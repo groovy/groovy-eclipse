@@ -25,6 +25,7 @@ import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLDStoreManager;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
+import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.eclipse.core.resources.IFile;
@@ -110,7 +111,7 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         
         // ensure that all DSLD refresh jobs are complete.
         try {
-            Job.getJobManager().join(this.project, null);
+            Job.getJobManager().join(RefreshDSLDJob.getFamily(this.project), null);
         } catch (OperationCanceledException e) {
         } catch (InterruptedException e) {
         }

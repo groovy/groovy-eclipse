@@ -39,7 +39,7 @@ public class AllGroovyTests {
         suite.addTest(AllBrowsingTests.suite());
         suite.addTest(AllRefactoringTests.suite());
         suite.addTest(AllQuickFixTests.suite());
-//        suite.addTest(AllDSLTests.suite());
+        suite.addTest(AllDSLTests.suite());
         return suite;
     }
 }

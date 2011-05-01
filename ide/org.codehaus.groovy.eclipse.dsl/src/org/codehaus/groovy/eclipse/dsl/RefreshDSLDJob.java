@@ -21,6 +21,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.resources.IStorage;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -138,7 +139,7 @@ public class RefreshDSLDJob extends Job {
         }
         monitor.subTask("Cancelling previous refresh jobs");
         // cancel all existing jobs
-        Job[] jobs = getJobManager().find(project);
+        Job[] jobs = getJobManager().find(getFamily(project));
         if (jobs != null) {
             for (Job job : jobs) {
                 if (job != this) {
@@ -210,7 +211,12 @@ public class RefreshDSLDJob extends Job {
     
     @Override
     public boolean belongsTo(Object family) {
-        return project.equals(family);
+        return getFamily(project).equals(family);
     }
 
+    
+    public static Object getFamily(IProject project) {
+        Assert.isNotNull(project, "Null project passed to 'getFamily()'");
+        return "DSLD: " + project.getName();
+    }
 }

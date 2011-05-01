@@ -49,7 +49,7 @@ def insideContribution = { enclosingCallName("accept") & inClosure() }
 
 // Ensure that the 'accept' method is available for all closures and variables that correspond to pointcuts
 (dsldFile & ( ~ insideContribution() )  & ( ~currentType(subType(Script)) )).accept {
-    delegatesTo IPointcut
+    delegatesTo "p.IPointcut"
 }
  
 // here we store all bound names inside of the wormhole so that they can be available later
@@ -87,7 +87,7 @@ def insideContribution = { enclosingCallName("accept") & inClosure() }
     // and you cannot import them or use them as types for variables 
     Map<String, String> pointcutNames = org.codehaus.groovy.eclipse.dsl.script.PointcutFactory.docRegistry
     for (pointcutName in pointcutNames.entrySet()) {
-        method name : pointcutName.key, type: IPointcut, params : [pointcutArg : Object], doc : pointcutName.value
+        method name : pointcutName.key, type: "p.IPointcut", params : [pointcutArg : Object], doc : pointcutName.value
     }
     
     method name : "supportsVersion", type : void, params : [versionKindToName : Map.class ], 
