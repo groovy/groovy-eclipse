@@ -73,11 +73,11 @@ public class UserExtensiblePointcut extends AbstractPointcut {
                 }
             }
             // also ensure that the thing to match is available
-            newMap.put("it", toMatch);
+//            newMap.put("it2", toMatch);
             Object result = null;
             synchronized(closure) {
                 closure.setDelegate(newMap);
-                result = closure.call();
+                result = closure.call(toMatch);
                 closure.setDelegate(null);
             }
             return ensureCollection(result);
