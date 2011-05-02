@@ -42,7 +42,7 @@ we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Ecl
 	</target>
 
 	<target name="-runTestSuite">
-		<ant target="ui-test" antfile="${test.library.xml}" dir="${test.eclipse.host}" inheritall="false">
+		<ant target="core-test" antfile="${test.library.xml}" dir="${test.eclipse.host}" inheritall="false">
 			<property name="data-dir" value="${test.workspace} -clean" />
 			<property name="plugin-name" value="org.codehaus.groovy.alltests" />
     	<property name="classname" value="org.codehaus.groovy.alltests.AllGroovyTests" />

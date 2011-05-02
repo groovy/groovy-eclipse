@@ -90,6 +90,9 @@
             class="org.codehaus.groovy.eclipse.dsl.ui.DSLPreferencesPage"
             id="org.codehaus.groovy.eclipse.dsl.preferences"
             name="DSLD">
+         <keywordReference
+               id="org.codehaus.groovy.eclipse.dsl.keywords">
+         </keywordReference>
       </page>
    </extension>
    <extension
@@ -105,6 +108,16 @@
          <description>
             Create a new DSL descriptor file.
          </description>
+         <keywordReference
+               id="org.codehaus.groovy.eclipse.dsl.keywords">
+         </keywordReference>
       </wizard>
+   </extension>
+   <extension
+         point="org.eclipse.ui.keywords">
+      <keyword
+            id="org.codehaus.groovy.eclipse.dsl.keywords"
+            label="groovy dsld dsl descriptor">
+      </keyword>
    </extension>
 </plugin>

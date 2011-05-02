@@ -80,8 +80,8 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
                     "// this is a DSLD file\n" +
             		"// start off creating a custom DSL Descriptor for your Groovy DSL\n" +
             		"\n" +
-            		"// The following snippet adds the 'newProp' property to all GroovyObjects\n" +
-            		"// currentType('groovy.lang.GroovyObject').accept {\n" +
+            		"// The following snippet adds the 'newProp' to all types that are a subtype of GroovyObjects\n" +
+            		"// currentType(subType('groovy.lang.GroovyObject')).accept {\n" +
             		"//   property name : 'newProp', type : String, provider : 'Sample DSL', doc : 'This is a sample.  You should see this in content assist for GroovyObjects: <pre>newProp</pre>'\n" +
             		"// }\n");
         }
