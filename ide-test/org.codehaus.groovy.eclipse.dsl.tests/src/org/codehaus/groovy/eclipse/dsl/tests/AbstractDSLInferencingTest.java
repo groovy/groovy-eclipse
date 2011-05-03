@@ -111,6 +111,7 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
     protected void assertDSLStore(int expectedNumDslFiles, Map<String, List<String>> allExpectedPointcuts, Map<String, Integer> expectedContributionCounts) {
         
         // ensure that all DSLD refresh jobs are complete.
+        SynchronizationUtils.waitForDSLDProcessingToComplete();        
         SynchronizationUtils.joinBackgroudActivities();
         
         DSLDStoreManager manager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();

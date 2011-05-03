@@ -197,4 +197,23 @@ public class SynchronizationUtils {
 	        }
 	    }
 	}
+
+    public static void waitForDSLDProcessingToComplete() {
+        SynchronizationUtils.joinBackgroudActivities();
+        Job[] jobs = Job.getJobManager().find(null);
+        for (int i = 0; i < jobs.length; i++) {
+            if (jobs[i].getName().startsWith("Refresh DSLD scripts")) {
+                boolean wasInterrupted = true;
+                while (wasInterrupted) {
+                    try {
+                        wasInterrupted = false;
+                        jobs[i].join();
+                    } catch (InterruptedException e) {
+                        wasInterrupted = true;
+                    }
+                }
+            }
+        }
+    }
+
 }
