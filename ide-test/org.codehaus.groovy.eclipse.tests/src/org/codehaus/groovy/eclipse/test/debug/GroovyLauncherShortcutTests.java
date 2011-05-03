@@ -16,16 +16,21 @@
 package org.codehaus.groovy.eclipse.test.debug;
 
 import java.io.File;
+import java.net.URL;
 import java.util.Map;
 
 import junit.framework.AssertionFailedError;
 
+import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
+import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchShortcut;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.codehaus.groovy.eclipse.test.TestProject;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.model.IProcess;
@@ -218,8 +223,9 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         }
     }
 
+    // This test might fail on windows
     // test that the classpath generation occurs as expected
-    public void testClasspathGeneration() throws Exception {
+    public void testClasspathGeneration1() throws Exception {
         TestProject p4 = new TestProject("P4");
         p4.createSourceFolder("src2", "bin2");
 
@@ -235,19 +241,52 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         p1.addProjectReference(p4.getJavaProject());
         p1.addProjectReference(p3.getJavaProject());
         p1.addProjectReference(p2.getJavaProject());
-
+        
         String classpath = new MockGroovyScriptLaunchShortcut().generateClasspath(p1.getJavaProject());
-        assertEquals("Invalid classpath generated", createClassPathString(), classpath);
+        assertEquals("Invalid classpath generated", createClassPathString1(), classpath);
+        p1.dispose();
+        p2.dispose();
+        p3.dispose();
+        p4.dispose();
+    }
+    
+    
+    public void testClasspathGeneration2() throws Exception {
+        TestProject p1 = new TestProject("P1a");
+        URL groovyURL = CompilerUtils.getExportedGroovyAllJar();
+        IPath runtimeJarPath = new Path(groovyURL.getPath());
+        p1.addJarFileToClasspath(runtimeJarPath);
+        
+        IFile f1 = p1.createFile("empty.jar", "");
+        p1.addJarFileToClasspath(f1.getFullPath());
+        
+        TestProject p2 = new TestProject("P2a");
+        IFile f2 = p2.createFile("empty2.jar", "");
+        p1.addJarFileToClasspath(f2.getFullPath());
+        
+        String classpath = new MockGroovyScriptLaunchShortcut().generateClasspath(p1.getJavaProject());
+        
+        assertEquals("Wrong classpath", createClassPathString2(runtimeJarPath.toPortableString()), classpath);
+        
+        p1.dispose();
+        p2.dispose();
     }
 
-    /**
-     * @return
-     */
-    private String createClassPathString() {
+    private String createClassPathString1() {
         String classpath = "\"${workspace_loc:/P1}\\src:${workspace_loc:/P2}\\src:"
                 + "${workspace_loc:/P3}\\src:${workspace_loc:/P3}\\src2:${workspace_loc:/P4}\\src:${workspace_"
                 + "loc:/P4}\\src2:${workspace_loc:/P1}\\bin:${workspace_loc:/P2}\\bin:${workspace_loc:/P3}\\bin"
                 + ":${workspace_loc:/P3}\\bin2:${workspace_loc:/P4}\\bin:${workspace_loc:/P4}\\bin2\"";
+        if (File.separatorChar == '/') {
+            classpath = classpath.replace('\\', '/');
+        }
+        return classpath;
+    }
+    private String createClassPathString2(String groovyRuntimePath) {
+        String classpath = "\"${workspace_loc:/P1a}/empty.jar:" +
+        		"${workspace_loc:/P1a}/src:${workspace_loc:/P2a}/empty2.jar:" +
+        		groovyRuntimePath + ":" +
+        		"${workspace_loc:/P1a}/bin\"";
         if (File.separatorChar == '/') {
             classpath = classpath.replace('\\', '/');
         }

@@ -103,22 +103,22 @@ public class NewFieldCompletionTests extends CompletionTestCase {
         checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent       "), 
                 new String[] {
                     "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
-                    "class SomeClass {\nHTMLFrameHyperlinkEvent htmlFrameHyperlinkEvent }",
+                    "class SomeClass {\nHTMLFrameHyperlinkEvent       htmlFrameHyperlinkEvent }",
                     
                     "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
-                    "class SomeClass {\nHTMLFrameHyperlinkEvent frameHyperlinkEvent }",
+                    "class SomeClass {\nHTMLFrameHyperlinkEvent       frameHyperlinkEvent }",
                     
                     "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
-                    "class SomeClass {\nHTMLFrameHyperlinkEvent hyperlinkEvent }",
+                    "class SomeClass {\nHTMLFrameHyperlinkEvent       hyperlinkEvent }",
                     
                     "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
-                    "class SomeClass {\nHTMLFrameHyperlinkEvent event }"
+                    "class SomeClass {\nHTMLFrameHyperlinkEvent       event }"
                 },
                 new String[] {
-                    "HTMLFrameHyperlinkEvent htmlFrameHyperlinkEvent",
-                    "HTMLFrameHyperlinkEvent frameHyperlinkEvent",
-                    "HTMLFrameHyperlinkEvent hyperlinkEvent",
-                    "HTMLFrameHyperlinkEvent event"
+                    "HTMLFrameHyperlinkEvent       htmlFrameHyperlinkEvent",
+                    "HTMLFrameHyperlinkEvent       frameHyperlinkEvent",
+                    "HTMLFrameHyperlinkEvent       hyperlinkEvent",
+                    "HTMLFrameHyperlinkEvent       event"
                 });
     }
 
@@ -128,12 +128,66 @@ public class NewFieldCompletionTests extends CompletionTestCase {
         
         checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent     f"), 
                 new String[] {
-            "class SomeClass {\njavax.swing.text.html.HTMLFrameHyperlinkEvent frameHyperlinkEvent }",
+            "class SomeClass {\njavax.swing.text.html.HTMLFrameHyperlinkEvent     frameHyperlinkEvent }",
         },
         new String[] {
-            "HTMLFrameHyperlinkEvent frameHyperlinkEvent",
+            "HTMLFrameHyperlinkEvent     frameHyperlinkEvent",
         });
     }
+    
+    public void testNewField6() throws Exception {
+        String contents = 
+            "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+            "class SomeClass {\nHTMLFrameHyperlinkEvent[]        }";
+    
+        checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent[]       "), 
+                new String[] {
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+                    "class SomeClass {\nHTMLFrameHyperlinkEvent[]       htmlFrameHyperlinkEvents }",
+                    
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+                    "class SomeClass {\nHTMLFrameHyperlinkEvent[]       frameHyperlinkEvents }",
+                    
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+                    "class SomeClass {\nHTMLFrameHyperlinkEvent[]       hyperlinkEvents }",
+                    
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+                    "class SomeClass {\nHTMLFrameHyperlinkEvent[]       events }"
+                },
+                new String[] {
+                    "HTMLFrameHyperlinkEvent[]       htmlFrameHyperlinkEvents",
+                    "HTMLFrameHyperlinkEvent[]       frameHyperlinkEvents",
+                    "HTMLFrameHyperlinkEvent[]       hyperlinkEvents",
+                    "HTMLFrameHyperlinkEvent[]       events"
+                });
+    }
+    public void testNewField7() throws Exception {
+        String contents = 
+            "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+            "class SomeClass {\nHTMLFrameHyperlinkEvent  [][]        }";
+    
+        checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent  [][]       "), 
+                new String[] {
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+                    "class SomeClass {\nHTMLFrameHyperlinkEvent  [][]       htmlFrameHyperlinkEvents }",
+                    
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+                    "class SomeClass {\nHTMLFrameHyperlinkEvent  [][]       frameHyperlinkEvents }",
+                    
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+                    "class SomeClass {\nHTMLFrameHyperlinkEvent  [][]       hyperlinkEvents }",
+                    
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+                    "class SomeClass {\nHTMLFrameHyperlinkEvent  [][]       events }"
+                },
+                new String[] {
+                    "HTMLFrameHyperlinkEvent  [][]       htmlFrameHyperlinkEvents",
+                    "HTMLFrameHyperlinkEvent  [][]       frameHyperlinkEvents",
+                    "HTMLFrameHyperlinkEvent  [][]       hyperlinkEvents",
+                    "HTMLFrameHyperlinkEvent  [][]       events"
+                });
+    }
+
     
     public void testNoNewField1() throws Exception {
         String contents = 

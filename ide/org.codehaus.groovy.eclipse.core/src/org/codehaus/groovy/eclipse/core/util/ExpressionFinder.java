@@ -211,6 +211,26 @@ public class ExpressionFinder {
             this.name = name;
             this.location = locaiton;
         }
+
+        public String toTypeName() {
+            StringBuilder sb = new StringBuilder();
+            int i = 0;
+            while (i < name.length() && Character.isJavaIdentifierPart(name.charAt(i))) {
+                sb.append(name.charAt(i++));
+            }
+            return sb.toString();
+        }
+
+        public int dims() {
+            int i = 0;
+            int dims = 0;
+            while (i < name.length()) {
+                if (name.charAt(i++) == ']') {
+                    dims++;
+                }
+            }
+            return dims;
+        }
     }
 
     public NameAndLocation findPreviousTypeNameToken(ISourceBuffer buffer, int start) {
@@ -224,15 +244,19 @@ public class ExpressionFinder {
         if (current < 0 || !Character.isWhitespace(buffer.charAt(current))) {
             return null;
         }
-        while (current >= 0 && Character.isWhitespace(buffer.charAt(current)) && buffer.charAt(current) != '\n') {
-            current--;
+        // don't allow newline chars, but do allow [] and whitespace
+        StringBuilder sb = new StringBuilder();
+        while (current >= 0
+                && (Character.isWhitespace(buffer.charAt(current)) || buffer.charAt(current) == '[' || buffer.charAt(current) == ']')
+                && buffer.charAt(current) != '\n' && buffer.charAt(current) != '\r') {
+            // current--;
+            sb.append(buffer.charAt(current--));
         }
 
         if (current < 0 || !Character.isJavaIdentifierPart(buffer.charAt(current))) {
             return null;
         }
 
-        StringBuilder sb = new StringBuilder();
         while (current >= 0 && Character.isJavaIdentifierPart(buffer.charAt(current))) {
             sb.append(buffer.charAt(current--));
         }

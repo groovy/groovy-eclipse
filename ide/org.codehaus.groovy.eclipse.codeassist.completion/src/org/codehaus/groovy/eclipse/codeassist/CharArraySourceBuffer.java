@@ -45,10 +45,12 @@ public class CharArraySourceBuffer implements ISourceBuffer {
 
 
     public int[] toLineColumn(int offset) {
+        // not implemented
         return null;
     }
 
     public int toOffset(int line, int column) {
+        // not implemented
         return 0;
     }
 

@@ -37,6 +37,7 @@ import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.core.util.ListUtil;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IAdaptable;
@@ -305,6 +306,13 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
         return "${workspace_loc:/" + elt.getJavaProject().getProject().getName() + "}";
     }
 
+    private String getProjectLocation(IPath path) {
+        if (path.segmentCount() > 0) {
+            return "${workspace_loc:/" + path.segment(0) + "}";
+        } else {
+            return "${workspace_loc}";
+        }
+    }
 
     /* make protected for testing purposes */
     protected String generateClasspath(IJavaProject javaProject) {
@@ -345,14 +353,14 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
                 switch(kind) {
                     case IClasspathEntry.CPE_LIBRARY:
                         IPath libPath = entry.getPath();
-                        if (libPath.isAbsolute()) {
+                        if (!isPathInWorkspace(libPath)) {
                             sourceEntries.add(libPath.toOSString());
                             break;
                         }
                         //$FALL-THROUGH$
                     case IClasspathEntry.CPE_SOURCE:
                         IPath srcPath = entry.getPath();
-                        String sloc = getProjectLocation(javaProject);
+                        String sloc = getProjectLocation(srcPath);
                         if (srcPath.segmentCount() > 1) {
                             sloc += File.separator + srcPath.removeFirstSegments(1).toOSString();
                         }
@@ -360,7 +368,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
 
                         IPath outPath = entry.getOutputLocation();
                         if (outPath != null) {
-                            String bloc = getProjectLocation(javaProject);
+                            String bloc = getProjectLocation(outPath);
                             if (outPath.segmentCount() > 1) {
                                 bloc += File.separator + outPath.removeFirstSegments(1).toOSString();
                             }
@@ -393,7 +401,18 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
         }
     }
 
-
+    /**
+     * True if this is a path to a resource in the workspace, false otherwise
+     *
+     * @param libPath
+     * @return
+     */
+    private boolean isPathInWorkspace(IPath libPath) {
+        if (!libPath.isAbsolute() || libPath.segmentCount() == 0) {
+            return true;
+        }
+        return ResourcesPlugin.getWorkspace().getRoot().getProject(libPath.segment(0)).exists();
+    }
 
     /**
      * Launches from the source file.
@@ -541,7 +560,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
      */
     public ILaunchConfiguration chooseConfiguration(List< ILaunchConfiguration > configList) {
         IDebugModelPresentation labelProvider = DebugUITools.newDebugModelPresentation();
-        return (ILaunchConfiguration) LaunchShortcutHelper.chooseFromList(configList, labelProvider, title, text);
+        return LaunchShortcutHelper.chooseFromList(configList, labelProvider, title, text);
     }
 
     /**

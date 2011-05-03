@@ -52,7 +52,7 @@ import org.eclipse.swt.graphics.Image;
  * @created Nov 10, 2009
  */
 public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcessor {
-    static class NewGroovyFieldCompletionProposal extends JavaCompletionProposal {
+    public static class NewGroovyFieldCompletionProposal extends JavaCompletionProposal {
         NewGroovyFieldCompletionProposal(String fieldName,
                 int replacementOffset, int replacementLength, int relevance,
                 boolean isStatic, boolean useKeywordBeforeReplacement, String typeName) {
@@ -66,12 +66,12 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
         static String createReplacementString(String fieldName, String typeName, boolean isStatic) {
             if (isStatic) {
                 if (typeName != null) {
-                    return "static " + typeName + " " + fieldName + " = null";
+                    return "static " + typeName + fieldName + " = null";
                 } else {
                     return "static " + fieldName + " = null";
                 }
             } else if (typeName != null) {
-                return typeName + " " + fieldName;
+                return typeName + fieldName;
             } else {
                 return "def " + fieldName;
             }
@@ -100,13 +100,13 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
                             .createColorRegistryStyler(
                                     JFacePreferences.HYPERLINK_COLOR, null));
                     if (typeName != null) {
-                        ss.append(typeName + " ");
+                        ss.append(typeName);
                     }
                 } else {
                     if (typeName == null) {
                         ss.append("def ", StyledString.createColorRegistryStyler(JFacePreferences.HYPERLINK_COLOR, null));
                     } else {
-                        ss.append(typeName + " ");
+                        ss.append(typeName);
                     }
                 }
             }
@@ -143,8 +143,8 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
             NameAndLocation nameAndLocation = findCompletionTypeName(context.unit, context.completionLocation);
             if (nameAndLocation != null) {
                 String[] suggestedNames = NamingConventions.suggestVariableNames(NamingConventions.VK_INSTANCE_FIELD,
-                        InternalNamingConventions.BK_SIMPLE_TYPE_NAME, nameAndLocation.name, context.unit.getJavaProject(), 0,
-                        null, true);
+                        InternalNamingConventions.BK_SIMPLE_TYPE_NAME, nameAndLocation.toTypeName(), context.unit.getJavaProject(),
+                        nameAndLocation.dims(), null, true);
                 if (suggestedNames != null) {
                     for (String suggestedName : suggestedNames) {
                         if (suggestedName.startsWith(context.completionExpression)) {

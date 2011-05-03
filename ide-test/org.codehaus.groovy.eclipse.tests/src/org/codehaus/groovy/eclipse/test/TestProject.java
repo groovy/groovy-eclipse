@@ -375,6 +375,14 @@ public class TestProject {
         javaProject.setRawClasspath(newEntries, null);
     }
     
+    public void addJarFileToClasspath(IPath path) throws JavaModelException {
+        IClasspathEntry[] oldEntries = javaProject.getRawClasspath();
+        IClasspathEntry[] newEntries = new IClasspathEntry[oldEntries.length + 1];
+        System.arraycopy(oldEntries, 0, newEntries, 0, oldEntries.length);
+        newEntries[oldEntries.length] = JavaCore.newLibraryEntry(path, null, null);
+        javaProject.setRawClasspath(newEntries, null);
+    }
+    
     private void addSystemLibraries() throws JavaModelException {
         IClasspathEntry[] oldEntries = javaProject.getRawClasspath();
         IClasspathEntry[] newEntries = new IClasspathEntry[oldEntries.length + 1];

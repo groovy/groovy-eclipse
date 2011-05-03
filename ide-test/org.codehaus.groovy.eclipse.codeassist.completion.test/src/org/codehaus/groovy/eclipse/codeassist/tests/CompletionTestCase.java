@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
+import org.codehaus.groovy.eclipse.codeassist.processors.NewFieldCompletionProcessor;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -200,7 +201,8 @@ public abstract class CompletionTestCase extends BuilderTests {
             
             // if a field
             String propName = proposal.getDisplayString();
-            if (propName.startsWith(name + " ") && !(proposal instanceof LazyGenericTypeProposal)) {
+            if (propName.startsWith(name + " ") && 
+                    !(proposal instanceof LazyGenericTypeProposal)) {
                 return proposal;
             } else
             // if a method
