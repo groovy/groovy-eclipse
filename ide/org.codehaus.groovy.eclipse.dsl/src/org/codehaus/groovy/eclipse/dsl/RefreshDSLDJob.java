@@ -117,7 +117,7 @@ public class RefreshDSLDJob extends Job {
     }
 
     @Override
-    protected IStatus run(IProgressMonitor monitor) {
+    public IStatus run(IProgressMonitor monitor) {
         String event = null;
         if (GroovyLogManager.manager.hasLoggers()) {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Refreshing inferencing scripts for " + project.getName());
