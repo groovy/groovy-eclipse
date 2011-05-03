@@ -31,9 +31,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest;
 
 /**
@@ -110,9 +109,15 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
      */
     protected void assertDSLStore(int expectedNumDslFiles, Map<String, List<String>> allExpectedPointcuts, Map<String, Integer> expectedContributionCounts) {
         
-        // ensure that all DSLD refresh jobs are complete.
-        SynchronizationUtils.waitForDSLDProcessingToComplete();        
-        SynchronizationUtils.joinBackgroudActivities();
+        // ensure DSLDs are refreshed
+        // don't schedule. instead run in the same thread.
+        System.out.println("About to run RefreshDSLDJob");
+        SynchronizationUtils.printJobs();
+        RefreshDSLDJob job = new RefreshDSLDJob(project);
+        job.run(new NullProgressMonitor());
+        System.out.println("Finished RefreshDSLDJob");
+        SynchronizationUtils.printJobs();
+        
         
         DSLDStoreManager manager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
         DSLDStore store = manager.getDSLDStore(project);
