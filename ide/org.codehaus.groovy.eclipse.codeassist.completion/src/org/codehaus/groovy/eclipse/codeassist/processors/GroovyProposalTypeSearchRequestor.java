@@ -574,7 +574,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         return javaCompletionProposal;
     }
 
-    @SuppressWarnings("deprecation")
     private void initializeImportCaches() {
         importCachesInitialized = true;
         List<ImportNode> importPackages = (List<ImportNode>) module

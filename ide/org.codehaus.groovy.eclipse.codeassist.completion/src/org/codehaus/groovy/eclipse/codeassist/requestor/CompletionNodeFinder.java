@@ -578,11 +578,6 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     }
 
 
-    // called when completion is not possible
-    private void createNullContext() {
-        throw new VisitCompleteException();
-    }
-
     protected boolean doTest(ASTNode node) {
         return ((supportingNodeEnd > node.getStart() && supportingNodeEnd <= node.getEnd()) ||
                 (completionOffset >= node.getStart() && completionOffset <= node.getEnd()));

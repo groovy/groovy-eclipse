@@ -20,15 +20,21 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.eclipse.codeassist.CharArraySourceBuffer;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;
+import org.codehaus.groovy.eclipse.core.util.ExpressionFinder.NameAndLocation;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.NamingConventions;
+import org.eclipse.jdt.internal.core.InternalNamingConventions;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -49,17 +55,23 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
     static class NewGroovyFieldCompletionProposal extends JavaCompletionProposal {
         NewGroovyFieldCompletionProposal(String fieldName,
                 int replacementOffset, int replacementLength, int relevance,
-                boolean isStatic, boolean useKeywordBeforeReplacement) {
-            super(createReplacementString(fieldName, isStatic),
+                boolean isStatic, boolean useKeywordBeforeReplacement, String typeName) {
+            super(createReplacementString(fieldName, typeName, isStatic),
                     replacementOffset, replacementLength,
-                    createImage(isStatic), createDisplayString(fieldName,
+                    createImage(isStatic), createDisplayString(fieldName, typeName,
                             isStatic, useKeywordBeforeReplacement), relevance);
         }
 
         // can we do better with the initializer?
-        static String createReplacementString(String fieldName, boolean isStatic) {
+        static String createReplacementString(String fieldName, String typeName, boolean isStatic) {
             if (isStatic) {
-                return "static " + fieldName + " = null";
+                if (typeName != null) {
+                    return "static " + typeName + " " + fieldName + " = null";
+                } else {
+                    return "static " + fieldName + " = null";
+                }
+            } else if (typeName != null) {
+                return typeName + " " + fieldName;
             } else {
                 return "def " + fieldName;
             }
@@ -73,7 +85,7 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
             return ProposalUtils.getImage(dummy);
         }
 
-        static StyledString createDisplayString(String fieldName,
+        static StyledString createDisplayString(String fieldName, String typeName,
                 boolean isStatic, boolean useKeywordBeforeReplacement) {
             StyledString ss = new StyledString();
 
@@ -87,9 +99,15 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
                     ss.append("static ", StyledString
                             .createColorRegistryStyler(
                                     JFacePreferences.HYPERLINK_COLOR, null));
+                    if (typeName != null) {
+                        ss.append(typeName + " ");
+                    }
                 } else {
-                    ss.append("def ", StyledString.createColorRegistryStyler(
-                            JFacePreferences.HYPERLINK_COLOR, null));
+                    if (typeName == null) {
+                        ss.append("def ", StyledString.createColorRegistryStyler(JFacePreferences.HYPERLINK_COLOR, null));
+                    } else {
+                        ss.append(typeName + " ");
+                    }
                 }
             }
 
@@ -101,7 +119,6 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
                 ss.append(fieldName);
                 ss.append(" - New property", StyledString.QUALIFIER_STYLER);
             }
-
             return ss;
         }
     }
@@ -111,15 +128,47 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
     }
 
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
-        List<String> unimplementedFieldNames = getAllSuggestedFieldNames(getContext());
+        ContentAssistContext context = getContext();
+        List<String> unimplementedFieldNames = getAllSuggestedFieldNames(context);
         List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
-        IType enclosingType = getContext().getEnclosingType();
+        IType enclosingType = context.getEnclosingType();
         if (enclosingType != null) {
             for (String fieldName : unimplementedFieldNames) {
-                proposals.add(createProposal(fieldName, getContext(), enclosingType));
+                proposals.add(createProposal(fieldName, context, enclosingType));
+            }
+            // next check to see if we are at a partially completed field
+            // declaration,
+            // ie- is the type specified, but the name is not (or is only
+            // partially specified)?
+            NameAndLocation nameAndLocation = findCompletionTypeName(context.unit, context.completionLocation);
+            if (nameAndLocation != null) {
+                String[] suggestedNames = NamingConventions.suggestVariableNames(NamingConventions.VK_INSTANCE_FIELD,
+                        InternalNamingConventions.BK_SIMPLE_TYPE_NAME, nameAndLocation.name, context.unit.getJavaProject(), 0,
+                        null, true);
+                if (suggestedNames != null) {
+                    for (String suggestedName : suggestedNames) {
+                        if (suggestedName.startsWith(context.completionExpression)) {
+                            proposals.add(createProposal(suggestedName, nameAndLocation.name, context, enclosingType, false, true,
+                                    nameAndLocation.location, context.completionLocation - nameAndLocation.location));
+                        }
+                    }
+                }
             }
         }
+
         return proposals;
+    }
+
+    /**
+     * works backward from the current location to see if there is something
+     * that looks like a type name as the previous token
+     *
+     * @param unit
+     * @param completionLocation
+     * @return
+     */
+    private NameAndLocation findCompletionTypeName(GroovyCompilationUnit unit, int completionLocation) {
+        return new ExpressionFinder().findPreviousTypeNameToken(new CharArraySourceBuffer(unit.getContents()), completionLocation);
     }
 
     /**
@@ -145,7 +194,6 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
 
     private ICompletionProposal createProposal(String fieldName,
             ContentAssistContext context, IType enclosingType) {
-        int relevance = Relevance.VERY_HIGH.getRelavance();
         boolean isStatic;
         if (fieldName.startsWith(IProposalProvider.NONSTATIC_FIELD)) {
             fieldName = fieldName.substring(IProposalProvider.NONSTATIC_FIELD
@@ -161,24 +209,36 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
                 && ((context.completionNode instanceof FieldNode)
                         || "def".startsWith(context.completionExpression) || "static"
                         .startsWith(context.completionExpression));
-
-        // replace start is either the start of the field node (if using keyword replacement),
-        // or it is the completion location - the length of the existing part of the expression
-        int replaceStart = context.completionNode instanceof FieldNode ? context.completionNode
-                .getStart() : context.completionLocation
-                - context.completionExpression.length();
-
-        // the completion length is the length of the bit of text that will be replaced
-        // this is either the completion expression length or the difference between the
+        // replace start is either the start of the field node (if using keyword
+        // replacement),
+        // or it is the completion location - the length of the existing part of
+        // the expression
+        int replaceStart = context.completionNode instanceof FieldNode ? context.completionNode.getStart()
+                : context.completionLocation - context.completionExpression.length();
+        // the completion length is the length of the bit of text that will be
+        // replaced
+        // this is either the completion expression length or the difference
+        // between the
         // start of the field node and the completion location
-        int replaceLength = context.completionNode instanceof FieldNode ? context.completionLocation
-                - replaceStart
+        int replaceLength = context.completionNode instanceof FieldNode ? context.completionLocation - replaceStart
                 : context.completionExpression.length();
+
+        return createProposal(fieldName, null, context, enclosingType, isStatic, useKeywordBeforeReplacement, replaceStart,
+                replaceLength);
+    }
+
+
+    private ICompletionProposal createProposal(String fieldName, String typeName, ContentAssistContext context,
+            IType enclosingType, boolean isStatic, boolean useKeywordBeforeReplacement, int replaceStart, int replaceLength) {
+
+        int relevance = Relevance.VERY_HIGH.getRelavance();
+
+
 
         return new NewGroovyFieldCompletionProposal(fieldName, replaceStart,
                 replaceLength,
-                relevance, isStatic, useKeywordBeforeReplacement);
+ relevance, isStatic,
+                useKeywordBeforeReplacement, typeName);
     }
-
 
 }

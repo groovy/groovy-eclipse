@@ -23,7 +23,6 @@ import java.util.List;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -95,21 +94,4 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
         }
         return res;
     }
-
-    /**
-     * @return
-     */
-    private int getSearchFor() {
-        switch(getContext().location) {
-            case EXTENDS:
-                return IJavaSearchConstants.CLASS;
-            case IMPLEMENTS:
-                return IJavaSearchConstants.INTERFACE;
-            case EXCEPTIONS:
-                return IJavaSearchConstants.CLASS;
-            default:
-                return IJavaSearchConstants.TYPE;
-        }
-    }
-
 }

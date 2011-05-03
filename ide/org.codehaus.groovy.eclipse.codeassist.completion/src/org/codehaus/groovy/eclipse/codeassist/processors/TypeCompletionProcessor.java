@@ -19,8 +19,11 @@ package org.codehaus.groovy.eclipse.codeassist.processors;
 import java.util.Collections;
 import java.util.List;
 
+import org.codehaus.groovy.eclipse.codeassist.CharArraySourceBuffer;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
+import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
@@ -67,7 +70,10 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
 
     /**
      * Don't show types if there is no previous text (except if in imports)
-     * Also, don't show types if there is a '.'
+     * Don't show types if there is a '.'
+     * Don't show types when in a class body and there is a type declaration
+     * immediately before
+     * 
      * @param context
      * @param toSearch
      * @return
@@ -75,7 +81,8 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
     private boolean shouldShowTypes(ContentAssistContext context,
             String toSearch) {
         return (toSearch.length() == 0 && context.location != ContentAssistLocation.IMPORT) ||
-                context.fullCompletionExpression.contains(".");
+ context.fullCompletionExpression.contains(".")
+                || isBeforeTypeName(context.location, context.unit, context.completionLocation);
     }
 
     /**
@@ -109,6 +116,11 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
             default:
                 return IJavaSearchConstants.TYPE;
         }
+    }
+
+    private boolean isBeforeTypeName(ContentAssistLocation location, GroovyCompilationUnit unit, int completionLocation) {
+        return location == ContentAssistLocation.CLASS_BODY
+                && new ExpressionFinder().findPreviousTypeNameToken(new CharArraySourceBuffer(unit.getContents()), completionLocation) != null;
     }
 
 }

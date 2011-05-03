@@ -202,6 +202,48 @@ public class ExpressionFinder {
         return ret;
 	}
 
+    public class NameAndLocation {
+        public final String name;
+
+        public final int location;
+
+        public NameAndLocation(String name, int locaiton) {
+            this.name = name;
+            this.location = locaiton;
+        }
+    }
+
+    public NameAndLocation findPreviousTypeNameToken(ISourceBuffer buffer, int start) {
+        int current = start;
+        current--;
+        while (current >= 0 && !Character.isWhitespace(buffer.charAt(current))
+                && Character.isJavaIdentifierPart(buffer.charAt(current))) {
+            current--;
+        }
+
+        if (current < 0 || !Character.isWhitespace(buffer.charAt(current))) {
+            return null;
+        }
+        while (current >= 0 && Character.isWhitespace(buffer.charAt(current)) && buffer.charAt(current) != '\n') {
+            current--;
+        }
+
+        if (current < 0 || !Character.isJavaIdentifierPart(buffer.charAt(current))) {
+            return null;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        while (current >= 0 && Character.isJavaIdentifierPart(buffer.charAt(current))) {
+            sb.append(buffer.charAt(current--));
+        }
+
+        if (sb.length() > 0) {
+            return new NameAndLocation(sb.reverse().toString(), current + 1);
+        } else {
+            return null;
+        }
+    }
+
     /**
      * FIXADE only skip line breaks if the previous character is a '.' otherwise
      * line breaks should signify the end of the completion.

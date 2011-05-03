@@ -11,8 +11,6 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
-import org.eclipse.jface.text.Document;
-import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 
 /**

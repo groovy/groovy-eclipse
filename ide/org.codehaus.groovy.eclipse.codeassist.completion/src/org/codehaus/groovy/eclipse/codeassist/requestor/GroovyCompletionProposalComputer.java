@@ -17,6 +17,7 @@ import org.codehaus.groovy.eclipse.codeassist.factories.LocalVariableCompletionP
 import org.codehaus.groovy.eclipse.codeassist.factories.ModifiersCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.NewFieldCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.NewMethodCompletionProcessorFactory;
+import org.codehaus.groovy.eclipse.codeassist.factories.NewVariableCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.PackageCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.TypeCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.processors.IGroovyCompletionProcessor;
@@ -44,12 +45,13 @@ public class GroovyCompletionProposalComputer implements
     static {
         locationFactoryMap = new HashMap<ContentAssistLocation, List<IGroovyCompletionProcessorFactory>>();
 
-        List<IGroovyCompletionProcessorFactory> factories = new ArrayList<IGroovyCompletionProcessorFactory>(3);
+        List<IGroovyCompletionProcessorFactory> factories = new ArrayList<IGroovyCompletionProcessorFactory>(5);
         factories.add(new ModifiersCompletionProcessorFactory());
         factories.add(new NewMethodCompletionProcessorFactory());
         factories.add(new NewFieldCompletionProcessorFactory());
         factories.add(new TypeCompletionProcessorFactory());
         factories.add(new PackageCompletionProcessorFactory());
+        factories.add(new NewVariableCompletionProcessorFactory());
         locationFactoryMap.put(ContentAssistLocation.CLASS_BODY, factories);
 
         factories = new ArrayList<IGroovyCompletionProcessorFactory>(2);
@@ -68,14 +70,15 @@ public class GroovyCompletionProposalComputer implements
         factories.add(new PackageCompletionProcessorFactory());
         locationFactoryMap.put(ContentAssistLocation.EXPRESSION, factories);
 
-        factories = new ArrayList<IGroovyCompletionProcessorFactory>(4);
+        factories = new ArrayList<IGroovyCompletionProcessorFactory>(5);
         factories.add(new TypeCompletionProcessorFactory());
         factories.add(new ExpressionCompletionProcessorFactory());
         factories.add(new LocalVariableCompletionProcessorFactory());
         factories.add(new PackageCompletionProcessorFactory());
+        factories.add(new NewVariableCompletionProcessorFactory());
         locationFactoryMap.put(ContentAssistLocation.STATEMENT, factories);
 
-        factories = new ArrayList<IGroovyCompletionProcessorFactory>(5);
+        factories = new ArrayList<IGroovyCompletionProcessorFactory>(8);
         factories.add(new ModifiersCompletionProcessorFactory());
         factories.add(new NewMethodCompletionProcessorFactory());
         factories.add(new NewFieldCompletionProcessorFactory());
@@ -83,7 +86,9 @@ public class GroovyCompletionProposalComputer implements
         factories.add(new ExpressionCompletionProcessorFactory());
         factories.add(new LocalVariableCompletionProcessorFactory());
         factories.add(new PackageCompletionProcessorFactory());
+        factories.add(new NewVariableCompletionProcessorFactory());
         locationFactoryMap.put(ContentAssistLocation.SCRIPT, factories);
+
     }
 
 
@@ -149,7 +154,9 @@ public class GroovyCompletionProposalComputer implements
                         IGroovyCompletionProcessor processor = factory
                                 .createProcessor(assistContext, javaContext,
                                         nameEnvironment);
-                        proposals.addAll(processor.generateProposals(monitor));
+                        if (processor != null) {
+                            proposals.addAll(processor.generateProposals(monitor));
+                        }
                     }
                 } finally {
                     if (nameEnvironment != null) {

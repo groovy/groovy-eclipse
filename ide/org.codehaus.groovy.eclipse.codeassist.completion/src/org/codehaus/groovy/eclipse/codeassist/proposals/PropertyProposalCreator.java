@@ -16,14 +16,11 @@
 
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
-import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.PropertyNode;
 
 /**
  * Consider deleting this class.  As of GRECLIPSE-611, properties are no
@@ -37,29 +34,6 @@ public class PropertyProposalCreator extends AbstractProposalCreator implements 
     public List<IGroovyProposal> findAllProposals(ClassNode type,
             Set<ClassNode> categories, String prefix, boolean isStatic) {
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
-
-//        for (PropertyNode property : allProperties) {
-//            if ((!isStatic || property.isStatic()) &&
-//                    ProposalUtils.looselyMatches(prefix, property.getName())) {
-//                groovyProposals.add(new GroovyPropertyProposal(property));
-//            }
-//        }
-
         return groovyProposals;
-    }
-
-    private Collection<PropertyNode> getAllProperties(ClassNode thisType) {
-        Set<ClassNode> types = new LinkedHashSet<ClassNode>();
-        getAllSupers(thisType, types);
-        List<PropertyNode> allProperties = new LinkedList<PropertyNode>();
-        for (ClassNode type : types) {
-            type = type.redirect();
-            for (PropertyNode property : (Iterable<PropertyNode>) type.getProperties()) {
-                if (checkName(property.getName())) {
-                    allProperties.add(property);
-                }
-            }
-        }
-        return allProperties;
     }
 }
