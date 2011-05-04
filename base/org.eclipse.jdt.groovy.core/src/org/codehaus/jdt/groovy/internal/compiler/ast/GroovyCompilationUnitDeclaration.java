@@ -812,6 +812,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			constructorDeclaration.modifiers = isEnum ? ClassFileConstants.AccPrivate : ClassFileConstants.AccPublic;
 			constructorDeclaration.selector = ctorName;
 			constructorDeclaration.arguments = createArguments(constructorNode.getParameters(), false);
+			constructorDeclaration.thrownExceptions = createTypeReferencesForClassNodes(constructorNode.getExceptions());
 			if (constructorNode.hasDefaultValue()) {
 				createConstructorVariants(constructorNode, constructorDeclaration, accumulatedMethodDeclarations,
 						compilationResult, isEnum);
@@ -1120,6 +1121,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 			methodDeclaration.arguments = createArguments(params, isMain);
 			methodDeclaration.returnType = createTypeReferenceForClassNode(returnType);
+			methodDeclaration.thrownExceptions = createTypeReferencesForClassNodes(methodNode.getExceptions());
 			fixupSourceLocationsForMethodDeclaration(methodDeclaration, methodNode);
 			return methodDeclaration;
 		}
@@ -1333,6 +1335,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			// throw new GroovyEclipseBug();
 			return null;
 		}
+	}
+
+	private TypeReference[] createTypeReferencesForClassNodes(ClassNode[] classNodes) {
+		if (classNodes == null || classNodes.length == 0) {
+			return null;
+		}
+		TypeReference[] refs = new TypeReference[classNodes.length];
+		for (int i = 0; i < classNodes.length; i++) {
+			refs[i] = createTypeReferenceForClassNode(classNodes[i]);
+		}
+		return refs;
 	}
 
 	private TypeReference createTypeReferenceForClassNode(ClassNode classNode) {

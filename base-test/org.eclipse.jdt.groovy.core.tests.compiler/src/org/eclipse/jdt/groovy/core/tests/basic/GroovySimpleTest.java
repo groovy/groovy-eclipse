@@ -226,6 +226,63 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     }
     
 
+    public void testUnreachable_1047() {
+    	this.runConformTest(new String[]{
+    			"MyException.java",
+    			"class MyException extends Exception {\n"+
+    			"  private static final long serialVersionUID = 1L;\n"+
+    			"}",
+    			"CanThrowException.groovy",
+    			"\n"+
+    			"public interface CanThrowException {\n"+
+    			"  void thisCanThrowException() throws MyException\n"+
+    			"}\n",
+    			"ShouldCatchException.java",
+    			"\n"+
+    			"class ShouldCatchException {\n"+
+    			"  private CanThrowException thing;\n"+
+    			"  \n"+
+    			"  public void doIt() {\n"+
+    			"    try {\n"+
+    			"      thing.thisCanThrowException();\n"+
+    			"    } catch( MyException e ) {\n"+
+    			"      System.out.println(\"Did we catch it?\");\n"+
+    			"    }\n"+
+    			"  }\n"+
+    			"}\n"
+    	});
+    }
+    
+    public void testUnreachable_1047_2() {
+    	this.runConformTest(new String[]{
+    			"MyException.java",
+    			"class MyException extends Exception {\n"+
+    			"  private static final long serialVersionUID = 1L;\n"+
+    			"}",
+    			"CanThrowException.groovy",
+    			"\n"+
+    			
+    			"public class CanThrowException {\n"+
+    			"  public CanThrowException() throws MyException {\n"+
+    			"    throw new MyException();\n"+
+    			"  }\n"+
+    			"}\n",
+    			"ShouldCatchException.java",
+    			"\n"+
+    			"class ShouldCatchException {\n"+
+    			"  \n"+
+    			"  public void doIt() {\n"+
+    			"    try {\n"+
+    			"      new CanThrowException();\n"+
+    			"    } catch( MyException e ) {\n"+
+    			"      System.out.println(\"Did we catch it?\");\n"+
+    			"    }\n"+
+    			"  }\n"+
+    			"}\n"
+    	});
+    }
+    
+
     /**
      * This test is looking at what happens when a valid type is compiled ahead of two problem types (problematic
      * since they both declare the same class).  Although the first file gets through resolution OK, re-resolution
@@ -3878,7 +3935,92 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},		
 		"");
 	}
+/*
+    public void testEnums2() {
+		try {
+		JDTResolver.recordInstances = true;
+		this.runConformTest(new String[] {
+    			"EE.groovy",
+    			"enum EE {A,B,C;}\n",
+    			"Foo.java",
+    			"public class Foo<E extends Foo<E>> implements Comparable<E> {" +
+    			"  public int compareTo(E b) { return 0;}\n"+
+    			"}\n" +
+    			"\n",
+    			"Goo.java",
+    			"public class Goo<X extends Goo<X>> extends Foo<X> {}\n",
+    			"Bar.groovy",
+    			"abstract class Bar extends Goo<Bar> {" +
+    			"  int compareTo(Bar b) { return 0;}\n"+
+    			"  EE getEnum() { return null; }\n"+
+    			"}\n"},"");
 
+		// Check on the state of Comparable		
+		JDTResolver jr = (JDTResolver)JDTResolver.instances.get(0);
+		JDTClassNode classnode = jr.getCachedNode("java.lang.Comparable<E>");
+//		assertNotNull(classnode);
+		// Should have one method
+//		List methods = classnode.getMethods();
+//		assertEquals(1,methods.size());
+//		assertEquals("int compareTo(java.lang.Object)",((MethodNode)methods.get(0)).getTypeDescriptor());
+		
+//		classnode.lazyClassInit();
+	} finally {
+		JDTResolver.instances.clear();
+		JDTResolver.recordInstances=false;
+	}
+//    	this.runConformTest(new String[]{
+//    			"Foo.groovy",
+//    			"class Foo<E extends Foo<E>> implements Comparable<E> {" +
+//    			"  int compareTo(Object b) { return 0;}\n"+
+//    			"}\n" +
+//    			"\n",
+//    			"Bar.groovy",
+//    			"abstract class Bar extends Foo<Bar> {" +
+//    			"  int compareTo(Bar b) { return 0;}\n"+
+//    			"}\n"},"");
+    }
+//    public void testJDTClassNode_633() {
+//		try {
+//			JDTResolver.recordInstances = true;
+//			this.runConformTest(new String[] {
+//				"p/Run.groovy",
+//				"package p;\n"+
+//				"import static p.q.r.Colour.*;\n"+
+//				"import p.q.r.Colour2;\n"+
+//				"public class Run {\n" + 
+//				"  public static void main(String[] argv) {\n"+
+//				"    System.out.print(Red);\n"+
+//				"    System.out.print(Green);\n"+
+//				"    System.out.print(Blue);\n"+
+//				"   Colour2 c2 = new Colour2();\n"+
+//				"   int i = c2.compareTo('abc');\n"+
+//				"  }\n"+
+//				"}\n",
+//	
+//				"p/q/r/Colour.java",
+//				"package p.q.r;\n" + 
+//				"enum Colour { Red,Green,Blue; }\n",
+//	
+//				"p/q/r/Colour2.java",
+//				"package p.q.r;\n" + 
+//				"public class Colour2 implements Comparable<String> { \n"+
+//				"  public int compareTo(String s) { return 0; } \n"+
+//					"}\n",
+//				},"RedGreenBlue");		 
+//			
+//			// Check on the state of Comparable		
+//			JDTClassNode classnode = ((JDTResolver)JDTResolver.instances.get(0)).getCachedNode("java.lang.Comparable<T>");
+//			assertNotNull(classnode);
+//			// Should have one method
+//			List methods = classnode.getMethods();
+//			assertEquals(1,methods.size());
+//			assertEquals("int compareTo(java.lang.Object)",((MethodNode)methods.get(0)).getTypeDescriptor());
+//		} finally {
+//			JDTResolver.instances.clear();
+//			JDTResolver.recordInstances=false;
+//		}
+//	}*/
 	public void testNonTerminalMissingImport() {
 		this.runNegativeTest(new String[] {
 			"p/X.groovy",
