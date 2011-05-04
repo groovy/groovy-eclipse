@@ -101,7 +101,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         try {
         	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.0.jar");
         	if (groovyJar==null) {
-        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.8.jar");
+        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.10.jar");
             	if (groovyJar==null) {
             		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
             	}
@@ -8013,11 +8013,11 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		String expectedContents = 
 			"// Compiled from Foo.groovy (version 1.5 : 49.0, no super bit)\n" + 
 			"public abstract @interface A extends java.lang.annotation.Annotation {\n" + 
-			(GroovyUtils.GROOVY_LEVEL<18?"":
+//			(GroovyUtils.GROOVY_LEVEL<18?"":
 				"\n"+
 				"  Inner classes:\n" + 
 				"    [inner class info: #9 A$1, outer class info: #2 A\n" + 
-				"     inner name: #10 1, accessflags: 4128 default]\n" )+"}";
+				"     inner name: #10 1, accessflags: 4128 default]\n" +"}";
 		checkDisassemblyFor("A.class",expectedContents);
 	
 	}

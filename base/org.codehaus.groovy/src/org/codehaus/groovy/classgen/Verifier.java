@@ -73,7 +73,7 @@ import org.objectweb.asm.Opcodes;
  * bytecode generation occurs.
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision: 21442 $
+ * @version $Revision: 21553 $
  */
 public class Verifier implements GroovyClassVisitor, Opcodes {
 
@@ -1165,6 +1165,26 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                     " in "+oldMethod.getDeclaringClass().getName()+
                     " with disparate static modifier",
                     overridingMethod);
+        }
+        if (!equalReturnType) {
+            boolean oldM = ClassHelper.isPrimitiveType(oldMethod.getReturnType());
+            boolean newM = ClassHelper.isPrimitiveType(overridingMethod.getReturnType());
+            if (oldM || newM) {
+                String message="";
+                if (oldM && newM) {
+                    message = " with old and new method having different primitive return types";
+                } else if (newM) {
+                    message = " with new method having a primitive return type and old method not";
+                } else if (oldM) {
+                    message = " with old method having a primitive return type and new method not";
+                }
+                throw new RuntimeParserException(
+                        "Cannot override method " + 
+                            oldMethod.getTypeDescriptor() +
+                            " in " + oldMethod.getDeclaringClass().getName() +
+                            message,
+                        overridingMethod);
+            }
         }
         
         MethodNode newMethod = new MethodNode(

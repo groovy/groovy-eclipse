@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.antlr;
 
-import java.io.Reader;
-
 import antlr.LexerSharedInputState;
 
 /**
@@ -25,26 +23,25 @@ import antlr.LexerSharedInputState;
  * @created Mar 3, 2011
  */
 public class UnicodeLexerSharedInputState extends LexerSharedInputState {
+    private final UnicodeEscapingReader escapingReader;
 
-    private final UnicodeUnescaper unescaper;
-    
     private int prevUnescape;
-    
-    public UnicodeLexerSharedInputState(Reader in) {
+
+    public UnicodeLexerSharedInputState(UnicodeEscapingReader in) {
         super(in);
-        unescaper = in instanceof UnicodeUnescaper ? (UnicodeUnescaper) in : new NoEscaper(); 
+        escapingReader = in; 
     }
 
     @Override
     public int getColumn() {
-        prevUnescape = unescaper.getUnescapedUnicodeColumnCount();
+        prevUnescape = escapingReader.getUnescapedUnicodeColumnCount();
         return super.getColumn() + prevUnescape;
     }
-    
+
     @Override
     public int getTokenStartColumn() {
         if (line == tokenStartLine) {
-            return super.getTokenStartColumn() + unescaper.getUnescapedUnicodeColumnCount();
+            return super.getTokenStartColumn() + escapingReader.getUnescapedUnicodeColumnCount();
         } else {
             return super.getTokenStartColumn() + prevUnescape;
         }

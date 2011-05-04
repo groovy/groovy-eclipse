@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2011 the original author or authors.
+ * Copyright 2003-2007 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,39 +19,46 @@ package org.codehaus.groovy.antlr;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.List;
 
 import antlr.CharScanner;
+import antlr.Token;
+import antlr.TokenStreamException;
 
 /**
  * Translates GLS-defined unicode escapes into characters. Throws an exception
  * in the event of an invalid unicode escape being detected.
  *
- * <p>No attempt has been made to optimise this class for speed or
+ * <p>No attempt has been made to optimize this class for speed or
  * space.</p>
  *
- * @version $Revision: 7922 $
+ * @version $Revision: 21735 $
  */
+public class UnicodeEscapingReader extends Reader {
 
-// GRECLIPSE: start
-/* old { 
-public class UnicodeEscapingReader extends Reader implements UnicodeUnescaper {
- */
-// add interface
-public class UnicodeEscapingReader extends Reader implements UnicodeUnescaper {
-// end
     private final Reader reader;
     private CharScanner lexer;
     private boolean hasNextChar = false;
     private int nextChar;
     private final SourceBuffer sourceBuffer;
-   
-    // GRECLIPSE: start
-    // GRECLIPSE-805 keep track of unicode escape sequences
-    int previousLine;
-    int numUnicodeEscapesFound = 0;
-    int numUnicodeEscapesFoundOnCurrentLine = 0;
-    // end
+    private int previousLine;
+    private int numUnicodeEscapesFound = 0;
+    private int numUnicodeEscapesFoundOnCurrentLine = 0;
+    
+    private static class DummyLexer extends CharScanner{
+        final private Token t = new Token();
+        public Token nextToken() throws TokenStreamException {
+            return t;
+        }
+        @Override
+        public int getColumn() {
+            return 0;
+        }
+        @Override
+        public int getLine() {
+            return 0;
+        }
+        
+    }
     
     /**
      * Constructor.
@@ -60,9 +67,7 @@ public class UnicodeEscapingReader extends Reader implements UnicodeUnescaper {
     public UnicodeEscapingReader(Reader reader,SourceBuffer sourceBuffer) {
         this.reader = reader;
         this.sourceBuffer = sourceBuffer;
-        if (sourceBuffer != null) {
-            sourceBuffer.setUnescaper(this);
-        }
+        this.lexer = new DummyLexer();
     }
 
     /**
@@ -99,13 +104,11 @@ public class UnicodeEscapingReader extends Reader implements UnicodeUnescaper {
             return nextChar;
         }
         
-        // GRECLIPSE: start
         if (previousLine != lexer.getLine()) {
             // new line, so reset unicode escapes
             numUnicodeEscapesFoundOnCurrentLine = 0;
             previousLine = lexer.getLine();
         }
-        // end
         
         int c = reader.read();
         if (c != '\\') {
@@ -123,7 +126,9 @@ public class UnicodeEscapingReader extends Reader implements UnicodeUnescaper {
         }
 
         // Swallow multiple 'u's
+        int numberOfUChars = 0;
         do {
+            numberOfUChars++;
             c = reader.read();
         } while (c == 'u');
 
@@ -141,11 +146,8 @@ public class UnicodeEscapingReader extends Reader implements UnicodeUnescaper {
         int rv = Integer.parseInt(charNum.toString(), 16);
         write(rv);
         
-        // GRECLIPSE: start
-        // remember location of this escape char
-        numUnicodeEscapesFound += 5;
-        numUnicodeEscapesFoundOnCurrentLine += 5;
-        // end
+        numUnicodeEscapesFound += 4 + numberOfUChars;
+        numUnicodeEscapesFoundOnCurrentLine += 4 + numberOfUChars;
         
         return rv;
     }
@@ -172,15 +174,13 @@ public class UnicodeEscapingReader extends Reader implements UnicodeUnescaper {
                 + " line: " + lexer.getLine() + " col:" + lexer.getColumn());
     }
 
-    // GRECLIPSE: start new methods
     public int getUnescapedUnicodeColumnCount() {
         return numUnicodeEscapesFoundOnCurrentLine;
     }
     
     public int getUnescapedUnicodeOffsetCount() {
-        return numUnicodeEscapesFound /*- numUnicodeEscapesFoundOnCurrentLine*/;
+        return numUnicodeEscapesFound;
     }
-    // end
     
     /**
      * Closes this reader by calling close on the underlying reader.

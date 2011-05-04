@@ -48,7 +48,7 @@ import java.util.*;
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
  * @author <a href='mailto:the[dot]mindstorm[at]gmail[dot]com'>Alex Popescu</a>
  * @author Alex Tkachman
- * @version $Revision: 21378 $
+ * @version $Revision: 21652 $
  */
 public class AsmClassGenerator extends ClassGenerator {
 
@@ -232,7 +232,7 @@ public class AsmClassGenerator extends ClassGenerator {
 
             cv.visit(
                     getBytecodeVersion(),
-                    adjustedModifiers(classNode.getModifiers()),
+                    adjustedClassModifiers(classNode.getModifiers()),
                     internalClassName,
                     BytecodeHelper.getGenericsSignature(classNode),
                     internalBaseClassName,
@@ -279,27 +279,11 @@ public class AsmClassGenerator extends ClassGenerator {
                 createSyntheticStaticFields();
             }
 
-            for (ClassNode innerClass : innerClasses) {
-                String innerClassName = innerClass.getName();
-                String innerClassInternalName = BytecodeHelper.getClassInternalName(innerClassName);
-                {
-                    int index = innerClassName.lastIndexOf('$');
-                    if (index >= 0) innerClassName = innerClassName.substring(index + 1);
-                }
-                String outerClassName = internalClassName; // default for inner classes
-                MethodNode enclosingMethod = innerClass.getEnclosingMethod();
-                if (enclosingMethod != null) {
-                    // local inner classes do not specify the outer class name
-                    outerClassName = null;
-                    innerClassName = null;
-                }
-                cv.visitInnerClass(
-                        innerClassInternalName,
-                        outerClassName,
-                        innerClassName,
-                        adjustedModifiers(innerClass.getModifiers()));
+            for (Iterator<InnerClassNode> iter = classNode.getInnerClasses(); iter.hasNext();) {
+                InnerClassNode innerClass = iter.next();
+                makeInnerClassEntry(innerClass);
             }
-            //TODO: an inner class should have an entry of itself
+            makeInnerClassEntry(classNode);
 
             cv.visitEnd();
         }
@@ -309,12 +293,39 @@ public class AsmClassGenerator extends ClassGenerator {
         }
     }
 
+    private void makeInnerClassEntry(ClassNode cn) {
+        if (!(cn instanceof InnerClassNode)) return;
+        InnerClassNode innerClass = (InnerClassNode) cn;
+                String innerClassName = innerClass.getName();
+                String innerClassInternalName = BytecodeHelper.getClassInternalName(innerClassName);
+                {
+                    int index = innerClassName.lastIndexOf('$');
+                    if (index >= 0) innerClassName = innerClassName.substring(index + 1);
+                }
+        String outerClassName = BytecodeHelper.getClassInternalName(innerClass.getOuterClass().getName());
+                MethodNode enclosingMethod = innerClass.getEnclosingMethod();
+                if (enclosingMethod != null) {
+                    // local inner classes do not specify the outer class name
+                    outerClassName = null;
+                    innerClassName = null;
+                }
+        int mods = innerClass.getModifiers();
+                cv.visitInnerClass(
+                        innerClassInternalName,
+                        outerClassName,
+                        innerClassName,
+                mods);
+    }
+
     /*
      * Classes but not interfaces should have ACC_SUPER set
      */
-    private int adjustedModifiers(int modifiers) {
+    private int adjustedClassModifiers(int modifiers) {
         boolean needsSuper = (modifiers & ACC_INTERFACE) == 0;
-        return needsSuper ? modifiers | ACC_SUPER : modifiers;
+        modifiers = needsSuper ? modifiers | ACC_SUPER : modifiers;
+        // eliminate static
+        modifiers = modifiers & ~ACC_STATIC;
+        return modifiers;
     }
 
     private void generateCallSiteArray() {
@@ -1993,6 +2004,7 @@ public class AsmClassGenerator extends ClassGenerator {
             boolean safe, boolean spreadSafe, boolean implicitThis
     ) {
         ClassNode cn = classNode;
+        if (isInClosure() && !implicitThis /*&& AsmClassGenerator.isThisExpression(receiver)*/) cn = cn.getOuterClass();
         makeCall(new ClassExpression(cn), receiver, message, arguments,
                 adapter, safe, spreadSafe, implicitThis);
     }

@@ -44,6 +44,7 @@ import org.codehaus.groovy.classgen.ClassGenerator;
 import org.codehaus.groovy.classgen.EnumVisitor;
 import org.codehaus.groovy.classgen.ExtendedVerifier;
 import org.codehaus.groovy.classgen.GeneratorContext;
+import org.codehaus.groovy.classgen.InnerClassCompletionVisitor;
 import org.codehaus.groovy.classgen.InnerClassVisitor;
 import org.codehaus.groovy.classgen.VariableScopeVisitor;
 import org.codehaus.groovy.classgen.Verifier;
@@ -190,7 +191,6 @@ public class CompilationUnit extends ProcessingUnit {
         addPhaseOperation(resolve, Phases.SEMANTIC_ANALYSIS);
         addPhaseOperation(staticImport, Phases.SEMANTIC_ANALYSIS);
         addPhaseOperation(new PrimaryClassNodeOperation() {
-            @Override
             public void call(SourceUnit source, GeneratorContext context,
                              ClassNode classNode) throws CompilationFailedException {
                 InnerClassVisitor iv = new InnerClassVisitor(CompilationUnit.this,source);
@@ -207,6 +207,14 @@ public class CompilationUnit extends ProcessingUnit {
         // end
         	ASTTransformationVisitor.addPhaseOperations(this);
         }
+        addPhaseOperation(new PrimaryClassNodeOperation() {
+            public void call(SourceUnit source, GeneratorContext context,
+                             ClassNode classNode) throws CompilationFailedException {
+                InnerClassCompletionVisitor iv = new InnerClassCompletionVisitor(CompilationUnit.this,source);
+                iv.visitClass(classNode);
+            }
+        }, Phases.CANONICALIZATION);
+        
 
         this.classgenCallback = null;
     }
