@@ -42,7 +42,7 @@ import java.util.*;
  * bytecode generation occurs.
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision: 21554 $
+ * @version $Revision: 21957 $
  */
 public class Verifier implements GroovyClassVisitor, Opcodes {
 
@@ -138,6 +138,9 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             ConstructorNode dummy = new ConstructorNode(0,null);
             addInitialization(node, dummy);
             node.visitContents(this);
+            if (classNode.getNodeMetaData(ClassNodeSkip.class)==null) {
+                classNode.setNodeMetaData(ClassNodeSkip.class,true);
+            }
             return;
         }
 
@@ -1059,13 +1062,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     private void collectSuperInterfaceMethods(ClassNode cn, Map<String, MethodNode> allInterfaceMethods) {
     	List cnInterfaces = Arrays.asList(cn.getInterfaces());
     	ClassNode sn = cn.getSuperClass();
-    	/* GRECLIPSE: start: temp change - ought to ensure the JDTclassnodes fit expectations here and return Object at the top
-    	/*old{
-    	while(!sn.equals(ClassHelper.OBJECT_TYPE)) {
-	}*/
-	// new:
     	while(sn!=null && !sn.equals(ClassHelper.OBJECT_TYPE)) {
-    	// end
             ClassNode[] interfaces = sn.getInterfaces();
             for (ClassNode iface : interfaces) {
                 if(!cnInterfaces.contains(iface)) {
@@ -1319,7 +1316,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         return ret;
     }
 
-    private boolean moveOptimizedConstantsInitialization(ClassNode node) {
+    private boolean moveOptimizedConstantsInitialization(final ClassNode node) {
         if (node.isInterface()) return false;
 
         final int mods = Opcodes.ACC_STATIC|Opcodes.ACC_SYNTHETIC| Opcodes.ACC_PUBLIC;
@@ -1329,6 +1326,14 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 name, mods, ClassHelper.VOID_TYPE,
                 Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, methodCode);        
         
+        methodCode.addStatement(new BytecodeSequence(new BytecodeInstruction() {
+            @Override
+            public void visit(MethodVisitor mv) {
+                final String classInternalName = BytecodeHelper.getClassInternalName(node);
+                mv.visitInsn(ACONST_NULL);
+                mv.visitFieldInsn(PUTSTATIC, classInternalName, "$callSiteArray", "Ljava/lang/ref/SoftReference;");
+            }
+        }));
         for (FieldNode fn : node.getFields()) {
             if (!fn.isStatic() || !fn.isSynthetic() || !fn.getName().startsWith("$const$")) continue;
             if (fn.getInitialExpression()==null) continue;

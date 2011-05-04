@@ -59,9 +59,9 @@ public abstract class ParserPluginFactory {
                 }
                 catch (Exception e) {
           	 // GRECLIPSE: start
-          	 // oldcode
-//                    throw new RuntimeException("Could not create AntlrParserPluginFactory: " + e, e);
-                    // newcode
+          	 /*oldcode{
+                   throw new RuntimeException("Could not create AntlrParserPluginFactory: " + e, e);
+             }newcode*/
                     throw new RuntimeException("Could not create ErrorRecoveredCSTParserPluginFactory: " + e, e);
                     //end
                 }

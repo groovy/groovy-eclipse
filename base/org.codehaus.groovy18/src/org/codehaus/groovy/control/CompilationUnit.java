@@ -55,7 +55,7 @@ import java.util.*;
  * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
  * @author <a href="mailto:roshandawrani@codehaus.org">Roshan Dawrani</a>
- * @version $Id: CompilationUnit.java 21737 2011-03-07 16:05:50Z glaforge $
+ * @version $Id: CompilationUnit.java 21957 2011-04-08 16:07:33Z blackdrag $
  */
 
 public class CompilationUnit extends ProcessingUnit {
@@ -205,7 +205,7 @@ public class CompilationUnit extends ProcessingUnit {
             @Override
             public void call(SourceUnit source, GeneratorContext context,
                              ClassNode classNode) throws CompilationFailedException {
-                InnerClassCompletionVisitor iv = new InnerClassCompletionVisitor(CompilationUnit.this, source);
+                InnerClassCompletionVisitor iv = new InnerClassCompletionVisitor();
                 iv.visitClass(classNode);
             }
         }, Phases.CANONICALIZATION);
