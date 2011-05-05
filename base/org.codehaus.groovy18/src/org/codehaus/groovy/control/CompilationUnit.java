@@ -601,41 +601,6 @@ public class CompilationUnit extends ProcessingUnit {
         }
     }
 
-// GRECLIPSE: start: need this any more?
-    //  new method for continuing through phases
-    public void continueThrough(int throughPhase) throws CompilationFailedException {
-        throughPhase = Math.min(throughPhase, Phases.ALL);
-
-        while (throughPhase >= phase && phase <= Phases.ALL) {
-
-            for (Iterator it = phaseOperations[phase].iterator(); it.hasNext();) {
-                Object operation = it.next();
-                if (operation instanceof PrimaryClassNodeOperation) {
-                    applyToPrimaryClassNodes((PrimaryClassNodeOperation) operation);
-                } else if (operation instanceof SourceUnitOperation) {
-                    applyToSourceUnits((SourceUnitOperation) operation);
-                } else {
-                    applyToGeneratedGroovyClasses((GroovyClassOperation) operation);
-                }
-            }
-
-            if (progressCallback != null) progressCallback.call(this, phase);
-            completePhase();
-            applyToSourceUnits(mark);
-
-            if (dequeued()) continue;
-
-            gotoPhase(phase + 1);
-
-            if (phase == Phases.CLASS_GENERATION) {
-                sortClasses();
-            }
-        }
-
-        errorCollector.failIfErrors();
-    }
-    // end
-
     private void sortClasses() throws CompilationFailedException {
         for (ModuleNode module : this.ast.getModules()) {
             module.sortClasses();
