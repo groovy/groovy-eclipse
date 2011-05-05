@@ -146,15 +146,16 @@ public class RefreshDSLDJob extends Job {
                     job.cancel();
                 }
             }
-            // now wait for them to be finished
-            for (Job job : jobs) {
-                if (job != this) {
-                    try {
-                        job.join();
-                    } catch (InterruptedException e) {
-                    }
-                }
-            }
+//            FIXADE DANGER! DANGER! I think uncommenting this is causing the job to never end, but why???  Commenting out for now to see if this lets the tests pass and doesn't leave jobs running after shutting down.
+//            // now wait for them to be finished
+//            for (Job job : jobs) {
+//                if (job != this) {
+//                    try {
+//                        job.join();
+//                    } catch (InterruptedException e) {
+//                    }
+//                }
+//            }
         }
         
         if (monitor.isCanceled()) {
