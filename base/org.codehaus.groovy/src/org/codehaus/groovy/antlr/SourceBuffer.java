@@ -32,7 +32,7 @@ public class SourceBuffer {
     private final List<Integer> lineEndings;
 
     // GRECLIPSE-805 Support for unicode escape sequences
-    private UnicodeUnescaper unescaper;
+    private UnicodeEscapingReader unescaper;
     // end
 
     public SourceBuffer() {
@@ -120,8 +120,8 @@ public class SourceBuffer {
     } 
     }*/
     // newcode:
-    public void setUnescaper(UnicodeUnescaper unescaper) {
-        this.unescaper = unescaper;
+    public void setUnescaper(UnicodeEscapingReader unicodeEscapingReader) {
+        this.unescaper = unicodeEscapingReader;
     }
     
     private boolean prevWasCarriageReturn = false;
@@ -160,7 +160,7 @@ public class SourceBuffer {
     }
     
     public LocationSupport getLocationSupport() {
-    	lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount()); // last line ends wherever it ends...
+    	lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount()); // last line ends where the data runs out
     	int[] lineEndingsArray = new int[lineEndings.size()];
     	for (int i=0,max=lineEndings.size();i<max;i++) {
     		lineEndingsArray[i] = lineEndings.get(i).intValue();

@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.antlr;
 
+import java.io.Reader;
+
 /**
  * GRECLIPSE-805 Support for unicode escape sequences
  * 
@@ -23,12 +25,12 @@ package org.codehaus.groovy.antlr;
  * @author Andrew Eisenberg
  * @created Mar 3, 2011
  */
-public interface UnicodeUnescaper {
-    int getUnescapedUnicodeColumnCount();
-    int getUnescapedUnicodeOffsetCount();
-}
 
-class NoEscaper implements UnicodeUnescaper {
+class NoEscaper extends UnicodeEscapingReader {
+
+    public NoEscaper() {
+		super(null, null);
+}
 
     public int getUnescapedUnicodeColumnCount() {
         return 0;
