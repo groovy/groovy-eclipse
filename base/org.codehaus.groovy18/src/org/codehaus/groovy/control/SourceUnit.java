@@ -300,6 +300,12 @@ public class SourceUnit extends ProcessingUnit {
             this.ast.setDescription(this.name);
         }
         catch (SyntaxException e) {
+        	// GRECLIPSE: start
+        	if (this.ast==null) {
+        		// Create a dummy ModuleNode to represent a failed parse - in case a later phase attempts to use the ast
+        		this.ast = new ModuleNode(this);
+        	}
+        	// GRECLIPSE: end
             getErrorCollector().addError(new SyntaxErrorMessage(e,this));
         }
 
