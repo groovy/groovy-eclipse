@@ -15,8 +15,10 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.processors.NewFieldCompletionProcessor;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
+import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
@@ -58,6 +60,10 @@ public abstract class CompletionTestCase extends BuilderTests {
 
     public CompletionTestCase(String name) {
         super(name);
+    }
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
     }
 
     @Override

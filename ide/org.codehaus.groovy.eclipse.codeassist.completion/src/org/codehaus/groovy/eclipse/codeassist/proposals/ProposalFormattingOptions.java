@@ -27,7 +27,8 @@ public class ProposalFormattingOptions {
         IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
         return new ProposalFormattingOptions(prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS),
                 prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS),
-                prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS));
+                prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS),
+                prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING));
     }
 
     public final boolean noParensAroundArgs;
@@ -36,20 +37,24 @@ public class ProposalFormattingOptions {
 
     public final boolean useNamedArguments;
 
+    public final boolean doParameterGuessing;
+
     public ProposalFormattingOptions(boolean noParensAroundArgs,
-            boolean useBracketsForClosures, boolean useNamedArguments) {
+ boolean useBracketsForClosures, boolean useNamedArguments,
+            boolean doParameterGuessing) {
         this.noParensAroundArgs = noParensAroundArgs;
         this.useBracketsForClosures = useBracketsForClosures;
         this.useNamedArguments = useNamedArguments;
+        this.doParameterGuessing = doParameterGuessing;
     }
 
     public ProposalFormattingOptions newFromExisting(boolean overrideUseNamedArgs, MethodNode method) {
         // if overridden, always use named args
         // if not a constructor and not overridden, never use named args
         if (overrideUseNamedArgs && !useNamedArguments) {
-            return new ProposalFormattingOptions(noParensAroundArgs, useBracketsForClosures, true);
+            return new ProposalFormattingOptions(noParensAroundArgs, useBracketsForClosures, true, doParameterGuessing);
         } else if (useNamedArguments && !(method instanceof ConstructorNode)) {
-            return new ProposalFormattingOptions(noParensAroundArgs, useBracketsForClosures, false);
+            return new ProposalFormattingOptions(noParensAroundArgs, useBracketsForClosures, false, doParameterGuessing);
         } else {
             return this;
         }

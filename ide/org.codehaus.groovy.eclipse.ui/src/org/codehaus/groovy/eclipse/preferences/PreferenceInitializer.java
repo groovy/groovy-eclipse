@@ -92,6 +92,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
         store.setDefault(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
         store.setDefault(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
+        store.setDefault(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, true);
 
         store.setDefault(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY,
                 PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME);
@@ -164,6 +165,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
         store.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
         store.setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
+        store.setValue(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, true);
 
         store.setValue(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY, "proj_home");
 

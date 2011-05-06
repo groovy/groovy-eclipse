@@ -24,7 +24,6 @@ import java.util.Set;
 
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyJavaMethodCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
@@ -33,7 +32,6 @@ import org.codehaus.groovy.eclipse.codeassist.relevance.RelevanceRules;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -61,7 +59,6 @@ import org.eclipse.jdt.internal.ui.text.java.LazyGenericTypeProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaTypeCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
@@ -863,12 +860,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
 
     private ProposalFormattingOptions getProposalOptions() {
         if (groovyProposalPrefs == null) {
-            IPreferenceStore prefs = GroovyPlugin.getDefault()
-                    .getPreferenceStore();
-            groovyProposalPrefs = new ProposalFormattingOptions(
-                    prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS),
-                    prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS),
-                    prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS));
+            groovyProposalPrefs = ProposalFormattingOptions.newFromOptions();
         }
         return groovyProposalPrefs;
     }

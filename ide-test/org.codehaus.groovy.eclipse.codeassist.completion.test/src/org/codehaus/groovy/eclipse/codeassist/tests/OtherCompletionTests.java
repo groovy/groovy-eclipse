@@ -34,6 +34,7 @@ public class OtherCompletionTests extends CompletionTestCase {
         super.setUp();
         orig = GroovyPlugin.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, false);
     }
     @Override
     protected void tearDown() throws Exception {
@@ -41,6 +42,7 @@ public class OtherCompletionTests extends CompletionTestCase {
             super.tearDown();
         } finally {
             GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, orig);
+            GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, true);
         }
     }
 
@@ -88,7 +90,7 @@ public class OtherCompletionTests extends CompletionTestCase {
         fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "foo.ba"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "bar", 1);
-        assertEquals (proposals[0].getDisplayString(), "bar() : String - StringExtension (Groovy)");
+        assertEquals ("bar() : String - StringExtension (Category: StringExtension)", proposals[0].getDisplayString());
             
         proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "this.collect"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "collect", 2);

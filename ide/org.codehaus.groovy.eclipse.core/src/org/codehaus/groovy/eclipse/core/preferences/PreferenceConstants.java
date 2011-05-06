@@ -76,6 +76,9 @@ public class PreferenceConstants {
     // if true use named arguments for method calls
     public static final String GROOVY_CONTENT_NAMED_ARGUMENTS = "groovy.contentassist.namedarguments";
 
+    // if true use parameter guessing proposals
+    public static final String GROOVY_CONTENT_PARAMETER_GUESSING = "groovy.contentassist.parameterguessing";
+
 	// if true, then groovy internal stack frames are de-emphasized
 	public static final String GROOVY_DEBUG_FILTER_STACK = "groovy.debug.filter.stack";
 

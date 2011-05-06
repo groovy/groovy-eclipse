@@ -42,6 +42,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         new org.codehaus.groovy.eclipse.preferences.PreferenceInitializer().initializeDefaultPreferences();
         // ensure that the correct properties are set
         new org.codehaus.groovy.eclipse.preferences.PreferenceInitializer().reset();
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, false);
     }
     
     @Override

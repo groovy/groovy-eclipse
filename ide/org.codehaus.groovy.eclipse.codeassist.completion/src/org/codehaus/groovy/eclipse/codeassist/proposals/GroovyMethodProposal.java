@@ -102,10 +102,13 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         // setting the extended data of the coreContext. We don't really have
         // access to all that information
         LazyJavaCompletionProposal lazyProposal = null;
-        lazyProposal = GroovyJavaGuessingCompletionProposal.createProposal(proposal, javaContext, true, contributor,
-                getGroovyProposalOptions());
+        ProposalFormattingOptions groovyProposalOptions = getGroovyProposalOptions();
+        if (groovyProposalOptions.doParameterGuessing) {
+            lazyProposal = GroovyJavaGuessingCompletionProposal.createProposal(proposal, javaContext, true, contributor,
+                    groovyProposalOptions);
+        }
         if (lazyProposal == null) {
-            lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, javaContext, getGroovyProposalOptions(), contributor);
+            lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, javaContext, groovyProposalOptions, contributor);
         }
         return lazyProposal;
 
