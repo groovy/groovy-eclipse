@@ -27,7 +27,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyJavaMethodCompletionProposal;
-import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyJavaMethodCompletionProposal.ProposalOptions;
+import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.relevance.RelevanceRules;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
@@ -861,11 +861,11 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         return javaCompletionProposal;
     }
 
-    private ProposalOptions getProposalOptions() {
+    private ProposalFormattingOptions getProposalOptions() {
         if (groovyProposalPrefs == null) {
             IPreferenceStore prefs = GroovyPlugin.getDefault()
                     .getPreferenceStore();
-            groovyProposalPrefs = new ProposalOptions(
+            groovyProposalPrefs = new ProposalFormattingOptions(
                     prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS),
                     prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS),
                     prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS));
@@ -915,7 +915,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         return proposal;
     }
 
-    private ProposalOptions groovyProposalPrefs;
+    private ProposalFormattingOptions groovyProposalPrefs;
 
 
     /**

@@ -41,6 +41,8 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  */
 public class MethodProposalCreator extends AbstractProposalCreator implements IProposalCreator {
 
+    ProposalFormattingOptions options = ProposalFormattingOptions.newFromOptions();
+
     public List<IGroovyProposal> findAllProposals(ClassNode type,
             Set<ClassNode> categories, String prefix, boolean isStatic) {
         List<MethodNode> allMethods = type.getAllDeclaredMethods();
@@ -54,7 +56,7 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                 boolean isInterestingType = isInterestingType(method
                                 .getReturnType());
                 if (ProposalUtils.looselyMatches(prefix, methodName)) {
-                    GroovyMethodProposal methodProposal = new GroovyMethodProposal(method);
+                    GroovyMethodProposal methodProposal = new GroovyMethodProposal(method, "Groovy", options);
                     float relevanceMultiplier = isInterestingType ? 101 : 1;
                     relevanceMultiplier *= method.isStatic() ? 0.1 : 1;
                     methodProposal
@@ -108,7 +110,7 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                         .getDeclaredMethods(fieldName);
                 if (methods != null) {
                     for (MethodNode method : methods) {
-                        staticProposals.add(new GroovyMethodProposal(method));
+                        staticProposals.add(new GroovyMethodProposal(method, "Groovy", options));
                     }
                 }
             }
@@ -123,7 +125,7 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                     if (method.isStatic()
                             && ProposalUtils.looselyMatches(prefix,
                                     method.getName())) {
-                        staticProposals.add(new GroovyMethodProposal(method));
+                        staticProposals.add(new GroovyMethodProposal(method, "Groovy", options));
                     }
                 }
             }

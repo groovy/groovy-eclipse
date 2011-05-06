@@ -20,10 +20,8 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
-import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyJavaMethodCompletionProposal.ProposalOptions;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
@@ -34,6 +32,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -52,6 +51,8 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     private boolean useNamedArguments; // allow individual method proposal contributors to override
                                        // the setting in the preferences
 
+    private ProposalFormattingOptions options;
+
     public GroovyMethodProposal(MethodNode method) {
         super();
         this.method = method;
@@ -61,6 +62,11 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     public GroovyMethodProposal(MethodNode method, String contributor) {
         this(method);
         this.contributor = contributor;
+    }
+
+    public GroovyMethodProposal(MethodNode method, String contributor, ProposalFormattingOptions options) {
+        this(method, contributor);
+        this.options = options;
     }
 
     public void setUseNamedArguments(boolean useNamedArguments) {
@@ -92,28 +98,24 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         proposal.setSignature(methodSignature);
         proposal.setRelevance(computeRelevance());
 
-        // FIXADE refactor this so it is not calculated for each proposal
-        IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
-        ProposalOptions groovyFormatterPrefs = new ProposalOptions(
-                prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS),
-                prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS),
-                shouldUseNamedArguments(prefs));
-
         // would be nice to use a ParameterGuessingProposal, but that requires
         // setting the extended data of the coreContext. We don't really have
         // access to all that information
-        // LazyJavaCompletionProposal lazyProposal = null;
-        // lazyProposal = ParameterGuessingProposal.createProposal(proposal,
-        // javaContext, true);
-        // if (lazyProposal == null) {
-        // lazyProposal = new FilledArgumentNamesMethodProposal(proposal,
-        // javaContext);
-        // }
-        // return lazyProposal;
+        LazyJavaCompletionProposal lazyProposal = null;
+        lazyProposal = GroovyJavaGuessingCompletionProposal.createProposal(proposal, javaContext, true, contributor,
+                getGroovyProposalOptions());
+        if (lazyProposal == null) {
+            lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, javaContext, getGroovyProposalOptions(), contributor);
+        }
+        return lazyProposal;
 
-        return new GroovyJavaMethodCompletionProposal(proposal, javaContext,
-                groovyFormatterPrefs, contributor);
+    }
 
+    private ProposalFormattingOptions getGroovyProposalOptions() {
+        if (options == null) {
+            options = ProposalFormattingOptions.newFromOptions();
+        }
+        return options.newFromExisting(useNamedArguments, method);
     }
 
     /**

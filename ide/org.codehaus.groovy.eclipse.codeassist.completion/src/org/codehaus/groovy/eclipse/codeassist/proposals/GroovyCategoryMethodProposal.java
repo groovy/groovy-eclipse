@@ -29,7 +29,15 @@ import org.objectweb.asm.Opcodes;
 public class GroovyCategoryMethodProposal extends GroovyMethodProposal {
 
     public GroovyCategoryMethodProposal(MethodNode method) {
-        super(method);
+        super(method, "Category: " + method.getDeclaringClass().getNameWithoutPackage());
+    }
+
+    public GroovyCategoryMethodProposal(MethodNode method, String contributor) {
+        super(method, contributor);
+    }
+
+    public GroovyCategoryMethodProposal(MethodNode method, String contributor, ProposalFormattingOptions options) {
+        super(method, contributor, options);
     }
 
     @Override

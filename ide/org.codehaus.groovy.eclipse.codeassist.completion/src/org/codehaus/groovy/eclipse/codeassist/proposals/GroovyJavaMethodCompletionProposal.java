@@ -32,34 +32,21 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
  */
 public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProposal {
 
-    public static class ProposalOptions {
-        public ProposalOptions(boolean noParensAroundArgs,
-                boolean useBracketsForClosures, boolean useNamedArguments) {
-            this.noParensAroundArgs = noParensAroundArgs;
-            this.useBracketsForClosures = useBracketsForClosures;
-            this.useNamedArguments = useNamedArguments;
-        }
-        public final boolean noParensAroundArgs;
-        public final boolean useBracketsForClosures;
-
-        public final boolean useNamedArguments;
-    }
-
     private int[] fArgumentOffsets;
     private int[] fArgumentLengths;
     private IRegion fSelectedRegion; // initialized by apply()
-    private final ProposalOptions groovyFormatterPrefs;
+    private final ProposalFormattingOptions groovyFormatterPrefs;
     private String contributor;
 
     public GroovyJavaMethodCompletionProposal(CompletionProposal proposal,
-            JavaContentAssistInvocationContext context, ProposalOptions groovyFormatterPrefs) {
+            JavaContentAssistInvocationContext context, ProposalFormattingOptions groovyFormatterPrefs) {
         super(proposal, context);
         this.groovyFormatterPrefs = groovyFormatterPrefs;
         this.contributor = "Groovy";
         this.setRelevance(proposal.getRelevance());
     }
     public GroovyJavaMethodCompletionProposal(CompletionProposal proposal,
-            JavaContentAssistInvocationContext context, ProposalOptions groovyFormatterPrefs, String contributor) {
+            JavaContentAssistInvocationContext context, ProposalFormattingOptions groovyFormatterPrefs, String contributor) {
         this(proposal, context, groovyFormatterPrefs);
         this.contributor = contributor;
     }
@@ -202,12 +189,13 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 }
 
                 fArgumentOffsets[i] = buffer.length();
-                if (groovyFormatterPrefs.useBracketsForClosures &&
-                        new String(Signature.getSignatureSimpleName(parameterTypes[i])).equals("Closure")) {
+                // handle closures
+                if (groovyFormatterPrefs.useBracketsForClosures
+                        && String.valueOf(Signature.getSignatureSimpleName(parameterTypes[i])).equals("Closure")) {
                     buffer.append("{ }");
                     fArgumentLengths[i] = 3;
                     if (i == 0) {
-                        setCursorPosition(buffer.length()-2);
+                        setCursorPosition(buffer.length() - 2);
                     }
 
                 } else {
@@ -238,7 +226,8 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
      */
     @Override
     protected boolean needsLinkedMode() {
-        return false; // we handle it ourselves
+        return super.needsLinkedMode(); // we handle it ourselves
+        // return false; // we handle it ourselves
     }
 
 

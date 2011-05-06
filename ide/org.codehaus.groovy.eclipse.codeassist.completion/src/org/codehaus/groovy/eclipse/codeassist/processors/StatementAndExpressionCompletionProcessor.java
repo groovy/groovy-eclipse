@@ -39,6 +39,7 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.codeassist.proposals.AbstractProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.proposals.CategoryProposalCreator;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyExtendedCompletionContext;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
@@ -46,16 +47,19 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.core.CompletionContext;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
+import org.eclipse.jdt.internal.codeassist.InternalCompletionContext;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -370,6 +374,8 @@ public class StatementAndExpressionCompletionProcessor extends
             GroovyCore.logException("Exception accessing proposal provider registry", e);
         }
 
+        fillInExtendedContext(requestor);
+
         // extra filtering and sorting provided by third parties
         try {
             List<IProposalFilter> filters = ProposalProviderRegistry
@@ -407,6 +413,20 @@ public class StatementAndExpressionCompletionProcessor extends
         }
 
         return javaProposals;
+    }
+
+    /**
+     * @param requestor
+     */
+    private void fillInExtendedContext(ExpressionCompletionRequestor requestor) {
+        JavaContentAssistInvocationContext javaContext = getJavaContext();
+        CompletionContext coreContext = javaContext.getCoreContext();
+        if (coreContext != null && !coreContext.isExtended()) {
+            // must use reflection to set the fields
+            ReflectionUtils.setPrivateField(InternalCompletionContext.class, "isExtended", coreContext, true);
+            ReflectionUtils.setPrivateField(InternalCompletionContext.class, "extendedContext", coreContext,
+                    new GroovyExtendedCompletionContext(getContext(), requestor.currentScope));
+        }
     }
 
     /**

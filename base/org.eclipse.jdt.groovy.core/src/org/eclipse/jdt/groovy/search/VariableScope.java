@@ -24,8 +24,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.Stack;
+import java.util.Map.Entry;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -41,6 +43,7 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
 import org.codehaus.jdt.groovy.internal.compiler.ast.LazyGenericsType;
+import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -92,6 +95,15 @@ public class VariableScope {
 			super();
 			this.type = type;
 			this.declaringType = declaringType;
+		}
+
+		public String getTypeSignature() {
+			String typeName = type.getName();
+			if (typeName.startsWith("[")) {
+				return typeName;
+			} else {
+				return Signature.createTypeSignature(typeName, true);
+			}
 		}
 	}
 
@@ -659,5 +671,34 @@ public class VariableScope {
 	 */
 	public boolean containsInThisScope(String name) {
 		return nameVariableMap.containsKey(name);
+	}
+
+	public Iterator<Map.Entry<String, VariableInfo>> variablesIterator() {
+		return new Iterator<Map.Entry<String, VariableInfo>>() {
+			VariableScope currentScope = VariableScope.this;
+			Iterator<Map.Entry<String, VariableInfo>> currentIter = currentScope.nameVariableMap.entrySet().iterator();
+
+			public boolean hasNext() {
+				if (currentIter == null) {
+					return false;
+				}
+				if (!currentIter.hasNext()) {
+					currentScope = currentScope.parent;
+					currentIter = currentScope == null ? null : currentScope.nameVariableMap.entrySet().iterator();
+				}
+				return currentIter != null && currentIter.hasNext();
+			}
+
+			public Entry<String, VariableInfo> next() {
+				if (!currentIter.hasNext()) {
+					throw new NoSuchElementException();
+				}
+				return currentIter.next();
+			}
+
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
+		};
 	}
 }

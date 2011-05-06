@@ -142,8 +142,12 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
             // partially specified)?
             NameAndLocation nameAndLocation = findCompletionTypeName(context.unit, context.completionLocation);
             if (nameAndLocation != null) {
+                String typeName = nameAndLocation.toTypeName();
+                if (typeName.equals("def")) {
+                    typeName = "value";
+                }
                 String[] suggestedNames = NamingConventions.suggestVariableNames(NamingConventions.VK_INSTANCE_FIELD,
-                        InternalNamingConventions.BK_SIMPLE_TYPE_NAME, nameAndLocation.toTypeName(), context.unit.getJavaProject(),
+                        InternalNamingConventions.BK_SIMPLE_TYPE_NAME, typeName, context.unit.getJavaProject(),
                         nameAndLocation.dims(), null, true);
                 if (suggestedNames != null) {
                     for (String suggestedName : suggestedNames) {

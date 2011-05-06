@@ -17,6 +17,7 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 import org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup.TypeAndDeclaration;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -48,6 +49,8 @@ public class MethodContributionElement implements IContributionElement {
     private ClassNode cachedDeclaringType;
     private ClassNode cachedReturnType;
     private Parameter[] cachedParameters;
+    private ProposalFormattingOptions options = ProposalFormattingOptions.newFromOptions();
+
     
     
     public MethodContributionElement(String methodName, ParameterContribution[] params, String returnType, String declaringType, boolean isStatic, String provider, String doc, boolean useNamedArgs) {
@@ -68,7 +71,7 @@ public class MethodContributionElement implements IContributionElement {
     }
 
     public IGroovyProposal toProposal(ClassNode declaringType, ResolverCache resolver) {
-        GroovyMethodProposal groovyMethodProposal = new GroovyMethodProposal(toMethod(declaringType.redirect(), resolver), provider);
+        GroovyMethodProposal groovyMethodProposal = new GroovyMethodProposal(toMethod(declaringType.redirect(), resolver), provider, options);
         groovyMethodProposal.setUseNamedArguments(useNamedArgs);
         return groovyMethodProposal;
     }

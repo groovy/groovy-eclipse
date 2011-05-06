@@ -129,20 +129,7 @@ public class GroovyCompletionProposalComputer implements
 
         int invocationOffset = context.getInvocationOffset();
         IDocument document = context.getDocument();
-        String fullCompletionText = findCompletionText(document, invocationOffset);
-        String[] completionExpressions = findCompletionExpression(fullCompletionText);
-        if (completionExpressions == null) {
-            completionExpressions = new String[] { "", "" };
-        }
-        String completionExpression = completionExpressions[1] == null ? completionExpressions[0]
-                : completionExpressions[1];
-        int supportingNodeEnd = findSupportingNodeEnd(invocationOffset, fullCompletionText);
-        int completionEnd = findCompletionEnd(document,
-                invocationOffset);
-        CompletionNodeFinder finder = new CompletionNodeFinder(
-                invocationOffset, completionEnd,
-                supportingNodeEnd, completionExpression, fullCompletionText);
-        ContentAssistContext assistContext = finder.findContentAssistContext(gunit);
+        ContentAssistContext assistContext = createContentAssistContext(gunit, invocationOffset, document);
         List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
         if (assistContext != null) {
             List<IGroovyCompletionProcessorFactory> factories = locationFactoryMap.get(assistContext.location);
@@ -171,6 +158,32 @@ public class GroovyCompletionProposalComputer implements
                     .logEnd(event, TraceCategory.CONTENT_ASSIST);
         }
         return proposals;
+    }
+
+    /**
+     * Make public to allow for testing
+     * 
+     * @param gunit
+     * @param invocationOffset
+     * @param document
+     * @return
+     */
+    public ContentAssistContext createContentAssistContext(GroovyCompilationUnit gunit, int invocationOffset, IDocument document) {
+        String fullCompletionText = findCompletionText(document, invocationOffset);
+        String[] completionExpressions = findCompletionExpression(fullCompletionText);
+        if (completionExpressions == null) {
+            completionExpressions = new String[] { "", "" };
+        }
+        String completionExpression = completionExpressions[1] == null ? completionExpressions[0]
+                : completionExpressions[1];
+        int supportingNodeEnd = findSupportingNodeEnd(invocationOffset, fullCompletionText);
+        int completionEnd = findCompletionEnd(document,
+                invocationOffset);
+        CompletionNodeFinder finder = new CompletionNodeFinder(
+                invocationOffset, completionEnd,
+                supportingNodeEnd, completionExpression, fullCompletionText);
+        ContentAssistContext assistContext = finder.findContentAssistContext(gunit);
+        return assistContext;
     }
 
     private int findSupportingNodeEnd(int invocationOffset,
@@ -225,6 +238,7 @@ public class GroovyCompletionProposalComputer implements
     }
 
     private static final List<IContextInformation> NO_CONTEXTS= Collections.emptyList();
+
     public List<IContextInformation> computeContextInformation(
             ContentAssistInvocationContext context, IProgressMonitor monitor) {
         return NO_CONTEXTS;
