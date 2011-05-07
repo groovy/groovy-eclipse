@@ -94,10 +94,10 @@ public class OtherCompletionTests extends CompletionTestCase {
             
         proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "this.collect"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "collect", 2);
-        assertTrue (printProposals(proposals), ((proposals[0].getDisplayString().equals("collect(Closure closure) : List - DefaultGroovyMethods (Groovy)")) ||
-                     (proposals[1].getDisplayString().equals("collect(Closure closure) : List - DefaultGroovyMethods (Groovy)"))));
-        assertTrue (printProposals(proposals), ((proposals[0].getDisplayString().equals("collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Groovy)")) ||
-                     (proposals[1].getDisplayString().equals("collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Groovy)"))));
+        assertTrue (printProposals(proposals), ((proposals[0].getDisplayString().equals("collect(Closure closure) : List - DefaultGroovyMethods (Category: DefaultGroovyMethods)")) ||
+                     (proposals[1].getDisplayString().equals("collect(Closure closure) : List - DefaultGroovyMethods (Category: DefaultGroovyMethods)"))));
+        assertTrue (printProposals(proposals), ((proposals[0].getDisplayString().equals("collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)")) ||
+                     (proposals[1].getDisplayString().equals("collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)"))));
     }
     
     public void testVisibility() throws Exception {
