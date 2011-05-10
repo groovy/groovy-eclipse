@@ -119,7 +119,7 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
                 getFieldEditorParent()));
         addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING,
                 "Try to guess the most likely parameters to use for method invocations\n"
-                        + "(if unchecked, then the argument name is used instead", getFieldEditorParent()));
+                        + "(if unchecked, then the argument name is used instead)", getFieldEditorParent()));
 
 
         // default launch location for scripts

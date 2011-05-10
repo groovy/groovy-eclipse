@@ -469,6 +469,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					if (bexpr.getLeftExpression() instanceof FieldExpression) {
 						FieldNode f = ((FieldExpression) bexpr.getLeftExpression()).getField();
 						if (f != null && f.isStatic() && bexpr.getRightExpression() != null) {
+							// create the field scope so that it looks like we are visiting within the context of the field
 							VariableScope fieldScope = new VariableScope(currentScope, f, true);
 							scopes.push(fieldScope);
 							try {
@@ -523,7 +524,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					visitClassReference(fieldType);
 				}
 				visitAnnotations(node);
-				// GRECLIPSE-1008 : do not visit the initialization here. this already happens in the default constructor
+				// FIXADE should we be visiting the initializer here? It may already have been visited in the <clinit>. See also
+				// GRECLIPSE-1008
 				Expression init = node.getInitialExpression();
 				if (init != null)
 					init.visit(this);

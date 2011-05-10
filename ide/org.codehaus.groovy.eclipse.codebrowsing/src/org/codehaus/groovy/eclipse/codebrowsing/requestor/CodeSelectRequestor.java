@@ -292,30 +292,46 @@ public class CodeSelectRequestor implements ITypeRequestor {
     private String createGenericsAwareName(ClassNode node, boolean useSimple) {
         StringBuilder sb = new StringBuilder();
         String name = node.getName();
+        StringBuilder sbArr;
         if (name.charAt(0) == '[') {
+            sbArr = new StringBuilder();
             int arrayCount = 0;
             while (name.charAt(arrayCount) == '[') {
-                sb.append("[]");
+                sbArr.append("[]");
                 node = node.getComponentType();
                 arrayCount++;
             }
+        } else {
+            sbArr = null;
         }
             
         if (useSimple) {
-            sb.insert(0, node.getNameWithoutPackage());
+            sb.append(node.getNameWithoutPackage());
         } else {
-            sb.insert(0, node.getName());
+            sb.append(node.getName());
         }
 
         // recur down the generics
         GenericsType[] genericsTypes = node.getGenericsTypes();
         if (genericsTypes != null && genericsTypes.length > 0) {
             sb.append('<');
+            // the commented out code is attempting to treat type parameters correctly
+            // currently, they are being treated as regular type references
+//            StringBuilder sbTypeParameter = new StringBuilder();
             for (GenericsType gt : genericsTypes) {
-                sb.append(createGenericsAwareName(gt.getType() == null ? VariableScope.OBJECT_CLASS_NODE : gt.getType(), useSimple));
+                ClassNode genericsType = gt.getType();
+//                if (genericsType == null || genericsType.isGenericsPlaceHolder()) {
+//                    sb.append("T" + gt.getName() + ";");
+//                    sb.insert(0, "<" + gt.getName() + ":>");
+//                } else {
+                    sb.append(createGenericsAwareName(genericsType, useSimple));
+//                }
                 sb.append(',');
             }
             sb.replace(sb.length()-1, sb.length(), ">");
+        }
+        if (sbArr != null) {
+            sb.append(sbArr);
         }
         return sb.toString();
     }

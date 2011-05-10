@@ -103,13 +103,14 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
             Entry<String, VariableInfo> entry = variablesIter.next();
             // don't put elements in a second time since we are moving from
             // inner scope to outer scope
-            if (!nameElementMap.containsKey(entry.getKey())) {
+            String varName = entry.getKey();
+            if (!varName.equals("super") && !nameElementMap.containsKey(varName)) {
                 ClassNode type = entry.getValue().type;
                 if (isAssignableTo(type, superType, isInterface)) {
                     // note that parent, start location, and typeSignature are
                     // not important here
-                    nameElementMap.put(entry.getKey(),
-                            ReflectionUtils.createLocalVariable(enclosingElement, entry.getKey(), 0, typeSignature));
+                    nameElementMap.put(varName,
+                            ReflectionUtils.createLocalVariable(enclosingElement, varName, 0, typeSignature));
                 }
             }
         }

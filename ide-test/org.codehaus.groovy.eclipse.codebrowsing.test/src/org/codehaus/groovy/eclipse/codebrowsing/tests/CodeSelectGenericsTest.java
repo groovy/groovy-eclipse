@@ -28,6 +28,22 @@ public class CodeSelectGenericsTest extends BrowsingTestCase {
         super.setUp();
     }
 
+    // test an array of generic types
+    public void testGRECLIPSE1050a() throws Exception {
+        String groovyContents = "org.codehaus.groovy.ast.ClassHelper.make(List.class)";
+        String toFind = "make";
+        String elementName = "make";
+        assertCodeSelect(XX, null, groovyContents, toFind, elementName);
+    }
+
+    // test an array of generic types
+    public void testGRECLIPSE1050b() throws Exception {
+        String groovyContents = "org.codehaus.groovy.ast.ClassHelper.make(new Class[0])[0].nameWithoutPackage";
+        String toFind = "nameWithoutPackage";
+        String elementName = "getNameWithoutPackage";
+        assertCodeSelect(XX, null, groovyContents, toFind, elementName);
+    }
+
     public void testCodeSelectGenericField1() throws Exception {
         String structureContents = "class Structure { java.util.List<String> field; }";
         String javaContents = "class Java { { new Structure().field = null;} }";
