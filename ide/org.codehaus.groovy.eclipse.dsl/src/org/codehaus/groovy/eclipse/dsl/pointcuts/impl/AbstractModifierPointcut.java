@@ -14,6 +14,7 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.objectweb.asm.Opcodes;
@@ -77,6 +78,8 @@ public class AbstractModifierPointcut extends FilteringPointcut<AnnotatedNode> {
             success = (((FieldNode) result).getModifiers() & modifier) != 0;
         } else if (result instanceof MethodNode) {
             success = (((MethodNode) result).getModifiers() & modifier) != 0;
+        } else if (result instanceof PropertyNode) {
+            success = (((PropertyNode) result).getModifiers() & modifier) != 0;
         }
         return success ? result : null;
     }
