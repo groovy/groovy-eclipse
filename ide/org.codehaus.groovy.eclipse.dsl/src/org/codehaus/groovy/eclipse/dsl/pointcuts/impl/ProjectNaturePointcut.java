@@ -12,11 +12,15 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
+import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.jdt.core.JavaCore;
 
 /**
  * Tests that the {@link IProject} that contains the current pattern has a nature of the specified type.
@@ -27,6 +31,7 @@ import org.eclipse.core.resources.IProject;
  * @created Feb 10, 2011
  */
 public class ProjectNaturePointcut extends AbstractPointcut {
+    
 
     public ProjectNaturePointcut(String containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
@@ -35,7 +40,8 @@ public class ProjectNaturePointcut extends AbstractPointcut {
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         for (String nature : pattern.projectNatures) {
-            if (nature.equals(getFirstArgument())) {
+            Object firstArgument = getFirstArgument();
+            if (nature.equals(firstArgument) || nature.equals(SHORTCUTS.get(firstArgument))) {
                 return Collections.singleton(nature);
             }
         }
@@ -58,5 +64,19 @@ public class ProjectNaturePointcut extends AbstractPointcut {
             throw new PointcutVerificationException(maybeStatus, this);
         }
         super.verify();
+    }
+    
+    /**
+     * In order to remove Eclipse-specific identifiers in scripts, 
+     * common project natures can use a shortcut instead of the full nature string
+     * @param shortcut
+     * @return
+     */
+    private static final Map<String, String> SHORTCUTS = new HashMap<String, String>();
+    static {
+        SHORTCUTS.put("groovy", GroovyNature.GROOVY_NATURE);
+        SHORTCUTS.put("java", JavaCore.NATURE_ID);
+        SHORTCUTS.put("grails", "com.springsource.sts.grails.core.nature");
+        SHORTCUTS.put("gradle", "com.springsource.sts.gradle.core.nature");
     }
 }
