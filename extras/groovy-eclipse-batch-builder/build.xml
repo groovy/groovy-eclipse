@@ -46,6 +46,7 @@
 		<unzip dest="${extract.loc}" src="${workspace.loc}/org.eclipse.jdt.core/jdtCompilerAdapter.jar" />
 
 		<!--
+		These files need to stick around
 		<delete dir="${extract.loc}/META-INF">
 			<exclude name="dgminfo"/>
 			<exclude name="services"/>
@@ -78,8 +79,8 @@
          - - - - - - - - - - - - - - - - - -->
 	<target name="_init">
 		<property file="build.properties"/>
-		<property name="jar.name" value="groovy-eclipse-batch-${version}.jar"/>
-		<property name="pom.name" value="groovy-eclipse-batch-${version}.pom"/>
+		<property name="jar.name" value="groovy-eclipse-batch-${version1.7}.jar"/>
+		<property name="pom.name" value="groovy-eclipse-batch-${version1.7}.pom"/>
 
 		<fileset dir="${eclipse.install.plugins}" id="orig.plugin.jars">
 			<include name="org.eclipse.osgi_*.jar" />
@@ -100,10 +101,13 @@
 			<include name="org.codehaus.groovy/lib/asm-tree-3*.jar"/>
 			
 			<exclude name="org.codehaus.groovy/lib/*sources*"/>
+			
+			<!-- Also include the non-locking classloader with sources -->
+			<include name="org.eclipse.jdt.groovy.core/nlcl*.jar"/>
 		</fileset>
 			
 		
-		<!-- Ensure that this comes later becayse the groovy-eclipse.jar must overwrite the groovy jar -->
+		<!-- Ensure that this comes later because the groovy-eclipse.jar must overwrite the groovy jar -->
 			<fileset dir="${workspace.loc}/org.eclipse.jdt.groovy.core/bin" id="jdt.groovy.core.class.files">
 				<include name="**/*.*" />
 			</fileset>
@@ -125,7 +129,7 @@
          - - - - - - - - - - - - - - - - - -->
 	<target name="_copy_pom" depends="_init">
 		<copy  file="pom.xml" tofile="${jar.dest}/${pom.name}"/>
-		<replace file="${jar.dest}/${pom.name}" token="REPLACE_WITH_VERSION" value="${version}"></replace>
+		<replace file="${jar.dest}/${pom.name}" token="REPLACE_WITH_VERSION" value="${version1.7}"></replace>
 	</target>
 
 </project>
