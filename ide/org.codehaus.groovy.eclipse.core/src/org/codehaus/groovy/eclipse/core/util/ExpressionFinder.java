@@ -97,6 +97,8 @@ public class ExpressionFinder {
 			if (last != null) {
 				token = last;
 			}
+        } catch (IllegalStateException e) {
+
 		}
 		if (token != null) {
 			return sourceBuffer.subSequence(token.startOffset, endOffset).toString();
@@ -135,7 +137,7 @@ public class ExpressionFinder {
      *            {@link #findForCompletions(ISourceBuffer, int)} method.
      * @return A string pair, the expression to complete, and the prefix to be
      *         completed.<br>
-     *         { "", "" } if no completion expression could be found
+     *         { "", null } if no completion expression could be found
      *         String[0] is an expression .<br>
      *         String[1] is the empty string if the last character is a '.'.<br>
      *         String[1] is 'ident' if the expression ends with '.ident'.<br>
@@ -191,12 +193,12 @@ public class ExpressionFinder {
             } else if (token0.type == Token.IDENT) {
                 ret[0] = expression;
             } else {
-                ret = new String[] { "", "" };
+                ret = new String[] { "", null };
             }
         } catch (TokenStreamException e) {
-            ret = new String[] { "", "" };
+            ret = new String[] { "", null };
         } catch (IllegalStateException e) {
-            ret = new String[] { "", "" };
+            ret = new String[] { "", null };
         }
 
         return ret;

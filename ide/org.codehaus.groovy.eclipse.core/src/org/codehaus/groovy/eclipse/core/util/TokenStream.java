@@ -34,7 +34,7 @@ import org.codehaus.groovy.eclipse.core.impl.ReverseSourceBuffer;
 
 /**
  * Token stream used by the ExpressionFinder parser.
- * 
+ *
  * @author empovazan
  */
 public class TokenStream {
@@ -78,7 +78,7 @@ public class TokenStream {
 		return ret;
 	}
 
-	
+
 	public char getCurrentChar() {
 		return ch;
 	}
@@ -150,6 +150,10 @@ public class TokenStream {
 
 	private Token scanDot() {
 		nextChar();
+        if (offset == -1) {
+            return TOKEN_EOF;
+        }
+
 		if (ch == '.') {
 			nextChar();
 			return new Token(Token.DOUBLE_DOT, offset + 1, offset + 3, buffer
@@ -173,7 +177,7 @@ public class TokenStream {
 		nextChar();
 		if (offset != -1 && isLineBreakChar()) {
 			char secondChar = ch;
-			
+
 			nextChar();
 			return new Token(Token.LINE_BREAK, offset + 1, endOffset, new String(new char[]{firstChar, secondChar}));
 		}
@@ -203,7 +207,7 @@ public class TokenStream {
 
 	/**
 	 * Scans closing and opening pairs, ignoring nested pairs.
-	 * 
+	 *
 	 * @param open
 	 * @param close
 	 * @return

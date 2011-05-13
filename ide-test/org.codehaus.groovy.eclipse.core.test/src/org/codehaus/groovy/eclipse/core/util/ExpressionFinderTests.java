@@ -15,15 +15,12 @@
  */
 package org.codehaus.groovy.eclipse.core.util;
 
-import org.codehaus.groovy.eclipse.core.impl.StringSourceBuffer;
-import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;
-import org.codehaus.groovy.eclipse.core.util.ParseException;
-import org.codehaus.groovy.eclipse.core.util.TokenStreamException;
-
 import junit.framework.TestCase;
 
+import org.codehaus.groovy.eclipse.core.impl.StringSourceBuffer;
+
 public class ExpressionFinderTests extends TestCase {
-    
+
     @Override
     protected void setUp() throws Exception {
         System.out.println("------------------------------");
@@ -32,7 +29,7 @@ public class ExpressionFinderTests extends TestCase {
     }
 	/**
 	 * Tests the given expression, assuming the cursor is at end if the test string.
-	 * 
+	 *
 	 * @param expression
 	 * @throws ParseException
 	 * @throws TokenStreamException
@@ -49,7 +46,7 @@ public class ExpressionFinderTests extends TestCase {
 
 	/**
 	 * Tests the expression from a given offset in the test string.
-	 * 
+	 *
 	 * @param test
 	 * @param expected
 	 * @param offset
@@ -68,7 +65,7 @@ public class ExpressionFinderTests extends TestCase {
 
 	/**
 	 * Tests the splitting of an expression into an expression and prefix part for completion.
-	 * 
+	 *
 	 * @param test
 	 *            The test expression.
 	 * @param expr
@@ -92,7 +89,7 @@ public class ExpressionFinderTests extends TestCase {
 
 	/**
 	 * Test that splitting for completion fails as expected.
-	 * 
+	 *
 	 * @param test
 	 */
 	void failSplit(String test) {
@@ -100,7 +97,7 @@ public class ExpressionFinderTests extends TestCase {
 		String[] split = finder.splitForCompletion(test);
 		assertEquals(2, split.length);
 		assertEquals("", split[0]);
-		assertEquals("", split[1]);
+        assertEquals(null, split[1]);
 	}
 
 	public void testSimple1() {
@@ -225,45 +222,73 @@ public class ExpressionFinderTests extends TestCase {
 	public void testFailSplit4() {
 		failSplit("'boo'");
 	}
-	
+
+    public void testFailSplit5() {
+        failSplit("//\n");
+    }
+
+    public void testFailSplit6() {
+        failSplit("//fdsafdsfasddsfa\n     ");
+    }
+
+    public void testFailSplit7() {
+        failSplit("//fdsafdsfasddsfa\nboo[]     ");
+    }
+
+    public void testFailSplit8() {
+        failSplit("/*fdsafdsfasddsfa*/ \nboo[]     ");
+    }
+
+    public void testFailSplit9() {
+        failSplit("/* // fdsafdsfasddsfa*/ \nboo[]     ");
+    }
+
 	public void testParenEOF() {
-		String test = "def b = thing()\na."; 
+		String test = "def b = thing()\na.";
 		doFind(test, "a.", test.length() - 1);
 	}
-	
+
 	public void testBraceEOF() {
 		String test = "def blah() { a.";
 		doFind(test, "a.", test.length() - 1);
 	}
 
-	
+
 	public void testBraceEOFNoSpace() {
 		String test = "def blah() {a.";
 		doFind(test, "a.", test.length() - 1);
 	}
-	
+
 	public void testWithLineComment() {
 		String test = "// a comment\na.";
 		doFind(test, "a.", test.length() - 1);
 	}
-	
+
 	public void testWithLineComment2() {
 		String test = "//\t\thelp.\n\t\ta.";
 		doFind(test, "a.", test.length() - 1);
 	}
-	
+
 	public void testWithLineComment3() {
 		String test = "def a = 10\n//\t\thelp.\n\t\ta.";
 		doFind(test, "a.", test.length() - 1);
 	}
-	
+
 	public void testWithBlockComment() {
 		String test = "/* a block comment */\na.";
 		doFind(test, "a.", test.length() - 1);
 	}
-	
+
 	public void testNewExpression() {
 		doFind("new File('.').");
 		doFind("new File('.').canon");
 	}
+
+    public void testProblem() throws Exception {
+        // this used to throw an exception, but should not
+        ExpressionFinder finder = new ExpressionFinder();
+        String test = ".";
+        StringSourceBuffer sb = new StringSourceBuffer(test);
+        assertNull(finder.findForCompletions(sb, test.length() - 1));
+    }
 }
