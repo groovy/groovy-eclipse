@@ -31,15 +31,11 @@ import org.eclipse.jdt.core.JavaModelException;
 /**
  * Some utility methods to stress test the reconciler
  * @author Andrew Eisenberg
+ * @author Andy Clement
  * @created May 13, 2011
  */
 public class ReconcilerUtils {
 
-    /**
-     * 
-     * @author Andrew Eisenberg
-     * @created May 13, 2011
-     */
     public static class ReconcileResults {
         public Map<ICompilationUnit, Long> reconcileTimes = new HashMap<ICompilationUnit, Long>();
         
@@ -48,6 +44,26 @@ public class ReconcilerUtils {
         }
         
         public long totalTime;
+        
+        public String toString() {
+        	StringBuilder s = new StringBuilder();
+        	s.append("Reconcile times for "+reconcileTimes.size()+" units\n");
+        	long totaltime = 0L;
+        	for (Map.Entry<ICompilationUnit,Long> entry: reconcileTimes.entrySet()) {
+        		s.append(entry.getValue()+"ms "+entry.getKey().getElementName()+"\n");
+        		totaltime+=entry.getValue();
+        	}
+        	s.append("Total time spent reconciling: "+totaltime+"ms\n");
+        	return s.toString();
+        }
+        
+        public long getTotalTimeSpentReconciling() {
+        	long totaltime = 0L;
+        	for (Map.Entry<ICompilationUnit,Long> entry: reconcileTimes.entrySet()) {
+        		totaltime+=entry.getValue();
+        	}
+        	return totaltime;
+        }
     }
 
     public static ReconcileResults reconcileAllCompilationUnits(IJavaProject project, boolean onlyGroovy) throws JavaModelException {

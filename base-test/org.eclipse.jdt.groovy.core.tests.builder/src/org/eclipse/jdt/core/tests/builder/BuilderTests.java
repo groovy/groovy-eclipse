@@ -16,6 +16,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
 
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -112,7 +113,7 @@ public class BuilderTests extends TestCase {
 			System.out.println("OUTPUT\n"); //$NON-NLS-1$
 			System.out.println(Util.displayString(actualOutput));
 		}
-		assertTrue("unexpected output", actualOutput.indexOf(expectingOutput) != -1); //$NON-NLS-1$
+		assertTrue("unexpected output.\nExpected:\n"+expectingOutput+"\nActual:\n"+actualOutput, actualOutput.indexOf(expectingOutput) != -1); //$NON-NLS-1$
 
 	}
 
@@ -163,7 +164,12 @@ public class BuilderTests extends TestCase {
 		String[] actual = debugRequestor.getCompiledClasses();
 		org.eclipse.jdt.internal.core.util.Util.sort(actual);
 		org.eclipse.jdt.internal.core.util.Util.sort(expected);
-		expectingCompiling(actual, expected, "unexpected recompiled units"); //$NON-NLS-1$
+		expectingCompiling(actual, expected, "unexpected recompiled units. lenExpected="+expected.length+" lenActual="+actual.length); //$NON-NLS-1$
+	}
+	
+	protected void expectedCompiledClassCount(int expected) {
+		int actual = debugRequestor.getCompiledClasses().length;
+		assertEquals(expected,actual);
 	}
 	
 	/** 
@@ -224,11 +230,19 @@ public class BuilderTests extends TestCase {
 	protected void expectingNoProblems() {
 		expectingNoProblemsFor(env.getWorkspaceRootPath());
 	}
+	
+	protected void expectingNoErrors() {
+		expectingNoErrorsFor(env.getWorkspaceRootPath());
+	}
 
 	/** Verifies that the given element has no problems.
 	 */
 	protected void expectingNoProblemsFor(IPath root) {
 		expectingNoProblemsFor(new IPath[] { root });
+	}
+	
+	protected void expectingNoErrorsFor(IPath root) {
+		expectingNoErrorsFor(new IPath[] { root });
 	}
 
 	/** Verifies that the given elements have no problems.
@@ -243,6 +257,25 @@ public class BuilderTests extends TestCase {
 		}
 		String actual = buffer.toString();
 		assumeEquals("Unexpected problem(s)!!!", "", actual); //$NON-NLS-1$
+	}
+	
+	protected void expectingNoErrorsFor(IPath[] roots) {
+		StringBuffer buffer = new StringBuffer();
+		Problem[] allProblems = allSortedProblems(roots);
+		int count = 0;
+		if (allProblems != null) {
+			for (int i=0, length=allProblems.length; i<length; i++) {
+				if (allProblems[i].getSeverity()==IMarker.SEVERITY_ERROR) {
+					// TODO could convert task markers into just warnings (or ignore), but this is easier right now...
+					if (allProblems[i].toString().indexOf("TODO")==-1) {
+					buffer.append(allProblems[i]+"\n");
+					count++;
+					}
+				}
+			}
+		}
+		String actual = buffer.toString();
+		assumeEquals("Unexpected problem(s)!!! number="+count, "", actual); //$NON-NLS-1$
 	}
 
 	/** Verifies that the given element has problems and
