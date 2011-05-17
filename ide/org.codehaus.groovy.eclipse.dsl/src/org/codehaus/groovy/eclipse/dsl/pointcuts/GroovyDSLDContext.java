@@ -30,31 +30,10 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  */
 public class GroovyDSLDContext {
 
-    public GroovyDSLDContext(GroovyCompilationUnit unit) throws CoreException {
-        this(unit.getJavaProject().getProject().getDescription().getNatureIds(), unit.getResource().getFullPath().removeFirstSegments(1).toPortableString());
-        resolver = new ResolverCache(unit.getResolver(), unit.getModuleNode());
-    }
-    
-    
-    /**
-     * Not API!!!
-     * Shoud not use this constructor.  It is only for testing
-     */
-    @Deprecated
-    public GroovyDSLDContext(String[] projectNatures, String fullPathName) {
-        this.fullPathName = fullPathName;
-        if (fullPathName != null) {
-            int lastDot = fullPathName.lastIndexOf('/');
-            this.simpleFileName = fullPathName.substring(lastDot+1);
-        } else {
-            this.simpleFileName = null;
-        }
-        this.projectNatures = projectNatures;
-    }
-    
+
     /** will be null if this object created from deprecated API */
     public ResolverCache resolver;
-    
+
     public final String[] projectNatures;
 
     /**
@@ -68,17 +47,82 @@ public class GroovyDSLDContext {
      * a per-file basis
      */
     public final String simpleFileName;
+
+    /**
+     * Patch from project to package root
+     */
+    public final String packageRootPath;
+
+    /**
+     * Path from package root to file name (exclusive)
+     */
+    public final String packageFolderPath;
     
     private BindingSet currentBinding;
-    
+
     private VariableScope currentScope;
-    
+
     /** 
      * the type of the expression currently being analyzed
      * set by the type lookup, should not be set by the pointcuts 
      */
     private ClassNode targetType;
+
+    public GroovyDSLDContext(GroovyCompilationUnit unit) throws CoreException {
+        this(getProjectNatures(unit), 
+                getFullPathToFile(unit),
+                getPathToPackage(unit));
+        resolver = new ResolverCache(unit.getResolver(), unit.getModuleNode());
+    }
+
+
+    /**
+     * Not API!!!
+     * Shoud not use this constructor.  It is only for testing
+     */
+    @Deprecated
+    public GroovyDSLDContext(String[] projectNatures, String fullPathName, String packageRootPath) {
+        this.fullPathName = fullPathName;
+        this.packageRootPath = packageRootPath;
+        if (fullPathName != null) {
+            int lastDot = fullPathName.lastIndexOf('/');
+            this.simpleFileName = fullPathName.substring(lastDot+1);
+        } else {
+            this.simpleFileName = null;
+        }
+        
+        // assumption is that packageRootPath is a prefix of fullPathName
+        String candidate;
+        if (packageRootPath != null && packageRootPath.length() < fullPathName.length()) {
+            candidate = fullPathName.substring(packageRootPath.length());
+            if (simpleFileName != null) {
+                int indexOf = candidate.lastIndexOf("/" + simpleFileName);
+                int start = candidate.startsWith("/") ? 1 : 0;
+                if (indexOf >= 0) {
+                    candidate = candidate.substring(start, indexOf);
+                }
+            }
+        } else {
+            candidate = "";
+        }
+        packageFolderPath = candidate;
+        this.projectNatures = projectNatures;
+    }
     
+    private static String getPathToPackage(GroovyCompilationUnit unit) {
+        return unit.getPackageFragmentRoot().getResource().getFullPath().removeFirstSegments(1).toPortableString();
+    }
+
+
+    private static String getFullPathToFile(GroovyCompilationUnit unit) {
+        return unit.getResource().getFullPath().removeFirstSegments(1).toPortableString();
+    }
+
+
+    private static String[] getProjectNatures(GroovyCompilationUnit unit) throws CoreException {
+        return unit.getJavaProject().getProject().getDescription().getNatureIds();
+    }
+
     /** cached type hierarchy for checking type matches (consider caching more) */
     private Set<ClassNode> cachedHierarchy;
     

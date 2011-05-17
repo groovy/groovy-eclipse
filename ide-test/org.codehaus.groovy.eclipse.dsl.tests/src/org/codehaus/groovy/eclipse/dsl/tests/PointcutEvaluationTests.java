@@ -253,6 +253,14 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
         doTestOfLastMatch("package p\n2", "nature(\"invalid\")", null);
     }
     
+    public void testPackagePath() throws Exception {
+        doTestOfLastMatch("p", "package p\n2", "packageFolder(\"p\")", "p");
+    }
+    
+    public void testPackagePathFail() throws Exception {
+        doTestOfLastMatch("p", "package p\n2", "packageFolder(\"invalid\")", null);
+    }
+    
     public void testNamedBinding1() throws Exception {
         doTestOfLastBindingSet("package p\n2", "bind( b : nature(\"org.eclipse.jdt.groovy.core.groovyNature\") )", 
                 new BindingResult("b", "org.eclipse.jdt.groovy.core.groovyNature"));

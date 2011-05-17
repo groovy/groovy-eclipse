@@ -42,6 +42,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindPropertyPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.NamePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.NotPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.OrPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.PackageFolderPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.ProjectNaturePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SourceFolderOfFilePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SourceFolderOfTypePointcut;
@@ -266,6 +267,12 @@ public class PointcutFactory {
                 createDoc("Matches on the simple file name of the file being inferred.",
                         "The file name to match. Should include the file extension, but not the path.",
                         "The simple file name that was matched, or null if there was no match."));
+        registerGlobalPointcut(
+                "packageFolder",
+                PackageFolderPointcut.class,
+                createDoc("Matches on the package folder name of the file being inferred.  The package folder is the sub-path from the package root to the file name (exclusive).",
+                        "The package folder name to match.  Should not include the file name itself.",
+                "The package folder name that was matched, or null if there was no match."));
         registerGlobalPointcut(
                 "nature",
                 ProjectNaturePointcut.class,
