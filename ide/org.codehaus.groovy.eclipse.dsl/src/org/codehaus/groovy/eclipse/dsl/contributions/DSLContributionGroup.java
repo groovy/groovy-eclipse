@@ -120,6 +120,8 @@ public class DSLContributionGroup extends ContributionGroup {
             return scope.getEnclosingNode();
         } else if ("currentType".equals(property)) {
             return currentType;
+        } else if ("resolver".equals(property)) {
+            return resolver;
         }
         return bindings.get(property);
     }
@@ -271,14 +273,74 @@ public class DSLContributionGroup extends ContributionGroup {
         }
         if (!type.getName().equals(Object.class.getName())) {
             for (MethodNode method : type.getMethods()) {
-                if (!(method instanceof ConstructorNode) && ! method.getName().contains("$")) {
-                    contributions.add(new MethodContributionElement(method.getName(), toParameterContribution(method
+                String name = method.getName();
+                if (!(method instanceof ConstructorNode) && ! name.contains("$")) {
+                    contributions.add(new MethodContributionElement(name, toParameterContribution(method
                             .getParameters()), method.getReturnType().getName(), type.getName(), method.isStatic(), provider,
                             null, useNamedArgs));
+                    
+                    if (name.startsWith("get") && name.length() > 3 && (method.getParameters() == null || method.getParameters().length == 0)) {
+                        contributions.add(new PropertyContributionElement(Character.toLowerCase(name.charAt(3)) + name.substring(4), method.getReturnType().getName(), 
+                                method.getDeclaringClass().getName(), method.isStatic(), provider, null));
+                    }
                 }
             }
         }
     }
+    
+    void delegatesToCategory(String className) {
+        delegatesToCategory(this.resolver.resolve(className));
+    }
+
+    void delegatesToCategory(Class<?> clazz) {
+        delegatesToCategory(this.resolver.resolve(clazz.getCanonicalName()));
+    }
+    
+    /**
+     * invoked by the closure
+     * takes an expression and adds all members of its type to the augmented
+     * class reference.
+     */
+    void delegatesToCategory(AnnotatedNode expr) {
+        internalDelegatesToCategory(expr, false);
+    }
+    
+    
+    private void internalDelegatesToCategory(AnnotatedNode expr, boolean useNamedArgs) {
+        ClassNode type;
+        if (expr instanceof ClassNode) {
+            type = (ClassNode) expr;
+        } else if (expr instanceof FieldNode) {
+            type = ((FieldNode) expr).getType();
+        } else if (expr instanceof MethodNode) {
+            type = ((MethodNode) expr).getReturnType();
+        } else if (expr instanceof ClassExpression) {
+            type = ((ClassExpression) expr).getType();
+        } else {
+            // invalid
+            if (GroovyLogManager.manager.hasLoggers()) {
+                GroovyLogManager.manager.log(TraceCategory.DSL, 
+                        "Cannot invoke delegatesTo() on an invalid object: " + expr);
+            }
+            return;
+        }
+        if (!type.getName().equals(Object.class.getName())) {
+            for (MethodNode method : type.getMethods()) {
+                if (!(method instanceof ConstructorNode) && ! method.getName().contains("$")) {
+                    if (method.getParameters() != null && method.getParameters().length > 0) {
+                        ClassNode firstType = method.getParameters()[0].getType();
+                        if ((firstType.isInterface() && currentType.implementsInterface(firstType)) ||
+                                currentType.isDerivedFrom(firstType)) {
+                            contributions.add(new MethodContributionElement(method.getName(), toParameterContributionRemoveFirst(method
+                                    .getParameters()), method.getReturnType().getName(), type.getName(), false, provider,
+                                    null, useNamedArgs));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     
     private ParameterContribution[] toParameterContribution(Parameter[] params) {
         if (params != null) {
@@ -292,6 +354,18 @@ public class DSLContributionGroup extends ContributionGroup {
         }
     }
 
+    private ParameterContribution[] toParameterContributionRemoveFirst(Parameter[] params) {
+        if (params != null) {
+            ParameterContribution[] contribs = new ParameterContribution[params.length-1];
+            for (int i = 1; i < params.length; i++) {
+                contribs[i-1] = new ParameterContribution(params[i]);
+            }
+            return contribs;
+        } else {
+            return new ParameterContribution[0];
+        }
+    }
+    
     
     void provider(Object args) {
         provider = args == null ? null : asString(args);
