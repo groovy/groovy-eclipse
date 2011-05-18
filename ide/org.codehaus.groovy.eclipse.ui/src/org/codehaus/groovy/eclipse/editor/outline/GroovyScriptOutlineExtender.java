@@ -74,19 +74,25 @@ class GroovyScriptOCompilationUnit extends OCompilationUnit {
     @Override
     public IJavaElement[] refreshChildren() {
         ModuleNode node = (ModuleNode) getNode();
-        ClassNode scriptClassDummy = node.getScriptClassDummy();
-        if (scriptClassDummy == null) {
-            if (node.getClasses().size() > 0) {
-                scriptClassDummy = node.getClasses().get(0);
-            }
-        }
+        ClassNode scriptClassDummy;
         String scriptName;
-        if (scriptClassDummy == null) {
-            scriptName = "Problem";
+        if (node != null) {
+            scriptClassDummy = node.getScriptClassDummy();
+            if (scriptClassDummy == null) {
+                if (node.getClasses().size() > 0) {
+                    scriptClassDummy = node.getClasses().get(0);
+                }
+            }
+            if (scriptClassDummy == null) {
+                scriptName = "Problem";
+            } else {
+                scriptName = scriptClassDummy.getNameWithoutPackage();
+            }
         } else {
-            scriptName = scriptClassDummy.getNameWithoutPackage();
+            scriptName = null;
+            scriptClassDummy = null;
         }
-        if (node.encounteredUnrecoverableError() || scriptClassDummy == null) {
+        if (node == null || node.encounteredUnrecoverableError() || scriptClassDummy == null) {
             // we have no idea what the structure is.
             // Let the user know
             return new IJavaElement[] { new OType(getUnit(), node, scriptName + GroovyScriptOutlineExtender.NO_STRUCTURE_FOUND) };
