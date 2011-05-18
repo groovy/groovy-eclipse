@@ -150,8 +150,8 @@ public class GroovyParser {
 	// this(null, options, problemReporter);
 	// }
 
-	public GroovyParser(CompilerOptions options, ProblemReporter problemReporter, boolean allowTransforms) {
-		this(null, options, problemReporter, allowTransforms);
+	public GroovyParser(CompilerOptions options, ProblemReporter problemReporter, boolean allowTransforms, boolean isReconcile) {
+		this(null, options, problemReporter, allowTransforms, isReconcile);
 	}
 
 	// public GroovyParser(Object requestor, CompilerOptions options, ProblemReporter problemReporter) {
@@ -226,7 +226,8 @@ public class GroovyParser {
 	}
 
 	// FIXASC review callers who pass null for options
-	public GroovyParser(Object requestor, CompilerOptions options, ProblemReporter problemReporter, boolean allowTransforms) {
+	public GroovyParser(Object requestor, CompilerOptions options, ProblemReporter problemReporter, boolean allowTransforms,
+			boolean isReconcile) {
 		String path = (options == null ? null : options.groovyClassLoaderPath);
 		this.requestor = requestor;
 		// FIXASC set parent of the loader to system or context class loader?
@@ -248,6 +249,7 @@ public class GroovyParser {
 		// Currently it is not cached but created each time - we'll have to decide if there is a need to cache
 		GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader();
 		this.groovyCompilationUnit = new CompilationUnit(null, null, grabbyLoader, allowTransforms ? gcl : null);
+		this.groovyCompilationUnit.tweak(isReconcile);
 		if (grabbyLoader != null) {
 			grabbyLoader.setCompilationUnit(groovyCompilationUnit);
 		}

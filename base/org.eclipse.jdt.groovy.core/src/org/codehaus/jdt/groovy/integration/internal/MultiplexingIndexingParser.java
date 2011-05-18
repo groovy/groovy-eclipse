@@ -69,7 +69,7 @@ public class MultiplexingIndexingParser extends IndexingParser {
 
 			// FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
 			GroovyCompilationUnitDeclaration cud = (GroovyCompilationUnitDeclaration) new GroovyParser(this.options,
-					problemReporter, false).dietParse(unit, compilationResult);
+					problemReporter, false, true).dietParse(unit, compilationResult);
 
 			// CompilationUnitDeclaration cud groovyParser.dietParse(sourceUnit, compilationResult);
 			HashtableOfObjectToInt sourceEnds = createSourceEnds(cud);
