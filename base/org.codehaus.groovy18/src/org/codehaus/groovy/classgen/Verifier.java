@@ -68,6 +68,9 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     private ClassNode classNode;
     private MethodNode methodNode;
 
+    // GRECLIPSE: configuration options 
+    public boolean inlineStaticFieldInitializersIntoClinit = true;
+    
     public ClassNode getClassNode() {
         return classNode;
     }
@@ -921,14 +924,18 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                         Token.newSymbol(Types.EQUAL, fieldNode.getLineNumber(), fieldNode.getColumnNumber()),
                         expression));
             if (fieldNode.isStatic()) {
-            	// GROOVY-3311: pre-defined constants added by groovy compiler for numbers/characters should be
-            	// initialized first so that code dependent on it does not see their values as empty
-            	if (expression instanceof ConstantExpression) {
-                    staticList.add(0, statement);
-            	} else {
-                    staticList.add(statement);
+            	// GRECLIPSE: only conditionally 'move stuff around'
+            	if (inlineStaticFieldInitializersIntoClinit) {
+            	// end
+		        	// GROOVY-3311: pre-defined constants added by groovy compiler for numbers/characters should be
+		        	// initialized first so that code dependent on it does not see their values as empty
+		        	if (expression instanceof ConstantExpression) {
+		                staticList.add(0, statement);
+		        	} else {
+		                staticList.add(statement);
+		        	}
+		            fieldNode.setInitialValueExpression(null); // to avoid double initialization in case of several constructors
             	}
-                fieldNode.setInitialValueExpression(null); // to avoid double initialization in case of several constructors
                 /*
                  * If it is a statement for an explicitly declared static field inside an enum, store its
                  * reference. For enums, they need to be handled differently as such init statements should
