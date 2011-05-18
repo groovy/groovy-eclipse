@@ -74,12 +74,18 @@ public class FullProjectTests extends GroovierBuilderTests {
 		// Check the compile result
 		expectedCompiledClassCount(370);
 		expectingNoErrors();
+
+		IJavaProject p = env.getJavaProject(projectPath);
+
+		// Warm up
+		for (int i=0;i<10;i++) {
+			ReconcilerUtils.reconcileAllCompilationUnits(p,	true);
+		}
 		
 		// Time the reconcile
 		long t = 0;
-		IJavaProject p = env.getJavaProject(projectPath);
 		for (int i=0;i<20;i++) {
-		ReconcileResults rr = ReconcilerUtils.reconcileAllCompilationUnits(p,
+			ReconcileResults rr = ReconcilerUtils.reconcileAllCompilationUnits(p,
 				true);
 		System.out.println(rr.getTotalTimeSpentReconciling()+"ms");
 		t+=rr.getTotalTimeSpentReconciling();
