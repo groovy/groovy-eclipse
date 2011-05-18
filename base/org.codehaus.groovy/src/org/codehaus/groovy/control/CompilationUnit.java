@@ -1226,6 +1226,20 @@ public class CompilationUnit extends ProcessingUnit {
 		}
 		return "CompilationUnit: null";
 	}
+
+	/**
+	 * Slightly modifies the behaviour of the phases based on what the caller really needs.  Some invocations of the compilation
+	 * infrastructure don't need the bytecode, so we can skip creating it, they would rather have a more 'source like' AST.
+	 * 
+	 * @param isReconcile is this a reconciling compile?
+	 */
+	public void tweak(boolean isReconcile) {
+		if (isReconcile) {
+        	verifier.inlineStaticFieldInitializersIntoClinit=false;
+		} else {
+        	verifier.inlineStaticFieldInitializersIntoClinit=true;			
+		}
+	}
     // end
     
 }
