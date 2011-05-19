@@ -17,10 +17,14 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import junit.framework.Test;
 
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -100,71 +104,8 @@ public class FailingErrorRecoveryTests extends AbstractRegressionTest {
         }
         return newcps;
     }
-    
-    
-    public void testGRE495() throws Exception {
-        this.runNegativeTest(new String[]{
-                "A.groovy", 
-                "class FooTest extends GroovyTestCase { }\n" + 
-                "class BBB extends FooTes" 
-        },
-        "----------\n" + 
-        "1. ERROR in A.groovy (at line 2)\n" + 
-        "\tclass BBB extends FooTes\n" + 
-        "\t                       ^\n" + 
-        "Groovy:unexpected token:  @ line 2, column 24.\n" + 
-        "----------\n");
-        // missing end curly, but that shouldn't cause us to discard what we successfully parsed
-        ModuleNode mn = getModuleNode("A.groovy");
-        assertNotNull(mn);
-        assertFalse(mn.encounteredUnrecoverableError());
-        ClassNode cn = (ClassNode)mn.getClasses().get(0);
-        assertNotNull(cn);
-        assertTrue(cn.getName().equals("FooTest"));
-        cn = (ClassNode)mn.getClasses().get(1);
-        assertNotNull(cn);
-        assertTrue(cn.getName().equals("BBB"));
-    }
-
-    public void testGRE538a() throws Exception {
-        this.runNegativeTest(new String[]{
-                "A.groovy", 
-                "import " 
-        },
-        "----------\n" + 
-        "1. ERROR in A.groovy (at line 1)\n" + 
-        "\timport \n" + 
-        "\t ^\n" + 
-        "Groovy:unexpected token: import @ line 1, column 1.\n" + 
-        "----------\n");
-        ModuleNode mn = getModuleNode("A.groovy");
-        assertNotNull(mn);
-        assertFalse(mn.encounteredUnrecoverableError());
-        ClassNode cn = (ClassNode)mn.getClasses().get(0);
-        assertNotNull(cn);
-        assertTrue(cn.getName().equals("A"));
-    }
-    
-    public void testGRE538b() throws Exception {
-        this.runNegativeTest(new String[]{
-                "A.groovy", 
-                "import foo." 
-        },
-        "----------\n" + 
-        "1. ERROR in A.groovy (at line 1)\n" + 
-        "\timport foo.\n" + 
-        "\t          ^\n" + 
-        "Groovy:expecting '*', found '' @ line 1, column 11.\n" + 
-        "----------\n");
-        ModuleNode mn = getModuleNode("A.groovy");
-        assertNotNull(mn);
-        assertFalse(mn.encounteredUnrecoverableError());
-        ClassNode cn = (ClassNode)mn.getClasses().get(0);
-        assertNotNull(cn);
-        assertTrue(cn.getName().equals("A"));
-    }
-    
-    public void testGRE1046a() throws Exception {
+        
+    public void testParsingIncompleteIfCondition_1046() throws Exception {
         this.runNegativeTest(new String[]{
                 "A.groovy", 
                 "File f = new File('c:\\test')\n" +
@@ -184,7 +125,7 @@ public class FailingErrorRecoveryTests extends AbstractRegressionTest {
         assertTrue(cn.getName().equals("A"));
     }
     
-    public void testGRE1046b() throws Exception {
+    public void testParsingDotTerminatingIncompleteIfCondition_1046() throws Exception {
         this.runNegativeTest(new String[]{
                 "A.groovy", 
                 "File f = new File('c:\\test')\n" +
@@ -215,18 +156,23 @@ public class FailingErrorRecoveryTests extends AbstractRegressionTest {
                 "class Foo {\n" + 
                 "  def myMethod() {\n" + 
                 "    def x = \"\"\n" + 
-                "    println x.\n" + 
+                "    println x.;\n" + // if a ';' is inserted in this situation, you can get back what you want...
                 "    println x\n" + 
                 "  }\n" + 
                 "}" 
         },
-        "");
+        "----------\n" + 
+		"1. ERROR in A.groovy (at line 4)\n" + 
+		"	println x.;\n" + 
+		"	          ^\n" + 
+		"Groovy:unexpected token: ; @ line 4, column 15.\n" + 
+		"----------\n");
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
         assertFalse(mn.encounteredUnrecoverableError());
         ClassNode cn = (ClassNode)mn.getClasses().get(0);
         assertNotNull(cn);
-        assertTrue(cn.getName().equals("A"));
+        assertEquals("Foo",cn.getName());
     }
     
     public void testGRE644() throws Exception {
@@ -264,17 +210,22 @@ public class FailingErrorRecoveryTests extends AbstractRegressionTest {
                 "    static void foo(){\n" + 
                 "        TextCompletionTest variable = new TextCompletionTest()\n" + 
                 "        println variable.bla //works\n" + 
-                "        println(variable.bla)\n" + 
+                "        println(variable.)\n" + 
                 "    }\n" + 
                 "}",
         },
-        "");
+        "----------\n" + 
+		"1. ERROR in A.groovy (at line 9)\n" + 
+		"	println(variable.)\n" + 
+		"	                 ^\n" + 
+		"Groovy:unexpected token: ) @ line 9, column 26.\n" + 
+		"----------\n");
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
         assertFalse(mn.encounteredUnrecoverableError());
         ClassNode cn = (ClassNode)mn.getClasses().get(0);
         assertNotNull(cn);
-        assertTrue(cn.getName().equals("A"));
+        assertTrue(cn.getName().equals("TextCompletionTest"));
     }
     
     private ModuleNode getModuleNode(String filename) {
