@@ -630,12 +630,43 @@ packageDefinition
 importStatement
         //TODO? options {defaultErrorHandler = true;}
         { Token first = LT(1); boolean isStatic = false; }
+    /* old{
     :   an:annotationsOpt "import"! ( "static"! {isStatic=true;} )? is:identifierStar!
         {if (isStatic)
             #importStatement = #(create(STATIC_IMPORT,"static_import",first,LT(1)),an,is);
          else
             #importStatement = #(create(IMPORT,"import",first,LT(1)),an,is);}
     ;
+    }*/
+    /* RECOVERY: NOTES:
+     * THe aim here is just to allow for the type to be optional.  If not specified
+     * it is clearly an error but we want to recover and continue parsing the file.
+     * Here if the type is missing (is_AST==null) then we report an error and create
+     * a fake import statement with a null type reference.  There is a corresponding
+     * change in AntlrParserPlugin that deals with a null type reference and constructs
+     * a suitable 'fake' ImportNode.
+     */
+    :   an:annotationsOpt "import"! ( "static"! {isStatic=true;})? (is:identifierStar!)?
+        {
+         if (isStatic) {
+           if (is_AST==null) {
+             reportError("Invalid import static specification",first);
+             #importStatement = #(create(STATIC_IMPORT,"static_import",first,null),an,is);
+           } else {
+             #importStatement = #(create(STATIC_IMPORT,"static_import",first,LT(1)),an,is);
+           }
+         } else {
+           if (is_AST==null) {
+             reportError("Invalid import specification",LT(0));
+             #importStatement = #(create(IMPORT,"import",first,null),an,is);
+           } else {
+             #importStatement = #(create(IMPORT,"import",first,LT(1)),an,is);
+           }
+         }
+        }
+    ;
+    
+    
 
 // TODO REMOVE
 // A type definition is either a class, interface, enum or annotation with possible additional semis.
@@ -996,18 +1027,32 @@ identifier {Token first = LT(1);}
         {#identifier = #i1;}
     ;
 
-identifierStar {Token first = LT(1);}
+identifierStar {Token first = LT(1); int mark=mark();}
     :   i1:IDENT!
         (   options { greedy = true; } :
             d1:DOT! nls! i2:IDENT!
             {#i1 = #(create(DOT,".",first,LT(1)),i1,i2);}
-        )*
-        (   d2:DOT!  nls! s:STAR!
+        )*         
+        (d2:DOT!  nls! s:STAR!
             {#i1 = #(create(DOT,".",first,LT(1)),i1,s);}
         |   "as"! nls! alias:IDENT!
             {#i1 = #(create(LITERAL_as,"as",first,LT(1)),i1,alias);}
         )?
         {#identifierStar = #i1;}
+        /* RECOVERY: notes:
+         * The start of parsing this structure was marked.  If there is a problem an exception
+         * is caught, error logged, fake ast node created (to satisfy the parent rule) and
+         * we jump back to the start of this line and proceed to the end of it, hoping
+         * that parsing can continue on the next.
+         */
+        exception
+        catch [RecognitionException e] {
+        	reportError("Invalid import ",first);
+            #identifierStar = #(create(DOT,".",first,LT(1)),i1,#(create(STAR,"*",null)));
+            // Give up on this line and just go to the next
+			rewind(mark);
+			consumeUntil(NLS);
+        }
     ;
 
 modifiersInternal
@@ -1168,9 +1213,29 @@ if (modifiers != null) {
         // it might implement some interfaces...
         ic:implementsClause
         // now parse the body of the class
+        /*old{
         cb:classBlock
         {#classDefinition = #(create(CLASS_DEF,"CLASS_DEF",first,LT(1)),
                                                             modifiers,IDENT,tp,sc,ic,cb);}
+        }new*/
+        /* RECOVERY: notes:
+         * Here we allow for the classBlock to be optional, the user may be typing:
+         * class Foo extends Ba<Ctrl+Space>
+         * As with similar rules we record an error and create a placeholder class def
+         * ast with a missing body.  Corresponding check in AntlrParserPlugin that
+         * was expecting a body has been changed to cope with it being missing.
+         */
+        (cb:classBlock)?
+        {
+        if (cb_AST!=null) {
+          #classDefinition = #(create(CLASS_DEF,"CLASS_DEF",first,LT(1)),
+                                                            modifiers,IDENT,tp,sc,ic,cb);
+ 		} else {
+ 		  reportError("Malformed class declaration",LT(1));
+ 		  #classDefinition = #(create(CLASS_DEF,"CLASS_DEF",first,LT(1)),
+                                                            modifiers,IDENT,tp,sc,ic,null);    
+        }                                            
+        }
         { currentClass = prevCurrentClass; }
     ;
 
@@ -3519,7 +3584,7 @@ nlsWarn!
         )?
         nls!
     ;
-
+    
 
 //----------------------------------------------------------------------------
 // The Groovy scanner

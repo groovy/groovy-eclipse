@@ -432,6 +432,19 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             AST aliasNode = node.getNextSibling();
             alias = identifier(aliasNode);
         }
+        
+        // GRECLIPSE: start
+        // node == null means it is a broken entry and the parser recovered.  The error will be already
+        // be recorded against the file
+        if (node==null) {
+        	if (isStatic) {
+        		addStaticImport(ClassHelper.OBJECT_TYPE, "",null, annotations);
+        	} else {
+        		addImport(ClassHelper.OBJECT_TYPE,"",null,annotations);
+        	}
+        	return;
+        }
+        // GRECLIPSE: end
 
         if (node.getNumberOfChildren()==0) {
             String name = identifier(node);
@@ -729,8 +742,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         int oldClassCount = innerClassCounter;
         
-        assertNodeType(OBJBLOCK, node);
-        objectBlock(node);
+        // GRECLIPSE: start
+        // A null node means the classbody is missing but the parser recovered. An error
+        // will already have been recorded against the file        
+        if (node!=null) {
+     	// GRECLIPSE end
+            assertNodeType(OBJBLOCK, node);
+            objectBlock(node);
+        }//GRECLIPSE: closing brace
         
         classNode = outerClass;
         innerClassCounter = oldClassCount;
