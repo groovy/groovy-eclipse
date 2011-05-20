@@ -28,7 +28,19 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  */
 public class GroovyLikeCompletionTests extends CompletionTestCase {
 
-    private static final String SCRIPTCONTENTS = "any\nclone\nfindIndexOf\ninject\nclass Foo {\nFoo(first, second) { } \n Foo(int third) { }}\nnew Foo()";
+    private static final String SCRIPTCONTENTS = 
+            "any\n" +
+    		"clone\n" +
+    		"findIndexOf\n" +
+    		"inject\n" +
+    		"class Foo {\n" +
+    		"  Foo(first, second) { }\n" +
+    		"  Foo(int third) { }\n" +
+    		"  def method1(arg) { }\n" +
+    		"  def method2(arg, Closure c1) { }\n" +
+    		"  def method3(arg, Closure c1, Closure c2) { }\n" +
+    		"}\n" +
+    		"new Foo()";
 
     public GroovyLikeCompletionTests(String name) {
         super(name);
@@ -56,7 +68,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
         ICompilationUnit unit = createGroovy();
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "any"), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "any { }", 1);
+        checkReplacementString(proposals, "any {  }", 1);
     }
 
     public void testMethodWithNoArgs() throws Exception {
@@ -69,7 +81,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
         ICompilationUnit unit = createGroovy();
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "findIndexOf"), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "findIndexOf arg1, { }", 1);
+        checkReplacementString(proposals, "findIndexOf(arg1) {  }", 1);
     }
     
     public void testMethodWithClosureNotGroovyLike() throws Exception {
@@ -92,6 +104,114 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
     }
     
+    public void testClosureApplication1a() throws Exception {
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
+        createGroovy();
+        String contents = "new Foo().method1";
+        String expected = "new Foo().method1(arg)";
+        checkProposalApplicationNonType(contents, expected, contents.length(), "method1");
+    }
+    
+    public void testClosureApplication1b() throws Exception {
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
+        createGroovy();
+        String contents = "new Foo().method1";
+        String expected = "new Foo().method1(arg)";
+        checkProposalApplicationNonType(contents, expected, contents.length(), "method1");
+    }
+    
+    public void testClosureApplication1c() throws Exception {
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false);
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
+        createGroovy();
+        String contents = "new Foo().method1";
+        String expected = "new Foo().method1(arg)";
+        checkProposalApplicationNonType(contents, expected, contents.length(), "method1");
+    }
+    
+    public void testClosureApplication1d() throws Exception {
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false);
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
+        createGroovy();
+        String contents = "new Foo().method1";
+        String expected = "new Foo().method1(arg)";
+        checkProposalApplicationNonType(contents, expected, contents.length(), "method1");
+    }
+    
+    public void testClosureApplication2a() throws Exception {
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
+        createGroovy();
+        String contents = "new Foo().method2";
+        String expected = "new Foo().method2(arg) {  }";
+        checkProposalApplicationNonType(contents, expected, contents.length(), "method2");
+    }
+    
+    public void testClosureApplication2b() throws Exception {
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
+        createGroovy();
+        String contents = "new Foo().method2";
+        String expected = "new Foo().method2(arg, {  })";
+        checkProposalApplicationNonType(contents, expected, contents.length(), "method2");
+    }
+    
+    public void testClosureApplication2c() throws Exception {
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false);
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
+        createGroovy();
+        String contents = "new Foo().method2";
+        String expected = "new Foo().method2(arg) c1";
+        checkProposalApplicationNonType(contents, expected, contents.length(), "method2");
+    }
+    
+    public void testClosureApplication2d() throws Exception {
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false);
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
+        createGroovy();
+        String contents = "new Foo().method2";
+        String expected = "new Foo().method2(arg, c1)";
+        checkProposalApplicationNonType(contents, expected, contents.length(), "method2");
+    }
+    
+    public void testClosureApplication3a() throws Exception {
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
+        createGroovy();
+        String contents = "new Foo().method3";
+        String expected = "new Foo().method3(arg, {  }) {  }";
+        checkProposalApplicationNonType(contents, expected, contents.length(), "method3");
+    }
+    
+    public void testClosureApplication3b() throws Exception {
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
+        createGroovy();
+        String contents = "new Foo().method3";
+        String expected = "new Foo().method3(arg, {  }, {  })";
+        checkProposalApplicationNonType(contents, expected, contents.length(), "method3");
+    }
+    
+    public void testClosureApplication3c() throws Exception {
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false);
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
+        createGroovy();
+        String contents = "new Foo().method3";
+        String expected = "new Foo().method3(arg, c1) c2";
+        checkProposalApplicationNonType(contents, expected, contents.length(), "method3");
+    }
+    
+    public void testClosureApplication3d() throws Exception {
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false);
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
+        createGroovy();
+        String contents = "new Foo().method3";
+        String expected = "new Foo().method3(arg, c1, c2)";
+        checkProposalApplicationNonType(contents, expected, contents.length(), "method3");
+    }
+
     /**
      * can't get it to pass on build server
      * @throws Exception
@@ -142,9 +262,13 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
     }
     
     private ICompilationUnit createGroovy() throws Exception {
+        return createGroovy("GroovyLikeCompletions", SCRIPTCONTENTS);
+    }
+    
+    private ICompilationUnit createGroovy(String cuName, String cuContents) throws Exception {
         IPath projectPath = createGenericProject();
         IPath src = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(src, "GroovyLikeCompletions", SCRIPTCONTENTS);
+        IPath pathToJavaClass = env.addGroovyClass(src, cuName, cuContents);
         incrementalBuild();
         ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
         return unit;

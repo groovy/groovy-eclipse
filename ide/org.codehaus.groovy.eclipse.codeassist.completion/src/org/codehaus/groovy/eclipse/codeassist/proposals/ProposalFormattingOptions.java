@@ -31,7 +31,7 @@ public class ProposalFormattingOptions {
                 prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING));
     }
 
-    public final boolean noParensAroundArgs;
+    public final boolean noParensAroundClosures;
 
     public final boolean useBracketsForClosures;
 
@@ -42,7 +42,7 @@ public class ProposalFormattingOptions {
     public ProposalFormattingOptions(boolean noParensAroundArgs,
  boolean useBracketsForClosures, boolean useNamedArguments,
             boolean doParameterGuessing) {
-        this.noParensAroundArgs = noParensAroundArgs;
+        this.noParensAroundClosures = noParensAroundArgs;
         this.useBracketsForClosures = useBracketsForClosures;
         this.useNamedArguments = useNamedArguments;
         this.doParameterGuessing = doParameterGuessing;
@@ -52,9 +52,9 @@ public class ProposalFormattingOptions {
         // if overridden, always use named args
         // if not a constructor and not overridden, never use named args
         if (overrideUseNamedArgs && !useNamedArguments) {
-            return new ProposalFormattingOptions(noParensAroundArgs, useBracketsForClosures, true, doParameterGuessing);
+            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, true, doParameterGuessing);
         } else if (useNamedArguments && !(method instanceof ConstructorNode)) {
-            return new ProposalFormattingOptions(noParensAroundArgs, useBracketsForClosures, false, doParameterGuessing);
+            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, false, doParameterGuessing);
         } else {
             return this;
         }

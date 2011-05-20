@@ -162,7 +162,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setValue(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, true);
 
         // Groovier Content assist
-        store.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
+        store.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
         store.setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
         store.setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
         store.setValue(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, true);

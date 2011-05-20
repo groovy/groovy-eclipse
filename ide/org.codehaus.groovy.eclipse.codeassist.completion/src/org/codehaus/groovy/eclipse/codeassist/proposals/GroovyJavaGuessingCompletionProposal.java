@@ -58,7 +58,7 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
  */
 public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionProposal {
 
-    private static final String CLOSURE_TEXT = "{ }";
+    private static final String CLOSURE_TEXT = "{  }";
 
     /**
      * Creates a {@link ParameterGuessingProposal} or <code>null</code> if the
@@ -261,14 +261,26 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
 
         setCursorPosition(buffer.length());
 
-        if (proposalOptions.noParensAroundArgs) {
-            // remove the openning paren
-            buffer.replace(buffer.length() - 1, buffer.length(), "");
+        // groovy doesn't require parens around closures if it is the last
+        // argument
+        // If the option is set, then we follow that heuristic
+        int indexOfLastClosure = -1;
+        String[] parameterTypes = getParameterTypes();
+        if (proposalOptions.noParensAroundClosures) {
+            if (lastArgIsClosure(parameterTypes)) {
+                indexOfLastClosure = parameterTypes.length - 1;
+            }
 
-            // add space if not already there
-            // would be added by call to appendMethodNameReplacement
-            if (!prefs.beforeOpeningParen) {
-                buffer.append(SPACE);
+            // remove the opening paren only if there is a single closure
+            // parameter
+            if (indexOfLastClosure == 0) {
+                buffer.replace(buffer.length() - 1, buffer.length(), "");
+
+                // add space if not already there
+                // would be added by call to appendMethodNameReplacement
+                if (!prefs.beforeOpeningParen) {
+                    buffer.append(SPACE);
+                }
             }
         } else {
             if (prefs.afterOpeningParen)
@@ -276,19 +288,11 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         }
 
         char[][] parameterNames = fProposal.findParameterNames(null);
-        String[] parameterTypes = getParameterTypes();
         fChoices = guessParameters(parameterNames);
         int count = fChoices.length;
         int replacementOffset = getReplacementOffset();
 
         for (int i = 0; i < count; i++) {
-            if (i != 0) {
-                if (prefs.beforeComma)
-                    buffer.append(SPACE);
-                buffer.append(COMMA);
-                if (prefs.afterComma)
-                    buffer.append(SPACE);
-            }
 
             if (proposalOptions.useNamedArguments) {
                 buffer.append(parameterNames[i]).append(":");
@@ -298,9 +302,9 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
             if (proposalOptions.useBracketsForClosures && Signature.getSimpleName(parameterTypes[i]).equals("Closure")) {
                 // closure
                 Position position = fPositions[i];
-                position.setOffset(replacementOffset + buffer.length());
+                position.setOffset(replacementOffset + buffer.length() + 2);
                 buffer.append(CLOSURE_TEXT);
-                position.setLength(CLOSURE_TEXT.length());
+                position.setLength(0);
 
             } else {
                 // regular argument
@@ -316,16 +320,34 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
                     ((JavaCompletionProposal) proposal).setReplacementOffset(replacementOffset + buffer.length());
                 buffer.append(argument);
             }
-        }
 
-        if (prefs.beforeClosingParen)
-            buffer.append(SPACE);
+            if (i == indexOfLastClosure - 1 || (i != indexOfLastClosure && i == count - 1)) {
+                if (prefs.beforeClosingParen) {
+                    buffer.append(SPACE);
+                }
+                buffer.append(RPAREN);
+                if (i == indexOfLastClosure - 1) {
+                    buffer.append(SPACE);
+                }
+            } else if (i < count - 1) {
+                if (prefs.beforeComma)
+                    buffer.append(SPACE);
+                buffer.append(COMMA);
+                if (prefs.afterComma)
+                    buffer.append(SPACE);
+            }
 
-        if (!proposalOptions.noParensAroundArgs) {
-            buffer.append(RPAREN);
         }
 
         return buffer.toString();
+    }
+
+    private boolean lastArgIsClosure(String[] parameterTypes) {
+        if (parameterTypes == null || parameterTypes.length == 0) {
+            return false;
+        }
+
+        return "Closure".equals(Signature.getSimpleName(parameterTypes[parameterTypes.length - 1]));
     }
 
     /**

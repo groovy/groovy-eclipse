@@ -63,6 +63,18 @@ public class GroovyPartitionScannerTests extends TestCase {
         tryString("\"\"\"dsafasdfasdds\n\"\"\"", 0, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
     }
 
+    public void testDollarSlash1() throws Exception {
+        tryString("$/ /$", 0, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
+    }
+    
+    public void testDollarSlash2() throws Exception {
+        tryString("$/\n/$", 0, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
+    }
+    
+    public void testDollarSlash3() throws Exception {
+        tryString("$/fdafsdasda/ $fdsaafds\n/$", 0, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
+    }
+    
     public void testNone() throws Exception {
         tryString("\"\n\"\"\"", 0, IJavaPartitions.JAVA_STRING);
     }

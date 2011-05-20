@@ -121,12 +121,11 @@ public class PartialVisitTest extends BrowsingTestCase {
                 "y", "Foo", "y");
     }
 
-    // static iniitalizers are visited before anything else, so nothing is skipped
-    // because the node is found first
+    // static initializers are now visited in place
     public void testStaticFieldInitializer() throws Exception {
         String contents = "class Foo { Foo() { } \n static y \n def z \nstatic x = y }";
         assertCodeSelectWithSkippedNames(contents, lastIndexOf(contents, "y"),
-                "y");
+ "y", "Foo", "z", "y");
     }
 
     public void testInnerClass() throws Exception {

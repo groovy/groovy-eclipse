@@ -148,6 +148,7 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
 		// Add rule for strings and character constants.
         rules.add(new MultiLineRule("'''", "'''", mString));
         rules.add(new MultiLineRule("\"\"\"", "\"\"\"", mString));
+        rules.add(new MultiLineRule("$/", "/$", mString));
         rules.add(new SingleLineRule("\"", "\"", sString, '\\'));
         rules.add(new SingleLineRule("'", "'", sString, '\\'));
 

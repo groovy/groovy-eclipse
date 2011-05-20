@@ -68,7 +68,7 @@ public class PreferenceConstants {
 	public static final String GROOVY_SEMANTIC_HIGHLIGHTING = "groovy.semantic.highlighting";
 
 	// if true do not use parens around methods
-	public static final String GROOVY_CONTENT_ASSIST_NOPARENS = "groovy.contentassist.noparens";
+    public static final String GROOVY_CONTENT_ASSIST_NOPARENS = "groovy.contentassist.noparens.around.closures";
 
 	// if true use brackets for closure args
 	public static final String GROOVY_CONTENT_ASSIST_BRACKETS = "groovy.contentassist.brackets";

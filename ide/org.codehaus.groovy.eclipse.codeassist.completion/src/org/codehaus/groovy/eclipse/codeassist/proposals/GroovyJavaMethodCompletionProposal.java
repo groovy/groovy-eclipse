@@ -31,17 +31,19 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
  *
  */
 public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProposal {
+    private static final String CLOSURE_TEXT = "{  }";
 
     private int[] fArgumentOffsets;
     private int[] fArgumentLengths;
     private IRegion fSelectedRegion; // initialized by apply()
-    private final ProposalFormattingOptions groovyFormatterPrefs;
+
+    private final ProposalFormattingOptions proposalOptions;
     private String contributor;
 
     public GroovyJavaMethodCompletionProposal(CompletionProposal proposal,
             JavaContentAssistInvocationContext context, ProposalFormattingOptions groovyFormatterPrefs) {
         super(proposal, context);
-        this.groovyFormatterPrefs = groovyFormatterPrefs;
+        this.proposalOptions = groovyFormatterPrefs;
         this.contributor = "Groovy";
         this.setRelevance(proposal.getRelevance());
     }
@@ -155,62 +157,75 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
         if (hasParameters()) {
 
-            if (groovyFormatterPrefs.noParensAroundArgs) {
-                // remove the openning paren
-                buffer.replace(buffer.length()-1, buffer.length(), "");
-
-                // add space if not already there
-                // would be added by call to appendMethodNameReplacement
-                if (!prefs.beforeOpeningParen) {
-                    buffer.append(SPACE);
+            int indexOfLastClosure = -1;
+            char[][] parameterTypes = Signature.getParameterTypes(fProposal.getSignature());
+            if (proposalOptions.noParensAroundClosures) {
+                if (lastArgIsClosure(parameterTypes)) {
+                    indexOfLastClosure = parameterTypes.length - 1;
                 }
+
+                // remove the opening paren only if there is a single closure
+                // parameter
+                if (indexOfLastClosure == 0) {
+                    buffer.replace(buffer.length() - 1, buffer.length(), "");
+
+                    // add space if not already there
+                    // would be added by call to appendMethodNameReplacement
+                    if (!prefs.beforeOpeningParen) {
+                        buffer.append(SPACE);
+                    }
+                }
+            } else {
+                if (prefs.afterOpeningParen)
+                    buffer.append(SPACE);
             }
 
             // now add the parameters
             char[][] parameterNames= fProposal.findParameterNames(null);
-            char[][] parameterTypes = Signature.getParameterTypes(fProposal.getSignature());
             int count= parameterNames.length;
             fArgumentOffsets= new int[count];
             fArgumentLengths= new int[count];
 
             for (int i= 0; i != count; i++) {
-                if (i != 0) {
-                    if (prefs.beforeComma) {
-                        buffer.append(SPACE);
-                    }
-                    buffer.append(COMMA);
-                    if (prefs.afterComma) {
-                        buffer.append(SPACE);
-                    }
-                }
-
-                if (groovyFormatterPrefs.useNamedArguments) {
+                if (proposalOptions.useNamedArguments) {
                     buffer.append(parameterNames[i]).append(":");
                 }
-
-                fArgumentOffsets[i] = buffer.length();
-                // handle closures
-                if (groovyFormatterPrefs.useBracketsForClosures
-                        && String.valueOf(Signature.getSignatureSimpleName(parameterTypes[i])).equals("Closure")) {
-                    buffer.append("{ }");
-                    fArgumentLengths[i] = 3;
-                    if (i == 0) {
-                        setCursorPosition(buffer.length() - 2);
-                    }
+				fArgumentOffsets[i] = buffer.length();
+                if (i == 0) {
+                    setCursorPosition(buffer.length());
+                }
+                // handle the argument name
+                if (proposalOptions.useBracketsForClosures
+                        && CharOperation.equals("Closure".toCharArray(), Signature.getSignatureSimpleName(parameterTypes[i]))) {
+                    // closure
+                    fArgumentOffsets[i] = buffer.length() + 2;
+                    fArgumentLengths[i] = 0;
+                    buffer.append(CLOSURE_TEXT);
 
                 } else {
-                    if (i == 0) {
-                        setCursorPosition(buffer.length());
-                    }
+                    // regular argument
+                    fArgumentOffsets[i] = buffer.length();
                     buffer.append(parameterNames[i]);
                     fArgumentLengths[i] = parameterNames[i].length;
                 }
-            }
 
-            if (!groovyFormatterPrefs.noParensAroundArgs) {
-                buffer.append(RPAREN);
-            }
+                if (i == indexOfLastClosure - 1 || (i != indexOfLastClosure && i == count - 1)) {
+                    if (prefs.beforeClosingParen) {
+                        buffer.append(SPACE);
+                    }
+                    buffer.append(RPAREN);
+                    if (i == indexOfLastClosure - 1) {
+                        buffer.append(SPACE);
+                    }
+                } else if (i < count - 1) {
+                    if (prefs.beforeComma)
+                        buffer.append(SPACE);
+                    buffer.append(COMMA);
+                    if (prefs.afterComma)
+                        buffer.append(SPACE);
+                }
 
+            }
         } else {
             if (prefs.inEmptyList) {
                 buffer.append(SPACE);
@@ -219,6 +234,15 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         }
 
         return buffer.toString();
+    }
+
+    private boolean lastArgIsClosure(char[][] parameterTypes) {
+        if (parameterTypes == null || parameterTypes.length == 0) {
+            return false;
+        }
+
+        return CharOperation.equals("Closure".toCharArray(),
+                Signature.getSignatureSimpleName(parameterTypes[parameterTypes.length - 1]));
     }
 
     /*
