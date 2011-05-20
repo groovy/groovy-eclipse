@@ -10,21 +10,39 @@
         Andrew Eisenberg - initial API and implementation
  -->
 
-<project name="Build the groovy-eclipse-batch jar" default="extract_and_create_jar">
+<project name="Build the groovy-eclipse-batch jar" default="extract-create-publish">
+
+	<import file="maven/build-maven.xml"/> 
 
 	<!-- ================================= 
-          target: extract_and_create_jar
+          target: extract-create-publish
           Do all the work: extract the original jars to the extract location and jar it up to a single jar
-          also copy over the pom.      
+          also copy over the pom.
+          Finally, deploy the artifact to the artifact repo
        ================================= -->
-	<target name="extract_and_create_jar" depends="_init,_extract,_create.jar,_copy_pom"/>
+	<target name="extract-create-publish" depends="extract-create,publish"/>
+
+	<!-- ================================= 
+          target: extract-create
+          Do all work except deployment to repo
+       ================================= -->
+	<target name="extract-create" depends="-init,-extract,-create.jar,-copy-pom"/>
+
+	
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: publish
+          publish to the codehaus repository                      
+         - - - - - - - - - - - - - - - - - -->
+	<target name="publish" depends="-init,-mavenDeployInit,-installDefault,-deployDefault"
+      description="Deploy jars to maven repository on codehaus.org.">
+	</target>
 
 
 	<!-- - - - - - - - - - - - - - - - - - 
-          target: _extract 
+          target: -extract 
           extract the contents of all jars and copy them to the extract location                      
          - - - - - - - - - - - - - - - - - -->
-	<target name="_extract" depends="_init">
+	<target name="-extract" depends="-init">
 		<mkdir dir="${jar.dest}"/>
 		<delete dir="${extract.loc}" failonerror="no"/>
 		<mkdir dir="${extract.loc}"/>
@@ -32,15 +50,15 @@
 			<fileset refid="orig.plugin.jars"/>
 			<fileset refid="orig.groovy.jars"/>
 		</unzip>
-		
+
 		<!-- Overwrite existing with classes from workspace bin folders-->
 		<copy todir="${extract.loc}">
 			<fileset refid="jdt.groovy.core.class.files"/>
 			<fileset refid="jdt.core.class.files"/>
 			<fileset refid="groovy.core.class.files"/>
+			<fileset refid="groovy.trace.class.files"/>
 			<fileset refid="ant.groovy.class.files"/>
 		</copy>
-		
 
 		<!-- now unzip the jdt compiler adapter jar.  It is a jar within a jar -->
 		<unzip dest="${extract.loc}" src="${workspace.loc}/org.eclipse.jdt.core/jdtCompilerAdapter.jar" />
@@ -54,12 +72,14 @@
 		</delete>
 		-->
 	</target>
+	
+	
 
 	<!-- - - - - - - - - - - - - - - - - - 
-          target: _create.jar        
+          target: -create.jar        
           jar up all relevant files in the extract location               
          - - - - - - - - - - - - - - - - - -->
-	<target name="_create.jar" depends="_init">
+	<target name="-create.jar" depends="-init">
 		<mkdir dir="${jar.dest}"/>
 		<jar destfile="${jar.dest}/${jar.name}">
 			<fileset dir="${extract.loc}">
@@ -74,13 +94,16 @@
 
 
 	<!-- - - - - - - - - - - - - - - - - - 
-          target: _init   
+          target: -init   
           create properties and filesets                   
          - - - - - - - - - - - - - - - - - -->
-	<target name="_init">
+	<target name="-init" depends="-fail-if-no-version-specified,-init17,-init18">
 		<property file="build.properties"/>
-		<property name="jar.name" value="groovy-eclipse-batch-${version1.7}.jar"/>
-		<property name="pom.name" value="groovy-eclipse-batch-${version1.7}.pom"/>
+		<property name="jar.prefix" value="groovy-eclipse-batch"/>
+
+		<property name="jar.name" value="${jar.prefix}-${version}.jar"/>
+		<property name="pom.name" value="${jar.prefix}.pom"/>
+		<property name="bootstrapDirectory" value="bootstrap"/>
 
 		<fileset dir="${eclipse.install.plugins}" id="orig.plugin.jars">
 			<include name="org.eclipse.osgi_*.jar" />
@@ -94,42 +117,103 @@
 		</fileset>
 
 		<fileset dir="${workspace.loc}" id="orig.groovy.jars">
-			
-			<include name="org.codehaus.groovy/lib/groovy-1.7.*.jar"/>
-			<include name="org.codehaus.groovy/lib/antlr-*.jar"/>
-			<include name="org.codehaus.groovy/lib/asm-3*.jar"/>
-			<include name="org.codehaus.groovy/lib/asm-tree-3*.jar"/>
-			
-			<exclude name="org.codehaus.groovy/lib/*sources*"/>
-			
+
+			<include name="${groovy.folder}/lib/groovy-${version}.*.jar"/>
+			<include name="${groovy.folder}/lib/antlr-*.jar"/>
+			<include name="${groovy.folder}/lib/asm-3*.jar"/>
+			<include name="${groovy.folder}/lib/asm-tree-3*.jar"/>
+
+			<exclude name="${groovy.folder}/lib/*sources*"/>
+
 			<!-- Also include the non-locking classloader with sources -->
 			<include name="org.eclipse.jdt.groovy.core/nlcl*.jar"/>
 		</fileset>
-			
-		
-		<!-- Ensure that this comes later because the groovy-eclipse.jar must overwrite the groovy jar -->
-			<fileset dir="${workspace.loc}/org.eclipse.jdt.groovy.core/bin" id="jdt.groovy.core.class.files">
-				<include name="**/*.*" />
-			</fileset>
-			<fileset dir="${workspace.loc}/org.eclipse.jdt.core/bin" id="jdt.core.class.files">
-				<include name="**/*.*" />
-			</fileset>
-			<fileset dir="${workspace.loc}/org.codehaus.groovy/bin" id="groovy.core.class.files">
-				<include name="**/*.*" />
-			</fileset>
-			<fileset dir="${workspace.loc}/org.codehaus.groovy.eclipse.ant/bin" id="ant.groovy.class.files">
-				<include name="**/*.*" />
-			</fileset>
 
+
+		<!-- Ensure that this comes later because the groovy-eclipse.jar must overwrite the groovy jar -->
+		<fileset dir="${workspace.loc}/org.eclipse.jdt.groovy.core/bin" id="jdt.groovy.core.class.files">
+			<include name="**/*.*" />
+		</fileset>
+		<fileset dir="${workspace.loc}/org.eclipse.jdt.core/bin" id="jdt.core.class.files">
+			<include name="**/*.*" />
+		</fileset>
+		<fileset dir="${workspace.loc}/${groovy.folder}/bin" id="groovy.core.class.files">
+			<include name="**/*.*" />
+		</fileset>
+		<fileset dir="${workspace.loc}/${groovy.folder}/bin-trace" id="groovy.trace.class.files">
+			<include name="**/*.*" />
+		</fileset>
+		<fileset dir="${workspace.loc}/org.codehaus.groovy.eclipse.ant/bin" id="ant.groovy.class.files">
+			<include name="**/*.*" />
+		</fileset>
 	</target>
 
 	<!-- - - - - - - - - - - - - - - - - - 
-          target: _copy_pom    
-          copy the pom to the jar destination and ensure that the proper version is inserted                  
+          target: -init17                      
          - - - - - - - - - - - - - - - - - -->
-	<target name="_copy_pom" depends="_init">
-		<copy  file="pom.xml" tofile="${jar.dest}/${pom.name}"/>
-		<replace file="${jar.dest}/${pom.name}" token="REPLACE_WITH_VERSION" value="${version1.7}"></replace>
+    <target name="-init17" if="do-17-build">
+       <property name="version" value="${version1.7}"/>
+    	 <property name="groovy.folder" value="org.codehaus.groovy"/>
+
+    </target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: -init18                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="-init18" if="do-18-build">
+       <property name="version" value="${version1.8}"/>
+    	 <property name="groovy.folder" value="org.codehaus.groovy18"/>
+
+    </target>
+	
+	<target name="-check-build-version">
+		<property file="build.properties"/>
+		<condition property="no-version-specified">
+			<not>
+			<or>
+				<isset property="do-17-build"/>
+				<isset property="do-18-build"/>
+			</or>
+			</not>
+		</condition>
 	</target>
 
+	<target name="-fail-if-no-version-specified" depends="-check-build-version" if="no-version-specified">
+		<fail message="You must set either do-17-build or do-18-build to specify a groovy version to build"/>
+	</target>
+	
+	
+
+	
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: -copy-pom    
+          copy the pom to the jar destination and ensure that the proper version is inserted                  
+         - - - - - - - - - - - - - - - - - -->
+	<target name="-copy-pom" depends="-init">
+		<copy file="maven/pom.xml" tofile="${jar.dest}/${pom.name}"/>
+		<replace file="${jar.dest}/${pom.name}" token="REPLACE_WITH_VERSION" value="${version}">
+		</replace>
+	</target>
+
+	<!-- does the deploy and updates the username and pass -->
+	<target name="-deployDefault" depends="-forceUploadSettings,-init">
+		<mavenDeploy version="${version}" prefix="${jar.prefix}" settings="${jar.dest}/settings.xml"/>
+	</target>
+
+
+	<!-- installs into the local repo -->
+	<target name="-installDefault" depends="-forceUploadSettings,-init">
+		<mavenInstall version="${version}" prefix="${jar.prefix}"/>
+	</target>
+
+	<!-- updates username and pass to the specified properties -->
+	<target name="-forceUploadSettings" depends="-init">
+		<copy tofile="${jar.dest}/settings.xml">
+			<fileset file="maven/settings.xml"/>
+			<filterset>
+				<filter token="groovy.deploy.username" value="${groovy.deploy.username}"/>
+				<filter token="groovy.deploy.password" value="${groovy.deploy.password}"/>
+			</filterset>
+		</copy>
+	</target>
 </project>

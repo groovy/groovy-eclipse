@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
+compliance with the License. You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is
+distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+implied. See the License for the specific language governing permissions and limitations under the License.
+
+This work is copyright by the author(s) and is part of a greater work collectively copyright by the
+Groovy community. See the NOTICE.txt file distributed with this work for additional information.
+
+Author : Paul King
+$Revision: 20154 $ ($LastChangedBy: paulk $)
+$Date: 2010-05-29 06:47:51 +0200 (Sat, 29 May 2010) $
+-->
+
+<project name="build-maven" default="" basedir=".." xmlns:artifact="urn:maven-artifact-ant">
+
+	<macrodef name="maven.pom">
+		<attribute name="file" />
+		<attribute name="id" />
+		<sequential>
+			<artifact:pom file="@{file}" id="@{id}" />
+		</sequential>
+	</macrodef>
+
+	<target name="-mavenInit" depends="-mavenTaskdef,-mavenPomDefinitions">
+		<property file="build.properties" />
+		<property name="bootstrapDirectory" value="bootstrap" />
+	</target>
+
+	<target name="-mavenTaskdef">
+		<typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="urn:maven-artifact-ant">
+			<classpath>
+				<fileset dir="${bootstrapDirectory}" includes="maven-ant-tasks-*.jar" />
+			</classpath>
+		</typedef>
+	</target>
+
+	<target name="-mavenPomDefinitions">
+		<maven.pom file="${jar.dest}/${pom.name}" id="groovy.pom" />
+	</target>
+
+	<target name="-mavenDeployInit" depends="-mavenInit">
+		<artifact:install-provider artifactId="wagon-webdav" version="1.0-beta-2" />
+	</target>
+
+	<macrodef name="mavenDeploy">
+		<attribute name="version" />
+		<attribute name="prefix" />
+		<attribute name="settings" />
+		<sequential>
+			<artifact:pom id="groovy_pom" file="${jar.dest}/@{prefix}.pom" />
+			<artifact:deploy file="${jar.dest}/@{prefix}-@{version}.jar" settingsFile="@{settings}">
+				<pom refid="groovy_pom" />
+				<remoteRepository id="codehaus.org" url="dav:https://dav.codehaus.org/repository/groovy/" />
+			</artifact:deploy>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="mavenInstall">
+		<attribute name="version" />
+		<attribute name="prefix" />
+		<sequential>
+			<echo message="Installing artifact: ${jar.dest}/@{prefix}-@{version}.jar into local repository" />
+			<artifact:pom id="groovy_pom" file="${jar.dest}/@{prefix}.pom" />
+			<artifact:install file="${jar.dest}/@{prefix}-@{version}.jar">
+				<pom refid="groovy_pom" />
+			</artifact:install>
+		</sequential>
+	</macrodef>
+
+</project>

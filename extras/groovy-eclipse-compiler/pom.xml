@@ -1,25 +1,24 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.codehaus.groovy</groupId>
-  <artifactId>groovy-eclipse-compiler</artifactId>
-  <version>0.5.1-SNAPSHOT</version>
-  <packaging>jar</packaging>
+	<groupId>org.codehaus.groovy</groupId>
+	<artifactId>groovy-eclipse-compiler</artifactId>
+	<version>2.5.1-SNAPSHOT</version>
 
-  <name>Groovy-Eclipse compiler</name>
-  <description>Compiles Groovy code using the Groovy-Eclipse compiler.</description>
-  <url>http://groovy.codehaus.org/Eclipse+Plugin</url>
+	<name>Groovy-Eclipse compiler</name>
+	<description>Compiles Groovy code using the Groovy-Eclipse compiler.</description>
+	<url>http://groovy.codehaus.org/Eclipse+Plugin</url>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 
-  <issueManagement>
-  	<system>jira</system>
-  	<url>http://jira.codehaus.org/browse/GRECLIPSE</url>
-  </issueManagement>
-  <dependencies>
+	<issueManagement>
+		<system>jira</system>
+		<url>http://jira.codehaus.org/browse/GRECLIPSE</url>
+	</issueManagement>
+	<dependencies>
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-eclipse-batch</artifactId>
@@ -37,12 +36,31 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-  </dependencies>
-  <repositories>
-  <repository>
-  <id>springsource</id>
-  <url>http://maven.springframework.org/snapshot</url>
-  </repository>
-</repositories>
-  
+	</dependencies>
+	<organization>
+		<name>SpringSource</name>
+		<url>http://springsource.com</url>
+	</organization>
+	<repositories>
+		<repository>
+			<id>springsource</id>
+			<url>http://maven.springframework.org/snapshot</url>
+		</repository>
+	</repositories>
+  <distributionManagement>
+    <repository>
+      <id>codehaus.org</id>
+      <name>Codehaus.org repository</name>
+      <url>dav:https://dav.codehaus.org/repository/groovy/</url>
+    </repository>
+  </distributionManagement>
+  <build>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+         <artifactId>wagon-webdav</artifactId>
+         <version>1.0-beta-2</version>
+      </extension>
+    </extensions>
+  </build>
 </project>
