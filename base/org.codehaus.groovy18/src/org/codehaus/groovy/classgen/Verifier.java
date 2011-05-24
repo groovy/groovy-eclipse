@@ -70,6 +70,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
     // GRECLIPSE: configuration options 
     public boolean inlineStaticFieldInitializersIntoClinit = true;
+    public boolean inlineFieldInitializersIntoInit = true;
     
     public ClassNode getClassNode() {
         return classNode;
@@ -820,10 +821,16 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         		}
         }
         }
-        for (FieldNode fn : node.getFields()) {
-            addFieldInitialization(statements, staticStatements, fn, isEnum,
-        			initStmtsAfterEnumValuesInit, explicitStaticPropsInEnum);
+        // GRECLIPSE - conditionally 'copy' the initializers into the ctors
+        if (inlineFieldInitializersIntoInit) {
+        // GRECLIPSE - end
+	        for (FieldNode fn : node.getFields()) {
+	            addFieldInitialization(statements, staticStatements, fn, isEnum,
+	        			initStmtsAfterEnumValuesInit, explicitStaticPropsInEnum);
+	        }
+	    // GRECLIPSE - start
         }
+        // GRECLIPSE - end
         statements.addAll(node.getObjectInitializerStatements());
         if (!statements.isEmpty()) {
             Statement code = constructorNode.getCode();

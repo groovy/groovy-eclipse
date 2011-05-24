@@ -1201,8 +1201,10 @@ public class CompilationUnit extends ProcessingUnit {
 	public void tweak(boolean isReconcile) {
 		if (isReconcile) {
         	verifier.inlineStaticFieldInitializersIntoClinit=false;
+        	verifier.inlineFieldInitializersIntoInit=false;
 		} else {
         	verifier.inlineStaticFieldInitializersIntoClinit=true;			
+        	verifier.inlineFieldInitializersIntoInit=true;
 		}
 	}
 	// end
