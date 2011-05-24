@@ -18,15 +18,15 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.CandidateCollector;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.JavaRefactoringDispatcher;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.ISourceReference;
-import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.refactoring.RenameSupport;
@@ -42,41 +42,62 @@ import org.eclipse.ui.PlatformUI;
  */
 public class RenameDispatcherAction extends GroovyRefactoringAction {
 
-
 	public void run(IAction action) {
 		if (initRefactoring()) {
 			CandidateCollector dispatcher = new CandidateCollector(getUnit(), getSelection());
 			try {
 			    ISourceReference target = dispatcher.getRefactoringTarget();
-			    if (target instanceof IMember || target instanceof ILocalVariable) {
-
-                    if (target instanceof IType) {
-                        ICompilationUnit compilationUnit = ((IType) target).getCompilationUnit();
-                        if (compilationUnit != null
-                                && compilationUnit.getElementName().startsWith(((IType) target).getElementName() + ".")) {
-                            target = compilationUnit;
-                        }
-                    }
-                    IPreferenceStore store = JavaPlugin.getDefault().getPreferenceStore();
-                    boolean lightweight = store.getBoolean(PreferenceConstants.REFACTOR_LIGHTWEIGHT);
+                IPreferenceStore store = JavaPlugin.getDefault().getPreferenceStore();
+                boolean lightweight = store.getBoolean(PreferenceConstants.REFACTOR_LIGHTWEIGHT);
+                if (runViaAdapter(target, lightweight))
+                    return;
+                if (target instanceof IMember || target instanceof ILocalVariable) {
                     if (lightweight) {
                         new GroovyRenameLinkedMode((IJavaElement) target, getEditor()).start();
                     } else {
                         openJavaRefactoringWizard((IJavaElement) target);
                     }
-			    } else {
-			        displayErrorDialog("Cannot refactor on current selection.  No refactoring candidates found");
-			    }
+                } else {
+                    displayErrorDialog("Cannot refactor on current selection.  No refactoring candidates found");
+                }
             } catch (CoreException e) {
 				displayErrorDialog(e.getMessage());
 			}
 		}
 	}
 
-	private void openJavaRefactoringWizard(IJavaElement element) throws CoreException {
+    private boolean runViaAdapter(ISourceReference _target, boolean lightweight) {
+        try {
+            IRenameTarget target = adapt(_target, IRenameTarget.class);
+            if (target != null) {
+                return target.performRenameAction(getShell(), getEditor(), lightweight);
+            }
+        } catch (Exception e) {
+            GroovyCore.logException("", e);
+        }
+        return false;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T adapt(Object target, Class<T> clazz) {
+        T result;
+        if (target instanceof IAdaptable) {
+            result = (T) ((IAdaptable) target).getAdapter(clazz);
+        } else {
+            result = null;
+        }
+        System.out.println("==> " + result);
+        return result;
+    }
+
+    private void openJavaRefactoringWizard(IJavaElement element) throws CoreException {
 		JavaRefactoringDispatcher dispatcher = new JavaRefactoringDispatcher(element);
 		RenameSupport refactoring = dispatcher.dispatchJavaRenameRefactoring();
-		Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-		refactoring.openDialog(shell);
+		Shell shell = getShell();
+        refactoring.openDialog(shell);
 	}
+
+    private Shell getShell() {
+        return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+    }
 }
