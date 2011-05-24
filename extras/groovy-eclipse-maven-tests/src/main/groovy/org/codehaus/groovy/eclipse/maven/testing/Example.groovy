@@ -18,6 +18,10 @@ class Example {
     Helper help
     JavaClass j
     def show() {
-        println 'Hello World' 
+        println 'Hello World'
+        foo "foo" bar "hello"
     } 
+    Example foo(x) { this }
+    def bar(x) { println x }
+    
 }

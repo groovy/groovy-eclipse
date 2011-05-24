@@ -80,6 +80,7 @@
           jar up all relevant files in the extract location               
          - - - - - - - - - - - - - - - - - -->
 	<target name="-create.jar" depends="-init">
+		<delete dir="${jar.dest}" failonerror="no"/>
 		<mkdir dir="${jar.dest}"/>
 		<jar destfile="${jar.dest}/${jar.name}">
 			<fileset dir="${extract.loc}">
@@ -118,7 +119,7 @@
 
 		<fileset dir="${workspace.loc}" id="orig.groovy.jars">
 
-			<include name="${groovy.folder}/lib/groovy-${version}.*.jar"/>
+			<include name="${groovy.folder}/lib/groovy-1*.jar"/>
 			<include name="${groovy.folder}/lib/antlr-*.jar"/>
 			<include name="${groovy.folder}/lib/asm-3*.jar"/>
 			<include name="${groovy.folder}/lib/asm-tree-3*.jar"/>
@@ -154,7 +155,6 @@
     <target name="-init17" if="do-17-build">
        <property name="version" value="${version1.7}"/>
     	 <property name="groovy.folder" value="org.codehaus.groovy"/>
-
     </target>
 
 	<!-- - - - - - - - - - - - - - - - - - 
