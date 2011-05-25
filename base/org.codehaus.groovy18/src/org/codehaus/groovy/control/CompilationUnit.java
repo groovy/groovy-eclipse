@@ -1199,12 +1199,14 @@ public class CompilationUnit extends ProcessingUnit {
 	 * @param isReconcile is this a reconciling compile?
 	 */
 	public void tweak(boolean isReconcile) {
+		// Cant do this for field initializers. They need to be in the constructor in order for them to
+		// be correctly visited by the verifier and have certain optimizations performed (creating returns)
 		if (isReconcile) {
         	verifier.inlineStaticFieldInitializersIntoClinit=false;
-        	verifier.inlineFieldInitializersIntoInit=false;
+//        	verifier.inlineFieldInitializersIntoInit=false;
 		} else {
         	verifier.inlineStaticFieldInitializersIntoClinit=true;			
-        	verifier.inlineFieldInitializersIntoInit=true;
+//        	verifier.inlineFieldInitializersIntoInit=true;
 		}
 	}
 	// end
