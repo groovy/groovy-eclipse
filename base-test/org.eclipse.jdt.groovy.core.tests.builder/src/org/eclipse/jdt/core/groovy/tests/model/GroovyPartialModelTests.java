@@ -26,6 +26,8 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
@@ -61,20 +63,35 @@ public class GroovyPartialModelTests  extends AbstractGroovyTypeRootTests {
                 "  static aStatic = {}\n" +
                 "}\n", ClosureExpression.class);
     }
-    // tests that a non-static field initializer is not erased during a reconcile
-    public void testFieldInitializerIsNotMoved1() throws Exception {
-        findFieldInitializer("package p1\n"+
-                "public class Hello {\n"+
-                "  def aStatic = []\n" +
-                "}\n", ListExpression.class);
-    }
     
-    // tests that a non-static field initializer is not erased during a reconcile
-    public void testFieldInitializerIsNotMoved2() throws Exception {
-        findFieldInitializer("package p1\n"+
-                "public class Hello {\n"+
-                "  def aStatic = {}\n" +
-                "}\n", ClosureExpression.class);
+//    // tests that a non-static field initializer is not erased during a reconcile
+//    public void testFieldInitializerIsNotMoved1() throws Exception {
+//        findFieldInitializer("package p1\n"+
+//                "public class Hello {\n"+
+//                "  def aStatic = []\n" +
+//                "}\n", ListExpression.class);
+//    }
+    
+//    // tests that a non-static field initializer is not erased during a reconcile
+//    public void testFieldInitializerIsNotMoved2() throws Exception {
+//        findFieldInitializer("package p1\n"+
+//                "public class Hello {\n"+
+//                "  def aStatic = {}\n" +
+//                "}\n", ClosureExpression.class);
+//    }
+    
+    public void testClosureReturner() throws Exception {
+    	IProject project = createSimpleGroovyProject().getProject();
+        env.addGroovyClass(project.getFullPath().append("src"), "p1", "Hello2", "class C { def aaa = { 123 } }");
+        IFile javaFile = getFile("Project/src/p1/Hello2.groovy");
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(javaFile);
+        ClassNode inClass = unit.getModuleNode().getClasses().get(0);
+        FieldNode field = inClass.getField("aaa");
+        Expression initialExpression = field.getInitialExpression();
+        ClosureExpression cEx = (ClosureExpression)initialExpression;
+        BlockStatement bSt = (BlockStatement) cEx.getCode();
+        Statement st = bSt.getStatements().get(0);
+        assertEquals("org.codehaus.groovy.ast.stmt.ReturnStatement",st.getClass().getName());
     }
     
     private Expression findFieldInitializer(String contents, Class<? extends Expression> expressionClass) throws JavaModelException {
