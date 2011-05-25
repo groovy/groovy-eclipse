@@ -242,8 +242,9 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         if (ASTTransformation.class.isAssignableFrom(klass)) {
             classNode.addTransform(klass, annotation);
         } else {
-            source.getErrorCollector().addError(new SimpleMessage("Not an ASTTransformation: " + 
-                    klass.getName() + " declared by " + annotation.getClassNode().getName(), source));
+        	SimpleMessage sm = new SimpleMessage("Not an ASTTransformation: " + 
+                    klass.getName() + " declared by " + annotation.getClassNode().getName()+":  klass="+klass+" loaderForKlass="+(klass==null?null:klass.getClassLoader())+" ASTTransformation.class loader="+ASTTransformation.class.getClassLoader(), source);
+            source.getErrorCollector().addError(sm);
         }
     }
 
