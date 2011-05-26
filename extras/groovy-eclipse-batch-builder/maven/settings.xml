@@ -2,6 +2,11 @@
 <settings>
   <servers>
     <server>
+      <id>codehaus-nexus-snapshots</id>
+      <username>@groovy.deploy.username@</username>
+      <password>@groovy.deploy.password@</password>
+    </server>
+    <server>
       <id>codehaus.org</id>
       <username>@groovy.deploy.username@</username>
       <password>@groovy.deploy.password@</password>

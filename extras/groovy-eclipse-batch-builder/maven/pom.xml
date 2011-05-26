@@ -8,4 +8,54 @@
   <packaging>jar</packaging>
   <version>REPLACE_WITH_VERSION</version>
   <name>Groovy-Eclipse Batch Compiler</name>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<licenses>
+		<license>
+			<name>The Eclipse Public License</name>
+			<url>http://www.eclipse.org/legal/epl-v10.html</url>
+			<distribution>repo</distribution>
+		</license>
+		<license>
+			<name>The Eclipse Public License</name>
+			<url>http://www.eclipse.org/legal/epl-v10.html</url>
+			<distribution>repo</distribution>
+		</license>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<id>werdna</id>
+			<name>Andrew Eisenberg</name>
+			<email>andrew@eisenberg.as</email>
+		</developer>
+	</developers>
+
+	<issueManagement>
+		<system>jira</system>
+		<url>http://jira.codehaus.org/browse/GRECLIPSE</url>
+	</issueManagement>
+	<scm>
+		<connection>scm:svn:http://svn.codehaus.org/groovy/eclipse</connection>
+		<developerConnection>scm:svn:https://svn.codehaus.org/groovy/eclipse</developerConnection>
+		<url>http://svn.codehaus.org/groovy/eclipse</url>
+	</scm>
+	<organization>
+		<name>SpringSource, a division of VMWare</name>
+		<url>http://springsource.com</url>
+	</organization>
+	<distributionManagement>
+		<repository>
+			<id>codehaus-nexus-snapshots</id>
+			<name>Codehaus.org snapshot repository</name>
+			<url>https://nexus.codehaus.org/content/repositories/snapshots/groovy/</url>
+		</repository>
+	</distributionManagement>
 </project>

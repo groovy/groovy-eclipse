@@ -8,6 +8,7 @@
  * Contributors:
  *     Andrew Eisenberg     - Initial API and implementation
  *     Carlos Fernandez     - fix for nowarn
+ *     Travis Schneeberger  - ensure that all options are supported
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.compiler;
 
@@ -29,19 +30,19 @@ import org.codehaus.plexus.compiler.CompilerOutputStyle;
 import org.codehaus.plexus.compiler.util.scan.InclusionScanException;
 import org.codehaus.plexus.compiler.util.scan.SourceInclusionScanner;
 import org.codehaus.plexus.compiler.util.scan.StaleSourceScanner;
-import org.codehaus.plexus.compiler.util.scan.mapping.SingleTargetSourceMapping;
 import org.codehaus.plexus.compiler.util.scan.mapping.SourceMapping;
 import org.codehaus.plexus.compiler.util.scan.mapping.SuffixMapping;
 import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.internal.compiler.batch.Main;
 
 /**
+ * Allows the use of the Groovy-Eclipse compiler through maven.
+ * 
  * @plexus.component role="org.codehaus.plexus.compiler.Compiler"
  *                   role-hint="groovy-eclipse"
  * 
  * 
  * @author <a href="mailto:andrew@eisenberg.as">Andrew Eisenberg</a>
- * @author <a href="mailto:jason@maven.org">Jason van Zyl</a>
  */
 public class GroovyEclipseCompiler extends AbstractCompiler {
 
@@ -194,7 +195,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
  
         String[] args = createCommandLine(config);
         if (args.length == 0) {
-            // nothing to compile
+            getLogger().info("Nothing to compile - all classes are up to date");
             return Collections.emptyList();
         }
             
@@ -215,9 +216,15 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     private File[] recalculateStaleFiles(CompilerConfiguration config)
             throws CompilerException {
         config.setSourceFiles(null);
-        long staleMillis = 0;
+        long staleMillis = 0;  // can we do better than using 0?
+        Set<String> includes = config.getIncludes();
+        if (includes == null || includes.isEmpty()) {
+            includes = Collections.singleton("**/*");
+        }
+        StaleSourceScanner scanner = new StaleSourceScanner(staleMillis, 
+                includes, config.getExcludes());
         Set<File> staleSources = computeStaleSources(config,
-                new StaleSourceScanner(staleMillis));
+                scanner);
         config.setSourceFiles(staleSources);
 
         File[] sourceFiles = staleSources.toArray(new File[0]);
@@ -264,7 +271,6 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         File[] sourceFiles = recalculateStaleFiles(config);
 
         if (sourceFiles.length == 0) {
-            getLogger().info("Nothing to compile - all classes are up to date");
             return new String[0];
         }
 
@@ -293,9 +299,25 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
 
         if (config.isDebug()) {
-            args.add("-g");
+            if (config.getDebugLevel() != null && config.getDebugLevel().trim().length() > 0) {
+                args.add("-g:" + config.getDebugLevel());
+            } else {
+                args.add("-g");
+            }
         }
         
+        
+        if ("none".equals(config.getProc())) {
+            args.add("-proc:none");
+        } else if ("only".equals(config.getProc())) {
+            args.add("-proc:only"); 
+        }
+        
+        if (config.getGeneratedSourcesDirectory() != null) {
+            args.add("-s");
+            args.add(config.getGeneratedSourcesDirectory().getAbsolutePath());
+        }
+    
         // change default to 1.5...why? because I say so.
         String source = config.getSourceVersion();
         args.add("-source");
@@ -318,6 +340,36 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         if (!config.isShowWarnings()) {
             args.add("-nowarn");
         }
+        
+        if (config.getAnnotationProcessors() != null) {
+            StringBuilder procArg = new StringBuilder();
+            for (String proc : config.getAnnotationProcessors()) {
+                if (proc != null && proc.trim().length() > 0) {
+                    procArg.append(proc);
+                    procArg.append(",");
+                }
+            }
+            if (procArg.length() > 0) {
+                args.add("-processor ");
+                procArg.replace(procArg.length()-1, procArg.length(), "");
+                args.add("\"" + procArg.toString() + "\"");
+            }
+        }
+        
+        if (verbose) {
+            args.add("-verbose");
+        }
+
+        if (verbose) {
+            getLogger().info("All args: " + args);
+        }
+        
+        if (config.getSourceEncoding() != null) {
+            args.add("-encoding");
+            args.add(config.getSourceEncoding());
+        }
+
+
 
         for (Iterator argIter = config.getCustomCompilerArguments().entrySet()
                 .iterator(); argIter.hasNext();) {
@@ -343,18 +395,6 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
         args.addAll(composeSourceFiles(sourceFiles));
 
-        if (verbose) {
-            args.add("-verbose");
-        }
-
-        if (verbose) {
-            getLogger().info("All args: " + args);
-        }
-        
-        if (config.getSourceEncoding() != null) {
-            args.add("-encoding");
-            args.add(config.getSourceEncoding());
-        }
         return args.toArray(new String[args.size()]);
     }
 

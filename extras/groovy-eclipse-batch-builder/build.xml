@@ -33,7 +33,7 @@
           target: publish
           publish to the codehaus repository                      
          - - - - - - - - - - - - - - - - - -->
-	<target name="publish" depends="-init,-mavenDeployInit,-installDefault,-deployDefault"
+	<target name="publish" depends="-init,-installDefault,-deployDefault"
       description="Deploy jars to maven repository on codehaus.org.">
 	</target>
 
@@ -104,7 +104,6 @@
 
 		<property name="jar.name" value="${jar.prefix}-${version}.jar"/>
 		<property name="pom.name" value="${jar.prefix}.pom"/>
-		<property name="bootstrapDirectory" value="bootstrap"/>
 
 		<fileset dir="${eclipse.install.plugins}" id="orig.plugin.jars">
 			<include name="org.eclipse.osgi_*.jar" />
@@ -196,7 +195,7 @@
 	</target>
 
 	<!-- does the deploy and updates the username and pass -->
-	<target name="-deployDefault" depends="-forceUploadSettings,-init">
+	<target name="-deployDefault" depends="-forceUploadSettings,-init,-mavenDeployInit">
 		<mavenDeploy version="${version}" prefix="${jar.prefix}" settings="${jar.dest}/settings.xml"/>
 	</target>
 
@@ -207,7 +206,7 @@
 	</target>
 
 	<!-- updates username and pass to the specified properties -->
-	<target name="-forceUploadSettings" depends="-init">
+	<target name="-forceUploadSettings" depends="-init,-mavenDeployInit">
 		<copy tofile="${jar.dest}/settings.xml">
 			<fileset file="maven/settings.xml"/>
 			<filterset>

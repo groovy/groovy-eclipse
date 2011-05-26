@@ -14,21 +14,53 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-	
+
+	<licenses>
+		<license>
+			<name>The Eclipse Public License</name>
+			<url>http://www.eclipse.org/legal/epl-v10.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<parent>
+		<groupId>org.codehaus</groupId>
+		<artifactId>codehaus-parent</artifactId>
+		<version>4</version>
+	</parent>
+
+	<developers>
+		<developer>
+			<id>werdna</id>
+			<name>Andrew Eisenberg</name>
+			<email>andrew@eisenberg.as</email>
+		</developer>
+	</developers>
+
 	<issueManagement>
 		<system>jira</system>
 		<url>http://jira.codehaus.org/browse/GRECLIPSE</url>
 	</issueManagement>
+	<scm>
+		<connection>scm:svn:http://svn.codehaus.org/groovy/eclipse</connection>
+		<developerConnection>scm:svn:https://svn.codehaus.org/groovy/eclipse</developerConnection>
+		<url>http://svn.codehaus.org/groovy/eclipse</url>
+	</scm>
+	<organization>
+		<name>SpringSource, a division of VMWare</name>
+		<url>http://springsource.com</url>
+	</organization>
 	<dependencies>
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-eclipse-batch</artifactId>
-			<version>[1.7.10-01,1.7.10-99],[1.8.0-01,1.8.0-99]</version>
+			<version>[1.7.10-02,1.7.10-99],[1.8.0-02,1.8.0-99]</version>
+			<!-- <version>[1.7.10-02,1.7.10-99],[1.8.0-02,1.8.0-99]</version> -->
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.plexus</groupId>
 			<artifactId>plexus-compiler-api</artifactId>
-			<version>1.6</version>
+			<version>1.8.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.codehaus.plexus</groupId>
@@ -38,30 +70,21 @@
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
-	<organization>
-		<name>SpringSource</name>
-		<url>http://springsource.com</url>
-	</organization>
+
 	<repositories>
 		<repository>
-			<id>springsource</id>
-			<url>http://maven.springframework.org/snapshot</url>
+			<id>codehaus.org</id>
+			<url>http://repository.codehaus.org</url>
 		</repository>
 	</repositories>
-  <distributionManagement>
-    <repository>
-      <id>codehaus.org</id>
-      <name>Codehaus.org repository</name>
-      <url>dav:https://dav.codehaus.org/repository/groovy/</url>
-    </repository>
-  </distributionManagement>
-  <build>
-    <extensions>
-      <extension>
-        <groupId>org.apache.maven.wagon</groupId>
-         <artifactId>wagon-webdav</artifactId>
-         <version>1.0-beta-2</version>
-      </extension>
-    </extensions>
-  </build>
+
+	<build>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-webdav</artifactId>
+				<version>1.0-beta-2</version>
+			</extension>
+		</extensions>
+	</build>
 </project>
