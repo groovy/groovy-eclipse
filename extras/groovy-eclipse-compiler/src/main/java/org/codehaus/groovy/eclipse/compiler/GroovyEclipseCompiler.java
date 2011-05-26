@@ -15,15 +15,23 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.codehaus.plexus.compiler.AbstractCompiler;
 import org.codehaus.plexus.compiler.CompilerConfiguration;
 import org.codehaus.plexus.compiler.CompilerError;
 import org.codehaus.plexus.compiler.CompilerException;
 import org.codehaus.plexus.compiler.CompilerOutputStyle;
+import org.codehaus.plexus.compiler.util.scan.InclusionScanException;
+import org.codehaus.plexus.compiler.util.scan.SourceInclusionScanner;
+import org.codehaus.plexus.compiler.util.scan.StaleSourceScanner;
+import org.codehaus.plexus.compiler.util.scan.mapping.SingleTargetSourceMapping;
+import org.codehaus.plexus.compiler.util.scan.mapping.SourceMapping;
+import org.codehaus.plexus.compiler.util.scan.mapping.SuffixMapping;
 import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.internal.compiler.batch.Main;
 
@@ -176,35 +184,98 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         -O                 optimize for execution time (ignored)
      */
     public GroovyEclipseCompiler() {
-        super(CompilerOutputStyle.ONE_OUTPUT_FILE_PER_INPUT_FILE, ".groovy",
-                ".class", null);
+        // here is a bit of a hack.  maven only wants a single file extension
+        // for sources, so we pass it "".  Later, we must recalculate for real.
+        super(CompilerOutputStyle.ONE_OUTPUT_FILE_PER_INPUT_FILE, "", ".class",
+                null);
     }
 
     public List compile(CompilerConfiguration config) throws CompilerException {
+ 
+        String[] args = createCommandLine(config);
+        if (args.length == 0) {
+            // nothing to compile
+            return Collections.emptyList();
+        }
+            
+        Progress progress = new Progress();
+        Main main = new Main(new PrintWriter(System.out), new PrintWriter(
+                System.err), false/* systemExit */, null/* options */, progress);
+        boolean result = main.compile(args);
+        
+
+        return formatResult(main, result);
+    }
+
+    /**
+     * @param config
+     * @return
+     * @throws CompilerException
+     */
+    private File[] recalculateStaleFiles(CompilerConfiguration config)
+            throws CompilerException {
+        config.setSourceFiles(null);
+        long staleMillis = 0;
+        Set<File> staleSources = computeStaleSources(config,
+                new StaleSourceScanner(staleMillis));
+        config.setSourceFiles(staleSources);
+
+        File[] sourceFiles = staleSources.toArray(new File[0]);
+        return sourceFiles;
+    }
+
+    private boolean doesStartWithHyphen(Object key) {
+        return null != key && String.class.isInstance(key)
+                && ((String) key).startsWith("-");
+    }
+
+    private List formatResult(Main main, boolean result) {
+        if (result) {
+            return Collections.EMPTY_LIST;
+        } else {
+            String error = main.globalErrorsCount == 1 ? "error" : "errors";
+            String warning = main.globalWarningsCount == 1 ? "warning"
+                    : "warnings";
+            return Collections.singletonList(new CompilerError("Found "
+                    + main.globalErrorsCount + " " + error + " and "
+                    + main.globalWarningsCount + " " + warning + ".", true));
+        }
+    }
+
+    private List<String> composeSourceFiles(File[] sourceFiles) {
+        List<String> sources = new ArrayList<String>(sourceFiles.length);
+        for (int i = 0; i < sourceFiles.length; i++) {
+            sources.add(sourceFiles[i].getPath());
+        }
+        return sources;
+    }
+
+    // FIXADE still need to handle:
+    // fork, maxmem, meminitial
+    public String[] createCommandLine(CompilerConfiguration config)
+            throws CompilerException {
         File destinationDir = new File(config.getOutputLocation());
 
         if (!destinationDir.exists()) {
             destinationDir.mkdirs();
         }
-        
-        // force the resetting of the source files so that java files are included
-        config.setSourceFiles(null);
-        config.addInclude("**/*.java");
-        config.addInclude("**/*.groovy");
-        String[] sourceFiles = getSourceFiles(config);
+
+        // recalculate stale files since they were not properly calculated in super
+        File[] sourceFiles = recalculateStaleFiles(config);
 
         if (sourceFiles.length == 0) {
-            getLogger().warn("No sources added to compile; skipping");
-            return Collections.EMPTY_LIST;
+            getLogger().info("Nothing to compile - all classes are up to date");
+            return new String[0];
         }
 
-        getLogger().info("Using Groovy-Eclipse compiler to compile both Java and Groovy files");
-        getLogger().info("Compiling " + sourceFiles.length + " "
-                + "source file" + (sourceFiles.length == 1 ? "" : "s") + " to "
-                + destinationDir.getAbsolutePath());
-        
+        getLogger()
+                .info("Using Groovy-Eclipse compiler to compile both Java and Groovy files");
+        getLogger().info(
+                "Compiling " + sourceFiles.length + " " + "source file"
+                        + (sourceFiles.length == 1 ? "" : "s") + " to "
+                        + destinationDir.getAbsolutePath());
 
-        List args = new ArrayList();
+        List<String> args = new ArrayList<String>();
         String cp = super.getPathString(config.getClasspathEntries());
         verbose = config.isVerbose();
         if (verbose) {
@@ -214,15 +285,18 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             args.add("-cp");
             args.add(cp);
         }
-        
-        if (config.getOutputLocation()!= null && config.getOutputLocation().length() > 0) {
+
+        if (config.getOutputLocation() != null
+                && config.getOutputLocation().length() > 0) {
             args.add("-d");
             args.add(config.getOutputLocation());
         }
+
+        if (config.isDebug()) {
+            args.add("-g");
+        }
         
-        args.add("-g");
-        
-        // change default to 1.5...why?  because I say so.
+        // change default to 1.5...why? because I say so.
         String source = config.getSourceVersion();
         args.add("-source");
         if (source != null && source.length() > 0) {
@@ -238,85 +312,89 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             args.add("1.5");
         }
 
-        // trigger nowarn based on the CompilerConfiguration
-        if (config.isShowWarnings() ) {
+        if (config.isShowDeprecation()) {
+            args.add("-deprecation");
+        }
+        if (!config.isShowWarnings()) {
             args.add("-nowarn");
         }
 
-        //TODO review CompilerConfiguration - make sure all options are taken into account
-
-
-        for (Iterator argIter = config.getCustomCompilerArguments().entrySet().iterator(); argIter.hasNext();) {
+        for (Iterator argIter = config.getCustomCompilerArguments().entrySet()
+                .iterator(); argIter.hasNext();) {
             Entry entry = (Entry) argIter.next();
 
             Object key = entry.getKey();
-            if (doesStartWithHyphen(key)) { // don't add a "-" if the arg already has one
-                args.add(key);
-            } else {
+            if (doesStartWithHyphen(key)) { // don't add a "-" if the arg
+                                            // already has one
+                args.add((String) key);
+            } else if (key != null) {
                 /*
-                 * Not sure what the possible range of usage looks like but
-                 * i don't think this should allow for null keys?
-                 * "-null" probably isn't going to play nicely with any compiler?
+                 * Not sure what the possible range of usage looks like but i
+                 * don't think this should allow for null keys? "-null" probably
+                 * isn't going to play nicely with any compiler?
                  */
                 args.add("-" + key);
-            }
-
-            if (null != entry.getValue()) { // don't allow a null value
-                args.add("\"" + entry.getValue() + "\"");
+                if (null != entry.getValue()) { // don't allow a null value
+                    args.add("\"" + entry.getValue() + "\"");
+                }
             }
 
         }
-        
+
         args.addAll(composeSourceFiles(sourceFiles));
-        
+
         if (verbose) {
             args.add("-verbose");
         }
-        
+
         if (verbose) {
             getLogger().info("All args: " + args);
         }
-        Progress progress = new Progress();
-        Main main = new Main(new PrintWriter(System.out), new PrintWriter(System.err), false/*systemExit*/, null/*options*/, progress);
-        boolean result = main.compile((String[]) args.toArray(new String[args.size()]));
-
-        return formatResult(main, result);
-    }
-
-    private boolean doesStartWithHyphen(Object key) {
-        return null != key
-                && String.class.isInstance(key)
-                && ((String)key).startsWith("-");
-    }
-
-    /**
-     * @param main
-     * @param result
-     * @return
-     */
-    private List formatResult(Main main, boolean result) {
-        if (result) {
-            return Collections.EMPTY_LIST;
-        } else {
-            String error = main.globalErrorsCount == 1 ? "error" : "errors";
-            String warning = main.globalWarningsCount == 1 ? "warning" : "warnings";
-            return Collections.singletonList(new CompilerError("Found " + main.globalErrorsCount + " " + error + " and " + main.globalWarningsCount + " " + warning  + ".", true));
+        
+        if (config.getSourceEncoding() != null) {
+            args.add("-encoding");
+            args.add(config.getSourceEncoding());
         }
+        return args.toArray(new String[args.size()]);
     }
 
-    private List composeSourceFiles(String[] sourceFiles) {
-        List sources = new ArrayList(sourceFiles.length);
-        for (int i = 0; i < sourceFiles.length; i++) {
-            sources.add(sourceFiles[i]);
+    private Set<File> computeStaleSources(
+            CompilerConfiguration compilerConfiguration,
+            SourceInclusionScanner scanner) throws CompilerException {
+        SourceMapping mappingGroovy = new SuffixMapping(
+                ".groovy",
+                ".class");
+
+        SourceMapping mappingJava = new SuffixMapping(
+                ".java",
+                ".class");
+        scanner.addSourceMapping(mappingGroovy);
+        scanner.addSourceMapping(mappingJava);
+        
+        File outputDirectory = new File(compilerConfiguration.getOutputLocation());
+        Set<File> staleSources = new HashSet<File>();
+
+        for (String sourceRoot : (List<String>) compilerConfiguration
+                .getSourceLocations()) {
+            File rootFile = new File(sourceRoot);
+
+            if (!rootFile.isDirectory()) {
+                continue;
+            }
+
+            try {
+                staleSources.addAll(scanner.getIncludedSources(rootFile,
+                        outputDirectory));
+            } catch (InclusionScanException e) {
+                throw new CompilerException(
+                        "Error scanning source root: \'" + sourceRoot + "\' "
+                                + "for stale files to recompile.", e);
+            }
         }
-        return sources;
+
+        return staleSources;
     }
 
-    public String[] createCommandLine(CompilerConfiguration config)
-            throws CompilerException {
-        return null;
-    }
-    
     /**
      * Simple progress monitor to keep track of number of files compiled
      * 
@@ -324,18 +402,18 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      * @created Aug 13, 2010
      */
     private class Progress extends CompilationProgress {
-        
+
         int numCompiled = 0;
 
-        public void begin(int arg0) { }
+        public void begin(int arg0) {}
 
-        public void done() { }
+        public void done() {}
 
         public boolean isCanceled() {
             return false;
         }
 
-        public void setTaskName(String newTaskName) { }
+        public void setTaskName(String newTaskName) {}
 
         public void worked(int workIncrement, int remainingWork) {
             if (verbose) {
@@ -344,7 +422,6 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             }
             numCompiled++;
         }
-        
-    }
 
+    }
 }
