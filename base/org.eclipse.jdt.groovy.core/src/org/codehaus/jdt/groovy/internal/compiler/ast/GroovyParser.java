@@ -39,6 +39,7 @@ import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -411,9 +412,12 @@ public class GroovyParser {
 
 		{ // Try to turn this into a 'real' absolute file system reference
 			Path path = new Path(filepath);
-			if (path.segmentCount() >= 2) { //Needs 2 segments: a project and file name or eclipse throws assertion failed here.
+			if (path.segmentCount() >= 2) { // Needs 2 segments: a project and file name or eclipse throws assertion failed here.
 				IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(filepath));
-				filepath = file.getLocation().toFile().getAbsolutePath();
+				final IPath location = file.getLocation();
+				if (location != null) {
+					filepath = location.toFile().getAbsolutePath();
+				}
 			}
 		}
 
