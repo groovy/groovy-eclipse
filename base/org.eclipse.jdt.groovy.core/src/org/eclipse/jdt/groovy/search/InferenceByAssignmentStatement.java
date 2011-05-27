@@ -64,7 +64,13 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 			}
 
 			// use the declared type if not void and not object expression
-			ClassNode varType = declExpr.getVariableExpression().getType();
+			VariableExpression variableExpression = declExpr.getVariableExpression();
+			ClassNode varType;
+			if (variableExpression.getOriginType() != null) {
+				varType = variableExpression.getOriginType();
+			} else {
+				varType = variableExpression.getType();
+			}
 			ClassNode typeToStore;
 			if (!VariableScope.isVoidOrObject(varType) && !varType.equals(VariableScope.OBJECT_CLASS_NODE)) {
 				typeToStore = varType;
@@ -75,7 +81,7 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 			}
 			// store the variable. declaring type is always null since the
 			// variable is being declared right here.
-			scope.addVariable(declExpr.getVariableExpression().getName(), typeToStore, null);
+			scope.addVariable(variableExpression.getName(), typeToStore, null);
 
 		} else if (node instanceof BinaryExpression) {
 			BinaryExpression assign = (BinaryExpression) node;

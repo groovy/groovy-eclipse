@@ -896,6 +896,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	@Override
 	public void visitBinaryExpression(BinaryExpression node) {
 
+		// don't visit binary expressions in a constructor that have no source location.
+		// the reason is that these were copied from the field initializer.
+		// we want to visit them under the field initializer, not the construcor
+		if (node.getEnd() == 0) {
+			return;
+		}
+
 		// BinaryExpressions not an AnnotatedNode in groovy 1.6, but they are in 1.7+
 		Object maybeAnnotatedNode = node;
 		if (maybeAnnotatedNode instanceof AnnotatedNode) {
