@@ -24,10 +24,13 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.core.ClasspathEntry;
 
 /**
  * This class contains all the utility methods used in adding the Groovy Runtime
@@ -50,6 +53,7 @@ public class GroovyRuntime {
         }
     }
 
+
     public static void removeLibraryFromClasspath(
             final IJavaProject javaProject, final IPath libraryPath)
             throws JavaModelException {
@@ -65,6 +69,12 @@ public class GroovyRuntime {
         }
     }
 
+    // Breaking encapsu;ation here. I don't want to specify this classpath
+    // container here
+    // because it is defined in a different plugin, but this is the least
+    // complicated way pf doing it.
+    public static IPath DSLD_CONTAINER_ID = new Path("GROOVY_DSL_SUPPORT");
+
     public static void addGroovyRuntime(final IProject project) {
         GroovyCore.trace("GroovyRuntime.addGroovyRuntime()");
         try {
@@ -77,6 +87,11 @@ public class GroovyRuntime {
             final IJavaProject javaProject = JavaCore.create(project);
             addGroovyClasspathContainer(javaProject);
 
+            // this breaks encapsulation, but it is the most logical place to
+            // put it
+            // add the DSLD classpath container
+            addLibraryToClasspath(javaProject, DSLD_CONTAINER_ID);
+
         } catch (final Exception e) {
             GroovyCore.logException("Failed to add groovy runtime support", e);
         }
@@ -84,23 +99,23 @@ public class GroovyRuntime {
 
     public static boolean hasGroovyClasspathContainer(
             final IJavaProject javaProject) throws CoreException {
+        return hasClasspathContainer(javaProject, GroovyClasspathContainer.CONTAINER_ID);
+    }
+
+    public static boolean hasClasspathContainer(final IJavaProject javaProject, final IPath libraryPath) throws CoreException {
         if (javaProject == null || !javaProject.getProject().isAccessible())
             return false;
         final IClasspathEntry[] entries = javaProject.getRawClasspath();
         for (int i = 0; i < entries.length; i++) {
             final IClasspathEntry entry = entries[i];
-            if (entry.getEntryKind() != IClasspathEntry.CPE_CONTAINER)
-                continue;
-            if (!ObjectUtils.equals(entry.getPath(),
-                    GroovyClasspathContainer.CONTAINER_ID)
-                    && !GroovyClasspathContainer.CONTAINER_ID.isPrefixOf(entry
-                            .getPath()))
-                continue;
-            return true;
+            if (entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
+                if (ObjectUtils.equals(entry.getPath(), libraryPath) || libraryPath.isPrefixOf(entry.getPath())) {
+                    return true;
+                }
+            }
         }
         return false;
     }
-
 //    /**
 //     * Not used, but could be used to exclude all groovy files from compilation
 //     * @param javaProject
@@ -146,7 +161,7 @@ public class GroovyRuntime {
             if (javaProject == null || hasGroovyClasspathContainer(javaProject)) {
                 return;
             }
-            
+
             final IClasspathEntry containerEntry = JavaCore.newContainerEntry(
                     GroovyClasspathContainer.CONTAINER_ID, true);
             addClassPathEntry(javaProject, containerEntry);
@@ -159,15 +174,19 @@ public class GroovyRuntime {
 
     public static void removeGroovyClasspathContainer(
             final IJavaProject javaProject) {
+        removeClasspathContainer(GroovyClasspathContainer.CONTAINER_ID, javaProject);
+    }
+
+    public static void removeClasspathContainer(IPath containerPath, IJavaProject javaProject) {
         try {
             if (!hasGroovyClasspathContainer(javaProject)) {
                 return;
             }
-            
+
             IClasspathEntry[] entries = javaProject.getRawClasspath();
             int removeIndex = -1;
             for (int i = 0; i < entries.length; i++) {
-                if (entries[i].getPath().equals(GroovyClasspathContainer.CONTAINER_ID)) {
+                if (entries[i].getPath().equals(containerPath)) {
                     removeIndex = i;
                     break;
                 }
@@ -180,11 +199,11 @@ public class GroovyRuntime {
             throw new RuntimeException(ce);
         }
     }
-    
+
     /**
      * Adds a library/folder that already exists in the project to the
      * classpath. Only added if it is not already on the classpath.
-     * 
+     *
      * @param javaProject
      *            The project to add add the classpath entry to.
      * @param libraryPath
@@ -193,13 +212,21 @@ public class GroovyRuntime {
      */
     public static void addLibraryToClasspath(final IJavaProject javaProject,
             final IPath libraryPath) throws JavaModelException {
+
         boolean alreadyExists = includesClasspathEntry(javaProject, libraryPath
                 .lastSegment());
         if (alreadyExists) {
             return;
         }
-        addClassPathEntry(javaProject, JavaCore.newLibraryEntry(libraryPath,
-                null, null, true));
+        addClassPathEntry(javaProject, new ClasspathEntry(IPackageFragmentRoot.K_BINARY, IClasspathEntry.CPE_CONTAINER,
+                libraryPath,
+                ClasspathEntry.INCLUDE_ALL, // inclusion patterns
+                ClasspathEntry.EXCLUDE_NONE, // exclusion patterns
+                null, null, null, // specific output folder
+                true, // exported
+                ClasspathEntry.NO_ACCESS_RULES, false, // no access rules to
+                                                       // combine
+                ClasspathEntry.NO_EXTRA_ATTRIBUTES));
     }
 
     public static void addGroovyNature(final IProject project)
@@ -223,7 +250,7 @@ public class GroovyRuntime {
 
     /**
      * Adds a classpath entry to a project
-     * 
+     *
      * @param project
      *            The project to add the entry to.
      * @param newEntry
@@ -239,7 +266,7 @@ public class GroovyRuntime {
 
     /**
      * Removes a classpath entry to a project
-     * 
+     *
      * @param project
      *            The project to remove the entry.
      * @param newEntry
@@ -252,11 +279,11 @@ public class GroovyRuntime {
                 project.getRawClasspath(), newEntry);
         project.setRawClasspath(newEntries, null);
     }
-    
+
     /**
      * Looks through a set of classpath entries and checks to see if the path is
      * in them.
-     * 
+     *
      * @param project
      *            The project to search.
      * @param possiblePath
@@ -267,7 +294,7 @@ public class GroovyRuntime {
      */
     private static boolean includesClasspathEntry(IJavaProject project,
             String entryName) throws JavaModelException {
-        IClasspathEntry[] entries = project.getResolvedClasspath(false);
+        IClasspathEntry[] entries = project.getRawClasspath();
         for (int i = 0; i < entries.length; i++) {
             IClasspathEntry entry = entries[i];
             if (entry.getPath().lastSegment().equals(entryName)) {

@@ -24,6 +24,7 @@ import org.eclipse.jdt.core.groovy.tests.model.AnnotationsTests;
 import org.eclipse.jdt.core.groovy.tests.model.GroovyClassFileTests;
 import org.eclipse.jdt.core.groovy.tests.model.GroovyCompilationUnitTests;
 import org.eclipse.jdt.core.groovy.tests.model.GroovyContentTypeTests;
+import org.eclipse.jdt.core.groovy.tests.model.GroovyPartialModelTests;
 import org.eclipse.jdt.core.groovy.tests.model.MoveRenameCopyTests;
 import org.eclipse.jdt.core.groovy.tests.search.AllSearchTests;
 import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTest;
@@ -44,6 +45,7 @@ public class GroovyJDTTests {
         suite.addTest(GroovyClassFileTests.suite());
         suite.addTest(GroovyContentTypeTests.suite());
         suite.addTest(MoveRenameCopyTests.suite());
+        suite.addTest(GroovyPartialModelTests.suite());
 
         // Builder tests
         suite.addTest(BasicGroovyBuildTests.suite());

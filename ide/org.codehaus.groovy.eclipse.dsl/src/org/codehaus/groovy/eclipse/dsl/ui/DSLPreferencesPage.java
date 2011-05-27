@@ -18,6 +18,7 @@ import java.util.Map;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLDStoreManager;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
+import org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer;
 import org.codehaus.groovy.eclipse.dsl.DisabledScriptsCache;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.earlystartup.InitializeAllDSLDs;
@@ -29,12 +30,16 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.internal.ui.viewsupport.JavaElementImageProvider;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.DialogField;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.ITreeListAdapter;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.LayoutUtil;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.TreeListDialogField;
+import org.eclipse.jdt.ui.ISharedImages;
+import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.layout.PixelConverter;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
@@ -45,6 +50,7 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Tree;
@@ -135,6 +141,13 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
                 IFile file = toFile(element);
                 if (file != null) {
                     return file.getProjectRelativePath().toPortableString();
+                } else if (element instanceof ProjectContextKey) {
+                    // external file
+                    String dslFileName = ((ProjectContextKey) element).dslFileName;
+                    if (dslFileName.startsWith("/")) {
+                        dslFileName = dslFileName.substring(1);
+                    }
+                    return dslFileName;
                 }
             }
             return super.getText(element);
@@ -145,7 +158,11 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             if (proj != null) {
                 return provider.getImage(proj);
             }
-            return provider.getImage(toFile(element));
+            IFile file = toFile(element);
+            if (file != null) {
+                return provider.getImage(file);
+            }
+            return JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CFILE);
         }
     }
     
@@ -216,6 +233,10 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
 
     private IWorkbenchPage page;
     
+    private IPreferenceStore store = GroovyDSLCoreActivator.getDefault().getPreferenceStore();
+
+    private Button autoAdd;
+    
     public DSLPreferencesPage() {
     }
 
@@ -257,6 +278,12 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         int buttonBarWidth= converter.convertWidthInCharsToPixels(24);
         tree.setButtonsMinWidth(buttonBarWidth);
             
+        
+        autoAdd = new Button(composite, SWT.CHECK);
+        autoAdd.setText("Automatically add DSL Support to all Groovy projects");
+        autoAdd.setSelection(store.getBoolean(DSLPreferencesInitializer.AUTO_ADD_DSL_SUPPORT));
+        
+        
         return composite;
     }
 
@@ -272,14 +299,18 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
     }
     
     protected IFile toFile(Object element) {
-        IFile file = ROOT.getFile(new Path(((ProjectContextKey) element).dslFileName));
+        Path path = new Path(((ProjectContextKey) element).dslFileName);
+        if (path.segmentCount() == 1) {
+            // external file
+            return null;
+        }
+        IFile file = ROOT.getFile(path);
         if (file.isAccessible()) {
             return file;
         } else {
             return null;
         }
     }
-    
     
     
     protected boolean canEdit() {
@@ -366,11 +397,14 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
     protected void performDefaults() {
         super.performDefaults();
         checkAll(true);
+        DSLPreferencesInitializer.reset();
+        autoAdd.setSelection(true);
     }
 
     @Override
     public boolean performOk() {
         storeChecks();
+        store.setValue(DSLPreferencesInitializer.AUTO_ADD_DSL_SUPPORT, autoAdd.getSelection());
         return super.performOk();
     }
 }

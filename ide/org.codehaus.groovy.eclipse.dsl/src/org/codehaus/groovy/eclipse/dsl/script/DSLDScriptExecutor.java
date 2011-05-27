@@ -145,7 +145,7 @@ public class DSLDScriptExecutor {
     private String scriptName;
     
     public DSLDScriptExecutor(IJavaProject project) {
-        // FIXADE What should we be using for the parent classloader? 
+        // FIXADE Should have one classloader per project
         gcl = new GroovyClassLoader(GroovyDSLCoreActivator.class.getClassLoader());
         this.project = project;
     }

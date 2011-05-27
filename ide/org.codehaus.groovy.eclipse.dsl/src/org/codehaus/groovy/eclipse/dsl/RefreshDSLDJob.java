@@ -10,7 +10,9 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.codehaus.groovy.eclipse.GroovyLogManager;
@@ -33,6 +35,7 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.core.ExternalPackageFragmentRoot;
 
 public class RefreshDSLDJob extends Job {
     
@@ -79,14 +82,35 @@ public class RefreshDSLDJob extends Job {
         protected void findDSLDsInLibraries() throws JavaModelException {
             IJavaProject javaProject = JavaCore.create(project);
             for (IPackageFragmentRoot root : javaProject.getPackageFragmentRoots()) {
-                IPackageFragment frag = root.getPackageFragment("dsld");
-                if (frag.exists()) {
-                    Object[] resources = frag.getNonJavaResources();
-                    for (Object resource : resources) {
-                        if (resource instanceof IStorage) {
-                            IStorage file = (IStorage) resource;
-                            if (isDSLD(file)) {
-                                dsldFiles.add(file);
+                if (root.getKind() == IPackageFragmentRoot.K_BINARY) {
+                    IPackageFragment frag = root.getPackageFragment("dsld");
+                    if (frag.exists()) {
+                        
+                        // FIXADE start workaround for Bug 346928
+                        // in 3.6 and earlier, it was not possible to refresh scripts in external folders 
+                        // fixed in 3.7, consider removing when 3.6 is no longer supported.
+                        IResource rootResource = root.getResource();
+                        if (rootResource == null && root instanceof ExternalPackageFragmentRoot) {
+                            // external source roots return null for getResource, but do have a resource 
+                            rootResource = ((ExternalPackageFragmentRoot) root).resource();
+                        }
+                        if (rootResource != null) {
+                            try {
+                                // FIXADE pass the progress monitor in here
+                                rootResource.refreshLocal(IResource.DEPTH_INFINITE, null);
+                            } catch (CoreException e) {
+                                GroovyDSLCoreActivator.logException(e);
+                            }
+                        }
+                        // FIXADE end workaround
+                        
+                        Object[] resources = frag.getNonJavaResources();
+                        for (Object resource : resources) {
+                            if (resource instanceof IStorage) {
+                                IStorage file = (IStorage) resource;
+                                if (isDSLD(file)) {
+                                    dsldFiles.add(file);
+                                }
                             }
                         }
                     }

@@ -39,22 +39,22 @@ import org.eclipse.ui.IWorkbenchPart;
 /**
  * RemoveGroovyNatureAction is responsible for removing the Groovy nature to a java
  * project.
- * 
+ *
  * @author Andrew
  */
 public class RemoveGroovyNatureAction implements IObjectActionDelegate {
     private List<IProject> currSelected = new LinkedList<IProject>();
-    
+
     private IWorkbenchPart targetPart;
-    
+
     private boolean shouldAskToRemoveJars = true;
 
 
     public void run(final IAction action) {
-        
+
         if (currSelected != null && currSelected.size() > 0) {
             GroovyCore.trace("RemoveGroovySupportAction.run()");
-            
+
             for (IProject project : currSelected) {
                 GroovyCore.trace("   to " + project.getName());
                 try {
@@ -70,6 +70,7 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
 					    }
 					    if (shouldRemove) {
 					        GroovyRuntime.removeGroovyClasspathContainer(javaProject);
+                            GroovyRuntime.removeLibraryFromClasspath(javaProject, GroovyRuntime.DSLD_CONTAINER_ID);
 					    }
 					}
 				} catch (CoreException e) {
@@ -98,7 +99,7 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
             for (Iterator<?> iter = newSelection.iterator(); iter.hasNext();) {
                 Object object = iter.next();
                 if (object instanceof IAdaptable) {
-                    IProject project = (IProject) ((IAdaptable)object).getAdapter(IProject.class);  
+                    IProject project = (IProject) ((IAdaptable)object).getAdapter(IProject.class);
                     if(project != null) {
                         newSelected.add(project);
                     } else {
@@ -126,7 +127,7 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
     public void setActivePart(final IAction action, final IWorkbenchPart targetPart) {
         this.targetPart = targetPart;
     }
-    
+
     // for testing ensure there is no ui modal dialog
     public void doNotAskToRemoveJars() {
         this.shouldAskToRemoveJars = false;

@@ -162,6 +162,23 @@ public class CompilerUtils {
         }
     }
 
+    public static URL findDSLDFolder() {
+        Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
+        Enumeration<URL> enu = groovyBundle.findEntries(".", "plugin_dsld_support", false);
+        if (enu != null && enu.hasMoreElements()) {
+            URL folder = enu.nextElement();
+            // remove the "reference:/" protocol
+            try {
+                folder = resolve(folder);
+                return folder;
+            } catch (IOException e) {
+                GroovyCore.logException("Exception when looking for DSLD folder", e);
+            }
+        }
+        return null;
+
+    }
+
     /**
      * Swtiches to or from groovy version 1.6.x depending on the boolean passed
      * in
@@ -257,13 +274,20 @@ public class CompilerUtils {
 
 
     private static String getDotGroovyLibLocation() {
-        String home = FrameworkProperties.getProperty("user.home");
+        String home = getDotGroovyLocation();
         if (home != null) {
-            home += "/.groovy/lib";
+            home += "/lib";
         }
         return home;
     }
 
+    public static String getDotGroovyLocation() {
+        String home = FrameworkProperties.getProperty("user.home");
+        if (home != null) {
+            home += "/.groovy";
+        }
+        return home;
+    }
 
     public static File[] findJarsInDotGroovyLocation() {
         String home = getDotGroovyLibLocation();

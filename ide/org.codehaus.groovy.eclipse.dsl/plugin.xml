@@ -59,6 +59,14 @@
                menubarPath="groovy/dsl"
                tooltip="Refresh Groovy DSLs for currentl selected Groovy Project(s)">
          </action>
+         <action
+               class="org.codehaus.groovy.eclipse.dsl.ui.AddDSLDContainerActtion"
+               enablesFor="1"
+               id="org.codehaus.groovy.eclipse.importlibs.action"
+               label="Add DSL support"
+               menubarPath="groovy/dsl"
+               tooltip="Add or remove DSL support for this project">
+         </action>
           <visibility>
              <objectState
                    name="nature"
@@ -119,5 +127,18 @@
             id="org.codehaus.groovy.eclipse.dsl.keywords"
             label="groovy dsld dsl descriptor">
       </keyword>
+   </extension>
+   <extension
+         point="org.eclipse.jdt.core.classpathContainerInitializer">
+      <classpathContainerInitializer
+            class="org.codehaus.groovy.eclipse.dsl.classpath.DSLDContainerInitializer"
+            id="GROOVY_DSL_SUPPORT">
+      </classpathContainerInitializer>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer">
+      </initializer>
    </extension>
 </plugin>

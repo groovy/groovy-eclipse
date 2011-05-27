@@ -1331,20 +1331,21 @@ public class GroovyEditor extends CompilationUnitEditor {
     protected JavaOutlinePage createOutlinePage() {
         OutlineExtenderRegistry outlineExtenderRegistry = GroovyPlugin.getDefault().getOutlineTools().getOutlineExtenderRegistry();
 
-        page = outlineExtenderRegistry.getGroovyOutlinePageForEditor(getGroovyCompilationUnit().getJavaProject().getProject(),
-                fOutlinerContextMenuId, this);
-        if (page != null) {
-            // don't call this since it will grab the GroovyCompilationUnit
-            // instead of the OCompilationUnit
-            // setOutlinePageInput(page, getEditorInput());
-            // FIXADE do we need to call
-            // page.getOutlineCompilationUnit().exists()?
-            page.setInput(page.getOutlineCompilationUnit());
-            return page;
-        } else {
-            return super.createOutlinePage();
+        GroovyCompilationUnit unit = getGroovyCompilationUnit();
+        if (unit != null) {
+            page = outlineExtenderRegistry.getGroovyOutlinePageForEditor(unit.getJavaProject().getProject(),
+                    fOutlinerContextMenuId, this);
+            if (page != null) {
+                // don't call this since it will grab the GroovyCompilationUnit
+                // instead of the OCompilationUnit
+                // setOutlinePageInput(page, getEditorInput());
+                // FIXADE do we need to call
+                // page.getOutlineCompilationUnit().exists()?
+                page.setInput(page.getOutlineCompilationUnit());
+                return page;
+            }
         }
-
+        return super.createOutlinePage();
     }
 
 }

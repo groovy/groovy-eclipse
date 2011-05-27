@@ -12,6 +12,8 @@ package org.codehaus.groovy.eclipse.dsl;
 
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
+import org.codehaus.groovy.eclipse.dsl.classpath.AutoAddContainerSupport;
+import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -29,6 +31,8 @@ public class GroovyDSLCoreActivator extends AbstractUIPlugin {
     private final DSLDStoreManager contextStoreManager;
 
     private DSLDResourceListener dsldListener;
+    
+    private AutoAddContainerSupport containerListener;
     
     public GroovyDSLCoreActivator() {
         plugin = this;
@@ -50,6 +54,10 @@ public class GroovyDSLCoreActivator extends AbstractUIPlugin {
 		GroovyDSLCoreActivator.context = bundleContext;
 		dsldListener = new DSLDResourceListener();
 		ResourcesPlugin.getWorkspace().addResourceChangeListener(dsldListener);
+
+		containerListener = new AutoAddContainerSupport();
+		containerListener.addContainerToAll();
+        ResourcesPlugin.getWorkspace().addResourceChangeListener(containerListener, IResourceChangeEvent.POST_CHANGE);
 	}
 
 	@Override
@@ -58,7 +66,16 @@ public class GroovyDSLCoreActivator extends AbstractUIPlugin {
 		GroovyDSLCoreActivator.context = null;
         ResourcesPlugin.getWorkspace().removeResourceChangeListener(dsldListener);
         dsldListener = null;
+        
+        ResourcesPlugin.getWorkspace().removeResourceChangeListener(containerListener);
+        containerListener.dispose();
+        containerListener = null;
+        
 	}
+	
+	public AutoAddContainerSupport getContainerListener() {
+        return containerListener;
+    }
 
 	public DSLDStoreManager getContextStoreManager() {
         return contextStoreManager;

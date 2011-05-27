@@ -267,11 +267,12 @@
 			         menubarPath="groovy/nature">
 			   </action>
 			   <action
-			         class="org.codehaus.groovy.eclipse.actions.ImportLibs"
-			         enablesFor="1"
-			         id="org.codehaus.groovy.eclipse.importlibs.action"
-			         label="Add Groovy libs to classpath"
-			         menubarPath="groovy/libs">
+             class="org.codehaus.groovy.eclipse.actions.AddGroovyClasspathContainerAction"
+             enablesFor="1"
+             id="org.codehaus.groovy.eclipse.importlibs.action"
+             label="Add Groovy libs to classpath"
+             menubarPath="groovy/libs"
+             tooltip="Add or remove the Groovy classpath container to this project">
 			   </action>
 			   <visibility>
 			      <objectState

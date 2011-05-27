@@ -20,6 +20,7 @@ import java.util.Map.Entry;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -28,6 +29,7 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
+import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
@@ -221,7 +223,16 @@ public class DSLContributionGroup extends ContributionGroup {
     }
 
     void delegatesTo(Class<?> clazz) {
-        delegatesTo(this.resolver.resolve(clazz.getCanonicalName()));
+        ClassNode resolved = this.resolver.resolve(clazz.getCanonicalName());
+        if (resolved == VariableScope.OBJECT_CLASS_NODE && !clazz.getName().equals(Object.class.getName())) {
+            // likely that we are trying to resolve a class that is defined inside of a DSLD itself
+            try {
+                resolved = ClassHelper.make(clazz);
+            } catch (Exception e) {
+                GroovyDSLCoreActivator.logException(e);
+            }
+        }
+        delegatesTo(resolved);
     }
     
     /**

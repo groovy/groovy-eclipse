@@ -62,7 +62,7 @@ public class OutlineExtenderRegistry {
     }
 
     GroovyOutlinePage getGroovyOutlinePageForEditor(IProject project, String contextMenuID, GroovyEditor editor) {
-        if (!project) {
+        if (!project || !project.isAccessible()) {
             return
         }
         def groovyOutlinePage
