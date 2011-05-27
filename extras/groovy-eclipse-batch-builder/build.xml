@@ -10,7 +10,7 @@
         Andrew Eisenberg - initial API and implementation
  -->
 
-<project name="Build the groovy-eclipse-batch jar" default="extract-create-publish">
+<project name="Build the groovy-eclipse-batch jar" basedir="." default="extract-create-publish">
 
 	<import file="maven/build-maven.xml"/> 
 
@@ -82,7 +82,7 @@
 	<target name="-create.jar" depends="-init">
 		<delete dir="${jar.dest}" failonerror="no"/>
 		<mkdir dir="${jar.dest}"/>
-		<jar destfile="${jar.dest}/${jar.name}">
+		<jar destfile="${jar.dest}/${jar.name}" manifest="maven/MANIFEST.MF">
 			<fileset dir="${extract.loc}">
 				<include name="**/*.class"/>
 				<include name="**/*.properties"/>

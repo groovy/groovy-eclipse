@@ -20,8 +20,8 @@
 			<name>The Eclipse Public License</name>
 			<url>http://www.eclipse.org/legal/epl-v10.html</url>
 			<distribution>repo</distribution>
-		</license>
-	</licenses>
+		</license> 
+	</licenses> 
 
 	<parent>
 		<groupId>org.codehaus</groupId>
@@ -47,16 +47,16 @@
 		<url>http://svn.codehaus.org/groovy/eclipse</url>
 	</scm>
 	<organization>
-		<name>SpringSource, a division of VMWare</name>
-		<url>http://springsource.com</url>
+		<name>The Codehuas</name>
+		<url>http://codehaus.org</url>
 	</organization>
 	<dependencies>
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-eclipse-batch</artifactId>
-			<version>[1.7.10-02,1.7.10-99],[1.8.0-02,1.8.0-99]</version>
-			<!-- <version>[1.7.10-02,1.7.10-99],[1.8.0-02,1.8.0-99]</version> -->
-		</dependency>
+			<version>1.7.10-02</version>
+ <!-- <version>[1.7.10-02,1.7.10-99],[1.8.0-02,1.8.0-99]</version> -->
+		</dependency> 
 		<dependency>
 			<groupId>org.codehaus.plexus</groupId>
 			<artifactId>plexus-compiler-api</artifactId>
