@@ -59,9 +59,25 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
     }
 
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
-        Map<String,ClassNode> localNames = findLocalNames(getContext().completionExpression);
+        Map<String,ClassNode> localNames = findLocalNames(extractVariableNameStart());
         List<ICompletionProposal> proposals = createProposals(localNames);
         return proposals;
+    }
+
+    private String extractVariableNameStart() {
+        String fullExpression = getContext().completionExpression;
+        if (fullExpression.length() == 0) {
+            return "";
+        }
+        int end = fullExpression.length() - 1;
+        while (end > 0 && Character.isJavaIdentifierPart(fullExpression.charAt(end))) {
+            end--;
+        }
+        if (end >= 0) {
+            return fullExpression.substring(++end);
+        } else {
+            return fullExpression;
+        }
     }
 
     private Map<String,ClassNode> findLocalNames(String prefix) {
@@ -81,7 +97,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
                  }
 
                 if (inBounds && ProposalUtils.looselyMatches(prefix, var.getName())) {
-                    nameTypeMap.put(var.getName(), var.getType());
+                    nameTypeMap.put(var.getName(), var.getOriginType() != null ? var.getOriginType() : var.getType());
                 }
              }
              scope = scope.getParent();
