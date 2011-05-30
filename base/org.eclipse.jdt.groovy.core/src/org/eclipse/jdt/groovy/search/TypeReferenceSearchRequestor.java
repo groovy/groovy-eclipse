@@ -102,8 +102,12 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 
 					boolean startEndFound = false;
 					if (node instanceof ImportNode) {
-						end = node.getEnd();
-						start = node.getStart();
+						if (((ImportNode) node).getType() == null) {
+							// if the import node's type is not null, then the type will be visited later anyway.
+							// so don't visit it here.
+							end = node.getEnd();
+							start = node.getStart();
+						}
 					} else if (node instanceof ClassExpression) {
 						end = node.getEnd();
 						start = node.getStart();
