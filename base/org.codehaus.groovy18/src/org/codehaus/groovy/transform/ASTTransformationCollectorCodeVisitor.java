@@ -20,6 +20,7 @@ import groovy.lang.GroovyClassLoader;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -135,20 +136,23 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         		if (expr==null) {
         			return NO_CLASSES;
         		}
-        		Class[] values = NO_CLASSES;
+        		Class<?>[] values = NO_CLASSES;
     			// Will need to extract the classnames
         		if (expr instanceof ListExpression) {
+        			List<Class<?>> loadedClasses = new ArrayList<Class<?>>();
         			ListExpression expression = (ListExpression)expr;
         			List<Expression> expressions = expression.getExpressions();
-        			values = new Class[expressions.size()];
-        			int e=0;
         			for (Expression oneExpr: expressions) {
         				String classname = ((ClassExpression)oneExpr).getType().getName();
         				try {
-        					values[e++] = Class.forName(classname,false,transformLoader);
+        					Class<?> clazz = Class.forName(classname,false,transformLoader);
+        					loadedClasses.add(clazz);
         				} catch (ClassNotFoundException cnfe) {
         		            source.getErrorCollector().addError(new SimpleMessage("Ast transform processing, cannot find "+classname, source));
         				}
+        			}
+        			if (loadedClasses.size()!=0) {
+        				values = loadedClasses.toArray(new Class<?>[loadedClasses.size()]);
         			}
         			return values;
         		} else {
