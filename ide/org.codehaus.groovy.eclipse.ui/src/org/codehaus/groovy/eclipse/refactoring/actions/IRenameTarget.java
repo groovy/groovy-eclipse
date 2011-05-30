@@ -27,18 +27,21 @@ import org.eclipse.ui.texteditor.AbstractTextEditor;
 public interface IRenameTarget {
 
     /**
-     * Called when a rename refactoring is requested from the editor. By
+     * Called when a rename refactoring is requested from the editor or project
+     * explorer. By
      * implementing this method we can intercept what happens when the rename
      * action is triggered on a given rename target.
      * The typical implementation will open a refactoring wizard.
      * <p>
-     * 
-     * @param groovyEditor editor in the context of which we were invoked.
-     * 
+     *
+     * @param groovyEditor editor in the context of which we were invoked or
+     *            null if
+     *            invoked from the project explorer.
+     *
      * @param lightweight is true if the request is to do an 'inline' renaming.
      *            Implementation may
      *            ignore this if it isn't capable of doing inline renaming.
-     * 
+     *
      * @return true if action was intercepted, false otherwise. If false is
      *         returned, or an unexpected
      *         exception is thrown, then the caller should fallback to using its
