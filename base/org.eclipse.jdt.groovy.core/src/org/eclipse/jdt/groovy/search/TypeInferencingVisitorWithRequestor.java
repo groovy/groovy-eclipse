@@ -671,6 +671,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			IJavaElement oldEnclosingElement = enclosingElement;
 			// FIXADE this will not work for static or * imports
 			ClassNode type = imp.getType();
+
 			if (type != null) {
 				enclosingElement = unit.getImport(imp.getClassName().replace('$', '.'));
 				if (!enclosingElement.exists()) {
@@ -678,39 +679,42 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 			}
 
-			VariableScope scope = scopes.peek();
-			for (ITypeLookup lookup : lookups) {
-				TypeLookupResult candidate = lookup.lookupType(imp, scope);
-				if (candidate != null) {
-					if (result == null || result.confidence.isLessPreciseThan(candidate.confidence)) {
-						result = candidate;
-					}
-					if (TypeConfidence.LOOSELY_INFERRED.isLessPreciseThan(result.confidence)) {
-						break;
+			try {
+				VariableScope scope = scopes.peek();
+				for (ITypeLookup lookup : lookups) {
+					TypeLookupResult candidate = lookup.lookupType(imp, scope);
+					if (candidate != null) {
+						if (result == null || result.confidence.isLessPreciseThan(candidate.confidence)) {
+							result = candidate;
+						}
+						if (TypeConfidence.LOOSELY_INFERRED.isLessPreciseThan(result.confidence)) {
+							break;
+						}
 					}
 				}
-			}
-			VisitStatus status = handleRequestor(imp, requestor, result);
+				VisitStatus status = handleRequestor(imp, requestor, result);
 
-			enclosingElement = oldEnclosingElement;
-			switch (status) {
-				case CONTINUE:
-					try {
-						if (type != null) {
-							visitClassReference(type);
+				switch (status) {
+					case CONTINUE:
+						try {
+							if (type != null) {
+								visitClassReference(type);
+							}
+						} catch (VisitCompleted e) {
+							if (e.status == VisitStatus.STOP_VISIT) {
+								throw e;
+							}
 						}
-					} catch (VisitCompleted e) {
-						if (e.status == VisitStatus.STOP_VISIT) {
-							throw e;
-						}
-					}
-					continue;
-				case CANCEL_BRANCH:
-				case CANCEL_MEMBER:
-					// assume that import statements are not interesting
-					return;
-				case STOP_VISIT:
-					throw new VisitCompleted(status);
+						continue;
+					case CANCEL_BRANCH:
+					case CANCEL_MEMBER:
+						// assume that import statements are not interesting
+						return;
+					case STOP_VISIT:
+						throw new VisitCompleted(status);
+				}
+			} finally {
+				enclosingElement = oldEnclosingElement;
 			}
 		}
 	}
@@ -773,6 +777,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		ClassNode rememberedDeclaringType = result.declaringType;
 		if (scope.getCategoryNames().contains(rememberedDeclaringType)) {
 			rememberedDeclaringType = objectExprType;
+		}
+		if (rememberedDeclaringType == null) {
+			rememberedDeclaringType = VariableScope.OBJECT_CLASS_NODE;
 		}
 		switch (status) {
 			case CONTINUE:

@@ -81,6 +81,8 @@ public class RefactoringTestSetup extends AbstractRefactoringTestSetup {
 		fgJavaTestProject= JavaProjectHelper.createGroovyProject("TestProject"+System.currentTimeMillis(), "bin");
 		fgJRELibraries= addRTJars(fgJavaTestProject);
 		fgGroovyLibrary= addGroovyJar(fgJavaTestProject);
+		// just in case, remove the source root that is the root of the project (if it exists)
+		JavaProjectHelper.removeFromClasspath(fgJavaTestProject, fgJavaTestProject.getProject().getFullPath());
 		fgRoot= JavaProjectHelper.addSourceContainer(fgJavaTestProject, CONTAINER);
 		fgPackageP= fgRoot.createPackageFragment("p", true, null);
 	}
