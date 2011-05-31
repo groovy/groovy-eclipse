@@ -86,7 +86,6 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
         } else {
             result = null;
         }
-        System.out.println("==> " + result);
         return result;
     }
 
