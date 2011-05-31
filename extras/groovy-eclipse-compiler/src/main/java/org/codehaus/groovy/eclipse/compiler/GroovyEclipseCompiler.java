@@ -18,13 +18,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
@@ -207,6 +208,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 null);
     }
 
+    @SuppressWarnings("rawtypes")
     public List compile(CompilerConfiguration config) throws CompilerException {
 
         String[] args = createCommandLine(config);
@@ -221,7 +223,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
             if (StringUtils.isEmpty(executable)) {
                 try {
-                    executable = getJavacExecutable();
+                    executable = getJavaExecutable();
                 } catch (IOException e) {
                     getLogger()
                             .warn("Unable to autodetect 'java' path, using 'java' from the environment.");
@@ -264,7 +266,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return sourceFiles;
     }
 
-    private boolean doesStartWithHyphen(Object key) {
+    private boolean startsWithHyphen(Object key) {
         return null != key && String.class.isInstance(key)
                 && ((String) key).startsWith("-");
     }
@@ -290,8 +292,6 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return sources;
     }
 
-    // FIXADE still need to handle:
-    // fork, maxmem, meminitial
     public String[] createCommandLine(CompilerConfiguration config)
             throws CompilerException {
         File destinationDir = new File(config.getOutputLocation());
@@ -403,12 +403,10 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             args.add(config.getSourceEncoding());
         }
 
-        for (Iterator argIter = config.getCustomCompilerArguments().entrySet()
-                .iterator(); argIter.hasNext();) {
-            Entry entry = (Entry) argIter.next();
+        for (Entry<Object, Object> entry : (Iterable<Entry<Object, Object>>) config.getCustomCompilerArguments().entrySet()) {
 
             Object key = entry.getKey();
-            if (doesStartWithHyphen(key)) { // don't add a "-" if the arg
+            if (startsWithHyphen(key)) { // don't add a "-" if the arg
                                             // already has one
                 args.add((String) key);
             } else if (key != null) {
@@ -553,7 +551,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                                 + EOL + cli.toString());
             } else {
                 messages.add(new CompilerError(
-                        "Failure executing javac,  but could not parse the error:"
+                        "Failure executing groovy-eclipse compiler:"
                                 + EOL + err.getOutput(), true));
             }
         }
@@ -571,9 +569,9 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      * @return List of CompilerError objects
      * @throws IOException
      */
-    static List parseModernStream(int exitCode, BufferedReader input)
+    List<CompilerError> parseModernStream(int exitCode, BufferedReader input)
             throws IOException {
-        List errors = new ArrayList();
+        List<CompilerError> errors = new ArrayList<CompilerError>();
 
         String line;
 
@@ -591,7 +589,6 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                     return errors;
                 }
 
-                // TODO: there should be a better way to parse these
                 if ((buffer.length() == 0) && line.startsWith("error: ")) {
                     errors.add(new CompilerError(line, true));
                 } else if ((buffer.length() == 0) && isNote(line)) {
@@ -803,13 +800,19 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
     }
     
-    private static String getGroovyEclipseBatchLocation() throws CompilerException {
+    private String getGroovyEclipseBatchLocation() throws CompilerException {
         Class<Main> cls =  Main.class;
         ProtectionDomain pDomain = cls.getProtectionDomain();
         CodeSource cSource = pDomain.getCodeSource();
         if (cSource != null) {
-            URL loc = cSource.getLocation(); 
-            File file = new File(loc.getPath());
+            URL loc = cSource.getLocation();
+            File file;
+            try {
+                file = new File(URLDecoder.decode(loc.getPath(), "UTF-8"));
+            } catch (UnsupportedEncodingException e) {
+                getLogger().warn("Unsupported Encoding for URL: " + loc, e);
+                file = new File(loc.getPath());
+            }
             return file.getPath();
         } else {
             throw new CompilerException("Cannot find the location of groovy-eclipse-batch jar");
@@ -825,26 +828,26 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      * @throws IOException
      *             if not found
      */
-    private static String getJavacExecutable() throws IOException {
-        String javacCommand = "java"
+    private String getJavaExecutable() throws IOException {
+        String javaCommand = "java"
                 + (Os.isFamily(Os.FAMILY_WINDOWS) ? ".exe" : "");
 
         String javaHome = System.getProperty("java.home");
-        File javacExe;
+        File javaExe;
         if (Os.isName("AIX")) {
-            javacExe = new File(javaHome + File.separator + ".."
-                    + File.separator + "sh", javacCommand);
+            javaExe = new File(javaHome + File.separator + ".."
+                    + File.separator + "sh", javaCommand);
         } else if (Os.isName("Mac OS X")) {
-            javacExe = new File(javaHome + File.separator + "bin", javacCommand);
+            javaExe = new File(javaHome + File.separator + "bin", javaCommand);
         } else {
-            javacExe = new File(javaHome + File.separator + ".."
-                    + File.separator + "bin", javacCommand);
+            javaExe = new File(javaHome + File.separator + ".."
+                    + File.separator + "bin", javaCommand);
         }
 
         // ----------------------------------------------------------------------
         // Try to find javacExe from JAVA_HOME environment variable
         // ----------------------------------------------------------------------
-        if (!javacExe.isFile()) {
+        if (!javaExe.isFile()) {
             Properties env = CommandLineUtils.getSystemEnvVars();
             javaHome = env.getProperty("JAVA_HOME");
             if (StringUtils.isEmpty(javaHome)) {
@@ -857,17 +860,17 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                         + " doesn't exist or is not a valid directory.");
             }
 
-            javacExe = new File(env.getProperty("JAVA_HOME") + File.separator
-                    + "bin", javacCommand);
+            javaExe = new File(env.getProperty("JAVA_HOME") + File.separator
+                    + "bin", javaCommand);
         }
 
-        if (!javacExe.isFile()) {
+        if (!javaExe.isFile()) {
             throw new IOException(
                     "The javadoc executable '"
-                            + javacExe
+                            + javaExe
                             + "' doesn't exist or is not a file. Verify the JAVA_HOME environment variable.");
         }
 
-        return javacExe.getAbsolutePath();
+        return javaExe.getAbsolutePath();
     }
 }
