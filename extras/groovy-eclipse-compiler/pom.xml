@@ -1,10 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.codehaus.groovy</groupId>
 	<artifactId>groovy-eclipse-compiler</artifactId>
-	<version>2.5.1-M1-SNAPSHOT</version>
+	<version>2.5.1-M1</version>
 
 	<packaging>jar</packaging>
 	<name>Groovy-Eclipse compiler</name>
@@ -42,9 +41,9 @@
 		<url>http://jira.codehaus.org/browse/GRECLIPSE</url>
 	</issueManagement>
 	<scm>
-		<connection>scm:svn:http://svn.codehaus.org/groovy/eclipse</connection>
-		<developerConnection>scm:svn:https://svn.codehaus.org/groovy/eclipse</developerConnection>
-		<url>http://svn.codehaus.org/groovy/eclipse</url>
+		<connection>scm:svn:http://svn.codehaus.org/groovy/eclipse/tags/maven_plugin_251M1</connection>
+		<developerConnection>scm:svn:https://svn.codehaus.org/groovy/eclipse/tags/maven_plugin_251M1</developerConnection>
+		<url>http://svn.codehaus.org/groovy/eclipse/tags/maven_plugin_251M1</url>
 	</scm>
 	<organization>
 		<name>The Codehuas</name>
