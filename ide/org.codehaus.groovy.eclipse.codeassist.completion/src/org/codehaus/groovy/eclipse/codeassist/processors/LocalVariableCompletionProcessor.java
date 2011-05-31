@@ -64,13 +64,14 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
         return proposals;
     }
 
+    // removes any leading whitespace or non-java identifier chars
     private String extractVariableNameStart() {
         String fullExpression = getContext().completionExpression;
         if (fullExpression.length() == 0) {
             return "";
         }
         int end = fullExpression.length() - 1;
-        while (end > 0 && Character.isJavaIdentifierPart(fullExpression.charAt(end))) {
+        while (end >= 0 && Character.isJavaIdentifierPart(fullExpression.charAt(end))) {
             end--;
         }
         if (end >= 0) {
