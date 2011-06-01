@@ -1,0 +1,66 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.codehaus.groovy</groupId>
+  <artifactId>groovy-eclipse-quickstart</artifactId>
+  <version>2.5.1-M3-SNAPSHOT</version>
+  <name>Archetype - groovy-eclipse-quickstart</name>
+  <description>Creates an archetype project that uses the groovy-eclipse-compiler to compile a few Groovy and Java classes.</description>
+	<url>http://groovy.codehaus.org/Eclipse+Plugin</url>
+	<packaging>jar</packaging>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<parent>
+		<groupId>org.codehaus</groupId>
+		<artifactId>codehaus-parent</artifactId>
+		<version>4</version>
+	</parent>
+
+	<licenses>
+		<license>
+			<name>The Eclipse Public License</name>
+			<url>http://www.eclipse.org/legal/epl-v10.html</url>
+			<distribution>repo</distribution>
+		</license> 
+	</licenses> 
+
+	<developers>
+		<developer>
+			<id>werdna</id>
+			<name>Andrew Eisenberg</name>
+			<email>andrew@eisenberg.as</email>
+		</developer>
+		<developer>
+			<id>leo.herbie</id>
+			<name>Travis Schneeberger</name>
+			<email>leo.herbie@gmail.com</email>
+		</developer>
+	</developers>
+	<issueManagement>
+		<system>jira</system>
+		<url>http://jira.codehaus.org/browse/GRECLIPSE</url>
+	</issueManagement>
+	<scm>
+		<connection>scm:svn:http://svn.codehaus.org/groovy/eclipse</connection>
+		<developerConnection>scm:svn:https://svn.codehaus.org/groovy/eclipse</developerConnection>
+		<url>http://svn.codehaus.org/groovy/eclipse</url>
+	</scm>
+	<organization>
+		<name>The Codehuas</name>
+		<url>http://codehaus.org</url>
+	</organization>
+
+	<build>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-webdav</artifactId>
+				<version>1.0-beta-2</version>
+			</extension>
+		</extensions>
+	</build>
+
+</project>

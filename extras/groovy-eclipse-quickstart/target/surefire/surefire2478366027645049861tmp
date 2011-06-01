@@ -1,0 +1,5 @@
+#surefire
+#Wed Jun 01 09:08:06 PDT 2011
+user.dir=/Users/andrew/NonEclipse/Maven/groovy-eclipse-quickstart
+localRepository=/Users/andrew/.m2/repository
+basedir=/Users/andrew/NonEclipse/Maven/groovy-eclipse-quickstart
