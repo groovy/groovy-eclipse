@@ -32,6 +32,9 @@ public abstract class Comment {
 	protected String comment;
 	private int kind;
 
+	// set when the comment is associated with a source element
+	public boolean usedUp = false;
+
 	// Start/Ends for line/columns
 	// Lines are from 1..N
 	// Columns are from 1..N

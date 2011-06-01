@@ -55,15 +55,16 @@ public class EnumHelper {
     // GRECLIPSE: start
     // modified to return the FieldNode it creates, so that we can fix up the position
     // GRECLIPSE: end
-    public static FieldNode addEnumConstant(ClassNode enumClass, String name, Expression init) {
+    public static FieldNode addEnumConstant(ClassNode enumClassType,ClassNode enumClassOwner, String name, Expression init) {
         int modifiers = PUBLIC_FS | Opcodes.ACC_ENUM;
         if  (init!=null && !(init instanceof ListExpression)) {
             ListExpression list = new ListExpression();
             list.addExpression(init);
             init = list;
         }
-        FieldNode fn = new FieldNode(name,modifiers,enumClass,enumClass,init);
-        enumClass.addField(fn);
+       
+        FieldNode fn = new FieldNode(name,modifiers,enumClassType,enumClassOwner,init);
+        enumClassOwner.addField(fn);
         return fn;
     }
 }

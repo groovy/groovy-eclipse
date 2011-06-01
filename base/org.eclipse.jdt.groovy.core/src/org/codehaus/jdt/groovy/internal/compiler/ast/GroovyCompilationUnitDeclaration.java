@@ -144,8 +144,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		for (int c = 0, max = groovyComments.size(); c < max; c++) {
 			Comment groovyComment = groovyComments.get(c);
 			this.comments[c] = groovyComment.getPositions(compilationResult.lineSeparatorPositions);
-			// System.out.println("Comment recorded on " + groovySourceUnit.getName() + "  " + this.comments[c][0] + ">"
-			// + this.comments[c][1]);
+			System.out.println("Comment recorded on " + groovySourceUnit.getName() + "  " + this.comments[c][0] + ">"
+					+ this.comments[c][1]);
 		}
 	}
 
@@ -571,11 +571,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		for (Comment comment : groovySourceUnit.getComments()) {
 			if (comment.isJavadoc()) {
 				// System.out.println("Checking against comment ending on " + comment.getLastLine());
-				if (comment.getLastLine() + 1 == line || comment.getLastLine() + 2 == line) {
+				if (comment.getLastLine() + 1 == line || (comment.getLastLine() + 2 == line && !comment.usedUp)) {
 					int[] pos = comment.getPositions(compilationResult.lineSeparatorPositions);
 					// System.out.println("Comment says it is from line=" + comment.sline + ",col=" + comment.scol + " to line="
 					// + comment.eline + ",col=" + comment.ecol);
 					// System.out.println("Returning positions " + pos[0] + ">" + pos[1]);
+					comment.usedUp = true;
 					return new Javadoc(pos[0], pos[1]);
 				}
 			}
@@ -1830,7 +1831,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		if (isEnumField) {
 			// they have no 'leading' type declaration or modifiers
-			fieldDeclaration.declarationSourceStart = fieldNode.getNameStart();
+			fieldDeclaration.declarationSourceStart = doc == null ? fieldNode.getNameStart() : doc.sourceStart;// fieldNode.getNameStart();
 			fieldDeclaration.declarationSourceEnd = fieldNode.getNameEnd() - 1;
 		} else {
 			fieldDeclaration.declarationSourceStart = doc == null ? fieldNode.getStart() : doc.sourceStart;

@@ -192,7 +192,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"The type Foo is already defined\n" + 
     			"----------\n");
     }
-    
+   
     public void testGenericParamUsage() {
     	this.runConformTest(new String[]{
     			"A.groovy",
@@ -2051,6 +2051,39 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		
 		fDecl = grabField(decl,"setthree");
 		assertEquals("(75>77)Set<(79>102)? super (87>102)(87>90)java.(92>95)lang.(97>102)Number>",stringify(fDecl.type));
+	}
+	
+	public void testEnumPositions_GRE1072() {
+		this.runConformTest(new String[] {
+			"X.groovy",
+			"enum Color {\n" + 
+			"  /** hello */\n"+
+			"  RED,\n"+
+			"  GREEN,\n"+
+			"  BLUE\n"+
+			"}\n",
+		},"");		
+
+		GroovyCompilationUnitDeclaration decl = getDecl("X.groovy");
+		
+		FieldDeclaration fDecl = null;
+		
+		fDecl = grabField(decl,"RED");
+		assertEquals("RED sourceStart>sourceEnd:30>32 declSourceStart>declSourceEnd:15>31 modifiersSourceStart=30 endPart1Position:30",stringifyFieldDecl(fDecl));
+		fDecl = grabField(decl,"GREEN");
+		assertEquals("GREEN sourceStart>sourceEnd:37>41 declSourceStart>declSourceEnd:37>40 modifiersSourceStart=37 endPart1Position:37",stringifyFieldDecl(fDecl));
+		fDecl = grabField(decl,"BLUE");
+		assertEquals("BLUE sourceStart>sourceEnd:46>49 declSourceStart>declSourceEnd:46>48 modifiersSourceStart=46 endPart1Position:46",stringifyFieldDecl(fDecl));
+	}
+
+	private String stringifyFieldDecl(FieldDeclaration fDecl) {
+		StringBuffer sb = new StringBuffer();
+		sb.append(fDecl.name);
+		sb.append(" sourceStart>sourceEnd:"+fDecl.sourceStart+">"+fDecl.sourceEnd);
+		sb.append(" declSourceStart>declSourceEnd:"+fDecl.declarationSourceStart+">"+fDecl.declarationSourceEnd);
+		sb.append(" modifiersSourceStart="+fDecl.modifiersSourceStart); // first char of decls modifiers
+		sb.append(" endPart1Position:"+fDecl.endPart1Position); // char after type decl ('int x,y' is space)
+		return sb.toString();
 	}
 
 	

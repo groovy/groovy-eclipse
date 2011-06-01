@@ -888,12 +888,19 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         GroovySourceAST groovySourceAST = (GroovySourceAST) node;
         int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
         int nameEnd = nameStart + identifier.length()-1;
+        
+        ClassNode fakeNodeToRepresentTheNonDeclaredTypeOfEnumValue = ClassHelper.make(classNode.getName());   
+        fakeNodeToRepresentTheNonDeclaredTypeOfEnumValue.setRedirect(classNode);
+
         FieldNode fn = 
         // end
-        EnumHelper.addEnumConstant(classNode, identifier, init);
+        EnumHelper.addEnumConstant(fakeNodeToRepresentTheNonDeclaredTypeOfEnumValue,classNode, identifier, init);
         // GRECLIPSE: start
+        configureAST(fn, node);
         fn.setNameStart(nameStart);
         fn.setNameEnd(nameEnd);
+        fn.setStart(nameStart);
+        fn.setEnd(nameEnd);
         // end
         enumConstantBeingDef = false;
     }
