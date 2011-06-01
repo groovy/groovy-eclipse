@@ -15,16 +15,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
-	<pluginRepositories>
-		<pluginRepository>
-			<id>codehaus.org</id>
-			<url>http://repository.codehaus.org</url>
-		</pluginRepository>
-		<pluginRepository>
-			<id>nexus.snapshots.codehaus.org</id>
-			<url>http://nexus.codehaus.org/snapshots/</url>
-		</pluginRepository>
-	</pluginRepositories>
 	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
@@ -59,7 +49,7 @@
   					<dependency>
 						<groupId>org.codehaus.groovy</groupId>
 						<artifactId>groovy-eclipse-batch</artifactId>
-						<version>1.8.0-02</version>
+						<version>1.8.0-03</version>
 					</dependency>
 				</dependencies>
 			</plugin>
