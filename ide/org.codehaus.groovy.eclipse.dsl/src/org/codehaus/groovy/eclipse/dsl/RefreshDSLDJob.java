@@ -84,7 +84,7 @@ public class RefreshDSLDJob extends Job {
             for (IPackageFragmentRoot root : javaProject.getPackageFragmentRoots()) {
                 if (root.getKind() == IPackageFragmentRoot.K_BINARY) {
                     IPackageFragment frag = root.getPackageFragment("dsld");
-                    if (frag.exists()) {
+                    if (frag.exists() || root.getElementName().equals("global_dsld_support") || root.getElementName().equals("plugin_dsld_support")) {
                         
                         // FIXADE start workaround for Bug 346928
                         // in 3.6 and earlier, it was not possible to refresh scripts in external folders 
@@ -98,6 +98,8 @@ public class RefreshDSLDJob extends Job {
                             try {
                                 // FIXADE pass the progress monitor in here
                                 rootResource.refreshLocal(IResource.DEPTH_INFINITE, null);
+                                root.close();
+                                root.open(null);
                             } catch (CoreException e) {
                                 GroovyDSLCoreActivator.logException(e);
                             }
