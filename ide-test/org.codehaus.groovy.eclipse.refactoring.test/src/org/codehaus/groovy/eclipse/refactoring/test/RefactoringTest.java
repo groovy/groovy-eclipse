@@ -150,29 +150,34 @@ public abstract class RefactoringTest extends TestCase {
 		IJavaProject javaProject= getRoot().getJavaProject();
 		if (javaProject.exists()) {
 			IClasspathEntry srcEntry= getRoot().getRawClasspathEntry();
-			IClasspathEntry[] jreEntries= RefactoringTestSetup.getJRELibrariesAsRawClasspathEntry();
-			IClasspathEntry[] cpes= javaProject.getRawClasspath();
-			ArrayList newCPEs= new ArrayList();
-			boolean cpChanged= false;
-			for (int i= 0; i < cpes.length; i++) {
-				IClasspathEntry cpe= cpes[i];
-				boolean isJREEntry = false;
-				for (int j = 0; j < jreEntries.length; j++) {
-                    if (cpe.equals(jreEntries[j])) {
-                        isJREEntry = true;
-                        break;
+			try {
+                IClasspathEntry[] jreEntries= RefactoringTestSetup.getJRELibrariesAsRawClasspathEntry();
+                IClasspathEntry[] cpes= javaProject.getRawClasspath();
+                ArrayList newCPEs= new ArrayList();
+                boolean cpChanged= false;
+                for (int i= 0; i < cpes.length; i++) {
+                	IClasspathEntry cpe= cpes[i];
+                	boolean isJREEntry = false;
+                	for (int j = 0; j < jreEntries.length; j++) {
+                        if (cpe.equals(jreEntries[j])) {
+                            isJREEntry = true;
+                            break;
+                        }
                     }
+                	if (cpe.equals(srcEntry) || isJREEntry) {
+                		newCPEs.add(cpe);
+                	} else {
+                		cpChanged= true;
+                	}
                 }
-				if (cpe.equals(srcEntry) || isJREEntry) {
-					newCPEs.add(cpe);
-				} else {
-					cpChanged= true;
-				}
-			}
-			if (cpChanged) {
-				IClasspathEntry[] newCPEsArray= (IClasspathEntry[]) newCPEs.toArray(new IClasspathEntry[newCPEs.size()]);
-				javaProject.setRawClasspath(newCPEsArray, null);
-			}
+                if (cpChanged) {
+                	IClasspathEntry[] newCPEsArray= (IClasspathEntry[]) newCPEs.toArray(new IClasspathEntry[newCPEs.size()]);
+                	javaProject.setRawClasspath(newCPEsArray, null);
+                }
+            } catch (JavaModelException e) {
+                System.err.println("Exception thrown when trying to restore project to original state.  We can probable ignore this.");
+                e.printStackTrace();
+            }
 
 			Object[] nonJavaResources= javaProject.getNonJavaResources();
 			for (int i= 0; i < nonJavaResources.length; i++) {
