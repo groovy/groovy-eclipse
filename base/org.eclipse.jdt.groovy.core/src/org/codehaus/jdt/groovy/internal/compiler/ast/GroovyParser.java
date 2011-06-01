@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Codehaus.org, SpringSource, and others.
+ * Copyright (c) 2009-2011 Codehaus.org, SpringSource, and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -37,6 +37,7 @@ import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
+import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
@@ -410,18 +411,18 @@ public class GroovyParser {
 			filepath = new String(sourceUnit.getFileName());
 		}
 
-		{ // Try to turn this into a 'real' absolute file system reference
-			Path path = new Path(filepath);
-			if (path.segmentCount() >= 2) { // Needs 2 segments: a project and file name or eclipse throws assertion failed here.
-				IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(filepath));
-				final IPath location = file.getLocation();
-				if (location != null) {
-					filepath = location.toFile().getAbsolutePath();
-				}
+		// Try to turn this into a 'real' absolute file system reference (this is because Grails 1.5 expects it).
+		Path path = new Path(filepath);
+		IFile eclipseFile = null;
+		if (path.segmentCount() >= 2) { // Needs 2 segments: a project and file name or eclipse throws assertion failed here.
+			eclipseFile = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(filepath));
+			final IPath location = eclipseFile.getLocation();
+			if (location != null) {
+				filepath = location.toFile().getAbsolutePath();
 			}
 		}
 
-		SourceUnit groovySourceUnit = new SourceUnit(filepath, new String(sourceCode), groovyCompilerConfig,
+		SourceUnit groovySourceUnit = new EclipseSourceUnit(eclipseFile, filepath, new String(sourceCode), groovyCompilerConfig,
 				groovyCompilationUnit.getClassLoader(), errorCollector);
 		GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult,
 				sourceCode.length, groovyCompilationUnit, groovySourceUnit, compilerOptions);

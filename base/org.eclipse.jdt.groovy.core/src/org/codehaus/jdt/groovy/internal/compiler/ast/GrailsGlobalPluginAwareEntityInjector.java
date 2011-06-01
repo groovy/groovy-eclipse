@@ -12,8 +12,9 @@ import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit.PrimaryClassNodeOperation;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 
 /**
  * Grails runs an ASTTransform org.codehaus.groovy.grails.compiler.injection.GlobalPluginAwareEntityASTTransformation. But this
@@ -58,54 +59,56 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
 	}
 
 	@Override
-	public void call(SourceUnit sourceUnit, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
+	public void call(SourceUnit _sourceUnit, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
 		if (broken) {
 			return;
 		}
-		try {
-			if (classNode.isAnnotationDefinition()) {
-				return;
-			}
-
-			if (!isFirstClassInModule(classNode)) {
-				// The Grails version of the transform only walk the first class in a module
-				return;
-			}
-
-			String sourcePathString = sourceUnit.getName();
-			IPath sourcePath = new Path(sourcePathString);
-			PluginInfo info = getInfo(sourcePath);
-			if (info != null) {
-				if (DEBUG) {
-					debug("APPLY transform: " + classNode);
-				}
-
-				// The transform should be applied. (code below lifted from
-				// org.codehaus.groovy.grails.compiler.injection.GlobalPluginAwareEntityASTTransformation)
-				Class<?> GrailsPlugin_class = Class.forName("org.codehaus.groovy.grails.plugins.metadata.GrailsPlugin", false,
-						groovyClassLoader);
-
-				final ClassNode annotation = new ClassNode(GrailsPlugin_class);
-				final List<?> list = classNode.getAnnotations(annotation);
-				if (!list.isEmpty()) {
+		if (_sourceUnit instanceof EclipseSourceUnit) {
+			EclipseSourceUnit sourceUnit = (EclipseSourceUnit) _sourceUnit;
+			try {
+				if (classNode.isAnnotationDefinition()) {
 					return;
 				}
 
-				final AnnotationNode annotationNode = new AnnotationNode(annotation);
-				annotationNode.addMember("name", new ConstantExpression(info.name));
-				annotationNode.addMember("version", new ConstantExpression(info.version));
-				annotationNode.setRuntimeRetention(true);
-				annotationNode.setClassRetention(true);
-
-				classNode.addAnnotation(annotationNode);
-			} else {
-				if (DEBUG) {
-					debug("SKIP transform: " + classNode);
+				if (!isFirstClassInModule(classNode)) {
+					// The Grails version of the transform only walk the first class in a module
+					return;
 				}
+
+				IFile file = sourceUnit.getEclipseFile();
+				PluginInfo info = getInfo(file);
+				if (info != null) {
+					if (DEBUG) {
+						debug("APPLY transform: " + classNode);
+					}
+
+					// The transform should be applied. (code below lifted from
+					// org.codehaus.groovy.grails.compiler.injection.GlobalPluginAwareEntityASTTransformation)
+					Class<?> GrailsPlugin_class = Class.forName("org.codehaus.groovy.grails.plugins.metadata.GrailsPlugin", false,
+							groovyClassLoader);
+
+					final ClassNode annotation = new ClassNode(GrailsPlugin_class);
+					final List<?> list = classNode.getAnnotations(annotation);
+					if (!list.isEmpty()) {
+						return;
+					}
+
+					final AnnotationNode annotationNode = new AnnotationNode(annotation);
+					annotationNode.addMember("name", new ConstantExpression(info.name));
+					annotationNode.addMember("version", new ConstantExpression(info.version));
+					annotationNode.setRuntimeRetention(true);
+					annotationNode.setClassRetention(true);
+
+					classNode.addAnnotation(annotationNode);
+				} else {
+					if (DEBUG) {
+						debug("SKIP transform: " + classNode);
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace(System.err);
+				broken = true;
 			}
-		} catch (Exception e) {
-			e.printStackTrace(System.err);
-			broken = true;
 		}
 	}
 
@@ -120,7 +123,8 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
 		return false;
 	}
 
-	public static PluginInfo getInfo(IPath sourcePath) {
+	public static PluginInfo getInfo(IFile file) {
+		IPath path = file.getFullPath();
 		// The path is expected to have this form
 		// Example:
 		// /test-pro/.link_to_grails_plugins/audit-logging-0.5.4/grails-app/controllers/org/codehaus/groovy/grails/plugins/orm/auditable/AuditLogEventController.groovy
@@ -131,25 +135,28 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
 		// See grails.util.PluginBuildSettings.getPluginInfoForSource(String)
 		// Test folder path looks like:
 		// /<project-name>/.link_to_grails_plugins/<plugin-name>-<plugin-version>/test/<the-rest-of-it>
-
-		if (sourcePath.segmentCount() > 3) {
-			String link = sourcePath.segment(1);
-			if (link.equals(".link_to_grails_plugins")) { // Same as in JDT SourceFile
-				String pluginNameAndVersion = sourcePath.segment(2);
-				int split = findVersionDash(pluginNameAndVersion);
-				if (split >= 0) {
-					if ("test".equals(sourcePath.segment(3))) {
-						// Exclude "test" folder in plugins
-						return null;
-					} else {
-						// Pattern matched, extract relevant info.
-						return new PluginInfo(pluginNameAndVersion.substring(0, split), pluginNameAndVersion.substring(split + 1));
+		if (path != null) {
+			if (path.segmentCount() > 3) {
+				String link = path.segment(1);
+				if (link.equals(".link_to_grails_plugins")) { // Same as in JDT SourceFile
+					String pluginNameAndVersion = path.segment(2);
+					int split = findVersionDash(pluginNameAndVersion);
+					if (split >= 0) {
+						if ("test".equals(path.segment(3))) {
+							// Exclude "test" folder in plugins
+							return null;
+						} else {
+							// Pattern matched, extract relevant info.
+							return new PluginInfo(pluginNameAndVersion.substring(0, split),
+									pluginNameAndVersion.substring(split + 1));
+						}
 					}
 				}
 			}
 		}
 		// If the expected pattern isn't found, no info is extracted
 		// => the transform will not apply.
+
 		return null;
 	}
 
