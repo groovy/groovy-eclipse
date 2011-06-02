@@ -2167,11 +2167,25 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		FieldDeclaration fDecl = null;
 		
 		fDecl = grabField(decl,"RED");
-		assertEquals("RED sourceStart>sourceEnd:30>32 declSourceStart>declSourceEnd:15>31 modifiersSourceStart=30 endPart1Position:30",stringifyFieldDecl(fDecl));
+		if (GroovyUtils.GROOVY_LEVEL<18) {
+			assertEquals("RED sourceStart>sourceEnd:30>32 declSourceStart>declSourceEnd:30>31 modifiersSourceStart=0 endPart1Position:30",stringifyFieldDecl(fDecl));
+		} else {
+			assertEquals("RED sourceStart>sourceEnd:30>32 declSourceStart>declSourceEnd:15>31 modifiersSourceStart=30 endPart1Position:30",stringifyFieldDecl(fDecl));
+		
+		}
+		
 		fDecl = grabField(decl,"GREEN");
-		assertEquals("GREEN sourceStart>sourceEnd:37>41 declSourceStart>declSourceEnd:37>40 modifiersSourceStart=37 endPart1Position:37",stringifyFieldDecl(fDecl));
+		if (GroovyUtils.GROOVY_LEVEL<18) {
+			assertEquals("GREEN sourceStart>sourceEnd:37>41 declSourceStart>declSourceEnd:37>40 modifiersSourceStart=0 endPart1Position:37",stringifyFieldDecl(fDecl));
+		} else {
+			assertEquals("GREEN sourceStart>sourceEnd:37>41 declSourceStart>declSourceEnd:37>40 modifiersSourceStart=37 endPart1Position:37",stringifyFieldDecl(fDecl));
+		}
 		fDecl = grabField(decl,"BLUE");
-		assertEquals("BLUE sourceStart>sourceEnd:46>49 declSourceStart>declSourceEnd:46>48 modifiersSourceStart=46 endPart1Position:46",stringifyFieldDecl(fDecl));
+		if (GroovyUtils.GROOVY_LEVEL<18) {
+			assertEquals("BLUE sourceStart>sourceEnd:46>49 declSourceStart>declSourceEnd:46>48 modifiersSourceStart=0 endPart1Position:46",stringifyFieldDecl(fDecl));
+		} else {
+			assertEquals("BLUE sourceStart>sourceEnd:46>49 declSourceStart>declSourceEnd:46>48 modifiersSourceStart=46 endPart1Position:46",stringifyFieldDecl(fDecl));
+		}
 	}
 	
 	static class Requestor implements ICompilerRequestor {

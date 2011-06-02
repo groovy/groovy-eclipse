@@ -253,36 +253,62 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      */
     public ClassNode(ClassNode componentType) {
     	// GRECLIPSE: start
-    	/*{
-        this(componentType.getName()+"[]", ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
-        }*/ 
+    	///*{
+        // this(componentType.getName()+"[]", ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
+        //}*/ 
         // newcode:
-        // elsewhere the 'name' for an array is considered to the be, for example "[Ljava.lang.String;" for String[] (see BytecodeHelper)
-    	// I think this code ought to be doing a similar thing
-        this("["+getTheNameMightBeArray(componentType)/*componentType.getName()+"[]"*/, ACC_PUBLIC, ClassHelper.OBJECT_TYPE);  
+        this(computeArrayName(componentType), ACC_PUBLIC, ClassHelper.OBJECT_TYPE);  
         // end
         this.componentType = componentType.redirect();
         isPrimaryNode=false;
     }
 
     // GRECLIPSE: start
-    public static String getTheNameMightBeArray(ClassNode componentType) {
+    /**
+     * For a given component type compute the right 'name'.  Rules are as follows:
+     * <ul>
+     * <li> primitive component types: result is a name like "[I" or "[Z"
+     * <li> array component types: follow the pattern for the component, if it starts '[' add another leading. if it ends with '[]' then do that
+     * <li> reference types: Create [Lcom.foo.Bar; - this isn't quite right really as it should have '/' in...
+     * </ul>
+     */
+    public static String computeArrayName(ClassNode componentType) {
     	String n = componentType.getName();
-    	if (componentType.isArray() || n.length()==1) { // TODO needs to cope with basic primitive names (char/etc)
-        	return componentType.getName();    		
+    	if (componentType.isPrimitive()) {
+    		int len=n.length();
+    		if (len==7) {
+    			// boolean
+    			return "[Z";
+    		} else if (len==6) {
+    			// double
+    			return "[D";
+    		} else if (len==5) {
+    			if (n.charAt(0)=='f') {
+    				return "[F";//float
+    			} else {
+    				return "[S";//short
+    			}
+    		} else if (len==4) {
+    			 switch (n.charAt(0)) {
+    			 case 'b': return "[B";//byte
+    			 case 'c': return "[C";//char
+    			 default:
+    				 //case 'l': 
+    				 return "[J";//long
+    			 }
+    		} else {
+    			return "[I";//int
+    		}    		
+    	} else if (componentType.isArray()) {
+    		// follow the pattern:
+    		if (n.charAt(0)=='[') {
+    			return new StringBuilder("[").append(n).toString();
     	} else {
-    		if (Character.isLowerCase(n.charAt(0))) {
-    			if (n.equals("int")) { return "I"; }
-	    		else if (n.equals("long")) { return "J"; }
-	    		else if (n.equals("short")) { return "S"; }
-	    		else if (n.equals("boolean")) { return "Z"; }
-	    		else if (n.equals("char")) { return "C"; }
-	    		else if (n.equals("byte")) { return "B"; }
-	    		else if (n.equals("float")) { return "F"; }
-	    		else if (n.equals("double")) { return "D"; }
+    			return new StringBuilder(n).append("[]").toString();    			
     		}
-    		// FIXASC wasteful way to build strings
-    		return "L"+componentType.getName()+";";
+    	} else {
+    		// reference type:
+    		return new StringBuilder("[L").append(componentType.getName()).append(";").toString();
     	}
     }
     // end
