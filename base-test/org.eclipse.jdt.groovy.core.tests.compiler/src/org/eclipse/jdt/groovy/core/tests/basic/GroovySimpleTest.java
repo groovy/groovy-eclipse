@@ -41,11 +41,14 @@ import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
+import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
+import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
@@ -55,6 +58,7 @@ import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.omg.CORBA.Environment;
 
 
 public class GroovySimpleTest extends AbstractRegressionTest {
@@ -803,8 +807,102 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	    			"class Z {\n"+
 	    			"   Z[][] zzz() { null }\n"+
 	    			"}\n"},"works");
+    	// return type is a single char type (not in package and not primitive)
+    	assertEquals("[[LZ;",getReturnTypeOfMethod("Z.groovy","zzz"));
     }
-	    
+    
+    public void testPrimitiveLikeTypeNames_GRE891_2() {
+    	this.runConformTest(new String[]{
+    			"Foo.java",
+    			"public class Foo {\n"+
+    			"public static void main(String[] args) {\n"+
+    			"  int[][] zs = new Z().zzz();\n"+
+    			"  System.out.println(\"works\");\n"+
+    			"  }\n"+
+    			"}",
+    			"Z.groovy",
+    			"class Z {\n"+
+    			"   int[][] zzz() { null }\n"+
+    			"}\n"},"works");
+    	// return type is a primitive
+    	assertEquals("[[I",getReturnTypeOfMethod("Z.groovy","zzz"));
+    }
+    
+    public void testPrimitiveLikeTypeNames_GRE891_3() {
+    	runConformTest(new String[]{
+    			"Foo.java",
+    			"public class Foo {\n"+
+    			"public static void main(String[] args) {\n"+
+    			"  java.lang.String[][] zs = new Z().zzz();\n"+
+    			"  System.out.println(\"works\");\n"+
+    			"  }\n"+
+    			"}",
+    			"Z.groovy",
+    			"class Z {\n"+
+    			"   java.lang.String[][] zzz() { null }\n"+
+    			"}\n"},"works");   	
+    	// return type is a qualified java built in type
+    	assertEquals("[[Ljava.lang.String;",getReturnTypeOfMethod("Z.groovy","zzz"));    	 
+    } 
+    
+    public void testPrimitiveLikeTypeNames_GRE891_4() {
+    	runConformTest(new String[]{
+    			"pkg/Foo.java",
+    			"package pkg;\n"+
+    			"public class Foo {\n"+
+    			"public static void main(String[] args) {\n"+
+    			"  pkg.H[][] zs = new Z().zzz();\n"+
+    			"  System.out.println(\"works\");\n"+
+    			"  }\n"+
+    			"}",
+    			"Y.groovy",
+    			"package pkg\n"+
+    			"class H {}\n",
+    			"Z.groovy",
+    			"package pkg\n"+
+    			"class Z {\n"+
+    			"   H[][] zzz() { null }\n"+
+    			"}\n"},"works");
+    	
+    	// return type is a single char groovy type from a package
+    	assertEquals("[[Lpkg.H;",getReturnTypeOfMethod("Z.groovy","zzz"));
+    } 
+
+    public void testPrimitiveLikeTypeNames_GRE891_5() {
+    	runConformTest(new String[]{
+    			"pkg/Foo.java",
+    			"package pkg;\n"+
+    			"public class Foo {\n"+
+    			"public static void main(String[] args) {\n"+
+    			"  H[][] zs = new Z().zzz();\n"+
+    			"  System.out.println(\"works\");\n"+
+    			"  }\n"+
+    			"}",
+    			"Y.java",
+    			"package pkg;\n"+
+    			"class H {}\n",
+    			"Z.groovy",
+    			"package pkg;\n"+
+    			"class Z {\n"+
+    			"   H[][] zzz() { null }\n"+
+    			"}\n"},"works");
+       	// return type is a single char java type from a package
+     	assertEquals("[[Lpkg.H;",getReturnTypeOfMethod("Z.groovy","zzz"));
+    } 
+    
+    /**
+     * Find the named file (which should have just been compiled) and for the named method determine 
+     * the ClassNode for the return type and return the name of the classnode.
+     */
+    public String getReturnTypeOfMethod(String filename,String methodname) {
+		ModuleNode mn = getModuleNode(filename);      
+	    ClassNode cn = (ClassNode)mn.getClasses().get(0);
+	    assertNotNull(cn);
+	    MethodNode methodNode = cn.getMethod(methodname,new Parameter[]{});
+	    assertNotNull(methodNode);
+	    ClassNode returnType = methodNode.getReturnType();
+	    return returnType.getName();
+    }
 
     
  /*   public void testOverridingFinalMethod_() {
@@ -2011,7 +2109,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n",
 		},"y");		
 
-		GroovyCompilationUnitDeclaration decl = getDecl("X.groovy");
+		GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
 		
 		FieldDeclaration fDecl = null;
 		
@@ -2039,7 +2137,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n",
 		},"y");		
 
-		GroovyCompilationUnitDeclaration decl = getDecl("X.groovy");
+		GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
 		
 		FieldDeclaration fDecl = null;
 		
@@ -2064,7 +2162,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n",
 		},"");		
 
-		GroovyCompilationUnitDeclaration decl = getDecl("X.groovy");
+		GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
 		
 		FieldDeclaration fDecl = null;
 		
@@ -2074,6 +2172,24 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		assertEquals("GREEN sourceStart>sourceEnd:37>41 declSourceStart>declSourceEnd:37>40 modifiersSourceStart=37 endPart1Position:37",stringifyFieldDecl(fDecl));
 		fDecl = grabField(decl,"BLUE");
 		assertEquals("BLUE sourceStart>sourceEnd:46>49 declSourceStart>declSourceEnd:46>48 modifiersSourceStart=46 endPart1Position:46",stringifyFieldDecl(fDecl));
+	}
+	
+	static class Requestor implements ICompilerRequestor {
+
+		public void acceptResult(CompilationResult result) {
+			int stop =1;
+		}
+		
+	}
+	public void testEnumValues_GRE1071() {
+		runConformTest(new String[]{
+				"X.groovy",
+				"enum H {\n"+
+				"  RED,\n"+
+				"  BLUE\n"+
+				"}"},"");
+
+		assertEquals("[LH;",getReturnTypeOfMethod("X.groovy", "values"));
 	}
 
 	private String stringifyFieldDecl(FieldDeclaration fDecl) {
@@ -2106,7 +2222,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n",
 		},"y");		
 
-		GroovyCompilationUnitDeclaration decl = getDecl("X.groovy");
+		GroovyCompilationUnitDeclaration decl = getCUDeclFor("X.groovy");
 		
 		FieldDeclaration fDecl = null;
 		
@@ -8603,7 +8719,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"class C {}\n"+
 			"class D {}\n"
 		},"1.0");		
-		GroovyCompilationUnitDeclaration gcud = getDecl("Run.groovy");
+		GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
 		TypeDeclaration[] tds = gcud.types;
 		assertFalse((tds[0].bits&ASTNode.IsSecondaryType)!=0);
 		assertTrue((tds[1].bits&ASTNode.IsSecondaryType)!=0);
@@ -8617,7 +8733,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"class C {}\n"+
 				"class D {}\n"
 			},"1.0");		
-			gcud = getDecl("Run2.groovy");
+			gcud = getCUDeclFor("Run2.groovy");
 			tds = gcud.types;
 			assertTrue((tds[0].bits&ASTNode.IsSecondaryType)!=0);
 			assertFalse((tds[1].bits&ASTNode.IsSecondaryType)!=0);
@@ -8636,7 +8752,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"package a\n"+
 			"class B { public static String FOO='abc';}\n",
 		},"abc");		
-		GroovyCompilationUnitDeclaration gcud = getDecl("Run.groovy");
+		GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
 		ImportReference[] irs = gcud.imports;
 		assertEquals("a.B.FOO",irs[0].toString().trim());
 		assertTrue(irs[0].isStatic());
@@ -8653,7 +8769,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"package a\n"+
 			"class B { public static String FOO='abc';}\n",
 		},"abc");		
-		GroovyCompilationUnitDeclaration gcud = getDecl("Run.groovy");
+		GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
 		ImportReference[] irs = gcud.imports;
 		assertEquals("a.B.*",irs[0].toString().trim());
 		assertTrue(irs[0].isStatic());
@@ -8670,7 +8786,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"package a\n"+
 			"class B { public static String FOO='abc';}\n",
 		},"abc");		
-		GroovyCompilationUnitDeclaration gcud = getDecl("Run.groovy");
+		GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
 		ImportReference[] irs = gcud.imports;
 		assertTrue(irs[0] instanceof AliasImportReference);
 		assertEquals("a.B.Wibble",irs[0].toString().trim()); // FIXASC hmmm, why isn't that a.B.FOO (ie. declared long name)
@@ -9029,7 +9145,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		}
 	}
 	
-	private GroovyCompilationUnitDeclaration getDecl(String filename) {
+	private GroovyCompilationUnitDeclaration getCUDeclFor(String filename) {
 		return (GroovyCompilationUnitDeclaration)((DebugRequestor)GroovyParser.debugRequestor).declarations.get(filename);
 	}
 

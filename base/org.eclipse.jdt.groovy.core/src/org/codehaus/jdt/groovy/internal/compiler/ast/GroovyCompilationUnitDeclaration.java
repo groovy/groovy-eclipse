@@ -144,8 +144,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		for (int c = 0, max = groovyComments.size(); c < max; c++) {
 			Comment groovyComment = groovyComments.get(c);
 			this.comments[c] = groovyComment.getPositions(compilationResult.lineSeparatorPositions);
-			System.out.println("Comment recorded on " + groovySourceUnit.getName() + "  " + this.comments[c][0] + ">"
-					+ this.comments[c][1]);
+			// System.out.println("Comment recorded on " + groovySourceUnit.getName() + "  " + this.comments[c][0] + ">"
+			// + this.comments[c][1]);
 		}
 	}
 
@@ -1246,18 +1246,22 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	}
 
 	/**
-	 * Convert from an array ClassNode into a TypeReference.
+	 * Convert from an array ClassNode into a TypeReference. Name of the node is expected to be something like java.lang.String[][]
+	 * - primitives should be getting handled by the other create method (and have a sig like '[[I')
 	 */
-	private TypeReference createTypeReferenceForArrayName(ClassNode node, int start, int end) {
-		String signature = node.getName();
+	private TypeReference createTypeReferenceForArrayNameTrailingBrackets(ClassNode node, int start, int end) {
+		String name = node.getName();
 		int dim = 0;
+		int pos = name.length() - 2;
 		ClassNode componentType = node;
-		while (componentType.isArray()) {
+		// jump back counting dimensions
+		while (pos > 0 && name.charAt(pos) == '[') {
 			dim++;
+			pos -= 2;
 			componentType = componentType.getComponentType();
 		}
 		if (componentType.isPrimitive()) {
-			Integer ii = charToTypeId.get(signature.charAt(dim));
+			Integer ii = charToTypeId.get(name.charAt(dim));
 			if (ii == null) {
 				throw new IllegalStateException("node " + node + " reported it had a primitive component type, but it does not...");
 			} else {
@@ -1271,14 +1275,46 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			throw new IllegalStateException("Array classnode with dimensions 0?? node:" + node.getName());
 		}
 		// array component is something like La.b.c; ... or sometimes just [[Z (where Z is a type, not primitive)
-		String arrayComponentTypename = signature.substring(dim);
-		if (arrayComponentTypename.charAt(arrayComponentTypename.length() - 1) == ';') {
-			arrayComponentTypename = signature.substring(dim + 1, signature.length() - 1); // chop off '['s 'L' and ';'
-		}
+		String arrayComponentTypename = name.substring(0, pos + 2);
 		if (arrayComponentTypename.indexOf(".") == -1) {
 			return createJDTArrayTypeReference(arrayComponentTypename, dim, start, end);
 		} else {
 			return createJDTArrayQualifiedTypeReference(arrayComponentTypename, dim, start, end);
+		}
+	}
+
+	/**
+	 * Format will be [[I or [[Ljava.lang.String; - this latter form is really not right but groovy can produce it so we need to
+	 * cope with it.
+	 */
+	private TypeReference createTypeReferenceForArrayNameLeadingBrackets(ClassNode node, int start, int end) {
+		String name = node.getName();
+		int dim = 0;
+		ClassNode componentType = node;
+		while (name.charAt(dim) == '[') {
+			dim++;
+			componentType = componentType.getComponentType();
+		}
+		if (componentType.isPrimitive()) {
+			Integer ii = charToTypeId.get(name.charAt(dim));
+			if (ii == null) {
+				throw new IllegalStateException("node " + node + " reported it had a primitive component type, but it does not...");
+			} else {
+				TypeReference baseTypeReference = TypeReference.baseTypeReference(ii, dim);
+				baseTypeReference.sourceStart = start;
+				baseTypeReference.sourceEnd = start + componentType.getName().length();
+				return baseTypeReference;
+			}
+		} else {
+			String arrayComponentTypename = name.substring(dim);
+			if (arrayComponentTypename.charAt(arrayComponentTypename.length() - 1) == ';') {
+				arrayComponentTypename = name.substring(dim + 1, name.length() - 1); // chop off '['s 'L' and ';'
+			}
+			if (arrayComponentTypename.indexOf(".") == -1) {
+				return createJDTArrayTypeReference(arrayComponentTypename, dim, start, end);
+			} else {
+				return createJDTArrayQualifiedTypeReference(arrayComponentTypename, dim, start, end);
+			}
 		}
 	}
 
@@ -1383,9 +1419,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			return new Wildcard(Wildcard.UNBOUND);
 		}
 
-		// array? [Ljava/lang/String;
-		if (name.charAt(0) == '[') {
-			return createTypeReferenceForArrayName(classNode, start, end);
+		int arrayLoc = name.indexOf("[");
+		if (arrayLoc == 0) {
+			return createTypeReferenceForArrayNameLeadingBrackets(classNode, start, end);
+		} else if (arrayLoc > 0) {
+			return createTypeReferenceForArrayNameTrailingBrackets(classNode, start, end);
 		}
 
 		if (nameToPrimitiveTypeId.containsKey(name)) {
