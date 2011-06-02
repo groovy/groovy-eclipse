@@ -6,7 +6,7 @@
 	 <extension point="org.eclipse.core.contenttype.contentTypes">
 	    <content-type
            base-type="org.eclipse.jdt.core.javaSource"
-           file-extensions="groovy,gradle"
+           file-extensions="groovy,gradle,gpp,grunit"
            id="org.eclipse.jdt.groovy.core.groovySource"
            name="Groovy Source File (for Groovy projects)"
            priority="high"/>

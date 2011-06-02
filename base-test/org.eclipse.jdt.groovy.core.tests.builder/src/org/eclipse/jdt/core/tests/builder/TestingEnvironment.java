@@ -187,6 +187,17 @@ public class TestingEnvironment {
 	public IPath addGroovyClass(IPath packagePath, String className, String contents) {
 	    return addGroovyClassExtension(packagePath, className, contents, null);
 	}
+	
+    /** 
+     * Adds a groovy class with the given contents to the given
+     * package in the workspace, the file will use the specified file suffix.  
+     * The package is created if necessary.  If a class with the same name already
+     * exists, it is replaced.
+     * Returns the path of the added class.
+     */
+	public IPath addGroovyClassWithSuffix(IPath packagePath, String className, String suffix, String contents) {
+	    return addGroovyClassExtension(packagePath, className, suffix, contents, suffix);
+	}
 
 	
 	/** Adds a groovy class with the given contents to the given
@@ -211,7 +222,6 @@ public class TestingEnvironment {
 		}
 		return classPath;
 	}
-	
 
 	
 	/** Adds a class with the given contents to the given
@@ -242,6 +252,10 @@ public class TestingEnvironment {
 	public IPath addGroovyClass(IPath packageFragmentRootPath, String packageName, String className, String contents) {
 	    return addGroovyClassExtension(packageFragmentRootPath, packageName, className, contents, null);
 	}
+	
+	public IPath addGroovyClassWithSuffix(IPath packageFragmentRootPath, String packageName, String className, String suffix, String contents) {
+	    return addGroovyClassExtension(packageFragmentRootPath, packageName, className, contents, suffix);
+	}
 
 	/** Adds a groovy class with the given contents to the given
 	 * package in the workspace.  The package is created
@@ -256,9 +270,9 @@ public class TestingEnvironment {
 		if(packageName != null && packageName.length() >0){
 			IPath packagePath = addPackage(packageFragmentRootPath, packageName);
 
-			return addGroovyClassExtension(packagePath, className, contents, null);
+			return addGroovyClassExtension(packagePath, className, contents, fileExtension);
 		}
-		return addGroovyClassExtension(packageFragmentRootPath, className, contents, null);
+		return addGroovyClassExtension(packageFragmentRootPath, className, contents, fileExtension);
 	}
 
 /** 
@@ -1271,6 +1285,11 @@ public void cleanBuild() {
         addExternalJar(projectPath, GroovyActivator.GROOVY_JAR_URL.getFile());
         addExternalJar(projectPath, GroovyActivator.ASM_JAR_URL.getFile());
     }   
+    
+    public void addGroovyPlusPlusJar(IPath projectPath) throws Exception {
+        addExternalJar(projectPath, GroovyActivator.GROOVY_GPP_URL.getFile());
+    }
+    
     public void addJUnitJar(IPath projectPath) throws Exception {
         addExternalJar(projectPath,FileLocator.resolve(Platform.getBundle("org.codehaus.groovy.eclipse.core.test").getEntry("lib/junit-4.3.1.jar")).getFile());
     }
