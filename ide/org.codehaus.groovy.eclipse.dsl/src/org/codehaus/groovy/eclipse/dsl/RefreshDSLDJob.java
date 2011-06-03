@@ -100,6 +100,11 @@ public class RefreshDSLDJob extends Job {
                                 rootResource.refreshLocal(IResource.DEPTH_INFINITE, null);
                                 root.close();
                                 root.open(null);
+                                if (!frag.exists()) {
+                                    // must check a second time for existence because the close and re-opening of the root may 
+                                    // have changed things
+                                    continue;
+                                }
                             } catch (CoreException e) {
                                 GroovyDSLCoreActivator.logException(e);
                             }
