@@ -102,6 +102,7 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
     }
     
     private boolean shouldAddSupport() {
+//        return false;
         return store.getBoolean(DSLPreferences.AUTO_ADD_DSL_SUPPORT);
     }
     
@@ -114,6 +115,8 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
         if (ResourcesPlugin.getWorkspace().isTreeLocked()) {
             runnable.setPriority(Job.BUILD);
             runnable.setSystem(true);
+            //Next line is very important! Otherwise => race condition with GrailsProjectVersionFixer!
+            runnable.setRule(ResourcesPlugin.getWorkspace().getRuleFactory().modifyRule(project.getProject()));
             runnable.schedule();
         } else {
             runnable.run(null);
