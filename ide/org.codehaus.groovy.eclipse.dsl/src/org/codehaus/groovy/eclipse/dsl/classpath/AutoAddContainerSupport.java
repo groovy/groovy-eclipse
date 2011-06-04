@@ -32,14 +32,19 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
+import org.eclipse.core.resources.IResourceRuleFactory;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.jobs.MultiRule;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.core.JavaModelManager;
+import org.eclipse.jdt.internal.core.SetClasspathOperation;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.preference.IPreferenceStore;
 
@@ -102,7 +107,6 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
     }
     
     private boolean shouldAddSupport() {
-//        return false;
         return store.getBoolean(DSLPreferences.AUTO_ADD_DSL_SUPPORT);
     }
     
@@ -116,14 +120,28 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
             runnable.setPriority(Job.BUILD);
             runnable.setSystem(true);
             //Next line is very important! Otherwise => race condition with GrailsProjectVersionFixer!
-            runnable.setRule(ResourcesPlugin.getWorkspace().getRuleFactory().modifyRule(project.getProject()));
+            runnable.setRule(getSetClassPathSchedulingRule(project));
             runnable.schedule();
         } else {
             runnable.run(null);
         }
-            
     }
-    
+
+    /**
+     * Same scheduling rule as {@link SetClasspathOperation}
+     */
+    private ISchedulingRule getSetClassPathSchedulingRule(IJavaProject project) {
+        //copied from SetClassPathOperation. Rules must match (or be wider than this rule or the setClassPathOperation will fail)
+        IResourceRuleFactory ruleFactory = ResourcesPlugin.getWorkspace().getRuleFactory();
+        return new MultiRule(new ISchedulingRule[] {
+                // use project modification rule as this is needed to create the .classpath file if it doesn't exist yet, or to update project references
+                ruleFactory.modifyRule(project.getProject()),
+                
+                // and external project modification rule in case the external folders are modified
+                ruleFactory.modifyRule(JavaModelManager.getExternalManager().getExternalFoldersProject())
+            });
+    }
+
     public void addContainerToAll() {
         if (!shouldAddSupport()) {
             return;
