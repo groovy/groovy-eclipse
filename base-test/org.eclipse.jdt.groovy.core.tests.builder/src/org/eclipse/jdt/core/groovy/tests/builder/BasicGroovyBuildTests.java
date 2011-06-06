@@ -28,6 +28,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.CompilerUtils;
+import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
 
 /**
  * Basic tests for the builder - compiling and running some very simple java and groovy code
@@ -1853,7 +1854,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 	// }
 	// return null;
 	// }
-
+	
 	// build .groovy file hello world then run it
 	public void testBuildGroovy2() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
@@ -1876,6 +1877,54 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		incrementalBuild(projectPath);
 		expectingCompiledClassesV("p1.Hello");
 		expectingNoProblems();
+	}
+
+	
+	public void testLargeProjects_GRE1037() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		
+		int max = AbstractImageBuilder.MAX_AT_ONCE;
+		try {
+			AbstractImageBuilder.MAX_AT_ONCE=10;
+			
+			for (int i=1;i<10;i++) {
+				env.addClass(root, "p1", "Hello"+i,
+					"package p1;\n"+
+					"class Hello"+i+" {\n"+
+					"}\n"
+					);
+			}
+			
+			env.addGroovyClass(root, "p1", "Foo",
+				"package p1;\n"+
+				"import p1.*;\n"+
+				"class Foo {\n"+
+				"  public static void main(String []argv) { print '12';}\n"+
+				"  void m() { Bar b = new Bar();}\n"+
+				"}\n"
+				);
+	
+			env.addGroovyClass(root, "p1", "Bar",
+				"package p1;\n"+
+				"class Bar {\n"+
+				"}\n"
+				);
+	
+			incrementalBuild(projectPath);
+			// see console for all the exceptions...
+			// no class for p1.Foo when problem occurs:
+			executeClass(projectPath, "p1.Foo", "12", "");
+		} finally {
+			AbstractImageBuilder.MAX_AT_ONCE=max;
+		}
 	}
 
 	public void testIncrementalCompilationTheBasics() throws Exception {
