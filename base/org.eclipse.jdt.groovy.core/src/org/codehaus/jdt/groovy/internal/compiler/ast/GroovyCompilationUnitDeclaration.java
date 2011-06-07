@@ -288,6 +288,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				ref.declarationEnd = ref.sourceEnd;
 				importReferences.add(ref);
 			}
+
 			for (ImportNode importPackage : importPackages) {
 				String importText = importPackage.getText();
 
