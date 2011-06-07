@@ -260,15 +260,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		Map<String, ImportNode> importStatics = ImportNodeCompatibilityWrapper.getStaticImports(moduleNode);
 		Map<String, ImportNode> importStaticStars = ImportNodeCompatibilityWrapper.getStaticStarImports(moduleNode);
 		if (importNodes.size() > 0 || importPackages.size() > 0 || importStatics.size() > 0 || importStaticStars.size() > 0) {
-			int importNum = 0;
-			imports = new ImportReference[importNodes.size() + importPackages.size() + importStatics.size()
-					+ importStaticStars.size()];
+			List<ImportReference> importReferences = new ArrayList<ImportReference>();
 			for (ImportNode importNode : importNodes) {
 				char[][] splits = CharOperation.splitOn('.', importNode.getClassName().toCharArray());
 				ImportReference ref = null;
 				ClassNode type = importNode.getType();
 				int typeStartOffset = startOffset(type);
 				int typeEndOffset = endOffset(type);
+				if (typeStartOffset == 0) {
+					// not a real import, a fake one created during recovery
+					continue;
+				}
 				if (importNode.getAlias() != null && importNode.getAlias().length() > 0) {
 					// FIXASC will need extra positional info for the 'as' and the alias
 					ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positionsFor(splits,
@@ -278,10 +280,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 							ClassFileConstants.AccDefault);
 				}
 				ref.sourceEnd = Math.max(typeEndOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
-				ref.declarationSourceStart = importNode.getStart();
-				ref.declarationSourceEnd = importNode.getEnd();
+				int start = importNode.getStart();
+				ref.declarationSourceStart = start;
+				int end = importNode.getEnd();
+				ref.declarationSourceEnd = end;
+
 				ref.declarationEnd = ref.sourceEnd;
-				imports[importNum++] = ref;
+				importReferences.add(ref);
 			}
 			for (ImportNode importPackage : importPackages) {
 				String importText = importPackage.getText();
@@ -299,7 +304,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				ref.declarationSourceStart = importPackage.getStart();
 				ref.declarationSourceEnd = importPackage.getEnd();
 				ref.declarationEnd = ref.sourceEnd;
-				imports[importNum++] = ref;
+				importReferences.add(ref);
 			}
 			for (Map.Entry<String, ImportNode> importStatic : importStatics.entrySet()) {
 				ImportNode importNode = importStatic.getValue();
@@ -322,7 +327,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				ref.declarationSourceStart = importNode.getStart();
 				ref.declarationSourceEnd = importNode.getEnd();
 				ref.declarationEnd = ref.sourceEnd;
-				imports[importNum++] = ref;
+				importReferences.add(ref);
 			}
 			for (Map.Entry<String, ImportNode> importStaticStar : importStaticStars.entrySet()) {
 				String classname = importStaticStar.getKey();
@@ -337,16 +342,25 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				ref.declarationSourceStart = importNode.getStart();
 				ref.declarationSourceEnd = importNode.getEnd();
 				ref.declarationEnd = ref.sourceEnd;
-				imports[importNum++] = ref;
+				importReferences.add(ref);
 			}
 
 			// ensure proper lexical order
-			if (imports != null) {
+			if (importReferences.size() != 0) {
+				imports = importReferences.toArray(new ImportReference[importReferences.size()]);
 				Arrays.sort(imports, new Comparator<ImportReference>() {
 					public int compare(ImportReference left, ImportReference right) {
 						return left.sourceStart - right.sourceStart;
 					}
 				});
+				for (ImportReference ref : imports) {
+					if (ref.declarationSourceStart > 0 && (ref.declarationEnd - ref.declarationSourceStart + 1) < 0) {
+						throw new IllegalStateException("Import reference alongside class " + moduleNode.getClasses().get(0)
+								+ " will trigger later failure: " + ref.toString() + " declSourceStart="
+								+ ref.declarationSourceStart + " declEnd=" + +ref.declarationEnd);
+					}
+
+				}
 			}
 		}
 	}
