@@ -113,8 +113,12 @@ public class BuilderTests extends TestCase {
 			System.out.println("OUTPUT\n"); //$NON-NLS-1$
 			System.out.println(Util.displayString(actualOutput));
 		}
+		// strip out carriage return for windoze testing
+		int idx=-1;
+		while ((idx=actualOutput.indexOf('\r'))!=-1) {
+			actualOutput = actualOutput.substring(0,idx)+actualOutput.substring(idx+1);
+		}
 		assertTrue("unexpected output.\nExpected:\n"+expectingOutput+"\nActual:\n"+actualOutput, actualOutput.indexOf(expectingOutput) != -1); //$NON-NLS-1$
-
 	}
 
 	protected void expectingParticipantProblems(IPath path, String expected) {
