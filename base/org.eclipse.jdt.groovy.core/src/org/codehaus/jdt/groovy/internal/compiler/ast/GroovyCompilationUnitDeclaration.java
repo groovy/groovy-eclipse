@@ -1413,18 +1413,20 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		if (classNode.isUsingGenerics()) {
 			GenericsType[] genericsInfo = classNode.getGenericsTypes();
-			for (int g = 0; g < genericsInfo.length; g++) {
-				// ClassNode typeArgumentClassNode = genericsInfo[g].getType();
-				TypeReference tr = createTypeReferenceForClassNode(genericsInfo[g]);
-				if (tr != null) {
-					if (typeArguments == null) {
-						typeArguments = new ArrayList<TypeReference>();
+			if (genericsInfo != null) {
+				for (int g = 0; g < genericsInfo.length; g++) {
+					// ClassNode typeArgumentClassNode = genericsInfo[g].getType();
+					TypeReference tr = createTypeReferenceForClassNode(genericsInfo[g]);
+					if (tr != null) {
+						if (typeArguments == null) {
+							typeArguments = new ArrayList<TypeReference>();
+						}
+						typeArguments.add(tr);
 					}
-					typeArguments.add(tr);
+					// if (!typeArgumentClassNode.isGenericsPlaceHolder()) {
+					// typeArguments.add(createTypeReferenceForClassNode(typeArgumentClassNode));
+					// }
 				}
-				// if (!typeArgumentClassNode.isGenericsPlaceHolder()) {
-				// typeArguments.add(createTypeReferenceForClassNode(typeArgumentClassNode));
-				// }
 			}
 		}
 
