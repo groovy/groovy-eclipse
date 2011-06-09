@@ -229,6 +229,31 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"}\n"},"");
     }
     
+//    public void testClash_GRE1076() {
+//    	runConformTest(new String[]{
+//    			"com/foo/Bar/config.groovy",
+//    			"package com.foo.Bar\n"+
+//    			"print 'abc'\n",
+//    			"com/foo/Bar.java",
+//    			"package com.foo;\n"+
+//    			"class Bar {}\n"
+//    	},"abc");
+//    }
+//    
+//    public void testClash_GRE1076_2() {
+//    	runConformTest(new String[]{
+//    			"com/foo/Bar.java",
+//    			"package com.foo;\n"+
+//    			"public class Bar { \n"+
+//    			"  public static void main(String[] argv) {\n"+
+//    			"    System.out.println(\"def\");\n"+
+//    			"  }\n"+
+//    			"}\n",
+//    			"com/foo/Bar/config.groovy",
+//    			"package com.foo.Bar\n"+
+//    			"print 'abc'\n"
+//    	},"def");
+//    }
 
     public void testUnreachable_1047() {
     	this.runConformTest(new String[]{
