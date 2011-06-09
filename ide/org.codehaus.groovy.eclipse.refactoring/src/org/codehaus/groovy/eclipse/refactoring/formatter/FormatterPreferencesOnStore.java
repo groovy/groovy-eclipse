@@ -55,6 +55,7 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
     private static final int DEFAULT_BRACES_END = NEXT_LINE;
     private static final boolean DEFAULT_USE_TABS = true;
     private static final int DEFAULT_TAB_SIZE = 4;
+    private static final int DEFAULT_INDENT_SIZE = 4;
 
     private static final int DEFAULT_INDENT_MULTILINE = 2;
 
@@ -67,6 +68,8 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
     private boolean useTabs;
 
     private int tabSize;
+
+    private int indentSize;
 
     private int indentationMultiline;
 
@@ -117,17 +120,30 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
         if (pBracesEnd != null && pBracesEnd.equals("same"))
             bracesEnd = SAME_LINE;
 
-        this.useTabs = DEFAULT_USE_TABS;
-        String pTab = preferences.getString(PreferenceConstants.GROOVY_FORMATTER_INDENTATION);
-        if (pTab != null && pTab.equals(JavaCore.SPACE))
-            useTabs = false;
-        if (pTab != null && pTab.equals(JavaCore.TAB))
-            useTabs = true;
-
         this.tabSize = DEFAULT_TAB_SIZE;
-        int pTabSize = preferences.getInt(PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE);
+        int pTabSize = preferences.getInt(PreferenceConstants.GROOVY_FORMATTER_TAB_SIZE);
         if (pTabSize != 0)
             tabSize = pTabSize;
+
+        this.indentSize = DEFAULT_INDENT_SIZE;
+        int pIndentSize = preferences.getInt(PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE);
+        if (pIndentSize != 0) {
+            indentSize = pIndentSize;
+        }
+
+        this.useTabs = DEFAULT_USE_TABS;
+        String pTab = preferences.getString(PreferenceConstants.GROOVY_FORMATTER_INDENTATION);
+        if (pTab != null) {
+            if (pTab.equals(JavaCore.SPACE)) {
+                useTabs = false;
+            } else if (pTab.equals(JavaCore.TAB)) {
+                useTabs = true;
+                indentSize = tabSize; // If only tabs are allowed indentSize
+                                      // must be tabSize!
+            } else if (pTab.equals(DefaultCodeFormatterConstants.MIXED)) {
+                useTabs = true;
+            }
+        }
 
         this.indentationMultiline = DEFAULT_INDENT_MULTILINE;
         int pIndeMulti = preferences.getInt(PreferenceConstants.GROOVY_FORMATTER_MULTILINE_INDENTATION);
@@ -155,12 +171,8 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
         return bracesStart;
     }
 
-    public boolean isUseTabs() {
+    public boolean useTabs() {
         return useTabs;
-    }
-
-    public int getTabSize() {
-        return tabSize;
     }
 
     public int getBracesEnd() {
@@ -177,6 +189,14 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
 
     public boolean isIndentEmptyLines() {
         return indentEmptyLines;
+    }
+
+    public int getIndentationSize() {
+        return indentSize;
+    }
+
+    public int getTabSize() {
+        return tabSize;
     }
 
 }

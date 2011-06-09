@@ -40,10 +40,21 @@ public class TestPrefInitializer {
             pref.setValue(PreferenceConstants.GROOVY_FORMATTER_INDENTATION, ind);
 
 		String tabsize = properties.get("tabsize");
-		if(tabsize != null)
-		pref.setValue(
-				PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE,
-				Integer.parseInt(tabsize));
+		//Older tests will use tabsize assuming its the same as indentsize, so set both of these!
+		if(tabsize != null) {
+			pref.setValue(
+					PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE,
+					Integer.parseInt(tabsize));
+			pref.setValue(
+					PreferenceConstants.GROOVY_FORMATTER_TAB_SIZE,
+					Integer.parseInt(tabsize));
+		}
+		String indentsize = properties.get("indentsize");
+		if (indentsize!=null) {
+			pref.setValue(
+					PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE,
+					Integer.parseInt(indentsize));
+		}
 
 		String multiInd = properties.get("multilineIndentation");
 		if(multiInd != null)

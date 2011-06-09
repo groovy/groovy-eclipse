@@ -45,6 +45,7 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore;
 public class TestFormatterPreferences extends EclipseTestCase {
 
     private static final String TAB_SIZE = DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE;
+    private static final String INDENT_SIZE = DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE;
     private static final String TAB_CHAR = DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR;
     private static final String INDENT_EMPTY_LINES = DefaultCodeFormatterConstants.FORMATTER_INDENT_EMPTY_LINES;
     private static final String BRACES_START = PreferenceConstants.GROOVY_FORMATTER_BRACES_START;
@@ -112,15 +113,29 @@ public class TestFormatterPreferences extends EclipseTestCase {
 
         projectPrefs.setValue(TAB_CHAR, JavaCore.SPACE);
         IFormatterPreferences formatPrefs =  new FormatterPreferences(gunit);
-        assertTrue(formatPrefs.isUseTabs() == false);
+        assertTrue(formatPrefs.useTabs() == false);
 
         projectPrefs.setValue(TAB_CHAR, JavaCore.TAB);
         formatPrefs = new FormatterPreferences(gunit);
-        assertTrue(formatPrefs.isUseTabs() == true);
+        assertTrue(formatPrefs.useTabs() == true);
 
         projectPrefs.setValue(TAB_SIZE, 13);
         formatPrefs = new FormatterPreferences(gunit);
         assertEquals(13, formatPrefs.getTabSize());
+        
+        projectPrefs.setValue(TAB_CHAR, JavaCore.TAB);
+        projectPrefs.setValue(TAB_SIZE, 11);
+        projectPrefs.setValue(INDENT_SIZE, 5);
+        formatPrefs = new FormatterPreferences(gunit);
+        assertEquals(11, formatPrefs.getIndentationSize());
+        assertEquals(11, formatPrefs.getTabSize());
+        
+        projectPrefs.setValue(TAB_CHAR, DefaultCodeFormatterConstants.MIXED);
+        projectPrefs.setValue(TAB_SIZE, 11);
+        projectPrefs.setValue(INDENT_SIZE, 5);
+        formatPrefs = new FormatterPreferences(gunit);
+        assertEquals(5, formatPrefs.getIndentationSize());
+        assertEquals(11, formatPrefs.getTabSize());
     }
     
     /**

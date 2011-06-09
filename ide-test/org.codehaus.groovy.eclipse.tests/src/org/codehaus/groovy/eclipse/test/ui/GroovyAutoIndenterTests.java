@@ -174,6 +174,56 @@ public class GroovyAutoIndenterTests extends GroovyEditorTest {
                 "    }\n" +
                 "}\n\n");
     }
+    
+    /**
+     * Check whether autoindentor works correct for mixed tab/spaces mode.
+     */
+    public void testMixedTabsAndSpaces() throws Exception {
+        makeEditor(
+                "class Foo {\n" +
+                "    def foo() {\n" +
+                "        def bar {<***>\n" +
+                "        }\n" +
+                "    }\n"+
+                "}\n\n");
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, DefaultCodeFormatterConstants.MIXED);
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, "8");
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE, "4");
+        send("\n");
+        assertEditorContents(
+                "class Foo {\n" +
+                "    def foo() {\n" +
+                "        def bar {\n" +
+                "\t    <***>\n" +
+                "        }\n" +
+                "    }\n"+
+                "}\n\n");
+    }
+    
+    /**
+     * Similar to above, but also check whether it counts the tabs on previous lines correctly.
+     */
+    public void testMixedTabsAndSpaces2() throws Exception {
+        makeEditor(
+                "class Foo {\n" +
+                "    def foo() {\n" +
+                "\tdef bar {<***>\n" +
+                "\t}\n" +
+                "    }\n"+
+                "}\n\n");
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, DefaultCodeFormatterConstants.MIXED);
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, "8");
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE, "4");
+        send("\n");
+        assertEditorContents(
+                "class Foo {\n" +
+                "    def foo() {\n" +
+                "\tdef bar {\n" +
+                "\t    <***>\n" +
+                "\t}\n" +
+                "    }\n"+
+                "}\n\n");
+    }
 
     protected void setJavaPreference(String name, String value) {
         Hashtable options = JavaCore.getOptions();

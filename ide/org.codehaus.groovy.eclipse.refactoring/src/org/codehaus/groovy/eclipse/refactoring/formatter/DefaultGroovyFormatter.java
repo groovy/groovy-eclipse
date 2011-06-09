@@ -316,33 +316,22 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
         return getNextToken(i);
 	}
 
-	/**
-	 * Returns a Sting of spaces / tabs accordung to the configuration
-	 *
-	 * @param intentation
-	 *            the actual indentation level
-	 * @return
-	 */
+    /**
+     * Returns a Sting of spaces / tabs accordung to the configuration
+     *
+     * @param intentation
+     *            the actual indentation level in 'indentation units'
+     * @return
+     */
 	public String getLeadingGap(int indent) {
-	    int indentation = indent;
-		StringBuilder gap = new StringBuilder();
-		while (indentation > 0) {
-			if (pref.isUseTabs())
-				gap.append("\t");
-			else {
-				for (int i = 0; i < pref.getTabSize(); i++) {
-					gap.append(" ");
-				}
-			}
-			indentation--;
-		}
-		return gap.toString();
+        int spaces = indent * pref.getIndentationSize();
+        return GroovyIndentationService.createIndentation(pref, spaces);
 	}
 
-	/**
-	 * @return Returns the default newline for this document
-	 * @throws BadLocationException
-	 */
+    /**
+     * @return Returns the default newline for this document
+     * @throws BadLocationException
+     */
 	public String getNewLine() {
 		return formattedDocument.getDefaultLineDelimiter();
 	}
@@ -503,33 +492,35 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 		return posClStart;
 	}
 
-
-	/**
-	 * Computes the given indent level for the line by looking at whitespace.
-	 * before the line starts.<br><br>
-	 * Each tab is consider one indent level.  And for spaces,
-	 * the value pref.tabSize is used (rounded up).
-	 * @param line the line to look at
-	 * @return indentation level
-	 */
+    /**
+     * Computes the given indent level for the line by looking at whitespace.
+     * before the line starts.<br>
+     * <br>
+     * Each tab is consider an equivalent number of spaces.
+     * The total number of spaces is divided by indentSize and rounded up.
+     * 
+     * @return indentation level
+     */
 	public int computeIndentLevel(String line) {
-	    int indentsFound = 0;
-	    for (int currPos = 0, accumulatedSpaces = 0; currPos < line.length(); currPos++) {
+        int accumulatedSpaces = 0;
+        int tabSize = pref.getTabSize();
+        for (int currPos = 0; currPos < line.length(); currPos++) {
 	        char c = line.charAt(currPos);
 	        if (c != ' ' && c != '\t') {
 	            break;
 	        } else if (c == '\t') {
-	            indentsFound++;
-	            accumulatedSpaces = 0;
+                accumulatedSpaces = nextTabStop(accumulatedSpaces, tabSize);
 	        } else if (c == ' ') {
 	            accumulatedSpaces++;
-	            if (accumulatedSpaces == pref.getTabSize()) {
-	                indentsFound++;
-	                accumulatedSpaces = 0;
-	            }
 	        }
 	    }
-	    return indentsFound;
+        int indentSize = pref.getIndentationSize();
+        return (accumulatedSpaces + indentSize - 1) / indentSize;
 	}
+
+    private int nextTabStop(int spaces, int tabSize) {
+        int tabs = spaces / tabSize + 1;
+        return tabs * tabSize;
+    }
 
 }

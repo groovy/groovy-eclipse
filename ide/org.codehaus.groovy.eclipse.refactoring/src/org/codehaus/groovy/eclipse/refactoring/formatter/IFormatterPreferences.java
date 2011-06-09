@@ -23,11 +23,11 @@ package org.codehaus.groovy.eclipse.refactoring.formatter;
 public interface IFormatterPreferences {
     int getBracesEnd();
     int getBracesStart();
-    boolean isUseTabs();
+    boolean useTabs();
+    int getIndentationSize();
     int getTabSize();
     int getIndentationMultiline();
     int getMaxLineLength();
     boolean isSmartPaste();
-
     boolean isIndentEmptyLines();
 }

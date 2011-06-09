@@ -256,18 +256,11 @@ public class GroovyIndentationService {
     }
 
     /**
-     * Create indentation characters properly using tabs and spaces.
+     * Create indentation characters properly using tabs and spaces, equivalent
+     * to a given number of spaces.
      */
-    public String createIndentation(int indentLevel) {
-        int tabs = getPrefs().isUseTabs() ? indentLevel / getPrefs().getTabSize() : 0;
-        int spaces = indentLevel - tabs * getPrefs().getTabSize();
-
-        StringBuffer buf = new StringBuffer();
-        for (int i = 0; i < tabs; i++)
-            buf.append('\t');
-        for (int i = 0; i < spaces; i++)
-            buf.append(' ');
-        return buf.toString();
+    public String createIndentation(int spaces) {
+        return createIndentation(getPrefs(), spaces);
     }
 
     public void dispose() {
@@ -411,7 +404,7 @@ public class GroovyIndentationService {
     }
 
     /**
-     * @return A String equivalent to one tab indentation, using either a tab,
+     * @return A String equivalent to one tab, using either a tab,
      *         or a number of spaces, in accordance with the preferences.
      */
     public String getTabString() {
@@ -532,10 +525,33 @@ public class GroovyIndentationService {
                 adjust--;
         }
         if (adjust > 0)
-            indentLevel += getPrefs().getTabSize();
+            indentLevel += getPrefs().getIndentationSize();
         else if (adjust < 0)
-            indentLevel = indentLevel - getPrefs().getTabSize();
+            indentLevel = indentLevel - getPrefs().getIndentationSize();
         return indentLevel;
+    }
+
+    public static String createIndentation(IFormatterPreferences pref, int spaces) {
+        StringBuilder gap = new StringBuilder();
+        if (pref.useTabs()) {
+            // Using tabs and possible some trailing space to make up the rest
+            int tabSize = pref.getTabSize();
+            while (spaces >= tabSize) {
+                // Keep using tabs until the remaining spaces is less than a tab
+                gap.append('\t');
+                spaces -= tabSize;
+            }
+            while (spaces > 0) {
+                gap.append(' ');
+                spaces--;
+            }
+        } else {
+            // Only use spaces
+            for (int i = 0; i < spaces; i++) {
+                gap.append(' ');
+            }
+        }
+    	return gap.toString();
     }
 
 }

@@ -48,7 +48,7 @@ import org.codehaus.groovy.eclipse.refactoring.core.rewriter.ASTWriter;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
 import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferencesOnStore;
-import org.codehaus.groovy.eclipse.refactoring.formatter.IFormatterPreferences;
+import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyIndentationService;
 import org.codehaus.groovy.eclipse.refactoring.ui.extract.GroovyRefactoringMessages;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
@@ -601,8 +601,12 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
 
         StringBuilder sb = new StringBuilder();
         try {
+            final FormatterPreferencesOnStore formmatterPrefs = new FormatterPreferencesOnStore(refactoringPreferences);
             int indentation = calculateIndentation();
-            sb.append(lineDelimiter + lineDelimiter + createIndent(indentation));
+            sb.append(lineDelimiter
+                    + lineDelimiter
+                    + GroovyIndentationService.createIndentation(formmatterPrefs,
+                            indentation * formmatterPrefs.getIndentationSize()));
             sb.append(getMethodHead()).append(" {").append(lineDelimiter);
             // copy the source code
             String copyOfSourceCode = unitDocument.get(replaceScope.getOffset(), replaceScope.getLength());
@@ -623,8 +627,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
                 edits.apply(newMethodDocument);
             }
 
-            DefaultGroovyFormatter formatter = new DefaultGroovyFormatter(newMethodDocument, new FormatterPreferencesOnStore(
-                    refactoringPreferences), indentation);
+            DefaultGroovyFormatter formatter = new DefaultGroovyFormatter(newMethodDocument, formmatterPrefs, indentation);
             formatter.format().apply(newMethodDocument);
             return newMethodDocument.get();
         } catch (BadLocationException e) {
@@ -632,20 +635,6 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
                     .addFatalError("Problem when creating the body of the extracted method.\n" + e.getMessage(),
                             createErrorContext());
             GroovyCore.logException("Problem when creating the body of the extracted method.", e);
-        }
-        return sb.toString();
-    }
-
-    /**
-     * @return
-     */
-    private String createIndent(int level) {
-        IFormatterPreferences formatterPrefs = new FormatterPreferencesOnStore(refactoringPreferences);
-        char tab = formatterPrefs.isUseTabs() ? '\t' : ' ';
-        StringBuilder sb = new StringBuilder();
-        int times = level * formatterPrefs.getTabSize();
-        for (int i = 0; i < times; i++) {
-            sb.append(tab);
         }
         return sb.toString();
     }
@@ -684,7 +673,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     /**
-     * @return
+     * @return indentation level, given in 'indentation units'.
      */
     private int calculateIndentation() {
         int defaultIndentation;
