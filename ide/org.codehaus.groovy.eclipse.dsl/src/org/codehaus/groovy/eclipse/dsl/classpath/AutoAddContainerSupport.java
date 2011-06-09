@@ -172,10 +172,12 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
                     if (child.getResource() instanceof IProject) {
                         if (child.getAffectedChildren().length == 0) {
                             projects.add((IProject) child.getResource());
-                        } else if (child.getAffectedChildren().length == 1) {
-                            IResource r = child.getAffectedChildren()[0].getResource();
-                            if (r instanceof IFile && r.getName().equals(".project")) {
-                                projects.add((IProject) child.getResource());
+                        } else {
+                            for (IResourceDelta childDelta : child.getAffectedChildren()) {
+                                IResource r = childDelta.getResource();
+                                if (r instanceof IFile && r.getName().equals(".project")) {
+                                    projects.add((IProject) child.getResource());
+                                }
                             }
                         }
                     }

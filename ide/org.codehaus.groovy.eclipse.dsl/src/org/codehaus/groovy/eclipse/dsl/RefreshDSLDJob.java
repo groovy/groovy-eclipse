@@ -41,6 +41,8 @@ public class RefreshDSLDJob extends Job {
     
     public class DSLDResourceVisitor implements IResourceVisitor {
     
+        private static final String PLUGIN_DSLD_SUPPORT = "plugin_dsld_support";
+        private static final String GLOBAL_DSLD_SUPPORT = "global_dsld_support";
         private final IProject project;
         private final Set<IStorage> dsldFiles;
         public DSLDResourceVisitor(IProject project) {
@@ -62,13 +64,13 @@ public class RefreshDSLDJob extends Job {
             return true;
         }
     
-        public Set<IStorage> findFiles() {
+        public Set<IStorage> findFiles(IProgressMonitor monitor) {
             try {
                 // first look for files in the project
                 project.accept(this);
 
                 // now look for files in class folders of the project
-                findDSLDsInLibraries();
+                findDSLDsInLibraries(monitor);
             } catch (CoreException e) {
                 GroovyDSLCoreActivator.logException(e);
             }
@@ -76,15 +78,12 @@ public class RefreshDSLDJob extends Job {
             return dsldFiles;
         }
 
-        /**
-         * @throws JavaModelException
-         */
-        protected void findDSLDsInLibraries() throws JavaModelException {
+        protected void findDSLDsInLibraries(IProgressMonitor monitor) throws JavaModelException {
             IJavaProject javaProject = JavaCore.create(project);
             for (IPackageFragmentRoot root : javaProject.getPackageFragmentRoots()) {
                 if (root.getKind() == IPackageFragmentRoot.K_BINARY) {
                     IPackageFragment frag = root.getPackageFragment("dsld");
-                    if (frag.exists() || root.getElementName().equals("global_dsld_support") || root.getElementName().equals("plugin_dsld_support")) {
+                    if (frag.exists() || root.getElementName().equals(GLOBAL_DSLD_SUPPORT) || root.getElementName().equals(PLUGIN_DSLD_SUPPORT)) {
                         
                         // FIXADE start workaround for Bug 346928
                         // in 3.6 and earlier, it was not possible to refresh scripts in external folders 
@@ -96,8 +95,7 @@ public class RefreshDSLDJob extends Job {
                         }
                         if (rootResource != null) {
                             try {
-                                // FIXADE pass the progress monitor in here
-                                rootResource.refreshLocal(IResource.DEPTH_INFINITE, null);
+                                rootResource.refreshLocal(IResource.DEPTH_INFINITE, monitor);
                                 root.close();
                                 root.open(null);
                                 if (!root.exists() || !frag.exists()) {
@@ -213,7 +211,7 @@ public class RefreshDSLDJob extends Job {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Finding inferencing DSL scripts");
         }
         monitor.subTask("Finding inferencing DSL scripts");
-        Set<IStorage> findDSLDFiles = new DSLDResourceVisitor(project).findFiles();
+        Set<IStorage> findDSLDFiles = new DSLDResourceVisitor(project).findFiles(monitor);
         
         if (monitor.isCanceled()) {
             return Status.CANCEL_STATUS;
