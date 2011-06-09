@@ -494,11 +494,12 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 
     /**
      * Computes the given indent level for the line by looking at whitespace.
-     * before the line starts.<br>
-     * <br>
-     * Each tab is consider an equivalent number of spaces.
-     * The total number of spaces is divided by indentSize and rounded up.
-     * 
+     * before the line starts.
+     * <p>
+     * Each tab is consider to move to the next 'tabstop' at a column position
+     * that is a multiple of the tab size. Finally, the total number of spaces thus
+     * accumulated is divided by indentSize and rounded down.
+     *
      * @return indentation level
      */
 	public int computeIndentLevel(String line) {
@@ -515,7 +516,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 	        }
 	    }
         int indentSize = pref.getIndentationSize();
-        return (accumulatedSpaces + indentSize - 1) / indentSize;
+        return accumulatedSpaces / indentSize;
 	}
 
     private int nextTabStop(int spaces, int tabSize) {

@@ -70,8 +70,8 @@ public class FindIndentsTests extends TestCase {
     }
 
     public void testIndent6() throws Exception {
-        String line = " \t \t \t f";
-        assertEquals("Incorrect indentation found for line \"" + line + "\"", 3, formatter.computeIndentLevel(line));
+        String line = "   \t \t \tf";
+        assertEquals("Incorrect indentation found for line \"" + line + "\"", 4, formatter.computeIndentLevel(line));
     }
     public void testIndent7() throws Exception {
         String line = "f";
