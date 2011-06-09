@@ -337,6 +337,15 @@ protected void compile(SourceFile[] units) {
 
 	int unitsLength = units.length;
 	this.compiledAllAtOnce = unitsLength <= MAX_AT_ONCE;
+
+	// GROOVY start
+	// currently can't easily fault in files from the other group.  Easier to
+	// do this than fix that right now.
+	if (this.compiler!=null && this.compiler.options!=null && this.compiler.options.buildGroovyFiles==2) {
+		// System.out.println("although more than "+MAX_AT_ONCE+" still compiling "+unitsLength+" files at once");
+		this.compiledAllAtOnce = true;
+	}
+	// GROOVY end
 	if (this.compiledAllAtOnce) {
 		// do them all now
 		if (JavaBuilder.DEBUG)
