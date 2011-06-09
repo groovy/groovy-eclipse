@@ -1407,27 +1407,28 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		List<TypeReference> typeArguments = null;
 
 		// need to distinguish between raw usage of a type 'List' and generics
-		// usage 'List<T>' - it basically depends upon whether the type variable reference can be
+		// usage 'List<T>' -
+		// it basically depends upon whether the type variable reference can be
 		// resolved within the current 'scope' - if it cannot then this is probably a raw
 		// reference (yes?)
 
 		if (classNode.isUsingGenerics()) {
 			GenericsType[] genericsInfo = classNode.getGenericsTypes();
 			if (genericsInfo != null) {
-				for (int g = 0; g < genericsInfo.length; g++) {
-					// ClassNode typeArgumentClassNode = genericsInfo[g].getType();
-					TypeReference tr = createTypeReferenceForClassNode(genericsInfo[g]);
-					if (tr != null) {
-						if (typeArguments == null) {
-							typeArguments = new ArrayList<TypeReference>();
-						}
-						typeArguments.add(tr);
+			for (int g = 0; g < genericsInfo.length; g++) {
+				// ClassNode typeArgumentClassNode = genericsInfo[g].getType();
+				TypeReference tr = createTypeReferenceForClassNode(genericsInfo[g]);
+				if (tr != null) {
+					if (typeArguments == null) {
+						typeArguments = new ArrayList<TypeReference>();
 					}
-					// if (!typeArgumentClassNode.isGenericsPlaceHolder()) {
-					// typeArguments.add(createTypeReferenceForClassNode(typeArgumentClassNode));
-					// }
+					typeArguments.add(tr);
 				}
+				// if (!typeArgumentClassNode.isGenericsPlaceHolder()) {
+				// typeArguments.add(createTypeReferenceForClassNode(typeArgumentClassNode));
+				// }
 			}
+		}
 		}
 
 		String name = classNode.getName();
