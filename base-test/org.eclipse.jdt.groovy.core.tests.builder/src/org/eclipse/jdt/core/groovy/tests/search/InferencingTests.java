@@ -151,32 +151,7 @@ public class InferencingTests extends AbstractInferencingTest {
         }
     }
     
-    public void testClassReference1() throws Exception {
-        String contents = "String";
-        assertType(contents, "java.lang.String");
-    }
-    public void testClassReference2() throws Exception {
-        String contents = "String.class";
-        assertType(contents, "java.lang.Class<java.lang.Object<T>>");  // should be String, not object
-    }
-    public void testClassReference3() throws Exception {
-        String contents = "String.getClass()";
-        int start = contents.indexOf("getClass");
-        int end = start + "getClass".length();
-        assertType(contents, start, end, "java.lang.Class<java.lang.Object>");  // should be String, not object
-    }
-    public void testClassReference4() throws Exception {
-        String contents = "String.class.getCanonicalName()";
-        int start = contents.indexOf("getCanonicalName");
-        int end = start + "getCanonicalName".length();
-        assertType(contents, start, end, "java.lang.String");
-    }
-    public void testClassReference5() throws Exception {
-        String contents = "String.class.canonicalName";
-        int start = contents.indexOf("canonicalName");
-        int end = start + "canonicalName".length();
-        assertType(contents, start, end, "java.lang.String");
-    }
+
     
     public void testInnerClass1() throws Exception {
         String contents = "class Outer { class Inner { } \nInner x }\nnew Outer().x ";

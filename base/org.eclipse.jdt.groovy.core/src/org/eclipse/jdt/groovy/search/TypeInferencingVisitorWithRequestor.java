@@ -1,19 +1,13 @@
-/*
- * Copyright 2003-2009 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+/*******************************************************************************
+ * Copyright (c) 2009-2011 SpringSource and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ *     SpringSource - initial API and implementation
+ *******************************************************************************/
 package org.eclipse.jdt.groovy.search;
 
 import java.util.Collection;
@@ -664,7 +658,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		super.visitAnnotations(node);
 	}
 
-	// @Override
+	@Override
 	public void visitImports(ModuleNode node) {
 		for (ImportNode imp : new ImportNodeCompatibilityWrapper(node).getAllImportNodes()) {
 			TypeLookupResult result = null;
@@ -744,22 +738,24 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	private boolean handleExpression(Expression node) {
 		TypeLookupResult result = null;
 		ClassNode objectExprType;
+		boolean isStatic;
 		VariableScope scope = scopes.peek();
 		if (isProperty(node)) {
 			objectExprType = objectExpressionType.pop();
+			isStatic = hasStaticObjectExpression(node);
+			scope.methodCallNumberOfArguments = getMethodCallArgs();
 		} else {
-			// if inside a closure and that closure is an argument to a method call,
-			// then use the declaring type of the method call.
-			// eg-
-			// foo.run { someMethod() }
-			// the declaring type of someMethod() should be the type of foo.
-			// CallAndType cat = scope.getEnclosingMethodCallExpression();
-			// objectExprType = cat != null && scope.getEnclosingClosure() != null ? cat.declaringType : null;
 			objectExprType = null;
+			isStatic = false;
 		}
 
 		for (ITypeLookup lookup : lookups) {
-			TypeLookupResult candidate = lookup.lookupType(node, scope, objectExprType);
+			TypeLookupResult candidate;
+			if (lookup instanceof ITypeLookupExtension) {
+				candidate = ((ITypeLookupExtension) lookup).lookupType(node, scope, objectExprType, isStatic);
+			} else {
+				candidate = lookup.lookupType(node, scope, objectExprType);
+			}
 			if (candidate != null) {
 				if (result == null || result.confidence.isLessPreciseThan(candidate.confidence)) {
 					result = candidate;
@@ -771,6 +767,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 		result.enclosingAssignment = enclosingAssignment;
 		VisitStatus status = handleRequestor(node, requestor, result);
+
+		scope.methodCallNumberOfArguments = -1; // forget the number of arguments
 
 		// when there is a category method, we don't want to store it
 		// as the declaring type since this will mess things up inside closures
@@ -804,6 +802,28 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 		// won't get here
 		return false;
+	}
+
+	/**
+	 * Finds the number of arguments of the current method call. Returns -1 if not a method call. Returns 0 if no arguments else
+	 * returns the number of arguments.
+	 * 
+	 * @return
+	 */
+	private int getMethodCallArgs() {
+		ASTNode peek = propertyExpression.peek();
+		if (peek instanceof MethodCallExpression) {
+			MethodCallExpression call = (MethodCallExpression) peek;
+			Expression arguments = call.getArguments();
+			if (arguments instanceof ArgumentListExpression) {
+				ArgumentListExpression list = (ArgumentListExpression) arguments;
+				List<Expression> expressions = list.getExpressions();
+				return expressions != null ? expressions.size() : 0;
+			} else {
+				return 0;
+			}
+		}
+		return -1;
 	}
 
 	private boolean handleParameterList(Parameter[] params) {
@@ -1564,7 +1584,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					if (groovyParams.length != jdtParamTypes.length) {
 						continue;
 					}
-					// FIXADE this is not precise. Doesn't take into account generics
 					for (int i = 0; i < groovyParams.length; i++) {
 						String groovyClassType = groovyParams[i].getType().getName();
 						if (!groovyClassType.startsWith("[")) { //$NON-NLS-1$
@@ -1584,7 +1603,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					if (groovyParams.length != jdtParamTypes.length) {
 						continue;
 					}
-					// FIXADE this is not precise. Doesn't take into account generics
 					for (int i = 0; i < groovyParams.length; i++) {
 						String groovyClassType = groovyParams[i].getType().getName();
 						if (!groovyClassType.startsWith("[")) { //$NON-NLS-1$
@@ -1722,6 +1740,37 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			} else if (maybeProperty instanceof AttributeExpression) {
 				AttributeExpression prop = (AttributeExpression) maybeProperty;
 				return prop.getProperty() == node;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * 
+	 * @param node
+	 * @return true iff the object expression associated with node is a static reference to a class declaration
+	 */
+	private boolean hasStaticObjectExpression(Expression node) {
+		if (!propertyExpression.isEmpty()) {
+			ASTNode maybeProperty = propertyExpression.peek();
+			if (maybeProperty instanceof PropertyExpression) {
+				PropertyExpression prop = (PropertyExpression) maybeProperty;
+				return prop.getObjectExpression() instanceof ClassExpression ||
+				// check to see if in a static scope
+						(prop.isImplicitThis() && scopes.peek().isStatic());
+			} else if (maybeProperty instanceof MethodCallExpression) {
+				MethodCallExpression prop = (MethodCallExpression) maybeProperty;
+				return prop.getObjectExpression() instanceof ClassExpression ||
+				// check to see if in a static scope
+						(prop.isImplicitThis() && scopes.peek().isStatic());
+			} else if (maybeProperty instanceof AttributeExpression) {
+				AttributeExpression prop = (AttributeExpression) maybeProperty;
+				return prop.getObjectExpression() instanceof ClassExpression ||
+				// check to see if in a static scope
+						(prop.isImplicitThis() && scopes.peek().isStatic());
 			} else {
 				return false;
 			}

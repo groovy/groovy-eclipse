@@ -1,19 +1,13 @@
-/*
- * Copyright 2003-2009 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
+/*******************************************************************************
+ * Copyright (c) 2009-2011 SpringSource and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ *     SpringSource - initial API and implementation
+ *******************************************************************************/
 package org.eclipse.jdt.groovy.search;
 
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.EXACT;
@@ -77,7 +71,7 @@ import org.objectweb.asm.Opcodes;
  *          Looks at the type associated with the ASTNode for the type <br>
  */
 @SuppressWarnings("nls")
-public class SimpleTypeLookup implements ITypeLookup {
+public class SimpleTypeLookup implements ITypeLookupExtension {
 
 	private GroovyCompilationUnit unit;
 
@@ -86,11 +80,16 @@ public class SimpleTypeLookup implements ITypeLookup {
 	}
 
 	public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
+		return lookupType(node, scope, objectExpressionType, false);
+	}
 
+	public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType,
+			boolean isStaticObjectExpression) {
 		TypeConfidence[] confidence = new TypeConfidence[] { EXACT };
 		ClassNode declaringType = objectExpressionType != null ? objectExpressionType : findDeclaringType(node, scope, confidence);
 
-		TypeLookupResult result = findType(node, objectExpressionType, declaringType, scope, confidence[0]);
+		TypeLookupResult result = findType(node, objectExpressionType, declaringType, scope, confidence[0],
+				isStaticObjectExpression || (objectExpressionType == null && scope.isStatic()));
 
 		return result;
 	}
@@ -195,13 +194,8 @@ public class SimpleTypeLookup implements ITypeLookup {
 		return VariableScope.OBJECT_CLASS_NODE;
 	}
 
-	/**
-	 * @param node
-	 * @param scope
-	 * @return
-	 */
 	private TypeLookupResult findType(Expression node, ClassNode objectExpressionType, ClassNode declaringType,
-			VariableScope scope, TypeConfidence confidence) {
+			VariableScope scope, TypeConfidence confidence, boolean isStaticObjectExpression) {
 
 		// check first to see if we have this type inferred
 		if (node instanceof VariableExpression) {
@@ -217,7 +211,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 
 			if (node instanceof ConstantExpression) {
 				return findTypeForNameWithKnownObjectExpression(((ConstantExpression) node).getText(), nodeType,
-						objectExpressionType, scope, confidence);
+						objectExpressionType, scope, confidence, isStaticObjectExpression);
 
 			} else if (node instanceof BinaryExpression && ((BinaryExpression) node).getOperation().getType() == Types.EQUALS) {
 				// this is an assignment expression, return the object expression, which is the right hand side
@@ -255,7 +249,7 @@ public class SimpleTypeLookup implements ITypeLookup {
 						realName = realName.substring(1, realName.length() - 1);
 					}
 					return findTypeForNameWithKnownObjectExpression(realName, nodeType, scope.getEnclosingTypeDeclaration(), scope,
-							confidence);
+							confidence, isStaticObjectExpression);
 				}
 				if (nodeType.equals(VariableScope.STRING_CLASS_NODE)) {
 					// likely a proper quoted string constant
@@ -415,10 +409,17 @@ public class SimpleTypeLookup implements ITypeLookup {
 	 * @return
 	 */
 	private TypeLookupResult findTypeForNameWithKnownObjectExpression(String name, ClassNode type, ClassNode declaringType,
-			VariableScope scope, TypeConfidence confidence) {
+			VariableScope scope, TypeConfidence confidence, boolean isStaticObjectExpression) {
 		ClassNode realDeclaringType;
 		VariableInfo varInfo;
 		ASTNode declaration = findDeclaration(name, declaringType);
+
+		// GRECLIPSE-1079
+		if (declaration == null && isStaticObjectExpression) {
+			// we might have a reference to a property/method defined on java.lang.Class
+			declaration = findDeclaration(name, VariableScope.CLASS_CLASS_NODE);
+		}
+
 		if (declaration != null) {
 			type = typeFromDeclaration(declaration, declaringType);
 			realDeclaringType = declaringTypeFromDeclaration(declaration, declaringType);
@@ -440,6 +441,24 @@ public class SimpleTypeLookup implements ITypeLookup {
 			realDeclaringType = declaringType;
 			confidence = UNKNOWN;
 		}
+
+		// now check to see if the object expression is static, but the declaration is not
+		if (declaration != null) {
+			if (declaration instanceof FieldNode) {
+				if (isStaticObjectExpression && !((FieldNode) declaration).isStatic()) {
+					confidence = UNKNOWN;
+				}
+			} else if (declaration instanceof PropertyNode) {
+				if (isStaticObjectExpression && !((PropertyNode) declaration).isStatic()) {
+					confidence = UNKNOWN;
+				}
+			} else if (declaration instanceof MethodNode) {
+				if (isStaticObjectExpression && !((MethodNode) declaration).isStatic()) {
+					confidence = UNKNOWN;
+				}
+			}
+		}
+
 		return new TypeLookupResult(type, realDeclaringType, declaration, confidence, scope);
 	}
 
