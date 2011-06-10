@@ -32,7 +32,10 @@ public class EfficiencyCompilerRequestor implements IDebugRequestor {
 		});
 		for (int i = 0; i < classFiles.length; i++) {
 			String className = new String(classFiles[i].fileName());
-			compiledClasses.addElement(className.replace('/', '.'));
+			className = className.replace('/', '.');
+			if (!compiledClasses.contains(className)) {
+				compiledClasses.addElement(className);
+			}
 		}
 	}
 	
