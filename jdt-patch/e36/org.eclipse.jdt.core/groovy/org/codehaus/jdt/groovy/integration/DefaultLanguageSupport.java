@@ -13,6 +13,7 @@ package org.codehaus.jdt.groovy.integration;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.WorkingCopyOwner;
+import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -116,5 +117,10 @@ class DefaultLanguageSupport implements LanguageSupport {
 
 	public void filterNonSourceMembers(BinaryType binaryType) {
 		// nop
+	}
+
+	public IJavaSearchScope expandSearchScope(IJavaSearchScope scope, SearchPattern pattern, SearchRequestor requestor) {
+	    // never expand
+		return scope;
 	}
 }

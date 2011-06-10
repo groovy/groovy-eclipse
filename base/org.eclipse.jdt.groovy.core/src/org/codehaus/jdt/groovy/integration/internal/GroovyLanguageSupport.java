@@ -34,6 +34,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
+import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
@@ -237,5 +238,20 @@ public class GroovyLanguageSupport implements LanguageSupport {
 		} catch (JavaModelException e) {
 			e.printStackTrace();
 		}
+	}
+
+	// Singleton that determines if a search scope should be expanded
+	public static ISearchScopeExpander searchScopeExpander;
+
+	/**
+	 * Expand the search scope iff the focus is a private member inside of a {@link GroovyCompilationUnit}. And the search requestor
+	 * is CollectingSearchRequestor.
+	 */
+	public IJavaSearchScope expandSearchScope(IJavaSearchScope scope, SearchPattern pattern, SearchRequestor requestor) {
+		// delegate to something that can see the org.eclise.jdt.coreext classes
+		if (searchScopeExpander != null) {
+			return searchScopeExpander.expandSearchScope(scope, pattern, requestor);
+		}
+		return scope;
 	}
 }

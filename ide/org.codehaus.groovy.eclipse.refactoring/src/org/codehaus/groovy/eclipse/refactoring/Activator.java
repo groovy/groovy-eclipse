@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -18,6 +18,10 @@
  */
 package org.codehaus.groovy.eclipse.refactoring;
 
+
+
+import org.codehaus.groovy.eclipse.refactoring.core.rename.RefactoringSearchScopeExpander;
+import org.codehaus.jdt.groovy.integration.internal.GroovyLanguageSupport;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -32,7 +36,7 @@ public class Activator extends AbstractUIPlugin {
 
 	// The shared instance
 	private static Activator plugin;
-	
+
 	/**
 	 * The constructor
 	 */
@@ -43,6 +47,8 @@ public class Activator extends AbstractUIPlugin {
     public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
+        // plug in our search expander for groovy code
+        GroovyLanguageSupport.searchScopeExpander = new RefactoringSearchScopeExpander();
 	}
 
 	@Override
@@ -70,5 +76,5 @@ public class Activator extends AbstractUIPlugin {
 	public static ImageDescriptor getImageDescriptor(String path) {
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
 	}
-	
+
 }
