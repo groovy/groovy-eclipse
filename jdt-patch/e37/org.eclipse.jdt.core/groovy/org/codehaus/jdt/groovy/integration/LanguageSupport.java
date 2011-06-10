@@ -105,4 +105,13 @@ public interface LanguageSupport {
 
 	void filterNonSourceMembers(BinaryType binaryType);
 
+	/**
+	 * Creates an expanded search scope for the given search pattern if required
+	 * @param scope the initial scope
+	 * @param pattern the target pattern
+	 * @param requestor TODO
+	 * @return an expanded scope if required, or the initial scope if there is no change
+	 */
+	IJavaSearchScope expandSearchScope(IJavaSearchScope scope, SearchPattern pattern, SearchRequestor requestor);
+
 }

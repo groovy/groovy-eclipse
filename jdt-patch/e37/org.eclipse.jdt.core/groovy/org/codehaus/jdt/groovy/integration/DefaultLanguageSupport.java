@@ -117,4 +117,9 @@ class DefaultLanguageSupport implements LanguageSupport {
 	public void filterNonSourceMembers(BinaryType binaryType) {
 		// nop
 	}
+
+	public IJavaSearchScope expandSearchScope(IJavaSearchScope scope, SearchPattern pattern, SearchRequestor requestor) {
+	    // never expand
+		return scope;
+	}
 }
