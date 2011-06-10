@@ -14,6 +14,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMethod;
 
 /**
  * @author Andrew Eisenberg
@@ -345,6 +346,38 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found method 'getSql'", "getSql",
                 elt[0].getElementName());
+    }
+
+    // test for GRECLIPSE-831
+    public void testCodeSelectOverloadedMethod1() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "''.substring(0)";
+        env.addGroovyClass(root, "", "Super", contents);
+        incrementalBuild();
+        expectingNoProblems();
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Super.groovy");
+        unit.becomeWorkingCopy(null);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("substring"), "substring".length());
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found method 'substring'", "substring", elt[0].getElementName());
+        assertEquals("Wrong number of parameters to method", 1, ((IMethod) elt[0]).getParameterTypes().length);
+    }
+
+    // test for GRECLIPSE-831
+    public void testCodeSelectOverloadedMethod2() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "''.substring(0,1)";
+        env.addGroovyClass(root, "", "Super", contents);
+        incrementalBuild();
+        expectingNoProblems();
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Super.groovy");
+        unit.becomeWorkingCopy(null);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("substring"), "substring".length());
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found method 'substring'", "substring", elt[0].getElementName());
+        assertEquals("Wrong number of parameters to method", 2, ((IMethod) elt[0]).getParameterTypes().length);
     }
 
 }

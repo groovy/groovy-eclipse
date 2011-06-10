@@ -160,7 +160,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			Variable var = ((VariableExpression) node).getAccessedVariable();
 			if (var instanceof DynamicVariable) {
 				// search type hierarchy for declaration
-				ASTNode declaration = findDeclaration(var.getName(), scope.getEnclosingTypeDeclaration());
+				ASTNode declaration = findDeclaration(var.getName(), scope.getEnclosingTypeDeclaration(),
+						scope.methodCallNumberOfArguments);
 				ClassNode type;
 				if (declaration == null) {
 					// this is a dynamic variable that doesn't seem to have a declaration
@@ -412,12 +413,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			VariableScope scope, TypeConfidence confidence, boolean isStaticObjectExpression) {
 		ClassNode realDeclaringType;
 		VariableInfo varInfo;
-		ASTNode declaration = findDeclaration(name, declaringType);
+		ASTNode declaration = findDeclaration(name, declaringType, scope.methodCallNumberOfArguments);
 
 		// GRECLIPSE-1079
 		if (declaration == null && isStaticObjectExpression) {
 			// we might have a reference to a property/method defined on java.lang.Class
-			declaration = findDeclaration(name, VariableScope.CLASS_CLASS_NODE);
+			declaration = findDeclaration(name, VariableScope.CLASS_CLASS_NODE, scope.methodCallNumberOfArguments);
 		}
 
 		if (declaration != null) {
@@ -430,7 +431,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			// now try to find the declaration again
 			type = varInfo.type;
 			realDeclaringType = varInfo.declaringType;
-			declaration = findDeclaration(name, realDeclaringType);
+			declaration = findDeclaration(name, realDeclaringType, scope.methodCallNumberOfArguments);
 			if (declaration == null) {
 				declaration = varInfo.declaringType;
 			}
@@ -497,7 +498,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		if (accessedVar instanceof DynamicVariable) {
 			// this is likely a reference to a field or method in a type in the hierarchy
 			// find the declaration
-			ASTNode maybeDeclaration = findDeclaration(accessedVar.getName(), getMorePreciseType(declaringType, info));
+			ASTNode maybeDeclaration = findDeclaration(accessedVar.getName(), getMorePreciseType(declaringType, info),
+					scope.methodCallNumberOfArguments);
 			if (maybeDeclaration != null) {
 				declaration = maybeDeclaration;
 				// declaring type may have changed
@@ -633,16 +635,17 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 	 * 
 	 * @param name
 	 * @param declaringType
+	 * @param numOfArgs TODO
 	 * @return
 	 */
-	private ASTNode findDeclaration(String name, ClassNode declaringType) {
+	private ASTNode findDeclaration(String name, ClassNode declaringType, int numOfArgs) {
 		if (declaringType.isArray()) {
 			// only length exists on array type
 			if (name.equals("length")) {
 				return createLengthField(declaringType);
 			} else {
 				// otherwise search on object
-				return findDeclaration(name, VariableScope.OBJECT_CLASS_NODE);
+				return findDeclaration(name, VariableScope.OBJECT_CLASS_NODE, numOfArgs);
 			}
 		}
 
@@ -658,6 +661,17 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		// want to call the method than a field of the same name.
 		List<MethodNode> maybeMethods = declaringType.getMethods(name);
 		if (maybeMethods != null && maybeMethods.size() > 0) {
+			// prefer retrieving the method with the same number of args as specified in the parameter.
+			// if none exists, or parameter is -1, then arbitrarily choose the first.
+			if (numOfArgs >= 0) {
+				for (MethodNode maybeMethod : maybeMethods) {
+					Parameter[] parameters = maybeMethod.getParameters();
+					if ((parameters != null && parameters.length == numOfArgs) || (parameters == null && numOfArgs == 0)) {
+						return maybeMethod;
+					}
+				}
+			}
+
 			return maybeMethods.get(0);
 		}
 
