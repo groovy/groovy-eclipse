@@ -959,5 +959,14 @@
             label="Groovy Information Hover">
       </hover>
    </extension>
+    <extension
+          point="org.eclipse.core.variables.dynamicVariables">
+       <variable
+             description="The absolute file system location of the Groovy home used in this instance of Eclipse."
+             name="groovy_home"
+             resolver="org.codehaus.groovy.eclipse.launchers.GroovyHomeVariableResolver"
+             supportsArgument="false">
+       </variable>
+    </extension>
  
 </plugin>

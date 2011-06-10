@@ -17,11 +17,8 @@
 package org.codehaus.groovy.eclipse.launchers;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -31,7 +28,6 @@ import java.util.TreeSet;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.core.util.ListUtil;
@@ -39,7 +35,6 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -66,7 +61,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PlatformUI;
-import org.osgi.framework.Bundle;
 
 /**
  * @author Andrew Eisenberg
@@ -123,8 +117,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
         }
         if (unit != null || canLaunchWithNoType()) {
             launchGroovy(unit, javaProject, mode);
-        }
-        else {
+        } else {
             MessageDialog.openError(PlatformUI.getWorkbench().
                     getActiveWorkbenchWindow().getShell(), "Can't run script", "No script selected!");
         }
@@ -226,7 +219,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
 
         if (runType != null) {
             try {
-                pathToClass = " \"" + runType.getResource().getLocation().toOSString() + "\"";
+                pathToClass = " \"${selected_resource_loc:" + runType.getResource().getFullPath().toPortableString() + "}\"";
             } catch (NullPointerException e) {
                 pathToClass = "";
                 GroovyCore.errorRunningGroovy(new IllegalArgumentException("Could not find file to run for " + runType));
@@ -253,34 +246,12 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
 
         return launchConfigProperties;
     }
-    @SuppressWarnings("unchecked")
     private String getGroovyConf() {
-        Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
-        Enumeration<URL> enu = groovyBundle.findEntries("conf", "groovy-starter.conf", false);
-        if (enu != null) {
-            URL jar = enu.nextElement();
-            // remove the "reference:/" protocol
-            try {
-                jar = FileLocator.resolve(jar);
-                return "\"" + jar.getFile() + "\"";
-            } catch (IOException e) {
-                GroovyCore.logException("Error finding groovy-starter.conf", e);
-            }
-        }
-        // should throw an exception here
-        return null;
+        return "\"${groovy_home}/conf/groovy-starter.conf\"";
     }
 
     private String getGroovyHome() {
-        Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
-        try {
-            return "\"" +
-            FileLocator.getBundleFile(groovyBundle).toString() + "\"";
-        } catch (IOException e) {
-            GroovyCore.logException("Error finding Groovy Home", e);
-            // should throw an exception here
-            return null;
-        }
+        return "\"${groovy_home}\"";
     }
 
     private String getWorkingDirectory(IType runType, IJavaProject javaProject) {
