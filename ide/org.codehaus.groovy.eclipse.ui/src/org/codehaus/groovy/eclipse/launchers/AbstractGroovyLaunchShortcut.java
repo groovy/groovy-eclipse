@@ -219,7 +219,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
 
         if (runType != null) {
             try {
-                pathToClass = " \"${selected_resource_loc:" + runType.getResource().getFullPath().toPortableString() + "}\"";
+                pathToClass = " \"${resource_loc:" + runType.getResource().getFullPath().toPortableString() + "}\"";
             } catch (NullPointerException e) {
                 pathToClass = "";
                 GroovyCore.errorRunningGroovy(new IllegalArgumentException("Could not find file to run for " + runType));
