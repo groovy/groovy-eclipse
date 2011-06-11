@@ -13,6 +13,7 @@ package org.codehaus.jdt.groovy.integration;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.WorkingCopyOwner;
+import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -109,7 +110,7 @@ public interface LanguageSupport {
 	 * Creates an expanded search scope for the given search pattern if required
 	 * @param scope the initial scope
 	 * @param pattern the target pattern
-	 * @param requestor TODO
+	 * @param requestor the {@link SearchRequestor} for the given search
 	 * @return an expanded scope if required, or the initial scope if there is no change
 	 */
 	IJavaSearchScope expandSearchScope(IJavaSearchScope scope, SearchPattern pattern, SearchRequestor requestor);
