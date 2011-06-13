@@ -98,25 +98,25 @@ public class JDTAnnotationNode extends AnnotationNode {
 		return super.isTargetAllowed(target);
 	}
 
-	@Override
-	public void setAllowedTargets(int bitmap) {
-		throw new ImmutableException();
-	}
+	// @Override
+	// public void setAllowedTargets(int bitmap) {
+	// throw new ImmutableException();
+	// }
 
-	@Override
-	public void setRuntimeRetention(boolean flag) {
-		throw new ImmutableException();
-	}
+	// @Override
+	// public void setRuntimeRetention(boolean flag) {
+	// throw new ImmutableException();
+	// }
 
-	@Override
-	public void setSourceRetention(boolean flag) {
-		throw new ImmutableException();
-	}
+	// @Override
+	// public void setSourceRetention(boolean flag) {
+	// throw new ImmutableException();
+	// }
 
-	@Override
-	public void setClassRetention(boolean flag) {
-		throw new ImmutableException();
-	}
+	// @Override
+	// public void setClassRetention(boolean flag) {
+	// throw new ImmutableException();
+	// }
 
 	@Override
 	public void setMember(String name, Expression value) {
