@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.groovy.eclipse.GroovyLogManager;
+import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLDStoreManager;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
@@ -30,7 +32,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jdt.internal.ui.viewsupport.JavaElementImageProvider;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.DialogField;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.ITreeListAdapter;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.LayoutUtil;
@@ -38,6 +39,7 @@ import org.eclipse.jdt.internal.ui.wizards.dialogfields.TreeListDialogField;
 import org.eclipse.jdt.ui.ISharedImages;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.ErrorDialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.PixelConverter;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;
@@ -50,9 +52,11 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
@@ -60,6 +64,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 import org.eclipse.ui.ide.IDE;
+import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPreferencePage {
@@ -236,6 +241,8 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
     private IPreferenceStore store = GroovyDSLCoreActivator.getDefault().getPreferenceStore();
 
     private Button autoAdd;
+
+    private Button disableDSLDs;
     
     public DSLPreferencesPage() {
     }
@@ -263,26 +270,41 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
     @Override
     protected Control createContents(Composite parent) {
         
-        PixelConverter converter= new PixelConverter(parent);
-        
         Composite composite= new Composite(parent, SWT.NONE);
         composite.setFont(parent.getFont());
+
         
         tree = new CheckedTreeListDialogField(new DSLListAdapter(), LABELS, new DSLLabelProvider());
         tree.setTreeExpansionLevel(2);
         LayoutUtil.doDefaultLayout(composite, new DialogField[] { tree }, true, SWT.DEFAULT, SWT.DEFAULT);
-        
         LayoutUtil.setHorizontalGrabbing(tree.getTreeControl(null));
 
         refresh();
+        
+        PixelConverter converter= new PixelConverter(parent);
         int buttonBarWidth= converter.convertWidthInCharsToPixels(24);
         tree.setButtonsMinWidth(buttonBarWidth);
             
-        
+        composite = new Composite(composite, SWT.NONE);
+        composite.setFont(parent.getFont());
+        FillLayout fillLayout = new FillLayout();
+        fillLayout.type = SWT.VERTICAL;
+        fillLayout.marginHeight = 25;
+        fillLayout.spacing = 5;
+        composite.setLayout(fillLayout);
         autoAdd = new Button(composite, SWT.CHECK);
         autoAdd.setText("Automatically add DSL Support to all Groovy projects");
         autoAdd.setSelection(store.getBoolean(DSLPreferencesInitializer.AUTO_ADD_DSL_SUPPORT));
+
+        disableDSLDs = new Button(composite, SWT.CHECK);
+        disableDSLDs.setText("Disable DSLD support in your workspace. (Requires restart)");
+        boolean isDisabled = store.getBoolean(DSLPreferencesInitializer.DSLD_DISABLED);
+        disableDSLDs.setSelection(isDisabled);
         
+        if (disableDSLDs.getSelection()) {
+            Label l = new Label(composite, SWT.NONE);
+            l.setText("NOTE: DSLD support is currently disabled.");
+        }
         
         return composite;
     }
@@ -389,8 +411,15 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         DSLPreferences.setDisabledScripts(unchecked.toArray(new String[0]));
     }
     
+
+    private static final String EVENT = "Recompiling all DSLDs in the workspace.";
+
+
     protected void recompile() {
+        GroovyLogManager.manager.log(TraceCategory.DSL, EVENT);
+        GroovyLogManager.manager.logStart(EVENT);
         new InitializeAllDSLDs().initializeAll();
+        GroovyLogManager.manager.logEnd(EVENT, TraceCategory.DSL);
     }
     
     @Override
@@ -405,6 +434,19 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
     public boolean performOk() {
         storeChecks();
         store.setValue(DSLPreferencesInitializer.AUTO_ADD_DSL_SUPPORT, autoAdd.getSelection());
+        
+        boolean origDisabled = store.getBoolean(DSLPreferencesInitializer.DSLD_DISABLED);
+        if (origDisabled != disableDSLDs.getSelection()) {
+            store.setValue(DSLPreferencesInitializer.DSLD_DISABLED, disableDSLDs.getSelection());
+            String newValue = disableDSLDs.getSelection() ? "enabled" : "disabled";
+        
+            boolean res = MessageDialog.openQuestion(getShell(), "Restart now?", "You have " + newValue + 
+                    " DSLDs in your worksoace.  This setting will not coming effect until a restart has " +
+                    "been performed.\n\nDo you want to restart now?");
+            if (res) {
+                Workbench.getInstance().restart();
+            }
+        }
         return super.performOk();
     }
 }

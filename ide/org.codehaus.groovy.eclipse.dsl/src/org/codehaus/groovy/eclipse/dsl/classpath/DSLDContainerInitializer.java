@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
+import org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -26,6 +27,8 @@ import org.eclipse.jdt.core.JavaCore;
  * @created May 21, 2011
  */
 public class DSLDContainerInitializer extends ClasspathContainerInitializer {
+
+    private static final IClasspathEntry[] NO_ENTRIES = new IClasspathEntry[0];
 
     private final class DSLDClasspathContainer implements IClasspathContainer {
         private IClasspathEntry[] entries;
@@ -58,6 +61,11 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
          * @return
          */
         protected IClasspathEntry[] calculateEntries() {
+            if (GroovyDSLCoreActivator.getDefault().getPreferenceStore()
+            		.getBoolean(DSLPreferencesInitializer.DSLD_DISABLED)) {
+        		return NO_ENTRIES;
+        	}
+        	
             String dotGroovyLocation = CompilerUtils.getDotGroovyLocation();
             List<IClasspathEntry> newEntries = new ArrayList<IClasspathEntry>();
             if (dotGroovyLocation != null) {
@@ -85,7 +93,7 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
                     newEntries.add(newLibraryEntry(path, null, null));
                 }
             }
-            return newEntries.toArray(new IClasspathEntry[0]);
+            return newEntries.toArray(NO_ENTRIES);
         }
     }
 

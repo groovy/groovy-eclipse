@@ -33,6 +33,20 @@
             name="DSLD-related commands">
       </category>
    </extension>
+      <extension
+         point="org.eclipse.ui.decorators">
+      <decorator
+            adaptable="true"
+            class="org.codehaus.groovy.eclipse.dsl.classpath.DSLDClasspathContainerDecorator"
+            id="org.codehaus.groovy.eclipse.dsl.dsldClasspathContainerDecorator"
+            label="DSLD Enablement Decorator"
+            lightweight="true"
+            state="true">
+         <enablement>
+            	<objectClass name="org.eclipse.jdt.internal.ui.packageview.ClassPathContainer" />
+         </enablement>
+      </decorator>
+   </extension>
    <extension
          point="org.codehaus.groovy.eclipse.codeassist.completion.completionProposalProvider">
       <proposalProvider

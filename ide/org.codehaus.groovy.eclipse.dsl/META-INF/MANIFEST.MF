@@ -19,7 +19,6 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui.ide,
  org.eclipse.core.resources
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
-Bundle-ActivationPolicy: lazy;exclude:="org.codehaus.groovy.eclipse.dsl.earlystartup"
 Export-Package: org.codehaus.groovy.eclipse.dsl,
  org.codehaus.groovy.eclipse.dsl.contributions,
  org.codehaus.groovy.eclipse.dsl.lookup,
@@ -27,3 +26,4 @@ Export-Package: org.codehaus.groovy.eclipse.dsl,
  org.codehaus.groovy.eclipse.dsl.pointcuts.impl,
  org.codehaus.groovy.eclipse.dsl.proposals,
  org.codehaus.groovy.eclipse.dsl.script
+Bundle-ActivationPolicy: lazy;exclude:="org.codehaus.groovy.eclipse.dsl.earlystartup"

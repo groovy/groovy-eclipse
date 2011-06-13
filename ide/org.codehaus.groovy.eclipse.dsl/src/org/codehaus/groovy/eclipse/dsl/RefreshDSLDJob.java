@@ -36,6 +36,7 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ExternalPackageFragmentRoot;
+import org.eclipse.jface.preference.IPreferenceStore;
 
 public class RefreshDSLDJob extends Job {
     
@@ -147,6 +148,14 @@ public class RefreshDSLDJob extends Job {
 
     @Override
     public IStatus run(IProgressMonitor monitor) {
+        IPreferenceStore prefStore = GroovyDSLCoreActivator.getDefault().getPreferenceStore();
+        if (prefStore.getBoolean(DSLPreferencesInitializer.DSLD_DISABLED)) {
+            if (GroovyLogManager.manager.hasLoggers()) {
+                GroovyLogManager.manager.log(TraceCategory.DSL, "DSLD support is currently disabled, so not refreshing DSLDs for " + project.getName());
+            }
+            return Status.OK_STATUS;
+        }
+        
         String event = null;
         if (GroovyLogManager.manager.hasLoggers()) {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Refreshing inferencing scripts for " + project.getName());

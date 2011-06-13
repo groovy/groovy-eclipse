@@ -21,7 +21,6 @@ import java.util.Map;
 
 import junit.framework.AssertionFailedError;
 
-import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchShortcut;
