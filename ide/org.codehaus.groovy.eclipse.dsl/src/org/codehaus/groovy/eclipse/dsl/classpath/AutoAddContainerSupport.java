@@ -107,24 +107,18 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
     }
     
     private boolean shouldAddSupport() {
-        return store.getBoolean(DSLPreferences.AUTO_ADD_DSL_SUPPORT);
+        return store.getBoolean(DSLPreferences.AUTO_ADD_DSL_SUPPORT) || store.getBoolean(DSLPreferences.DISABLED_SCRIPTS);
     }
     
     // will add container if it doesn't already exist
     private void addContainer(final IJavaProject project) {
-        
-        
         final String projectName = project.getElementName();
         AddDSLSupportJob runnable = new AddDSLSupportJob("Add DSL Support", projectName, project);
-        if (ResourcesPlugin.getWorkspace().isTreeLocked()) {
-            runnable.setPriority(Job.BUILD);
-            runnable.setSystem(true);
-            //Next line is very important! Otherwise => race condition with GrailsProjectVersionFixer!
-            runnable.setRule(getSetClassPathSchedulingRule(project));
-            runnable.schedule();
-        } else {
-            runnable.run(null);
-        }
+        runnable.setPriority(Job.BUILD);
+        runnable.setSystem(true);
+        //Next line is very important! Otherwise => race condition with GrailsProjectVersionFixer!
+        runnable.setRule(getSetClassPathSchedulingRule(project));
+        runnable.schedule();
     }
 
     /**
