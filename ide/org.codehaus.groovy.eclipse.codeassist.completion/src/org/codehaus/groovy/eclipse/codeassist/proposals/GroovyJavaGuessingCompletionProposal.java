@@ -12,6 +12,9 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
+import java.lang.reflect.Method;
+
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.CompletionContext;
 import org.eclipse.jdt.core.CompletionProposal;
@@ -393,8 +396,8 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
             String paramName = new String(parameterNames[i]);
             Position position = new Position(0, 0);
 
-            ICompletionProposal[] argumentProposals = guesser.parameterProposals(parameterTypes[i], paramName, position,
-                    assignableElements[i], fFillBestGuess);
+            ICompletionProposal[] argumentProposals = parameterProposals(guesser, parameterTypes[i], paramName, position,
+                    assignableElements[i]);
             if (argumentProposals.length == 0)
                 argumentProposals = new ICompletionProposal[] { new JavaCompletionProposal(paramName, 0, paramName.length(), null,
                         paramName, 0) };
@@ -404,6 +407,54 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         }
 
         return fChoices;
+    }
+
+    // unfortunately, the parameterProposals method has a different signature in
+    // 3.6 and 3.7.
+    // so must call using reflection
+    private ICompletionProposal[] parameterProposals(ParameterGuesser guesser, String parameterType, String paramName,
+            Position position, IJavaElement[] assignable) {
+
+        Method method = findParameterProposalsMethod();
+        try {
+            if (method.getParameterTypes().length == 5) {
+                // 3.6
+                return (ICompletionProposal[]) method.invoke(guesser, parameterType, paramName, position, assignable,
+                        fFillBestGuess);
+            } else {
+                // 3.7
+                return (ICompletionProposal[]) method.invoke(guesser, parameterType, paramName, position, assignable,
+                        fFillBestGuess, false);
+            }
+        } catch (Exception e) {
+            GroovyCore.logException("Exception trying to reflectively invoke 'parameterProposals' method.", e);
+            return new ICompletionProposal[0];
+        }
+
+    }
+
+    private static Method parameterProposalsMethod;
+    private static Method findParameterProposalsMethod() {
+        if (parameterProposalsMethod == null) {
+            try {
+                // 3.6
+                parameterProposalsMethod = ParameterGuesser.class.getMethod("parameterProposals", String.class, String.class,
+                        Position.class, IJavaElement[].class, boolean.class);
+            } catch (SecurityException e) {
+                GroovyCore.logException("Exception trying to reflectively find 'parameterProposals' method.", e);
+            } catch (NoSuchMethodException e) {
+                // 3.7 RC4 or later
+                try {
+                    parameterProposalsMethod = ParameterGuesser.class.getMethod("parameterProposals", String.class, String.class,
+                            Position.class, IJavaElement[].class, boolean.class, boolean.class);
+                } catch (SecurityException e1) {
+                    GroovyCore.logException("Exception trying to reflectively find 'parameterProposals' method.", e1);
+                } catch (NoSuchMethodException e1) {
+                    GroovyCore.logException("Exception trying to reflectively find 'parameterProposals' method.", e1);
+                }
+            }
+        }
+        return parameterProposalsMethod;
     }
 
     private String[] cachedParameterTypes = null;
