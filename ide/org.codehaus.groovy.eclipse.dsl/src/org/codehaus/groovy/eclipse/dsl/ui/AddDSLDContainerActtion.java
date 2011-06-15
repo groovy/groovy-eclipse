@@ -17,10 +17,8 @@ package org.codehaus.groovy.eclipse.dsl.ui;
 
 import org.codehaus.groovy.eclipse.actions.AbstractAddClasspathContainerAction;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
-import org.codehaus.groovy.eclipse.dsl.classpath.DSLDContainerInitializer;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.preference.IPreferenceStore;
 
 /**
  * 
@@ -31,7 +29,7 @@ public class AddDSLDContainerActtion extends AbstractAddClasspathContainerAction
     
     @Override
     protected IPath getClasspathContainerPath() {
-        return DSLDContainerInitializer.CONTAINER_ID;
+        return GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID;
     }
 
     @Override

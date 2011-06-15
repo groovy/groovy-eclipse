@@ -23,6 +23,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
+import org.eclipse.core.resources.IStorage;
 
 /**
  * 
@@ -33,12 +34,12 @@ public class UserExtensiblePointcut extends AbstractPointcut {
     @SuppressWarnings("rawtypes")
     private Closure closure;
 
-    public UserExtensiblePointcut(String containerIdentifier, String pointcutName) {
+    public UserExtensiblePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 
     @SuppressWarnings("rawtypes")
-    public UserExtensiblePointcut(String containerIdentifier, String pointcutName, Closure closure) {
+    public UserExtensiblePointcut(IStorage containerIdentifier, String pointcutName, Closure closure) {
         super(containerIdentifier, pointcutName);
         setClosure(closure);
     }

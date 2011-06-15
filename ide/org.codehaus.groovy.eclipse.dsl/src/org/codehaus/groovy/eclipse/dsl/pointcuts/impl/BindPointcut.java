@@ -16,6 +16,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
+import org.eclipse.core.resources.IStorage;
 
 /**
  * The bind() pointcut takes a named argument where the argument is another pointcut.
@@ -24,7 +25,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
  */
 public class BindPointcut extends AbstractPointcut {
     
-    public BindPointcut(String containerIdentifier, String pointcutName) {
+    public BindPointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 

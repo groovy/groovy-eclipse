@@ -18,6 +18,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
+import org.eclipse.core.resources.IStorage;
 
 /**
  * Negates the pointcut that this one encloses
@@ -31,7 +32,7 @@ public class NotPointcut extends AbstractPointcut {
      */
     private static final Set<Object> EMPTY_MATCH = Collections.singleton(new Object());
 
-    public NotPointcut(String containerIdentifier, String pointcutName) {
+    public NotPointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 

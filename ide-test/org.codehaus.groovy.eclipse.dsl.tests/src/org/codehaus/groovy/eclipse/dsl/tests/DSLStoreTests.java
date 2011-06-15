@@ -15,9 +15,13 @@ import java.util.Collections;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindFieldPointcut;
+import org.eclipse.core.resources.IStorage;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.JavaCore;
 
 /**
  * 
@@ -237,7 +241,7 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
 
     }
     
-    public void testDisabled1() throws Exception {
+    public void testDisabledOfFile() throws Exception {
         createDsls("currentType().accept { }", "fields().accept { }");
         assertDSLStore(2, 
                 createExpectedPointcuts(
@@ -251,7 +255,7 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
         ));
 
         // disable script
-        DSLPreferences.setDisabledScripts(new String[] { project.getFile("dsl0.dsld").getFullPath().toPortableString() });
+        DSLPreferences.setDisabledScripts(new String[] { DSLDStore.toUniqueString(project.getFile("dsl0.dsld")) });
         
         assertDSLStore(
                 2,
@@ -277,5 +281,54 @@ public class DSLStoreTests extends AbstractDSLInferencingTest {
                                 createSemiUniqueName(FindFieldPointcut.class, 1)},
                         new Integer[] { 1, 1 }
         ));
+    }
+    
+    public void testDisabledOfJar() throws Exception {
+        addJarToProject("simple_dsld.jar");
+        env.fullBuild();
+        IPackageFragmentRoot root = JavaCore.create(project).getPackageFragmentRoot(findExternalFilePath("simple_dsld.jar"));
+        IStorage storage = (IStorage) root.getPackageFragment("dsld").getNonJavaResources()[0];
+
+        assertDSLStore(1, 
+                createExpectedPointcuts(new IStorage[] { storage },
+                        new String[] { createSemiUniqueName(CurrentTypePointcut.class, storage) } ),
+        
+                createExpectedContributionCount(
+                        new String[] {createSemiUniqueName(CurrentTypePointcut.class, storage) },
+                        new Integer[] { 1 }
+        ));
+        
+        // disable script
+        DSLPreferences.setDisabledScripts(new String[] { DSLDStore.toUniqueString(storage) });
+        
+        assertDSLStore(
+                1,
+                createExpectedPointcuts(new String[] {} ),
+
+                createExpectedContributionCount(new String[] { },
+                        new Integer[] { }));
+        
+        // re-enable
+        DSLPreferences.setDisabledScripts(new String[] { });
+
+        assertDSLStore(1, 
+                createExpectedPointcuts(new IStorage[] { storage },
+                        new String[] { createSemiUniqueName(CurrentTypePointcut.class, storage) } ),
+        
+                createExpectedContributionCount(
+                        new String[] {createSemiUniqueName(CurrentTypePointcut.class, storage) },
+                        new Integer[] { 1 }
+        ));
+
+        // remove from classpath
+        removeJarFromProject("simple_dsld.jar");
+        
+        assertDSLStore(
+                0,
+                createExpectedPointcuts(new String[] {} ),
+
+                createExpectedContributionCount(new String[] { },
+                        new Integer[] { }));
+
     }
 }

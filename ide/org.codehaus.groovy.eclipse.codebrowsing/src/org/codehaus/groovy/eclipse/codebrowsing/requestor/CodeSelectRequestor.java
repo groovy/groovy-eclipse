@@ -394,7 +394,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
         StringBuilder sb = new StringBuilder();
         sb.append(createUniqueKeyForClass(node.getDeclaringClass(), resolvedDeclaringType));
         sb.append('.').append(actualField.getElementName()).append(')');
-        sb.append(createUniqueKeyForResolvedClass(resolvedType));
+        ClassNode typeOfField = node.getName().startsWith("set")  && node.getParameters() != null && node.getParameters().length > 0 ? node.getParameters()[0].getType(): resolvedType;
+        sb.append(createUniqueKeyForResolvedClass(typeOfField));
         return sb;
     }
     

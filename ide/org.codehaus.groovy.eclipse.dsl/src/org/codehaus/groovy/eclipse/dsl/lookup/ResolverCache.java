@@ -42,6 +42,7 @@ public class ResolverCache {
      * @return
      */
     public ClassNode resolve(String qName) {
+        qName = qName.trim();
         ClassNode clazz = nameTypeCache.get(qName);
         if (clazz == null && resolver != null) {
             int typeParamStart = qName.indexOf('<');

@@ -20,6 +20,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IStorage;
 import org.eclipse.jdt.core.JavaCore;
 
 /**
@@ -33,7 +34,7 @@ import org.eclipse.jdt.core.JavaCore;
 public class ProjectNaturePointcut extends AbstractPointcut {
     
 
-    public ProjectNaturePointcut(String containerIdentifier, String pointcutName) {
+    public ProjectNaturePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 

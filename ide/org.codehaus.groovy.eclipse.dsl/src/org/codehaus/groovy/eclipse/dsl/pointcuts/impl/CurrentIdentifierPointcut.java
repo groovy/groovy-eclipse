@@ -16,6 +16,7 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
+import org.eclipse.core.resources.IStorage;
 
 /**
  * the match returns true if the pattern passed in is an identifier expression
@@ -26,7 +27,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
  */
 public class CurrentIdentifierPointcut extends FilteringPointcut<Expression> {
 
-    public CurrentIdentifierPointcut(String containerIdentifier, String pointcutName) {
+    public CurrentIdentifierPointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName, Expression.class);
     }
 

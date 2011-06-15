@@ -100,7 +100,7 @@ public class RefreshDSLDJob extends Job {
                             try {
                                 rootResource.refreshLocal(IResource.DEPTH_INFINITE, monitor);
                                 root.close();
-                                root.open(null);
+                                root.open(monitor);
                                 if (!root.exists() || !frag.exists()) {
                                     // must check a second time for existence because the close and re-opening of the root may 
                                     // have changed things
@@ -217,14 +217,6 @@ public class RefreshDSLDJob extends Job {
         }
         
         monitor.beginTask("Refreshing DSLD files for project " + project.getName(), 9);
-        
-        if (monitor.isCanceled()) {
-            return Status.CANCEL_STATUS;
-        }
-        
-        if (GroovyLogManager.manager.hasLoggers()) {
-            GroovyLogManager.manager.log(TraceCategory.DSL, "Cancelling previous refresh jobs");
-        }
         
         if (monitor.isCanceled()) {
             return Status.CANCEL_STATUS;

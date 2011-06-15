@@ -96,7 +96,7 @@ public class GroovyDSLDContext {
         if (packageRootPath != null && packageRootPath.length() < fullPathName.length()) {
             candidate = fullPathName.substring(packageRootPath.length());
             if (simpleFileName != null) {
-                int indexOf = candidate.lastIndexOf("/" + simpleFileName)+1;
+                int indexOf = candidate.lastIndexOf("/" + simpleFileName);
                 int start = candidate.startsWith("/") ? 1 : 0;
                 if (indexOf > 0 && candidate.length() > 0) {
                     candidate = candidate.substring(start, indexOf);

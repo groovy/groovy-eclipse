@@ -27,6 +27,7 @@ import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.script.PointcutClosure;
 import org.codehaus.groovy.eclipse.dsl.script.PointcutFactory;
+import org.eclipse.core.resources.ResourcesPlugin;
 
 /**
  * takes a pointcut expression and evaluates it against a module node.
@@ -107,7 +108,7 @@ public class PointcutScriptExecutor {
 
     private final static String DEFAULT_SCRIPT_NAME = "GeneratedPointcutScriptExecutor";
     
-    private final PointcutFactory factory = new PointcutFactory(DEFAULT_SCRIPT_NAME);
+    private final PointcutFactory factory = new PointcutFactory(ResourcesPlugin.getWorkspace().getRoot().getProject("Project").getFile(".project"), ResourcesPlugin.getWorkspace().getRoot().getProject("Project"));
     
     public IPointcut createPointcut(String expression) {
         GroovyCodeSource source = new GroovyCodeSource(expression, DEFAULT_SCRIPT_NAME, GroovyShell.DEFAULT_CODE_BASE);
@@ -117,6 +118,7 @@ public class PointcutScriptExecutor {
         return res instanceof IPointcut ? (IPointcut) res : null;
     }
 
+    @SuppressWarnings("rawtypes")
     protected Object tryRegister(Object args) {
         Object[] nameAndClass = extractArgsForRegister(args);
         if (nameAndClass != null) {

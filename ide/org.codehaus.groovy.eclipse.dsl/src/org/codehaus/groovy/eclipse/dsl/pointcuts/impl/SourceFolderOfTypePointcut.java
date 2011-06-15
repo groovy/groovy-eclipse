@@ -22,6 +22,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
+import org.eclipse.core.resources.IStorage;
 import org.eclipse.jdt.core.compiler.CharOperation;
 
 /**
@@ -35,7 +36,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
  */
 public class SourceFolderOfTypePointcut extends AbstractPointcut {
 
-    public SourceFolderOfTypePointcut(String containerIdentifier, String pointcutName) {
+    public SourceFolderOfTypePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 

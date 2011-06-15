@@ -19,6 +19,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
+import org.eclipse.core.resources.IStorage;
 
 /**
  * the match returns true if the pattern passed in has a method with the
@@ -28,7 +29,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
  */
 public class FindMethodPointcut extends FilteringPointcut<MethodNode> {
 
-    public FindMethodPointcut(String containerIdentifier, String pointcutName) {
+    public FindMethodPointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName, MethodNode.class);
     }
 

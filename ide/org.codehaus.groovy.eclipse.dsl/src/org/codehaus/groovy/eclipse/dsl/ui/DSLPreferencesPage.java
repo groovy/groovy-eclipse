@@ -10,30 +10,31 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.ui;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.Set;
 
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLDStoreManager;
-import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer;
 import org.codehaus.groovy.eclipse.dsl.DisabledScriptsCache;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.earlystartup.InitializeAllDSLDs;
+import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IStorage;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.DialogField;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.ITreeListAdapter;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.LayoutUtil;
@@ -54,13 +55,13 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPreferencePage;
@@ -126,11 +127,11 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
 
     class ProjectContextKey {
         final String projectName;
-        final String dslFileName;
+        final IStorage dslFile;
         boolean isChecked;  // set later
-        public ProjectContextKey(String projectName, String dslFileName) {
+        public ProjectContextKey(String projectName, IStorage dslFile) {
             this.projectName = projectName;
-            this.dslFileName = dslFileName;
+            this.dslFile = dslFile;
         }
     }
     
@@ -147,23 +148,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         public String getText(Object element) {
             if (element instanceof ProjectContextKey) {
                 ProjectContextKey pck = (ProjectContextKey) element;
-                IFile file = toFile(pck);
-                if (file != null) {
-                    if (pck.dslFileName.startsWith("/.org.eclipse.jdt.core.external.folders")) {
-                        // external file
-                        return file.getName();
-                    } else {
-                        // local file
-                        return file.getProjectRelativePath().toPortableString();
-                    }
-                } else {
-                    // in a jar
-                    String dslFileName = pck.dslFileName;
-                    if (dslFileName.startsWith("/")) {
-                        dslFileName = dslFileName.substring(1);
-                    }
-                    return dslFileName;
-                }
+                return pck.dslFile.getName();
             }
             return super.getText(element);
         }
@@ -173,8 +158,13 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             if (proj != null) {
                 return provider.getImage(proj);
             }
-            IFile file = toFile(element);
-            if (file != null && !file.getProject().getName().equals(".org.eclipse.jdt.core.external.folders")) {
+            
+            IFile file = null;
+            if (element instanceof ProjectContextKey && ((ProjectContextKey) element).dslFile instanceof IFile) {
+                file = (IFile) ((ProjectContextKey) element).dslFile;
+            }
+            
+            if (file != null) {
                 return provider.getImage(file);
             }
             return JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CFILE);
@@ -325,21 +315,6 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         return null;
     }
     
-    protected IFile toFile(Object element) {
-        Path path = new Path(((ProjectContextKey) element).dslFileName);
-        if (path.segmentCount() == 1) {
-            // external file
-            return null;
-        }
-        IFile file = ROOT.getFile(path);
-        if (file.isAccessible()) {
-            return file;
-        } else {
-            return null;
-        }
-    }
-    
-    
     protected boolean canEdit() {
         List<?> selected = tree.getSelectedElements();
         return selected.size() == 1 && selected.get(0) instanceof ProjectContextKey;
@@ -349,11 +324,12 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         if (canEdit()) {
             List<?> selected = tree.getSelectedElements();
             ProjectContextKey pck = (ProjectContextKey) selected.get(0);
-            IFile file = ROOT.getFile(new Path(pck.dslFileName));
-            if (file.isAccessible() && !pck.dslFileName.startsWith("/.org.eclipse.jdt.core.external.folders")) {
+            IStorage storage = pck.dslFile;
+            IEditorInput input = EditorUtility.getEditorInput(storage);
+            if (input != null) {
                 try {
                     if (page != null) {
-                        IDE.openEditor(page, file, true, true);
+                        IDE.openEditor(page, input, GroovyEditor.EDITOR_ID, true);
                     }
                 } catch (PartInitException e) {
                     if (page != null) {
@@ -363,7 +339,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
                 }
             } else {
                 if (page != null) {
-                    ErrorDialog.openError(page.getWorkbenchWindow().getShell(), "Could not open editor", "File " + pck.dslFileName
+                    ErrorDialog.openError(page.getWorkbenchWindow().getShell(), "Could not open editor", "File " + pck.dslFile
                             + " is not accessible.", new Status(IStatus.ERROR, GroovyDSLCoreActivator.PLUGIN_ID, "Could not open editor"));
                 }
             }
@@ -378,11 +354,11 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             if (project != null) {
                 DSLDStore store = manager.getDSLDStore(project);
                 if (store != null) {
-                    String[] keys = store.getAllContextKeys();
+                    IStorage[] keys = store.getAllContextKeys();
                     ProjectContextKey[] pck = new ProjectContextKey[keys.length];
                     for (int i = 0; i < pck.length; i++) {
                         pck[i] = new ProjectContextKey(element, keys[i]); 
-                        pck[i].isChecked = ! cache.isDisabled(pck[i].dslFileName);
+                        pck[i].isChecked = ! cache.isDisabled(DSLDStore.toUniqueString(pck[i].dslFile));
                     }
                     elementsMap.put(element, pck);
                 }
@@ -410,15 +386,15 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
     }
 
     protected void storeChecks() {
-        List<String> unchecked = new ArrayList<String>();
+        Set<String> unchecked = new HashSet<String>();
         for (ProjectContextKey[] keys : elementsMap.values()) {
             for (ProjectContextKey key : keys) {
                 if (! key.isChecked) {
-                    unchecked.add(key.dslFileName);
+                    unchecked.add(DSLDStore.toUniqueString(key.dslFile));
                 }
             }
         }
-        DSLPreferences.setDisabledScripts(unchecked.toArray(new String[0]));
+        cache.setDisabled(unchecked);
     }
     
 

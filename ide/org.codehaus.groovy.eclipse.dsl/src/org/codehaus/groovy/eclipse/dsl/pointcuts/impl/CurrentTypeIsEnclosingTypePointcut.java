@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
+import org.eclipse.core.resources.IStorage;
 
 /**
  * Matches when the current type is the same as the enclosing type.  This matches true
@@ -32,7 +33,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
  */
 public class CurrentTypeIsEnclosingTypePointcut extends AbstractPointcut {
 
-    public CurrentTypeIsEnclosingTypePointcut(String containerIdentifier, String pointcutName) {
+    public CurrentTypeIsEnclosingTypePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 

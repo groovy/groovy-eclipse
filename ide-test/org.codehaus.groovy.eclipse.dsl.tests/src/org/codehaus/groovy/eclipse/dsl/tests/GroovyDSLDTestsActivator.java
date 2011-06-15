@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.eclipse.core.runtime.IPath;
@@ -66,14 +67,17 @@ public class GroovyDSLDTestsActivator extends AbstractUIPlugin {
 	}
 	
     public InputStream getTestResourceStream(String fileName) throws IOException {
-        IPath path= new Path("testResources").append(fileName);
-        URL url= new URL(getBundle().getEntry("/"), path.toString());
-        return url.openStream();
+        return getTestResourceURL(fileName).openStream();
     }
 
     public String getTestResourceContents(String fileName) throws IOException {
         InputStream stream = getTestResourceStream(fileName);
         return getContents(stream);
+    }
+    
+    public URL getTestResourceURL(String fileName) throws MalformedURLException {
+        IPath path= new Path("testResources").append(fileName);
+        return new URL(getBundle().getEntry("/"), path.toString());
     }
     
     public String getContents(InputStream in) throws IOException {

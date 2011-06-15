@@ -11,8 +11,6 @@
 package org.codehaus.groovy.eclipse.dsl;
 
 
-import java.util.Collections;
-
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.jobs.Job;

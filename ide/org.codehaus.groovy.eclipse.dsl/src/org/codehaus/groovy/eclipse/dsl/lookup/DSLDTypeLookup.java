@@ -25,6 +25,7 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup;
 import org.eclipse.jdt.groovy.search.ITypeLookup;
+import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
@@ -67,6 +68,12 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
             }
         }
         return null;
+    }
+    
+    
+    @Override
+    protected TypeConfidence confidence() {
+        return TypeConfidence.INFERRED;
     }
 
 }

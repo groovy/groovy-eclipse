@@ -17,6 +17,7 @@ import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
+import org.eclipse.core.resources.IStorage;
 
 /**
  * Tests that there is an enclosing closure
@@ -25,7 +26,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
  */
 public class EnclosingClosurePointcut extends AbstractPointcut {
 
-    public EnclosingClosurePointcut(String containerIdentifier, String pointcutName) {
+    public EnclosingClosurePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 

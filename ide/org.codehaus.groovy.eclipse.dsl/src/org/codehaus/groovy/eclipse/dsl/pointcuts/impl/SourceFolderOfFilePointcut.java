@@ -16,6 +16,7 @@ import java.util.Collections;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
+import org.eclipse.core.resources.IStorage;
 
 /**
  * Tests that the file currently being checked is in the given source folder
@@ -28,7 +29,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
  */
 public class SourceFolderOfFilePointcut extends AbstractPointcut {
 
-    public SourceFolderOfFilePointcut(String containerIdentifier, String pointcutName) {
+    public SourceFolderOfFilePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 

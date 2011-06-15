@@ -18,6 +18,7 @@ import java.util.List;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
+import org.eclipse.core.resources.IStorage;
 
 /**
  * the match returns true if the pattern passed in has a field with the
@@ -27,7 +28,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
  */
 public class FindFieldPointcut extends FilteringPointcut<FieldNode> {
 
-    public FindFieldPointcut(String containerIdentifier, String pointcutName) {
+    public FindFieldPointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName, FieldNode.class);
     }
 

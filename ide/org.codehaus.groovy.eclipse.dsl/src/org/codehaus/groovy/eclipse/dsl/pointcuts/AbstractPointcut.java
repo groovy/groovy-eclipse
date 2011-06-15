@@ -26,6 +26,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AndPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.NotPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.OrPointcut;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IStorage;
 
 
 
@@ -37,7 +38,7 @@ import org.eclipse.core.resources.IProject;
  */
 public abstract class AbstractPointcut implements IPointcut {
 
-    private String containerIdentifier;
+    private IStorage containerIdentifier;
     
     private StringObjectVector elements = new StringObjectVector(1);
     
@@ -45,7 +46,7 @@ public abstract class AbstractPointcut implements IPointcut {
 
     private String pointcutName;
     
-    public AbstractPointcut(String containerIdentifier, String pointcutName) {
+    public AbstractPointcut(IStorage containerIdentifier, String pointcutName) {
         this.containerIdentifier = containerIdentifier;
         this.pointcutName = pointcutName;
     }
@@ -62,11 +63,11 @@ public abstract class AbstractPointcut implements IPointcut {
         return pointcutName + " (" + getClass().getSimpleName() + ")";
     }
     
-    public String getContainerIdentifier() {
+    public IStorage getContainerIdentifier() {
         return containerIdentifier;
     }
     
-    public void setContainerIdentifier(String containerIdentifier) {
+    public void setContainerIdentifier(IStorage containerIdentifier) {
         this.containerIdentifier = containerIdentifier;
     }
     

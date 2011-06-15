@@ -13,7 +13,7 @@ public class DSLDClasspathContainerDecorator extends LabelProvider implements IL
         // decorate the class path container and add the originating target runtime
         if (element instanceof ClassPathContainer) {
             ClassPathContainer container = (ClassPathContainer) element;
-            if (container.getClasspathEntry().getPath().equals(DSLDContainerInitializer.CONTAINER_ID)) {
+            if (container.getClasspathEntry().getPath().equals(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID)) {
                 if (container.getJavaProject().getProject().isAccessible() && GroovyDSLCoreActivator.getDefault().getPreferenceStore().getBoolean(DSLPreferencesInitializer.DSLD_DISABLED)) {
                     decoration.addSuffix(" (Disabled)");
                 }

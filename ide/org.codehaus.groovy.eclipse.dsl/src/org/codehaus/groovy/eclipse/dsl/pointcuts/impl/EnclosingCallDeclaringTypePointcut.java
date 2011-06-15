@@ -20,6 +20,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
+import org.eclipse.core.resources.IStorage;
 import org.eclipse.jdt.groovy.search.VariableScope.CallAndType;
 
 /**
@@ -29,7 +30,7 @@ import org.eclipse.jdt.groovy.search.VariableScope.CallAndType;
  */
 public class EnclosingCallDeclaringTypePointcut extends AbstractPointcut {
 
-    public EnclosingCallDeclaringTypePointcut(String containerIdentifier, String pointcutName) {
+    public EnclosingCallDeclaringTypePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 

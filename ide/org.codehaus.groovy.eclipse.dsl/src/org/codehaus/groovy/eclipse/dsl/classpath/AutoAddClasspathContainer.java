@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.dsl.classpath;
 
-import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.eclipse.jface.preference.IPreferenceStore;

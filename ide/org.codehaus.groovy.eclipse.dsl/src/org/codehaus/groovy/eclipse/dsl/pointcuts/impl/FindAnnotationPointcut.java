@@ -18,6 +18,7 @@ import java.util.List;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
+import org.eclipse.core.resources.IStorage;
 
 /**
  * the match returns true if the pattern passed in has an annotated node that has an annotation 
@@ -30,7 +31,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
  */
 public class FindAnnotationPointcut extends FilteringPointcut<AnnotationNode> {
 
-    public FindAnnotationPointcut(String containerIdentifier, String pointcutName) {
+    public FindAnnotationPointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName, AnnotationNode.class);
     }
     

@@ -75,7 +75,7 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
         @Override
         public IStatus run(IProgressMonitor monitor) {
             try {
-                GroovyRuntime.addLibraryToClasspath(project, DSLDContainerInitializer.CONTAINER_ID);
+                GroovyRuntime.addLibraryToClasspath(project, GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID);
                 // here, remember that we have added this project
                 alreadyAddedProjects.add(projectName);
                 return Status.OK_STATUS;

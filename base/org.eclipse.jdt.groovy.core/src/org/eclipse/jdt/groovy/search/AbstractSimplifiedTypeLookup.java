@@ -69,17 +69,24 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookup {
 			TypeAndDeclaration tAndD = lookupTypeAndDeclaration(declaringType, ((ConstantExpression) node).getText(), scope);
 			if (tAndD != null) {
 				return new TypeLookupResult(tAndD.type, tAndD.declaringType == null ? declaringType : tAndD.declaringType,
-						tAndD.declaration, TypeConfidence.LOOSELY_INFERRED, scope, tAndD.extraDoc);
+						tAndD.declaration, confidence(), scope, tAndD.extraDoc);
 			}
 		} else if (node instanceof VariableExpression) {
 			ClassNode declaringType = objectExpressionType != null ? objectExpressionType : scope.getEnclosingTypeDeclaration();
 			TypeAndDeclaration tAndD = lookupTypeAndDeclaration(declaringType, ((VariableExpression) node).getName(), scope);
 			if (tAndD != null) {
 				return new TypeLookupResult(tAndD.type, tAndD.declaringType == null ? declaringType : tAndD.declaringType,
-						tAndD.declaration, TypeConfidence.LOOSELY_INFERRED, scope, tAndD.extraDoc);
+						tAndD.declaration, confidence(), scope, tAndD.extraDoc);
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * @return the confidence level of lookup results for this type lookup. Defaults to {@link TypeConfidence#LOOSELY_INFERRED}
+	 */
+	protected TypeConfidence confidence() {
+		return TypeConfidence.LOOSELY_INFERRED;
 	}
 
 	public final TypeLookupResult lookupType(FieldNode node, VariableScope scope) {

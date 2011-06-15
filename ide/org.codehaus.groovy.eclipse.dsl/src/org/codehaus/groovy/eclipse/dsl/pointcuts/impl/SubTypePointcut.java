@@ -18,6 +18,7 @@ import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
+import org.eclipse.core.resources.IStorage;
 
 /**
  * Converts the object toMatch into a type and then sees if it is a subtype.
@@ -31,7 +32,7 @@ public class SubTypePointcut extends FilteringPointcut<ClassNode> {
     
     private Map<ClassNode, Set<ClassNode>> cachedHierarchies = new HashMap<ClassNode, Set<ClassNode>>();
 
-    public SubTypePointcut(String containerIdentifier, String pointcutName) {
+    public SubTypePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName, ClassNode.class);
     }
 

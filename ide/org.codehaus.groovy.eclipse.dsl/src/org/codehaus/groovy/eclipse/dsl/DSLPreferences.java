@@ -90,14 +90,16 @@ public class DSLPreferences {
     }
 
     private static String[] filter(String[] disabled) {
-        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-        List<String> filtered = new ArrayList<String>(disabled.length);
-        for (String string : disabled) {
-            IResource r = root.getFile(new Path(string));
-            if (r.getType() == IResource.FILE && r.isAccessible()) {
-                filtered.add(string);
-            }
-        }
-        return filtered.toArray(new String[filtered.size()]);
+        // not working now
+//        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+//        List<String> filtered = new ArrayList<String>(disabled.length);
+//        for (String string : disabled) {
+//            IResource r = root.getFile(new Path(string));
+//            if (r.getType() == IResource.FILE && r.isAccessible()) {
+//                filtered.add(string);
+//            }
+//        }
+//        return filtered.toArray(new String[filtered.size()]);
+        return disabled;
     }
 }

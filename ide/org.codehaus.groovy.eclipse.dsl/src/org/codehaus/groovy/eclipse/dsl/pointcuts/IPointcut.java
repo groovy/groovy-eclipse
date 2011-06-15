@@ -17,6 +17,7 @@ import java.util.Collection;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IStorage;
 
 
 /**
@@ -64,10 +65,9 @@ public interface IPointcut {
     
     /**
      * A unique identifier for the container that created this context.
-     * Most likely, this is the name of the script that defines it.
      * @return a unique identifier
      */
-    String getContainerIdentifier();
+    IStorage getContainerIdentifier();
     
     
     /**

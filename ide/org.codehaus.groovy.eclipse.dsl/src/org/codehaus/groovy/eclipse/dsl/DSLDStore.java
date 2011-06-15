@@ -27,6 +27,8 @@ import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IStorage;
+import org.eclipse.jdt.internal.core.NonJavaResource;
 
 /**
  * Stores the pointcuts for a single project
@@ -36,11 +38,11 @@ import org.eclipse.core.resources.IFile;
 public class DSLDStore {
 
     private final Map<IPointcut, List<IContributionGroup>> pointcutContributionMap;  // maps pointcuts to their contributors
-    private final Map<String, Set<IPointcut>> keyContextMap;  // maps unique keys (such as script names) to all the pointcuts that they produce
+    private final Map<IStorage, Set<IPointcut>> keyContextMap;  // maps unique keys (such as script names) to all the pointcuts that they produce
     public DSLDStore() {
         // use linked hash map because order matters
         pointcutContributionMap = new LinkedHashMap<IPointcut, List<IContributionGroup>>();
-        keyContextMap = new HashMap<String, Set<IPointcut>>();
+        keyContextMap = new HashMap<IStorage, Set<IPointcut>>();
     }
     
     public void addContributionGroup(IPointcut pointcut, IContributionGroup contribution) {
@@ -51,7 +53,7 @@ public class DSLDStore {
         }
         contributions.add(contribution);
         
-        String identifier = pointcut.getContainerIdentifier();
+        IStorage identifier = pointcut.getContainerIdentifier();
         Set<IPointcut> pointcuts = keyContextMap.get(identifier);
         if (pointcuts == null) {
             pointcuts = new HashSet<IPointcut>();
@@ -61,7 +63,7 @@ public class DSLDStore {
     }
     
     
-    public void purgeIdentifier(String identifier) {
+    public void purgeIdentifier(IStorage identifier) {
         Set<IPointcut> pointcuts = keyContextMap.remove(identifier);
         if (pointcuts != null) {
             for (IPointcut pointcut : pointcuts) {
@@ -113,7 +115,7 @@ public class DSLDStore {
         if (GroovyLogManager.manager.hasLoggers()) {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Purging pointcut for DSL file " + file);
         }
-        Set<IPointcut> pointcuts = keyContextMap.remove(convertToIdentifier(file));
+        Set<IPointcut> pointcuts = keyContextMap.remove(file);
         if (pointcuts != null) {
             for (IPointcut pointcut : pointcuts) {
                 pointcutContributionMap.remove(pointcut);
@@ -131,7 +133,7 @@ public class DSLDStore {
         List<IContributionElement> elts = new ArrayList<IContributionElement>();
         for (Entry<IPointcut, List<IContributionGroup>> entry : pointcutContributionMap.entrySet()) {
             IPointcut pointcut = entry.getKey();
-            if (! disabledScripts.contains(pointcut.getContainerIdentifier())) {
+            if (! disabledScripts.contains(DSLDStore.toUniqueString(pointcut.getContainerIdentifier()))) {
                 pattern.resetBinding();
                 Collection<?> results = pointcut.matches(pattern, pattern.getCurrentType());
                 if (results != null) {
@@ -144,11 +146,17 @@ public class DSLDStore {
         return elts;
     }
     
-    public static String convertToIdentifier(IFile file) {
-        return file.getFullPath().toPortableString();
+    public IStorage[] getAllContextKeys() {
+        return keyContextMap.keySet().toArray(new IStorage[0]);
     }
     
-    public String[] getAllContextKeys() {
-        return keyContextMap.keySet().toArray(new String[0]);
+    public static String toUniqueString(IStorage storage) {
+        if (storage instanceof IFile) {
+            return storage.getFullPath().toPortableString();
+        } else if (storage instanceof NonJavaResource) {
+            return ((NonJavaResource) storage).getPackageFragmentRoot().getJavaProject().getElementName() + " (binary) " + storage.getName();
+        } else {
+            return storage.getName();
+        }
     }
 } 

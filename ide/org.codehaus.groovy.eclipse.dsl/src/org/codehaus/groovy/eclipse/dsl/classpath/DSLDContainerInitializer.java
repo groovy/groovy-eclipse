@@ -34,7 +34,7 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
         private IClasspathEntry[] entries;
 
         public IPath getPath() {
-            return CONTAINER_ID;
+            return GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID;
         }
 
         public int getKind() {
@@ -97,8 +97,6 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
         }
     }
 
-    public static IPath CONTAINER_ID = new Path("GROOVY_DSL_SUPPORT");
-    
     private IJavaProject javaProject;
     
     @Override

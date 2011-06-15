@@ -25,6 +25,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.S
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.SynchronizedPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AndPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.BindPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentIdentifierPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingCallDeclaringTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingCallNamePointcut;
@@ -48,8 +49,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SourceFolderOfFilePointcut
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SourceFolderOfTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SubTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.UserExtensiblePointcut;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentIdentifierPointcut;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IStorage;
 
 /**
  * Generates {@link IPointcut} objects
@@ -59,7 +60,7 @@ import org.eclipse.core.resources.IProject;
 public class PointcutFactory {
 
     private static final Map<String, Class<? extends IPointcut>> registry = new HashMap<String, Class<? extends IPointcut>>();
-    private static final Map<String, String> docRegistry    = new HashMap<String, String>();
+    private static final Map<String, String> docRegistry = new HashMap<String, String>();
     static {
         // combinatorial pointcuts
         registerGlobalPointcut(
@@ -321,16 +322,11 @@ public class PointcutFactory {
     @SuppressWarnings("rawtypes")
     private final Map<String, Closure> localRegistry = new HashMap<String, Closure>();
 
-    private final String uniqueID;
+    private final IStorage uniqueID;
 
     private final IProject project;
     
-    public PointcutFactory(String uniqueID) {
-        this.uniqueID = uniqueID;
-        this.project = null;
-    }
-    
-    public PointcutFactory(String uniqueID, IProject project) {
+    public PointcutFactory(IStorage uniqueID, IProject project) {
         this.uniqueID = uniqueID;
         this.project = project;
     }
@@ -367,7 +363,7 @@ public class PointcutFactory {
             try {
                 // try the two arg constructor and the no-arg constructor
                 try {
-                    IPointcut p = pc.getConstructor(String.class, String.class).newInstance(uniqueID, name);
+                    IPointcut p = pc.getConstructor(IStorage.class, String.class).newInstance(uniqueID, name);
                     p.setProject(project);
                     return p;
                 } catch (NoSuchMethodException e) {

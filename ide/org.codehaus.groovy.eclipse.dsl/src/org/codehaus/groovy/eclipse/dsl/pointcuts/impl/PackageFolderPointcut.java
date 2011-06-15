@@ -16,6 +16,7 @@ import java.util.Collections;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
+import org.eclipse.core.resources.IStorage;
 
 /**
  * Tests that the current package folder of the current file matches the name passed in.
@@ -28,7 +29,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
  */
 public class PackageFolderPointcut extends AbstractPointcut {
 
-    public PackageFolderPointcut(String containerIdentifier, String pointcutName) {
+    public PackageFolderPointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 

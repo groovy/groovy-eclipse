@@ -38,6 +38,7 @@ public class DisabledScriptsCache {
     
     public void setDisabled(Set<String> disabled) {
         this.disabled = disabled;
+        DSLPreferences.setDisabledScripts(disabled.toArray(new String[0]));
     }
     
     private void ensureInitialized() {

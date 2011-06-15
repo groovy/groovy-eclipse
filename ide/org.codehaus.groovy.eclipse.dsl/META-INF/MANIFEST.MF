@@ -20,6 +20,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.resources
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Export-Package: org.codehaus.groovy.eclipse.dsl,
+ org.codehaus.groovy.eclipse.dsl.classpath,
  org.codehaus.groovy.eclipse.dsl.contributions,
  org.codehaus.groovy.eclipse.dsl.lookup,
  org.codehaus.groovy.eclipse.dsl.pointcuts,

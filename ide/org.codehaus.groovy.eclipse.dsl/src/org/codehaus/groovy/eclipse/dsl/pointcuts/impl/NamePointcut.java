@@ -15,6 +15,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
+import org.eclipse.core.resources.IStorage;
 
 /**
  * the matches on the name of the object
@@ -23,7 +24,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
  */
 public class NamePointcut extends FilteringPointcut<Object> {
 
-    public NamePointcut(String containerIdentifier, String pointcutName) {
+    public NamePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName, Object.class);
     }
     

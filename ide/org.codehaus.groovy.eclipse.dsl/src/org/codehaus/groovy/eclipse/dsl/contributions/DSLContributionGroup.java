@@ -17,7 +17,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -25,6 +24,7 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ClassExpression;
@@ -140,7 +140,7 @@ public class DSLContributionGroup extends ContributionGroup {
         String returnType = value == null ? "java.lang.Object" : asString(value);
         
         value = args.get("declaringType");
-        String declaringType = value == null ? currentType.getName() : asString(value);
+        String declaringType = value == null ? getTypeName(currentType) : asString(value);
         
         value = args.get("provider");
         String provider = value == null ? this.provider : asString(value); // might be null
@@ -199,7 +199,7 @@ public class DSLContributionGroup extends ContributionGroup {
         String type = value == null ? NO_TYPE : asString(value);
         
         value = args.get("declaringType");
-        String declaringType = value == null ? currentType.getName() : asString(value);
+        String declaringType = value == null ? getTypeName(currentType) : asString(value);
         
         value = args.get("provider");
         String provider = value == null ? this.provider : asString(value); // might be null
@@ -309,7 +309,7 @@ public class DSLContributionGroup extends ContributionGroup {
         }
         if (!type.getName().equals(Object.class.getName())) {
             for (MethodNode method : type.getMethods()) {
-                if (exceptions != null && !exceptions.contains(method.getName())) {
+                if ((exceptions == null || !exceptions.contains(method.getName())) && !(method instanceof ConstructorNode) && ! method.getName().contains("$")) {
                     if (asCategory) {
                         delegateToCategoryMethod(useNamedArgs, isStatic, type, method);
                     } else {
@@ -328,34 +328,45 @@ public class DSLContributionGroup extends ContributionGroup {
      */
     private void delegateToNonCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method) {
         String name = method.getName();
-        if (!(method instanceof ConstructorNode) && ! name.contains("$")) {
-            contributions.add(new MethodContributionElement(name, toParameterContribution(method
-                    .getParameters()), method.getReturnType().getName(), type.getName(), (method.isStatic() || isStatic), provider,
-                    null, useNamedArgs));
-            
-            // also add the associated property if applicable
-            if (name.startsWith("get") && name.length() > 3 && (method.getParameters() == null || method.getParameters().length == 0)) {
-                contributions.add(new PropertyContributionElement(Character.toLowerCase(name.charAt(3)) + name.substring(4), method.getReturnType().getName(), 
-                        method.getDeclaringClass().getName(), (method.isStatic() || isStatic), provider, null));
-            }
+        contributions.add(new MethodContributionElement(name, toParameterContribution(method
+                .getParameters()), getTypeName(method.getReturnType()), getTypeName(type), (method.isStatic() || isStatic), provider,
+                null, useNamedArgs));
+        
+        // also add the associated property if applicable
+        if (name.startsWith("get") && name.length() > 3 && (method.getParameters() == null || method.getParameters().length == 0)) {
+            contributions.add(new PropertyContributionElement(Character.toLowerCase(name.charAt(3)) + name.substring(4), getTypeName(method.getReturnType()), 
+                    getTypeName(method.getDeclaringClass()), (method.isStatic() || isStatic), provider, null));
         }
     }
 
+    
+    static String getTypeName(ClassNode clazz) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(clazz.getName());
+        if (clazz.getGenericsTypes() != null && clazz.getGenericsTypes().length > 0) {
+            sb.append('<');
+            for (GenericsType gt : clazz.getGenericsTypes()) {
+                sb.append(getTypeName(gt.getType()));
+                sb.append(',');
+            }
+            sb.replace(sb.length()-1, sb.length(), ">");
+        }
+        return sb.toString();
+    }
+    
     /**
      * @param useNamedArgs
      * @param type
      * @param method
      */
     private void delegateToCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method) {
-        if (!(method instanceof ConstructorNode) && ! method.getName().contains("$")) {
-            if (method.getParameters() != null && method.getParameters().length > 0) {
-                ClassNode firstType = method.getParameters()[0].getType();
-                if ((firstType.isInterface() && currentType.implementsInterface(firstType)) ||
-                        currentType.isDerivedFrom(firstType)) {
-                    contributions.add(new MethodContributionElement(method.getName(), toParameterContributionRemoveFirst(method
-                            .getParameters()), method.getReturnType().getName(), type.getName(), isStatic, provider,
-                            null, useNamedArgs));
-                }
+        if (method.getParameters() != null && method.getParameters().length > 0) {
+            ClassNode firstType = method.getParameters()[0].getType();
+            if ((firstType.isInterface() && currentType.implementsInterface(firstType)) ||
+                    currentType.isDerivedFrom(firstType)) {
+                contributions.add(new MethodContributionElement(method.getName(), toParameterContributionRemoveFirst(method
+                        .getParameters()), getTypeName(method.getReturnType()), getTypeName(type), isStatic, provider,
+                        null, useNamedArgs));
             }
         }
     }
@@ -420,11 +431,11 @@ public class DSLContributionGroup extends ContributionGroup {
         } else if (value instanceof String) {
             return (String) value;
         } else if (value instanceof ClassNode) {
-            return ((ClassNode) value).getName();
+            return getTypeName(((ClassNode) value));
         } else if (value instanceof FieldNode) {
-            return ((FieldNode) value).getDeclaringClass().getName() + "." + ((FieldNode) value).getName();
+            return getTypeName(((FieldNode) value).getDeclaringClass()) + "." + ((FieldNode) value).getName();
         } else if (value instanceof MethodNode) {
-            return ((MethodNode) value).getDeclaringClass().getName() + "." + ((MethodNode) value).getName();
+            return getTypeName(((MethodNode) value).getDeclaringClass()) + "." + ((MethodNode) value).getName();
         } else if (value instanceof AnnotationNode) {
             return ((AnnotationNode) value).getClassNode().getName();
         } else if (value instanceof Class) {
