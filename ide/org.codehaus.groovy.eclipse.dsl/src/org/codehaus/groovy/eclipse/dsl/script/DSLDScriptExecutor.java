@@ -30,10 +30,13 @@ import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IStorage;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.core.NonJavaResource;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
@@ -151,7 +154,16 @@ public class DSLDScriptExecutor {
     }
 
     public Object executeScript(IStorage scriptFile) {
-        scriptName = scriptFile.getFullPath().toPortableString();
+        if (scriptFile instanceof NonJavaResource && ((NonJavaResource) scriptFile).isFile()) {
+            IResource resource = (IResource) ReflectionUtils.getPrivateField(NonJavaResource.class, "resource", scriptFile);
+            if (resource != null) {
+                scriptName = resource.getFullPath().toPortableString();
+            }
+        }
+        
+        if (scriptName == null) {
+            scriptName = scriptFile.getFullPath().toPortableString();
+        }
         String event = null;
         try {
             if (GroovyLogManager.manager.hasLoggers()) {

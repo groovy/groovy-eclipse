@@ -11,9 +11,11 @@
 package org.codehaus.groovy.eclipse.dsl.ui;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
@@ -53,6 +55,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -143,12 +146,19 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         @Override
         public String getText(Object element) {
             if (element instanceof ProjectContextKey) {
-                IFile file = toFile(element);
+                ProjectContextKey pck = (ProjectContextKey) element;
+                IFile file = toFile(pck);
                 if (file != null) {
-                    return file.getProjectRelativePath().toPortableString();
-                } else if (element instanceof ProjectContextKey) {
-                    // external file
-                    String dslFileName = ((ProjectContextKey) element).dslFileName;
+                    if (pck.dslFileName.startsWith("/.org.eclipse.jdt.core.external.folders")) {
+                        // external file
+                        return file.getName();
+                    } else {
+                        // local file
+                        return file.getProjectRelativePath().toPortableString();
+                    }
+                } else {
+                    // in a jar
+                    String dslFileName = pck.dslFileName;
                     if (dslFileName.startsWith("/")) {
                         dslFileName = dslFileName.substring(1);
                     }
@@ -164,7 +174,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
                 return provider.getImage(proj);
             }
             IFile file = toFile(element);
-            if (file != null) {
+            if (file != null && !file.getProject().getName().equals(".org.eclipse.jdt.core.external.folders")) {
                 return provider.getImage(file);
             }
             return JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CFILE);
@@ -269,7 +279,6 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
 
     @Override
     protected Control createContents(Composite parent) {
-        
         Composite composite= new Composite(parent, SWT.NONE);
         composite.setFont(parent.getFont());
 
@@ -280,26 +289,22 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         LayoutUtil.setHorizontalGrabbing(tree.getTreeControl(null));
 
         refresh();
-        
         PixelConverter converter= new PixelConverter(parent);
         int buttonBarWidth= converter.convertWidthInCharsToPixels(24);
         tree.setButtonsMinWidth(buttonBarWidth);
             
-        composite = new Composite(composite, SWT.NONE);
-        composite.setFont(parent.getFont());
-        FillLayout fillLayout = new FillLayout();
-        fillLayout.type = SWT.VERTICAL;
-        fillLayout.marginHeight = 25;
-        fillLayout.spacing = 5;
-        composite.setLayout(fillLayout);
         autoAdd = new Button(composite, SWT.CHECK);
         autoAdd.setText("Automatically add DSL Support to all Groovy projects");
         autoAdd.setSelection(store.getBoolean(DSLPreferencesInitializer.AUTO_ADD_DSL_SUPPORT));
-
+        
+        GridData data = new GridData(SWT.LEFT, SWT.TOP, true, false);
+        data.horizontalSpan = 2;
+        autoAdd.setLayoutData(data);
         disableDSLDs = new Button(composite, SWT.CHECK);
         disableDSLDs.setText("Disable DSLD support in your workspace. (Requires restart)");
         boolean isDisabled = store.getBoolean(DSLPreferencesInitializer.DSLD_DISABLED);
         disableDSLDs.setSelection(isDisabled);
+        disableDSLDs.setLayoutData(data);
         
         if (disableDSLDs.getSelection()) {
             Label l = new Label(composite, SWT.NONE);
@@ -345,18 +350,22 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             List<?> selected = tree.getSelectedElements();
             ProjectContextKey pck = (ProjectContextKey) selected.get(0);
             IFile file = ROOT.getFile(new Path(pck.dslFileName));
-            if (file.isAccessible()) {
+            if (file.isAccessible() && !pck.dslFileName.startsWith("/.org.eclipse.jdt.core.external.folders")) {
                 try {
                     if (page != null) {
                         IDE.openEditor(page, file, true, true);
                     }
                 } catch (PartInitException e) {
-                    ErrorDialog.openError(page.getWorkbenchWindow().getShell(), "Error opening editor", "See error log: " + e.getLocalizedMessage(), e.getStatus());
+                    if (page != null) {
+                        ErrorDialog.openError(page.getWorkbenchWindow().getShell(), "Error opening editor", "See error log: " + e.getLocalizedMessage(), e.getStatus());
+                    }
                     GroovyDSLCoreActivator.logException(e);
                 }
             } else {
-                ErrorDialog.openError(page.getWorkbenchWindow().getShell(), "Could not open editor", "File " + pck.dslFileName
-                        + " is not accessible.", new Status(IStatus.ERROR, GroovyDSLCoreActivator.PLUGIN_ID, "Could not open editor"));
+                if (page != null) {
+                    ErrorDialog.openError(page.getWorkbenchWindow().getShell(), "Could not open editor", "File " + pck.dslFileName
+                            + " is not accessible.", new Status(IStatus.ERROR, GroovyDSLCoreActivator.PLUGIN_ID, "Could not open editor"));
+                }
             }
         }
     }
@@ -379,7 +388,8 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
                 }
             }
         }
-
+        Collections.sort(allStores);
+        
         tree.setElements(allStores);
         tree.refresh();
         for (ProjectContextKey[] keys : elementsMap.values()) {

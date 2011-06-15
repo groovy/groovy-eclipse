@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl;
 
+import java.util.Collections;
+
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.script.DSLDScriptExecutor;

@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.earlystartup;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
@@ -41,19 +44,21 @@ public class InitializeAllDSLDs implements IStartup {
 
         
         IProject[] allProjects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+        List<IProject> toRefresh = new ArrayList<IProject>(allProjects.length);
         for (IProject project : allProjects) {
             // don't access the GroovyNature class here because we don't want to start
             // the groovy plugin if we don't have to.
             try {
                 if (project.isAccessible() && project.hasNature("org.eclipse.jdt.groovy.core.groovyNature")) {
-                    Job refreshJob = new RefreshDSLDJob(project);
-                    refreshJob.setPriority(Job.LONG);
-                    refreshJob.schedule();
+                    toRefresh.add(project);
                 }
             } catch (CoreException e) {
                 logException(e);
             }
         }
+        Job refreshJob = new RefreshDSLDJob(toRefresh);
+        refreshJob.setPriority(Job.LONG);
+        refreshJob.schedule();
     }
 
     /**

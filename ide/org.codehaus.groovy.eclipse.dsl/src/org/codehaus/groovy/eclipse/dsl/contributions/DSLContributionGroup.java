@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -217,6 +218,16 @@ public class DSLContributionGroup extends ContributionGroup {
     void template(Map<String, String> args) {
         
     }
+    
+    void delegatesTo(Map<String, Object> args) {
+        String name = asString(args.get("type"));
+        boolean isStatic = isStatic(args);
+        boolean asCategory = getBoolean("asCategory", args);
+        boolean useNamed = getBoolean("useNamed", args);
+        List<String> except = (List<String>) args.get("except");
+        ClassNode type = this.resolver.resolve(name);
+        internalDelegatesTo(type, useNamed, isStatic, asCategory, except);
+    }
 
     void delegatesTo(String className) {
         delegatesTo(this.resolver.resolve(className));
@@ -241,7 +252,7 @@ public class DSLContributionGroup extends ContributionGroup {
      * class reference.
      */
     void delegatesTo(AnnotatedNode expr) {
-        internalDelegatesTo(expr, false);
+        internalDelegatesTo(expr, false, false, false, null);
     }
 
     void delegatesToUseNamedArgs(String className) {
@@ -258,45 +269,7 @@ public class DSLContributionGroup extends ContributionGroup {
      * class reference.
      */
     void delegatesToUseNamedArgs(AnnotatedNode expr) {
-        internalDelegatesTo(expr, true);
-    }
-    
-    /**
-     * @param expr
-     */
-    private void internalDelegatesTo(AnnotatedNode expr, boolean useNamedArgs) {
-        ClassNode type;
-        if (expr instanceof ClassNode) {
-            type = (ClassNode) expr;
-        } else if (expr instanceof FieldNode) {
-            type = ((FieldNode) expr).getType();
-        } else if (expr instanceof MethodNode) {
-            type = ((MethodNode) expr).getReturnType();
-        } else if (expr instanceof ClassExpression) {
-            type = ((ClassExpression) expr).getType();
-        } else {
-            // invalid
-            if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.DSL, 
-                        "Cannot invoke delegatesTo() on an invalid object: " + expr);
-            }
-            return;
-        }
-        if (!type.getName().equals(Object.class.getName())) {
-            for (MethodNode method : type.getMethods()) {
-                String name = method.getName();
-                if (!(method instanceof ConstructorNode) && ! name.contains("$")) {
-                    contributions.add(new MethodContributionElement(name, toParameterContribution(method
-                            .getParameters()), method.getReturnType().getName(), type.getName(), method.isStatic(), provider,
-                            null, useNamedArgs));
-                    
-                    if (name.startsWith("get") && name.length() > 3 && (method.getParameters() == null || method.getParameters().length == 0)) {
-                        contributions.add(new PropertyContributionElement(Character.toLowerCase(name.charAt(3)) + name.substring(4), method.getReturnType().getName(), 
-                                method.getDeclaringClass().getName(), method.isStatic(), provider, null));
-                    }
-                }
-            }
-        }
+        internalDelegatesTo(expr, true, false, false, null);
     }
     
     void delegatesToCategory(String className) {
@@ -313,11 +286,10 @@ public class DSLContributionGroup extends ContributionGroup {
      * class reference.
      */
     void delegatesToCategory(AnnotatedNode expr) {
-        internalDelegatesToCategory(expr, false);
+        internalDelegatesTo(expr, false, false, true, null);
     }
-    
-    
-    private void internalDelegatesToCategory(AnnotatedNode expr, boolean useNamedArgs) {
+
+    private void internalDelegatesTo(AnnotatedNode expr, boolean useNamedArgs, boolean isStatic, boolean asCategory, List<String> exceptions) {
         ClassNode type;
         if (expr instanceof ClassNode) {
             type = (ClassNode) expr;
@@ -337,22 +309,57 @@ public class DSLContributionGroup extends ContributionGroup {
         }
         if (!type.getName().equals(Object.class.getName())) {
             for (MethodNode method : type.getMethods()) {
-                if (!(method instanceof ConstructorNode) && ! method.getName().contains("$")) {
-                    if (method.getParameters() != null && method.getParameters().length > 0) {
-                        ClassNode firstType = method.getParameters()[0].getType();
-                        if ((firstType.isInterface() && currentType.implementsInterface(firstType)) ||
-                                currentType.isDerivedFrom(firstType)) {
-                            contributions.add(new MethodContributionElement(method.getName(), toParameterContributionRemoveFirst(method
-                                    .getParameters()), method.getReturnType().getName(), type.getName(), false, provider,
-                                    null, useNamedArgs));
-                        }
+                if (exceptions != null && !exceptions.contains(method.getName())) {
+                    if (asCategory) {
+                        delegateToCategoryMethod(useNamedArgs, isStatic, type, method);
+                    } else {
+                        delegateToNonCategoryMethod(useNamedArgs, isStatic, type, method);
                     }
                 }
             }
         }
     }
 
-    
+    /**
+     * @param useNamedArgs
+     * @param isStatic
+     * @param type
+     * @param method
+     */
+    private void delegateToNonCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method) {
+        String name = method.getName();
+        if (!(method instanceof ConstructorNode) && ! name.contains("$")) {
+            contributions.add(new MethodContributionElement(name, toParameterContribution(method
+                    .getParameters()), method.getReturnType().getName(), type.getName(), (method.isStatic() || isStatic), provider,
+                    null, useNamedArgs));
+            
+            // also add the associated property if applicable
+            if (name.startsWith("get") && name.length() > 3 && (method.getParameters() == null || method.getParameters().length == 0)) {
+                contributions.add(new PropertyContributionElement(Character.toLowerCase(name.charAt(3)) + name.substring(4), method.getReturnType().getName(), 
+                        method.getDeclaringClass().getName(), (method.isStatic() || isStatic), provider, null));
+            }
+        }
+    }
+
+    /**
+     * @param useNamedArgs
+     * @param type
+     * @param method
+     */
+    private void delegateToCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method) {
+        if (!(method instanceof ConstructorNode) && ! method.getName().contains("$")) {
+            if (method.getParameters() != null && method.getParameters().length > 0) {
+                ClassNode firstType = method.getParameters()[0].getType();
+                if ((firstType.isInterface() && currentType.implementsInterface(firstType)) ||
+                        currentType.isDerivedFrom(firstType)) {
+                    contributions.add(new MethodContributionElement(method.getName(), toParameterContributionRemoveFirst(method
+                            .getParameters()), method.getReturnType().getName(), type.getName(), isStatic, provider,
+                            null, useNamedArgs));
+                }
+            }
+        }
+    }
+
     private ParameterContribution[] toParameterContribution(Parameter[] params) {
         if (params != null) {
             ParameterContribution[] contribs = new ParameterContribution[params.length];
@@ -387,7 +394,11 @@ public class DSLContributionGroup extends ContributionGroup {
      * @return true iff the static argument is passed in.
      */
     private boolean isStatic(Map<?, ?> args) {
-        Object maybeStatic = args.get("isStatic");
+        return getBoolean("isStatic", args);
+    }
+
+    private boolean getBoolean(String name, Map<?,?> args) {
+        Object maybeStatic = args.get(name);
         if (maybeStatic == null) {
             return false;
         } else if (maybeStatic instanceof Boolean) {
@@ -396,7 +407,7 @@ public class DSLContributionGroup extends ContributionGroup {
             return Boolean.getBoolean(maybeStatic.toString());
         }
     }
-
+    
     /**
      * Converts an object into a string
      * @param value

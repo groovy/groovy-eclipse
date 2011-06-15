@@ -11,6 +11,7 @@
 package org.codehaus.groovy.eclipse.dsl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,12 +24,13 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.resources.IStorage;
-import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
@@ -139,11 +141,14 @@ public class RefreshDSLDJob extends Job {
     
     }
 
-    private final IProject project;
+    private final List<IProject> projects;
 
     public RefreshDSLDJob(IProject project) {
-        super("Refresh DSLD scripts for " + project.getName());
-        this.project = project;
+        this(Collections.singletonList(project));
+    }
+    public RefreshDSLDJob(List<IProject> projects) {
+        super("Refresh DSLD scripts");
+        this.projects = projects;
     }
 
     @Override
@@ -151,33 +156,13 @@ public class RefreshDSLDJob extends Job {
         IPreferenceStore prefStore = GroovyDSLCoreActivator.getDefault().getPreferenceStore();
         if (prefStore.getBoolean(DSLPreferencesInitializer.DSLD_DISABLED)) {
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.DSL, "DSLD support is currently disabled, so not refreshing DSLDs for " + project.getName());
+                GroovyLogManager.manager.log(TraceCategory.DSL, "DSLD support is currently disabled, so not refreshing DSLDs.");
             }
             return Status.OK_STATUS;
         }
         
-        String event = null;
-        if (GroovyLogManager.manager.hasLoggers()) {
-            GroovyLogManager.manager.log(TraceCategory.DSL, "Refreshing inferencing scripts for " + project.getName());
-            event = "Refreshing inferencing scripts: " + project.getName();
-            GroovyLogManager.manager.logStart(event);
-        }
-        if (monitor == null) {
-            monitor = new NullProgressMonitor();
-        }
-        
-        if (monitor.isCanceled()) {
-            return Status.CANCEL_STATUS;
-        }
-        
-        monitor.beginTask("Refreshing DSLD files", 9);
-        
-        if (GroovyLogManager.manager.hasLoggers()) {
-            GroovyLogManager.manager.log(TraceCategory.DSL, "Cancelling previous refresh jobs");
-        }
-        monitor.subTask("Cancelling previous refresh jobs");
         // cancel all existing jobs
-        Job[] jobs = getJobManager().find(getFamily(project));
+        Job[] jobs = getJobManager().find(RefreshDSLDJob.class);
         if (jobs != null) {
             for (Job job : jobs) {
                 if (job != this) {
@@ -195,6 +180,51 @@ public class RefreshDSLDJob extends Job {
 //                }
 //            }
         }
+
+
+        List<IStatus> errorStatuses = new ArrayList<IStatus>();
+        if (monitor == null) {
+            monitor = new NullProgressMonitor();
+        }
+        monitor.beginTask("Refresh DSLD scripts", projects.size() * 9);
+        for (IProject project : projects) {
+            IStatus res = refreshProject(project, new SubProgressMonitor(monitor, 9));
+            if (!res.isOK()) {
+                errorStatuses.add(res);
+            } else if (res == Status.CANCEL_STATUS) {
+                return res;
+            }
+        }
+        monitor.done();
+        
+        if (errorStatuses.isEmpty()) {
+            return Status.OK_STATUS;
+        } else {
+            MultiStatus multi = new MultiStatus(GroovyDSLCoreActivator.PLUGIN_ID, 0, "Error refreshing DSLDs.", null);
+            for (IStatus error : errorStatuses) {
+                multi.add(error);
+            }
+            return multi;
+        }
+    }
+    
+    private IStatus refreshProject(IProject project, IProgressMonitor monitor) {
+        String event = null;
+        if (GroovyLogManager.manager.hasLoggers()) {
+            GroovyLogManager.manager.log(TraceCategory.DSL, "Refreshing inferencing scripts for " + project.getName());
+            event = "Refreshing inferencing scripts: " + project.getName();
+            GroovyLogManager.manager.logStart(event);
+        }
+        
+        monitor.beginTask("Refreshing DSLD files for project " + project.getName(), 9);
+        
+        if (monitor.isCanceled()) {
+            return Status.CANCEL_STATUS;
+        }
+        
+        if (GroovyLogManager.manager.hasLoggers()) {
+            GroovyLogManager.manager.log(TraceCategory.DSL, "Cancelling previous refresh jobs");
+        }
         
         if (monitor.isCanceled()) {
             return Status.CANCEL_STATUS;
@@ -206,7 +236,6 @@ public class RefreshDSLDJob extends Job {
         if (GroovyLogManager.manager.hasLoggers()) {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Purging old state");
         }
-        monitor.subTask("Purging old state");
         DSLDStore store = GroovyDSLCoreActivator.getDefault().getContextStoreManager().getDSLDStore(project);
         store.purgeAll();
         
@@ -219,7 +248,6 @@ public class RefreshDSLDJob extends Job {
         if (GroovyLogManager.manager.hasLoggers()) {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Finding inferencing DSL scripts");
         }
-        monitor.subTask("Finding inferencing DSL scripts");
         Set<IStorage> findDSLDFiles = new DSLDResourceVisitor(project).findFiles(monitor);
         
         if (monitor.isCanceled()) {
@@ -231,15 +259,15 @@ public class RefreshDSLDJob extends Job {
         DSLDScriptExecutor executor = new DSLDScriptExecutor(JavaCore.create(project));
         for (IStorage file : findDSLDFiles) {
             if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.DSL, "Processing " + file.getName());
+                GroovyLogManager.manager.log(TraceCategory.DSL, "Processing " + file.getName() + " in project " + project.getName());
             }
-            monitor.subTask("Processing " + file.getName());
+            monitor.subTask("Processing " + file.getName() + " in project " + project.getName());
             executor.executeScript(file);
             if (monitor.isCanceled()) {
                 return Status.CANCEL_STATUS;
             }
-            monitor.worked(1);
         }
+        monitor.worked(6);
         
         monitor.done();
         if (event != null) {
@@ -250,12 +278,6 @@ public class RefreshDSLDJob extends Job {
     
     @Override
     public boolean belongsTo(Object family) {
-        return getFamily(project).equals(family);
-    }
-
-    
-    public static Object getFamily(IProject project) {
-        Assert.isNotNull(project, "Null project passed to 'getFamily()'");
-        return "DSLD: " + project.getName();
+        return family == RefreshDSLDJob.class;
     }
 }
