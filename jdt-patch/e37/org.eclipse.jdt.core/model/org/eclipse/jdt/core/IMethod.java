@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -100,6 +100,21 @@ ITypeParameter[] getTypeParameters() throws JavaModelException;
  * @return the number of parameters of this method
  */
 int getNumberOfParameters();
+
+/**
+ * Returns the parameters of this method.
+ * <p>An empty array is returned, if the method has no parameters.</p>
+ * <p>For binary types, associated source is used to retrieve the {@link ILocalVariable#getNameRange() name range},
+ * {@link ILocalVariable#getSourceRange() source range} and the {@link ILocalVariable#getFlags() flags}.</p>
+ * <p>These local variables can be used to retrieve the {@link ILocalVariable#getAnnotations() parameter annotations}.</p>
+ * 
+ * @return the parameters of this method
+ * @throws JavaModelException if this element does not exist or if an
+ *      exception occurs while accessing its corresponding resource.
+ * @since 3.7
+ */
+ILocalVariable[] getParameters() throws JavaModelException;
+
 /**
  * Returns the binding key for this method only if the given method is {@link #isResolved() resolved}.
  * A binding key is a key that uniquely identifies this method. It allows access

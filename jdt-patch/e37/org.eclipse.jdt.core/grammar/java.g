@@ -350,9 +350,17 @@ Header2 -> Header
 Header2 -> EnumConstantHeader
 /:$readableName Header2:/
 
-CatchHeader ::= 'catch' '(' FormalParameter ')' '{'
+CatchHeader ::= 'catch' '(' CatchFormalParameter ')' '{'
 /.$putCase consumeCatchHeader(); $break ./
 /:$readableName CatchHeader:/
+
+CatchFormalParameter ::= Modifiersopt Type VariableDeclaratorId
+/.$putCase consumeCatchFormalParameter(false); $break ./
+CatchFormalParameter ::= Modifiersopt Type '...' VariableDeclaratorId
+/.$putCase consumeCatchFormalParameter(true); $break ./
+/:$readableName FormalParameter:/
+/:$compliance 1.5:/
+/:$recovery_template Identifier Identifier:/
 
 ImportDeclarations -> ImportDeclaration
 ImportDeclarations ::= ImportDeclarations ImportDeclaration 
@@ -1100,7 +1108,7 @@ Catches ::= Catches CatchClause
 /.$putCase consumeCatches(); $break ./
 /:$readableName Catches:/
 
-CatchClause ::= 'catch' '(' FormalParameter ')'    Block
+CatchClause ::= 'catch' '(' CatchFormalParameter ')' Block
 /.$putCase consumeStatementCatch() ; $break ./
 /:$readableName CatchClause:/
 

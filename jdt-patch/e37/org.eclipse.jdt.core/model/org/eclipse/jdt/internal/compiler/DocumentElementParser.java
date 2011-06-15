@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -575,6 +575,58 @@ protected void consumeFormalParameter(boolean isVarArgs) {
 			namePositions,
 			type,
 			this.intStack[this.intPtr + 1]);// modifiers
+	// consume annotations
+	int length;
+	if ((length = this.expressionLengthStack[this.expressionLengthPtr--]) != 0) {
+		System.arraycopy(
+			this.expressionStack,
+			(this.expressionPtr -= length) + 1,
+			arg.annotations = new Annotation[length],
+			0,
+			length);
+	}
+	pushOnAstStack(arg);
+	this.intArrayPtr--;
+}
+protected void consumeCatchFormalParameter(boolean isVarArgs) {
+	// FormalParameter ::= Type VariableDeclaratorId ==> false
+	// FormalParameter ::= Modifiers Type VariableDeclaratorId ==> true
+	/*
+	astStack :
+	identifierStack : type identifier
+	intStack : dim dim
+	 ==>
+	astStack : Argument
+	identifierStack :
+	intStack :
+	*/
+
+	this.identifierLengthPtr--;
+	char[] parameterName = this.identifierStack[this.identifierPtr];
+	long namePositions = this.identifierPositionStack[this.identifierPtr--];
+	int extendedDimensions = this.intStack[this.intPtr--];
+	int endOfEllipsis = 0;
+	if (isVarArgs) {
+		endOfEllipsis = this.intStack[this.intPtr--];
+	}
+	int firstDimensions = this.intStack[this.intPtr--];
+	final int typeDimensions = firstDimensions + extendedDimensions;
+	TypeReference type = getTypeReference(typeDimensions);
+	if (isVarArgs) {
+		type = copyDims(type, typeDimensions + 1);
+		if (extendedDimensions == 0) {
+			type.sourceEnd = endOfEllipsis;
+		}
+		type.bits |= ASTNode.IsVarArgs; // set isVarArgs
+	}
+	this.intPtr -= 3;
+	Argument arg =
+		new Argument(
+			parameterName,
+			namePositions,
+			type,
+			this.intStack[this.intPtr + 1]);// modifiers
+	arg.bits &= ~ASTNode.IsArgument;
 	// consume annotations
 	int length;
 	if ((length = this.expressionLengthStack[this.expressionLengthPtr--]) != 0) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,8 +22,23 @@ public abstract class FlowInfo {
 
 	public int tagBits; // REACHABLE by default
 	public final static int REACHABLE = 0;
-	public final static int UNREACHABLE = 1;
-	public final static int NULL_FLAG_MASK = 2;
+	/* unreachable code 
+	 * eg. while (true);
+	 *     i++;  --> unreachable code 
+	 */
+	public final static int UNREACHABLE_OR_DEAD = 1;
+	/* unreachable code as inferred by null analysis
+	 * eg. str = null;
+	 *     if (str != null) {
+	 *        // dead code
+	 *     }
+	 */
+	public final static int UNREACHABLE_BY_NULLANALYSIS = 2;
+	/*
+	 * code unreachable in any fashion
+	 */
+	public final static int UNREACHABLE = UNREACHABLE_OR_DEAD | UNREACHABLE_BY_NULLANALYSIS;
+	public final static int NULL_FLAG_MASK = 4;
 
 	public final static int UNKNOWN = 1;
 	public final static int NULL = 2;
@@ -355,7 +370,7 @@ public static UnconditionalFlowInfo mergedOptimizedBranches(
 	UnconditionalFlowInfo mergedInfo;
 	if (isOptimizedTrue){
 		if (initsWhenTrue == FlowInfo.DEAD_END && allowFakeDeadBranch) {
-			mergedInfo = initsWhenFalse.setReachMode(FlowInfo.UNREACHABLE).
+			mergedInfo = initsWhenFalse.setReachMode(FlowInfo.UNREACHABLE_OR_DEAD).
 				unconditionalInits();
 		}
 		else {
@@ -367,7 +382,7 @@ public static UnconditionalFlowInfo mergedOptimizedBranches(
 	}
 	else if (isOptimizedFalse) {
 		if (initsWhenFalse == FlowInfo.DEAD_END && allowFakeDeadBranch) {
-			mergedInfo = initsWhenTrue.setReachMode(FlowInfo.UNREACHABLE).
+			mergedInfo = initsWhenTrue.setReachMode(FlowInfo.UNREACHABLE_OR_DEAD).
 				unconditionalInits();
 		}
 		else {
@@ -394,7 +409,7 @@ public static UnconditionalFlowInfo mergedOptimizedBranchesIfElse(
 	UnconditionalFlowInfo mergedInfo;
 	if (isOptimizedTrue){
 		if (initsWhenTrue == FlowInfo.DEAD_END && allowFakeDeadBranch) {
-			mergedInfo = initsWhenFalse.setReachMode(FlowInfo.UNREACHABLE).
+			mergedInfo = initsWhenFalse.setReachMode(FlowInfo.UNREACHABLE_OR_DEAD).
 				unconditionalInits();
 		}
 		else {
@@ -406,7 +421,7 @@ public static UnconditionalFlowInfo mergedOptimizedBranchesIfElse(
 	}
 	else if (isOptimizedFalse) {
 		if (initsWhenFalse == FlowInfo.DEAD_END && allowFakeDeadBranch) {
-			mergedInfo = initsWhenTrue.setReachMode(FlowInfo.UNREACHABLE).
+			mergedInfo = initsWhenTrue.setReachMode(FlowInfo.UNREACHABLE_OR_DEAD).
 				unconditionalInits();
 		}
 		else {
@@ -456,10 +471,9 @@ public static UnconditionalFlowInfo mergedOptimizedBranchesIfElse(
 }
 
 /**
- * Return REACHABLE if this flow info is reachable, UNREACHABLE
- * else.
- * @return REACHABLE if this flow info is reachable, UNREACHABLE
- *         else
+ * Find out the reachability mode of this flowInfo.
+ * @return REACHABLE if this flow info is reachable, otherwise
+ *         either UNREACHABLE_OR_DEAD or UNREACHABLE_BY_NULLANALYSIS.
  */
 public int reachMode() {
 	return this.tagBits & UNREACHABLE;
@@ -476,7 +490,8 @@ abstract public FlowInfo safeInitsWhenTrue();
 
 /**
  * Set this flow info reach mode and return this.
- * @param reachMode one of {@link #REACHABLE REACHABLE} or {@link #UNREACHABLE UNREACHABLE}
+ * @param reachMode one of {@link #REACHABLE REACHABLE}, {@link #UNREACHABLE_OR_DEAD UNREACHABLE_OR_DEAD},
+ * {@link #UNREACHABLE_BY_NULLANALYSIS UNREACHABLE_BY_NULLANALYSIS} or {@link #UNREACHABLE UNREACHABLE}
  * @return this, with the reach mode set to reachMode
  */
 abstract public FlowInfo setReachMode(int reachMode);

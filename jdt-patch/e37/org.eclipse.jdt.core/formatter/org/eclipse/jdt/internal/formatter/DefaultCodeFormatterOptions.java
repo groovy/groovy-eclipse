@@ -2041,47 +2041,69 @@ public class DefaultCodeFormatterOptions {
 				this.comment_clear_blank_lines_in_block_comment = DefaultCodeFormatterConstants.TRUE.equals(commentClearBlankLinesInBlockCommentOption);
 			}
 		}
+		
 		// New line after annotations
 		final Object insertNewLineAfterAnnotationOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION);
-		if (insertNewLineAfterAnnotationOption != null) { // check if deprecated 3.1 option was used
-			boolean insert = JavaCore.INSERT.equals(insertNewLineAfterAnnotationOption);
-			this.insert_new_line_after_annotation_on_type = insert;
-			this.insert_new_line_after_annotation_on_field = insert;
-			this.insert_new_line_after_annotation_on_method = insert;
-			this.insert_new_line_after_annotation_on_package = insert;
-			this.insert_new_line_after_annotation_on_parameter = insert;
-			this.insert_new_line_after_annotation_on_local_variable = insert;
-		} else {
-			final Object insertNewLineAfterAnnotationOnMemberOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_MEMBER);
-			if (insertNewLineAfterAnnotationOnMemberOption != null) { // check if deprecated 3.4 option was used
+		
+		final Object insertNewLineAfterAnnotationOnMemberOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_MEMBER);
+		final Object insertNewLineAfterAnnotationOnTypeOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_TYPE);
+		final Object insertNewLineAfterAnnotationOnFieldOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_FIELD);
+		final Object insertNewLineAfterAnnotationOnMethodOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_METHOD);
+		final Object insertNewLineAfterAnnotationOnPackageOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PACKAGE);
+		
+		final Object insertNewLineAfterAnnotationOnParameterOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PARAMETER);
+		final Object insertNewLineAfterAnnotationOnLocalVariableOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_LOCAL_VARIABLE);
+
+		if (insertNewLineAfterAnnotationOnTypeOption == null
+				&& insertNewLineAfterAnnotationOnFieldOption == null
+				&& insertNewLineAfterAnnotationOnMethodOption == null
+				&& insertNewLineAfterAnnotationOnPackageOption == null) {
+			// if none of the new 3.7 options is used, fall back to the deprecated 3.4 option
+			if (insertNewLineAfterAnnotationOnMemberOption != null) {
 				boolean insert = JavaCore.INSERT.equals(insertNewLineAfterAnnotationOnMemberOption);
 				this.insert_new_line_after_annotation_on_type = insert;
 				this.insert_new_line_after_annotation_on_field = insert;
 				this.insert_new_line_after_annotation_on_method = insert;
 				this.insert_new_line_after_annotation_on_package = insert;
-			} else { // otherwise use new options
-				final Object insertNewLineAfterAnnotationOnTypeOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_TYPE);
-				if (insertNewLineAfterAnnotationOnTypeOption != null) {
-					this.insert_new_line_after_annotation_on_type = JavaCore.INSERT.equals(insertNewLineAfterAnnotationOnTypeOption);
+				
+				// and use the other 3.4 options if available
+				if (insertNewLineAfterAnnotationOnParameterOption != null) {
+					this.insert_new_line_after_annotation_on_parameter = JavaCore.INSERT.equals(insertNewLineAfterAnnotationOnParameterOption);
 				}
-				final Object insertNewLineAfterAnnotationOnFieldOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_FIELD);
-				if (insertNewLineAfterAnnotationOnFieldOption != null) {
-					this.insert_new_line_after_annotation_on_field = JavaCore.INSERT.equals(insertNewLineAfterAnnotationOnFieldOption);
+				if (insertNewLineAfterAnnotationOnLocalVariableOption != null) {
+					this.insert_new_line_after_annotation_on_local_variable = JavaCore.INSERT.equals(insertNewLineAfterAnnotationOnLocalVariableOption);
 				}
-				final Object insertNewLineAfterAnnotationOnMethodOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_METHOD);
-				if (insertNewLineAfterAnnotationOnMethodOption != null) {
-					this.insert_new_line_after_annotation_on_method = JavaCore.INSERT.equals(insertNewLineAfterAnnotationOnMethodOption);
-				}
-				final Object insertNewLineAfterAnnotationOnPackageOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PACKAGE);
-				if (insertNewLineAfterAnnotationOnPackageOption != null) {
-					this.insert_new_line_after_annotation_on_package = JavaCore.INSERT.equals(insertNewLineAfterAnnotationOnPackageOption);
+				
+			} else if (insertNewLineAfterAnnotationOnParameterOption == null
+					&& insertNewLineAfterAnnotationOnLocalVariableOption == null) {
+				// if none of the new 3.4 options is used, fall back to the deprecated 3.1 option
+				if (insertNewLineAfterAnnotationOption != null) {
+					boolean insert = JavaCore.INSERT.equals(insertNewLineAfterAnnotationOption);
+					this.insert_new_line_after_annotation_on_type = insert;
+					this.insert_new_line_after_annotation_on_field = insert;
+					this.insert_new_line_after_annotation_on_method = insert;
+					this.insert_new_line_after_annotation_on_package = insert;
+					this.insert_new_line_after_annotation_on_parameter = insert;
+					this.insert_new_line_after_annotation_on_local_variable = insert;
 				}
 			}
-			final Object insertNewLineAfterAnnotationOnParameterOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PARAMETER);
+		} else { // otherwise use new 3.7 options if available
+			if (insertNewLineAfterAnnotationOnTypeOption != null) {
+				this.insert_new_line_after_annotation_on_type = JavaCore.INSERT.equals(insertNewLineAfterAnnotationOnTypeOption);
+			}
+			if (insertNewLineAfterAnnotationOnFieldOption != null) {
+				this.insert_new_line_after_annotation_on_field = JavaCore.INSERT.equals(insertNewLineAfterAnnotationOnFieldOption);
+			}
+			if (insertNewLineAfterAnnotationOnMethodOption != null) {
+				this.insert_new_line_after_annotation_on_method = JavaCore.INSERT.equals(insertNewLineAfterAnnotationOnMethodOption);
+			}
+			if (insertNewLineAfterAnnotationOnPackageOption != null) {
+				this.insert_new_line_after_annotation_on_package = JavaCore.INSERT.equals(insertNewLineAfterAnnotationOnPackageOption);
+			}
+			// and the other 3.4 options if available
 			if (insertNewLineAfterAnnotationOnParameterOption != null) {
 				this.insert_new_line_after_annotation_on_parameter = JavaCore.INSERT.equals(insertNewLineAfterAnnotationOnParameterOption);
 			}
-			final Object insertNewLineAfterAnnotationOnLocalVariableOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_LOCAL_VARIABLE);
 			if (insertNewLineAfterAnnotationOnLocalVariableOption != null) {
 				this.insert_new_line_after_annotation_on_local_variable = JavaCore.INSERT.equals(insertNewLineAfterAnnotationOnLocalVariableOption);
 			}

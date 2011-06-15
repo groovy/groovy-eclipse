@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -67,11 +67,11 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	// process the THEN part
 	FlowInfo thenFlowInfo = conditionFlowInfo.safeInitsWhenTrue();
 	if (isConditionOptimizedFalse) {
-		thenFlowInfo.setReachMode(FlowInfo.UNREACHABLE);
+		thenFlowInfo.setReachMode(FlowInfo.UNREACHABLE_OR_DEAD);
 	}
 	FlowInfo elseFlowInfo = conditionFlowInfo.initsWhenFalse().copy();
 	if (isConditionOptimizedTrue) {
-		elseFlowInfo.setReachMode(FlowInfo.UNREACHABLE);
+		elseFlowInfo.setReachMode(FlowInfo.UNREACHABLE_OR_DEAD);
 	}
 	if (((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0) && 
 			((thenFlowInfo.tagBits & FlowInfo.UNREACHABLE) != 0)) {
@@ -99,7 +99,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		thenFlowInfo = this.thenStatement.analyseCode(currentScope, flowContext, thenFlowInfo);
 	}
 	// code gen: optimizing the jump around the ELSE part
-	if ((thenFlowInfo.tagBits & FlowInfo.UNREACHABLE) != 0) {
+	if ((thenFlowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) != 0) {
 		this.bits |= ASTNode.ThenExit;
 	}
 
@@ -164,10 +164,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	if (hasThenPart) {
 		BranchLabel falseLabel = null;
 		// generate boolean condition only if needed
-		if (((this.bits & ASTNode.IsElseStatementUnreachable) != 0) ||
-				(cst != Constant.NotAConstant && cst.booleanValue() == true)) {
-			// No need to generate if condition statement when we know that only the then action
-			// will be executed
+		if (cst != Constant.NotAConstant && cst.booleanValue() == true) {
 			this.condition.generateCode(currentScope, codeStream, false);
 		} else {
 			this.condition.generateOptimizedBoolean(
@@ -206,10 +203,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 		}
 	} else if (hasElsePart) {
 		// generate boolean condition only if needed
-		if (((this.bits & ASTNode.IsThenStatementUnreachable) != 0) ||
-				(cst != Constant.NotAConstant && cst.booleanValue() == false)) {
-			// No need to generate if condition statement when we know that only the else action
-			// will be executed
+		if (cst != Constant.NotAConstant && cst.booleanValue() == false) {
 			this.condition.generateCode(currentScope, codeStream, false);
 		} else {
 			this.condition.generateOptimizedBoolean(

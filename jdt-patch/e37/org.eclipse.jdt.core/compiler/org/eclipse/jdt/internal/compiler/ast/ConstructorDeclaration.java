@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for Bug 343713 - [compiler] bogus line number in constructor of inner class in 1.5 compliance
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -156,7 +157,7 @@ public void analyseCode(ClassScope classScope, InitializationFlowContext initial
 			}
 		}
 		// check for missing returning path
-		if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0) {
+		if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0) {
 			this.bits |= ASTNode.NeedFreeReturn;
 		}
 
@@ -255,16 +256,19 @@ public void generateSyntheticFieldInitializationsIfNecessary(MethodScope methodS
 	NestedTypeBinding nestedType = (NestedTypeBinding) declaringClass;
 
 	SyntheticArgumentBinding[] syntheticArgs = nestedType.syntheticEnclosingInstances();
-	for (int i = 0, max = syntheticArgs == null ? 0 : syntheticArgs.length; i < max; i++) {
+	if (syntheticArgs != null) {
+		for (int i = 0, max = syntheticArgs.length; i < max; i++) {
 		SyntheticArgumentBinding syntheticArg;
 		if ((syntheticArg = syntheticArgs[i]).matchingField != null) {
 			codeStream.aload_0();
 			codeStream.load(syntheticArg);
 			codeStream.fieldAccess(Opcodes.OPC_putfield, syntheticArg.matchingField, null /* default declaringClass */);
 		}
+	}
 	}
 	syntheticArgs = nestedType.syntheticOuterLocalVariables();
-	for (int i = 0, max = syntheticArgs == null ? 0 : syntheticArgs.length; i < max; i++) {
+	if (syntheticArgs != null) {
+		for (int i = 0, max = syntheticArgs.length; i < max; i++) {
 		SyntheticArgumentBinding syntheticArg;
 		if ((syntheticArg = syntheticArgs[i]).matchingField != null) {
 			codeStream.aload_0();
@@ -272,6 +276,7 @@ public void generateSyntheticFieldInitializationsIfNecessary(MethodScope methodS
 			codeStream.fieldAccess(Opcodes.OPC_putfield, syntheticArg.matchingField, null /* default declaringClass */);
 		}
 	}
+}
 }
 
 private void internalGenerateCode(ClassScope classScope, ClassFile classFile) {
@@ -331,6 +336,7 @@ private void internalGenerateCode(ClassScope classScope, ClassFile classFile) {
 
 		if (needFieldInitializations && preInitSyntheticFields){
 			generateSyntheticFieldInitializationsIfNecessary(this.scope, codeStream, declaringClass);
+			codeStream.recordPositionsFrom(0, this.bodyStart);
 		}
 		// generate constructor call
 		if (this.constructorCall != null) {

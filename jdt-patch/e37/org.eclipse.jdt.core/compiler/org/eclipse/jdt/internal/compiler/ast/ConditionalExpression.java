@@ -7,7 +7,10 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Stephen Herrmann <stephan@cs.tu-berlin.de> -  Contributions for bugs 133125, 292478
+ *     Stephen Herrmann <stephan@cs.tu-berlin.de> -  Contributions for
+ *     						bug 133125 - [compiler][null] need to report the null status of expressions and analyze them simultaneously
+ *     						bug 292478 - Report potentially null across variable assignment
+ * 							bug 324178 - [null] ConditionalExpression.nullStatus(..) doesn't take into account the analysis of condition itself
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -29,6 +32,9 @@ public class ConditionalExpression extends OperatorExpression {
 	int trueInitStateIndex = -1;
 	int falseInitStateIndex = -1;
 	int mergedInitStateIndex = -1;
+
+	// we compute and store the null status during analyseCode (https://bugs.eclipse.org/324178):
+	private int nullStatus = FlowInfo.UNKNOWN;
 
 	public ConditionalExpression(
 		Expression condition,
@@ -55,7 +61,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		FlowInfo trueFlowInfo = flowInfo.initsWhenTrue().copy();
 		if (isConditionOptimizedFalse) {
 			if ((mode & FlowInfo.UNREACHABLE) == 0) {
-				trueFlowInfo.setReachMode(FlowInfo.UNREACHABLE);
+				trueFlowInfo.setReachMode(FlowInfo.UNREACHABLE_OR_DEAD);
 			}
 			if (!isKnowDeadCodePattern(this.condition) || currentScope.compilerOptions().reportDeadCodeInTrivialIfStatement) {
 				this.valueIfTrue.complainIfUnreachable(trueFlowInfo, currentScope, initialComplaintLevel);
@@ -68,7 +74,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		FlowInfo falseFlowInfo = flowInfo.initsWhenFalse().copy();
 		if (isConditionOptimizedTrue) {
 			if ((mode & FlowInfo.UNREACHABLE) == 0) {
-				falseFlowInfo.setReachMode(FlowInfo.UNREACHABLE);
+				falseFlowInfo.setReachMode(FlowInfo.UNREACHABLE_OR_DEAD);
 			}
 			if (!isKnowDeadCodePattern(this.condition) || currentScope.compilerOptions().reportDeadCodeInTrivialIfStatement) {
 				this.valueIfFalse.complainIfUnreachable(falseFlowInfo, currentScope, initialComplaintLevel);
@@ -81,10 +87,30 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		FlowInfo mergedInfo;
 		if (isConditionOptimizedTrue){
 			mergedInfo = trueFlowInfo.addPotentialInitializationsFrom(falseFlowInfo);
+			this.nullStatus = this.valueIfTrue.nullStatus(trueFlowInfo);
 		} else if (isConditionOptimizedFalse) {
 			mergedInfo = falseFlowInfo.addPotentialInitializationsFrom(trueFlowInfo);
+			this.nullStatus = this.valueIfFalse.nullStatus(falseFlowInfo);
 		} else {
-			// if ((t && (v = t)) ? t : t && (v = f)) r = v;  -- ok
+			// this block must meet two conflicting requirements (see https://bugs.eclipse.org/324178):
+			// (1) For null analysis of "Object o2 = (o1 != null) ? o1 : new Object();" we need to distinguish
+			//     the paths *originating* from the evaluation of the condition to true/false respectively.
+			//     This is used to determine the possible null status of the entire conditional expression.
+			// (2) For definite assignment analysis (JLS 16.1.5) of boolean conditional expressions of the form
+			//     "if (c1 ? expr1 : expr2) use(v);" we need to check whether any variable v will be definitely
+			//     assigned whenever the entire conditional expression evaluates to true (to reach the then branch).
+			//     I.e., we need to collect flowInfo *towards* the overall outcome true/false 
+			//     (regardless of the evaluation of the condition).
+			
+			// to support (1) use the infos of both branches originating from the condition for computing the nullStatus:
+			computeNullStatus(trueFlowInfo, falseFlowInfo);
+			
+			// to support (2) we split the true/false branches according to their inner structure. Consider this:
+			// if (b ? false : (true && (v = false))) return v; -- ok
+			// - expr1 ("false") has no path towards true (mark as unreachable)
+			// - expr2 ("(true && (v = false))") has a branch towards true on which v is assigned.
+			//   -> merging these two branches yields: v is assigned
+			// - the paths towards false are irrelevant since the enclosing if has no else.
 			cst = this.optimizedIfTrueConstant;
 			boolean isValueIfTrueOptimizedTrue = cst != null && cst != Constant.NotAConstant && cst.booleanValue() == true;
 			boolean isValueIfTrueOptimizedFalse = cst != null && cst != Constant.NotAConstant && cst.booleanValue() == false;
@@ -93,31 +119,55 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 			boolean isValueIfFalseOptimizedTrue = cst != null && cst != Constant.NotAConstant && cst.booleanValue() == true;
 			boolean isValueIfFalseOptimizedFalse = cst != null && cst != Constant.NotAConstant && cst.booleanValue() == false;
 
-			UnconditionalFlowInfo trueInfoWhenTrue = trueFlowInfo.initsWhenTrue().unconditionalCopy();
-			UnconditionalFlowInfo falseInfoWhenTrue = falseFlowInfo.initsWhenTrue().unconditionalCopy();
-			UnconditionalFlowInfo trueInfoWhenFalse = trueFlowInfo.initsWhenFalse().unconditionalInits();
-			UnconditionalFlowInfo falseInfoWhenFalse = falseFlowInfo.initsWhenFalse().unconditionalInits();
+			UnconditionalFlowInfo trueFlowTowardsTrue = trueFlowInfo.initsWhenTrue().unconditionalCopy();
+			UnconditionalFlowInfo falseFlowTowardsTrue = falseFlowInfo.initsWhenTrue().unconditionalCopy();
+			UnconditionalFlowInfo trueFlowTowardsFalse = trueFlowInfo.initsWhenFalse().unconditionalInits();
+			UnconditionalFlowInfo falseFlowTowardsFalse = falseFlowInfo.initsWhenFalse().unconditionalInits();
 			if (isValueIfTrueOptimizedFalse) {
-				trueInfoWhenTrue.setReachMode(FlowInfo.UNREACHABLE);				
+				trueFlowTowardsTrue.setReachMode(FlowInfo.UNREACHABLE_OR_DEAD);				
 			}
 			if (isValueIfFalseOptimizedFalse) {
-				falseInfoWhenTrue.setReachMode(FlowInfo.UNREACHABLE);	
+				falseFlowTowardsTrue.setReachMode(FlowInfo.UNREACHABLE_OR_DEAD);	
 			}
 			if (isValueIfTrueOptimizedTrue) {
-				trueInfoWhenFalse.setReachMode(FlowInfo.UNREACHABLE);	
+				trueFlowTowardsFalse.setReachMode(FlowInfo.UNREACHABLE_OR_DEAD);	
 			}
 			if (isValueIfFalseOptimizedTrue) {
-				falseInfoWhenFalse.setReachMode(FlowInfo.UNREACHABLE);	
+				falseFlowTowardsFalse.setReachMode(FlowInfo.UNREACHABLE_OR_DEAD);	
 			}
 			mergedInfo =
 				FlowInfo.conditional(
-					trueInfoWhenTrue.mergedWith(falseInfoWhenTrue),
-					trueInfoWhenFalse.mergedWith(falseInfoWhenFalse));
+					trueFlowTowardsTrue.mergedWith(falseFlowTowardsTrue),
+					trueFlowTowardsFalse.mergedWith(falseFlowTowardsFalse));
 		}
 		this.mergedInitStateIndex =
 			currentScope.methodScope().recordInitializationStates(mergedInfo);
 		mergedInfo.setReachMode(mode);
 		return mergedInfo;
+	}
+
+	private void computeNullStatus(FlowInfo trueBranchInfo, FlowInfo falseBranchInfo) {
+		// given that the condition cannot be optimized to a constant 
+		// we now merge the nullStatus from both branches:
+		int ifTrueNullStatus = this.valueIfTrue.nullStatus(trueBranchInfo);
+		int ifFalseNullStatus = this.valueIfFalse.nullStatus(falseBranchInfo);
+
+		if (ifTrueNullStatus == ifFalseNullStatus) {
+			this.nullStatus = ifTrueNullStatus;
+			return;
+		}
+		// is there a chance of null (or non-null)? -> potentially null etc.
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=133125
+		int status = 0;
+		int combinedStatus = ifTrueNullStatus|ifFalseNullStatus;
+		if ((combinedStatus & (FlowInfo.NULL|FlowInfo.POTENTIALLY_NULL)) != 0)
+			status |= FlowInfo.POTENTIALLY_NULL;
+		if ((combinedStatus & (FlowInfo.NON_NULL|FlowInfo.POTENTIALLY_NON_NULL)) != 0)
+			status |= FlowInfo.POTENTIALLY_NON_NULL;
+		if ((combinedStatus & (FlowInfo.UNKNOWN|FlowInfo.POTENTIALLY_UNKNOWN)) != 0)
+			status |= FlowInfo.POTENTIALLY_UNKNOWN;
+		if (status > 0)
+			this.nullStatus = status;
 	}
 
 	/**
@@ -307,31 +357,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 	}
 
 public int nullStatus(FlowInfo flowInfo) {
-	Constant cst = this.condition.optimizedBooleanConstant();
-	if (cst != Constant.NotAConstant) {
-		if (cst.booleanValue()) {
-			return this.valueIfTrue.nullStatus(flowInfo);
-		}
-		return this.valueIfFalse.nullStatus(flowInfo);
-	}
-	int ifTrueNullStatus = this.valueIfTrue.nullStatus(flowInfo),
-	    ifFalseNullStatus = this.valueIfFalse.nullStatus(flowInfo);
-	if (ifTrueNullStatus == ifFalseNullStatus) {
-		return ifTrueNullStatus;
-	}
-	// is there a chance of null (or non-null)? -> potentially null etc.
-	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=133125
-	int status = 0;
-	int combinedStatus = ifTrueNullStatus|ifFalseNullStatus;
-	if ((combinedStatus & (FlowInfo.NULL|FlowInfo.POTENTIALLY_NULL)) != 0)
-		status |= FlowInfo.POTENTIALLY_NULL;
-	if ((combinedStatus & (FlowInfo.NON_NULL|FlowInfo.POTENTIALLY_NON_NULL)) != 0)
-		status |= FlowInfo.POTENTIALLY_NON_NULL;
-	if ((combinedStatus & (FlowInfo.UNKNOWN|FlowInfo.POTENTIALLY_UNKNOWN)) != 0)
-		status |= FlowInfo.POTENTIALLY_UNKNOWN;
-	if (status > 0)
-		return status;
-	return FlowInfo.UNKNOWN;
+		return this.nullStatus;
 }
 
 	public Constant optimizedBooleanConstant() {

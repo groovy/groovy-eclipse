@@ -38,7 +38,7 @@ public class LocalDeclaration extends AbstractVariableDeclaration {
 
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	// record variable initialization if any
-	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0) {
+	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0) {
 		this.bits |= ASTNode.IsLocalDeclarationReachable; // only set if actually reached
 	}
 	if (this.binding != null && this.type.resolvedType instanceof TypeVariableBinding) {
@@ -71,11 +71,12 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	if ((this.initialization.implicitConversion & TypeIds.UNBOXING) != 0) {
 		this.initialization.checkNPE(currentScope, flowContext, flowInfo);
 	}
-	int nullStatus = this.initialization.nullStatus(flowInfo);
+	
 	flowInfo =
 		this.initialization
 			.analyseCode(currentScope, flowContext, flowInfo)
 			.unconditionalInits();
+	int nullStatus = this.initialization.nullStatus(flowInfo);
 	if (!flowInfo.isDefinitelyAssigned(this.binding)){// for local variable debug attributes
 		this.bits |= FirstAssignmentToLocal;
 	} else {

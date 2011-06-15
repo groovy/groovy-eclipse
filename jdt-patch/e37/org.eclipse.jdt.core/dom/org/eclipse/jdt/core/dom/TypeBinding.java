@@ -177,7 +177,6 @@ class TypeBinding implements ITypeBinding {
 	public ITypeBinding getGenericTypeOfWildcardType() {
 		switch (this.binding.kind()) {
 			case Binding.WILDCARD_TYPE :
-			case Binding.INTERSECTION_TYPE :
 				WildcardBinding wildcardBinding = (WildcardBinding) this.binding;
 				if (wildcardBinding.genericType != null) {
 					return this.resolver.getTypeBinding(wildcardBinding.genericType);

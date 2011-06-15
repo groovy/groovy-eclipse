@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -84,6 +84,11 @@ public class UserLibraryManager {
 						instancePreferences.remove(propertyName);
 						preferencesNeedFlush = true;
 						continue;
+					} catch (ClasspathEntry.AssertionFailedException e) {
+						Util.log(e, "Exception while initializing user library " + libName); //$NON-NLS-1$
+						instancePreferences.remove(propertyName);
+						preferencesNeedFlush = true;
+						continue;
 					}
 					this.userLibraries.put(libName, library);
 				}
@@ -148,6 +153,8 @@ public class UserLibraryManager {
 			Util.log(e, "Exception while decoding user library '"+ libName +"'."); //$NON-NLS-1$ //$NON-NLS-2$
 		} catch (JavaModelException e) {
 			Util.log(e, "Exception while setting user library '"+ libName +"'."); //$NON-NLS-1$ //$NON-NLS-2$
+		} catch (ClasspathEntry.AssertionFailedException ase) {
+			Util.log(ase, "Exception while decoding user library '"+ libName +"'."); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 

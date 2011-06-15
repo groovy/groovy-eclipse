@@ -1,5 +1,5 @@
 /*******************************************************************************
- *  Copyright (c) 2005, 2009 IBM Corporation and others.
+ *  Copyright (c) 2005, 2011 IBM Corporation and others.
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
  *  which accompanies this distribution, and is available at
@@ -9,6 +9,7 @@
  *     Ben Konrath <ben@bagu.org> - initial implementation
  *     Red Hat Incorporated - improvements based on comments from JDT developers
  *     IBM Corporation - Code review and integration
+ *     IBM Corporation - Fix for 340181
  *******************************************************************************/
 package org.eclipse.jdt.core.formatter;
 
@@ -36,9 +37,13 @@ import org.eclipse.text.edits.TextEdit;
 /**
  * Implements an Eclipse Application for org.eclipse.jdt.core.JavaCodeFormatter.
  *
- * There are a couple improvements that could be made: 1. Make a list of all the
+ * <p>On MacOS, when invoked using the Eclipse executable, the "user.dir" property is set to the folder
+ * in which the eclipse.ini file is located. This makes it harder to use relative paths to point to the 
+ * files to be formatted or the configuration file to use to set the code formatter's options.</p>
+ *
+ * <p>There are a couple improvements that could be made: 1. Make a list of all the
  * files first so that a file does not get formatted twice. 2. Use a text based
- * progress monitor for output.
+ * progress monitor for output.</p>
  *
  * @author Ben Konrath <bkonrath@redhat.com>
  * @since 3.2
@@ -60,6 +65,8 @@ public class CodeFormatterApplication implements IApplication {
 
 		public static String CommandLineErrorConfig;
 
+		public static String CommandLineErrorFileTryFullPath;
+
 		public static String CommandLineErrorFile;
 
 		public static String CommandLineErrorFileDir;
@@ -73,6 +80,8 @@ public class CodeFormatterApplication implements IApplication {
 		public static String CommandLineStart;
 
 		public static String CommandLineUsage;
+
+		public static String ConfigFileNotFoundErrorTryFullPath;
 
 		public static String ConfigFileReadingError;
 
@@ -292,7 +301,16 @@ public class CodeFormatterApplication implements IApplication {
 						}
 						filesToFormat[fileCounter++] = file;
 					} else {
-						displayHelp(Messages.bind(Messages.CommandLineErrorFile, currentArg));
+						String canonicalPath;
+						try {
+							canonicalPath = file.getCanonicalPath();
+						} catch(IOException e2) {
+							canonicalPath = file.getAbsolutePath();
+						}
+						String errorMsg = file.isAbsolute()?
+										  Messages.bind(Messages.CommandLineErrorFile, canonicalPath):
+										  Messages.bind(Messages.CommandLineErrorFileTryFullPath, canonicalPath);
+						displayHelp(errorMsg);
 						return null;
 					}
 					break;
@@ -332,17 +350,35 @@ public class CodeFormatterApplication implements IApplication {
 
 	/**
 	 * Return a Java Properties file representing the options that are in the
-	 * specified config file.
+	 * specified configuration file.
 	 */
 	private Properties readConfig(String filename) {
 		BufferedInputStream stream = null;
+		File configFile = new File(filename);
 		try {
-			stream = new BufferedInputStream(new FileInputStream(new File(filename)));
+			stream = new BufferedInputStream(new FileInputStream(configFile));
 			final Properties formatterOptions = new Properties();
 			formatterOptions.load(stream);
 			return formatterOptions;
 		} catch (IOException e) {
-			Util.log(e, Messages.bind(Messages.ConfigFileReadingError));
+			String canonicalPath = null;
+			try {
+				canonicalPath = configFile.getCanonicalPath();
+			} catch(IOException e2) {
+				canonicalPath = configFile.getAbsolutePath();
+			}
+			String errorMessage;
+			if (!configFile.exists() && !configFile.isAbsolute()) {
+				errorMessage = Messages.bind(Messages.ConfigFileNotFoundErrorTryFullPath, new Object[] {
+					canonicalPath,
+					System.getProperty("user.dir") //$NON-NLS-1$
+				});
+
+			} else {
+				errorMessage = Messages.bind(Messages.ConfigFileReadingError, canonicalPath);
+			}
+			Util.log(e, errorMessage);
+			System.err.println(errorMessage);
 		} finally {
 			if (stream != null) {
 				try {

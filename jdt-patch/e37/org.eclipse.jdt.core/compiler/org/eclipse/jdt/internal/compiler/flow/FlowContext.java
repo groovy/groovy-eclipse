@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -530,7 +530,7 @@ public void recordReturnFrom(UnconditionalFlowInfo flowInfo) {
 }
 
 public void recordSettingFinal(VariableBinding variable, Reference finalReference, FlowInfo flowInfo) {
-	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0)	{
+	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0)	{
 	// for initialization inside looping statement that effectively loops
 	FlowContext context = this;
 	while (context != null) {
@@ -578,14 +578,14 @@ public void recordUsingNullReference(Scope scope, LocalVariableBinding local,
 						scope.problemReporter().localVariableRedundantCheckOnNonNull(local, reference);
 					}
 					if (!flowInfo.isMarkedAsNullOrNonNullInAssertExpression(local)) {
-						flowInfo.initsWhenFalse().setReachMode(FlowInfo.UNREACHABLE);
+						flowInfo.initsWhenFalse().setReachMode(FlowInfo.UNREACHABLE_BY_NULLANALYSIS);
 					}
 				} else {
 					if ((this.tagBits & FlowContext.HIDE_NULL_COMPARISON_WARNING) == 0) {
 						scope.problemReporter().localVariableNonNullComparedToNull(local, reference);
 					}
 					if (!flowInfo.isMarkedAsNullOrNonNullInAssertExpression(local)) {
-						flowInfo.initsWhenTrue().setReachMode(FlowInfo.UNREACHABLE);
+						flowInfo.initsWhenTrue().setReachMode(FlowInfo.UNREACHABLE_BY_NULLANALYSIS);
 					}
 				}
 				return;
@@ -609,7 +609,7 @@ public void recordUsingNullReference(Scope scope, LocalVariableBinding local,
 							scope.problemReporter().localVariableRedundantCheckOnNull(local, reference);
 						}
 						if (!flowInfo.isMarkedAsNullOrNonNullInAssertExpression(local)) {
-							flowInfo.initsWhenFalse().setReachMode(FlowInfo.UNREACHABLE);
+							flowInfo.initsWhenFalse().setReachMode(FlowInfo.UNREACHABLE_BY_NULLANALYSIS);
 						}
 						return;
 					case FlowContext.IN_COMPARISON_NON_NULL:
@@ -621,7 +621,7 @@ public void recordUsingNullReference(Scope scope, LocalVariableBinding local,
 							scope.problemReporter().localVariableNullComparedToNonNull(local, reference);
 						}
 						if (!flowInfo.isMarkedAsNullOrNonNullInAssertExpression(local)) {
-							flowInfo.initsWhenTrue().setReachMode(FlowInfo.UNREACHABLE);
+							flowInfo.initsWhenTrue().setReachMode(FlowInfo.UNREACHABLE_BY_NULLANALYSIS);
 						}
 						return;
 					case FlowContext.IN_ASSIGNMENT:

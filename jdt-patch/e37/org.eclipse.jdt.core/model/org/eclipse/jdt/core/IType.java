@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -906,11 +906,17 @@ public interface IType extends IMember, IAnnotatable {
 	boolean isAnnotation() throws JavaModelException;
 
 	/**
-	 * Returns whether this type represents a local type.
+	 * Returns whether this type represents a local type. For an anonymous type, 
+	 * this method returns true.
+	 * <p>
+	 * Note: This deviates from JLS3 14.3, which states that anonymous types are 
+	 * not local types since they do not have a name.
+	 * </p>
 	 *
 	 * @exception JavaModelException if this element does not exist or if an
 	 *		exception occurs while accessing its corresponding resource.
 	 * @return true if this type represents a local type, false otherwise
+	 * @see org.eclipse.jdt.core.dom.ITypeBinding#isLocal()
 	 * @since 2.0
 	 */
 	boolean isLocal() throws JavaModelException;

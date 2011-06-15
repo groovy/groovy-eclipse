@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - contribution for bug 337868 - [compiler][model] incomplete support for package-info.java when using SearchableEnvironment
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
@@ -22,6 +23,7 @@ import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.env.ISourceType;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.core.search.BasicSearchEngine;
 import org.eclipse.jdt.internal.core.search.IRestrictedAccessConstructorRequestor;
 import org.eclipse.jdt.internal.core.search.IRestrictedAccessTypeRequestor;
@@ -134,8 +136,13 @@ public class SearchableEnvironment
 							sourceTypes[index++] = otherType;
 					}
 					return new NameEnvironmentAnswer(sourceTypes, answer.restriction);
-				} catch (JavaModelException npe) {
-					// fall back to using owner
+				} catch (JavaModelException jme) {
+					if (jme.isDoesNotExist() && String.valueOf(TypeConstants.PACKAGE_INFO_NAME).equals(typeName)) {
+						// in case of package-info.java the type doesn't exist in the model,
+						// but the CU may still help in order to fetch package level annotations.
+						return new NameEnvironmentAnswer((ICompilationUnit)answer.type.getParent(), answer.restriction);
+					}
+					// no usable answer
 				}
 			}
 		}

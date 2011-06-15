@@ -61,7 +61,7 @@ public class Clinit extends AbstractMethodDeclaration {
 					FlowInfo.DEAD_END);
 
 			// check for missing returning path
-			if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0) {
+			if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0) {
 				this.bits |= ASTNode.NeedFreeReturn;
 			}
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,9 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Benjamin Muskalla - Contribution for bug 239066
- *     Stephan Herrmann  - Contribution for bug 236385
+ *     Stephan Herrmann  - Contributions for 
+ *     						bug 236385 - [compiler] Warn for potential programming problem if an object is created but not used
+ *     						bug 338303 - Warning about Redundant assignment conflicts with definite assignment
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.problem;
 
@@ -1806,14 +1808,24 @@ public void fieldHiding(FieldDeclaration fieldDecl, Binding hiddenVariable) {
 			&& field.isStatic()
 			&& field.isFinal()
 			&& TypeBinding.LONG == field.type) {
-				return; // do not report unused serialVersionUID field
+		ReferenceBinding referenceBinding = field.declaringClass;
+		if (referenceBinding != null) {
+			if (referenceBinding.findSuperTypeOriginatingFrom(TypeIds.T_JavaIoSerializable, false /*Serializable is not a class*/) != null) {
+				return; // do not report unused serialVersionUID field for class that implements Serializable
+			}
+		}
 	}
 	if (CharOperation.equals(TypeConstants.SERIALPERSISTENTFIELDS, field.name)
 			&& field.isStatic()
 			&& field.isFinal()
 			&& field.type.dimensions() == 1
 			&& CharOperation.equals(TypeConstants.CharArray_JAVA_IO_OBJECTSTREAMFIELD, field.type.leafComponentType().readableName())) {
-				return; // do not report unused serialPersistentFields field
+		ReferenceBinding referenceBinding = field.declaringClass;
+		if (referenceBinding != null) {
+			if (referenceBinding.findSuperTypeOriginatingFrom(TypeIds.T_JavaIoSerializable, false /*Serializable is not a class*/) != null) {
+				return; // do not report unused serialVersionUID field for class that implements Serializable
+			}
+		}
 	}
 	boolean isLocal = hiddenVariable instanceof LocalVariableBinding;
 	int severity = computeSeverity(isLocal ? IProblem.FieldHidingLocalVariable : IProblem.FieldHidingField);
@@ -2087,6 +2099,29 @@ public void hierarchyCircularity(SourceTypeBinding sourceType, ReferenceBinding 
 			IProblem.HierarchyCircularity,
 			new String[] {new String(sourceType.readableName()), new String(superType.readableName())},
 			new String[] {new String(sourceType.shortReadableName()), new String(superType.shortReadableName())},
+			start,
+			end);
+}
+
+public void hierarchyCircularity(TypeVariableBinding type, ReferenceBinding superType, TypeReference reference) {
+	int start = 0;
+	int end = 0;
+
+	start = reference.sourceStart;
+	end = reference.sourceEnd;
+
+	if (type == superType)
+		this.handle(
+			IProblem.HierarchyCircularitySelfReference,
+			new String[] {new String(type.readableName()) },
+			new String[] {new String(type.shortReadableName()) },
+			start,
+			end);
+	else
+		this.handle(
+			IProblem.HierarchyCircularity,
+			new String[] {new String(type.readableName()), new String(superType.readableName())},
+			new String[] {new String(type.shortReadableName()), new String(superType.shortReadableName())},
 			start,
 			end);
 }
@@ -3798,14 +3833,6 @@ public void invalidTypeForCollectionTarget14(Expression expression) {
 			expression.sourceStart,
 			expression.sourceEnd);
 }
-public void invalidTypeReference(Expression expression) {
-	this.handle(
-		IProblem.InvalidTypeExpression,
-		NoArgument,
-		NoArgument,
-		expression.sourceStart,
-		expression.sourceEnd);
-}
 public void invalidTypeToSynchronize(Expression expression, TypeBinding type) {
 	this.handle(
 		IProblem.InvalidTypeToSynchronized,
@@ -4972,6 +4999,8 @@ public void localVariableRedundantCheckOnNull(LocalVariableBinding local, ASTNod
 }
 
 public void localVariableRedundantNullAssignment(LocalVariableBinding local, ASTNode location) {
+	if ((location.bits & ASTNode.FirstAssignmentToLocal) != 0) // https://bugs.eclipse.org/338303 - Warning about Redundant assignment conflicts with definite assignment
+		return;
 	int severity = computeSeverity(IProblem.RedundantLocalVariableNullAssignment);
 	if (severity == ProblemSeverities.Ignore) return;
 	String[] arguments = new String[] {new String(local.name)  };
@@ -5275,15 +5304,6 @@ public void mustDefineDimensionsOrInitializer(ArrayAllocationExpression expressi
 		NoArgument,
 		expression.sourceStart,
 		expression.sourceEnd);
-}
-public void mustSpecifyPackage(CompilationUnitDeclaration compUnitDecl) {
-	String[] arguments = new String[] {new String(compUnitDecl.getFileName())};
-	this.handle(
-		IProblem.MustSpecifyPackage,
-		arguments,
-		arguments,
-		compUnitDecl.sourceStart,
-		compUnitDecl.sourceStart + 1);
 }
 public void mustUseAStaticMethod(MessageSend messageSend, MethodBinding method) {
 	this.handle(
@@ -7205,8 +7225,12 @@ public void unsafeReturnTypeOverride(MethodBinding currentMethod, MethodBinding 
 			end);
 }
 public void unsafeTypeConversion(Expression expression, TypeBinding expressionType, TypeBinding expectedType) {
+	if (this.options.sourceLevel < ClassFileConstants.JDK1_5) return; // https://bugs.eclipse.org/bugs/show_bug.cgi?id=305259
 	int severity = computeSeverity(IProblem.UnsafeTypeConversion);
 	if (severity == ProblemSeverities.Ignore) return;
+	if (!this.options.reportUnavoidableGenericTypeProblems && expression.forcedToBeRaw(this.referenceContext)) {
+		return;
+	}
 	this.handle(
 		IProblem.UnsafeTypeConversion,
 		new String[] { new String(expressionType.readableName()), new String(expectedType.readableName()), new String(expectedType.erasure().readableName()) },
@@ -7342,14 +7366,24 @@ public void unusedPrivateField(FieldDeclaration fieldDecl) {
 			&& field.isStatic()
 			&& field.isFinal()
 			&& TypeBinding.LONG == field.type) {
-				return; // do not report unused serialVersionUID field
+		ReferenceBinding referenceBinding = field.declaringClass;
+		if (referenceBinding != null) {
+			if (referenceBinding.findSuperTypeOriginatingFrom(TypeIds.T_JavaIoSerializable, false /*Serializable is not a class*/) != null) {
+				return; // do not report unused serialVersionUID field for class that implements Serializable
+			}
+		}
 	}
 	if (CharOperation.equals(TypeConstants.SERIALPERSISTENTFIELDS, field.name)
 			&& field.isStatic()
 			&& field.isFinal()
 			&& field.type.dimensions() == 1
 			&& CharOperation.equals(TypeConstants.CharArray_JAVA_IO_OBJECTSTREAMFIELD, field.type.leafComponentType().readableName())) {
+		ReferenceBinding referenceBinding = field.declaringClass;
+		if (referenceBinding != null) {
+			if (referenceBinding.findSuperTypeOriginatingFrom(TypeIds.T_JavaIoSerializable, false /*Serializable is not a class*/) != null) {
 				return; // do not report unused serialPersistentFields field
+	}
+		}
 	}
 	this.handle(
 			IProblem.UnusedPrivateField,

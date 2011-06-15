@@ -11,7 +11,16 @@
 package org.eclipse.jdt.internal.core;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.core.*;
+import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.IAnnotation;
+import org.eclipse.jdt.core.ILocalVariable;
+import org.eclipse.jdt.core.IMemberValuePair;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeParameter;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation;
@@ -60,6 +69,51 @@ public IAnnotation[] getAnnotations() throws JavaModelException {
 	IBinaryMethod info = (IBinaryMethod) getElementInfo();
 	IBinaryAnnotation[] binaryAnnotations = info.getAnnotations();
 	return getAnnotations(binaryAnnotations, info.getTagBits());
+}
+public ILocalVariable[] getParameters() throws JavaModelException {
+	IBinaryMethod info = (IBinaryMethod) getElementInfo();
+	int length = this.parameterTypes.length;
+	if (length == 0) {
+		return LocalVariable.NO_LOCAL_VARIABLES;
+	}
+	ILocalVariable[] localVariables = new ILocalVariable[length];
+	char[][] argumentNames = info.getArgumentNames();
+	if (argumentNames == null || argumentNames.length < length) {
+		argumentNames = new char[length][];
+		for (int j = 0; j < length; j++) {
+			argumentNames[j] = ("arg" + j).toCharArray(); //$NON-NLS-1$
+		}
+	}
+	for (int i= 0; i < length; i++) {
+		LocalVariable localVariable = new LocalVariable(
+				this,
+				new String(argumentNames[i]),
+				0,
+				-1,
+				0,
+				-1,
+				this.parameterTypes[i],
+				null,
+				-1,
+				true);
+		localVariables[i] = localVariable;
+		IAnnotation[] annotations = getAnnotations(localVariable, info.getParameterAnnotations(i), info.getTagBits());
+		localVariable.annotations = annotations;
+	}
+	return localVariables;
+}
+private IAnnotation[] getAnnotations(JavaElement annotationParent, IBinaryAnnotation[] binaryAnnotations, long tagBits) {
+	IAnnotation[] standardAnnotations = getStandardAnnotations(tagBits);
+	if (binaryAnnotations == null)
+		return standardAnnotations;
+	int length = binaryAnnotations.length;
+	int standardLength = standardAnnotations.length;
+	IAnnotation[] annotations = new IAnnotation[length + standardLength];
+	for (int i = 0; i < length; i++) {
+		annotations[i] = Util.getAnnotation(annotationParent, binaryAnnotations[i], null);
+	}
+	System.arraycopy(standardAnnotations, 0, annotations, length, standardLength);
+	return annotations;
 }
 public IMemberValuePair getDefaultValue() throws JavaModelException {
 	IBinaryMethod info = (IBinaryMethod) getElementInfo();

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -799,7 +799,7 @@ private void buildMoreCompletionContext(Expression expression) {
 				Expression castType;
 				if(this.expressionPtr > 0
 					&& ((castType = this.expressionStack[this.expressionPtr-1]) instanceof TypeReference)) {
-					CastExpression cast = new CastExpression(expression, castType);
+					CastExpression cast = new CastExpression(expression, (TypeReference) castType);
 					cast.sourceStart = castType.sourceStart;
 					cast.sourceEnd= expression.sourceEnd;
 					this.assistNodeParent = cast;
@@ -875,8 +875,6 @@ private void buildMoreCompletionContext(Expression expression) {
 					&& this.expressionStack[this.expressionPtr].sourceStart > info) {
 					this.expressionLengthPtr--;
 				}
-
-				this.lastCheckPoint = this.scanner.currentPosition;
 
 				if(topKnownElementKind(COMPLETION_OR_ASSIST_PARSER, 1) == K_ARRAY_CREATION) {
 					ArrayAllocationExpression allocationExpression = new ArrayAllocationExpression();
@@ -2058,20 +2056,24 @@ protected void consumeCaseLabel() {
 protected void consumeCastExpressionWithPrimitiveType() {
 	popElement(K_CAST_STATEMENT);
 
-	Expression exp, cast, castType;
+	Expression exp;
+	Expression cast;
+	TypeReference castType;
 	this.expressionPtr--;
 	this.expressionLengthPtr--;
-	this.expressionStack[this.expressionPtr] = cast = new CastExpression(exp = this.expressionStack[this.expressionPtr+1], castType = this.expressionStack[this.expressionPtr]);
+	this.expressionStack[this.expressionPtr] = cast = new CastExpression(exp = this.expressionStack[this.expressionPtr+1], castType = (TypeReference) this.expressionStack[this.expressionPtr]);
 	cast.sourceStart = castType.sourceStart - 1;
 	cast.sourceEnd = exp.sourceEnd;
 }
 protected void consumeCastExpressionWithGenericsArray() {
 	popElement(K_CAST_STATEMENT);
 
-	Expression exp, cast, castType;
+	Expression exp;
+	Expression cast;
+	TypeReference castType;
 	this.expressionPtr--;
 	this.expressionLengthPtr--;
-	this.expressionStack[this.expressionPtr] = cast = new CastExpression(exp = this.expressionStack[this.expressionPtr + 1], castType = this.expressionStack[this.expressionPtr]);
+	this.expressionStack[this.expressionPtr] = cast = new CastExpression(exp = this.expressionStack[this.expressionPtr + 1], castType = (TypeReference) this.expressionStack[this.expressionPtr]);
 	cast.sourceStart = castType.sourceStart - 1;
 	cast.sourceEnd = exp.sourceEnd;
 }
@@ -2079,10 +2081,12 @@ protected void consumeCastExpressionWithGenericsArray() {
 protected void consumeCastExpressionWithQualifiedGenericsArray() {
 	popElement(K_CAST_STATEMENT);
 
-	Expression exp, cast, castType;
+	Expression exp;
+	Expression cast;
+	TypeReference castType;
 	this.expressionPtr--;
 	this.expressionLengthPtr--;
-	this.expressionStack[this.expressionPtr] = cast = new CastExpression(exp = this.expressionStack[this.expressionPtr + 1], castType = this.expressionStack[this.expressionPtr]);
+	this.expressionStack[this.expressionPtr] = cast = new CastExpression(exp = this.expressionStack[this.expressionPtr + 1], castType = (TypeReference) this.expressionStack[this.expressionPtr]);
 	cast.sourceStart = castType.sourceStart - 1;
 	cast.sourceEnd = exp.sourceEnd;
 }
@@ -2090,11 +2094,12 @@ protected void consumeCastExpressionWithNameArray() {
 	// CastExpression ::= PushLPAREN Name Dims PushRPAREN InsideCastExpression UnaryExpressionNotPlusMinus
 	popElement(K_CAST_STATEMENT);
 
-	Expression exp, cast, castType;
-
+	Expression exp;
+	Expression cast;
+	TypeReference castType;
 	this.expressionPtr--;
 	this.expressionLengthPtr--;
-	this.expressionStack[this.expressionPtr] = cast = new CastExpression(exp = this.expressionStack[this.expressionPtr+1], castType = this.expressionStack[this.expressionPtr]);
+	this.expressionStack[this.expressionPtr] = cast = new CastExpression(exp = this.expressionStack[this.expressionPtr+1], castType = (TypeReference) this.expressionStack[this.expressionPtr]);
 	cast.sourceStart = castType.sourceStart - 1;
 	cast.sourceEnd = exp.sourceEnd;
 }
@@ -2546,6 +2551,64 @@ protected void consumeFormalParameter(boolean isVarArgs) {
 				namePositions,
 				type,
 				this.intStack[this.intPtr + 1] & ~ClassFileConstants.AccDeprecated); // modifiers
+		// consume annotations
+		int length;
+		if ((length = this.expressionLengthStack[this.expressionLengthPtr--]) != 0) {
+			System.arraycopy(
+				this.expressionStack,
+				(this.expressionPtr -= length) + 1,
+				arg.annotations = new Annotation[length],
+				0,
+				length);
+		}
+
+		arg.isCatchArgument = topKnownElementKind(COMPLETION_OR_ASSIST_PARSER) == K_BETWEEN_CATCH_AND_RIGHT_PAREN;
+		pushOnAstStack(arg);
+
+		this.assistNode = arg;
+		this.lastCheckPoint = (int) namePositions;
+		this.isOrphanCompletionNode = true;
+
+		/* if incomplete method header, listLength counter will not have been reset,
+			indicating that some arguments are available on the stack */
+		this.listLength++;
+	}
+}
+protected void consumeCatchFormalParameter(boolean isVarArgs) {
+	if (this.indexOfAssistIdentifier() < 0) {
+		super.consumeCatchFormalParameter(isVarArgs);
+		if (this.pendingAnnotation != null) {
+			this.pendingAnnotation.potentialAnnotatedNode = this.astStack[this.astPtr];
+			this.pendingAnnotation = null;
+		}
+	} else {
+
+		this.identifierLengthPtr--;
+		char[] identifierName = this.identifierStack[this.identifierPtr];
+		long namePositions = this.identifierPositionStack[this.identifierPtr--];
+		int extendedDimensions = this.intStack[this.intPtr--];
+		int endOfEllipsis = 0;
+		if (isVarArgs) {
+			endOfEllipsis = this.intStack[this.intPtr--];
+		}
+		int firstDimensions = this.intStack[this.intPtr--];
+		final int typeDimensions = firstDimensions + extendedDimensions;
+		TypeReference type = getTypeReference(typeDimensions);
+		if (isVarArgs) {
+			type = copyDims(type, typeDimensions + 1);
+			if (extendedDimensions == 0) {
+				type.sourceEnd = endOfEllipsis;
+			}
+			type.bits |= ASTNode.IsVarArgs; // set isVarArgs
+		}
+		this.intPtr -= 2;
+		CompletionOnArgumentName arg =
+			new CompletionOnArgumentName(
+				identifierName,
+				namePositions,
+				type,
+				this.intStack[this.intPtr + 1] & ~ClassFileConstants.AccDeprecated); // modifiers
+		arg.bits &= ~ASTNode.IsArgument;
 		// consume annotations
 		int length;
 		if ((length = this.expressionLengthStack[this.expressionLengthPtr--]) != 0) {

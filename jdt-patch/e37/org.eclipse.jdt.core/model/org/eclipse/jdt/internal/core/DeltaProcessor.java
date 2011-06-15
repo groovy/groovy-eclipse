@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -105,26 +105,35 @@ public class DeltaProcessor {
 		IPath rootPath;
 		int entryKind;
 		IPackageFragmentRoot root;
+		IPackageFragmentRoot cache;
 		RootInfo(JavaProject project, IPath rootPath, char[][] inclusionPatterns, char[][] exclusionPatterns, int entryKind) {
 			this.project = project;
 			this.rootPath = rootPath;
 			this.inclusionPatterns = inclusionPatterns;
 			this.exclusionPatterns = exclusionPatterns;
 			this.entryKind = entryKind;
+			this.cache = getPackageFragmentRoot();
+		}
+		public IPackageFragmentRoot getPackageFragmentRoot() {
+			IPackageFragmentRoot tRoot = null;
+			Object target = JavaModel.getTarget(this.rootPath, false/*don't check existence*/);
+			if (target instanceof IResource) {
+				tRoot = this.project.getPackageFragmentRoot((IResource)target);
+			} else {
+				tRoot = this.project.getPackageFragmentRoot(this.rootPath.toOSString());
+			}
+			return tRoot;
 		}
 		public IPackageFragmentRoot getPackageFragmentRoot(IResource resource) {
 			if (this.root == null) {
 				if (resource != null) {
 					this.root = this.project.getPackageFragmentRoot(resource);
 				} else {
-					Object target = JavaModel.getTarget(this.rootPath, false/*don't check existence*/);
-					if (target instanceof IResource) {
-						this.root = this.project.getPackageFragmentRoot((IResource)target);
-					} else {
-						this.root = this.project.getPackageFragmentRoot(this.rootPath.toOSString());
+					this.root = getPackageFragmentRoot();
 					}
 				}
-			}
+			if (this.root != null) 
+				this.cache = this.root;
 			return this.root;
 		}
 		boolean isRootOfProject(IPath path) {
@@ -282,11 +291,70 @@ public class DeltaProcessor {
 		if (parent != null && parent.isOpen()) {
 			try {
 				OpenableElementInfo info = (OpenableElementInfo) parent.getElementInfo();
+				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=338006
+				// Insert the package fragment roots in the same order as the classpath order.
+				if (child instanceof IPackageFragmentRoot)
+					addPackageFragmentRoot(info, (IPackageFragmentRoot) child);
+				else
 				info.addChild(child);
 			} catch (JavaModelException e) {
 				// do nothing - we already checked if open
 			}
 		}
+	}
+	
+	private void addPackageFragmentRoot(OpenableElementInfo parent, IPackageFragmentRoot child)
+			throws JavaModelException {
+
+		IJavaElement[] roots = parent.getChildren();
+		if (roots.length > 0) {
+			IClasspathEntry[] resolvedClasspath = ((JavaProject) child.getJavaProject()).getResolvedClasspath();
+			IPath currentEntryPath = child.getResolvedClasspathEntry().getPath();
+			int indexToInsert = -1;
+			int lastComparedIndex = -1;
+			int i = 0, j = 0;
+			for (; i < roots.length && j < resolvedClasspath.length;) {
+
+				IClasspathEntry classpathEntry = resolvedClasspath[j];
+				if (lastComparedIndex != j && currentEntryPath.equals(classpathEntry.getPath())) {
+					indexToInsert = i;
+					break;
+				}
+				lastComparedIndex = j;
+
+				IClasspathEntry rootEntry = ((IPackageFragmentRoot) roots[i]).getResolvedClasspathEntry();
+				if (rootEntry.getPath().equals(classpathEntry.getPath()))
+					i++;
+				else
+					j++;
+			}
+
+			for (; i < roots.length; i++) {
+				// If the new root is already among the children, no need to proceed further. Just return.
+				if (roots[i].equals(child)) {
+					return;
+				}
+				// If we start seeing root's classpath entry different from the child's entry, then the child can't
+				// be present further down the roots array.
+				if (!((IPackageFragmentRoot) roots[i]).getResolvedClasspathEntry().getPath()
+						.equals(currentEntryPath))
+					break;
+			}
+
+			if (indexToInsert >= 0) {
+				int newSize = roots.length + 1;
+				IPackageFragmentRoot[] newChildren = new IPackageFragmentRoot[newSize];
+
+				if (indexToInsert > 0)
+					System.arraycopy(roots, 0, newChildren, 0, indexToInsert);
+
+				newChildren[indexToInsert] = child;
+				System.arraycopy(roots, indexToInsert, newChildren, indexToInsert + 1, (newSize - indexToInsert - 1));
+				parent.setChildren(newChildren);
+				return;
+			}
+		}
+		parent.addChild(child);
 	}
 	/*
 	 * Process the given delta and look for projects being added, opened, closed or

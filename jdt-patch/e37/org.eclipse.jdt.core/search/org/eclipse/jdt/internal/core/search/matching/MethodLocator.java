@@ -50,8 +50,8 @@ protected int fineGrain() {
 	return this.pattern.fineGrain;
 }
 
-private MethodBinding getMethodBinding(ReferenceBinding type, TypeBinding[] argumentTypes) {
-	MethodBinding[] methods = type.getMethods(this.pattern.selector);
+private MethodBinding getMethodBinding(ReferenceBinding type, char[] methodName, TypeBinding[] argumentTypes) {
+	MethodBinding[] methods = type.getMethods(methodName);
 	MethodBinding method = null;
 	methodsLoop: for (int i=0, length=methods.length; i<length; i++) {
 		method = methods[i];
@@ -613,7 +613,7 @@ public int resolveLevel(Binding binding) {
 		subType = CharOperation.compareWith(this.pattern.declaringQualification, method.declaringClass.fPackage.shortReadableName()) == 0;
 	}
 	int declaringLevel = subType
-		? resolveLevelAsSubtype(this.pattern.declaringSimpleName, this.pattern.declaringQualification, method.declaringClass, null)
+		? resolveLevelAsSubtype(this.pattern.declaringSimpleName, this.pattern.declaringQualification, method.declaringClass, method.selector, null)
 		: resolveLevelForType(this.pattern.declaringSimpleName, this.pattern.declaringQualification, method.declaringClass);
 	return (methodLevel & MATCH_LEVEL_MASK) > (declaringLevel & MATCH_LEVEL_MASK) ? declaringLevel : methodLevel; // return the weaker match
 }
@@ -646,7 +646,7 @@ protected int resolveLevel(MessageSend messageSend) {
 	int declaringLevel;
 	if (isVirtualInvoke(method, messageSend) && (messageSend.actualReceiverType instanceof ReferenceBinding)) {
 		ReferenceBinding methodReceiverType = (ReferenceBinding) messageSend.actualReceiverType;
-		declaringLevel = resolveLevelAsSubtype(this.pattern.declaringSimpleName, this.pattern.declaringQualification, methodReceiverType, method.parameters);
+		declaringLevel = resolveLevelAsSubtype(this.pattern.declaringSimpleName, this.pattern.declaringQualification, methodReceiverType, method.selector, method.parameters);
 		if (declaringLevel == IMPOSSIBLE_MATCH) {
 			if (method.declaringClass == null || this.allSuperDeclaringTypeNames == null) {
 				declaringLevel = INACCURATE_MATCH;
@@ -674,12 +674,12 @@ protected int resolveLevel(MessageSend messageSend) {
  * Returns INACCURATE_MATCH if resolve fails
  * Returns IMPOSSIBLE_MATCH if it doesn't.
  */
-protected int resolveLevelAsSubtype(char[] simplePattern, char[] qualifiedPattern, ReferenceBinding type, TypeBinding[] argumentTypes) {
+protected int resolveLevelAsSubtype(char[] simplePattern, char[] qualifiedPattern, ReferenceBinding type, char[] methodName, TypeBinding[] argumentTypes) {
 	if (type == null) return INACCURATE_MATCH;
 
 	int level = resolveLevelForType(simplePattern, qualifiedPattern, type);
 	if (level != IMPOSSIBLE_MATCH) {
-		MethodBinding method = argumentTypes == null ? null : getMethodBinding(type, argumentTypes);
+		MethodBinding method = argumentTypes == null ? null : getMethodBinding(type, methodName, argumentTypes);
 		if (((method != null && !method.isAbstract()) || !type.isAbstract()) && !type.isInterface()) { // if concrete, then method is overridden
 			level |= OVERRIDDEN_METHOD_FLAVOR;
 		}
@@ -688,11 +688,11 @@ protected int resolveLevelAsSubtype(char[] simplePattern, char[] qualifiedPatter
 
 	// matches superclass
 	if (!type.isInterface() && !CharOperation.equals(type.compoundName, TypeConstants.JAVA_LANG_OBJECT)) {
-		level = resolveLevelAsSubtype(simplePattern, qualifiedPattern, type.superclass(), argumentTypes);
+		level = resolveLevelAsSubtype(simplePattern, qualifiedPattern, type.superclass(), methodName, argumentTypes);
 		if (level != IMPOSSIBLE_MATCH) {
 			if (argumentTypes != null) {
 				// need to verify if method may be overridden
-				MethodBinding method = getMethodBinding(type, argumentTypes);
+				MethodBinding method = getMethodBinding(type, methodName, argumentTypes);
 				if (method != null) { // one method match in hierarchy
 					if ((level & OVERRIDDEN_METHOD_FLAVOR) != 0) {
 						// this method is already overridden on a super class, current match is impossible
@@ -712,7 +712,7 @@ protected int resolveLevelAsSubtype(char[] simplePattern, char[] qualifiedPatter
 	ReferenceBinding[] interfaces = type.superInterfaces();
 	if (interfaces == null) return INACCURATE_MATCH;
 	for (int i = 0; i < interfaces.length; i++) {
-		level = resolveLevelAsSubtype(simplePattern, qualifiedPattern, interfaces[i], null);
+		level = resolveLevelAsSubtype(simplePattern, qualifiedPattern, interfaces[i], methodName, null);
 		if (level != IMPOSSIBLE_MATCH) {
 			if (!type.isAbstract() && !type.isInterface()) { // if concrete class, then method is overridden
 				level |= OVERRIDDEN_METHOD_FLAVOR;

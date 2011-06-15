@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -274,10 +274,11 @@ public class Main implements ProblemSeverities, SuffixConstants {
 					}
 				}
 			}
-			int length = unitSource == null ? 0 : unitSource.length;
+			int length;
 			if ((startPosition > endPosition)
 				|| ((startPosition < 0) && (endPosition < 0))
-				|| length == 0)
+				|| (unitSource == null)
+				|| (length = unitSource.length) == 0)
 				return Messages.problem_noSourceInformation;
 
 			StringBuffer errorBuffer = new StringBuffer();
@@ -337,10 +338,11 @@ public class Main implements ProblemSeverities, SuffixConstants {
 					}
 				}
 			}
-			int length = unitSource== null ? 0 : unitSource.length;
+			int length;
 			if ((startPosition > endPosition)
 					|| ((startPosition < 0) && (endPosition < 0))
-					|| (length <= 0)
+					|| (unitSource == null)
+					|| ((length = unitSource.length) <= 0)
 					|| (endPosition > length)) {
 				this.parameters.put(Logger.VALUE, Messages.problem_noSourceInformation);
 				this.parameters.put(Logger.SOURCE_START, "-1"); //$NON-NLS-1$
@@ -567,38 +569,51 @@ public class Main implements ProblemSeverities, SuffixConstants {
 
 		private void logExtraProblem(CategorizedProblem problem, int localErrorCount, int globalErrorCount) {
 			char[] originatingFileName = problem.getOriginatingFileName();
-			String fileName =
-				originatingFileName == null
-				? this.main.bind("requestor.noFileNameSpecified")//$NON-NLS-1$
-				: new String(originatingFileName);
-			if ((this.tagBits & Logger.EMACS) != 0) {
-				String result = fileName
-						+ ":" //$NON-NLS-1$
-						+ problem.getSourceLineNumber()
-						+ ": " //$NON-NLS-1$
-						+ (problem.isError() ? this.main.bind("output.emacs.error") : this.main.bind("output.emacs.warning")) //$NON-NLS-1$ //$NON-NLS-2$
-						+ ": " //$NON-NLS-1$
-						+ problem.getMessage();
-				this.printlnErr(result);
-				final String errorReportSource = errorReportSource(problem, null, this.tagBits);
-				this.printlnErr(errorReportSource);
+			if (originatingFileName == null) {
+				// simplified message output
+				if (problem.isError()) {
+					printErr(this.main.bind(
+								"requestor.extraerror", //$NON-NLS-1$
+								Integer.toString(globalErrorCount)));
+				} else {
+					// warning / mandatory warning / other
+					printErr(this.main.bind(
+							"requestor.extrawarning", //$NON-NLS-1$
+							Integer.toString(globalErrorCount)));
+				}
+				printErr(" "); //$NON-NLS-1$
+				this.printlnErr(problem.getMessage());
 			} else {
-				if (localErrorCount == 0) {
+				String fileName = new String(originatingFileName);
+				if ((this.tagBits & Logger.EMACS) != 0) {
+					String result = fileName
+							+ ":" //$NON-NLS-1$
+							+ problem.getSourceLineNumber()
+							+ ": " //$NON-NLS-1$
+							+ (problem.isError() ? this.main.bind("output.emacs.error") : this.main.bind("output.emacs.warning")) //$NON-NLS-1$ //$NON-NLS-2$
+							+ ": " //$NON-NLS-1$
+							+ problem.getMessage();
+					this.printlnErr(result);
+					final String errorReportSource = errorReportSource(problem, null, this.tagBits);
+					this.printlnErr(errorReportSource);
+				} else {
+					if (localErrorCount == 0) {
+						this.printlnErr("----------"); //$NON-NLS-1$
+					}
+					printErr(problem.isError() ?
+							this.main.bind(
+									"requestor.error", //$NON-NLS-1$
+									Integer.toString(globalErrorCount),
+									new String(fileName))
+									: this.main.bind(
+											"requestor.warning", //$NON-NLS-1$
+											Integer.toString(globalErrorCount),
+											new String(fileName)));
+					final String errorReportSource = errorReportSource(problem, null, 0);
+					this.printlnErr(errorReportSource);
+					this.printlnErr(problem.getMessage());
 					this.printlnErr("----------"); //$NON-NLS-1$
 				}
-				printErr(problem.isError() ?
-						this.main.bind(
-								"requestor.error", //$NON-NLS-1$
-								Integer.toString(globalErrorCount),
-								new String(fileName))
-								: this.main.bind(
-										"requestor.warning", //$NON-NLS-1$
-										Integer.toString(globalErrorCount),
-										new String(fileName)));
-				final String errorReportSource = errorReportSource(problem, null, 0);
-				this.printlnErr(errorReportSource);
-				this.printlnErr(problem.getMessage());
-				this.printlnErr("----------"); //$NON-NLS-1$
 			}
 		}
 
@@ -1326,7 +1341,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 
 	private PrintWriter err;
 
-	ArrayList extraProblems;
+	protected ArrayList extraProblems;
 	public final static String bundleName = "org.eclipse.jdt.internal.compiler.batch.messages"; //$NON-NLS-1$
 	// two uses: recognize 'none' in options; code the singleton none
 	// for the '-d none' option (wherever it may be found)
@@ -2978,8 +2993,10 @@ public IProblemFactory getProblemFactory() {
  * External API
  */
 protected ArrayList handleBootclasspath(ArrayList bootclasspaths, String customEncoding) {
- 	final int bootclasspathsSize = bootclasspaths == null ? 0 : bootclasspaths.size();
-	if (bootclasspathsSize != 0) {
+ 	final int bootclasspathsSize;
+	if ((bootclasspaths != null)
+		&& ((bootclasspathsSize = bootclasspaths.size()) != 0))
+	{
 		String[] paths = new String[bootclasspathsSize];
 		bootclasspaths.toArray(paths);
 		bootclasspaths.clear();
@@ -3004,8 +3021,10 @@ protected ArrayList handleBootclasspath(ArrayList bootclasspaths, String customE
  * External API
  */
 protected ArrayList handleClasspath(ArrayList classpaths, String customEncoding) {
-	final int classpathsSize = classpaths == null ? 0 : classpaths.size();
-	if (classpathsSize != 0) {
+	final int classpathsSize;
+	if ((classpaths != null)
+		&& ((classpathsSize = classpaths.size()) != 0))
+	{
 		String[] paths = new String[classpathsSize];
 		classpaths.toArray(paths);
 		classpaths.clear();
@@ -3312,7 +3331,7 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 			break;
 		case 'e' :
 			if (token.equals("enumSwitch") //$NON-NLS-1$
-					|| token.equals("incomplete-switch")) { //$NON-NLS-1$
+					|| token.equals("incomplete-switch") /*backward compatible*/) { //$NON-NLS-1$
 				setSeverity(CompilerOptions.OPTION_ReportIncompleteEnumSwitch, severity, isEnabling);
 				return;
 			} else if (token.equals("emptyBlock")) {//$NON-NLS-1$
@@ -3765,7 +3784,7 @@ public void performCompilation() {
 	}
 
 	if (this.extraProblems != null) {
-		this.logger.loggingExtraProblems(this);
+		loggingExtraProblems();
 		this.extraProblems = null;
 	}
 	if (this.compilerStats != null) {
@@ -3775,6 +3794,9 @@ public void performCompilation() {
 
 	// cleanup
 	environment.cleanup();
+}
+protected void loggingExtraProblems() {
+	this.logger.loggingExtraProblems(this);
 }
 public void printUsage() {
 	printUsage("misc.usage"); //$NON-NLS-1$

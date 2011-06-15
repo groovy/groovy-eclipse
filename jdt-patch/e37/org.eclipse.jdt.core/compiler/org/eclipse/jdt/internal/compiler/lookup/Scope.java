@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -613,6 +613,24 @@ public abstract class Scope {
 									problemReporter().forwardTypeVariableReference(typeParameter, varSuperType);
 									typeVariable.tagBits |= TagBits.HierarchyHasProblems;
 									break firstBound; // do not keep first bound
+								}
+							}
+							// https://bugs.eclipse.org/bugs/show_bug.cgi?id=335751
+							if (compilerOptions().complianceLevel > ClassFileConstants.JDK1_6) {
+								if (typeVariable.rank >= varSuperType.rank && varSuperType.declaringElement == typeVariable.declaringElement) {
+									SimpleSet set = new SimpleSet(typeParameters.length);
+									set.add(typeVariable);
+									ReferenceBinding superBinding = varSuperType;
+									while (superBinding instanceof TypeVariableBinding) {
+										if (set.includes(superBinding)) {
+											problemReporter().hierarchyCircularity(typeVariable, varSuperType, typeRef);
+											typeVariable.tagBits |= TagBits.HierarchyHasProblems;
+											break firstBound; // do not keep first bound
+										} else {
+											set.add(superBinding);
+											superBinding = ((TypeVariableBinding)superBinding).superclass;
+										}
+									}
 								}
 							}
 							break;

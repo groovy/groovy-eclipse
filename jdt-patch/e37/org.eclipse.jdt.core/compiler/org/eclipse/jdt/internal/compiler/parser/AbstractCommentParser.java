@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -48,6 +48,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 
 	// Options
 	public boolean checkDocComment = false;
+	public boolean setJavadocPositions = false;
 	public boolean reportProblems;
 	protected long complianceLevel;
 	protected long sourceLevel;
@@ -283,6 +284,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 							refreshReturnStatement();
 						}
 						if (this.inlineTagStarted) {
+							textEndPosition = this.index - 1;
 							if (this.lineStarted && this.textStart != -1 && this.textStart < textEndPosition) {
 								pushText(this.textStart, textEndPosition);
 							}

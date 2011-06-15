@@ -58,7 +58,7 @@ public interface TerminalTokens {
 		TokenNamefor = 78,
 		TokenNamegoto = 109,
 		TokenNameif = 79,
-		TokenNameimplements = 106,
+		TokenNameimplements = 107,
 		TokenNameimport = 100,
 		TokenNameinstanceof = 12,
 		TokenNameint = 37,
@@ -140,7 +140,7 @@ public interface TerminalTokens {
 		TokenNameDOT = 3,
 		TokenNameEQUAL = 71,
 		TokenNameAT = 53,
-		TokenNameELLIPSIS = 107,
+		TokenNameELLIPSIS = 106,
 		TokenNameEOF = 69,
 		TokenNameERROR = 110;
 }

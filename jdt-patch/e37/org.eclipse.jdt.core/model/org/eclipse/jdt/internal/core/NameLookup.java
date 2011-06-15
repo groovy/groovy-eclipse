@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - contribution for bug 337868 - [compiler][model] incomplete support for package-info.java when using SearchableEnvironment
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
@@ -31,6 +32,7 @@ import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
@@ -1194,7 +1196,13 @@ public class NameLookup implements SuffixConstants {
 						return true; // don't continue with compilation unit
 					}
 				} else if (object instanceof IType[]) {
-					if (object == NO_TYPES) return true; // all types where deleted -> type is hidden
+					if (object == NO_TYPES) {
+						// all types where deleted -> type is hidden, OR it is the fake type package-info
+						String packageInfoName = String.valueOf(TypeConstants.PACKAGE_INFO_NAME);
+						if (packageInfoName.equals(name))
+							requestor.acceptType(pkg.getCompilationUnit(packageInfoName.concat(SUFFIX_STRING_java)).getType(name));
+						return true;
+					}
 					IType[] topLevelTypes = (IType[]) object;
 					for (int i = 0, length = topLevelTypes.length; i < length; i++) {
 						if (requestor.isCanceled())

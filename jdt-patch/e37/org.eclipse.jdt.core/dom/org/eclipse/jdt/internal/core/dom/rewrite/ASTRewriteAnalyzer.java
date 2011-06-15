@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -660,7 +660,30 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 						ASTNode changed= (ASTNode) currEvent.getNewValue();
 						
 						updateIndent(prevMark, currPos, i, editGroup);
-						
+						// make sure that comments between last modified source position and extended starting position of
+						// node to be replaced are not touched
+						try {
+							TokenScanner scanner = getScanner();
+							int newOffset = prevEnd;
+							int extendedOffset = getExtendedOffset(node);
+							// Try to find the end of the last comment which is not part of extended source
+							// range of the node.
+							while (TokenScanner.isComment(scanner.readNext(newOffset, false))) {
+								int tempOffset = scanner.getNextEndOffset(newOffset, false);
+								// check whether the comment is part of extended source range of the node.
+								// If it is then we need to stop.
+								if (tempOffset < extendedOffset) {
+									newOffset = tempOffset;
+								} else {
+									break;
+								}
+							}
+							if (currPos < newOffset) {
+								currPos = extendedOffset;
+							} 		
+						} catch (CoreException e) {
+							// ignore
+						}
 						doTextRemoveAndVisit(currPos, currEnd - currPos, node, editGroup);
 						doTextInsert(currPos, changed, getNodeIndent(i), true, editGroup);
 

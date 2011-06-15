@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -34,6 +34,7 @@ import org.eclipse.jdt.internal.compiler.lookup.LocalTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
@@ -841,6 +842,31 @@ protected IJavaElement findLocalElement(int pos) {
 		}
 	}
 	return res;
+}
+
+/**
+ * This method returns an IMethod element from the given method and declaring type bindings. However,
+ * unlike {@link Util#findMethod(IType, char[], String[], boolean)} , this does not require an IType to get 
+ * the IMethod element.
+ * @param method the given method binding
+ * @param signatures the type signatures of the method arguments
+ * @param declaringClass the binding of the method's declaring class
+ * @return an IMethod corresponding to the method binding given, or null if none is found.
+ */
+public IJavaElement findMethodFromBinding(MethodBinding method, String[] signatures, ReferenceBinding declaringClass) {
+	IType foundType = this.resolveType(declaringClass.qualifiedPackageName(), declaringClass.qualifiedSourceName(), NameLookup.ACCEPT_CLASSES & NameLookup.ACCEPT_INTERFACES);
+	if (foundType != null) {
+		if (foundType instanceof BinaryType) {
+			try {
+				return Util.findMethod(foundType, method.selector, signatures, method.isConstructor());
+			} catch (JavaModelException e) {
+				return null;
+			}
+		} else {
+			return foundType.getMethod(new String(method.selector), signatures);
+		}
+	}
+	return null;
 }
 /**
  * Returns the resolved elements.

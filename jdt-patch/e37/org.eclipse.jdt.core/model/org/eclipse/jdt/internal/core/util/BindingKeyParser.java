@@ -446,6 +446,8 @@ public class BindingKeyParser {
 
 	private boolean isMalformed;
 
+	private boolean isParsingThrownExceptions = false;	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=336451
+
 	public BindingKeyParser(BindingKeyParser parser) {
 		this(""); //$NON-NLS-1$
 		this.scanner = parser.scanner;
@@ -652,7 +654,7 @@ public class BindingKeyParser {
 					malformedKey();
 					return;
 			}
-		} else if (this.scanner.isAtTypeVariableStart()) {
+		} else if (!this.isParsingThrownExceptions && this.scanner.isAtTypeVariableStart()) {
 			parseTypeVariable();
 		} else if (this.scanner.isAtWildcardStart()) {
 			parseWildcard();
@@ -842,6 +844,7 @@ public class BindingKeyParser {
 		while (this.scanner.isAtThrownStart() && !this.isMalformed) {
 			this.scanner.skipThrownStart();
 			BindingKeyParser parser = newParser();
+			parser.isParsingThrownExceptions = true;
 			parser.parse();
 			consumeParser(parser);
 			consumeException();

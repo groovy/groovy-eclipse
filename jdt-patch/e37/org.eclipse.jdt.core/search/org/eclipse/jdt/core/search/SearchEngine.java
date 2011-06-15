@@ -12,29 +12,14 @@
 package org.eclipse.jdt.core.search;
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspace;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.core.Flags;
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.IWorkingCopy;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.WorkingCopyOwner;
+
+import org.eclipse.core.resources.*;
+import org.eclipse.core.runtime.*;
+
+import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
-import org.eclipse.jdt.internal.core.search.BasicSearchEngine;
-import org.eclipse.jdt.internal.core.search.IRestrictedAccessTypeRequestor;
-import org.eclipse.jdt.internal.core.search.TypeNameMatchRequestorWrapper;
-import org.eclipse.jdt.internal.core.search.TypeNameRequestorWrapper;
-import org.eclipse.jdt.internal.core.search.matching.DeclarationOfAccessedFieldsPattern;
-import org.eclipse.jdt.internal.core.search.matching.DeclarationOfReferencedMethodsPattern;
-import org.eclipse.jdt.internal.core.search.matching.DeclarationOfReferencedTypesPattern;
+import org.eclipse.jdt.internal.core.search.*;
+import org.eclipse.jdt.internal.core.search.matching.*;
 
 /**
  * A {@link SearchEngine} searches for Java elements following a search pattern.

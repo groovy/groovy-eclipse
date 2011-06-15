@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -546,11 +546,25 @@ public class Disassembler extends ClassFileBytesDisassembler {
 				IRuntimeInvisibleParameterAnnotationsAttribute attribute = (IRuntimeInvisibleParameterAnnotationsAttribute) runtimeInvisibleParameterAnnotationsAttribute;
 				invisibleParameterAnnotations = attribute.getParameterAnnotations();
 				length = invisibleParameterAnnotations.length;
+				if (length > 0) {
+					int parameterNamesLength = parameterNames.length;
+					if (length < parameterNamesLength) {
+						System.arraycopy(invisibleParameterAnnotations, 0, (invisibleParameterAnnotations = new IParameterAnnotation[parameterNamesLength]), 1, length);
+						length = parameterNamesLength;
+			}
+				}
 			}
 			if (runtimeVisibleParameterAnnotationsAttribute != null) {
 				IRuntimeVisibleParameterAnnotationsAttribute attribute = (IRuntimeVisibleParameterAnnotationsAttribute) runtimeVisibleParameterAnnotationsAttribute;
 				visibleParameterAnnotations = attribute.getParameterAnnotations();
 				length = visibleParameterAnnotations.length;
+				if (length > 0) {
+					int parameterNamesLength = parameterNames.length;
+					if (length < parameterNamesLength) {
+						System.arraycopy(visibleParameterAnnotations, 0, (visibleParameterAnnotations = new IParameterAnnotation[parameterNamesLength]), 1, length);
+						length = parameterNamesLength;
+			}
+				}
 			}
 			int insertionPosition = CharOperation.indexOf('(', methodHeader) + 1;
 			int start = 0;
@@ -561,15 +575,15 @@ public class Disassembler extends ClassFileBytesDisassembler {
 					stringBuffer.append(' ');
 				}
 				int stringBufferSize = stringBuffer.length();
-				if (runtimeVisibleParameterAnnotationsAttribute != null) {
-					disassembleAsModifier((IRuntimeVisibleParameterAnnotationsAttribute) runtimeVisibleParameterAnnotationsAttribute, stringBuffer, i, lineSeparator, tabNumber, mode);
+				if (visibleParameterAnnotations != null) {
+					disassembleAsModifier(visibleParameterAnnotations, stringBuffer, i, lineSeparator, tabNumber, mode);
 				}
-				if (runtimeInvisibleParameterAnnotationsAttribute != null) {
+				if (invisibleParameterAnnotations != null) {
 					if (stringBuffer.length() != stringBufferSize) {
 						stringBuffer.append(' ');
 						stringBufferSize = stringBuffer.length();
 					}
-					disassembleAsModifier((IRuntimeInvisibleParameterAnnotationsAttribute) runtimeInvisibleParameterAnnotationsAttribute, stringBuffer, i, lineSeparator, tabNumber, mode);
+					disassembleAsModifier(invisibleParameterAnnotations, stringBuffer, i, lineSeparator, tabNumber, mode);
 				}
 				if (i == 0 && stringBuffer.length() != stringBufferSize) {
 					stringBuffer.append(' ');
@@ -1862,21 +1876,14 @@ public class Disassembler extends ClassFileBytesDisassembler {
 		}
 	}
 
-	private void disassembleAsModifier(IRuntimeInvisibleParameterAnnotationsAttribute runtimeInvisibleParameterAnnotationsAttribute, StringBuffer buffer, int index, String lineSeparator, int tabNumber, int mode) {
-		IParameterAnnotation[] parameterAnnotations = runtimeInvisibleParameterAnnotationsAttribute.getParameterAnnotations();
-		if (parameterAnnotations.length > index) {
-			disassembleAsModifier(parameterAnnotations[index], buffer, lineSeparator, tabNumber + 1, mode);
-		}
-	}
-
-	private void disassembleAsModifier(IRuntimeVisibleParameterAnnotationsAttribute runtimeVisibleParameterAnnotationsAttribute, StringBuffer buffer, int index, String lineSeparator, int tabNumber, int mode) {
-		IParameterAnnotation[] parameterAnnotations = runtimeVisibleParameterAnnotationsAttribute.getParameterAnnotations();
+	private void disassembleAsModifier(IParameterAnnotation[] parameterAnnotations, StringBuffer buffer, int index, String lineSeparator, int tabNumber, int mode) {
 		if (parameterAnnotations.length > index) {
 			disassembleAsModifier(parameterAnnotations[index], buffer, lineSeparator, tabNumber + 1, mode);
 		}
 	}
 
 	private void disassembleAsModifier(IParameterAnnotation parameterAnnotation, StringBuffer buffer, String lineSeparator, int tabNumber, int mode) {
+		if (parameterAnnotation == null) return;
 		IAnnotation[] annotations = parameterAnnotation.getAnnotations();
 		for (int i = 0, max = annotations.length; i < max; i++) {
 			if (i > 0) {

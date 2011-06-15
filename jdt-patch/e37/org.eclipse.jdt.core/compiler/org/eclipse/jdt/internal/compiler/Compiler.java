@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - contribution for bug 337868 - [compiler][model] incomplete support for package-info.java when using SearchableEnvironment
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler;
 
@@ -363,6 +364,9 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 	protected synchronized void addCompilationUnit(
 		ICompilationUnit sourceUnit,
 		CompilationUnitDeclaration parsedUnit) {
+
+		if (this.unitsToProcess == null)
+			return; // not collecting units
 
 		// append the unit to the list of ones to process later on
 		int size = this.unitsToProcess.length;
@@ -936,8 +940,18 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 				// build and record parsed units
 				this.parseThreshold = 0; // will request a full parse
 				beginToCompile(new ICompilationUnit[] { sourceUnit });
-				// process all units (some more could be injected in the loop by the lookup environment)
-				unit = this.unitsToProcess[0];
+				// find the right unit from what was injected via accept(ICompilationUnit,..):
+				for (int i=0; i<this.totalUnits; i++) {
+					if (   this.unitsToProcess[i] != null
+						&& this.unitsToProcess[i].compilationResult.compilationUnit == sourceUnit)
+					{
+						unit = this.unitsToProcess[i];
+						break;
+					}
+				}
+				if (unit == null)
+					unit = this.unitsToProcess[0]; // fall back to old behavior
+
 			} else {
 				// initial type binding creation
 				this.lookupEnvironment.buildTypeBindings(unit, null /*no access restriction*/);

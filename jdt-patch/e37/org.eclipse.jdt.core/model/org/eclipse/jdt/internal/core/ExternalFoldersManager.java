@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -38,6 +38,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.util.Messages;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -90,7 +91,8 @@ public class ExternalFoldersManager {
 	public static boolean isExternalFolderPath(IPath externalPath) {
 		if (externalPath == null)
 			return false;
-		if (ResourcesPlugin.getWorkspace().getRoot().getProject(externalPath.segment(0)).exists())
+		String firstSegment = externalPath.segment(0);
+		if (firstSegment != null && ResourcesPlugin.getWorkspace().getRoot().getProject(firstSegment).exists())
 			return false;
 		File externalFolder = externalPath.toFile();
 		if (externalFolder.isFile())
@@ -140,6 +142,12 @@ public class ExternalFoldersManager {
 
 	public IFolder createLinkFolder(IPath externalFolderPath, boolean refreshIfExistAlready, IProgressMonitor monitor) throws CoreException {
 		IProject externalFoldersProject = createExternalFoldersProject(monitor); // run outside synchronized as this can create a resource
+		return createLinkFolder(externalFolderPath, refreshIfExistAlready, externalFoldersProject, monitor);
+	}
+
+	private IFolder createLinkFolder(IPath externalFolderPath, boolean refreshIfExistAlready,
+									IProject externalFoldersProject, IProgressMonitor monitor) throws CoreException {
+		
 		IFolder result = addFolder(externalFolderPath, externalFoldersProject, false);
 		if (!result.exists())
 			result.createLink(externalFolderPath, IResource.ALLOW_MISSING_LOCAL, monitor);
@@ -148,6 +156,28 @@ public class ExternalFoldersManager {
 		return result;
 	}
 
+	public void createPendingFolders(IProgressMonitor monitor) throws JavaModelException{
+		if (this.pendingFolders == null || this.pendingFolders.isEmpty()) return;
+		
+		IProject externalFoldersProject = null;
+		try {
+			externalFoldersProject = createExternalFoldersProject(monitor);
+		}
+		catch(CoreException e) {
+			throw new JavaModelException(e);
+		}
+		Iterator iterator = this.pendingFolders.iterator();
+		while (iterator.hasNext()) {
+			Object folderPath = iterator.next();
+			try {
+				createLinkFolder((IPath) folderPath, false, externalFoldersProject, monitor);
+			} catch (CoreException e) {
+				Util.log(e, "Error while creating a link for external folder :" + folderPath); //$NON-NLS-1$
+			}
+		}
+		this.pendingFolders.clear();
+	}
+	
 	public void cleanUp(IProgressMonitor monitor) throws CoreException {
 		ArrayList toDelete = getFoldersToCleanUp(monitor);
 		if (toDelete == null)
@@ -193,7 +223,7 @@ public class ExternalFoldersManager {
 	public IProject getExternalFoldersProject() {
 		return ResourcesPlugin.getWorkspace().getRoot().getProject(EXTERNAL_PROJECT_NAME);
 	}
-	private IProject createExternalFoldersProject(IProgressMonitor monitor) throws CoreException {
+	public IProject createExternalFoldersProject(IProgressMonitor monitor) throws CoreException {
 		IProject project = getExternalFoldersProject();
 		if (!project.isAccessible()) {
 			if (!project.exists()) {

@@ -344,7 +344,7 @@ public class JavaModelStatus extends Status implements IJavaModelStatus, IJavaMo
 
 				case CLASSPATH_CYCLE:
 					javaProject = (IJavaProject)this.elements[0];
-					return Messages.bind(Messages.classpath_cycle, javaProject.getElementName());
+					return Messages.bind(Messages.classpath_cycle, new String[] {javaProject.getElementName(), this.string});
 
 				case DISABLED_CP_EXCLUSION_PATTERNS:
 					javaProject = (IJavaProject)this.elements[0];

@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for Bug 342671 - ClassCastException: org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding cannot be cast to org.eclipse.jdt.internal.compiler.lookup.ArrayBinding
  *******************************************************************************/
 package org.eclipse.jdt.core.dom;
 
@@ -116,7 +117,10 @@ class DefaultBindingResolver extends BindingResolver {
 
 	/**
 	 * This map is used to retrieve an old ast node using the new ast node. This is not an
-	 * identity map.
+	 * identity map, as several nested DOM nodes may be associated with the same "larger"
+	 * compiler AST node.
+	 * E.g., an ArrayAllocationExpression "new MyType[1]" will appear as the right-hand value
+	 * for the SimpleType "MyType", the ArrayType "MyType[1]", and the ArrayCreation "new MyType[1]".
 	 */
 	Map newAstToOldAst;
 
@@ -1523,13 +1527,11 @@ class DefaultBindingResolver extends BindingResolver {
 						return null;
 					}
 					ArrayType arrayType = (ArrayType) type;
-					if (typeBinding.isArrayType()) {
 						ArrayBinding arrayBinding = (ArrayBinding) typeBinding;
 						return getTypeBinding(this.scope.createArrayType(arrayBinding.leafComponentType, arrayType.getDimensions()));
 					}
-					return getTypeBinding(this.scope.createArrayType(binding, arrayType.getDimensions()));
-				}
 				if (typeBinding.isArrayType()) {
+					// 'binding' can still be an array type because 'node' may be "larger" than 'type' (see comment of newAstToOldAst).
 					typeBinding = ((ArrayBinding) typeBinding).leafComponentType;
 				}
 				int index;
@@ -1567,12 +1569,10 @@ class DefaultBindingResolver extends BindingResolver {
 					if (this.scope == null) {
 						return null;
 					}
-					if (binding.isArrayType()) {
 						ArrayBinding arrayBinding = (ArrayBinding) binding;
 						return getTypeBinding(this.scope.createArrayType(arrayBinding.leafComponentType, arrayType.getDimensions()));
-					}
-					return getTypeBinding(this.scope.createArrayType(binding, arrayType.getDimensions()));
 				} else if (binding.isArrayType()) {
+					// 'binding' can still be an array type because 'node' may be "larger" than 'type' (see comment of newAstToOldAst).
 					ArrayBinding arrayBinding = (ArrayBinding) binding;
 					return getTypeBinding(arrayBinding.leafComponentType);
 				}

@@ -81,7 +81,6 @@ import org.eclipse.jdt.internal.core.util.Util;
 public class MatchLocator implements ITypeRequestor {
 
 public static final int MAX_AT_ONCE;
-public static boolean SHOULD_FILTER_ENUM = false;
 static {
 	long maxMemory = Runtime.getRuntime().maxMemory();
 	int ratio = (int) Math.round(((double) maxMemory) / (64 * 0x100000));

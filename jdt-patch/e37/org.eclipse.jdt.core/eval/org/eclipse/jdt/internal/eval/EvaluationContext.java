@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,6 +16,7 @@ import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.*;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
@@ -28,6 +29,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
@@ -128,6 +130,7 @@ public void complete(
 		// Do nothing
 	}
 	final char[] className = "CodeSnippetCompletion".toCharArray(); //$NON-NLS-1$
+	final long complianceVersion = CompilerOptions.versionToJdkLevel(options.get(JavaCore.COMPILER_COMPLIANCE));
 	final CodeSnippetToCuMapper mapper = new CodeSnippetToCuMapper(
 		codeSnippet,
 		this.packageName,
@@ -138,7 +141,8 @@ public void complete(
 		this.localVariableTypeNames,
 		this.localVariableModifiers,
 		this.declaringTypeName,
-		this.lineSeparator
+		this.lineSeparator,
+		complianceVersion
 	);
 	ICompilationUnit sourceUnit = new ICompilationUnit() {
 		public char[] getFileName() {
@@ -570,6 +574,7 @@ public void select(
 	WorkingCopyOwner owner) {
 
 	final char[] className = "CodeSnippetSelection".toCharArray(); //$NON-NLS-1$
+	final long complianceVersion = CompilerOptions.versionToJdkLevel(options.get(JavaCore.COMPILER_COMPLIANCE));
 	final CodeSnippetToCuMapper mapper = new CodeSnippetToCuMapper(
 		codeSnippet,
 		this.packageName,
@@ -580,7 +585,8 @@ public void select(
 		this.localVariableTypeNames,
 		this.localVariableModifiers,
 		this.declaringTypeName,
-		this.lineSeparator
+		this.lineSeparator,
+		complianceVersion
 	);
 	ICompilationUnit sourceUnit = new ICompilationUnit() {
 		public char[] getFileName() {

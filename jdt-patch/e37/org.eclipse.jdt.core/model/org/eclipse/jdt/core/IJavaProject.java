@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -49,7 +49,9 @@ import org.eclipse.jdt.core.eval.IEvaluationContext;
  * Java project elements need to be opened before they can be navigated or manipulated.
  * The children of a Java project are the package fragment roots that are
  * defined by the classpath and contained in this project (in other words, it
- * does not include package fragment roots for other projects).
+ * does not include package fragment roots for other projects). The children
+ * (i.e. the package fragment roots) appear in the order they are defined by 
+ * the classpath.
  * </p>
  * <p>
  * An instance of one of these handles can be created via
@@ -61,6 +63,22 @@ import org.eclipse.jdt.core.eval.IEvaluationContext;
  * @noimplement This interface is not intended to be implemented by clients.
  */
 public interface IJavaProject extends IParent, IJavaElement, IOpenable {
+
+	/**
+	 * Path of the file containing the project's classpath relative to the project's root.
+	 * 
+	 * <p>The file is a child of the project folder.</p>
+	 * <p>The format of this file is unspecified and it is not meant to be modified.
+	 * Its contents is modified by using the <code>IJavaProject#setRawClasspath(..)</code> methods.</p>
+	 * 
+	 * @see #setRawClasspath(IClasspathEntry[], IProgressMonitor)
+	 * @see #setRawClasspath(IClasspathEntry[], boolean, IProgressMonitor)
+	 * @see #setRawClasspath(IClasspathEntry[], IPath, IProgressMonitor)
+	 * @see #setRawClasspath(IClasspathEntry[], IClasspathEntry[], IPath, IProgressMonitor)
+	 * @see #setRawClasspath(IClasspathEntry[], IPath, boolean, IProgressMonitor)
+	 * @since 3.7
+	 */
+	String CLASSPATH_FILE_NAME = ".classpath"; //$NON-NLS-1$
 
 	/**
 	 * Decodes the classpath entry that has been encoded in the given string
@@ -502,7 +520,8 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 * Returns all of the  package fragment roots contained in this
 	 * project, identified on this project's resolved classpath. The result
 	 * does not include package fragment roots in other projects referenced
-	 * on this project's classpath.
+	 * on this project's classpath. The package fragment roots appear in the 
+	 * order they are defined by the classpath.
 	 *
 	 * <p>NOTE: This is equivalent to <code>getChildren()</code>.
 	 *

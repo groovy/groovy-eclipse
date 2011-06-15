@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.*;
@@ -75,9 +76,15 @@ public class JavadocFieldReference extends FieldReference {
 			}
 			if (this.actualReceiverType instanceof ReferenceBinding) {
 				ReferenceBinding refBinding = (ReferenceBinding) this.actualReceiverType;
-				MethodBinding possibleMethod = this.receiver.isThis()
-					? scope.getImplicitMethod(this.token, Binding.NO_TYPES, this)
-					: scope.getMethod(refBinding, this.token, Binding.NO_TYPES, this);
+				char[] selector = this.token;
+				MethodBinding possibleMethod = null;
+				if (CharOperation.equals(this.actualReceiverType.sourceName(), selector)) {
+					possibleMethod = scope.getConstructor(refBinding, Binding.NO_TYPES, this);
+				} else {
+					possibleMethod = this.receiver.isThis()
+						? scope.getImplicitMethod(selector, Binding.NO_TYPES, this)
+						: scope.getMethod(refBinding, selector, Binding.NO_TYPES, this);
+				}
 				if (possibleMethod.isValidBinding()) {
 					this.methodBinding = possibleMethod;
 				} else {

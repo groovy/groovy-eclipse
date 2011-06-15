@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -34,7 +34,7 @@ import java.util.List;
  *            [ AnonymousClassDeclaration ]
  * </pre>
  * <p>
- * Not all node arragements will represent legal Java constructs. In particular,
+ * Not all node arrangements will represent legal Java constructs. In particular,
  * it is nonsense if the type is a primitive type or an array type (primitive
  * types cannot be instantiated, and array creations must be represented with
  * <code>ArrayCreation</code> nodes). The normal use is when the type is a

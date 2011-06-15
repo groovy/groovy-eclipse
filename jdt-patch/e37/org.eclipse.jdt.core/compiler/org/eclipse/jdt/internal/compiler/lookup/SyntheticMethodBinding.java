@@ -231,7 +231,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 	    this.selector = overridenMethodToBridge.selector;
 	    // amongst other, clear the AccGenericSignature, so as to ensure no remains of original inherited persist (101794)
 	    // also use the modifiers from the target method, as opposed to inherited one (147690)
-	    this.modifiers = (targetMethod.modifiers | ClassFileConstants.AccBridge | ClassFileConstants.AccSynthetic) & ~(ClassFileConstants.AccAbstract | ClassFileConstants.AccNative  | ClassFileConstants.AccFinal | ExtraCompilerModifiers.AccGenericSignature);
+	    this.modifiers = (targetMethod.modifiers | ClassFileConstants.AccBridge | ClassFileConstants.AccSynthetic) & ~(ClassFileConstants.AccSynchronized | ClassFileConstants.AccAbstract | ClassFileConstants.AccNative  | ClassFileConstants.AccFinal | ExtraCompilerModifiers.AccGenericSignature);
 		this.tagBits |= (TagBits.AnnotationResolved | TagBits.DeprecatedAnnotationResolved);
 	    this.returnType = overridenMethodToBridge.returnType;
 	    this.parameters = overridenMethodToBridge.parameters;
@@ -299,7 +299,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 	    this.selector = overridenMethodToBridge.selector;
 	    // amongst other, clear the AccGenericSignature, so as to ensure no remains of original inherited persist (101794)
 	    // also use the modifiers from the target method, as opposed to inherited one (147690)
-	    this.modifiers = (overridenMethodToBridge.modifiers | ClassFileConstants.AccBridge | ClassFileConstants.AccSynthetic) & ~(ClassFileConstants.AccAbstract | ClassFileConstants.AccNative  | ClassFileConstants.AccFinal | ExtraCompilerModifiers.AccGenericSignature);
+	    this.modifiers = (overridenMethodToBridge.modifiers | ClassFileConstants.AccBridge | ClassFileConstants.AccSynthetic) & ~(ClassFileConstants.AccSynchronized | ClassFileConstants.AccAbstract | ClassFileConstants.AccNative  | ClassFileConstants.AccFinal | ExtraCompilerModifiers.AccGenericSignature);
 		this.tagBits |= (TagBits.AnnotationResolved | TagBits.DeprecatedAnnotationResolved);
 	    this.returnType = overridenMethodToBridge.returnType;
 	    this.parameters = overridenMethodToBridge.parameters;

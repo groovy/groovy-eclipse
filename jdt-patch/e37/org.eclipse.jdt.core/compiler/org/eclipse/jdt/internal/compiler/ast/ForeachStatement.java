@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -108,7 +108,7 @@ public class ForeachStatement extends Statement {
 			addInitializationsFrom(condInfo.initsWhenFalse());
 			// TODO (maxime) no need to test when false: can optimize (same for action being unreachable above)
 			if ((actionInfo.tagBits & loopingContext.initsOnContinue.tagBits &
-					FlowInfo.UNREACHABLE) != 0) {
+					FlowInfo.UNREACHABLE_OR_DEAD) != 0) {
 				this.continueLabel = null;
 			} else {
 				actionInfo = actionInfo.mergedWith(loopingContext.initsOnContinue);

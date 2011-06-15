@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -72,7 +72,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		// code generation can be optimized when no need to continue in the loop
 		if ((actionInfo.tagBits &
 				loopingContext.initsOnContinue.tagBits &
-				FlowInfo.UNREACHABLE) != 0) {
+				FlowInfo.UNREACHABLE_OR_DEAD) != 0) {
 			this.continueLabel = null;
 		}
 		if ((this.condition.implicitConversion & TypeIds.UNBOXING) != 0) {

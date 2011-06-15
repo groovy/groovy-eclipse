@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,51 +23,33 @@ import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
  * For JLS2:
  * <pre>
  * Statement:
- *    Block
- *    IfStatement
- *    ForStatement
- *    WhileStatement
- *    DoStatement
- *    TryStatement
- *    SwitchStatement
- *    SynchronizedStatement
- *    ReturnStatement
- *    ThrowStatement
- *    BreakStatement
- *    ContinueStatement
- *    EmptyStatement
- *    ExpressionStatement
- *    LabeledStatement
- *    AssertStatement
- *    VariableDeclarationStatement
- *    TypeDeclarationStatement
- *    ConstructorInvocation
- *    SuperConstructorInvocation
+ *    {@link AssertStatement},
+ *    {@link Block},
+ *    {@link BreakStatement},
+ *    {@link ConstructorInvocation},
+ *    {@link ContinueStatement},
+ *    {@link DoStatement},
+ *    {@link EmptyStatement},
+ *    {@link ExpressionStatement},
+ *    {@link ForStatement},
+ *    {@link IfStatement},
+ *    {@link LabeledStatement},
+ *    {@link ReturnStatement},
+ *    {@link SuperConstructorInvocation},
+ *    {@link SwitchCase},
+ *    {@link SwitchStatement},
+ *    {@link SynchronizedStatement},
+ *    {@link ThrowStatement},
+ *    {@link TryStatement},
+ *    {@link TypeDeclarationStatement},
+ *    {@link VariableDeclarationStatement},
+ *    {@link WhileStatement}
  * </pre>
  * For JLS3, an enhanced for node type was added:
  * <pre>
  * Statement:
- *    Block
- *    IfStatement
- *    ForStatement
- *    EnhancedForStatement
- *    WhileStatement
- *    DoStatement
- *    TryStatement
- *    SwitchStatement
- *    SynchronizedStatement
- *    ReturnStatement
- *    ThrowStatement
- *    BreakStatement
- *    ContinueStatement
- *    EmptyStatement
- *    ExpressionStatement
- *    LabeledStatement
- *    AssertStatement
- *    VariableDeclarationStatement
- *    TypeDeclarationStatement
- *    ConstructorInvocation
- *    SuperConstructorInvocation
+ *    <i>&lt;JLS2 statements&gt;...</i>,
+ *    {@link EnhancedForStatement}
  * </pre>
  * </p>
  *

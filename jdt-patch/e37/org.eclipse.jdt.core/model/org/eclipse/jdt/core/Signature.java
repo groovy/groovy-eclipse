@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,8 +15,7 @@ import java.util.ArrayList;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
-import org.eclipse.jdt.internal.core.util.Util;
-
+import org.eclipse.jdt.internal.compiler.util.Util;
 
 /**
  * Provides methods for encoding and decoding type and method signature strings.
@@ -149,75 +148,75 @@ public final class Signature {
 	 * Character constant indicating the primitive type boolean in a signature.
 	 * Value is <code>'Z'</code>.
 	 */
-	public static final char C_BOOLEAN 		= 'Z';
+	public static final char C_BOOLEAN = org.eclipse.jdt.internal.compiler.util.Util.C_BOOLEAN;
 
 	/**
 	 * Character constant indicating the primitive type byte in a signature.
 	 * Value is <code>'B'</code>.
 	 */
-	public static final char C_BYTE 		= 'B';
+	public static final char C_BYTE = org.eclipse.jdt.internal.compiler.util.Util.C_BYTE;
 
 	/**
 	 * Character constant indicating the primitive type char in a signature.
 	 * Value is <code>'C'</code>.
 	 */
-	public static final char C_CHAR 		= 'C';
+	public static final char C_CHAR = org.eclipse.jdt.internal.compiler.util.Util.C_CHAR;
 
 	/**
 	 * Character constant indicating the primitive type double in a signature.
 	 * Value is <code>'D'</code>.
 	 */
-	public static final char C_DOUBLE 		= 'D';
+	public static final char C_DOUBLE = org.eclipse.jdt.internal.compiler.util.Util.C_DOUBLE;
 
 	/**
 	 * Character constant indicating the primitive type float in a signature.
 	 * Value is <code>'F'</code>.
 	 */
-	public static final char C_FLOAT 		= 'F';
+	public static final char C_FLOAT = org.eclipse.jdt.internal.compiler.util.Util.C_FLOAT;
 
 	/**
 	 * Character constant indicating the primitive type int in a signature.
 	 * Value is <code>'I'</code>.
 	 */
-	public static final char C_INT 			= 'I';
+	public static final char C_INT = org.eclipse.jdt.internal.compiler.util.Util.C_INT;
 
 	/**
 	 * Character constant indicating the semicolon in a signature.
 	 * Value is <code>';'</code>.
 	 */
-	public static final char C_SEMICOLON 			= ';';
+	public static final char C_SEMICOLON = org.eclipse.jdt.internal.compiler.util.Util.C_SEMICOLON;
 
 	/**
 	 * Character constant indicating the colon in a signature.
 	 * Value is <code>':'</code>.
 	 * @since 3.0
 	 */
-	public static final char C_COLON 			= ':';
+	public static final char C_COLON = org.eclipse.jdt.internal.compiler.util.Util.C_COLON;
 
 	/**
 	 * Character constant indicating the primitive type long in a signature.
 	 * Value is <code>'J'</code>.
 	 */
-	public static final char C_LONG			= 'J';
+	public static final char C_LONG = org.eclipse.jdt.internal.compiler.util.Util.C_LONG;
 
 	/**
 	 * Character constant indicating the primitive type short in a signature.
 	 * Value is <code>'S'</code>.
 	 */
-	public static final char C_SHORT		= 'S';
+	public static final char C_SHORT = org.eclipse.jdt.internal.compiler.util.Util.C_SHORT;
 
 	/**
 	 * Character constant indicating result type void in a signature.
 	 * Value is <code>'V'</code>.
 	 */
-	public static final char C_VOID			= 'V';
+	public static final char C_VOID = org.eclipse.jdt.internal.compiler.util.Util.C_VOID;
 
 	/**
 	 * Character constant indicating the start of a resolved type variable in a
 	 * signature. Value is <code>'T'</code>.
 	 * @since 3.0
 	 */
-	public static final char C_TYPE_VARIABLE	= 'T';
+	public static final char C_TYPE_VARIABLE = org.eclipse.jdt.internal.compiler.util.Util.C_TYPE_VARIABLE;
 
 	/**
 	 * Character constant indicating an unbound wildcard type argument
@@ -225,14 +224,14 @@ public final class Signature {
 	 * Value is <code>'*'</code>.
 	 * @since 3.0
 	 */
-	public static final char C_STAR	= '*';
+	public static final char C_STAR = org.eclipse.jdt.internal.compiler.util.Util.C_STAR;
 
 	/**
 	 * Character constant indicating an exception in a signature.
 	 * Value is <code>'^'</code>.
 	 * @since 3.1
 	 */
-	public static final char C_EXCEPTION_START	= '^';
+	public static final char C_EXCEPTION_START = org.eclipse.jdt.internal.compiler.util.Util.C_EXCEPTION_START;
 
 	/**
 	 * Character constant indicating a bound wildcard type argument
@@ -240,7 +239,7 @@ public final class Signature {
 	 * Value is <code>'+'</code>.
 	 * @since 3.1
 	 */
-	public static final char C_EXTENDS	= '+';
+	public static final char C_EXTENDS = org.eclipse.jdt.internal.compiler.util.Util.C_EXTENDS;
 
 	/**
 	 * Character constant indicating a bound wildcard type argument
@@ -248,76 +247,76 @@ public final class Signature {
 	 * Value is <code>'-'</code>.
 	 * @since 3.1
 	 */
-	public static final char C_SUPER	= '-';
+	public static final char C_SUPER = org.eclipse.jdt.internal.compiler.util.Util.C_SUPER;
 
 	/**
 	 * Character constant indicating the dot in a signature.
 	 * Value is <code>'.'</code>.
 	 */
-	public static final char C_DOT			= '.';
+	public static final char C_DOT = org.eclipse.jdt.internal.compiler.util.Util.C_DOT;
 
 	/**
 	 * Character constant indicating the dollar in a signature.
 	 * Value is <code>'$'</code>.
 	 */
-	public static final char C_DOLLAR			= '$';
+	public static final char C_DOLLAR = org.eclipse.jdt.internal.compiler.util.Util.C_DOLLAR;
 
 	/**
 	 * Character constant indicating an array type in a signature.
 	 * Value is <code>'['</code>.
 	 */
-	public static final char C_ARRAY		= '[';
+	public static final char C_ARRAY = org.eclipse.jdt.internal.compiler.util.Util.C_ARRAY;
 
 	/**
 	 * Character constant indicating the start of a resolved, named type in a
 	 * signature. Value is <code>'L'</code>.
 	 */
-	public static final char C_RESOLVED		= 'L';
+	public static final char C_RESOLVED = org.eclipse.jdt.internal.compiler.util.Util.C_RESOLVED;
 
 	/**
 	 * Character constant indicating the start of an unresolved, named type in a
 	 * signature. Value is <code>'Q'</code>.
 	 */
-	public static final char C_UNRESOLVED	= 'Q';
+	public static final char C_UNRESOLVED = org.eclipse.jdt.internal.compiler.util.Util.C_UNRESOLVED;
 
 	/**
 	 * Character constant indicating the end of a named type in a signature.
 	 * Value is <code>';'</code>.
 	 */
-	public static final char C_NAME_END		= ';';
+	public static final char C_NAME_END = org.eclipse.jdt.internal.compiler.util.Util.C_NAME_END;
 
 	/**
 	 * Character constant indicating the start of a parameter type list in a
 	 * signature. Value is <code>'('</code>.
 	 */
-	public static final char C_PARAM_START	= '(';
+	public static final char C_PARAM_START = org.eclipse.jdt.internal.compiler.util.Util.C_PARAM_START;
 
 	/**
 	 * Character constant indicating the end of a parameter type list in a
 	 * signature. Value is <code>')'</code>.
 	 */
-	public static final char C_PARAM_END	= ')';
+	public static final char C_PARAM_END = org.eclipse.jdt.internal.compiler.util.Util.C_PARAM_END;
 
 	/**
 	 * Character constant indicating the start of a formal type parameter
 	 * (or type argument) list in a signature. Value is <code>'&lt;'</code>.
 	 * @since 3.0
 	 */
-	public static final char C_GENERIC_START	= '<';
+	public static final char C_GENERIC_START = org.eclipse.jdt.internal.compiler.util.Util.C_GENERIC_START;
 
 	/**
 	 * Character constant indicating the end of a generic type list in a
 	 * signature. Value is <code>'&gt;'</code>.
 	 * @since 3.0
 	 */
-	public static final char C_GENERIC_END	= '>';
+	public static final char C_GENERIC_END = org.eclipse.jdt.internal.compiler.util.Util.C_GENERIC_END;
 
 	/**
 	 * Character constant indicating a capture of a wildcard type in a
 	 * signature. Value is <code>'!'</code>.
 	 * @since 3.1
 	 */
-	public static final char C_CAPTURE	= '!';
+	public static final char C_CAPTURE =  org.eclipse.jdt.internal.compiler.util.Util.C_CAPTURE;
 
 	/**
 	 * String constant for the signature of the primitive type boolean.

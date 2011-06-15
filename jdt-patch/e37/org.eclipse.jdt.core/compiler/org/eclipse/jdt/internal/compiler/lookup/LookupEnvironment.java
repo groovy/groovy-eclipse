@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - contribution for bug 337868 - [compiler][model] incomplete support for package-info.java when using SearchableEnvironment
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -24,6 +25,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.*;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.ITypeRequestor;
+import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfPackage;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
@@ -125,8 +127,6 @@ public ReferenceBinding askForType(char[][] compoundName) {
 
 ReferenceBinding askForType(PackageBinding packageBinding, char[] name) {
 	if (packageBinding == null) {
-		if (this.defaultPackage == null)
-			return null;
 		packageBinding = this.defaultPackage;
 	}
 	NameEnvironmentAnswer answer = this.nameEnvironment.findType(name, packageBinding.compoundName);
@@ -138,7 +138,13 @@ ReferenceBinding askForType(PackageBinding packageBinding, char[] name) {
 		this.typeRequestor.accept(answer.getBinaryType(), packageBinding, answer.getAccessRestriction());
 	} else if (answer.isCompilationUnit()) {
 		// the type was found as a .java file, try to build it then search the cache
-		this.typeRequestor.accept(answer.getCompilationUnit(), answer.getAccessRestriction());
+		try {
+			this.typeRequestor.accept(answer.getCompilationUnit(), answer.getAccessRestriction());
+		} catch (AbortCompilation abort) {
+			if (CharOperation.equals(name, TypeConstants.PACKAGE_INFO_NAME))
+				return null; // silently, requestor may not be able to handle compilation units (HierarchyResolver)
+			throw abort;
+		}
 	} else if (answer.isSourceType()) {
 		// the type was found as a source model
 		this.typeRequestor.accept(answer.getSourceTypes(), packageBinding, answer.getAccessRestriction());
@@ -977,8 +983,6 @@ public AccessRestriction getAccessRestriction(TypeBinding type) {
  */
 public ReferenceBinding getCachedType(char[][] compoundName) {
 	if (compoundName.length == 1) {
-		if (this.defaultPackage == null)
-			return null;
 		return this.defaultPackage.getType0(compoundName[0]);
 	}
 	PackageBinding packageBinding = getPackage0(compoundName[0]);
@@ -1048,9 +1052,6 @@ public ReferenceBinding getType(char[][] compoundName) {
 	ReferenceBinding referenceBinding;
 
 	if (compoundName.length == 1) {
-		if (this.defaultPackage == null)
-			return null;
-
 		if ((referenceBinding = this.defaultPackage.getType0(compoundName[0])) == null) {
 			PackageBinding packageBinding = getPackage0(compoundName[0]);
 			if (packageBinding != null && packageBinding != TheNotFoundPackage)

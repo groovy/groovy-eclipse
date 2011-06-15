@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,8 +16,8 @@ import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.*;
-import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.codeassist.ISelectionRequestor;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 /**
  * Maps back and forth a code snippet to a compilation unit.
@@ -57,10 +57,23 @@ class CodeSnippetToCuMapper implements EvaluationConstants {
 	char[][] localVarNames;
 	char[][] localVarTypeNames;
 
+	long complianceVersion;
+
 /**
  * Rebuild source in presence of external local variables
  */
- public CodeSnippetToCuMapper(char[] codeSnippet, char[] packageName, char[][] imports, char[] className, char[] varClassName, char[][] localVarNames, char[][] localVarTypeNames, int[] localVarModifiers, char[] declaringTypeName, String lineSeparator) {
+ public CodeSnippetToCuMapper(
+		char[] codeSnippet,
+		char[] packageName,
+		char[][] imports,
+		char[] className,
+		char[] varClassName,
+		char[][] localVarNames,
+		char[][] localVarTypeNames,
+		int[] localVarModifiers,
+		char[] declaringTypeName,
+		String lineSeparator,
+		long complianceVersion) {
 	this.codeSnippet = codeSnippet;
 	this.snippetPackageName = packageName;
 	this.snippetImports = imports;
@@ -69,6 +82,7 @@ class CodeSnippetToCuMapper implements EvaluationConstants {
 	this.localVarNames = localVarNames;
 	this.localVarTypeNames = localVarTypeNames;
 	this.snippetDeclaringTypeName = declaringTypeName;
+	this.complianceVersion = complianceVersion;
 	buildCUSource(lineSeparator);
 }
 private void buildCUSource(String lineSeparator) {
@@ -129,6 +143,9 @@ private void buildCUSource(String lineSeparator) {
 		}
 	}
 	// run() method declaration
+	if (this.complianceVersion >= ClassFileConstants.JDK1_5) {
+		buffer.append("@Override "); //$NON-NLS-1$
+	}
 	buffer.append("public void run() throws Throwable {").append(lineSeparator); //$NON-NLS-1$
 	this.lineNumberOffset++;
 	this.startPosOffset = buffer.length();

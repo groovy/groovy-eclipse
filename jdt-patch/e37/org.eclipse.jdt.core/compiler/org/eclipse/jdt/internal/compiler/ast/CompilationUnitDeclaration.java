@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -242,8 +242,7 @@ public void finalizeProblems() {
 			// discard suppressed warning
 			removed++;
 			problems[iProblem] = null;
-			if (this.compilationResult.problemsMap != null) this.compilationResult.problemsMap.remove(problem);
-			if (this.compilationResult.firstErrors != null) this.compilationResult.firstErrors.remove(problem);
+			this.compilationResult.removeProblem(problem);
 			if (foundIrritants[iSuppress] == null){
 				foundIrritants[iSuppress] = new IrritantSet(irritant);
 			} else {
@@ -264,7 +263,6 @@ public void finalizeProblems() {
 				}
 			}
 		}
-		this.compilationResult.problemCount -= removed;
 	}
 	// flag SuppressWarnings which had no effect (only if no (mandatory) error got detected within unit
 	if (!hasMandatoryErrors) {

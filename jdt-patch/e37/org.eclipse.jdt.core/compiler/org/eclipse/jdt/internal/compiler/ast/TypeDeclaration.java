@@ -192,7 +192,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	if (this.ignoreFurtherInvestigation)
 		return flowInfo;
 	try {
-		if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0) {
+		if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0) {
 			this.bits |= ASTNode.IsReachable;
 			LocalTypeBinding localType = (LocalTypeBinding) this.binding;
 			localType.setConstantPoolName(currentScope.compilationUnitScope().computeConstantPoolName(localType));
@@ -230,7 +230,7 @@ public void analyseCode(ClassScope currentScope, FlowContext flowContext, FlowIn
 	if (this.ignoreFurtherInvestigation)
 		return;
 	try {
-		if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0) {
+		if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0) {
 			this.bits |= ASTNode.IsReachable;
 			LocalTypeBinding localType = (LocalTypeBinding) this.binding;
 			localType.setConstantPoolName(currentScope.compilationUnitScope().computeConstantPoolName(localType));
@@ -633,7 +633,7 @@ private void internalAnalyseCode(FlowContext flowContext, FlowInfo flowInfo) {
 		for (int i = 0, count = this.fields.length; i < count; i++) {
 			FieldDeclaration field = this.fields[i];
 			if (field.isStatic()) {
-				if ((staticFieldInfo.tagBits & FlowInfo.UNREACHABLE) != 0)
+				if ((staticFieldInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) != 0)
 					field.bits &= ~ASTNode.IsReachable;
 
 				/*if (field.isField()){
@@ -646,10 +646,10 @@ private void internalAnalyseCode(FlowContext flowContext, FlowInfo flowInfo) {
 				// branch, since the previous initializer already got the blame.
 				if (staticFieldInfo == FlowInfo.DEAD_END) {
 					this.staticInitializerScope.problemReporter().initializerMustCompleteNormally(field);
-					staticFieldInfo = FlowInfo.initial(this.maxFieldCount).setReachMode(FlowInfo.UNREACHABLE);
+					staticFieldInfo = FlowInfo.initial(this.maxFieldCount).setReachMode(FlowInfo.UNREACHABLE_OR_DEAD);
 				}
 			} else {
-				if ((nonStaticFieldInfo.tagBits & FlowInfo.UNREACHABLE) != 0)
+				if ((nonStaticFieldInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) != 0)
 					field.bits &= ~ASTNode.IsReachable;
 
 				/*if (field.isField()){
@@ -662,7 +662,7 @@ private void internalAnalyseCode(FlowContext flowContext, FlowInfo flowInfo) {
 				// branch, since the previous initializer already got the blame.
 				if (nonStaticFieldInfo == FlowInfo.DEAD_END) {
 					this.initializerScope.problemReporter().initializerMustCompleteNormally(field);
-					nonStaticFieldInfo = FlowInfo.initial(this.maxFieldCount).setReachMode(FlowInfo.UNREACHABLE);
+					nonStaticFieldInfo = FlowInfo.initial(this.maxFieldCount).setReachMode(FlowInfo.UNREACHABLE_OR_DEAD);
 				}
 			}
 		}
@@ -725,7 +725,7 @@ public final static int kind(int flags) {
  * 15.9.2
  */
 public void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo) {
-	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) != 0) return;
+	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) != 0) return;
 	NestedTypeBinding nestedType = (NestedTypeBinding) this.binding;
 
 	MethodScope methodScope = currentScope.methodScope();
@@ -776,7 +776,7 @@ public void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, Fl
  * Local member cannot be static.
  */
 public void manageEnclosingInstanceAccessIfNecessary(ClassScope currentScope, FlowInfo flowInfo) {
-	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0) {
+	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0) {
 	NestedTypeBinding nestedType = (NestedTypeBinding) this.binding;
 	nestedType.addSyntheticArgumentAndField(this.binding.enclosingType());
 	}
@@ -979,7 +979,7 @@ public void resolve() {
 			// if Object writeReplace() throws java.io.ObjectStreamException is present, then no serialVersionUID is needed
 			// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=101476
 			CompilationUnitScope compilationUnitScope = this.scope.compilationUnitScope();
-			MethodBinding methodBinding = sourceType.getExactMethod(TypeConstants.WRITEREPLACE, new TypeBinding[0], compilationUnitScope);
+			MethodBinding methodBinding = sourceType.getExactMethod(TypeConstants.WRITEREPLACE, Binding.NO_TYPES, compilationUnitScope);
 			ReferenceBinding[] throwsExceptions;
 			needSerialVersion =
 				methodBinding == null

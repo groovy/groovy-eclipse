@@ -7,8 +7,12 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Stephan Herrmann <stephan@cs.tu-berlin.de> - Contribution for 
- *     						bugs 325755, 320170, 292478 and 332637   
+ *     Stephan Herrmann <stephan@cs.tu-berlin.de> - Contributions for
+ *     						bug 325755 - [compiler] wrong initialization state after conditional expression
+ *     						bug 320170 - [compiler] [null] Whitebox issues in null analysis
+ *     						bug 292478 - Report potentially null across variable assignment
+ *     						bug 332637 - Dead Code detection removing code that isn't dead
+ *     						bug 341499 - [compiler][null] allocate extra bits in all methods of UnconditionalFlowInfo
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.flow;
 
@@ -731,7 +735,7 @@ final private boolean isDefinitelyAssigned(int position) {
 final public boolean isDefinitelyAssigned(FieldBinding field) {
 	// Mirrored in CodeStream.isDefinitelyAssigned(..)
 	// do not want to complain in unreachable code
-	if ((this.tagBits & UNREACHABLE) != 0) {
+	if ((this.tagBits & UNREACHABLE_OR_DEAD) != 0) {
 		return true;
 	}
 	return isDefinitelyAssigned(field.id);
@@ -739,7 +743,7 @@ final public boolean isDefinitelyAssigned(FieldBinding field) {
 
 final public boolean isDefinitelyAssigned(LocalVariableBinding local) {
 	// do not want to complain in unreachable code if local declared in reachable code
-	if ((this.tagBits & UNREACHABLE) != 0 && (local.declaration.bits & ASTNode.IsLocalDeclarationReachable) != 0) {
+	if ((this.tagBits & UNREACHABLE_OR_DEAD) != 0 && (local.declaration.bits & ASTNode.IsLocalDeclarationReachable) != 0) {
 		return true;
 	}
 	return isDefinitelyAssigned(local.id + this.maxFieldCount);
@@ -860,6 +864,7 @@ final public boolean isPotentiallyAssigned(LocalVariableBinding local) {
 	return isPotentiallyAssigned(local.id + this.maxFieldCount);
 }
 
+// TODO (Ayush) Check why this method does not return true for protected non null (1111)
 final public boolean isPotentiallyNonNull(LocalVariableBinding local) {
 	if ((this.tagBits & NULL_FLAG_MASK) == 0 ||
 			(local.type.tagBits & TagBits.IsBaseType) != 0) {
@@ -885,6 +890,7 @@ final public boolean isPotentiallyNonNull(LocalVariableBinding local) {
 		    & (1L << (position % BitCacheSize))) != 0;
 }
 
+// TODO (Ayush) Check why this method does not return true for protected null
 final public boolean isPotentiallyNull(LocalVariableBinding local) {
 	if ((this.tagBits & NULL_FLAG_MASK) == 0 ||
 			(local.type.tagBits & TagBits.IsBaseType) != 0) {
@@ -1258,8 +1264,25 @@ public void markAsDefinitelyNonNull(LocalVariableBinding local) {
     	}
     	else {
     		// use extra vector
-    		int vectorIndex ;
-    		this.extra[2][vectorIndex = (position / BitCacheSize) - 1]
+    		int vectorIndex = (position / BitCacheSize) - 1;
+    		if (this.extra == null) {
+    			int length = vectorIndex + 1;
+    			this.extra = new long[extraLength][];
+    			for (int j = 0; j < extraLength; j++) {
+    				this.extra[j] = new long[length];
+    			}
+    		}
+    		else {
+    			int oldLength; // might need to grow the arrays
+    			if (vectorIndex >= (oldLength = this.extra[0].length)) {
+    				for (int j = 0; j < extraLength; j++) {
+    					System.arraycopy(this.extra[j], 0,
+    						(this.extra[j] = new long[vectorIndex + 1]), 0,
+    						oldLength);
+    				}
+    			}
+    		}
+    		this.extra[2][vectorIndex]
     		    |= (mask = 1L << (position % BitCacheSize));
     		this.extra[4][vectorIndex] |= mask;
     		this.extra[3][vectorIndex] &= (mask = ~mask);
@@ -1295,8 +1318,25 @@ public void markAsDefinitelyNull(LocalVariableBinding local) {
     	}
     	else {
     		// use extra vector
-    		int vectorIndex ;
-    		this.extra[2][vectorIndex = (position / BitCacheSize) - 1]
+    		int vectorIndex = (position / BitCacheSize) - 1;
+    		if (this.extra == null) {
+    			int length = vectorIndex + 1;
+    			this.extra = new long[extraLength][];
+    			for (int j = 0; j < extraLength; j++) {
+    				this.extra[j] = new long[length];
+    			}
+    		}
+    		else {
+    			int oldLength; // might need to grow the arrays
+    			if (vectorIndex >= (oldLength = this.extra[0].length)) {
+    				for (int j = 0; j < extraLength; j++) {
+    					System.arraycopy(this.extra[j], 0,
+    						(this.extra[j] = new long[vectorIndex + 1]), 0,
+    						oldLength);
+    				}
+    			}
+    		}
+    		this.extra[2][vectorIndex]
     		    |= (mask = 1L << (position % BitCacheSize));
     		this.extra[3][vectorIndex] |= mask;
     		this.extra[4][vectorIndex] &= (mask = ~mask);
@@ -1339,8 +1379,25 @@ public void markAsDefinitelyUnknown(LocalVariableBinding local) {
 		}
 		else {
 			// use extra vector
-			int vectorIndex ;
-			this.extra[2][vectorIndex = (position / BitCacheSize) - 1]
+			int vectorIndex = (position / BitCacheSize) - 1;
+			if (this.extra == null) {
+				int length = vectorIndex + 1;
+				this.extra = new long[extraLength][];
+				for (int j = 0; j < extraLength; j++) {
+					this.extra[j] = new long[length];
+				}
+			}
+			else {
+				int oldLength; // might need to grow the arrays
+				if (vectorIndex >= (oldLength = this.extra[0].length)) {
+					for (int j = 0; j < extraLength; j++) {
+						System.arraycopy(this.extra[j], 0,
+							(this.extra[j] = new long[vectorIndex + 1]), 0,
+							oldLength);
+					}
+				}
+			}
+			this.extra[2][vectorIndex]
 			    |= (mask = 1L << (position % BitCacheSize));
 			this.extra[5][vectorIndex] |= mask;
 			this.extra[3][vectorIndex] &= (mask = ~mask);
@@ -1529,7 +1586,7 @@ public void markPotentiallyNonNullBit(LocalVariableBinding local) {
 }
 
 public UnconditionalFlowInfo mergedWith(UnconditionalFlowInfo otherInits) {
-	if ((otherInits.tagBits & UNREACHABLE) != 0 && this != DEAD_END) {
+	if ((otherInits.tagBits & UNREACHABLE_OR_DEAD) != 0 && this != DEAD_END) {
 		if (COVERAGE_TEST_FLAG) {
 			if(CoverageTestId == 28) {
 				throw new AssertionFailedException("COVERAGE 28"); //$NON-NLS-1$
@@ -1538,7 +1595,7 @@ public UnconditionalFlowInfo mergedWith(UnconditionalFlowInfo otherInits) {
 		combineNullStatusChangeInAssertInfo(otherInits);
 		return this;
 	}
-	if ((this.tagBits & UNREACHABLE) != 0) {
+	if ((this.tagBits & UNREACHABLE_OR_DEAD) != 0) {
 		if (COVERAGE_TEST_FLAG) {
 			if(CoverageTestId == 29) {
 				throw new AssertionFailedException("COVERAGE 29"); //$NON-NLS-1$
@@ -1563,7 +1620,17 @@ public UnconditionalFlowInfo mergedWith(UnconditionalFlowInfo otherInits) {
 		na1, na2, na3, na4,
 		nb1, nb2, nb3, nb4,
 		b1, b2, b3, b4;
-	if (thisHadNulls) {
+	if ((otherInits.tagBits & FlowInfo.UNREACHABLE_BY_NULLANALYSIS) != 0) {
+		otherHasNulls = false; // skip merging, otherInits is unreachable by null analysis
+	} else if ((this.tagBits & FlowInfo.UNREACHABLE_BY_NULLANALYSIS) != 0) { // directly copy if this is unreachable by null analysis
+		this.nullBit1 = otherInits.nullBit1;
+		this.nullBit2 = otherInits.nullBit2;
+		this.nullBit3 = otherInits.nullBit3;
+		this.nullBit4 = otherInits.nullBit4;
+		thisHadNulls = false;
+		thisHasNulls = otherHasNulls;
+		this.tagBits = otherInits.tagBits;
+	} else if (thisHadNulls) {
     	if (otherHasNulls) {
     		this.nullBit1 = (a2 = this.nullBit2) & (a3 = this.nullBit3)
     							& (a4 = this.nullBit4) & (b1 = otherInits.nullBit1)
@@ -1858,6 +1925,8 @@ public FlowInfo setReachMode(int reachMode) {
 	}	
 	if (reachMode == REACHABLE ) {
 		this.tagBits &= ~UNREACHABLE;
+	} else if (reachMode == UNREACHABLE_BY_NULLANALYSIS ) {
+		this.tagBits |= UNREACHABLE_BY_NULLANALYSIS;	// do not interfere with definite assignment analysis
 	} else {
 		if ((this.tagBits & UNREACHABLE) == 0) {
 			// reset optional inits when becoming unreachable
@@ -1870,7 +1939,7 @@ public FlowInfo setReachMode(int reachMode) {
 				}
 			}
 		}
-		this.tagBits |= UNREACHABLE;
+		this.tagBits |= reachMode;
 	}
 	return this;
 }

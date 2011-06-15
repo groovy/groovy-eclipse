@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,12 +25,15 @@ public class SelectionJavadocParser extends JavadocParser {
 	int selectionStart;
 	int selectionEnd;
 	ASTNode selectedNode;
+	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=171019
+	public boolean inheritDocTagSelected;
 
 	public SelectionJavadocParser(SelectionParser sourceParser) {
 		super(sourceParser);
 		this.shouldReportProblems = false;
 		this.reportProblems = false;
 		this.kind = SELECTION_PARSER | TEXT_PARSE;
+		this.inheritDocTagSelected = false;
 	}
 
 	/*
@@ -186,6 +189,16 @@ public class SelectionJavadocParser extends JavadocParser {
 	protected void updateDocComment() {
 		if (this.selectedNode instanceof Expression) {
 			((SelectionJavadoc) this.docComment).selectedNode = (Expression) this.selectedNode;
+		} else if (this.inheritDocTagSelected) {
+			((SelectionJavadoc) this.docComment).inheritDocSelected = true;
 		}
+	}
+	
+	/*
+	 * Sets a flag to denote that selection has taken place on an inheritDoc tag
+	 */
+	protected void parseInheritDocTag() {
+		if (this.tagSourceStart == this.selectionStart && this.tagSourceEnd == this.selectionEnd)
+			this.inheritDocTagSelected = true;
 	}
 }

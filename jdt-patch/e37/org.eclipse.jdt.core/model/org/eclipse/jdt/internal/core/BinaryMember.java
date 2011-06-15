@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -47,7 +47,11 @@ protected IAnnotation[] getAnnotations(IBinaryAnnotation[] binaryAnnotations, lo
 		return standardAnnotations;
 	int length = binaryAnnotations.length;
 	int standardLength = standardAnnotations.length;
-	IAnnotation[] annotations = new IAnnotation[length + standardLength];
+	int fullLength = length + standardLength;
+	if (fullLength == 0) {
+		return Annotation.NO_ANNOTATIONS;
+	}
+	IAnnotation[] annotations = new IAnnotation[fullLength];
 	for (int i = 0; i < length; i++) {
 		annotations[i] = Util.getAnnotation(this, binaryAnnotations[i], null);
 	}
@@ -57,7 +61,7 @@ protected IAnnotation[] getAnnotations(IBinaryAnnotation[] binaryAnnotations, lo
 private IAnnotation getAnnotation(char[][] annotationName) {
 	return new Annotation(this, new String(CharOperation.concatWith(annotationName, '.')));
 }
-private IAnnotation[] getStandardAnnotations(long tagBits) {
+protected IAnnotation[] getStandardAnnotations(long tagBits) {
 	if ((tagBits & TagBits.AllStandardAnnotationsMask) == 0)
 		return Annotation.NO_ANNOTATIONS;
 	ArrayList annotations = new ArrayList();

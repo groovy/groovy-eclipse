@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -134,7 +134,7 @@ private void buildMoreCompletionContext(Expression expression) {
 				Expression castType;
 				if(this.expressionPtr > 0
 					&& ((castType = this.expressionStack[this.expressionPtr-1]) instanceof TypeReference)) {
-					CastExpression cast = new CastExpression(expression, castType);
+					CastExpression cast = new CastExpression(expression, (TypeReference) castType);
 					cast.sourceStart = castType.sourceStart;
 					cast.sourceEnd= expression.sourceEnd;
 					parentNode = cast;
@@ -565,6 +565,74 @@ protected void consumeFormalParameter(boolean isVarArgs) {
 				namePositions,
 				type,
 				this.intStack[this.intPtr + 1] & ~ClassFileConstants.AccDeprecated); // modifiers
+		arg.declarationSourceStart = modifierPositions;
+
+		// consume annotations
+		int length;
+		if ((length = this.expressionLengthStack[this.expressionLengthPtr--]) != 0) {
+			System.arraycopy(
+				this.expressionStack,
+				(this.expressionPtr -= length) + 1,
+				arg.annotations = new Annotation[length],
+				0,
+				length);
+		}
+
+		pushOnAstStack(arg);
+
+		this.assistNode = arg;
+		this.lastCheckPoint = (int) namePositions;
+		this.isOrphanCompletionNode = true;
+
+		if (!this.diet){
+			this.restartRecovery	= true;	// force to restart in recovery mode
+			this.lastIgnoredToken = -1;
+		}
+
+		/* if incomplete method header, listLength counter will not have been reset,
+			indicating that some arguments are available on the stack */
+		this.listLength++;
+	}
+}
+protected void consumeCatchFormalParameter(boolean isVarArgs) {
+	if (this.indexOfAssistIdentifier() < 0) {
+		super.consumeCatchFormalParameter(isVarArgs);
+		if((!this.diet || this.dietInt != 0) && this.astPtr > -1) {
+			Argument argument = (Argument) this.astStack[this.astPtr];
+			if(argument.type == this.assistNode) {
+				this.isOrphanCompletionNode = true;
+				this.restartRecovery	= true;	// force to restart in recovery mode
+				this.lastIgnoredToken = -1;
+			}
+		}
+	} else {
+		this.identifierLengthPtr--;
+		char[] identifierName = this.identifierStack[this.identifierPtr];
+		long namePositions = this.identifierPositionStack[this.identifierPtr--];
+		int extendedDimensions = this.intStack[this.intPtr--];
+		int endOfEllipsis = 0;
+		if (isVarArgs) {
+			endOfEllipsis = this.intStack[this.intPtr--];
+		}
+		int firstDimensions = this.intStack[this.intPtr--];
+		final int typeDimensions = firstDimensions + extendedDimensions;
+		TypeReference type = getTypeReference(typeDimensions);
+		if (isVarArgs) {
+			type = copyDims(type, typeDimensions + 1);
+			if (extendedDimensions == 0) {
+				type.sourceEnd = endOfEllipsis;
+			}
+			type.bits |= ASTNode.IsVarArgs; // set isVarArgs
+		}
+		int modifierPositions = this.intStack[this.intPtr--];
+		this.intPtr--;
+		Argument arg =
+			new SelectionOnArgumentName(
+				identifierName,
+				namePositions,
+				type,
+				this.intStack[this.intPtr + 1] & ~ClassFileConstants.AccDeprecated); // modifiers
+		arg.bits &= ~ASTNode.IsArgument;
 		arg.declarationSourceStart = modifierPositions;
 
 		// consume annotations

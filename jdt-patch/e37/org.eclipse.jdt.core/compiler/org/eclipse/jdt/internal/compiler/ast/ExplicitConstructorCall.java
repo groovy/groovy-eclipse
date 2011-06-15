@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -196,7 +196,7 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 	void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo) {
 		ReferenceBinding superTypeErasure = (ReferenceBinding) this.binding.declaringClass.erasure();
 
-		if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0)	{
+		if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0)	{
 		// perform some emulation work in case there is some and we are inside a local type only
 		if (superTypeErasure.isNestedType()
 			&& currentScope.enclosingSourceType().isLocalType()) {
@@ -212,7 +212,7 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 	}
 
 	public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo) {
-		if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0)	{
+		if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0)	{
 			// if constructor from parameterized type got found, use the original constructor at codegen time
 			MethodBinding codegenBinding = this.binding.original();
 

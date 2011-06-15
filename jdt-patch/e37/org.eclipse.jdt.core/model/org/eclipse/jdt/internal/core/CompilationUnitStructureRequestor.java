@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,11 +17,19 @@ import java.util.Map;
 import java.util.Stack;
 
 import org.eclipse.core.runtime.Assert;
-import org.eclipse.jdt.core.*;
+import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.IAnnotation;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMemberValuePair;
+import org.eclipse.jdt.core.ITypeParameter;
+import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
+import org.eclipse.jdt.internal.compiler.ast.ASTNode;
+import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.ArrayInitializer;
 import org.eclipse.jdt.internal.compiler.ast.ClassLiteralAccess;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
@@ -39,7 +47,6 @@ import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 import org.eclipse.jdt.internal.core.util.ReferenceInfoAdapter;
 import org.eclipse.jdt.internal.core.util.Util;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 /**
  * A requestor for the fuzzy parser, used to compute the children of an ICompilationUnit.
  */
@@ -427,8 +434,53 @@ private SourceMethodElementInfo createMethodInfo(MethodInfo methodInfo, SourceMe
 			acceptAnnotation(annotation, info, handle);
 		}
 	}
+	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=334783
+	// Process the parameter annotations from the arguments
+	if (methodInfo.node != null && methodInfo.node.arguments != null) {
+		info.arguments = acceptMethodParameters(methodInfo.node.arguments, handle, methodInfo);
+	}
 	return info;
 }
+private LocalVariable[] acceptMethodParameters(Argument[] arguments, JavaElement methodHandle, MethodInfo methodInfo) {
+	if (arguments == null) return null;
+	LocalVariable[] result = new LocalVariable[arguments.length];
+	Annotation[][] paramAnnotations = new Annotation[arguments.length][];
+	for(int i = 0; i < arguments.length; i++) {
+		Argument argument = arguments[i];
+		AnnotatableInfo localVarInfo = new AnnotatableInfo();
+		localVarInfo.setSourceRangeStart(argument.declarationSourceStart);
+		localVarInfo.setSourceRangeEnd(argument.declarationSourceStart);
+		localVarInfo.setNameSourceStart(argument.sourceStart);
+		localVarInfo.setNameSourceEnd(argument.sourceEnd);
+		
+		String paramTypeSig = JavaModelManager.getJavaModelManager().intern(Signature.createTypeSignature(methodInfo.parameterTypes[i], false));
+		result[i] = new LocalVariable(
+				methodHandle,
+				new String(argument.name),
+				argument.declarationSourceStart,
+				argument.declarationSourceEnd,
+				argument.sourceStart,
+				argument.sourceEnd,
+				paramTypeSig,
+				argument.annotations,
+				argument.modifiers, 
+				true);
+		this.newElements.put(result[i], localVarInfo);
+		this.infoStack.push(localVarInfo);
+		this.handleStack.push(result[i]);
+		if (argument.annotations != null) {
+			paramAnnotations[i] = new Annotation[argument.annotations.length];
+			for (int  j = 0; j < argument.annotations.length; j++ ) {
+				org.eclipse.jdt.internal.compiler.ast.Annotation annotation = argument.annotations[j];
+				acceptAnnotation(annotation, localVarInfo, result[i]);
+			}
+		}
+		this.infoStack.pop();
+		this.handleStack.pop();
+	}
+	return result;
+}
+
 /**
  * @see ISourceElementRequestor
  */

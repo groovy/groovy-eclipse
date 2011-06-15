@@ -72,6 +72,7 @@ public void branchChainTo(BranchLabel label) {
 // complaintLevel = 0 if was reachable up until now, 1 if fake reachable (deadcode), 2 if fatal unreachable (error)
 public int complainIfUnreachable(FlowInfo flowInfo, BlockScope scope, int previousComplaintLevel) {
 	if ((flowInfo.reachMode() & FlowInfo.UNREACHABLE) != 0) {
+		if ((flowInfo.reachMode() & FlowInfo.UNREACHABLE_OR_DEAD) != 0)
 		this.bits &= ~ASTNode.IsReachable;
 		if (flowInfo == FlowInfo.DEAD_END) {
 			if (previousComplaintLevel < COMPLAINED_UNREACHABLE) {

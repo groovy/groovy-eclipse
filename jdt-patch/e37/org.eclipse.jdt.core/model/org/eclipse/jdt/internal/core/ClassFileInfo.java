@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -41,23 +41,26 @@ import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 	 */
 	protected ITypeParameter[] typeParameters;
 
+private void generateAnnotationsInfos(JavaElement member, IBinaryAnnotation[] binaryAnnotations, long tagBits, HashMap newElements) {
+	generateAnnotationsInfos(member, null, binaryAnnotations, tagBits, newElements);
+}
 /**
  * Creates the handles and infos for the annotations of the given binary member.
  * Adds new handles to the given vector.
  */
-private void generateAnnotationsInfos(BinaryMember member, IBinaryAnnotation[] binaryAnnotations, long tagBits, HashMap newElements) {
+private void generateAnnotationsInfos(JavaElement member, char[] parameterName, IBinaryAnnotation[] binaryAnnotations, long tagBits, HashMap newElements) {
 	if (binaryAnnotations != null) {
 		for (int i = 0, length = binaryAnnotations.length; i < length; i++) {
 			IBinaryAnnotation annotationInfo = binaryAnnotations[i];
-			generateAnnotationInfo(member, newElements, annotationInfo);
+			generateAnnotationInfo(member, parameterName, newElements, annotationInfo, null);
 		}
 	}
-	generateStandardAnnotationsInfos(member, tagBits, newElements);
-}
-private void generateAnnotationInfo(JavaElement parent, HashMap newElements, IBinaryAnnotation annotationInfo) {
-	generateAnnotationInfo(parent, newElements, annotationInfo, null);
+	generateStandardAnnotationsInfos(member, parameterName, tagBits, newElements);
 }
 private void generateAnnotationInfo(JavaElement parent, HashMap newElements, IBinaryAnnotation annotationInfo, String memberValuePairName) {
+	generateAnnotationInfo(parent, null, newElements, annotationInfo, memberValuePairName);
+}
+private void generateAnnotationInfo(JavaElement parent, char[] parameterName, HashMap newElements, IBinaryAnnotation annotationInfo, String memberValuePairName) {
 	char[] typeName = org.eclipse.jdt.core.Signature.toCharArray(CharOperation.replaceOnCopy(annotationInfo.getTypeName(), '/', '.'));
 	Annotation annotation = new Annotation(parent, new String(typeName), memberValuePairName);
 	while (newElements.containsKey(annotation)) {
@@ -81,29 +84,29 @@ private void generateAnnotationInfo(JavaElement parent, HashMap newElements, IBi
 		}
 	}
 }
-private void generateStandardAnnotationsInfos(BinaryMember member, long tagBits, HashMap newElements) {
+private void generateStandardAnnotationsInfos(JavaElement javaElement, char[] parameterName, long tagBits, HashMap newElements) {
 	if ((tagBits & TagBits.AllStandardAnnotationsMask) == 0)
 		return;
 	if ((tagBits & TagBits.AnnotationTargetMASK) != 0) {
-		generateStandardAnnotation(member, TypeConstants.JAVA_LANG_ANNOTATION_TARGET, getTargetElementTypes(tagBits), newElements);
+		generateStandardAnnotation(javaElement, TypeConstants.JAVA_LANG_ANNOTATION_TARGET, getTargetElementTypes(tagBits), newElements);
 	}
 	if ((tagBits & TagBits.AnnotationRetentionMASK) != 0) {
-		generateStandardAnnotation(member, TypeConstants.JAVA_LANG_ANNOTATION_RETENTION, getRetentionPolicy(tagBits), newElements);
+		generateStandardAnnotation(javaElement, TypeConstants.JAVA_LANG_ANNOTATION_RETENTION, getRetentionPolicy(tagBits), newElements);
 	}
 	if ((tagBits & TagBits.AnnotationDeprecated) != 0) {
-		generateStandardAnnotation(member, TypeConstants.JAVA_LANG_DEPRECATED, Annotation.NO_MEMBER_VALUE_PAIRS, newElements);
+		generateStandardAnnotation(javaElement, TypeConstants.JAVA_LANG_DEPRECATED, Annotation.NO_MEMBER_VALUE_PAIRS, newElements);
 	}
 	if ((tagBits & TagBits.AnnotationDocumented) != 0) {
-		generateStandardAnnotation(member, TypeConstants.JAVA_LANG_ANNOTATION_DOCUMENTED, Annotation.NO_MEMBER_VALUE_PAIRS, newElements);
+		generateStandardAnnotation(javaElement, TypeConstants.JAVA_LANG_ANNOTATION_DOCUMENTED, Annotation.NO_MEMBER_VALUE_PAIRS, newElements);
 	}
 	if ((tagBits & TagBits.AnnotationInherited) != 0) {
-		generateStandardAnnotation(member, TypeConstants.JAVA_LANG_ANNOTATION_INHERITED, Annotation.NO_MEMBER_VALUE_PAIRS, newElements);
+		generateStandardAnnotation(javaElement, TypeConstants.JAVA_LANG_ANNOTATION_INHERITED, Annotation.NO_MEMBER_VALUE_PAIRS, newElements);
 	}
 	// note that JAVA_LANG_SUPPRESSWARNINGS and JAVA_LANG_OVERRIDE cannot appear in binaries
 }
 
-private void generateStandardAnnotation(BinaryMember member, char[][] typeName, IMemberValuePair[] members, HashMap newElements) {
-	IAnnotation annotation = new Annotation(member, new String(CharOperation.concatWith(typeName, '.')));
+private void generateStandardAnnotation(JavaElement javaElement, char[][] typeName, IMemberValuePair[] members, HashMap newElements) {
+	IAnnotation annotation = new Annotation(javaElement, new String(CharOperation.concatWith(typeName, '.')));
 	AnnotationInfo annotationInfo = new AnnotationInfo();
 	annotationInfo.members = members;
 	newElements.put(annotation, annotationInfo);
@@ -268,7 +271,7 @@ private void generateMethodInfos(IType type, IBinaryType typeInfo, HashMap newEl
 				final String[] parameterTypes = Signature.getParameterTypes(new String(descriptor));
 				pNames[0] = parameterTypes[0];
 			}
-		}catch (IllegalArgumentException e) {
+		} catch (IllegalArgumentException e) {
 			// protect against malformed .class file (e.g. com/sun/crypto/provider/SunJCE_b.class has a 'a' generic signature)
 			signature = methodInfo.getMethodDescriptor();
 			pNames = Signature.getParameterTypes(new String(signature));
@@ -290,13 +293,38 @@ private void generateMethodInfos(IType type, IBinaryType typeInfo, HashMap newEl
 		BinaryMethod method = new BinaryMethod((JavaElement)type, selector, pNames);
 		childrenHandles.add(method);
 
-		// ensure that 2 binary methods with the same signature but with different return types have different occurence counts.
+		// ensure that 2 binary methods with the same signature but with different return types have different occurrence counts.
 		// (case of bridge methods in 1.5)
 		while (newElements.containsKey(method))
 			method.occurrenceCount++;
 
 		newElements.put(method, methodInfo);
 
+		int max = pNames.length;
+		char[][] argumentNames = methodInfo.getArgumentNames();
+		if (argumentNames == null || argumentNames.length < max) {
+			argumentNames = new char[max][];
+			for (int j = 0; j < max; j++) {
+				argumentNames[j] = ("arg" + j).toCharArray(); //$NON-NLS-1$
+			}
+		}
+		for (int j = 0; j < max; j++) {
+			IBinaryAnnotation[] parameterAnnotations = methodInfo.getParameterAnnotations(j);
+			if (parameterAnnotations != null) {
+				LocalVariable localVariable = new LocalVariable(
+						method,
+						new String(argumentNames[j]),
+						0,
+						-1,
+						0,
+						-1,
+						method.parameterTypes[j],
+						null,
+						-1,
+						true);
+				generateAnnotationsInfos(localVariable, argumentNames[j], parameterAnnotations, methodInfo.getTagBits(), newElements);
+			}
+		}
 		generateTypeParameterInfos(method, signature, newElements, typeParameterHandles);
 		generateAnnotationsInfos(method, methodInfo.getAnnotations(), methodInfo.getTagBits(), newElements);
 		Object defaultValue = methodInfo.getDefaultValue();

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,12 +10,18 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.codeassist;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.jdt.core.IBuffer;
+import org.eclipse.jdt.core.IMember;
+import org.eclipse.jdt.core.IOpenable;
+import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
@@ -1106,7 +1112,7 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 			}
 			this.acceptedAnswer = true;
 		} else if (binding instanceof MethodBinding) {
-			MethodBinding methodBinding = (MethodBinding) binding;
+			MethodBinding methodBinding = getCorrectMethodBinding((MethodBinding) binding);
 			this.noProposal = false;
 
 			boolean isValuesOrValueOf = false;
@@ -1607,5 +1613,193 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 		}
 
 		return false;
+	}
+	
+	/*
+	 * Returns the correct method binding according to whether the selection is on the method declaration
+	 * or on the inheritDoc tag in its javadoc.
+	 */
+	private MethodBinding getCorrectMethodBinding(MethodBinding binding) {
+		if (this.parser.javadocParser instanceof SelectionJavadocParser) {
+			if (((SelectionJavadocParser)this.parser.javadocParser).inheritDocTagSelected){
+				try {
+					Object res = findMethodWithAttachedDocInHierarchy(binding);
+					if (res instanceof MethodBinding) {
+						return (MethodBinding) res;
+					}
+				} catch (JavaModelException e) {
+					return null;
+				}
+			}
+		}
+		return binding;
+	}
+	
+	protected MethodBinding findOverriddenMethodInType(ReferenceBinding overriddenType, MethodBinding overriding) throws JavaModelException {
+		if (overriddenType == null)
+			return null;
+		MethodBinding[] overriddenMethods= overriddenType.availableMethods();
+		LookupEnvironment lookupEnv = this.lookupEnvironment;
+		if (lookupEnv != null && overriddenMethods != null) {
+			for (int i= 0; i < overriddenMethods.length; i++) {
+				if (lookupEnv.methodVerifier().isMethodSubsignature(overriding, overriddenMethods[i])) {
+					return overriddenMethods[i];
+				}
+			}
+		}
+		return null;
+	}
+	
+	private Object findMethodWithAttachedDocInHierarchy(final MethodBinding method) throws JavaModelException {
+		ReferenceBinding type= method.declaringClass;
+		final SelectionRequestor requestor1 = (SelectionRequestor) this.requestor;
+		return new InheritDocVisitor() {
+			public Object visit(ReferenceBinding currType) throws JavaModelException {
+				MethodBinding overridden =  findOverriddenMethodInType(currType, method);
+				if (overridden == null)
+					return InheritDocVisitor.CONTINUE;
+				TypeBinding args[] = overridden.parameters;
+				String names[] = new String[args.length];
+				for (int i = 0; i < args.length; i++) {
+					names[i] = Signature.createTypeSignature(args[i].sourceName(), false);
+				}
+				IMember member = (IMember) requestor1.findMethodFromBinding(overridden, names, overridden.declaringClass);
+				if (member == null)
+					return InheritDocVisitor.CONTINUE;
+				if (member.getAttachedJavadoc(null) != null ) {  
+					// for binary methods with attached javadoc and no source attached
+					return overridden;
+				}
+				IOpenable openable = member.getOpenable();
+				if (openable == null)
+					return InheritDocVisitor.CONTINUE;
+				IBuffer buf= openable.getBuffer();
+				if (buf == null) {
+					// no source attachment found. This method maybe the one. Stop.
+					return InheritDocVisitor.STOP_BRANCH;
+				}
+
+				ISourceRange javadocRange= member.getJavadocRange();
+				if (javadocRange == null)
+					return InheritDocVisitor.CONTINUE;	// this method doesn't have javadoc, continue to look.
+				String rawJavadoc= buf.getText(javadocRange.getOffset(), javadocRange.getLength());
+				if (rawJavadoc != null) {
+					return overridden;
+				}
+				return InheritDocVisitor.CONTINUE;
+			}
+		}.visitInheritDoc(type);
+	}
+	
+	/**
+	 * Implements the "Algorithm for Inheriting Method Comments" as specified for
+	 * <a href="http://java.sun.com/j2se/1.4.2/docs/tooldocs/solaris/javadoc.html#inheritingcomments">1.4.2</a>,
+	 * <a href="http://java.sun.com/j2se/1.5.0/docs/tooldocs/windows/javadoc.html#inheritingcomments">1.5</a>, and
+	 * <a href="http://java.sun.com/javase/6/docs/technotes/tools/windows/javadoc.html#inheritingcomments">1.6</a>.
+	 *
+	 * <p>
+	 * Unfortunately, the implementation is broken in Javadoc implementations since 1.5, see
+	 * <a href="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6376959">Sun's bug</a>.
+	 * </p>
+	 *
+	 * <p>
+	 * We adhere to the spec.
+	 * </p>
+	 */
+	static abstract class InheritDocVisitor {
+		public static final Object STOP_BRANCH= new Object() {
+			public String toString() { return "STOP_BRANCH"; } //$NON-NLS-1$
+		};
+		public static final Object CONTINUE= new Object() {
+			public String toString() { return "CONTINUE"; } //$NON-NLS-1$
+		};
+
+		/**
+		 * Visits a type and decides how the visitor should proceed.
+		 *
+		 * @param currType the current type
+		 * @return <ul>
+		 *         <li>{@link #STOP_BRANCH} to indicate that no Javadoc has been found and visiting
+		 *         super types should stop here</li>
+		 *         <li>{@link #CONTINUE} to indicate that no Javadoc has been found and visiting
+		 *         super types should continue</li>
+		 *         <li>an {@link Object} or <code>null</code>, to indicate that visiting should be
+		 *         cancelled immediately. The returned value is the result of
+		 *         {@link #visitInheritDoc(ReferenceBinding)}</li>
+		 *         </ul>
+		 * @throws JavaModelException unexpected problem
+		 * @see #visitInheritDoc(ReferenceBinding)
+		 */
+		public abstract Object visit(ReferenceBinding currType) throws JavaModelException;
+
+		/**
+		 * Visits the super types of the given <code>currentType</code>.
+		 *
+		 * @param currentType the starting type
+		 * @return the result from a call to {@link #visit(ReferenceBinding)}, or <code>null</code> if none of
+		 *         the calls returned a result
+		 * @throws JavaModelException unexpected problem
+		 */
+		public Object visitInheritDoc(ReferenceBinding currentType) throws JavaModelException {
+			ArrayList visited= new ArrayList();
+			visited.add(currentType);
+			Object result= visitInheritDocInterfaces(visited, currentType);
+			if (result != InheritDocVisitor.CONTINUE)
+				return result;
+
+			ReferenceBinding superClass= currentType.superclass();
+
+			while (superClass != null && ! visited.contains(superClass)) {
+				result= visit(superClass);
+				if (result == InheritDocVisitor.STOP_BRANCH) {
+					return null;
+				} else if (result == InheritDocVisitor.CONTINUE) {
+					visited.add(superClass);
+					result= visitInheritDocInterfaces(visited, superClass);
+					if (result != InheritDocVisitor.CONTINUE)
+						return result;
+					else
+						superClass= superClass.superclass();
+				} else {
+					return result;
+				}
+			}
+
+			return null;
+		}
+
+		/**
+		 * Visits the super interfaces of the given type in the given hierarchy, thereby skipping already visited types.
+		 * 
+		 * @param visited set of visited types
+		 * @param currentType type whose super interfaces should be visited
+		 * @return the result, or {@link #CONTINUE} if no result has been found
+		 * @throws JavaModelException unexpected problem
+		 */
+		private Object visitInheritDocInterfaces(ArrayList visited, ReferenceBinding currentType) throws JavaModelException {
+			ArrayList toVisitChildren= new ArrayList();
+			ReferenceBinding[] superInterfaces= currentType.superInterfaces();
+			for (int i= 0; i < superInterfaces.length; i++) {
+				ReferenceBinding superInterface= superInterfaces[i];
+				if (visited.contains(superInterface))
+					continue;
+				visited.add(superInterface);
+				Object result= visit(superInterface);
+				if (result == InheritDocVisitor.STOP_BRANCH) {
+					//skip
+				} else if (result == InheritDocVisitor.CONTINUE) {
+					toVisitChildren.add(superInterface);
+				} else {
+					return result;
+				}
+			}
+			for (Iterator iter= toVisitChildren.iterator(); iter.hasNext(); ) {
+				ReferenceBinding child= (ReferenceBinding) iter.next();
+				Object result= visitInheritDocInterfaces(visited, child);
+				if (result != InheritDocVisitor.CONTINUE)
+					return result;
+			}
+			return InheritDocVisitor.CONTINUE;
+		}
 	}
 }

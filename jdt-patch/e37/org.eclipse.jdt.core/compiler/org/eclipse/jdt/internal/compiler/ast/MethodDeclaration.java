@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -111,7 +111,7 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 			// check for missing returning path
 			TypeBinding returnTypeBinding = this.binding.returnType;
 			if ((returnTypeBinding == TypeBinding.VOID) || isAbstract()) {
-				if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0) {
+				if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0) {
 					this.bits |= ASTNode.NeedFreeReturn;
 				}
 			} else {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -59,6 +59,11 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			this,
 			flowInfo.unconditionalCopy(),
 			currentScope);
+	}
+	if (this.binding.declaringClass.isMemberType() && !this.binding.declaringClass.isStatic()) {
+		// allocating a non-static member type without an enclosing instance of parent type
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=335845
+		currentScope.resetEnclosingMethodStaticFlag();
 	}
 	manageEnclosingInstanceAccessIfNecessary(currentScope, flowInfo);
 	manageSyntheticAccessIfNecessary(currentScope, flowInfo);
@@ -179,7 +184,7 @@ public boolean isTypeAccess() {
  * exact need.
  */
 public void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo) {
-	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) != 0) return;
+	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) != 0) return;
 	ReferenceBinding allocatedTypeErasure = (ReferenceBinding) this.binding.declaringClass.erasure();
 
 	// perform some emulation work in case there is some and we are inside a local type only
@@ -198,7 +203,7 @@ public void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, Fl
 }
 
 public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo) {
-	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) != 0) return;
+	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) != 0) return;
 	// if constructor from parameterized type got found, use the original constructor at codegen time
 	MethodBinding codegenBinding = this.binding.original();
 

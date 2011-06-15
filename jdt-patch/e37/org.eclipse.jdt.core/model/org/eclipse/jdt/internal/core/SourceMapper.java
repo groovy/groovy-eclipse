@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -78,6 +78,66 @@ public class SourceMapper
 	extends ReferenceInfoAdapter
 	implements ISourceElementRequestor, SuffixConstants {
 
+	public static class LocalVariableElementKey {
+		String parent;
+		String name;
+		
+		public LocalVariableElementKey(IJavaElement method, String name) {
+			StringBuffer buffer = new StringBuffer();
+			buffer
+				.append(method.getParent().getHandleIdentifier())
+				.append('#')
+				.append(method.getElementName())
+				.append('(');
+			if (method.getElementType() == IJavaElement.METHOD) {
+				String[] parameterTypes = ((IMethod) method).getParameterTypes();
+				for (int i = 0, max = parameterTypes.length; i < max; i++) {
+					if (i > 0) {
+						buffer.append(',');
+					}
+					buffer.append(Signature.getSignatureSimpleName(parameterTypes[i]));
+				}
+			}
+			buffer.append(')');
+			this.parent = String.valueOf(buffer);
+			this.name = name;
+		}
+
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((this.name == null) ? 0 : this.name.hashCode());
+			result = prime * result + ((this.parent == null) ? 0 : this.parent.hashCode());
+			return result;
+		}
+
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			LocalVariableElementKey other = (LocalVariableElementKey) obj;
+			if (this.name == null) {
+				if (other.name != null)
+					return false;
+			} else if (!this.name.equals(other.name))
+				return false;
+			if (this.parent == null) {
+				if (other.parent != null)
+					return false;
+			} else if (!this.parent.equals(other.parent))
+				return false;
+			return true;
+		}
+		public String toString() {
+			StringBuffer buffer = new StringBuffer();
+			buffer.append('(').append(this.parent).append('.').append(this.name).append(')');
+			return String.valueOf(buffer);
+		}
+	}
+
 	public static boolean VERBOSE = false;
 	/**
 	 * Specifies the location of the package fragment roots within
@@ -121,6 +181,16 @@ public class SourceMapper
 	 */
 	protected HashMap categories;
 
+	/**
+	 * Table that contains all source ranges for local variables.
+	 * Keys are the special local variable elements, entries are <code>char[][]</code>.
+	 */
+	protected HashMap parametersRanges;
+	
+	/**
+	 * Set that contains all final local variables.
+	 */
+	protected HashSet finalParameters;
 
 	/**
 	 * The unknown source range {-1, 0}
@@ -211,6 +281,7 @@ public class SourceMapper
 		}
 		this.sourcePath = sourcePath;
 		this.sourceRanges = new HashMap();
+		this.parametersRanges = new HashMap();
 		this.parameterNames = new HashMap();
 		this.importsTable = new HashMap();
 		this.importsCounterTable = new HashMap();
@@ -290,6 +361,8 @@ public class SourceMapper
 	public void close() {
 		this.sourceRanges = null;
 		this.parameterNames = null;
+		this.parametersRanges = null;
+		this.finalParameters = null;
 	}
 
 	/**
@@ -753,6 +826,30 @@ public class SourceMapper
 							typeParameterInfo.nameSourceEnd - typeParameterInfo.nameSourceStart + 1));
 				}
 			}
+			// parameters infos
+			if (methodInfo.parameterInfos != null) {
+				for (int i = 0, length = methodInfo.parameterInfos.length; i < length; i++) {
+					ParameterInfo parameterInfo = methodInfo.parameterInfos[i];
+					LocalVariableElementKey key = new LocalVariableElementKey(method, new String(parameterInfo.name));
+					SourceRange[] allRanges = new SourceRange[] {
+						new SourceRange(
+							parameterInfo.declarationStart,
+							parameterInfo.declarationEnd - parameterInfo.declarationStart + 1),
+						new SourceRange(
+							parameterInfo.nameSourceStart,
+							parameterInfo.nameSourceEnd - parameterInfo.nameSourceStart + 1)
+					};
+					this.parametersRanges.put(
+						key,
+						allRanges);
+					if (parameterInfo.modifiers != 0) {
+						if (this.finalParameters == null) {
+							this.finalParameters = new HashSet();
+						}
+						this.finalParameters.add(key);
+					}
+				}
+			}
 
 			// categories
 			addCategories(method, methodInfo.categories);
@@ -961,6 +1058,16 @@ public class SourceMapper
 	}
 
 
+	public int getFlags(IJavaElement element) {
+		switch(element.getElementType()) {
+			case IJavaElement.LOCAL_VARIABLE :
+				LocalVariableElementKey key = new LocalVariableElementKey(element.getParent(), element.getElementName());
+				if (this.finalParameters != null && this.finalParameters.contains(key)) {
+					return Flags.AccFinal;
+				}
+		}
+		return 0;
+	}
 
 	/**
 	 * Returns the SourceRange for the name of the given element, or
@@ -992,6 +1099,15 @@ public class SourceMapper
 						element = method.getTypeParameter(element.getElementName());
 					}
 				}
+				break;
+			case IJavaElement.LOCAL_VARIABLE :
+				LocalVariableElementKey key = new LocalVariableElementKey(element.getParent(), element.getElementName());
+				SourceRange[] ranges = (SourceRange[]) this.parametersRanges.get(key);
+				if (ranges == null) {
+					return UNKNOWN_RANGE;
+				} else {
+					return ranges[1];
+		}
 		}
 		SourceRange[] ranges = (SourceRange[]) this.sourceRanges.get(element);
 		if (ranges == null) {
@@ -1051,6 +1167,15 @@ public class SourceMapper
 						}
 						element = method.getTypeParameter(element.getElementName());
 					}
+				}
+				break;
+			case IJavaElement.LOCAL_VARIABLE :
+				LocalVariableElementKey key = new LocalVariableElementKey(element.getParent(), element.getElementName());
+				SourceRange[] ranges = (SourceRange[]) this.parametersRanges.get(key);
+				if (ranges == null) {
+					return UNKNOWN_RANGE;
+				} else {
+					return ranges[0];
 				}
 		}
 		SourceRange[] ranges = (SourceRange[]) this.sourceRanges.get(element);

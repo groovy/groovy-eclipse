@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -39,7 +39,8 @@ import org.xml.sax.SAXException;
  */
 public class UserLibrary {
 
-	private static final String CURRENT_VERSION= "1"; //$NON-NLS-1$
+	private static final String VERSION_ONE = "1"; //$NON-NLS-1$
+	private static final String CURRENT_VERSION= "2"; //$NON-NLS-1$
 
 	private static final String TAG_VERSION= "version"; //$NON-NLS-1$
 	private static final String TAG_USERLIBRARY= "userlibrary"; //$NON-NLS-1$
@@ -112,13 +113,13 @@ public class UserLibrary {
 			ClasspathEntry cpEntry = (ClasspathEntry) entries[i];
 
 			HashMap archive = new HashMap();
-			archive.put(TAG_PATH, cpEntry.getPath().toString());
+			archive.put(TAG_PATH, cpEntry.getPath().toPortableString());
 			IPath sourceAttach= cpEntry.getSourceAttachmentPath();
 			if (sourceAttach != null)
-				archive.put(TAG_SOURCEATTACHMENT, sourceAttach);
+				archive.put(TAG_SOURCEATTACHMENT, sourceAttach.toPortableString());
 			IPath sourceAttachRoot= cpEntry.getSourceAttachmentRootPath();
 			if (sourceAttachRoot != null)
-				archive.put(TAG_SOURCEATTACHMENTROOT, sourceAttachRoot);
+				archive.put(TAG_SOURCEATTACHMENTROOT, sourceAttachRoot.toPortableString());
 
 			boolean hasExtraAttributes = cpEntry.extraAttributes != null && cpEntry.extraAttributes.length != 0;
 			boolean hasRestrictions = cpEntry.getAccessRuleSet() != null; // access rule set is null if no access rules
@@ -161,9 +162,7 @@ public class UserLibrary {
 		if (!cpElement.getNodeName().equalsIgnoreCase(TAG_USERLIBRARY)) {
 			throw new IOException(Messages.file_badFormat);
 		}
-		// String version= cpElement.getAttribute(TAG_VERSION);
-		// in case we update the format: add code to read older versions
-
+		String version= cpElement.getAttribute(TAG_VERSION);
 		boolean isSystem= Boolean.valueOf(cpElement.getAttribute(TAG_SYSTEMLIBRARY)).booleanValue();
 
 		NodeList list= cpElement.getChildNodes();
@@ -176,16 +175,30 @@ public class UserLibrary {
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
 				Element element= (Element) node;
 				if (element.getNodeName().equals(TAG_ARCHIVE)) {
-					String path = element.getAttribute(TAG_PATH);
-					IPath sourceAttach= element.hasAttribute(TAG_SOURCEATTACHMENT) ? new Path(element.getAttribute(TAG_SOURCEATTACHMENT)) : null;
-					IPath sourceAttachRoot= element.hasAttribute(TAG_SOURCEATTACHMENTROOT) ? new Path(element.getAttribute(TAG_SOURCEATTACHMENTROOT)) : null;
+					String pathString = element.getAttribute(TAG_PATH);
+					String sourceAttachString = element.hasAttribute(TAG_SOURCEATTACHMENT) ? element.getAttribute(TAG_SOURCEATTACHMENT) : null;
+					String sourceAttachRootString = element.hasAttribute(TAG_SOURCEATTACHMENTROOT) ? element.getAttribute(TAG_SOURCEATTACHMENTROOT) : null;
+					IPath entryPath = null; 
+					IPath sourceAttachPath = null;
+					IPath sourceAttachRootPath = null;
+					if (version.equals(VERSION_ONE)) {
+						entryPath = Path.fromOSString(pathString);
+						if (sourceAttachString != null) sourceAttachPath = Path.fromOSString(sourceAttachString);
+						if (sourceAttachRootString != null) sourceAttachRootPath = Path.fromOSString(sourceAttachRootString);
+					}
+					else {
+						entryPath = Path.fromPortableString(pathString);
+						if (sourceAttachString != null) sourceAttachPath = Path.fromPortableString(sourceAttachString);
+						if (sourceAttachRootString != null) sourceAttachRootPath = Path.fromPortableString(sourceAttachRootString);
+					}
+
 					NodeList children = element.getElementsByTagName("*"); //$NON-NLS-1$
 					boolean[] foundChildren = new boolean[children.getLength()];
 					NodeList attributeList = ClasspathEntry.getChildAttributes(ClasspathEntry.TAG_ATTRIBUTES, children, foundChildren);
 					IClasspathAttribute[] extraAttributes = ClasspathEntry.decodeExtraAttributes(attributeList);
 					attributeList = ClasspathEntry.getChildAttributes(ClasspathEntry.TAG_ACCESS_RULES, children, foundChildren);
 					IAccessRule[] accessRules = ClasspathEntry.decodeAccessRules(attributeList);
-					IClasspathEntry entry = JavaCore.newLibraryEntry(new Path(path), sourceAttach, sourceAttachRoot, accessRules, extraAttributes, false/*not exported*/);
+					IClasspathEntry entry = JavaCore.newLibraryEntry(entryPath, sourceAttachPath, sourceAttachRootPath, accessRules, extraAttributes, false/*not exported*/);
 					res.add(entry);
 				}
 			}

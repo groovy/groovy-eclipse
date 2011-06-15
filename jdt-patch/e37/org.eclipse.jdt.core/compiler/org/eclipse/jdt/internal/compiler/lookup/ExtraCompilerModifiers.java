@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann <stephan@cs.tu-berlin.de> - Contribution for bug 328281 - visibility leaks not detected when analyzing unused field in private class
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -31,7 +32,10 @@ public interface ExtraCompilerModifiers { // modifier constant
 	final int AccUnresolved = ASTNode.Bit26;
 	final int AccBlankFinal = ASTNode.Bit27; // for blank final variables
 	final int AccIsDefaultConstructor = ASTNode.Bit27; // for default constructor
-	final int AccLocallyUsed = ASTNode.Bit28; // used to diagnose unused private/local members
+	final int AccLocallyUsed = ASTNode.Bit28; // used to diagnose unused (a) private/local members or (b) members of private classes
+											  // generally set when actual usage has been detected 
+											  // or, (b) when member of a private class is exposed via a non-private subclass
+											  //     see https://bugs.eclipse.org/bugs/show_bug.cgi?id=328281
 	final int AccVisibilityMASK = ClassFileConstants.AccPublic | ClassFileConstants.AccProtected | ClassFileConstants.AccPrivate;
 
 	final int AccOverriding = ASTNode.Bit29; // record fact a method overrides another one

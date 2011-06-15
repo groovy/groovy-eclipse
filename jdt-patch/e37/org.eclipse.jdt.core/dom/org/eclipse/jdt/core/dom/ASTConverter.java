@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1067,64 +1067,7 @@ class ASTConverter {
 		}
 
 		int expressionOperatorID = (expression.bits & org.eclipse.jdt.internal.compiler.ast.ASTNode.OperatorMASK) >> org.eclipse.jdt.internal.compiler.ast.ASTNode.OperatorSHIFT;
-		switch (expressionOperatorID) {
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.EQUAL_EQUAL :
-				infixExpression.setOperator(InfixExpression.Operator.EQUALS);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.LESS_EQUAL :
-				infixExpression.setOperator(InfixExpression.Operator.LESS_EQUALS);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.GREATER_EQUAL :
-				infixExpression.setOperator(InfixExpression.Operator.GREATER_EQUALS);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.NOT_EQUAL :
-				infixExpression.setOperator(InfixExpression.Operator.NOT_EQUALS);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.LEFT_SHIFT :
-				infixExpression.setOperator(InfixExpression.Operator.LEFT_SHIFT);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.RIGHT_SHIFT :
-				infixExpression.setOperator(InfixExpression.Operator.RIGHT_SHIFT_SIGNED);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.UNSIGNED_RIGHT_SHIFT :
-				infixExpression.setOperator(InfixExpression.Operator.RIGHT_SHIFT_UNSIGNED);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.OR_OR :
-				infixExpression.setOperator(InfixExpression.Operator.CONDITIONAL_OR);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.AND_AND :
-				infixExpression.setOperator(InfixExpression.Operator.CONDITIONAL_AND);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.PLUS :
-				infixExpression.setOperator(InfixExpression.Operator.PLUS);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.MINUS :
-				infixExpression.setOperator(InfixExpression.Operator.MINUS);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.REMAINDER :
-				infixExpression.setOperator(InfixExpression.Operator.REMAINDER);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.XOR :
-				infixExpression.setOperator(InfixExpression.Operator.XOR);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.AND :
-				infixExpression.setOperator(InfixExpression.Operator.AND);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.MULTIPLY :
-				infixExpression.setOperator(InfixExpression.Operator.TIMES);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.OR :
-				infixExpression.setOperator(InfixExpression.Operator.OR);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.DIVIDE :
-				infixExpression.setOperator(InfixExpression.Operator.DIVIDE);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.GREATER :
-				infixExpression.setOperator(InfixExpression.Operator.GREATER);
-				break;
-			case org.eclipse.jdt.internal.compiler.ast.OperatorIds.LESS :
-				infixExpression.setOperator(InfixExpression.Operator.LESS);
-		}
+		infixExpression.setOperator(getOperatorFor(expressionOperatorID));
 
 		if (expression.left instanceof org.eclipse.jdt.internal.compiler.ast.BinaryExpression
 				&& ((expression.left.bits & org.eclipse.jdt.internal.compiler.ast.ASTNode.ParenthesizedMASK) == 0)) {
@@ -1260,13 +1203,9 @@ class ASTConverter {
 	public CastExpression convert(org.eclipse.jdt.internal.compiler.ast.CastExpression expression) {
 		CastExpression castExpression = new CastExpression(this.ast);
 		castExpression.setSourceRange(expression.sourceStart, expression.sourceEnd - expression.sourceStart + 1);
-		org.eclipse.jdt.internal.compiler.ast.Expression type = expression.type;
+		TypeReference type = expression.type;
 		trimWhiteSpacesAndComments(type);
-		if (type instanceof org.eclipse.jdt.internal.compiler.ast.TypeReference ) {
-			castExpression.setType(convertType((org.eclipse.jdt.internal.compiler.ast.TypeReference)type));
-		} else if (type instanceof org.eclipse.jdt.internal.compiler.ast.NameReference) {
-			castExpression.setType(convertToType((org.eclipse.jdt.internal.compiler.ast.NameReference)type));
-		}
+		castExpression.setType(convertType(type));
 		castExpression.setExpression(convert(expression.expression));
 		if (this.resolveBindings) {
 			recordNodes(castExpression, expression);
@@ -2559,32 +2498,7 @@ class ASTConverter {
 			if (result == null) {
 				return createFakeEmptyStatement(statement);
 			}
-			switch(result.getNodeType()) {
-				case ASTNode.ENUM_DECLARATION:
-					switch(this.ast.apiLevel) {
-						case AST.JLS2_INTERNAL :
-							return createFakeEmptyStatement(statement);
-						case AST.JLS3 :
-							final TypeDeclarationStatement typeDeclarationStatement = new TypeDeclarationStatement(this.ast);
-							typeDeclarationStatement.setDeclaration((EnumDeclaration) result);
-							AbstractTypeDeclaration typeDecl = typeDeclarationStatement.getDeclaration();
-							typeDeclarationStatement.setSourceRange(typeDecl.getStartPosition(), typeDecl.getLength());
-							return typeDeclarationStatement;
-					}
-					break;
-				case ASTNode.ANNOTATION_TYPE_DECLARATION :
-					switch(this.ast.apiLevel) {
-						case AST.JLS2_INTERNAL :
-							return createFakeEmptyStatement(statement);
-						case AST.JLS3 :
-							TypeDeclarationStatement typeDeclarationStatement = new TypeDeclarationStatement(this.ast);
-							typeDeclarationStatement.setDeclaration((AnnotationTypeDeclaration) result);
-							AbstractTypeDeclaration typeDecl = typeDeclarationStatement.getDeclaration();
-							typeDeclarationStatement.setSourceRange(typeDecl.getStartPosition(), typeDecl.getLength());
-							return typeDeclarationStatement;
-					}
-					break;
-				default:
+			// annotation and enum type declarations are not returned by the parser inside method bodies
 					TypeDeclaration typeDeclaration = (TypeDeclaration) result;
 					TypeDeclarationStatement typeDeclarationStatement = new TypeDeclarationStatement(this.ast);
 					typeDeclarationStatement.setDeclaration(typeDeclaration);
@@ -2600,7 +2514,6 @@ class ASTConverter {
 					}
 					return typeDeclarationStatement;
 			}
-		}
 		if (statement instanceof org.eclipse.jdt.internal.compiler.ast.WhileStatement) {
 			return convert((org.eclipse.jdt.internal.compiler.ast.WhileStatement) statement);
 		}
@@ -3035,17 +2948,6 @@ class ASTConverter {
 		expression.bits |= (numberOfParenthesis - 1) << org.eclipse.jdt.internal.compiler.ast.ASTNode.ParenthesizedSHIFT;
 		parenthesizedExpression.setExpression(convert(expression));
 		return parenthesizedExpression;
-	}
-
-	public Type convertToType(org.eclipse.jdt.internal.compiler.ast.NameReference reference) {
-		Name name = convert(reference);
-		final SimpleType type = new SimpleType(this.ast);
-		type.setName(name);
-		type.setSourceRange(name.getStartPosition(), name.getLength());
-		if (this.resolveBindings) {
-			this.recordNodes(type, reference);
-		}
-		return type;
 	}
 
 	protected VariableDeclarationExpression convertToVariableDeclarationExpression(org.eclipse.jdt.internal.compiler.ast.LocalDeclaration localDeclaration) {

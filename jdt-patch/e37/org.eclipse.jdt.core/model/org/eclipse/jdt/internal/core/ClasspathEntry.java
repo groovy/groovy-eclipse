@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1002,33 +1002,48 @@ public class ClasspathEntry implements IClasspathEntry {
 	/*
 	 * Resolves the ".." in the given path. Returns the given path if it contains no ".." segment.
 	 */
-	public static IPath resolveDotDot(IPath path) {
+	public static IPath resolveDotDot(IPath reference, IPath path) {
 		IPath newPath = null;
-		IPath workspaceLocation = null;
-		for (int i = 0, length = path.segmentCount(); i < length; i++) {
-			String segment = path.segment(i);
-			if (DOT_DOT.equals(segment)) {
-				if (newPath == null) {
-					if (i == 0) {
-						workspaceLocation = workspaceRoot.getLocation();
-						newPath = workspaceLocation;
+		IPath workspaceLocation = workspaceRoot.getLocation();
+		if (reference == null || workspaceLocation.isPrefixOf(reference)) {
+			for (int i = 0, length = path.segmentCount(); i < length; i++) {
+				String segment = path.segment(i);
+				if (DOT_DOT.equals(segment)) {
+					if (newPath == null) {
+						if (i == 0) {
+							newPath = workspaceLocation;
+						} else {
+							newPath = path.removeFirstSegments(i);
+						}
 					} else {
-						newPath = path.removeFirstSegments(i);
+						if (newPath.segmentCount() > 0) {
+							newPath = newPath.removeLastSegments(1);
+						} else {
+							newPath = workspaceLocation;
+						}
 					}
-				} else {
+				} else if (newPath != null) {
+					if (newPath.equals(workspaceLocation) && workspaceRoot.getProject(segment).isAccessible()) {
+						newPath = new Path(segment).makeAbsolute();
+					} else {
+						newPath = newPath.append(segment);
+					}
+				}
+			}
+		}
+		else {
+			for (int i = 0, length = path.segmentCount(); i < length; i++) {
+				String segment = path.segment(i);
+				if (DOT_DOT.equals(segment)) {
+					if (newPath == null){
+						newPath = reference;
+					}
 					if (newPath.segmentCount() > 0) {
 						newPath = newPath.removeLastSegments(1);
-					} else {
-						workspaceLocation = workspaceRoot.getLocation();
-						newPath = workspaceLocation;
-					}
-				}
-			} else if (newPath != null) {
-				if (newPath.equals(workspaceLocation) && workspaceRoot.getProject(segment).isAccessible()) {
-					newPath = new Path(segment).makeAbsolute();
-				} else {
+	 				}
+				} else if (newPath != null) {
 					newPath = newPath.append(segment);
-				}
+	 			}
 			}
 		}
 		if (newPath == null)
@@ -1419,8 +1434,8 @@ public class ClasspathEntry implements IClasspathEntry {
 		return buffer.toString();
 	}
 	
-	public ClasspathEntry resolvedDotDot() {
-		IPath resolvedPath = resolveDotDot(this.path);
+	public ClasspathEntry resolvedDotDot(IPath reference) {
+		IPath resolvedPath = resolveDotDot(reference, this.path);
 		if (resolvedPath == this.path)
 			return this;
 		return new ClasspathEntry(
@@ -1919,7 +1934,7 @@ public class ClasspathEntry implements IClasspathEntry {
 
 			// library entry check
 			case IClasspathEntry.CPE_LIBRARY :
-				path = ClasspathEntry.resolveDotDot(path);
+				path = ClasspathEntry.resolveDotDot(project.getProject().getLocation(), path);
 				
 				// do not validate entries from Class-Path: in manifest
 				// (these entries are considered optional since the user cannot act on them)
@@ -2090,14 +2105,14 @@ public class ClasspathEntry implements IClasspathEntry {
 					}
 				} else {
 					if (sourceAttachment != null
-						&& !sourceAttachment.isEmpty()
-						&& JavaModel.getTarget(sourceAttachment, true) == null){
-					if (container != null) {
-						return  new JavaModelStatus(IJavaModelStatusConstants.INVALID_CLASSPATH, Messages.bind(Messages.classpath_unboundSourceAttachmentInContainedLibrary, new String [] {sourceAttachment.toString(), path.toOSString(), container}));
-					} else {
-						return  new JavaModelStatus(IJavaModelStatusConstants.INVALID_CLASSPATH, Messages.bind(Messages.classpath_unboundSourceAttachment, new String [] {sourceAttachment.toString(), path.toOSString(), project.getElementName()}));
+							&& !sourceAttachment.isEmpty()
+							&& JavaModel.getTarget(sourceAttachment, true) == null){
+						if (container != null) {
+							return  new JavaModelStatus(IJavaModelStatusConstants.INVALID_CLASSPATH, Messages.bind(Messages.classpath_unboundSourceAttachmentInContainedLibrary, new String [] {sourceAttachment.toString(), path.toOSString(), container}));
+						} else {
+							return  new JavaModelStatus(IJavaModelStatusConstants.INVALID_CLASSPATH, Messages.bind(Messages.classpath_unboundSourceAttachment, new String [] {sourceAttachment.toString(), path.toOSString(), project.getElementName()}));
+						}
 					}
-				}
 					// https://bugs.eclipse.org/bugs/show_bug.cgi?id=229042
 					// Validate the contents of the archive
 					if(file.isFile()) {

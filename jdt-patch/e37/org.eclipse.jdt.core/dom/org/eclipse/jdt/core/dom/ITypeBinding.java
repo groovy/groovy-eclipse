@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -130,7 +130,7 @@ public interface ITypeBinding extends IBinding {
 	 * <p>These include public, protected, default (package-private) access,
 	 * and private fields declared by the class, but excludes inherited fields.
 	 * Synthetic fields may or may not be included. Fields from binary types that
-	 * reference unresolvable types may not be included.</p>
+	 * reference unresolved types may not be included.</p>
 	 *
 	 * <p>Returns an empty list if the class, interface, or enum declares no fields,
 	 * and for other kinds of type bindings that do not directly have members.</p>
@@ -151,7 +151,7 @@ public interface ITypeBinding extends IBinding {
 	 * included. Returns an empty list if the class, interface, or enum,
 	 * type declares no methods or constructors, if the annotation type declares
 	 * no members, or if this type binding represents some other kind of type
-	 * binding. Methods from binary types that reference unresolvable types may
+	 * binding. Methods from binary types that reference unresolved types may
 	 * not be included.</p>
 	 * <p>The resulting bindings are in no particular order.</p>
 	 *
@@ -751,11 +751,14 @@ public interface ITypeBinding extends IBinding {
 	 * <p>
 	 * A local class is any nested class or enum type not declared as a member
 	 * of another class or interface. A local class is a subspecies of nested
-	 * type, and mutually exclusive with member types. Note that anonymous
-	 * classes are a subspecies of local classes.
+	 * type, and mutually exclusive with member types. For anonymous
+	 * classes, which are considered a subspecies of local classes, this method
+	 * returns true. 
 	 * </p>
 	 * <p>
-	 * Also note that interfaces and annotation types cannot be local.
+	 * Note: This deviates from JLS3 14.3, which states that anonymous types are 
+	 * not local types since they do not have a name. Also note that interfaces 
+	 * and annotation types cannot be local.
 	 * </p>
 	 *
 	 * @return <code>true</code> if this type binding is for a local class or
@@ -934,7 +937,7 @@ public interface ITypeBinding extends IBinding {
 
 	/**
 	 * Returns whether this type binding represents a wildcard type. A wildcard
-	 * type occus only as an argument to a parameterized type reference.
+	 * type occurs only as an argument to a parameterized type reference.
 	 * <p>
 	 * For example, a AST type like
 	 * <code>Collection&lt;? extends Object&gt;</code> typically resolves to a

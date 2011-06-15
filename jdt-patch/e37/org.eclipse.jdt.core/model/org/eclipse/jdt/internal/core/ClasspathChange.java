@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,6 +28,7 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.compiler.util.ObjectVector;
+import org.eclipse.jdt.internal.core.DeltaProcessor.RootInfo;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerProjectInfo;
 import org.eclipse.jdt.internal.core.search.indexing.IndexManager;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -304,7 +305,7 @@ public class ClasspathChange {
 					result |= HAS_LIBRARY_CHANGE;
 				}
 
-				PackageFragmentRoot[] pkgFragmentRoots = null;
+				IPackageFragmentRoot[] pkgFragmentRoots = null;
 				if (removedRoots != null) {
 					PackageFragmentRoot oldRoot = (PackageFragmentRoot)  removedRoots.get(this.oldResolvedClasspath[i].getPath());
 					if (oldRoot != null) { // use old root if any (could be none if entry wasn't bound)
@@ -323,6 +324,26 @@ public class ClasspathChange {
 							null, // inside original project
 							false, // don't retrieve exported roots
 							null); /*no reverse map*/
+						// https://bugs.eclipse.org/bugs/show_bug.cgi?id=335986
+						// When a package fragment's corresponding resource is removed from the project, 
+						// IJavaProject#computePackageFragmentRoots() doesn't include that entry. Hence 
+						// the cache become necessary in such cases. Add the cache to the accumulatedRoots 
+						// only when it's not already present.
+						RootInfo rootInfo = (RootInfo) state.oldRoots.get(this.oldResolvedClasspath[i].getPath());
+						if (rootInfo != null && rootInfo.cache != null) {
+							IPackageFragmentRoot oldRoot = rootInfo.cache;
+							boolean found = false;
+							for (int j = 0; j < accumulatedRoots.size(); j++) {
+								IPackageFragmentRoot root = (IPackageFragmentRoot) accumulatedRoots.elementAt(j);
+								if (!root.getPath().equals(oldRoot.getPath())) {
+									found = true;
+									break;
+								}
+							}
+							if (!found)
+								accumulatedRoots.add(oldRoot);
+						}
+
 						pkgFragmentRoots = new PackageFragmentRoot[accumulatedRoots.size()];
 						accumulatedRoots.copyInto(pkgFragmentRoots);
 					} catch (JavaModelException e) {

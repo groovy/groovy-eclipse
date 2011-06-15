@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -510,7 +510,7 @@ public String getSuperclassTypeSignature() throws JavaModelException {
 			index++;
 		}
 		int start = index;
-		index = Util.scanClassTypeSignature(genericSignature, start) + 1;
+		index = org.eclipse.jdt.internal.compiler.util.Util.scanClassTypeSignature(genericSignature, start) + 1;
 		char[] superclassSig = CharOperation.subarray(genericSignature, start, index);
 		return new String(ClassFile.translatedName(superclassSig));
 	} else {
@@ -596,10 +596,10 @@ public String[] getSuperInterfaceTypeSignatures() throws JavaModelException {
 			index++;
 		}
 		// skip superclass
-		index = Util.scanClassTypeSignature(genericSignature, index) + 1;
+		index = org.eclipse.jdt.internal.compiler.util.Util.scanClassTypeSignature(genericSignature, index) + 1;
 		while (index  < signatureLength) {
 			int start = index;
-			index = Util.scanClassTypeSignature(genericSignature, start) + 1;
+			index = org.eclipse.jdt.internal.compiler.util.Util.scanClassTypeSignature(genericSignature, start) + 1;
 			char[] interfaceSig = CharOperation.subarray(genericSignature, start, index);
 			interfaces.add(new String(ClassFile.translatedName(interfaceSig)));
 		}

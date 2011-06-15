@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,7 @@ package org.eclipse.jdt.internal.eval;
 
 import java.util.Map;
 
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.*;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.Compiler;
@@ -188,7 +189,8 @@ private CodeSnippetToCuMapper getMapper() {
 			this.context.localVariableTypeNames,
 			this.context.localVariableModifiers,
 			this.context.declaringTypeName,
-			this.context.lineSeparator
+			this.context.lineSeparator,
+			CompilerOptions.versionToJdkLevel(this.options.get(JavaCore.COMPILER_COMPLIANCE))
 		);
 
 	}

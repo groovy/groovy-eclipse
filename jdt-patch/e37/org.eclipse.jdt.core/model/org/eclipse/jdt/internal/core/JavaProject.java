@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -112,7 +112,7 @@ public class JavaProject
 	/**
 	 * Name of file containing project classpath
 	 */
-	public static final String CLASSPATH_FILENAME = ".classpath";  //$NON-NLS-1$
+	public static final String CLASSPATH_FILENAME = IJavaProject.CLASSPATH_FILE_NAME;
 
 	/**
 	 * Value of the project's raw classpath if the .classpath file contains invalid entries.
@@ -374,7 +374,7 @@ public class JavaProject
 		int length = rscProjects.length;
 		JavaProject[] projects = new JavaProject[length];
 
-		HashSet cycleParticipants = new HashSet();
+		LinkedHashSet cycleParticipants = new LinkedHashSet();
 		HashSet traversed = new HashSet();
 
 		// compute cycle participants
@@ -408,9 +408,29 @@ public class JavaProject
 							throw new JavaModelException(e);
 						}
 					} else {
+						IJavaProject[] projectsInCycle;
+						String cycleString = "";	 //$NON-NLS-1$
+						if (cycleParticipants.isEmpty()) {
+							projectsInCycle = null;
+						} else {
+							projectsInCycle = new IJavaProject[cycleParticipants.size()];
+							Iterator it = cycleParticipants.iterator();
+							int k = 0;
+							while (it.hasNext()) {
+								//projectsInCycle[i++] = (IPath) it.next();
+								IResource member = workspaceRoot.findMember((IPath) it.next());
+								if (member != null && member.getType() == IResource.PROJECT){
+									projectsInCycle[k] = JavaCore.create((IProject)member);
+									if (projectsInCycle[k] != null) {
+										if (k != 0) cycleString += ", "; //$NON-NLS-1$
+										cycleString += projectsInCycle[k++].getElementName();
+									}
+								}
+							}
+						}
 						// create new marker
 						project.createClasspathProblemMarker(
-							new JavaModelStatus(IJavaModelStatusConstants.CLASSPATH_CYCLE, project));
+							new JavaModelStatus(IJavaModelStatusConstants.CLASSPATH_CYCLE, project, cycleString));
 					}
 				} else {
 					project.flushClasspathProblemMarkers(true, false);
@@ -1620,15 +1640,8 @@ public class JavaProject
 	 * @see org.eclipse.jdt.core.IJavaProject#getOption(String, boolean)
 	 */
 	public String getOption(String optionName, boolean inheritJavaCoreOptions) {
-		if (JavaModelManager.getJavaModelManager().optionNames.contains(optionName)){
-			IEclipsePreferences projectPreferences = getEclipsePreferences();
-			String javaCoreDefault = inheritJavaCoreOptions ? JavaCore.getOption(optionName) : null;
-			if (projectPreferences == null) return javaCoreDefault;
-			String value = projectPreferences.get(optionName, javaCoreDefault);
-			return value == null ? null : value.trim();
+		return JavaModelManager.getJavaModelManager().getOption(optionName, inheritJavaCoreOptions, getEclipsePreferences());
 		}
-		return null;
-	}
 
 	/**
 	 * @see org.eclipse.jdt.core.IJavaProject#getOptions(boolean)
@@ -1657,11 +1670,20 @@ public class JavaProject
 					String propertyName = propertyNames[i];
 					String value = projectPreferences.get(propertyName, null);
 					if (value != null) {
-						if (optionNames.contains(propertyName)){
-						projectOptions.put(propertyName, value.trim());
-						} else {
-							// Maybe an obsolete preference, try to migrate it...
-							javaModelManager.migrateObsoleteOption(projectOptions, propertyName, value.trim());
+						value = value.trim();
+						// Keep the option value, even if it's deprecated
+						// see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=324987
+						projectOptions.put(propertyName, value);
+						if (!optionNames.contains(propertyName)) {
+							// try to migrate deprecated options
+							String[] compatibleOptions = (String[]) javaModelManager.deprecatedOptions.get(propertyName);
+							if (compatibleOptions != null) {
+								for (int co=0, length=compatibleOptions.length; co < length; co++) {
+									String compatibleOption = compatibleOptions[co];
+									if (!projectOptions.containsKey(compatibleOption))
+										projectOptions.put(compatibleOption, value);
+								}
+							}
 					}
 				}
 				}
@@ -1681,7 +1703,7 @@ public class JavaProject
 				Map.Entry entry = (Map.Entry) propertyNames.next();
 				String propertyName = (String) entry.getKey();
 				String propertyValue = (String) entry.getValue();
-				if (propertyValue != null && optionNames.contains(propertyName)){
+				if (propertyValue != null && javaModelManager.knowsOption(propertyName)){
 					options.put(propertyName, propertyValue.trim());
 				}
 			}
@@ -2068,7 +2090,7 @@ public class JavaProject
 	 * @see IJavaProject
 	 */
 	public boolean hasClasspathCycle(IClasspathEntry[] preferredClasspath) {
-		HashSet cycleParticipants = new HashSet();
+		LinkedHashSet cycleParticipants = new LinkedHashSet();
 		HashMap preferredClasspaths = new HashMap(1);
 		preferredClasspaths.put(this, preferredClasspath);
 		updateCycleParticipants(new ArrayList(2), cycleParticipants, ResourcesPlugin.getWorkspace().getRoot(), new HashSet(2), preferredClasspaths);
@@ -2584,6 +2606,7 @@ public class JavaProject
 		JavaModelManager manager = JavaModelManager.getJavaModelManager();
 		ExternalFoldersManager externalFoldersManager = JavaModelManager.getExternalManager();
 		ResolvedClasspath result = new ResolvedClasspath();
+		Map knownDrives = new HashMap();
 
 		Map referencedEntriesMap = new HashMap();
 		List rawLibrariesPath = new ArrayList();
@@ -2593,7 +2616,7 @@ public class JavaProject
 			for (int index = 0; index < rawClasspath.length; index++) {
 				IClasspathEntry currentEntry = rawClasspath[index]; 
 				if (currentEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
-					rawLibrariesPath.add(ClasspathEntry.resolveDotDot(currentEntry.getPath()));
+					rawLibrariesPath.add(ClasspathEntry.resolveDotDot(getProject().getLocation(), currentEntry.getPath()));
 				}
 			}
 			if (referencedEntries != null) {
@@ -2644,11 +2667,11 @@ public class JavaProject
 								if (!rawLibrariesPath.contains(extraEntries[j].getPath())) {
 									// https://bugs.eclipse.org/bugs/show_bug.cgi?id=305037
 									// referenced entries for variable entries could also be persisted with extra attributes, so addAsChainedEntry = true
-									addToResult(rawEntry, extraEntries[j], result, resolvedEntries, externalFoldersManager, referencedEntriesMap, true);
+									addToResult(rawEntry, extraEntries[j], result, resolvedEntries, externalFoldersManager, referencedEntriesMap, true, knownDrives);
 								}
 							}
 						}
-						addToResult(rawEntry, resolvedEntry, result, resolvedEntries, externalFoldersManager, referencedEntriesMap, false);
+						addToResult(rawEntry, resolvedEntry, result, resolvedEntries, externalFoldersManager, referencedEntriesMap, false, knownDrives);
 					}
 					break;
 
@@ -2681,7 +2704,7 @@ public class JavaProject
 						
 						if (cEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
 							// resolve ".." in library path
-							cEntry = cEntry.resolvedDotDot();
+							cEntry = cEntry.resolvedDotDot(getProject().getLocation());
 							// https://bugs.eclipse.org/bugs/show_bug.cgi?id=313965
 							// Do not resolve if the system attribute is set to false	
 							if (resolveChainedLibraries
@@ -2691,33 +2714,33 @@ public class JavaProject
 								ClasspathEntry[] extraEntries = cEntry.resolvedChainedLibraries();
 								for (int k = 0, length2 = extraEntries.length; k < length2; k++) {
 									if (!rawLibrariesPath.contains(extraEntries[k].getPath())) {
-										addToResult(rawEntry, extraEntries[k], result, resolvedEntries, externalFoldersManager, referencedEntriesMap, false);
+										addToResult(rawEntry, extraEntries[k], result, resolvedEntries, externalFoldersManager, referencedEntriesMap, false, knownDrives);
 									}
 								}
 							}
 						}
-						addToResult(rawEntry, cEntry, result, resolvedEntries, externalFoldersManager, referencedEntriesMap, false);
+						addToResult(rawEntry, cEntry, result, resolvedEntries, externalFoldersManager, referencedEntriesMap, false, knownDrives);
 					}
 					break;
 
 				case IClasspathEntry.CPE_LIBRARY:
 					// resolve ".." in library path
-					resolvedEntry = ((ClasspathEntry) rawEntry).resolvedDotDot();
+					resolvedEntry = ((ClasspathEntry) rawEntry).resolvedDotDot(getProject().getLocation());
 					
 					if (resolveChainedLibraries && result.rawReverseMap.get(resolvedEntry.getPath()) == null) {
 						// resolve Class-Path: in manifest
 						ClasspathEntry[] extraEntries = ((ClasspathEntry) resolvedEntry).resolvedChainedLibraries();
 						for (int k = 0, length2 = extraEntries.length; k < length2; k++) {
 							if (!rawLibrariesPath.contains(extraEntries[k].getPath())) {
-								addToResult(rawEntry, extraEntries[k], result, resolvedEntries, externalFoldersManager, referencedEntriesMap, true);
+								addToResult(rawEntry, extraEntries[k], result, resolvedEntries, externalFoldersManager, referencedEntriesMap, true, knownDrives);
 							}
 						}
 					}
 
-					addToResult(rawEntry, resolvedEntry, result, resolvedEntries, externalFoldersManager, referencedEntriesMap, false);
+					addToResult(rawEntry, resolvedEntry, result, resolvedEntries, externalFoldersManager, referencedEntriesMap, false, knownDrives);
 					break;
 				default :
-					addToResult(rawEntry, resolvedEntry, result, resolvedEntries, externalFoldersManager, referencedEntriesMap, false);
+					addToResult(rawEntry, resolvedEntry, result, resolvedEntries, externalFoldersManager, referencedEntriesMap, false, knownDrives);
 					break;
 			}
 		}
@@ -2728,7 +2751,7 @@ public class JavaProject
 
 	private void addToResult(IClasspathEntry rawEntry, IClasspathEntry resolvedEntry, ResolvedClasspath result,
 			LinkedHashSet resolvedEntries, ExternalFoldersManager externalFoldersManager,
-			Map oldChainedEntriesMap, boolean addAsChainedEntry) {
+			Map oldChainedEntriesMap, boolean addAsChainedEntry, Map knownDrives) {
 
 		IPath resolvedPath;
 		// If it's already been resolved, do not add to resolvedEntries
@@ -2749,6 +2772,12 @@ public class JavaProject
 		if (resolvedEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY && ExternalFoldersManager.isExternalFolderPath(resolvedPath)) {
 			externalFoldersManager.addFolder(resolvedPath, true/*scheduleForCreation*/); // no-op if not an external folder or if already registered
 		}
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=336046
+		// The source attachment path could be external too and in which case, must be added.
+		IPath sourcePath = resolvedEntry.getSourceAttachmentPath();
+		if (sourcePath != null && driveExists(sourcePath, knownDrives) && ExternalFoldersManager.isExternalFolderPath(sourcePath)) {
+			externalFoldersManager.addFolder(sourcePath, true);
+		}
 	}
 
 	private void copyFromOldChainedEntry(ClasspathEntry resolvedEntry, ClasspathEntry chainedEntry) {
@@ -2764,6 +2793,26 @@ public class JavaProject
 		if (attributes != null) {
 			resolvedEntry.extraAttributes = attributes;
 		}
+	}
+	
+	/*
+	 * File#exists() takes lot of time for an unmapped drive. Hence, cache the info.
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=338649
+	 */
+	private boolean driveExists(IPath sourcePath, Map knownDrives) {	
+		String drive = sourcePath.getDevice();
+		if (drive == null) return true;
+		Boolean good = (Boolean)knownDrives.get(drive);
+		if (good == null) {
+			if (new File(drive).exists()) {
+				knownDrives.put(drive, Boolean.TRUE);
+				return true;
+			} else {
+				knownDrives.put(drive, Boolean.FALSE);
+				return false;
+			}
+		}
+		return good.booleanValue();
 	}
 	
 	/*
@@ -2882,21 +2931,18 @@ public class JavaProject
 	 * @see org.eclipse.jdt.core.IJavaProject#setOption(java.lang.String, java.lang.String)
 	 */
 	public void setOption(String optionName, String optionValue) {
-		if (!JavaModelManager.getJavaModelManager().optionNames.contains(optionName)) return; // unrecognized option
+		// Store option value
 		IEclipsePreferences projectPreferences = getEclipsePreferences();
-		if (optionValue == null) {
-			// remove preference
-			projectPreferences.remove(optionName);
-		} else {
-			projectPreferences.put(optionName, optionValue);
-		}
+		boolean modified = JavaModelManager.getJavaModelManager().storePreference(optionName, optionValue, projectPreferences);
 
-		// Dump changes
+		// Write changes
+		if (modified) {
 		try {
 			projectPreferences.flush();
 		} catch (BackingStoreException e) {
 			// problem with pref store - quietly ignore
 		}
+	}
 	}
 
 	/**
@@ -2911,12 +2957,12 @@ public class JavaProject
 				projectPreferences.clear();
 			} else {
 				Iterator entries = newOptions.entrySet().iterator();
+				JavaModelManager javaModelManager = JavaModelManager.getJavaModelManager();
 				while (entries.hasNext()){
 					Map.Entry entry = (Map.Entry) entries.next();
 					String key = (String) entry.getKey();
-					if (!JavaModelManager.getJavaModelManager().optionNames.contains(key)) continue; // unrecognized option
-					// no filtering for encoding (custom encoding for project is allowed)
-					projectPreferences.put(key, (String) entry.getValue());
+					String value = (String) entry.getValue();
+					javaModelManager.storePreference(key, value, projectPreferences);
 				}
 
 				// reset to default all options not in new map
@@ -3105,7 +3151,7 @@ public class JavaProject
 	 */
 	public void updateCycleParticipants(
 			ArrayList prereqChain,
-			HashSet cycleParticipants,
+			LinkedHashSet cycleParticipants,
 			IWorkspaceRoot workspaceRoot,
 			HashSet traversed,
 			Map preferredClasspaths){

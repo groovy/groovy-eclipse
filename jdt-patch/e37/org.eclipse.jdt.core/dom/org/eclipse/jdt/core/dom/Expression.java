@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,31 +17,31 @@ package org.eclipse.jdt.core.dom;
  * <p>
  * <pre>
  * Expression:
- *    Name
- *    IntegerLiteral (includes decimal, hex, and octal forms; and long)
- *    FloatingPointLiteral (includes both float and double)
- *    CharacterLiteral
- *    NullLiteral
- *    BooleanLiteral
- *    StringLiteral
- *    TypeLiteral
- *    ThisExpression
- *    SuperFieldAccess
- *    FieldAccess
- *    Assignment
- *    ParenthesizedExpression
- *    ClassInstanceCreation
- *    ArrayCreation
- *    ArrayInitializer
- *    MethodInvocation
- *    SuperMethodInvocation
- *    ArrayAccess
- *    InfixExpression
- *    InstanceofExpression
- *    ConditionalExpression
- *    PostfixExpression
- *    PrefixExpression
- *    CastExpression
+ *    Annotation,
+ *    ArrayAccess,
+ *    ArrayCreation,
+ *    ArrayInitializer,
+ *    Assignment,
+ *    BooleanLiteral,
+ *    CastExpression,
+ *    CharacterLiteral,
+ *    ClassInstanceCreation,
+ *    ConditionalExpression,
+ *    FieldAccess,
+ *    InfixExpression,
+ *    InstanceofExpression,
+ *    MethodInvocation,
+ *    Name,
+ *    NullLiteral,
+ *    NumberLiteral,
+ *    ParenthesizedExpression,
+ *    PostfixExpression,
+ *    PrefixExpression,
+ *    StringLiteral,
+ *    SuperFieldAccess,
+ *    SuperMethodInvocation,
+ *    ThisExpression,
+ *    TypeLiteral,
  *    VariableDeclarationExpression
  * </pre>
  * </p>

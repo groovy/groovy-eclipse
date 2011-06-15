@@ -670,6 +670,17 @@ public final class CompletionEngine
 		this.monitor = monitor;
 	}
 	
+	public void accept(ICompilationUnit sourceUnit, AccessRestriction accessRestriction) {
+		if (!CharOperation.equals(sourceUnit.getMainTypeName(), TypeConstants.PACKAGE_INFO_NAME)) {
+			// do not accept package-info.java as a type for completion engine
+			// because it contains no extra info that will help in completion
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=343865
+			// Required after the fix for https://bugs.eclipse.org/bugs/show_bug.cgi?id=337868
+			// because now we get a type corresponding to the package-info.java from the java model.
+			super.accept(sourceUnit, accessRestriction);
+		}
+	}
+	
 	public void acceptConstructor(
 			int modifiers,
 			char[] simpleTypeName,
@@ -2935,7 +2946,6 @@ public final class CompletionEngine
 			(CompletionOnQualifiedNameReference) astNode;
 		this.completionToken = ref.completionIdentifier;
 		long completionPosition = ref.sourcePositions[ref.sourcePositions.length - 1];
-		this.assistNodeIsInsideCase = assistNodeIsInsideCase(astNode, this.parser.assistNodeParent);
 
 		if (qualifiedBinding.problemId() == ProblemReasons.NotFound) {
 			setSourceAndTokenRange((int) (completionPosition >>> 32), (int) completionPosition);
@@ -3080,7 +3090,6 @@ public final class CompletionEngine
 		this.assistNodeIsSuperType = ref.isSuperType();
 		this.assistNodeIsExtendedType = assistNodeIsExtendedType(astNode, astNodeParent);
 		this.assistNodeIsInterfaceExcludingAnnotation = assistNodeIsInterfaceExcludingAnnotation(astNode, astNodeParent);
-		this.assistNodeIsInsideCase = assistNodeIsInsideCase(astNode, astNodeParent);
 
 		this.completionToken = ref.completionIdentifier;
 		long completionPosition = ref.sourcePositions[ref.tokens.length];
@@ -3141,7 +3150,6 @@ public final class CompletionEngine
 		CompletionOnSingleNameReference singleNameReference = (CompletionOnSingleNameReference) astNode;
 		this.completionToken = singleNameReference.token;
 		SwitchStatement switchStatement = astNodeParent instanceof SwitchStatement ? (SwitchStatement) astNodeParent : null;
-		this.assistNodeIsInsideCase = assistNodeIsInsideCase(astNode, astNodeParent);
 		if (switchStatement != null
 				&& switchStatement.expression.resolvedType != null
 				&& switchStatement.expression.resolvedType.isEnum()) {
@@ -3217,7 +3225,6 @@ public final class CompletionEngine
 		this.assistNodeIsSuperType = singleRef.isSuperType();
 		this.assistNodeIsExtendedType = assistNodeIsExtendedType(astNode, astNodeParent);
 		this.assistNodeIsInterfaceExcludingAnnotation = assistNodeIsInterfaceExcludingAnnotation(astNode, astNodeParent);
-		this.assistNodeIsInsideCase = assistNodeIsInsideCase(astNode, astNodeParent);
 
 		// can be the start of a qualified type name
 		if (qualifiedBinding == null) {
@@ -3430,6 +3437,11 @@ public final class CompletionEngine
 			if(binding != null) {
 				if(!(variable.initialization instanceof ArrayInitializer)) {
 					addExpectedType(binding, scope);
+				} else { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=310747
+					// If the variable is of type X[], and we're in the initializer
+					// we should have X as the expected type for the variable initializers.
+					binding = binding.leafComponentType();
+					addExpectedType(binding, scope);
 				}
 			}
 		} else if(parent instanceof Assignment) {
@@ -3446,7 +3458,7 @@ public final class CompletionEngine
 				}
 			}
 		} else if(parent instanceof CastExpression) {
-			Expression e = ((CastExpression)parent).type;
+			TypeReference e = ((CastExpression)parent).type;
 			TypeBinding binding = e.resolvedType;
 			if(binding != null){
 				addExpectedType(binding, scope);
@@ -3659,6 +3671,7 @@ public final class CompletionEngine
 			}
 		} else if (parent instanceof SwitchStatement) {
 			SwitchStatement switchStatement = (SwitchStatement) parent;
+			this.assistNodeIsInsideCase = assistNodeIsInsideCase(node, parent);
 			if (switchStatement.expression != null &&
 					switchStatement.expression.resolvedType != null) {
 				addExpectedType(switchStatement.expression.resolvedType, scope);
@@ -6040,10 +6053,17 @@ public final class CompletionEngine
 			if (this.options.checkVisibility
 				&& !field.canBeSeenBy(receiverType, invocationSite, scope))	continue next;
 
-			// don't propose array types in case expression
+			// don't propose non constant fields or strings (1.6 or below) in case expression
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=195346
-			if (this.assistNodeIsInsideCase && field.type instanceof ArrayBinding)
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=343342
+			if (this.assistNodeIsInsideCase) {
+				if (field.isFinal() && field.isStatic()) {
+					if (!(field.type instanceof BaseTypeBinding))
 				continue next;
+				} else {
+					continue next; // non-constants not allowed in case.	
+				}
+			}
 
 			boolean prefixRequired = false;
 
@@ -9716,6 +9736,9 @@ public final class CompletionEngine
 			return;
 		}
 
+		if (this.assistNodeIsInsideCase)
+			return;		// no methods should be proposed inside case expression
+
 		ReferenceBinding currentType = receiverType;
 		if (notInJavadoc) {
 			if (receiverType.isInterface()) {
@@ -11421,10 +11444,17 @@ public final class CompletionEngine
 								continue next;
 							}
 												
-							// don't propose array types in case expression
+							// don't propose non constant variables or strings (1.6 or below) in case expression
 							// https://bugs.eclipse.org/bugs/show_bug.cgi?id=195346
-							if (this.assistNodeIsInsideCase && local.type instanceof ArrayBinding)
-								continue next;
+							// https://bugs.eclipse.org/bugs/show_bug.cgi?id=343342
+							if (this.assistNodeIsInsideCase) {
+								if (local.isFinal()) {
+									if (!(local.type instanceof BaseTypeBinding))
+										continue next;
+								} else {
+									continue next; // non-constants not allowed in case.	
+								}
+							}
 							
 							int ptr = this.uninterestingBindingsPtr;
 							// Cases where the binding is uninteresting eg. for completion occurring inside a local var

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2010 IBM Corporation and others.
+ * Copyright (c) 2003, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,7 +21,7 @@ import java.util.List;
  *    Type <b>.</b> SimpleName
  * </pre>
  * <p>
- * Not all node arragements will represent legal Java constructs. In particular,
+ * Not all node arrangements will represent legal Java constructs. In particular,
  * it is nonsense if the type is an array type or primitive type. The normal use
  * is when the type is a simple or parameterized type.
  * </p>
