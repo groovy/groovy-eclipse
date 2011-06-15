@@ -1541,7 +1541,7 @@ public class CompilerOptions {
 				this.storeAnnotations = true; // force it on
 				// will need proper bit manipulation when second flag comes up
 				String s = (String)optionsMap.get(OPTIONG_GroovyFlags);
-				if (s!=null && s.equals("1")) {
+				if (s!=null && s.equals("1")) { //$NON-NLS-1$
 					this.groovyFlags = 0x01;
 				} else {
 					this.groovyFlags = 0;
@@ -1552,10 +1552,10 @@ public class CompilerOptions {
 			}
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyClassLoaderPath)) != null) {
-			groovyClassLoaderPath = (String)optionValue;
+			this.groovyClassLoaderPath = (String)optionValue;
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyProjectName)) != null) {
-			groovyProjectName = (String)optionValue;
+			this.groovyProjectName = (String)optionValue;
 		}
 		// GROOVY end
 	}
@@ -1661,10 +1661,10 @@ public class CompilerOptions {
 		buf.append("\n\t- method can be static: ").append(getSeverityString(MethodCanBeStatic)); //$NON-NLS-1$
 		buf.append("\n\t- method can be potentially static: ").append(getSeverityString(MethodCanBePotentiallyStatic)); //$NON-NLS-1$
 		// GROOVY start
-		buf.append("\n\t- build groovy files: ").append((buildGroovyFiles==0)?"dontknow":(buildGroovyFiles==1?"no":"yes")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-		buf.append("\n\t- build groovy flags: ").append(Integer.toHexString(groovyFlags)); //$NON-NLS-1$
-		buf.append("\n\t- groovyclassloader path: ").append(groovyClassLoaderPath); //$NON-NLS-1$
-		buf.append("\n\t- groovy projectname: ").append(groovyProjectName); //$NON-NLS-1$
+		buf.append("\n\t- build groovy files: ").append((this.buildGroovyFiles==0)?"dontknow":(this.buildGroovyFiles==1?"no":"yes")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		buf.append("\n\t- build groovy flags: ").append(Integer.toHexString(this.groovyFlags)); //$NON-NLS-1$
+		buf.append("\n\t- groovyclassloader path: ").append(this.groovyClassLoaderPath); //$NON-NLS-1$
+		buf.append("\n\t- groovy projectname: ").append(this.groovyProjectName); //$NON-NLS-1$
 		// GROOVY end
 		return buf.toString();
 	}
