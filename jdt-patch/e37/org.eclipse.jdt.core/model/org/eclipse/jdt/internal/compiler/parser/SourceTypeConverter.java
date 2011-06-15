@@ -157,7 +157,7 @@ public class SourceTypeConverter extends TypeConverter {
 		// FIXASC should be 'true' here?
 		if (LanguageSupportFactory.isInterestingSourceFile(new String(compilationResult.getFileName()))) {
 			try {
-				return LanguageSupportFactory.getParser(this, problemReporter.options, problemReporter, true, 3).dietParse(this.cu, compilationResult);
+				return LanguageSupportFactory.getParser(this, this.problemReporter.options, this.problemReporter, true, 3).dietParse(this.cu, compilationResult);
 			} catch (Throwable t) {
 				t.printStackTrace();
 			}

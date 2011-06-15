@@ -639,7 +639,7 @@ class ASTConverter {
 
 	// GROOVY start
 	private boolean scannerAvailable(Scope scope) {
-		if (!scannerUsable) {
+		if (!this.scannerUsable) {
 			return false;
 		}
 		if (scope!=null) {

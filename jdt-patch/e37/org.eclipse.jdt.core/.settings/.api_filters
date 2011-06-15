@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.eclipse.jdt.core" version="2">
+    <resource path="groovy/org/codehaus/jdt/groovy/integration/LanguageSupport.java" type="org.codehaus.jdt.groovy.integration.LanguageSupport">
+        <filter id="643846161">
+            <message_arguments>
+                <message_argument value="ProblemReporter"/>
+                <message_argument value="LanguageSupport"/>
+                <message_argument value="getImportMatchLocatorParserParser(ProblemReporter, MatchLocator)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="model/org/eclipse/jdt/core/util/CompilerUtils.java" type="org.eclipse.jdt.core.util.CompilerUtils">
+        <filter id="643846161">
+            <message_arguments>
+                <message_argument value="CompilerOptions"/>
+                <message_argument value="CompilerUtils"/>
+                <message_argument value="configureOptionsBasedOnNature(CompilerOptions, IJavaProject)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>

@@ -193,7 +193,7 @@ protected void copyExtraResourcesBack(ClasspathMultiDirectory sourceLocation, fi
 	final IContainer outputFolder = sourceLocation.binaryFolder;
 	final boolean isAlsoProject = sourceLocation.sourceFolder.equals(this.javaBuilder.currentProject);
 	// GROOVY start
-	final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(javaBuilder.getProject());
+	final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(this.javaBuilder.getProject());
 	// GROOVY end
 	sourceLocation.sourceFolder.accept(
 		new IResourceProxyVisitor() {

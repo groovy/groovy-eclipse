@@ -241,7 +241,7 @@ protected void acceptSecondaryType(ClassFile classFile) {
 protected void addAllSourceFiles(final ArrayList sourceFiles) throws CoreException {
     // GROOVY start
     // determine if this is a Groovy project
-    final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(javaBuilder.getProject());
+    final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(this.javaBuilder.getProject());
     // GROOVY end
 	for (int i = 0, l = this.sourceLocations.length; i < l; i++) {
 		final ClasspathMultiDirectory sourceLocation = this.sourceLocations[i];
@@ -584,7 +584,7 @@ protected Compiler newCompiler() {
 	compilerOptions.performMethodsFullRecovery = true;
 	compilerOptions.performStatementsRecovery = true;
 	// GROOVY start: make it behave in a groovier way if this project has the right nature
-	CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaBuilder.javaProject);
+	CompilerUtils.configureOptionsBasedOnNature(compilerOptions, this.javaBuilder.javaProject);
 	// GROOVY end
 	Compiler newCompiler = new Compiler(
 		this.nameEnvironment,

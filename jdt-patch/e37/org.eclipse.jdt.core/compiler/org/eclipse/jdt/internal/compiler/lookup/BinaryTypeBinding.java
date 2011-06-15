@@ -1081,13 +1081,13 @@ public ReferenceBinding[] memberTypes() {
 }
 // GROOVY start
 public MethodBinding[] infraMethods() {
-	if (!infraMethodsComplete) {
+	if (!this.infraMethodsComplete) {
 		for (int i = this.infraMethods.length; --i >= 0;) {
 			resolveTypesFor(this.infraMethods[i]);
 		}
-		infraMethodsComplete=true;
+		this.infraMethodsComplete=true;
 	}
-	return infraMethods;
+	return this.infraMethods;
 }
 // GROOVY end
 // NOTE: the return type, arg & exception types of each method of a binary type are resolved when needed

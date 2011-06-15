@@ -91,7 +91,7 @@ public class CompilerUtils {
 	 */
 	private static boolean isProbablyGrailsProject(IProject project) {
 	    try {
-	    	IFolder folder = project.getFolder("grails-app");
+	    	IFolder folder = project.getFolder("grails-app"); //$NON-NLS-1$
 			return folder.exists();
 		} catch (Exception e) {
 			return false;
@@ -133,13 +133,13 @@ public class CompilerUtils {
 					}
 				}
 			} catch (IOException ioe) {
-				System.err.println("Problem configuring groovy classloader classpath");
+				System.err.println("Problem configuring groovy classloader classpath"); //$NON-NLS-1$
 				ioe.printStackTrace();
 			} catch (CoreException ce) {
-				System.err.println("Problem configuring groovy classloader classpath");
+				System.err.println("Problem configuring groovy classloader classpath"); //$NON-NLS-1$
 				ce.printStackTrace();
 			} catch (Throwable t) {
-				System.err.println("Problem configuring groovy classloader classpath");
+				System.err.println("Problem configuring groovy classloader classpath"); //$NON-NLS-1$
 				t.printStackTrace();
 			}
 		} else {
@@ -147,7 +147,7 @@ public class CompilerUtils {
 				String classpath = calculateClasspath(javaProject);
 				optionMap.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath,classpath);
 			} catch (Throwable t) {
-				System.err.println("Problem configuring groovy classloader classpath (not using groovy.properties)");
+				System.err.println("Problem configuring groovy classloader classpath (not using groovy.properties)"); //$NON-NLS-1$
 				t.printStackTrace();				
 			}
 		}
@@ -181,7 +181,7 @@ public class CompilerUtils {
 					// the path is actually to the project root
 					IPath rawPath = project.getRawLocation();
 					if (rawPath==null) {
-						System.err.println("Failed on call to getRawLocation() against the project: "+project);
+						System.err.println("Failed on call to getRawLocation() against the project: "+project); //$NON-NLS-1$
 					} else {
 					realLocation =  project.getRawLocation().toOSString();
 					}

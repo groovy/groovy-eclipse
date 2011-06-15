@@ -80,7 +80,7 @@ public class ImportReference extends ASTNode {
 	
 	// GROOVY start - can be overridden by aliased imports that don't use the final token as the name
 	public char[] getSimpleName() {
-		return tokens[tokens.length-1];
+		return this.tokens[this.tokens.length-1];
 	}
 	// GROOVY end
 }
