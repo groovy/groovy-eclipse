@@ -102,5 +102,9 @@ public class GroovyDSLCoreActivator extends AbstractUIPlugin {
     public static void logException(Throwable throwable) {
         log(IStatus.ERROR, throwable.getLocalizedMessage(), throwable);
     }
+    public static void logWarning(String message) {
+        log(IStatus.WARNING, message, null);
+    }
+    
 
 }

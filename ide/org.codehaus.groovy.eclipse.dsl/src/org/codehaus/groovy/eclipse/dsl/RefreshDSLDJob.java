@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl;
 
+import java.nio.channels.AlreadyConnectedException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -18,6 +19,7 @@ import java.util.Set;
 
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
+import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.script.DSLDScriptExecutor;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -48,9 +50,11 @@ public class RefreshDSLDJob extends Job {
         private static final String GLOBAL_DSLD_SUPPORT = "global_dsld_support";
         private final IProject project;
         private final Set<IStorage> dsldFiles;
+        private final Set<String> alreadyAdded; 
         public DSLDResourceVisitor(IProject project) {
             this.project = project;
             this.dsldFiles = new HashSet<IStorage>();
+            alreadyAdded = new HashSet<String>();
         }
     
         public boolean visit(IResource resource) throws CoreException {
@@ -60,8 +64,13 @@ public class RefreshDSLDJob extends Job {
             }
             if (resource.getType() == IResource.FILE) {
                 IFile file = (IFile) resource;
-                if (isDSLD(file)) {
+                if (!alreadyAdded.contains(file) && isDSLD(file)) {
+                    alreadyAdded.add(file.getName());
                     dsldFiles.add(file);
+                } else {
+                    if (alreadyAdded.contains(file.getName())) {
+                        GroovyDSLCoreActivator.logWarning("DSLD File " + file.getFullPath() + " already added, so skipping.");
+                    }
                 }
             }
             return true;
@@ -113,11 +122,19 @@ public class RefreshDSLDJob extends Job {
                         // FIXADE end workaround
                         
                         Object[] resources = frag.getNonJavaResources();
+                        // make sure we don't add files with the same names.
+                        // this ensures that a dsld file that is coming from 2 different places is 
+                        // not added twice.
                         for (Object resource : resources) {
                             if (resource instanceof IStorage) {
                                 IStorage file = (IStorage) resource;
-                                if (isDSLD(file)) {
+                                if (!alreadyAdded.contains(file.getName()) && isDSLD(file)) {
+                                    alreadyAdded.add(file.getName());
                                     dsldFiles.add(file);
+                                } else {
+                                    if (alreadyAdded.contains(file.getName())) {
+                                        GroovyLogManager.manager.log(TraceCategory.DSL, "DSLD File " + file.getFullPath() + " already added, so skipping.");
+                                    }
                                 }
                             }
                         }
