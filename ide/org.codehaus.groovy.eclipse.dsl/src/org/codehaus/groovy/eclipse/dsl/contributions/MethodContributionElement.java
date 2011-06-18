@@ -66,8 +66,11 @@ public class MethodContributionElement implements IContributionElement {
     }
     
     public TypeAndDeclaration lookupType(String name, ClassNode declaringType, ResolverCache resolver) {
-        return name.equals(methodName) ? new TypeAndDeclaration(ensureReturnType(resolver), toMethod(declaringType, resolver),
-                ensureDeclaringType(declaringType, resolver), doc) : null;
+        if (name.equals(methodName))
+            return new TypeAndDeclaration(ensureReturnType(resolver), toMethod(declaringType, resolver),
+                    ensureDeclaringType(declaringType, resolver), doc);
+        else
+            return null;
     }
 
     public IGroovyProposal toProposal(ClassNode declaringType, ResolverCache resolver) {

@@ -36,10 +36,6 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         createDSL();
     }
     
-    public void testSingleton() throws Exception {
-        
-    }
-    
     public void testRegisteredPointcut1() throws Exception {
         String contents = "2.phat";
         String name = "phat";

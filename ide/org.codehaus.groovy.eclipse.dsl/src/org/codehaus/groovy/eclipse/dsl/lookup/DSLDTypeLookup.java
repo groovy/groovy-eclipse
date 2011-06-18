@@ -60,10 +60,6 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
         for (IContributionElement elt : elts) {
             TypeAndDeclaration td = elt.lookupType(name, declaringType, pattern.resolver);
             if (td != null) {
-                if (GroovyLogManager.manager.hasLoggers()) {
-                    GroovyLogManager.manager.log(TraceCategory.DSL, 
-                            "Match found for " + name + " in " + elt.contributionName());
-                }
                 return td;
             }
         }

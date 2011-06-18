@@ -70,11 +70,18 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
     
     TestLogger logger = new TestLogger();
     
+    protected boolean doRemoveClasspathContainer = true;
+    
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         GroovyLogManager.manager.addLogger(logger);
-        GroovyRuntime.removeClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, JavaCore.create(project));
+        if (doRemoveClasspathContainer) {
+            GroovyRuntime.removeClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, JavaCore.create(project));
+        } else {
+            GroovyRuntime.addLibraryToClasspath(JavaCore.create(project), GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID);
+            new RefreshDSLDJob(project).run(null);
+        }
         GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project);
     }
     

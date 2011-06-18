@@ -400,6 +400,9 @@ public class CodeSelectRequestor implements ITypeRequestor {
     }
     
     private StringBuilder createUniqueKeyForResolvedClass(ClassNode resolvedType) {
+        if (resolvedType.getName().equals("java.lang.Void")) {
+            resolvedType = VariableScope.VOID_CLASS_NODE;
+        }
         return new StringBuilder(Signature.createTypeSignature(createGenericsAwareName(resolvedType, false/*fully qualified*/), true/*must resolve*/).replace('.', '/'));
     }
     /**
@@ -409,7 +412,6 @@ public class CodeSelectRequestor implements ITypeRequestor {
      * @return
      */
     private StringBuilder createUniqueKeyForClass(ClassNode unresolvedType, ClassNode resolvedDeclaringType) {
-        
     	GenericsMapper mapper = GenericsMapper.gatherGenerics(resolvedDeclaringType, resolvedDeclaringType.redirect());
     	ClassNode resolvedType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(unresolvedType));
     	return createUniqueKeyForResolvedClass(resolvedType);

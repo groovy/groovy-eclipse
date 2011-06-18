@@ -43,6 +43,9 @@ public class ResolverCache {
      */
     public ClassNode resolve(String qName) {
         qName = qName.trim();
+        if (qName.equals("java.lang.Void") || qName.equals("void")) {
+            return VariableScope.VOID_CLASS_NODE;
+        }
         ClassNode clazz = nameTypeCache.get(qName);
         if (clazz == null && resolver != null) {
             int typeParamStart = qName.indexOf('<');
@@ -60,6 +63,8 @@ public class ResolverCache {
             
             // now recur down through the type parameters
             if (typeParamStart > 0) {
+                clazz = VariableScope.clone(clazz);
+                
                 String[] typeParameterNames = qName.substring(typeParamStart+1, qName.length()-1).split(",");
                 ClassNode[] typeParameters = new ClassNode[typeParameterNames.length];
                 for (int i = 0; i < typeParameterNames.length; i++) {

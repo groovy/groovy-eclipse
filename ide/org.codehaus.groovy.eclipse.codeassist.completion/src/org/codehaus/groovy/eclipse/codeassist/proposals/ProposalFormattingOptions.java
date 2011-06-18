@@ -51,7 +51,7 @@ public class ProposalFormattingOptions {
     public ProposalFormattingOptions newFromExisting(boolean overrideUseNamedArgs, MethodNode method) {
         // if overridden, always use named args
         // if not a constructor and not overridden, never use named args
-        if (overrideUseNamedArgs && !useNamedArguments) {
+        if (overrideUseNamedArgs) {
             return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, true, doParameterGuessing);
         } else if (useNamedArguments && !(method instanceof ConstructorNode)) {
             return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, false, doParameterGuessing);

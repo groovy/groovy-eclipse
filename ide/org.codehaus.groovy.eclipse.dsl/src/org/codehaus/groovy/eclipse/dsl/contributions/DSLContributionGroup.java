@@ -27,13 +27,16 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
+import org.eclipse.jdt.groovy.search.GenericsMapper;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
@@ -308,6 +311,8 @@ public class DSLContributionGroup extends ContributionGroup {
             return;
         }
         if (!type.getName().equals(Object.class.getName())) {
+            // use this to resolve parameterized types
+//            GenericsMapper mapper = GenericsMapper.gatherGenerics(type, type.redirect());
             for (MethodNode method : type.getMethods()) {
                 if ((exceptions == null || !exceptions.contains(method.getName())) && !(method instanceof ConstructorNode) && ! method.getName().contains("$")) {
                     if (asCategory) {
@@ -436,6 +441,10 @@ public class DSLContributionGroup extends ContributionGroup {
             return getTypeName(((FieldNode) value).getDeclaringClass()) + "." + ((FieldNode) value).getName();
         } else if (value instanceof MethodNode) {
             return getTypeName(((MethodNode) value).getDeclaringClass()) + "." + ((MethodNode) value).getName();
+        } else if (value instanceof ConstantExpression) {
+            return ((ConstantExpression) value).getText();
+        } else if (value instanceof Variable) {
+            return ((Variable) value).getName();
         } else if (value instanceof AnnotationNode) {
             return ((AnnotationNode) value).getClassNode().getName();
         } else if (value instanceof Class) {

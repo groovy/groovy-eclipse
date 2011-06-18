@@ -521,6 +521,29 @@ public class VariableScope {
 		return cloneInternal(type, 0);
 	}
 
+	public static ClassNode clonedMap() {
+		ClassNode clone = clone(MAP_CLASS_NODE);
+		cleanGenerics(clone.getGenericsTypes()[0]);
+		cleanGenerics(clone.getGenericsTypes()[1]);
+		return clone;
+	}
+
+	public static ClassNode clonedList() {
+		ClassNode clone = clone(LIST_CLASS_NODE);
+		cleanGenerics(clone.getGenericsTypes()[0]);
+		return clone;
+	}
+	
+	private static void cleanGenerics(GenericsType gt) {
+		gt.getType().setGenericsTypes(null);
+		gt.setName("java.lang.Object");
+		gt.setPlaceholder(false);
+		gt.setWildcard(false);
+		gt.setResolved(true);
+		gt.setUpperBounds(null);
+		gt.setLowerBound(null);
+	}
+
 	/**
 	 * Internal variant of clone that ensures stack recursion never gets too large
 	 * 
