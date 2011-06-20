@@ -15,7 +15,6 @@
  */
 package dsld
 
-import groovy.model.DefaultTableColumn
 import groovy.swing.SwingBuilder
 import groovy.swing.impl.*
 import javax.swing.*

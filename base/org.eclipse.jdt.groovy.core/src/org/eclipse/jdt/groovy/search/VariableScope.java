@@ -37,6 +37,7 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
 import org.codehaus.jdt.groovy.internal.compiler.ast.LazyGenericsType;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -456,6 +457,8 @@ public class VariableScope {
 			// if this parameter exists in the redirect, then it is the former, if not, then check the redirect for type
 			// parameters
 			if (typeParameterExistsInRedirected(typeToParameterize, toParameterizeName)) {
+				Assert.isLegal(typeToParameterize.redirect() != typeToParameterize,
+						"Error: trying to resolve type parameters of a type declaration: " + typeToParameterize);
 				// we have: Iterator<E> --> Iterator<String>
 				typeToParameterize.getGenericsTypes()[i].setType(resolved);
 				genericsToParameterize.setName(genericsToParameterize.getType().getName());
@@ -533,7 +536,7 @@ public class VariableScope {
 		cleanGenerics(clone.getGenericsTypes()[0]);
 		return clone;
 	}
-	
+
 	private static void cleanGenerics(GenericsType gt) {
 		gt.getType().setGenericsTypes(null);
 		gt.setName("java.lang.Object");

@@ -257,7 +257,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         }
         
         public String getDeclaringTypeName() {
-            return result.declaringType.getName();
+            return printTypeName(result.declaringType);
         }
         
         public String getTypeName() {

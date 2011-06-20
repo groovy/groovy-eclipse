@@ -75,7 +75,7 @@ public class GenericsMapper {
 	 * @param depth ensure that we don't recur forever, bottom out after a certain depth
 	 * @return
 	 */
-	ClassNode resolveParameter(GenericsType topGT, int depth) {
+	public ClassNode resolveParameter(GenericsType topGT, int depth) {
 		if (depth > 10) {
 			// I don't like this solution. I would like to remove this
 			// don't recur forever

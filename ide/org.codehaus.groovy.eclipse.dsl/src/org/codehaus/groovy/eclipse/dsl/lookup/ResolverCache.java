@@ -63,6 +63,7 @@ public class ResolverCache {
             
             // now recur down through the type parameters
             if (typeParamStart > 0) {
+                // only need to clone if generics are involved
                 clazz = VariableScope.clone(clazz);
                 
                 String[] typeParameterNames = qName.substring(typeParamStart+1, qName.length()-1).split(",");

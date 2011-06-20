@@ -1,5 +1,0 @@
-package dsld
-
-currentType("Foo").accept {
-    property name: "fooProperty"
- }

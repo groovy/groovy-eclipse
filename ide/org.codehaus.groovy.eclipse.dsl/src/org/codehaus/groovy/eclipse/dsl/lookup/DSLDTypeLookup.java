@@ -52,6 +52,7 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
         store = store.createSubStore(pattern);
     }
 
+    // FIXADE Should shortcut if we find a solution earlier.
     @Override
     protected TypeAndDeclaration lookupTypeAndDeclaration(ClassNode declaringType, String name, VariableScope scope) {
         pattern.setCurrentScope(scope);

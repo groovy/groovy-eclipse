@@ -292,6 +292,25 @@ public class DSLContributionGroup extends ContributionGroup {
         internalDelegatesTo(expr, false, false, true, null);
     }
 
+    /**
+     * Convert a {@link ClassNode} into a string that includes type parameters
+     * @param clazz
+     * @return
+     */
+    static String getTypeName(ClassNode clazz) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(clazz.getName());
+        if (clazz.getGenericsTypes() != null && clazz.getGenericsTypes().length > 0) {
+            sb.append('<');
+            for (GenericsType gt : clazz.getGenericsTypes()) {
+                sb.append(getTypeName(gt.getType()));
+                sb.append(',');
+            }
+            sb.replace(sb.length()-1, sb.length(), ">");
+        }
+        return sb.toString();
+    }
+
     private void internalDelegatesTo(AnnotatedNode expr, boolean useNamedArgs, boolean isStatic, boolean asCategory, List<String> exceptions) {
         ClassNode type;
         if (expr instanceof ClassNode) {
@@ -312,13 +331,14 @@ public class DSLContributionGroup extends ContributionGroup {
         }
         if (!type.getName().equals(Object.class.getName())) {
             // use this to resolve parameterized types
-//            GenericsMapper mapper = GenericsMapper.gatherGenerics(type, type.redirect());
+            GenericsMapper mapper = GenericsMapper.gatherGenerics(type, type.redirect());
             for (MethodNode method : type.getMethods()) {
                 if ((exceptions == null || !exceptions.contains(method.getName())) && !(method instanceof ConstructorNode) && ! method.getName().contains("$")) {
+                    ClassNode resolvedReturnType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(method.getReturnType()));
                     if (asCategory) {
-                        delegateToCategoryMethod(useNamedArgs, isStatic, type, method);
+                        delegateToCategoryMethod(useNamedArgs, isStatic, type, method, resolvedReturnType);
                     } else {
-                        delegateToNonCategoryMethod(useNamedArgs, isStatic, type, method);
+                        delegateToNonCategoryMethod(useNamedArgs, isStatic, type, method, resolvedReturnType);
                     }
                 }
             }
@@ -330,47 +350,36 @@ public class DSLContributionGroup extends ContributionGroup {
      * @param isStatic
      * @param type
      * @param method
+     * @param mapper
      */
-    private void delegateToNonCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method) {
+    private void delegateToNonCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method, ClassNode resolvedReturnType) {
         String name = method.getName();
         contributions.add(new MethodContributionElement(name, toParameterContribution(method
-                .getParameters()), getTypeName(method.getReturnType()), getTypeName(type), (method.isStatic() || isStatic), provider,
+                .getParameters()), getTypeName(resolvedReturnType),
+                getTypeName(type), (method.isStatic() || isStatic), provider,
                 null, useNamedArgs));
         
         // also add the associated property if applicable
         if (name.startsWith("get") && name.length() > 3 && (method.getParameters() == null || method.getParameters().length == 0)) {
-            contributions.add(new PropertyContributionElement(Character.toLowerCase(name.charAt(3)) + name.substring(4), getTypeName(method.getReturnType()), 
+            contributions.add(new PropertyContributionElement(Character.toLowerCase(name.charAt(3)) + name.substring(4), getTypeName(resolvedReturnType), 
                     getTypeName(method.getDeclaringClass()), (method.isStatic() || isStatic), provider, null));
         }
     }
 
     
-    static String getTypeName(ClassNode clazz) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(clazz.getName());
-        if (clazz.getGenericsTypes() != null && clazz.getGenericsTypes().length > 0) {
-            sb.append('<');
-            for (GenericsType gt : clazz.getGenericsTypes()) {
-                sb.append(getTypeName(gt.getType()));
-                sb.append(',');
-            }
-            sb.replace(sb.length()-1, sb.length(), ">");
-        }
-        return sb.toString();
-    }
-    
     /**
      * @param useNamedArgs
      * @param type
      * @param method
+     * @param mapper
      */
-    private void delegateToCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method) {
+    private void delegateToCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method, ClassNode resolvedReturnType) {
         if (method.getParameters() != null && method.getParameters().length > 0) {
             ClassNode firstType = method.getParameters()[0].getType();
             if ((firstType.isInterface() && currentType.implementsInterface(firstType)) ||
                     currentType.isDerivedFrom(firstType)) {
                 contributions.add(new MethodContributionElement(method.getName(), toParameterContributionRemoveFirst(method
-                        .getParameters()), getTypeName(method.getReturnType()), getTypeName(type), isStatic, provider,
+                        .getParameters()), getTypeName(resolvedReturnType), getTypeName(type), isStatic, provider,
                         null, useNamedArgs));
             }
         }
