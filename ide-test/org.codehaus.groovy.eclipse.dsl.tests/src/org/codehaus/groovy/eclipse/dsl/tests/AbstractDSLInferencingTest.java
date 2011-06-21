@@ -247,7 +247,7 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
     
     
     protected void assertDSLType(String contents, String name) {
-        assertDeclaringType(contents, contents.indexOf(name), contents.indexOf(name) + name.length(), "Search", true);
+        assertDeclaringType(contents, contents.indexOf(name), contents.indexOf(name) + name.length(), "p.IPointcut", true);
     }
     
     protected void assertUnknownDSLType(String contents, String name) {
