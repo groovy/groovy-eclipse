@@ -13,6 +13,16 @@ package org.codehaus.groovy.eclipse.dsl.tests;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
+import org.codehaus.groovy.eclipse.dsl.DSLDStore;
+import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
+import org.eclipse.core.resources.IStorage;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.JavaCore;
+
 /**
  * Tests type inferencing for DSL scripts included with Groovy plugin
  * 
@@ -32,6 +42,42 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
     protected void setUp() throws Exception {
         doRemoveClasspathContainer = false;
         super.setUp();
+    }
+
+    private boolean containsGroovyDSLD() {
+        IStorage[] allContextKeys = GroovyDSLCoreActivator.getDefault().getContextStoreManager().getDSLDStore(project).getAllContextKeys();
+        for (IStorage storage : allContextKeys) {
+            if (storage.getName().equals("groovy.dsld")) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public void testSanity() throws Exception {
+        IJavaProject javaProject = JavaCore.create(project);
+        assertTrue("Should have DSL support classpath container", 
+                GroovyRuntime.hasClasspathContainer(javaProject, 
+                        GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID));
+        
+        IClasspathEntry globalEntry = null;
+        IClasspathEntry[] entries = javaProject.getResolvedClasspath(true);
+        for (IClasspathEntry entry : entries) {
+            if (entry.getPath().toString().contains("global_dsld")) {
+                globalEntry = entry;
+            }
+        }
+        
+        assertNotNull("Did not find the Global DSLD classpath entry", globalEntry);
+        IPackageFragmentRoot root = javaProject.findPackageFragmentRoots(globalEntry)[0];
+        assertTrue("Global DSLD classpath entry should exist", root.exists());
+        IPackageFragment frag = root.getPackageFragment("dsld");
+        assertTrue("DSLD package fragment should exist", frag.exists());
+        assertTrue("Should have at least one non java resource in pacakge", frag.getNonJavaResources().length > 0);
+        
+        
+        assertTrue("Should have groovy.dsld as a dsld file", 
+                containsGroovyDSLD());
     }
     
     public void testSingleton() throws Exception {

@@ -157,9 +157,6 @@ public class RefreshDSLDJob extends Job {
             }
         }
 
-        /**
-         * @param file
-         */
         protected boolean isDSLD(IStorage file) {
             if (file instanceof IFile) {
                 IFile iFile = (IFile) file;

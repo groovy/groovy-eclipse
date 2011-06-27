@@ -80,6 +80,7 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
             GroovyRuntime.removeClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, JavaCore.create(project));
         } else {
             GroovyRuntime.addLibraryToClasspath(JavaCore.create(project), GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID);
+            env.fullBuild();
             new RefreshDSLDJob(project).run(null);
         }
         GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project);
