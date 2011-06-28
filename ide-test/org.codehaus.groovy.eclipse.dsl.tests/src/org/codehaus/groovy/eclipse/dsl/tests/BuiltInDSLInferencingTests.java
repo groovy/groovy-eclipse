@@ -11,6 +11,7 @@
 package org.codehaus.groovy.eclipse.dsl.tests;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import junit.framework.Test;
@@ -18,8 +19,10 @@ import junit.framework.TestSuite;
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
+import org.codehaus.groovy.eclipse.dsl.classpath.DSLDContainerInitializer;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IStorage;
+import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
@@ -47,6 +50,11 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
     protected void setUp() throws Exception {
         doRemoveClasspathContainer = false;
         super.setUp();
+        try {
+            wait(60*1000);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private boolean containsGroovyDSLD() {
@@ -64,6 +72,10 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
         assertTrue("Should have DSL support classpath container", 
                 GroovyRuntime.hasClasspathContainer(javaProject, 
                         GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID));
+        
+        IClasspathContainer container = JavaCore.getClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, javaProject);
+        IClasspathEntry[] cpes = container.getClasspathEntries();
+        assertEquals("Wrong number of classpath entries found: " + Arrays.toString(cpes), 2, cpes.length);
         
         IClasspathEntry pluginEntry = null;
         IClasspathEntry[] entries = javaProject.getResolvedClasspath(true);
