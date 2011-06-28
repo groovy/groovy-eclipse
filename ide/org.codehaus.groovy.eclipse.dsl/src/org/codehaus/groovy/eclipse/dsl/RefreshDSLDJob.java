@@ -127,6 +127,10 @@ public class RefreshDSLDJob extends Job {
                                     if (resource.getType() == IResource.FILE && !alreadyAdded.contains(resource.getName()) && isDSLD((IFile) resource)) {
                                         alreadyAdded.add(resource.getName());
                                         dsldFiles.add((IStorage) resource);
+                                    } else {
+                                        if (alreadyAdded.contains(resource.getName())) {
+                                            GroovyLogManager.manager.log(TraceCategory.DSL, "DSLD File " + resource.getFullPath() + " already added, so skipping.");
+                                        }
                                     }
                                 }
                             } catch (CoreException e) {

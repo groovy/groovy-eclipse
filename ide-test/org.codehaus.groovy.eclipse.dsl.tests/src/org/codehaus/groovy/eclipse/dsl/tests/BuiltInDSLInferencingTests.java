@@ -118,11 +118,6 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
         
         IPackageFragment frag = root.getPackageFragment("dsld");
         assertTrue("DSLD package fragment should exist", frag.exists());
-        assertTrue("Should have at least one non java resource in pacakge", frag.getNonJavaResources().length > 0);
-        
-        
-        assertTrue("Should have groovy.dsld as a dsld file", 
-                containsGroovyDSLD());
     }
 
     private String printList(List<String> elements) {
