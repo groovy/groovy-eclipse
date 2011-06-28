@@ -14,7 +14,6 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
-import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IStorage;
@@ -63,23 +62,23 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
                 GroovyRuntime.hasClasspathContainer(javaProject, 
                         GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID));
         
-        IClasspathEntry globalEntry = null;
+        IClasspathEntry pluginEntry = null;
         IClasspathEntry[] entries = javaProject.getResolvedClasspath(true);
         for (IClasspathEntry entry : entries) {
             if (entry.getPath().toString().contains("plugin_dsld")) {
-                globalEntry = entry;
+                pluginEntry = entry;
             }
         }
         
-        assertNotNull("Did not find the Global DSLD classpath entry", globalEntry);
+        assertNotNull("Did not find the Plugin DSLD classpath entry", pluginEntry);
         IPackageFragmentRoot root = null;
         for (IJavaElement elt : javaProject.getChildren()) {
             if (elt.getElementName().contains("plugin_dsld")) {
                 root = (IPackageFragmentRoot) elt;
             }
         }
-        assertNotNull("Global DSLD classpath entry should exist", root);
-        assertTrue("Global DSLD classpath entry should exist", root.exists());
+        assertNotNull("Plugin DSLD classpath entry should exist", root);
+        assertTrue("Plugin DSLD classpath entry should exist", root.exists());
 
         ExternalPackageFragmentRoot ext = (ExternalPackageFragmentRoot) root;
         ext.resource().refreshLocal(IResource.DEPTH_INFINITE, null);
