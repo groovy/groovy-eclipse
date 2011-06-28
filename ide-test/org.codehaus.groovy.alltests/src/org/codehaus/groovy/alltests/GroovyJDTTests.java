@@ -41,27 +41,27 @@ public class GroovyJDTTests {
 
         // Model tests
         suite.addTest(AnnotationsTests.suite());
-        suite.addTest(GroovyCompilationUnitTests.suite());
-        suite.addTest(GroovyClassFileTests.suite());
-        suite.addTest(GroovyContentTypeTests.suite());
-        suite.addTest(MoveRenameCopyTests.suite());
-        suite.addTest(GroovyPartialModelTests.suite());
-
-        // Builder tests
-        suite.addTest(BasicGroovyBuildTests.suite());
-
-		// Location tests
+//        suite.addTest(GroovyCompilationUnitTests.suite());
+//        suite.addTest(GroovyClassFileTests.suite());
+//        suite.addTest(GroovyContentTypeTests.suite());
+//        suite.addTest(MoveRenameCopyTests.suite());
+//        suite.addTest(GroovyPartialModelTests.suite());
+//
+//        // Builder tests
+//        suite.addTest(BasicGroovyBuildTests.suite());
+//
+//		// Location tests
         suite.addTestSuite(LocationSupportTests.class);
-		suite.addTestSuite(SourceLocationsTests.class);
-		suite.addTestSuite(ASTNodeSourceLocationsTests.class);
-		suite.addTestSuite(ASTConverterTests.class);
-
-        // Compiler tests
-        suite.addTest(GroovySimpleTest.suite());
-        suite.addTest(ScriptFolderTests.suite());
-
-        // Search tests
-        suite.addTest(AllSearchTests.suite());
+//		suite.addTestSuite(SourceLocationsTests.class);
+//		suite.addTestSuite(ASTNodeSourceLocationsTests.class);
+//		suite.addTestSuite(ASTConverterTests.class);
+//
+//        // Compiler tests
+//        suite.addTest(GroovySimpleTest.suite());
+//        suite.addTest(ScriptFolderTests.suite());
+//
+//        // Search tests
+//        suite.addTest(AllSearchTests.suite());
 
         return suite;
     }

@@ -66,7 +66,7 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
         IClasspathEntry globalEntry = null;
         IClasspathEntry[] entries = javaProject.getResolvedClasspath(true);
         for (IClasspathEntry entry : entries) {
-            if (entry.getPath().toString().contains("global_dsld")) {
+            if (entry.getPath().toString().contains("plugin_dsld")) {
                 globalEntry = entry;
             }
         }
@@ -74,7 +74,7 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
         assertNotNull("Did not find the Global DSLD classpath entry", globalEntry);
         IPackageFragmentRoot root = null;
         for (IJavaElement elt : javaProject.getChildren()) {
-            if (elt.getElementName().contains("global_dsld")) {
+            if (elt.getElementName().contains("plugin_dsld")) {
                 root = (IPackageFragmentRoot) elt;
             }
         }

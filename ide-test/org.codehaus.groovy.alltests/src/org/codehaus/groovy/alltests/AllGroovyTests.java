@@ -32,13 +32,13 @@ import org.codehaus.groovy.eclipse.test.AllUITests;
 public class AllGroovyTests {
     public static Test suite() throws Exception {
         TestSuite suite = new TestSuite("All Groovy Tests"); //$NON-NLS-1$
-        suite.addTest(AllUITests.suite());
-        suite.addTest(AllCoreTests.suite());
-        suite.addTest(AllJUnitTests.suite());
-        suite.addTest(AllCompletionTests.suite());
-        suite.addTest(AllBrowsingTests.suite());
-        suite.addTest(AllRefactoringTests.suite());
-        suite.addTest(AllQuickFixTests.suite());
+//        suite.addTest(AllUITests.suite());
+//        suite.addTest(AllCoreTests.suite());
+//        suite.addTest(AllJUnitTests.suite());
+//        suite.addTest(AllCompletionTests.suite());
+//        suite.addTest(AllBrowsingTests.suite());
+//        suite.addTest(AllRefactoringTests.suite());
+//        suite.addTest(AllQuickFixTests.suite());
         suite.addTest(AllDSLTests.suite());
         return suite;
     }
