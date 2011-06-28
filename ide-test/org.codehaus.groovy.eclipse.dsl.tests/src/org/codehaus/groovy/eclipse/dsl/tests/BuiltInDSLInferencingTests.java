@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.tests;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -72,12 +75,27 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
         
         assertNotNull("Did not find the Plugin DSLD classpath entry", pluginEntry);
         IPackageFragmentRoot root = null;
+        List<String> elements = new ArrayList<String>();
         for (IJavaElement elt : javaProject.getChildren()) {
+            elements.add(elt.getElementName());
             if (elt.getElementName().contains("plugin_dsld")) {
                 root = (IPackageFragmentRoot) elt;
             }
         }
-        assertNotNull("Plugin DSLD classpath entry should exist", root);
+
+        List<String> possibleFrags = new ArrayList<String>();
+        for (IPackageFragment frag : javaProject.getPackageFragments()) {
+            if (frag.getElementName().equals("dsld")) {
+                possibleFrags.add(frag.toString());
+                possibleFrags.add("  [");
+                for (IJavaElement child : frag.getChildren()) {
+                    possibleFrags.add("    " + child.getElementName());
+                }
+                possibleFrags.add("  ]");
+            }
+        }
+        
+        assertNotNull("Plugin DSLD classpath entry should exist.  Exsting resolved roots:\n" + printList(elements) + "\nOther DSLD fragments:\n" + printList(possibleFrags), root);
         assertTrue("Plugin DSLD classpath entry should exist", root.exists());
 
         ExternalPackageFragmentRoot ext = (ExternalPackageFragmentRoot) root;
@@ -93,6 +111,16 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
         
         assertTrue("Should have groovy.dsld as a dsld file", 
                 containsGroovyDSLD());
+    }
+
+    private String printList(List<String> elements) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[\n");
+        for (String elt : elements) {
+            sb.append(elt).append("\n");
+        }
+        sb.append("]");
+        return sb.toString();
     }
     
     public void testSingleton() throws Exception {
