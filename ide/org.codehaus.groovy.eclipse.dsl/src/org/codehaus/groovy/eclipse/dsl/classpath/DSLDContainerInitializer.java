@@ -11,6 +11,7 @@ import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -88,10 +89,10 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
             URL folder = CompilerUtils.findDSLDFolder();
             if (folder != null) {
                 String file = folder.getFile();
-                if (new File(file).exists()) {
-                    IPath path = new Path(folder.getPath());
-                    newEntries.add(newLibraryEntry(path, null, null));
-                }
+                Assert.isTrue(new File(file).exists(), "Plugin DSLD location does not exist: " + file);
+                
+                IPath path = new Path(folder.getPath());
+                newEntries.add(newLibraryEntry(path, null, null));
             }
             return newEntries.toArray(NO_ENTRIES);
         }
