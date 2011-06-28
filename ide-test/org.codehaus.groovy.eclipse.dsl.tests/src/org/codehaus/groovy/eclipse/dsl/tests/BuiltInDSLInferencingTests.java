@@ -16,12 +16,15 @@ import junit.framework.TestSuite;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IStorage;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.internal.core.ExternalPackageFragmentRoot;
 
 /**
  * Tests type inferencing for DSL scripts included with Groovy plugin
@@ -69,8 +72,21 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
         }
         
         assertNotNull("Did not find the Global DSLD classpath entry", globalEntry);
-        IPackageFragmentRoot root = javaProject.findPackageFragmentRoots(globalEntry)[0];
+        IPackageFragmentRoot root = null;
+        for (IJavaElement elt : javaProject.getChildren()) {
+            if (elt.getElementName().contains("global_dsld")) {
+                root = (IPackageFragmentRoot) elt;
+            }
+        }
+        assertNotNull("Global DSLD classpath entry should exist", root);
         assertTrue("Global DSLD classpath entry should exist", root.exists());
+
+        ExternalPackageFragmentRoot ext = (ExternalPackageFragmentRoot) root;
+        ext.resource().refreshLocal(IResource.DEPTH_INFINITE, null);
+        root.close();
+        root.open(null);
+        
+        
         IPackageFragment frag = root.getPackageFragment("dsld");
         assertTrue("DSLD package fragment should exist", frag.exists());
         assertTrue("Should have at least one non java resource in pacakge", frag.getNonJavaResources().length > 0);
