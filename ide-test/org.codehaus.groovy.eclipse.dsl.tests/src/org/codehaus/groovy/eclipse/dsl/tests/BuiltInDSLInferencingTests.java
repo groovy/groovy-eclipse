@@ -73,7 +73,6 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
             }
         }
         
-        assertNotNull("Did not find the Plugin DSLD classpath entry", pluginEntry);
         IPackageFragmentRoot root = null;
         List<String> elements = new ArrayList<String>();
         for (IJavaElement elt : javaProject.getChildren()) {
@@ -95,6 +94,7 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
             }
         }
         
+        assertNotNull("Did not find the Plugin DSLD classpath entry.  Exsting resolved roots:\n" + printList(elements) + "\nOther DSLD fragments:\n" + printList(possibleFrags), pluginEntry);
         assertNotNull("Plugin DSLD classpath entry should exist.  Exsting resolved roots:\n" + printList(elements) + "\nOther DSLD fragments:\n" + printList(possibleFrags), root);
         assertTrue("Plugin DSLD classpath entry should exist", root.exists());
 
