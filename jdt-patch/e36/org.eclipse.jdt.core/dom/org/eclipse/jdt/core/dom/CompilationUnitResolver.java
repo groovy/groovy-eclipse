@@ -66,6 +66,9 @@ import org.eclipse.jdt.internal.core.util.BindingKeyResolver;
 import org.eclipse.jdt.internal.core.util.CommentRecorderParser;
 import org.eclipse.jdt.internal.core.util.DOMFinder;
 
+// GROOVY Should we do this???
+public
+// GROOVY
 class CompilationUnitResolver extends Compiler {
 	public static final int RESOLVE_BINDING = 0x1;
 	public static final int PARTIAL = 0x2;

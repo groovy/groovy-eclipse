@@ -2,14 +2,14 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Code Completion Plug-in
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.codeassist.completion;singleton:=true
-Bundle-Version: 2.5.1.qualifier
+Bundle-Version: 2.5.2.qualifier
 Bundle-Activator: org.codehaus.groovy.eclipse.codeassist.Activator
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.jface.text,
  org.eclipse.ui,
  org.eclipse.ui.workbench.texteditor,
- org.codehaus.groovy.eclipse.core;bundle-version="2.5.1",
- org.codehaus.groovy.eclipse.ui;bundle-version="2.5.1",
+ org.codehaus.groovy.eclipse.core;bundle-version="2.5.2",
+ org.codehaus.groovy.eclipse.ui;bundle-version="2.5.2",
  org.codehaus.groovy;bundle-version="1.6.6",
  org.eclipse.jdt.core,
  org.eclipse.core.resources,

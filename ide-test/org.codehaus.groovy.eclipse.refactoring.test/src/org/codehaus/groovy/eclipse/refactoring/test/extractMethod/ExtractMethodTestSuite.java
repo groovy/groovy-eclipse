@@ -21,8 +21,9 @@ package org.codehaus.groovy.eclipse.refactoring.test.extractMethod;
 import java.io.File;
 import java.util.List;
 
+import org.codehaus.groovy.eclipse.refactoring.test.BaseTestSuite;
+
 import junit.framework.TestSuite;
-import tests.BaseTestSuite;
 
 public class ExtractMethodTestSuite extends BaseTestSuite {
 

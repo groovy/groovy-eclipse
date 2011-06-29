@@ -22,6 +22,7 @@ import java.io.File;
 
 import junit.framework.AssertionFailedError;
 
+import org.codehaus.groovy.eclipse.refactoring.test.BaseTestCase;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -29,7 +30,6 @@ import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.RefactoringStatusEntry;
 
-import tests.BaseTestCase;
 
 public abstract class RefactoringTestCase extends BaseTestCase {
 

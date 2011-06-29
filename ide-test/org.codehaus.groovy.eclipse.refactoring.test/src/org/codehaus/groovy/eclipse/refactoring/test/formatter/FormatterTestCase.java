@@ -22,12 +22,12 @@ import java.io.File;
 
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
 import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferencesOnStore;
+import org.codehaus.groovy.eclipse.refactoring.test.BaseTestCase;
+import org.codehaus.groovy.eclipse.refactoring.test.TestPrefInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.text.edits.MalformedTreeException;
 
-import tests.BaseTestCase;
-import core.TestPrefInitializer;
 
 /**
  * Test Case to test the Groovy Formatter

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package core;
+package org.codehaus.groovy.eclipse.refactoring.test;
 
 import java.util.HashMap;
 

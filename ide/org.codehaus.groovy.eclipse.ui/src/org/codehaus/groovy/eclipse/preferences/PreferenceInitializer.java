@@ -106,7 +106,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
         // Compile
         store.setDefault(Activator.GROOVY_SCRIPT_FILTERS,
-                "scripts/**/*.groovy,src/main/resources/**/*.groovy,src/test/resources/**/*.groovy");
+ Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         store.setDefault(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "false");
     }
 

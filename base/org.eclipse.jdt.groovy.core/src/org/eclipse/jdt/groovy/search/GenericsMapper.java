@@ -79,8 +79,8 @@ public class GenericsMapper {
 		if (depth > 10) {
 			// I don't like this solution. I would like to remove this
 			// don't recur forever
-			Util.log(new Status(IStatus.WARNING, "org.eclipse.jdt.groovy.core",
-					"GRECLIPSE-1040: prevent infinite recursion when resolving type parameters on generics type: " + topGT));
+			Util.log(new Status(IStatus.WARNING, "org.eclipse.jdt.groovy.core", //$NON-NLS-1$
+					"GRECLIPSE-1040: prevent infinite recursion when resolving type parameters on generics type: " + topGT)); //$NON-NLS-1$
 			return topGT.getType();
 		}
 

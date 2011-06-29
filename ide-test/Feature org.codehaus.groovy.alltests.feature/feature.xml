@@ -12,7 +12,7 @@
 <feature
       id="org.codehaus.groovy.alltests.feature"
       label="%featureName"
-      version="2.5.1.qualifier"
+      version="2.5.2.qualifier"
       provider-name="%Codehaus.org">
 
    <description url="%descriptionURL">

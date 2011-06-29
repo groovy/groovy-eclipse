@@ -54,7 +54,10 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 	private final String declaringQualifiedName;
 	private final boolean findDeclarations;
 	private final boolean findReferences;
+	// currently, not used, but maybe they should be
+	@SuppressWarnings("unused")
 	private char[][] parameterQualifications;
+	@SuppressWarnings("unused")
 	private char[][] parameterSimpleNames;
 
 	private final Set<Position> acceptedPositions = new HashSet<Position>();

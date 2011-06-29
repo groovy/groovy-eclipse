@@ -26,6 +26,7 @@ import org.codehaus.groovy.eclipse.refactoring.test.extract.StaticExpressionChec
 import org.codehaus.groovy.eclipse.refactoring.test.extract.StaticFragmentCheckerTests;
 import org.codehaus.groovy.eclipse.refactoring.test.extractMethod.ExtractMethodTestSuite;
 import org.codehaus.groovy.eclipse.refactoring.test.formatter.FormatterTestSuite;
+import org.codehaus.groovy.eclipse.refactoring.test.rename.MoveCURefactoringTests;
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameFieldTests;
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameLocalTests;
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameMethodTests;
@@ -47,6 +48,7 @@ public class AllRefactoringTests {
         suite.addTest(RenameMethodTests.suite());
         suite.addTest(RenameFieldTests.suite());
         suite.addTest(RenameLocalTests.suite());
+        suite.addTest(new TestSuite(MoveCURefactoringTests.class));
 
         // extract various
         suite.addTest(new TestSuite(StaticExpressionCheckerTests.class));

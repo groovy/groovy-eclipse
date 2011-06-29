@@ -17,14 +17,20 @@
  * limitations under the License.
  *
  */
-package tests;
+package org.codehaus.groovy.eclipse.refactoring.test;
 
-import core.FilePathHelper;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
 import junit.framework.TestSuite;
+
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Platform;
 
 public class BaseTestSuite extends TestSuite {
 	
@@ -50,7 +56,7 @@ public class BaseTestSuite extends TestSuite {
 	}
 	
 	private static List<File> createFileList(final String search, final String subFolder){
-		final String TEST_FILES = FilePathHelper.getPathToTestFiles();
+		final String TEST_FILES = getPathToTestFiles();
 		final File dir = new File(TEST_FILES + subFolder);
 		if(!dir.isDirectory()) {
 			throw new RuntimeException("The path: " + dir.getAbsolutePath() + " is invalid");
@@ -63,5 +69,27 @@ public class BaseTestSuite extends TestSuite {
 		
 		return fl;
 	} 
+	
+	
+    private static String getPluginDirectoryPath() {
+        try {
+            URL platformURL = Platform.getBundle("org.codehaus.groovy.eclipse.refactoring.test").getEntry("/"); //$NON-NLS-1$ //$NON-NLS-2$
+            return new File(FileLocator.toFileURL(platformURL).getFile()).getAbsolutePath();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    public static String getPathToTestFiles() {
+        final String systemSeparator = String.valueOf(IPath.SEPARATOR);
+        String folders = "/resources";
+        folders = folders.replaceAll("/", systemSeparator);
+
+        return getPluginDirectoryPath() + folders;
+
+    }
+
 	
 }

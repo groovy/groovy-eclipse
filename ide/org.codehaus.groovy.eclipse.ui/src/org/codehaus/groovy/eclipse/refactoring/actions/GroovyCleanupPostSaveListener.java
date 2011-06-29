@@ -31,7 +31,7 @@ import org.eclipse.jdt.ui.cleanup.ICleanUp;
 /**
  * Sub class of {@link CleanUpPostSaveListener} so that we can use only
  * groovy-supported post-save cleanups
- * 
+ *
  * @author Andrew Eisenberg
  * @created Aug 17, 2009
  *
@@ -47,13 +47,18 @@ public class GroovyCleanupPostSaveListener extends CleanUpPostSaveListener imple
         CleanUpOptions options = new MapCleanUpOptions(settings);
         boolean doImports = false;
         boolean doFormat = false;
+        boolean doIndent = false;
         for (int i= 0; i < result.length; i++) {
             if (result[i] instanceof ImportsCleanUp && options.isEnabled(CleanUpConstants.ORGANIZE_IMPORTS)) {
                 doImports = true;
-            } else if (result[i] instanceof CodeFormatCleanUp && 
-                    (options.isEnabled(CleanUpConstants.FORMAT_SOURCE_CODE) || 
-                            options.isEnabled(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY))) {
-                doFormat = true;
+            } else if (result[i] instanceof CodeFormatCleanUp) {
+                if (options.isEnabled(CleanUpConstants.FORMAT_SOURCE_CODE)
+                        || options.isEnabled(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY)) {
+                    doFormat = true;
+                } else if (options.isEnabled(CleanUpConstants.FORMAT_CORRECT_INDENTATION)
+                        || options.isEnabled(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES)) {
+                    doIndent = true;
+                }
             }
         }
         if (doImports && doFormat) {

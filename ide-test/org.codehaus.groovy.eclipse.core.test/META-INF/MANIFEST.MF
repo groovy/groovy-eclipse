@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: GroovyEclipse Core Tests
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.core.test
-Bundle-Version: 2.5.1.qualifier
+Bundle-Version: 2.5.2.qualifier
 Bundle-Activator: org.codehaus.groovy.eclipse.core.CoreTestsActivator
 Bundle-Vendor: The Codehaus
 Require-Bundle: org.eclipse.ui,
@@ -14,7 +14,7 @@ Require-Bundle: org.eclipse.ui,
  org.junit;bundle-version="3.8.2",
  org.codehaus.groovy;bundle-version="1.6.5",
  org.eclipse.jface.text;bundle-version="3.4.1",
- org.eclipse.jdt.groovy.core;bundle-version="2.5.1"
+ org.eclipse.jdt.groovy.core;bundle-version="2.5.2"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Export-Package: org.codehaus.groovy.eclipse.core

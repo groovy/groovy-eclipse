@@ -462,4 +462,20 @@ public class TestProject {
     public IPackageFragmentRoot getSourceFolder() {
 		return sourceFolder;
 	}
+
+    public ICompilationUnit createUnit(String pkg, String cuName, String cuContents) throws CoreException {
+        IPackageFragment frag = createPackage(pkg);
+        ICompilationUnit cu = frag.createCompilationUnit(cuName,
+                cuContents, false, null);
+        return cu;
+    }
+
+    public ICompilationUnit[] createUnits(String[] packages, String[] cuNames,
+            String[] cuContents) throws CoreException {
+        ICompilationUnit[] units = new ICompilationUnit[packages.length];
+        for (int i = 0; i < cuContents.length; i++) {
+            units[i] = createUnit(packages[i], cuNames[i], cuContents[i]);
+        }
+        return units;
+    }
 }

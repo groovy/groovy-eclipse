@@ -41,9 +41,6 @@ public class Activator extends Plugin {
 	public static final String GROOVY_SCRIPT_FILTERS_ENABLED = "groovy.script.filters.enabled";
 
 	// default list of regex filters to specify groovy scripts
-	public static final char[][] CHAR_CHAR_DEFAULT_GROOVY_SCRIPT_FILTER = new char[][] { "scripts/**/*.groovyy".toCharArray(),
-			"y".toCharArray(), "src/main/resources/**/*.groovy:y".toCharArray(), "y".toCharArray(),
-			"src/test/resources/**/*.groovy:y".toCharArray(), "y".toCharArray() };
 	public static final String DEFAULT_GROOVY_SCRIPT_FILTER = "scripts/**/*.groovy,y,src/main/resources/**/*.groovy,y,src/test/resources/**/*.groovy,y";
 
 	public void start(BundleContext context) throws Exception {

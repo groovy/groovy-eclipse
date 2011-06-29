@@ -192,26 +192,18 @@ public class RefreshDSLDJob extends Job {
             }
             return Status.OK_STATUS;
         }
-        
-        // cancel all existing jobs
-        Job[] jobs = getJobManager().find(RefreshDSLDJob.class);
-        if (jobs != null) {
-            for (Job job : jobs) {
-                if (job != this) {
-                    job.cancel();
-                }
-            }
-//            FIXADE DANGER! DANGER! I think uncommenting this is causing the job to never end, but why???  Commenting out for now to see if this lets the tests pass and doesn't leave jobs running after shutting down.
-//            // now wait for them to be finished
+
+        // actually, don't cancel since refresh jobs for other
+        // projects may be running
+//        // cancel all existing jobs
+//        Job[] jobs = getJobManager().find(RefreshDSLDJob.class);
+//        if (jobs != null) {
 //            for (Job job : jobs) {
 //                if (job != this) {
-//                    try {
-//                        job.join();
-//                    } catch (InterruptedException e) {
-//                    }
+//                    job.cancel();
 //                }
 //            }
-        }
+//        }
 
 
         List<IStatus> errorStatuses = new ArrayList<IStatus>();

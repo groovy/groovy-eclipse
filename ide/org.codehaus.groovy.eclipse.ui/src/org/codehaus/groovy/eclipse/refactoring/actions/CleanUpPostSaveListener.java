@@ -44,15 +44,15 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.internal.corext.fix.CleanUpConstants;
 import org.eclipse.jdt.internal.corext.fix.CleanUpPreferenceUtil;
 import org.eclipse.jdt.internal.corext.fix.CleanUpRefactoring;
-import org.eclipse.jdt.internal.corext.fix.FixMessages;
 import org.eclipse.jdt.internal.corext.fix.CleanUpRefactoring.CleanUpChange;
+import org.eclipse.jdt.internal.corext.fix.FixMessages;
 import org.eclipse.jdt.internal.corext.refactoring.util.RefactoringASTParser;
 import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.actions.ActionUtil;
 import org.eclipse.jdt.internal.ui.dialogs.OptionalMessageDialog;
-import org.eclipse.jdt.internal.ui.fix.MapCleanUpOptions;
 import org.eclipse.jdt.internal.ui.fix.IMultiLineCleanUp.MultiLineCleanUpContext;
+import org.eclipse.jdt.internal.ui.fix.MapCleanUpOptions;
 import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener;
 import org.eclipse.jdt.internal.ui.preferences.BulletListBlock;
 import org.eclipse.jdt.internal.ui.preferences.SaveParticipantPreferencePage;
@@ -104,7 +104,7 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 /**
  * This is the original {@link org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener}
  * from JDT.  Changes marked with // Groovy Change
- * 
+ *
  * @created Aug 17, 2009
  *
  */
@@ -128,14 +128,16 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 			fUndos= undos;
 		}
 
-		public final boolean needsSaving() {
+		@Override
+        public final boolean needsSaving() {
 			return true;
 		}
 
 		/**
 		 * {@inheritDoc}
 		 */
-		public Change perform(IProgressMonitor pm) throws CoreException {
+		@Override
+        public Change perform(IProgressMonitor pm) throws CoreException {
 			if (isValid(pm).hasFatalError())
 				return new NullChange();
 
@@ -206,7 +208,8 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 		/* (non-Javadoc)
 		 * @see org.eclipse.jface.dialogs.IconAndMessageDialog#createMessageArea(org.eclipse.swt.widgets.Composite)
 		 */
-		protected Control createMessageArea(Composite parent) {
+		@Override
+        protected Control createMessageArea(Composite parent) {
 			initializeDialogUnits(parent);
 
 			Composite messageComposite= new Composite(parent, SWT.NONE);
@@ -244,7 +247,8 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 				/*
 				 * @see org.eclipse.swt.events.SelectionAdapter#widgetSelected(org.eclipse.swt.events.SelectionEvent)
 				 */
-				public void widgetSelected(SelectionEvent e) {
+				@Override
+                public void widgetSelected(SelectionEvent e) {
 					PreferencesUtil.createPreferenceDialogOn(getShell(), SaveParticipantPreferencePage.PREFERENCE_PAGE_ID, null, null).open();
 				}
 			});
@@ -280,7 +284,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 		try {
 			if (!ActionUtil.isOnBuildPath(unit))
 				return;
-			
+
 			// GROOVY Change do not perform any cleanups if not a Groovy project
 			IProject proj = unit.getJavaProject().getProject();
 			if (proj == null || !GroovyNature.hasGroovyNature(proj)) {
@@ -412,6 +416,12 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 			filteredSettins.put(CleanUpConstants.FORMAT_SOURCE_CODE, settings.get(CleanUpConstants.FORMAT_SOURCE_CODE));
 			filteredSettins.put(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY, settings.get(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY));
 			filteredSettins.put(CleanUpConstants.ORGANIZE_IMPORTS, settings.get(CleanUpConstants.ORGANIZE_IMPORTS));
+            filteredSettins.put(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES,
+                    settings.get(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES));
+            filteredSettins.put(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_ALL,
+                    settings.get(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_ALL));
+            filteredSettins.put(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_IGNORE_EMPTY,
+                    settings.get(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_IGNORE_EMPTY));
 			Set ids= new HashSet(2);
 			ids.add("org.eclipse.jdt.ui.cleanup.format"); //$NON-NLS-1$
 			ids.add("org.eclipse.jdt.ui.cleanup.imports"); //$NON-NLS-1$

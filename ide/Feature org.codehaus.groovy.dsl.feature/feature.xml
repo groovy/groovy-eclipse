@@ -12,7 +12,7 @@
 <feature
       id="org.codehaus.groovy.dsl.feature"
       label="%featureName"
-      version="2.5.1.qualifier"
+      version="2.5.2.qualifier"
       provider-name="%Codehaus.org">
 
    <description url="%descriptionURL">
@@ -33,7 +33,7 @@
       <import plugin="org.eclipse.jdt.core"/>
       <import plugin="org.eclipse.jdt.groovy.core"/>
       <import plugin="org.eclipse.core.resources"/>
-      <import plugin="org.codehaus.groovy.eclipse.codebrowsing" version="2.5.1" match="greaterOrEqual"/>
+      <import plugin="org.codehaus.groovy.eclipse.codebrowsing" version="2.5.2" match="greaterOrEqual"/>
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.jdt.ui"/>
       <import plugin="org.codehaus.groovy.eclipse.codeassist.completion"/>

@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyMethodRefactoring;
+import org.codehaus.groovy.eclipse.refactoring.test.TestPrefInitializer;
 import org.codehaus.groovy.eclipse.test.TestProject;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
@@ -34,7 +35,6 @@ import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.objectweb.asm.Opcodes;
 
-import core.TestPrefInitializer;
 
 /**
  * Test Case to test the ExtractMethod refactoring

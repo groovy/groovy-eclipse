@@ -2,8 +2,8 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: JUnit support tests
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.junit.test
-Bundle-Version: 2.5.1.qualifier
-Require-Bundle: org.codehaus.groovy.eclipse.core.test;bundle-version="2.5.1",
+Bundle-Version: 2.5.2.qualifier
+Require-Bundle: org.codehaus.groovy.eclipse.core.test;bundle-version="2.5.2",
  org.eclipse.core.resources,
  org.eclipse.core.runtime,
  org.eclipse.jdt.core;bundle-version="3.5.0",
@@ -11,7 +11,7 @@ Require-Bundle: org.codehaus.groovy.eclipse.core.test;bundle-version="2.5.1",
  org.eclipse.core.expressions,
  org.junit;bundle-version="3.8.2",
  org.eclipse.jdt.junit,
- org.codehaus.groovy.eclipse.ui;bundle-version="2.5.1",
+ org.codehaus.groovy.eclipse.ui;bundle-version="2.5.2",
  org.codehaus.groovy;bundle-version="1.6.5",
  org.eclipse.jdt.groovy.core.tests.builder;bundle-version="3.3.100"
 Export-Package: org.codehaus.groovy.eclipse.junit.test

@@ -17,7 +17,7 @@
  * limitations under the License.
  *
  */
-package tests;
+package org.codehaus.groovy.eclipse.refactoring.test;
 
 import java.io.BufferedReader;
 import java.io.File;

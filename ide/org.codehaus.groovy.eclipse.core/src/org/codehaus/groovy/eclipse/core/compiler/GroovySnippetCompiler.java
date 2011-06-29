@@ -17,24 +17,30 @@ import java.util.Map;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.WorkingCopyOwner;
+import org.eclipse.jdt.core.dom.CompilationUnitResolver;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
+import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
-import org.eclipse.jdt.internal.core.builder.NameEnvironment;
+import org.eclipse.jdt.internal.core.JavaProject;
+import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.objectweb.asm.Opcodes;
 
 /**
  * @author Andrew Eisenberg
  * @created Aug 6, 2009
- * 
- * 
+ *
+ *
  *          This class is used to compile a snippet of groovy source code into a
  *          module node.
  *          The client is responsible for calling {@link #cleanup()} when all
@@ -53,10 +59,15 @@ public class GroovySnippetCompiler {
         }
     }
 
-    private NameEnvironment nameEnvironment;
+    private INameEnvironment nameEnvironment;
 
     public GroovySnippetCompiler(GroovyProjectFacade project) {
-        nameEnvironment = new NameEnvironment(project.getProject());
+        try {
+            nameEnvironment = new SearchableEnvironment((JavaProject) project.getProject(), (WorkingCopyOwner) null);
+        } catch (JavaModelException e) {
+            GroovyCore
+                    .logException("Problem initializing snippet compiler for project " + project.getProject().getElementName(), e);
+        }
     }
 
     /**
@@ -100,11 +111,8 @@ public class GroovySnippetCompiler {
 
         Map options = JavaCore.getOptions();
         options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
-        Compiler compiler = new Compiler(nameEnvironment,
-                DefaultErrorHandlingPolicies.proceedWithAllProblems(),
-                options,
-                new Requestor(),
-                new DefaultProblemFactory());
+        Compiler compiler = new CompilationUnitResolver(nameEnvironment, DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+                new CompilerOptions(options), new Requestor(), new DefaultProblemFactory(), null, true);
         GroovyCompilationUnitDeclaration decl =
             (GroovyCompilationUnitDeclaration)
             compiler.resolve(new MockCompilationUnit(source.toCharArray(), sourcePath.toCharArray()), true, false, false);

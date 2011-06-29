@@ -22,10 +22,10 @@ import junit.framework.TestCase;
 
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
 import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferencesOnStore;
+import org.codehaus.groovy.eclipse.refactoring.test.TestPrefInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.Document;
 
-import core.TestPrefInitializer;
 
 /**
  * @author Andrew Eisenberg

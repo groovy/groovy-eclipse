@@ -88,7 +88,7 @@ public class TypeDeclarationSearchRequestor implements ITypeRequestor, IIndexCon
 									.getNameStart(), orig.getNameEnd() - orig.getNameStart() + 1, participant, enclosingElement
 									.getResource()));
 						} catch (CoreException e) {
-							Util.log(e, "Exception with groovy search requestor");
+							Util.log(e, "Exception with groovy search requestor"); //$NON-NLS-1$
 						}
 					}
 				}

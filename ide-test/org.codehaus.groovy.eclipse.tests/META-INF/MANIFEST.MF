@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Groovy core plugin tests
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.tests;singleton:=true
-Bundle-Version: 2.5.1.qualifier
+Bundle-Version: 2.5.2.qualifier
 Bundle-ClassPath: .,
  lib/commons-io-1.3.1.jar
 Bundle-Activator: org.codehaus.groovy.eclipse.test.Activator
@@ -26,7 +26,7 @@ Require-Bundle: org.eclipse.jdt.core,
  org.codehaus.groovy.eclipse.ui,
  org.eclipse.core.runtime.compatibility,
  org.eclipse.core.runtime,
- org.eclipse.jdt.groovy.core;bundle-version="2.5.1",
+ org.eclipse.jdt.groovy.core;bundle-version="2.5.2",
  org.junit;bundle-version="3.8.2",
  org.codehaus.groovy,
  org.eclipse.core.expressions;bundle-version="3.4.1",
