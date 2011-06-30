@@ -345,11 +345,13 @@ public class GroovyParser {
 		} else {
 			return new URLClassLoader(urls, parent);
 		}
-	} 
+	}
 
 	private static URLClassLoader createConfigureLoader(String path) {
+		// GRECLIPSE-1090
+		ClassLoader pcl = GroovyParser.class.getClassLoader();// Thread.currentThread().getContextClassLoader();
 		if (path == null) {
-			return createLoader(null, Thread.currentThread().getContextClassLoader());
+			return createLoader(null, pcl);
 		}
 		List<URL> urls = new ArrayList<URL>();
 		if (path.indexOf(File.pathSeparator) != -1) {
@@ -368,7 +370,7 @@ public class GroovyParser {
 		} else {
 			addNewURL(path, urls);
 		}
-		return createLoader(urls.toArray(new URL[urls.size()]), Thread.currentThread().getContextClassLoader());
+		return createLoader(urls.toArray(new URL[urls.size()]), pcl);
 	}
 
 	private static void addNewURL(String path, List<URL> existingURLs) {
