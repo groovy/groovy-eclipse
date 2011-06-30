@@ -49,6 +49,10 @@ import org.eclipse.jface.text.Position;
  * 
  */
 public class TypeReferenceSearchRequestor implements ITypeRequestor {
+	/**
+	 * 
+	 */
+	private static final String DOT = ".";
 	private final SearchRequestor requestor;
 	private final SearchParticipant participant;
 
@@ -76,10 +80,6 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 		this.findDeclaration = pattern instanceof DeclarationOfReferencedTypesPattern;
 	}
 
-	/**
-	 * @param pattern
-	 * @return
-	 */
 	protected char[] extractArray(TypeReferencePattern pattern, String fieldName) {
 		char[] arr;
 		arr = (char[]) ReflectionUtils.getPrivateField(TypeReferencePattern.class, fieldName, pattern);
@@ -113,7 +113,7 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 
 			if (type != null) {
 				type = removeArray(type);
-				if (qualifiedNameMatches(type.getNameWithoutPackage(), type.getPackageName()) && hasValidSourceLocation(node)) {
+				if (qualifiedNameMatches(type) && hasValidSourceLocation(node)) {
 					int start = -1;
 					int end = -1;
 
@@ -257,14 +257,40 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 		return declaration.getComponentType() != null ? removeArray(declaration.getComponentType()) : declaration;
 	}
 
-	private boolean qualifiedNameMatches(String name, String qualification) {
+	private String[] extractNameAndQualification(ClassNode type) {
+		// qualification includes the full package name, plus all enclosing types with '.' separators
+		String qualification = type.getPackageName();
+		if (qualification == null) {
+			qualification = "";
+		}
+
+		String semiQualified = type.getNameWithoutPackage();
+
+		String simple;
+		int lastDollar = semiQualified.lastIndexOf('$');
+		if (lastDollar > 0) {
+			simple = semiQualified.substring(lastDollar + 1);
+			semiQualified = semiQualified.replace('$', '.').substring(0, lastDollar);
+			if (qualification.length() == 0) {
+				qualification = semiQualified;
+			} else {
+				qualification += DOT + semiQualified;
+			}
+		} else {
+			simple = semiQualified;
+		}
+
+		return new String[] { qualification, simple };
+	}
+
+	private boolean qualifiedNameMatches(ClassNode type) {
+		String[] nameAndQualification = extractNameAndQualification(type);
+		String name, qualification;
+		qualification = nameAndQualification[0];
+		name = nameAndQualification[1];
 		if (!isCaseSensitive) {
 			name = name.toLowerCase();
-			if (qualification != null) {
-				qualification = qualification.toLowerCase();
-			} else {
-				qualification = ""; //$NON-NLS-1$
-			}
+			qualification = qualification.toLowerCase();
 		}
 
 		boolean match = true;

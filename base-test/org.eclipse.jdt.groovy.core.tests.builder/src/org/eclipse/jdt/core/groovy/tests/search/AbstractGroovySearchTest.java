@@ -270,17 +270,21 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     }
     
 
-    protected List<SearchMatch> getAllMatches(String firstContents, String secondContents) throws JavaModelException {
+    protected List<SearchMatch> getAllMatches(String firstContents, String secondContents) throws CoreException {
         return getAllMatches(firstContents, secondContents, false);
     }
-    protected List<SearchMatch> getAllMatches(String firstContents, String secondContents, boolean waitForIndexer) throws JavaModelException {
+    protected List<SearchMatch> getAllMatches(String firstContents, String secondContents, boolean waitForIndexer) throws CoreException {
+        return getAllMatches(firstContents, secondContents, "", "", waitForIndexer);
+        
+    }
+    protected List<SearchMatch> getAllMatches(String firstContents, String secondContents, String firstPackage, String secondPackage, boolean waitForIndexer) throws CoreException {
         String firstClassName = "First";
         String secondClassName = "Second";
-        GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
+        GroovyCompilationUnit first = createUnit(firstPackage, firstClassName, firstContents);
         IType firstType = findType(firstClassName, first);
         SearchPattern pattern = SearchPattern.createPattern(firstType, IJavaSearchConstants.REFERENCES);
         
-        GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
+        GroovyCompilationUnit second = createUnit(secondPackage, secondClassName, secondContents);
 
         
         // saves time if we don't wait

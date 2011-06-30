@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.eclipse.jdt.core" version="2">
+    <resource path="dom/org/eclipse/jdt/core/dom/CompilationUnitResolver.java" type="org.eclipse.jdt.core.dom.CompilationUnitResolver">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.dom.CompilationUnitResolver"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="groovy/org/codehaus/jdt/groovy/integration/LanguageSupport.java" type="org.codehaus.jdt.groovy.integration.LanguageSupport">
         <filter id="643846161">
             <message_arguments>

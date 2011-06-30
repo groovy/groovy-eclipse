@@ -189,6 +189,92 @@ public class TypeReferenceSearchTests extends AbstractGroovySearchTest {
         assertEquals("Wrong length " + match, len, match.getLength());
     }
     
+    public void testInnerTypes2() throws Exception {
+        String firstContents = 
+            "package p\n" +
+            "class Other {\n" + 
+            "        class First { }\n" + 
+            "}";
+        
+        String secondContents = 
+            "package q\n" +
+            "import p.Other.First\n" + 
+            "Map<First, ? extends First> h\n" + 
+            "p.Other.First j\n" + 
+            "First i";
+        
+        String name = "First";
+        int len = name.length();
+        
+        List<SearchMatch> matches = getAllMatches(firstContents, secondContents, "p", "q", true);
+        assertEquals("Wrong number of matches found:\n" + matches, 5, matches.size());
+        
+        int start = secondContents.indexOf("First");
+        SearchMatch match = matches.get(0);
+        assertEquals("Wrong offset " + match, start, match.getOffset());
+        assertEquals("Wrong length " + match, len, match.getLength());
+        
+        start = secondContents.indexOf("First", start+1);
+        match = matches.get(1);
+        assertEquals("Wrong offset " + match, start, match.getOffset());
+        assertEquals("Wrong length " + match, len, match.getLength());
+        
+        start = secondContents.indexOf("First", start+1);
+        match = matches.get(2);
+        assertEquals("Wrong offset " + match, start, match.getOffset());
+        assertEquals("Wrong length " + match, len, match.getLength());
+        
+        start = secondContents.indexOf("First", start+1);
+        match = matches.get(3);
+        assertEquals("Wrong offset " + match, start, match.getOffset());
+        assertEquals("Wrong length " + match, len, match.getLength());
+        
+        start = secondContents.indexOf("First", start+1);
+        match = matches.get(4);
+        assertEquals("Wrong offset " + match, start, match.getOffset());
+        assertEquals("Wrong length " + match, len, match.getLength());
+    }
+    
+    public void testInnerTypes3() throws Exception {
+        String firstContents = 
+            "package p\n" +
+            "class Other {\n" + 
+            "        class First { }\n" + 
+            "}";
+        
+        String secondContents = 
+            "package q\n" +
+            "import p.Other\n" + 
+            "Map<Other.First, ? extends Other.First> h\n" + 
+            "p.Other.First j\n" + 
+            "Other.First i";
+        
+        String name = "First";
+        int len = name.length();
+        
+        List<SearchMatch> matches = getAllMatches(firstContents, secondContents, "p", "q", true);
+        assertEquals("Wrong number of matches found:\n" + matches, 4, matches.size());
+        
+        int start = secondContents.indexOf("First");
+        SearchMatch match = matches.get(0);
+        assertEquals("Wrong offset " + match, start, match.getOffset());
+        assertEquals("Wrong length " + match, len, match.getLength());
+        
+        start = secondContents.indexOf("First", start+1);
+        match = matches.get(1);
+        assertEquals("Wrong offset " + match, start, match.getOffset());
+        assertEquals("Wrong length " + match, len, match.getLength());
+        
+        start = secondContents.indexOf("First", start+1);
+        match = matches.get(2);
+        assertEquals("Wrong offset " + match, start, match.getOffset());
+        assertEquals("Wrong length " + match, len, match.getLength());
+        
+        start = secondContents.indexOf("First", start+1);
+        match = matches.get(3);
+        assertEquals("Wrong offset " + match, start, match.getOffset());
+        assertEquals("Wrong length " + match, len, match.getLength());
+    }
     
     private void doTestForTwoInScript(String secondContents) throws JavaModelException {
         doTestForTwoTypeReferences(FIRST_CONTENTS_CLASS, secondContents, true, 3);
