@@ -52,8 +52,10 @@ public class GroovyCleanupPostSaveListener extends CleanUpPostSaveListener imple
             if (result[i] instanceof ImportsCleanUp && options.isEnabled(CleanUpConstants.ORGANIZE_IMPORTS)) {
                 doImports = true;
             } else if (result[i] instanceof CodeFormatCleanUp) {
-                if (options.isEnabled(CleanUpConstants.FORMAT_SOURCE_CODE)
-                        || options.isEnabled(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY)) {
+                if (options.isEnabled(CleanUpConstants.FORMAT_SOURCE_CODE)) {
+                    // FIXKDV: commented out option below is ignored, does
+                    // formatter have a function to only format portion of file?
+                    // options.isEnabled(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY))
                     doFormat = true;
                 } else if (options.isEnabled(CleanUpConstants.FORMAT_CORRECT_INDENTATION)
                         || options.isEnabled(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES)) {
