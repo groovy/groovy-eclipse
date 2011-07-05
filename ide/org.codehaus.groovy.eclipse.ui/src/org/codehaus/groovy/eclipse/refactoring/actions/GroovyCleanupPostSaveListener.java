@@ -16,6 +16,8 @@
 
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,34 +45,38 @@ public class GroovyCleanupPostSaveListener extends CleanUpPostSaveListener imple
      */
     @Override
     protected ICleanUp[] getCleanUps(Map settings, Set ids) {
-        ICleanUp[] result= JavaPlugin.getDefault().getCleanUpRegistry().createCleanUps(ids);
+        ICleanUp[] javaCleanups = JavaPlugin.getDefault().getCleanUpRegistry().createCleanUps(ids);
         CleanUpOptions options = new MapCleanUpOptions(settings);
         boolean doImports = false;
         boolean doFormat = false;
         boolean doIndent = false;
-        for (int i= 0; i < result.length; i++) {
-            if (result[i] instanceof ImportsCleanUp && options.isEnabled(CleanUpConstants.ORGANIZE_IMPORTS)) {
+
+        for (int i = 0; i < javaCleanups.length; i++) {
+            if (javaCleanups[i] instanceof ImportsCleanUp && options.isEnabled(CleanUpConstants.ORGANIZE_IMPORTS)) {
                 doImports = true;
-            } else if (result[i] instanceof CodeFormatCleanUp) {
+            } else if (javaCleanups[i] instanceof CodeFormatCleanUp) {
                 if (options.isEnabled(CleanUpConstants.FORMAT_SOURCE_CODE)) {
                     // FIXKDV: commented out option below is ignored, does
                     // formatter have a function to only format portion of file?
                     // options.isEnabled(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY))
                     doFormat = true;
-                } else if (options.isEnabled(CleanUpConstants.FORMAT_CORRECT_INDENTATION)
-                        || options.isEnabled(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES)) {
+                } else if (options.isEnabled(CleanUpConstants.FORMAT_CORRECT_INDENTATION)) {
+                    // FIXKDV: can we support this:
+                    // CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES)) ?
                     doIndent = true;
                 }
             }
         }
-        if (doImports && doFormat) {
-            return new ICleanUp[] { new GroovyImportsCleanup(settings), new GroovyCodeFormatCleanUp(FormatKind.FORMAT) };
-        } else if (doImports) {
-            return new ICleanUp[] { new GroovyImportsCleanup(settings) };
-        } else if (doFormat) {
-            return new ICleanUp[] { new GroovyCodeFormatCleanUp(FormatKind.FORMAT) };
-        } else {
-            return new ICleanUp[0];
+        List<ICleanUp> result = new ArrayList<ICleanUp>(2);
+        if (doImports) {
+            result.add(new GroovyImportsCleanup(settings));
         }
+        if (doFormat) {
+            result.add(new GroovyCodeFormatCleanUp(FormatKind.FORMAT));
+        } else if (doIndent) {
+            // indent == true && format == false
+            result.add(new GroovyCodeFormatCleanUp(FormatKind.INDENT_ONLY));
+        }
+        return result.toArray(new ICleanUp[result.size()]);
     }
 }
