@@ -50,7 +50,6 @@ import org.eclipse.ui.IWorkbenchSite;
 /**
  * @author Andrew Eisenberg
  * @created Aug 18, 2009
- *
  */
 public class FormatAllGroovyAction extends FormatAllAction {
 
@@ -67,7 +66,6 @@ public class FormatAllGroovyAction extends FormatAllAction {
             ErrorDialog.openError(getShell(), getActionName(), null, status);
         }
 
-
         // Copied from super, but comment out section to test if on classpath
         private void run(ICompilationUnit cu) {
 //            if (!ActionUtil.isEditable(fEditor, getShell(), cu))
@@ -75,7 +73,6 @@ public class FormatAllGroovyAction extends FormatAllAction {
             if (cu.isReadOnly()) {
                 return;
             }
-
 
             ICleanUp[] cleanUps= getCleanUps(new ICompilationUnit[] {
                 cu
@@ -108,7 +105,6 @@ public class FormatAllGroovyAction extends FormatAllAction {
                 ReflectionUtils.executePrivateMethod(CleanUpAction.class, "runOnMultuple", new Class[] { ICompilationUnit.class }, this, new Object[] { cus });
             }
         }
-
 
         /*
          * @see org.eclipse.jdt.internal.ui.actions.CleanUpAction#createCleanUps(org.eclipse.jdt.core.ICompilationUnit[])
@@ -155,5 +151,4 @@ public class FormatAllGroovyAction extends FormatAllAction {
             }
         }
     }
-
 }

@@ -156,15 +156,6 @@
 		</extension>
 		-->
       <extension
-            point="org.eclipse.ui.preferencePages">
-         <page
-               category="org.codehaus.groovy.eclipse.preferences"
-               class="org.codehaus.groovy.eclipse.refactoring.ui.preferences.RefactoringPreferencePage"
-               id="org.codehaus.groovy.eclipse.refactoring.page"
-               name="Refactoring">
-         </page>
-      </extension>
-      <extension
             point="org.eclipse.ltk.core.refactoring.refactoringContributions">
          <contribution
                class="org.codehaus.groovy.eclipse.refactoring.core.rename.renameLocal.RenameLocalGroovyVariableContribution"

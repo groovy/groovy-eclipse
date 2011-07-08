@@ -8,12 +8,12 @@ indentEmptyLines=true
 // some thing
 def blub() {   
     // some comment   
-    def a = 1;   
+    def a = 1   
     
 
     
     def b = 1    
-    def c = 1;   
+    def c = 1   
     
 
       
@@ -23,12 +23,12 @@ def blub() {
 // some thing
 def blub() {
     // some comment
-    def a = 1;
+    def a = 1
     
     
     
     def b = 1
-    def c = 1;
+    def c = 1
     
     
     

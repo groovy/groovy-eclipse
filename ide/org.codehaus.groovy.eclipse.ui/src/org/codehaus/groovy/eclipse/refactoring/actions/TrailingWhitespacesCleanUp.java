@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 the original author or authors.
+ * Copyright 2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
-import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
-import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferences;
-import org.codehaus.groovy.eclipse.refactoring.formatter.IFormatterPreferences;
+import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyFormatter;
+import org.codehaus.groovy.eclipse.refactoring.formatter.WhitespaceRemover;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -30,17 +29,7 @@ import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.text.edits.TextEdit;
 
-/**
- * @author Andrew Eisenberg
- * @created Aug 18, 2009
- */
-public class GroovyCodeFormatCleanUp extends AbstractGroovyCleanUp {
-
-    private final FormatKind kind;
-
-    public GroovyCodeFormatCleanUp(FormatKind kind) {
-        this.kind = kind;
-    }
+public class TrailingWhitespacesCleanUp extends AbstractGroovyCleanUp {
 
     @Override
     public ICleanUpFix createFix(CleanUpContext context) throws CoreException {
@@ -52,19 +41,16 @@ public class GroovyCodeFormatCleanUp extends AbstractGroovyCleanUp {
 
         GroovyCompilationUnit gunit = (GroovyCompilationUnit) unit;
         char[] contents = gunit.getContents();
-        ITextSelection sel = new TextSelection(0, contents.length);
-        IDocument doc = new Document(new String(contents));
-        boolean isIndentOnly = kind == FormatKind.INDENT_ONLY;
-        IFormatterPreferences preferences = new FormatterPreferences(gunit);
+        ITextSelection selection = new TextSelection(0, contents.length);
+        IDocument document = new Document(new String(contents));
+        GroovyFormatter formatter = new WhitespaceRemover(selection, document);
 
-        DefaultGroovyFormatter formatter = new DefaultGroovyFormatter(sel, doc, preferences, isIndentOnly);
         TextEdit edit = formatter.format();
-
-        return new TextEditFix(edit, gunit, "Format groovy source code.");
+        return new TextEditFix(edit, gunit, "Remove trailing whitespaces.");
     }
 
     @Override
     public String[] getStepDescriptions() {
-        return new String[] { "Format groovy source code." };
+        return new String[] { "Remove trailing whitespaces." };
     }
 }

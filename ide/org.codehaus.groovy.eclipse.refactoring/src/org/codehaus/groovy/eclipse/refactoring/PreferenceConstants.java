@@ -25,17 +25,22 @@ import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
  */
 public class PreferenceConstants {
 
-	public static final String P_PATH = "pathPreference";
+    public static final String P_PATH = "pathPreference";
 
+    // Formatter
     public static final String GROOVY_FORMATTER_INDENTATION = DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR;
-
     public static final String GROOVY_FORMATTER_INDENTATION_SIZE = DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE;
     public static final String GROOVY_FORMATTER_TAB_SIZE = DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE;
-	public static final String GROOVY_FORMATTER_MULTILINE_INDENTATION = "groovy.formatter.multiline.indentation";
+    public static final String GROOVY_FORMATTER_MULTILINE_INDENTATION = "groovy.formatter.multiline.indentation";
 
-	public static final String GROOVY_FORMATTER_BRACES_START = "groovy.formatter.braces.start";
-	public static final String GROOVY_FORMATTER_BRACES_END = "groovy.formatter.braces.end";
+    public static final String GROOVY_FORMATTER_BRACES_START = "groovy.formatter.braces.start";
+    public static final String GROOVY_FORMATTER_BRACES_END = "groovy.formatter.braces.end";
 
-	public static final String GROOVY_FORMATTER_MAX_LINELENGTH = "groovy.formatter.line.maxlength";
+    public static final String GROOVY_FORMATTER_MAX_LINELENGTH = "groovy.formatter.line.maxlength";
 
+    public static final String GROOVY_FORMATTER_REMOVE_UNNECESSARY_SEMICOLONS = "groovy.formatter.remove.unnecessary.semicolons";
+
+    // Save Actions
+    public static final String GROOVY_SAVE_ACTION_REMOVE_TRAILING_WHITESPACES = "groovy.SaveAction.RemoveTrailingWhitespaces";
+    public static final String GROOVY_SAVE_ACTION_REMOVE_UNNECESSARY_SEMICOLONS = "groovy.SaveAction.RemoveUnnecessarySemicolons";
 }

@@ -75,7 +75,6 @@ public class CompilerPreferencesPage extends PreferencePage implements
         isGroovy17Disabled = CompilerUtils.isGroovy18DisabledOrMissing();
     }
 
-
     @Override
     protected Control createContents(Composite parent) {
         final Composite page = new Composite(parent, SWT.NONE);
@@ -98,7 +97,6 @@ public class CompilerPreferencesPage extends PreferencePage implements
 
         return page;
     }
-
 
     /**
      * @param parent
@@ -168,10 +166,8 @@ public class CompilerPreferencesPage extends PreferencePage implements
         compilerPage.setFont(page.getFont());
         compilerPage.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
-
         Label compilerVersion = new Label(compilerPage, SWT.LEFT | SWT.WRAP);
         compilerVersion.setText("You are currently using Groovy Compiler version " + CompilerUtils.getGroovyVersion() + ".");
-
 
         Button switchTo = new Button(compilerPage, SWT.PUSH);
         switchTo.setText("Switch to " + CompilerUtils.getOtherVersion());
@@ -196,12 +192,9 @@ public class CompilerPreferencesPage extends PreferencePage implements
                         error.open();
                     }
                 }
-
             }
 
-            public void widgetDefaultSelected(SelectionEvent e) {
-
-            }
+            public void widgetDefaultSelected(SelectionEvent e) {}
         });
 
         Link moreInfoLink = new Link(compilerPage, 0);
@@ -291,10 +284,7 @@ public class CompilerPreferencesPage extends PreferencePage implements
         return result.toString();
     }
 
-
-    public void init(IWorkbench workbench) {
-
-    }
+    public void init(IWorkbench workbench) {}
 
     public static void openUrl(String location) {
         try {
@@ -303,6 +293,7 @@ public class CompilerPreferencesPage extends PreferencePage implements
             if (location != null) {
                 url = new URL(location);
             }
+
             if (WebBrowserPreference.getBrowserChoice() == WebBrowserPreference.EXTERNAL) {
                 try {
                     IWorkbenchBrowserSupport support = PlatformUI
@@ -347,7 +338,6 @@ public class CompilerPreferencesPage extends PreferencePage implements
         } catch (JavaModelException e) {
             GroovyCore.logException("Problem updating Groovy classpath contianers", e);
         }
-
     }
 
     @Override
@@ -372,6 +362,4 @@ public class CompilerPreferencesPage extends PreferencePage implements
         GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, groovyLibButt.getSelection());
         scriptFolderSelector.applyPreferences();
     }
-
-
 }

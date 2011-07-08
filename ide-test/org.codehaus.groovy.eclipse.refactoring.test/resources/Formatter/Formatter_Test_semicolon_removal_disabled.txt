@@ -1,0 +1,8 @@
+###prop
+setPreferences=true
+removeUnnecessarySemicolons=false
+###src
+def a = 1;
+###exp
+def a = 1;
+###end

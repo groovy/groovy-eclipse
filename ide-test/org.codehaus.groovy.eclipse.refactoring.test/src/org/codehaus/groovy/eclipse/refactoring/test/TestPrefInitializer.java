@@ -27,63 +27,56 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceStore;
 
 /**
- *
  * Class to initialize Eclipse preferences in file based tests
  */
 public class TestPrefInitializer {
 
-	public static IPreferenceStore initializePreferences(HashMap<String, String> properties) {
-	    IPreferenceStore pref = new PreferenceStore();
+    public static IPreferenceStore initializePreferences(HashMap<String, String> properties) {
+        IPreferenceStore pref = new PreferenceStore();
 
-		String ind = properties.get("indentation");
-        if (ind != null)
-            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_INDENTATION, ind);
+        String indentation = properties.get("indentation");
+        if (indentation != null)
+            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_INDENTATION, indentation);
 
-		String tabsize = properties.get("tabsize");
-		//Older tests will use tabsize assuming its the same as indentsize, so set both of these!
-		if(tabsize != null) {
-			pref.setValue(
-					PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE,
-					Integer.parseInt(tabsize));
-			pref.setValue(
-					PreferenceConstants.GROOVY_FORMATTER_TAB_SIZE,
-					Integer.parseInt(tabsize));
-		}
-		String indentsize = properties.get("indentsize");
-		if (indentsize!=null) {
-			pref.setValue(
-					PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE,
-					Integer.parseInt(indentsize));
-		}
+        String tabsize = properties.get("tabsize");
+        // Older tests will use tabsize assuming its the same as indentsize, so
+        // set both of these!
+        if (tabsize != null) {
+            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE, Integer.parseInt(tabsize));
+            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_TAB_SIZE, Integer.parseInt(tabsize));
+        }
 
-		String multiInd = properties.get("multilineIndentation");
-		if(multiInd != null)
-		pref.setValue(
-				PreferenceConstants.GROOVY_FORMATTER_MULTILINE_INDENTATION,
-				Integer.parseInt(multiInd));
+        String indentsize = properties.get("indentsize");
+        if (indentsize != null) {
+            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE, Integer.parseInt(indentsize));
+        }
 
-		String bracesStart = properties.get("bracesStart");
-		if(bracesStart != null)
-		pref.setValue(PreferenceConstants.GROOVY_FORMATTER_BRACES_START, bracesStart);
+        String multiInd = properties.get("multilineIndentation");
+        if (multiInd != null)
+            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_MULTILINE_INDENTATION, Integer.parseInt(multiInd));
 
-		String bracesEnd = properties.get("bracesEnd");
-		if(bracesEnd != null)
-		pref.setValue(PreferenceConstants.GROOVY_FORMATTER_BRACES_END, bracesEnd);
+        String bracesStart = properties.get("bracesStart");
+        if (bracesStart != null)
+            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_BRACES_START, bracesStart);
 
+        String bracesEnd = properties.get("bracesEnd");
+        if (bracesEnd != null)
+            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_BRACES_END, bracesEnd);
 
+        String maxLineLength = properties.get("maxLineLegth");
+        if (maxLineLength != null)
+            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_MAX_LINELENGTH, Integer.parseInt(maxLineLength));
 
-		String maxLineLength = properties.get("maxLineLegth");
-		if(maxLineLength != null)
-		pref.setValue(
-				PreferenceConstants.GROOVY_FORMATTER_MAX_LINELENGTH,
-				Integer.parseInt(maxLineLength));
+        String indentEmptyLines = properties.get("indentEmptyLines");
+        if (indentEmptyLines != null) {
+            pref.setValue(DefaultCodeFormatterConstants.FORMATTER_INDENT_EMPTY_LINES, indentEmptyLines);
+        }
 
-		String indentEmptyLines = properties.get("indentEmptyLines");
-		if (indentEmptyLines!=null) {
-			pref.setValue(DefaultCodeFormatterConstants.FORMATTER_INDENT_EMPTY_LINES, indentEmptyLines);
-		}
-		
-		return pref;
-	}
+        String removeUnnecessarySemicolons = properties.get("removeUnnecessarySemicolons");
+        if (removeUnnecessarySemicolons != null) {
+            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_REMOVE_UNNECESSARY_SEMICOLONS, removeUnnecessarySemicolons);
+        }
 
+        return pref;
+    }
 }

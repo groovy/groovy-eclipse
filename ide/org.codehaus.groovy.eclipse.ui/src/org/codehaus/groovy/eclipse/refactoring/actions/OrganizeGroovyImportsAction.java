@@ -41,7 +41,8 @@ import org.eclipse.jface.window.Window;
  *
  */
 public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
-    private static final OrganizeImportComparator ORGANIZE_IMPORT_COMPARATOR= new OrganizeImportComparator();
+
+    private static final OrganizeImportComparator ORGANIZE_IMPORT_COMPARATOR = new OrganizeImportComparator();
 
     private static final class OrganizeImportComparator implements Comparator<Object> {
 
@@ -65,7 +66,6 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
         }
 
     }
-
 
     private JavaEditor editor;
 
@@ -151,7 +151,6 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
             editor.selectAndReveal(range.getOffset(), range.getLength());
         }
     }
-
 
     private IStatusLineManager getStatusLineManager() {
         if (editor != null) {

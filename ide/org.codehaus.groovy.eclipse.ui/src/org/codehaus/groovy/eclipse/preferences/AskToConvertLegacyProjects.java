@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,18 +36,19 @@ import org.eclipse.ui.progress.UIJob;
  *
  */
 public class AskToConvertLegacyProjects extends UIJob {
-    
+
     public AskToConvertLegacyProjects() {
         super("Convert Legacy Projects");
     }
-    
 
     @Override
     public IStatus runInUIThread(IProgressMonitor monitor) {
         ConvertLegacyProject legacy = new ConvertLegacyProject();
+
         if (legacy.getAllOldProjects().length == 0) {
             return Status.OK_STATUS;
         }
+
         Shell shell = this.getDisplay().getActiveShell();
         boolean shouldDispose = false;
         if (shell == null) {
@@ -61,12 +62,12 @@ public class AskToConvertLegacyProjects extends UIJob {
         }
         IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
         MessageDialogWithToggle d = MessageDialogWithToggle.openYesNoQuestion(
-                shell, "Convert legacy Groovy Projects", 
+                shell, "Convert legacy Groovy Projects",
                 "Some of your Groovy projects appear to be incompatible " +
-                		"with the new version of the Groovy plugin.  Should they be converted now?" +
-                		"\n\nThey can be converted later from the Groovy Preferences page",
-                		"Don't show this message again.", false, prefs,
-                		PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS);
+                "with the new version of the Groovy plugin.  Should they be converted now?" +
+                "\n\nThey can be converted later from the Groovy Preferences page",
+                "Don't show this message again.", false, prefs,
+                PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS);
         try {
             if (IDialogConstants.YES_ID == d.getReturnCode()) {
                 IProject[] projects = legacy.getAllOldProjects();
@@ -76,7 +77,7 @@ public class AskToConvertLegacyProjects extends UIJob {
                     monitor.internalWorked(1);
                 }
             }
-        
+
             prefs.setValue(PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS, !d.getToggleState());
             return Status.OK_STATUS;
         } catch (Exception e) {

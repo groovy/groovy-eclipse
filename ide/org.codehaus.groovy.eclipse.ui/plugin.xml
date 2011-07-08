@@ -625,6 +625,12 @@
              id="org.codehaus.groovy.eclipse.preferences.debugger"
              name="Debugger">
        </page>
+       <page
+             category="org.codehaus.groovy.eclipse.preferences"
+             class="org.codehaus.groovy.eclipse.preferences.SaveActionsPreferencePage"
+             id="org.codehaus.groovy.eclipse.ui.preferences.SaveActionsPreferencePage"
+             name="Save Actions">
+       </page>
    </extension>
    
    <extension
@@ -759,6 +765,9 @@
     	<initializer class="org.codehaus.groovy.eclipse.preferences.PreferenceInitializer"/>
          <initializer
                class="org.codehaus.groovy.eclipse.preferences.FormatterPreferenceInitializer">
+         </initializer>
+         <initializer
+               class="org.codehaus.groovy.eclipse.preferences.SaveActionsPreferenceInitializer">
          </initializer>
 	 	</extension>
 	<extension

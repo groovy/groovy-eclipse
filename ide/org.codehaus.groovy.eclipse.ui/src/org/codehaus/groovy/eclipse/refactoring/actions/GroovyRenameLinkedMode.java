@@ -55,7 +55,6 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 
 /**
- *
  * @author andrew
  * @created Jan 7, 2011
  */

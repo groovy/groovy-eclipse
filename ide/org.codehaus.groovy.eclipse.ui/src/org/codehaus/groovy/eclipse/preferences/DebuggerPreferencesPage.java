@@ -46,7 +46,6 @@ public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements
 
     private class PackageChooserListEditor extends ListEditor {
 
-
         public PackageChooserListEditor(String name, String labelText,
                 Composite parent) {
             super(name, labelText, parent);
@@ -94,17 +93,14 @@ public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements
             Arrays.sort(split);
             return split;
         }
-
     }
 
     private boolean doForceOptions = false;
-
 
     public DebuggerPreferencesPage() {
         super(GRID);
         setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
     }
-
 
     @Override
     protected String getPageId() {
@@ -124,8 +120,9 @@ public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements
                 " \n\n" +
                 "Stack frame filtering works best when it is combined with step filters." +
                 "\nUsing step filters, Groovy internal stack frames are ignored\n" +
- "when stepping through instructions in the debugger.  \n\n" + "You can <a>edit step filters...</a>\n\n"
-                        + "Or you can add step filtering automatically by clicking below.",
+                "when stepping through instructions in the debugger.  \n\n" +
+                "You can <a>edit step filters...</a>\n\n" +
+                "Or you can add step filtering automatically by clicking below.",
                 (IWorkbenchPreferenceContainer) getContainer(), null);
         GridData data = new GridData(SWT.FILL, SWT.CENTER, false, false);
         area.getControl().setLayoutData(data);
@@ -168,5 +165,4 @@ public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements
         }
         return super.performOk();
     }
-
 }

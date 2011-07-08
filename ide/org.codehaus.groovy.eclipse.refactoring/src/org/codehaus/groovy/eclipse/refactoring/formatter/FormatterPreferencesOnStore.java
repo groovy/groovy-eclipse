@@ -56,32 +56,23 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
     private static final boolean DEFAULT_USE_TABS = true;
     private static final int DEFAULT_TAB_SIZE = 4;
     private static final int DEFAULT_INDENT_SIZE = 4;
-
     private static final int DEFAULT_INDENT_MULTILINE = 2;
-
     private static final boolean DEFAULT_SMART_PASTE = true;
-
     private static final boolean DEFAULT_INDENT_EMPTY_LINES = false;
+    private static final boolean DEFAULT_REMOVE_UNNECESSARY_SEMICOLONS = false;
 
-    // //// preferences cached in fields below ////////////
+    // //// preferences cached in fields below //////////
 
     private boolean useTabs;
-
     private int tabSize;
-
     private int indentSize;
-
     private int indentationMultiline;
-
     private int bracesStart;
-
     private int bracesEnd;
-
     private int maxLineLength;
-
     private boolean smartPaste;
-
     private boolean indentEmptyLines;
+    private boolean removeUnnecessarySemicolons;
 
 	////////////////////////////////////////////////////
 
@@ -103,7 +94,6 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
      * @param preferences
      */
     private void refresh(IPreferenceStore preferences) {
-
         indentEmptyLines = DEFAULT_INDENT_EMPTY_LINES;
         String pIndentEmpty = preferences.getString(DefaultCodeFormatterConstants.FORMATTER_INDENT_EMPTY_LINES);
         if (pIndentEmpty != null) {
@@ -115,23 +105,23 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
         if (pBracesStart != null && pBracesStart.equals("next"))
             bracesStart = NEXT_LINE;
 
-        this.bracesEnd = DEFAULT_BRACES_END;
+        bracesEnd = DEFAULT_BRACES_END;
         String pBracesEnd = preferences.getString(PreferenceConstants.GROOVY_FORMATTER_BRACES_END);
         if (pBracesEnd != null && pBracesEnd.equals("same"))
             bracesEnd = SAME_LINE;
 
-        this.tabSize = DEFAULT_TAB_SIZE;
+        tabSize = DEFAULT_TAB_SIZE;
         int pTabSize = preferences.getInt(PreferenceConstants.GROOVY_FORMATTER_TAB_SIZE);
         if (pTabSize != 0)
             tabSize = pTabSize;
 
-        this.indentSize = DEFAULT_INDENT_SIZE;
+        indentSize = DEFAULT_INDENT_SIZE;
         int pIndentSize = preferences.getInt(PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE);
         if (pIndentSize != 0) {
             indentSize = pIndentSize;
         }
 
-        this.useTabs = DEFAULT_USE_TABS;
+        useTabs = DEFAULT_USE_TABS;
         String pTab = preferences.getString(PreferenceConstants.GROOVY_FORMATTER_INDENTATION);
         if (pTab != null) {
             if (pTab.equals(JavaCore.SPACE)) {
@@ -145,22 +135,28 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
             }
         }
 
-        this.indentationMultiline = DEFAULT_INDENT_MULTILINE;
+        indentationMultiline = DEFAULT_INDENT_MULTILINE;
         int pIndeMulti = preferences.getInt(PreferenceConstants.GROOVY_FORMATTER_MULTILINE_INDENTATION);
         if (pIndeMulti != 0)
             indentationMultiline = pIndeMulti;
 
         int pMaxLine = preferences.getInt(PreferenceConstants.GROOVY_FORMATTER_MAX_LINELENGTH);
-        this.maxLineLength = DEFAULT_MAX_LINE_LEN;
+        maxLineLength = DEFAULT_MAX_LINE_LEN;
         if (pMaxLine != 0)
             maxLineLength = pMaxLine;
 
         String pSmartPaste = preferences.getString(org.eclipse.jdt.ui.PreferenceConstants.EDITOR_SMART_PASTE);
-        this.smartPaste = DEFAULT_SMART_PASTE;
+        smartPaste = DEFAULT_SMART_PASTE;
         if ("true".equals(pSmartPaste))
             smartPaste = true;
         else if ("false".equals(pSmartPaste))
             smartPaste = false;
+
+        removeUnnecessarySemicolons = DEFAULT_REMOVE_UNNECESSARY_SEMICOLONS;
+        String pRemoveUnnecessarySemicolons = preferences.getString(PreferenceConstants.GROOVY_FORMATTER_REMOVE_UNNECESSARY_SEMICOLONS);
+        if (pRemoveUnnecessarySemicolons != null) {
+            removeUnnecessarySemicolons = pRemoveUnnecessarySemicolons.equals("true");
+        }
     }
 
     public int getIndentationMultiline() {
@@ -199,4 +195,7 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
         return tabSize;
     }
 
+    public boolean isRemoveUnnecessarySemicolons() {
+        return removeUnnecessarySemicolons;
+    }
 }

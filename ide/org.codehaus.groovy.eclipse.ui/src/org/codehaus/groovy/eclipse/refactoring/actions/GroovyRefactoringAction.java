@@ -37,67 +37,64 @@ import org.eclipse.ui.PlatformUI;
 
 /**
  * @author reto kleeb
- *
  */
 public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionDelegate, IEditorActionDelegate {
 
-	private GroovyEditor editor;
+    private GroovyEditor editor;
     private ITextSelection selection;
     private GroovyCompilationUnit gcu;
 
-	protected boolean initRefactoring() {
-		editor = (GroovyEditor) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
-		selection = (ITextSelection) editor.getSelectionProvider().getSelection();
-		gcu = editor.getGroovyCompilationUnit();
-		if (gcu != null) {
-    		if (gcu.getModuleNode() == null) {
+    protected boolean initRefactoring() {
+        editor = (GroovyEditor) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+        selection = (ITextSelection) editor.getSelectionProvider().getSelection();
+        gcu = editor.getGroovyCompilationUnit();
+        if (gcu != null) {
+            if (gcu.getModuleNode() == null) {
                 displayErrorDialog("Cannot find ModuleNode for " + gcu.getElementName());
-    			return false;
-    		}
+                return false;
+            }
             return true;
             // return PlatformUI.getWorkbench().saveAllEditors(true);
-		}
-		return false;
-	}
+        }
+        return false;
+    }
 
-	protected void displayErrorDialog(String message) {
-	    ErrorDialog error = new ErrorDialog(
-	            editor.getSite().getShell(), "Groovy Refactoring error", message,
-	            new Status(IStatus.ERROR, GroovyPlugin.PLUGIN_ID, message),
-	            IStatus.ERROR | IStatus.WARNING);
-		error.open();
-	}
+    protected void displayErrorDialog(String message) {
+        ErrorDialog error = new ErrorDialog(
+                editor.getSite().getShell(), "Groovy Refactoring error", message,
+                new Status(IStatus.ERROR, GroovyPlugin.PLUGIN_ID, message),
+                IStatus.ERROR | IStatus.WARNING);
+        error.open();
+    }
 
-	public void dispose() {
-	    editor = null;
-	    gcu = null;
-	    selection = null;
-	}
+    public void dispose() {
+        editor = null;
+        gcu = null;
+        selection = null;
+    }
 
-	protected GroovyEditor getEditor() {
+    protected GroovyEditor getEditor() {
         return editor;
     }
 
-	protected ITextSelection getSelection() {
+    protected ITextSelection getSelection() {
         return selection;
     }
 
-	protected GroovyCompilationUnit getUnit() {
+    protected GroovyCompilationUnit getUnit() {
         return gcu;
     }
 
+    public void init(IWorkbenchWindow window) {
+    }
 
-	public void init(IWorkbenchWindow window) {
-	}
+    public void selectionChanged(IAction action, ISelection selection) {
+    }
 
-	public void selectionChanged(IAction action, ISelection selection) {
-	}
+    public void setActiveEditor(IAction action, IEditorPart targetEditor) {
+    }
 
-	public void setActiveEditor(IAction action, IEditorPart targetEditor) {
-	}
-
-	public static int getUIFlags() {
-		return RefactoringWizard.DIALOG_BASED_USER_INTERFACE | RefactoringWizard.PREVIEW_EXPAND_FIRST_NODE;
-	}
-
+    public static int getUIFlags() {
+        return RefactoringWizard.DIALOG_BASED_USER_INTERFACE | RefactoringWizard.PREVIEW_EXPAND_FIRST_NODE;
+    }
 }

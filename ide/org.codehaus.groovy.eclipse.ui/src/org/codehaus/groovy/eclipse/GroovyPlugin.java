@@ -52,7 +52,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
                 IPartService service = (IPartService) page.getActivePart().getSite().getService(IPartService.class);
                 service.addPartListener(ensure);
             } catch (NullPointerException e) {
-                // can ignore...something is not initialized any more.
+                // can ignore...something is not initialized anymore.
             }
         }
 
@@ -65,24 +65,23 @@ public class GroovyPlugin extends AbstractUIPlugin {
             }
         }
 
-        public void pageActivated(IWorkbenchPage page) {
-        }
+        public void pageActivated(IWorkbenchPage page) {}
     }
 
     /**
-	 * The single plugin instance
-	 */
-	private static GroovyPlugin plugin;
+     * The single plugin instance
+     */
+    private static GroovyPlugin plugin;
 
-	static boolean trace;
+    static boolean trace;
 
-	private GroovyTextTools textTools;
+    private GroovyTextTools textTools;
 
     private GroovyOutlineTools outlineTools;
 
-	public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.ui";
+    public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.ui";
 
-	public static final String GROOVY_TEMPLATE_CTX = "org.codehaus.groovy.eclipse.templates";
+    public static final String GROOVY_TEMPLATE_CTX = "org.codehaus.groovy.eclipse.templates";
 
     private EnsureJUnitFont ensure;
 
@@ -90,65 +89,61 @@ public class GroovyPlugin extends AbstractUIPlugin {
 
     private boolean oldPREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT;
 
-	static {
-		String value = Platform
-				.getDebugOption("org.codehaus.groovy.eclipse/trace"); //$NON-NLS-1$
-		if (value != null && value.equalsIgnoreCase("true")) //$NON-NLS-1$
-			GroovyPlugin.trace = true;
-	}
-
-	/**
-	 * The constructor.
-	 */
-	public GroovyPlugin() {
-		super();
-		plugin = this;
+    static {
+        String value = Platform.getDebugOption("org.codehaus.groovy.eclipse/trace"); //$NON-NLS-1$
+        if (value != null && value.equalsIgnoreCase("true")) //$NON-NLS-1$
+            GroovyPlugin.trace = true;
     }
 
-	/**
-	 * @return Returns the plugin instance.
-	 */
-	public static GroovyPlugin getDefault() {
-		return plugin;
-	}
+    public GroovyPlugin() {
+        super();
+        plugin = this;
+    }
 
-	public static Shell getActiveWorkbenchShell() {
-		IWorkbenchWindow workBenchWindow= getActiveWorkbenchWindow();
-		if (workBenchWindow == null) {
-			return null;
-		}
-		Shell shell = workBenchWindow.getShell();
-		if (shell == null) {
-		    shell = plugin.getWorkbench().getDisplay().getActiveShell();
-		}
-		return shell;
-	}
+    /**
+     * @return Returns the plugin instance.
+     */
+    public static GroovyPlugin getDefault() {
+        return plugin;
+    }
 
-	/**
-	 * Returns the active workbench window
-	 *
-	 * @return the active workbench window
-	 */
-	public static IWorkbenchWindow getActiveWorkbenchWindow() {
-		if (plugin == null) {
-			return null;
-		}
-		IWorkbench workBench= plugin.getWorkbench();
-		if (workBench == null) {
-		    return null;
-		}
-		return workBench.getActiveWorkbenchWindow();
-	}
+    public static Shell getActiveWorkbenchShell() {
+        IWorkbenchWindow workBenchWindow= getActiveWorkbenchWindow();
+        if (workBenchWindow == null) {
+            return null;
+        }
+        Shell shell = workBenchWindow.getShell();
+        if (shell == null) {
+            shell = plugin.getWorkbench().getDisplay().getActiveShell();
+        }
+        return shell;
+    }
 
-	/**
-	 * Logs an exception
-	 *
-	 * @param message The message to save.
-	 * @param exception The exception to be logged.
-	 */
-	public void logException(String message, Exception exception) {
-		log(IStatus.ERROR, message, exception);
-	}
+    /**
+     * Returns the active workbench window
+     *
+     * @return the active workbench window
+     */
+    public static IWorkbenchWindow getActiveWorkbenchWindow() {
+        if (plugin == null) {
+            return null;
+        }
+        IWorkbench workBench= plugin.getWorkbench();
+        if (workBench == null) {
+            return null;
+        }
+        return workBench.getActiveWorkbenchWindow();
+    }
+
+    /**
+     * Logs an exception
+     *
+     * @param message The message to save.
+     * @param exception The exception to be logged.
+     */
+    public void logException(String message, Exception exception) {
+        log(IStatus.ERROR, message, exception);
+    }
 
     /**
      * Logs a warning.
@@ -156,41 +151,41 @@ public class GroovyPlugin extends AbstractUIPlugin {
      * @param message The warning to log.
      */
     public void logWarning( final String message ){
-    	log(IStatus.WARNING, message, null);
+        log(IStatus.WARNING, message, null);
     }
 
-	/**
-	 * Logs an information message.
-	 *
-	 * @param message The message to log.
-	 */
-	public void logTraceMessage(String message) {
-		log(IStatus.INFO, message, null);
-	}
+    /**
+     * Logs an information message.
+     *
+     * @param message The message to log.
+     */
+    public void logTraceMessage(String message) {
+        log(IStatus.INFO, message, null);
+    }
 
-	private void log(int severity, String message, Exception exception) {
-		final IStatus status = new Status( severity, getBundle().getSymbolicName(), 0, message, exception );
-        getLog().log( status );
-	}
+    private void log(int severity, String message, Exception exception) {
+        final IStatus status = new Status( severity, getBundle().getSymbolicName(), 0, message, exception );
+        getLog().log(status);
+    }
 
-	public static void trace(String message) {
-		if (trace) {
-			getDefault().logTraceMessage("trace: " + message);
-		}
-	}
+    public static void trace(String message) {
+        if (trace) {
+            getDefault().logTraceMessage("trace: " + message);
+        }
+    }
 
-	@Override
+    @Override
     public void start(BundleContext context) throws Exception {
-		super.start(context);
-		textTools = new GroovyTextTools();
+        super.start(context);
+        textTools = new GroovyTextTools();
         outlineTools = new GroovyOutlineTools();
-		addMonospaceFontListener();
-		DelegatingCleanUpPostSaveListener.installCleanUp();
+        addMonospaceFontListener();
+        DelegatingCleanUpPostSaveListener.installCleanUp();
 
-		// ensure that the user doesn't see any useless warning dialogs when breakpoints are added
-		// to a closure
-		IPreferenceStore preferenceStore= JDIDebugUIPlugin.getDefault().getPreferenceStore();
-		oldPREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT = preferenceStore.getBoolean(IJDIPreferencesConstants.PREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT);
+        // ensure that the user doesn't see any useless warning dialogs when breakpoints are added
+        // to a closure
+        IPreferenceStore preferenceStore= JDIDebugUIPlugin.getDefault().getPreferenceStore();
+        oldPREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT = preferenceStore.getBoolean(IJDIPreferencesConstants.PREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT);
         preferenceStore.setValue(IJDIPreferencesConstants.PREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT, false);
 
         // register our own stack frame label provider so that groovy stack frames are
@@ -200,7 +195,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
         if (getPreferenceStore().getBoolean(PreferenceConstants.GROOVY_DEBUG_FORCE_DEBUG_OPTIONS_ON_STARTUP)) {
             new GroovyDebugOptionsEnforcer().maybeForce(getPreferenceStore());
         }
-	}
+    }
 
     private void addMonospaceFontListener() {
         ensure = new EnsureJUnitFont();
@@ -241,10 +236,10 @@ public class GroovyPlugin extends AbstractUIPlugin {
     }
 
     @Override
-	public void stop(BundleContext context) throws Exception {
-	    super.stop(context);
-	    textTools.dispose();
-	    textTools = null;
+    public void stop(BundleContext context) throws Exception {
+        super.stop(context);
+        textTools.dispose();
+        textTools = null;
         outlineTools.dispose();
         outlineTools = null;
         DelegatingCleanUpPostSaveListener.uninstallCleanUp();
@@ -253,9 +248,7 @@ public class GroovyPlugin extends AbstractUIPlugin {
         // undo the preference store damage
         IPreferenceStore preferenceStore= JDIDebugUIPlugin.getDefault().getPreferenceStore();
         preferenceStore.setValue(IJDIPreferencesConstants.PREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT, oldPREF_ALERT_UNABLE_TO_INSTALL_BREAKPOINT);
-
     }
-
 
     public GroovyTextTools getTextTools() {
         return textTools;

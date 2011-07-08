@@ -25,17 +25,16 @@ import org.eclipse.jface.viewers.IStructuredSelection;
  * @author Andrew Eisenberg
  * @created Aug 26, 2009
  * Replaces JDT's rename action with Groovy's
- *
  */
 public class GroovyRenameAction extends RenameAction {
 
-	private RenameDispatcherAction renameDelegate;
+    private RenameDispatcherAction renameDelegate;
     
-    public GroovyRenameAction(final JavaEditor editor){
+    public GroovyRenameAction(final JavaEditor editor) {
         super(editor);
         renameDelegate = new RenameDispatcherAction();
     }
-    
+
     public void run(IStructuredSelection selection) {
         // do nothing...not applicable here
     }
@@ -48,7 +47,7 @@ public class GroovyRenameAction extends RenameAction {
     public void selectionChanged(IStructuredSelection selection) {
         renameDelegate.selectionChanged(this, selection);
     }
-    
+
     @Override
     public void selectionChanged(ITextSelection selection) {
         renameDelegate.selectionChanged(this, selection);

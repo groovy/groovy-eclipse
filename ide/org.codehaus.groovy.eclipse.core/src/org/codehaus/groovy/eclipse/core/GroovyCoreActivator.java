@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,13 +48,12 @@ public class GroovyCoreActivator extends Plugin {
 
     /**
      * Returns the shared instance
-     * 
+     *
      * @return the shared instance
      */
     public static GroovyCoreActivator getDefault() {
         return plugin;
     }
-
 
     public IEclipsePreferences getPreferences() {
         if (instanceScope == null) {
@@ -66,7 +65,7 @@ public class GroovyCoreActivator extends Plugin {
     public boolean getPreference(String key, boolean def) {
         return getPreferences().getBoolean(key, def);
     }
-    
+
     public void setPreference(String key, boolean val) {
         getPreferences().putBoolean(key, val);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2010-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,8 +37,7 @@ public class GroovyDocumentScannerTests extends TestCase {
     private int caret = 0;
 
     public void testGetTokenBefore() throws Exception {
-        makeEditor("a b c\n" +
-        "d e f");
+        makeEditor("a b c" + "\n" + "d e f");
 
         IDocument doc = getDocument();
         GroovyDocumentScanner scanner = new GroovyDocumentScanner(doc);
@@ -51,31 +50,14 @@ public class GroovyDocumentScannerTests extends TestCase {
         int expect = 0;
         Token token = scanner.getLastToken();
         assertEquals(GroovyTokenTypeBridge.EOF, token.getType());
-        while (token!=null) {
+
+        while (token != null) {
             assertEquals(expected[expect++], token.getText());
             token = scanner.getLastTokenBefore(token);
         }
 
         assertEquals(expected.length, expect);
         scanner.dispose();
-    }
-
-    /**
-     * @return
-     */
-    private IDocument getDocument() {
-        return editDoc;
-    }
-
-    private void makeEditor(String string) {
-        this.caret = string.indexOf("<***>");
-        if (caret<0) {
-            caret = 0;
-        }
-        else {
-            string = string.substring(0,caret) + string.substring(caret+"<***>".length());
-        }
-        this.editDoc = new Document(string);
     }
 
     public void testGetLineTokens() throws Exception {
@@ -114,7 +96,7 @@ public class GroovyDocumentScannerTests extends TestCase {
         assertTokens(new String[] { }, tokens);
 
         tokens = scanner.getLineTokens(3);
-        assertTokens(new String[] { "}"}, tokens);
+        assertTokens(new String[] { "}" }, tokens);
         scanner.dispose();
     }
 
@@ -124,14 +106,31 @@ public class GroovyDocumentScannerTests extends TestCase {
             "    def a = <***>\n" +
             "}\n";
         makeEditor(text);
+
         IDocument doc = getDocument();
         GroovyDocumentScanner scanner = new GroovyDocumentScanner(doc);
+
         List<Token> tokens = scanner.getLineTokens(1);
-        assertTokens(new String[] {"def", "a", "=", "<newline>"}, tokens);
+        assertTokens(new String[] { "def", "a", "=", "<newline>" }, tokens);
+
         send("3+4");
         tokens = scanner.getLineTokens(1);
-        assertTokens(new String[] {"def", "a", "=", "3", "+", "4", "<newline>"}, tokens);
+        assertTokens(new String[] { "def", "a", "=", "3", "+", "4", "<newline>" }, tokens);
         scanner.dispose();
+    }
+
+    private IDocument getDocument() {
+        return editDoc;
+    }
+
+    private void makeEditor(String string) {
+        caret = string.indexOf("<***>");
+        if (caret < 0) {
+            caret = 0;
+        } else {
+            string = string.substring(0, caret) + string.substring(caret + "<***>".length());
+        }
+        editDoc = new Document(string);
     }
 
     /**
@@ -143,7 +142,7 @@ public class GroovyDocumentScannerTests extends TestCase {
      */
     private void send(String insertionText) throws BadLocationException {
         editDoc.replace(caret, 0, insertionText);
-        caret = caret+insertionText.length();
+        caret = caret + insertionText.length();
     }
 
     private void assertTokens(String[] expected, List<Token> tokens) {
@@ -152,5 +151,4 @@ public class GroovyDocumentScannerTests extends TestCase {
             assertEquals(expected[i], tokens.get(i).getText());
         }
     }
-
 }

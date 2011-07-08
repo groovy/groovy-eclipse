@@ -16,8 +16,7 @@
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
 /**
- *
- * @author kdvolder
+ * @author Kris De Volder
  * @created 2010-05-21
  */
 public interface IFormatterPreferences {
@@ -30,4 +29,5 @@ public interface IFormatterPreferences {
     int getMaxLineLength();
     boolean isSmartPaste();
     boolean isIndentEmptyLines();
+    boolean isRemoveUnnecessarySemicolons();
 }

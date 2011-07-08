@@ -23,17 +23,17 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 
 /**
- * A lightweight adapter to get java options for a given IJavaProjectin the
+ * A lightweight adapter to get java options for a given IJavaProject in the
  * form of an IPreferencesStore.
  * <p>
- * The preferences store is readonly and it does not support listeners (i.e. it
+ * The preferences store is read-only and it does not support listeners (i.e. it
  * sends no notification events. It is possible to add/remove listeners, but
  * this has no effect.
  * <p>
- * The preferences store is <b>not<b> updated when preferences
- * in Eclipse are changed. It only takes a snapshot of the current preferences
- * by calling the IJavaProject.getOptions method.
- *
+ * The preferences store is <b>not</b> updated when preferences in Eclipse are
+ * changed. It only takes a snapshot of the current preferences by calling the
+ * IJavaProject.getOptions method.
+ * 
  * @author kdvolder
  * @created 2010-05-21
  */

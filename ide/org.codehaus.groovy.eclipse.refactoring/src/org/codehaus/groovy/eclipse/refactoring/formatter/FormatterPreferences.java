@@ -56,16 +56,13 @@ public class FormatterPreferences extends FormatterPreferencesOnStore implements
         // would be to have project specific prefs that can "override" global
         // settings just as in JDT.
 
-        // FIXKDV: We want to write the folllwing:
-        // IPreferenceStore groovyPrefs =
-        // GroovyPlugin.getDefault().getPreferenceStore();
+        // FIXKDV: We want to write the following:
+        // IPreferenceStore groovyPrefs = GroovyPlugin.getDefault().getPreferenceStore();
         // But unfortunately, we can't get the GroovyPlugin here because that
-        // creates
-        // a circular build dependency. So we do the following instead:
+        // creates a circular build dependency. So we do the following instead:
         IPreferenceStore groovyPrefs = new ScopedPreferenceStore(new InstanceScope(), "org.codehaus.groovy.eclipse.ui");
         IPreferenceStore javaUIprefs = JavaPlugin.getDefault().getCombinedPreferenceStore();
 
         return new ChainedPreferenceStore(new IPreferenceStore[] { groovyPrefs, javaPrefs, javaUIprefs });
     }
-
 }

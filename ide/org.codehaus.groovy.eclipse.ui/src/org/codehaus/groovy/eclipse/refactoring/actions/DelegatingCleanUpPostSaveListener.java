@@ -31,15 +31,23 @@ import org.eclipse.jface.text.IRegion;
 /**
  * @author Andrew Eisenberg
  * @created Aug 25, 2009
- * 
+ *
  * This class Delegates to either the {@link org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener} or
- * to {@link GroovyCleanupPostSaveListener} depending on the content type
- * of the file being saved.
- * <p> 
+ * to {@link GroovyCleanupPostSaveListener} depending on the content type of the file being saved.
+ * <p>
  * This class ensures that when groovy compilation units are encountered, Post save actions are
  * properly executed
  */
 public class DelegatingCleanUpPostSaveListener implements IPostSaveListener {
+
+    private final IPostSaveListener jdtCleanUp;
+    private final IPostSaveListener groovyCleanUp;
+
+    public DelegatingCleanUpPostSaveListener(org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener jdtCleanUp,
+            GroovyCleanupPostSaveListener groovyCleanUp) {
+        this.jdtCleanUp = jdtCleanUp;
+        this.groovyCleanUp = groovyCleanUp;
+    }
 
     /**
      * Installs a delegating cleanup by replacing the existing jdt cleanup
@@ -52,27 +60,24 @@ public class DelegatingCleanUpPostSaveListener implements IPostSaveListener {
                 SaveParticipantDescriptor descriptor = registry.getSaveParticipantDescriptor(org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener.POSTSAVELISTENER_ID);
                 // descriptor shouldn't be null, but if it is, NPE is thrown and we register the exception in the log.
                 // also exception will be thrown if the delegating cleanup was already installed
-                org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener jdtCleanUp = (org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener) 
-                        descriptor.getPostSaveListener();
+                org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener jdtCleanUp = (org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener) descriptor.getPostSaveListener();
                 GroovyCleanupPostSaveListener groovyCleanUp = new GroovyCleanupPostSaveListener();
-                DelegatingCleanUpPostSaveListener delegatingCleanUp = new DelegatingCleanUpPostSaveListener(jdtCleanUp, groovyCleanUp);
+                IPostSaveListener delegatingCleanUp = new DelegatingCleanUpPostSaveListener(jdtCleanUp, groovyCleanUp);
                 ReflectionUtils.setPrivateField(SaveParticipantDescriptor.class, "fPostSaveListener", descriptor, delegatingCleanUp);
             }
-            
         } catch (Exception e) {
-            // a classcaseexception can be thrown when changing compilers, so ignore it
+            // a ClassCastException can be thrown when changing compilers, so ignore it
             if (e instanceof ClassCastException) {
                 if (e.getStackTrace()[0].getLineNumber() == 55) {
-                    // ignore
                     return;
                 }
             }
-            
+
             // if an exception is thrown, then the groovy post save listener will not be used.
             GroovyCore.logException("Exception thrown while trying to install GroovyCleanUpPostSaveListener", e);
         }
     }
-    
+
     /**
      * Uninstalls the delegating cleanup and replaces it with the original jdt cleanup
      */
@@ -82,27 +87,15 @@ public class DelegatingCleanUpPostSaveListener implements IPostSaveListener {
             // synchronized because we don't want registry being used in the middle of this.
             synchronized (registry) {
                 SaveParticipantDescriptor descriptor = registry.getSaveParticipantDescriptor(org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener.POSTSAVELISTENER_ID);
-                DelegatingCleanUpPostSaveListener delegatingCleanUp = (DelegatingCleanUpPostSaveListener) 
-                        descriptor.getPostSaveListener();
+                DelegatingCleanUpPostSaveListener delegatingCleanUp = (DelegatingCleanUpPostSaveListener) descriptor.getPostSaveListener();
                 ReflectionUtils.setPrivateField(SaveParticipantDescriptor.class, "fPostSaveListener", descriptor, delegatingCleanUp.jdtCleanUp);
             }
         } catch (Exception e) {
-            // if an exceptino is thrown, then the groovy post save listener will not be used.
+            // if an exception is thrown, then the groovy post save listener will not be used.
             GroovyCore.logException("Exception thrown while trying to install GroovyCleanUpPostSaveListener", e);
         }
     }
-    
-    
 
-    final org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener jdtCleanUp;
-    private final GroovyCleanupPostSaveListener groovyCleanUp;
-
-    public DelegatingCleanUpPostSaveListener(org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener jdtCleanUp, 
-            GroovyCleanupPostSaveListener groovyCleanUp) {
-        this.jdtCleanUp = jdtCleanUp;
-        this.groovyCleanUp = groovyCleanUp;
-    }
-    
     public String getId() {
         return jdtCleanUp.getId();
     }

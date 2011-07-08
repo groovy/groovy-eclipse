@@ -42,11 +42,11 @@ import org.eclipse.ui.PlatformUI;
  */
 public class RenameDispatcherAction extends GroovyRefactoringAction {
 
-	public void run(IAction action) {
-		if (initRefactoring()) {
-			CandidateCollector dispatcher = new CandidateCollector(getUnit(), getSelection());
-			try {
-			    ISourceReference target = dispatcher.getRefactoringTarget();
+    public void run(IAction action) {
+        if (initRefactoring()) {
+            CandidateCollector dispatcher = new CandidateCollector(getUnit(), getSelection());
+            try {
+                ISourceReference target = dispatcher.getRefactoringTarget();
                 IPreferenceStore store = JavaPlugin.getDefault().getPreferenceStore();
                 boolean lightweight = store.getBoolean(PreferenceConstants.REFACTOR_LIGHTWEIGHT);
                 if (runViaAdapter(target, lightweight))
@@ -61,10 +61,10 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
                     displayErrorDialog("Cannot refactor on current selection.  No refactoring candidates found");
                 }
             } catch (CoreException e) {
-				displayErrorDialog(e.getMessage());
-			}
-		}
-	}
+                displayErrorDialog(e.getMessage());
+            }
+        }
+    }
 
     private boolean runViaAdapter(ISourceReference _target, boolean lightweight) {
         try {
@@ -90,11 +90,11 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
     }
 
     private void openJavaRefactoringWizard(IJavaElement element) throws CoreException {
-		JavaRefactoringDispatcher dispatcher = new JavaRefactoringDispatcher(element);
-		RenameSupport refactoring = dispatcher.dispatchJavaRenameRefactoring();
-		Shell shell = getShell();
+        JavaRefactoringDispatcher dispatcher = new JavaRefactoringDispatcher(element);
+        RenameSupport refactoring = dispatcher.dispatchJavaRenameRefactoring();
+        Shell shell = getShell();
         refactoring.openDialog(shell);
-	}
+    }
 
     private Shell getShell() {
         return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
