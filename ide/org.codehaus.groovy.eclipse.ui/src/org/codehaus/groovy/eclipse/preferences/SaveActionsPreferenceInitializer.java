@@ -29,7 +29,6 @@ public class SaveActionsPreferenceInitializer extends AbstractPreferenceInitiali
     public void initializeDefaultPreferences() {
         IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
 
-        store.setDefault(PreferenceConstants.GROOVY_SAVE_ACTION_REMOVE_TRAILING_WHITESPACES, false);
         store.setDefault(PreferenceConstants.GROOVY_SAVE_ACTION_REMOVE_UNNECESSARY_SEMICOLONS, false);
     }
 }

@@ -416,15 +416,14 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 			filteredSettins.put(CleanUpConstants.FORMAT_SOURCE_CODE, settings.get(CleanUpConstants.FORMAT_SOURCE_CODE));
 			filteredSettins.put(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY, settings.get(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY));
 			filteredSettins.put(CleanUpConstants.ORGANIZE_IMPORTS, settings.get(CleanUpConstants.ORGANIZE_IMPORTS));
-            filteredSettins.put(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES,
-                    settings.get(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES));
-            filteredSettins.put(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_ALL,
-                    settings.get(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_ALL));
-            filteredSettins.put(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_IGNORE_EMPTY,
-                    settings.get(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_IGNORE_EMPTY));
+			filteredSettins.put(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES, settings.get(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES));
+			filteredSettins.put(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_ALL, settings.get(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_ALL));
+			filteredSettins.put(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_IGNORE_EMPTY, settings.get(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES_IGNORE_EMPTY));
+
 			Set ids= new HashSet(2);
 			ids.add("org.eclipse.jdt.ui.cleanup.format"); //$NON-NLS-1$
 			ids.add("org.eclipse.jdt.ui.cleanup.imports"); //$NON-NLS-1$
+
 			cleanUps= getCleanUps(filteredSettins, ids);
 		}
 

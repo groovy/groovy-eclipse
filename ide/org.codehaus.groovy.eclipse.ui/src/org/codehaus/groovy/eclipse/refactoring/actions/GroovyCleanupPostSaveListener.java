@@ -51,7 +51,7 @@ public class GroovyCleanupPostSaveListener extends CleanUpPostSaveListener imple
 
         IPreferenceStore groovyPreferences = GroovyPlugin.getDefault().getPreferenceStore();
         boolean doSemicolonRemoval = groovyPreferences.getBoolean(PreferenceConstants.GROOVY_SAVE_ACTION_REMOVE_UNNECESSARY_SEMICOLONS);
-        boolean doWhitespaceRemoval = groovyPreferences.getBoolean(PreferenceConstants.GROOVY_SAVE_ACTION_REMOVE_TRAILING_WHITESPACES);
+        boolean doWhitespaceRemoval = options.isEnabled(CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES);
 
         for (ICleanUp cleanup : javaCleanUps) {
             if (cleanup instanceof ImportsCleanUp && options.isEnabled(CleanUpConstants.ORGANIZE_IMPORTS)) {
@@ -63,8 +63,6 @@ public class GroovyCleanupPostSaveListener extends CleanUpPostSaveListener imple
                     // options.isEnabled(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY))
                     doFormat = true;
                 } else if (options.isEnabled(CleanUpConstants.FORMAT_CORRECT_INDENTATION)) {
-                    // FIXKDV: can we support this:
-                    // CleanUpConstants.FORMAT_REMOVE_TRAILING_WHITESPACES)) ?
                     doIndent = true;
                 }
             }

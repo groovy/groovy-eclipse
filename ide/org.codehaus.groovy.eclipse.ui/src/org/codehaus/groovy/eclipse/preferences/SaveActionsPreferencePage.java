@@ -31,10 +31,7 @@ public class SaveActionsPreferencePage extends FieldEditorPreferencePage impleme
 
     @Override
     public void createFieldEditors() {
-        BooleanFieldEditor whitespaceOption = new BooleanFieldEditor(PreferenceConstants.GROOVY_SAVE_ACTION_REMOVE_TRAILING_WHITESPACES, "Remove trailing whitespaces", getFieldEditorParent());
         BooleanFieldEditor semicolonOption = new BooleanFieldEditor(PreferenceConstants.GROOVY_SAVE_ACTION_REMOVE_UNNECESSARY_SEMICOLONS, "Remove unnecessary semicolons", getFieldEditorParent());
-
-        addField(whitespaceOption);
         addField(semicolonOption);
     }
 

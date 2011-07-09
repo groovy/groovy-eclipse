@@ -41,6 +41,5 @@ public class PreferenceConstants {
     public static final String GROOVY_FORMATTER_REMOVE_UNNECESSARY_SEMICOLONS = "groovy.formatter.remove.unnecessary.semicolons";
 
     // Save Actions
-    public static final String GROOVY_SAVE_ACTION_REMOVE_TRAILING_WHITESPACES = "groovy.SaveAction.RemoveTrailingWhitespaces";
     public static final String GROOVY_SAVE_ACTION_REMOVE_UNNECESSARY_SEMICOLONS = "groovy.SaveAction.RemoveUnnecessarySemicolons";
 }
