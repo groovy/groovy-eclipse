@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.ui;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,6 +28,7 @@ import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.earlystartup.InitializeAllDSLDs;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.eclipse.core.internal.filesystem.local.LocalFile;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IStorage;
@@ -34,6 +36,7 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.DialogField;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.ITreeListAdapter;
@@ -67,6 +70,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
+import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
@@ -325,7 +329,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             List<?> selected = tree.getSelectedElements();
             ProjectContextKey pck = (ProjectContextKey) selected.get(0);
             IStorage storage = pck.dslFile;
-            IEditorInput input = EditorUtility.getEditorInput(storage);
+            IEditorInput input = getEditorInput(storage);
             if (input != null) {
                 try {
                     if (page != null) {
@@ -344,6 +348,18 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
                 }
             }
         }
+    }
+
+    /**
+     * @param storage
+     * @return
+     */
+    private IEditorInput getEditorInput(IStorage storage) {
+    	if (storage instanceof IFile && ((IFile) storage).getProject().equals(JavaModelManager.getExternalManager().getExternalFoldersProject())) {
+    		return new FileStoreEditorInput(new LocalFile(new File(((IFile) storage).getLocationURI())));
+    	} else {
+    		return EditorUtility.getEditorInput(storage);
+    	}
     }
 
     protected void refresh() {

@@ -54,6 +54,9 @@ public class TypeLookupRegistry {
 	private Map<String, List<IConfigurationElement>> natureLookupMap = new HashMap<String, List<IConfigurationElement>>();
 
 	List<ITypeLookup> getLookupsFor(IProject project) throws CoreException {
+		if (!project.exists()) {
+			return new ArrayList<ITypeLookup>(3);
+		}
 		String[] natures = project.getDescription().getNatureIds();
 		List<ITypeLookup> lookups = new ArrayList<ITypeLookup>();
 		for (String nature : natures) {
