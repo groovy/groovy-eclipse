@@ -52,6 +52,7 @@ public class ListUtil {
         return list;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> List<T> newEmptyList() {
         return newList();
     }

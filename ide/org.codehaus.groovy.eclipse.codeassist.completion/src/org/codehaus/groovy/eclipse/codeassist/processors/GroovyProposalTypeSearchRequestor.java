@@ -747,13 +747,16 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
             typeCompletion = simpleTypeName;
         }
 
-
         float relevanceMultiplier = 1;
         relevanceMultiplier += accessibility == IAccessRule.K_ACCESSIBLE ? 2
                 : -1;
         relevanceMultiplier += computeRelevanceForCaseMatching(
                 this.completionExpression.toCharArray(), simpleTypeName);
 
+        int augmentedModifiers = modifiers;
+        if (Flags.isDeprecated(typeModifiers)) {
+            augmentedModifiers |= Flags.AccDeprecated;
+        }
 
         GroovyCompletionProposal typeProposal = createProposal(CompletionProposal.TYPE_REF, this.actualCompletionPosition);
         typeProposal.setNameLookup(nameLookup);
@@ -770,13 +773,10 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         typeProposal.setTokenRange(this.offset, this.offset
                 + this.replaceLength);
         typeProposal.setRelevance(RelevanceRules.ALL_RULES.getRelevance(
-                fullyQualifiedName, allTypesInUnit, accessibility, modifiers));
+                fullyQualifiedName, allTypesInUnit, accessibility,
+                augmentedModifiers));
 
 
-        int flags = Flags.AccPublic;
-        if (Flags.isDeprecated(typeModifiers)) {
-            flags |= Flags.AccDeprecated;
-        }
         if (parameterCount == -1) {
             // default constructor
             parameterNames = CharOperation.NO_CHAR_CHAR;
@@ -830,12 +830,11 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         proposal.setIsContructor(true);
 
         proposal.setCompletion(this.completionExpression.toCharArray());
-        proposal.setFlags(modifiers);
         proposal.setRelevance(Relevance.MEDIUM_HIGH
                 .getRelevance(relevanceMultiplier));
 
         proposal.setCompletion(new char[] { '(', ')' });
-        proposal.setFlags(modifiers);
+        proposal.setFlags(augmentedModifiers);
 
         // looks strange, but this is just copying similar code in CompletionEngine.java
         proposal.setReplaceRange(this.offset + this.replaceLength, this.offset

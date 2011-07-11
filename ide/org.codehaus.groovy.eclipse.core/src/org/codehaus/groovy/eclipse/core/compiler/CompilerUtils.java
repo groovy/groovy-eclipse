@@ -105,7 +105,6 @@ public class CompilerUtils {
      *         org.codehaus.groovy project.
      * @throws BundleException
      */
-    @SuppressWarnings("unchecked")
     public static URL getExportedGroovyAllJar() {
         try {
             Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
@@ -136,7 +135,6 @@ public class CompilerUtils {
      *
      * @return jline, servlet-api, ivy, and commons-cli
      */
-    @SuppressWarnings("unchecked")
     public static URL[] getExtraJarsForClasspath() {
         try {
             Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();

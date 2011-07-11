@@ -100,7 +100,7 @@ public class GroovySnippetCompiler {
         return unit.compilationResult();
     }
 
-    @SuppressWarnings({ "unchecked", "deprecation" })
+    @SuppressWarnings({ "unchecked" })
     private GroovyCompilationUnitDeclaration internalCompile(String source,
             String sourcePath) {
         if (sourcePath == null) {
