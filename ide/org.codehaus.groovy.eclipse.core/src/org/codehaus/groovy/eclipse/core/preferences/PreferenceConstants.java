@@ -50,14 +50,23 @@ public class PreferenceConstants {
 
     public static final String GROOVY_EDITOR_BOLD_SUFFIX = "_bold";
 
-	// this preference will add the plugin trace statements to the error in order
-	// to make it easier to track down problems at runtime
+    /**
+     * this preference will add the plugin trace statements to the error in
+     * order
+     * to make it easier to track down problems at runtime
+     */
     public static final String GROOVY_LOG_TRACE_MESSAGES_ENABLED = "groovy.log.trace.messages.enabled";
 
-	// toggles whether an individual project should add the groovy lib folder to the classpath
+    /**
+     * toggles whether an individual project should add the groovy lib folder to
+     * the classpath
+     */
     public static final String GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL = "groovy.classpath.use.groovy.lib.global";
 
-    // toggles whether the global default is to add the groovy lib folder to the classpath
+    /**
+     * toggles whether the global default is to add the groovy lib folder to the
+     * classpath
+     */
 	public static final String GROOVY_CLASSPATH_USE_GROOVY_LIB = "groovy.classpath.use.groovy,lib";
 
 	public static final String GROOVY_JUNIT_MONOSPACE_FONT = "groovy.junit.monospace.font";
