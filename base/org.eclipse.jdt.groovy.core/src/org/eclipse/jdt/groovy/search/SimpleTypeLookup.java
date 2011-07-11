@@ -631,11 +631,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 	// }
 
 	/**
-	 * Looks for the named member in the declaring type. Also searches super types. The result can be a field, method, or property
+	 * Looks for the named member in the declaring type. Also searches super types. The result can be a field, method, or property.
+	 * 
+	 * If numOfArgs is >= 0, then look for a method first, otherwise look for a property and then a field
 	 * 
 	 * @param name
 	 * @param declaringType
-	 * @param numOfArgs TODO
+	 * @param numOfArgs number of arguments to the associated method call (or -1 if not a method call)
 	 * @return
 	 */
 	private ASTNode findDeclaration(String name, ClassNode declaringType, int numOfArgs) {
@@ -649,30 +651,21 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			}
 		}
 
+		AnnotatedNode maybe = null;
+		if (numOfArgs >= 0) {
+			// this expression is part of a method call expression and so, look for methods first
+			maybe = findMethodDeclaration(name, declaringType, numOfArgs);
+			if (maybe != null) {
+				return maybe;
+			}
+		}
+
 		Set<ClassNode> allClasses = new LinkedHashSet<ClassNode>();
 		createTypeHierarchy(declaringType, allClasses);
 
-		AnnotatedNode maybe = findPropertyInClass(name, allClasses);
+		maybe = findPropertyInClass(name, allClasses);
 		if (maybe != null) {
 			return maybe;
-		}
-
-		// look at methods first because it is more likely people would
-		// want to call the method than a field of the same name.
-		List<MethodNode> maybeMethods = declaringType.getMethods(name);
-		if (maybeMethods != null && maybeMethods.size() > 0) {
-			// prefer retrieving the method with the same number of args as specified in the parameter.
-			// if none exists, or parameter is -1, then arbitrarily choose the first.
-			if (numOfArgs >= 0) {
-				for (MethodNode maybeMethod : maybeMethods) {
-					Parameter[] parameters = maybeMethod.getParameters();
-					if ((parameters != null && parameters.length == numOfArgs) || (parameters == null && numOfArgs == 0)) {
-						return maybeMethod;
-					}
-				}
-			}
-
-			return maybeMethods.get(0);
 		}
 
 		maybe = declaringType.getField(name);
@@ -702,16 +695,59 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			return constantFromSuper;
 		}
 
-		// lastly, try converting to a getter and see if the getter version of the method exists
-		// hmmmm...should we do the same for set?
-		if (!name.startsWith("get") && name.length() > 0) {
+		if (numOfArgs < 0) {
+			// this expression is not part of a method call expression and so, look for methods last
+			maybe = findMethodDeclaration(name, declaringType, numOfArgs);
+			if (maybe != null) {
+				return maybe;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Finds a method with the given name in the declaring type. Will prioritize methods with the same number of arguments, but if
+	 * multiple methods exist with same name, then will return an arbitrary one.
+	 * 
+	 * @param name
+	 * @param declaringType
+	 * @param numOfArgs
+	 * @return
+	 */
+	private AnnotatedNode findMethodDeclaration(String name, ClassNode declaringType, int numOfArgs) {
+		List<MethodNode> maybeMethods = declaringType.getMethods(name);
+		if (maybeMethods != null && maybeMethods.size() > 0) {
+			// prefer retrieving the method with the same number of args as specified in the parameter.
+			// if none exists, or parameter is -1, then arbitrarily choose the first.
+			if (numOfArgs >= 0) {
+				for (MethodNode maybeMethod : maybeMethods) {
+					Parameter[] parameters = maybeMethod.getParameters();
+					if ((parameters != null && parameters.length == numOfArgs) || (parameters == null && numOfArgs == 0)) {
+						return maybeMethod;
+					}
+				}
+			}
+
+			return maybeMethods.get(0);
+		}
+
+		// try converting to a getter and see if the getter version of the method exists
+		if (numOfArgs < 0 && !name.startsWith("get") && name.length() > 0) {
 			String getter = "get" + Character.toUpperCase(name.charAt(0)) + (name.length() > 1 ? name.substring(1) : "");
 			maybeMethods = declaringType.getMethods(getter);
 			if (maybeMethods != null && maybeMethods.size() > 0) {
 				return maybeMethods.get(0);
 			}
 		}
-
+		// try converting to a setter and see if the getter version of the method exists
+		if (numOfArgs < 0 && !name.startsWith("set") && name.length() > 0) {
+			String getter = "set" + Character.toUpperCase(name.charAt(0)) + (name.length() > 1 ? name.substring(1) : "");
+			maybeMethods = declaringType.getMethods(getter);
+			if (maybeMethods != null && maybeMethods.size() > 0) {
+				return maybeMethods.get(0);
+			}
+		}
 		return null;
 	}
 

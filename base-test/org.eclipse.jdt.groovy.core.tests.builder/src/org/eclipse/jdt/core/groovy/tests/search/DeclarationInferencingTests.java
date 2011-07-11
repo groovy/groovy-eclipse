@@ -118,5 +118,147 @@ public class DeclarationInferencingTests extends AbstractInferencingTest {
         assertDeclaration(contents, start, end, "Other", "xxx", DeclarationKind.PROPERTY);
     }
     
-
+    // GRECLIPSE-1105
+    public void testMethodAndFieldWithSameName1() throws Exception {
+        createUnit("A", 
+                "class A {\n" + 
+                "    String field;\n" + 
+                "    public A field(){}\n" + 
+                "}");
+        
+        String contents = 
+                "A a = new A()\n" +
+        		"a.field('')";
+        int start =  contents.lastIndexOf("field");
+        int end = start + "field".length();
+        assertDeclaration(contents, start, end, "A", "field", DeclarationKind.METHOD);
+    }
+    
+    // GRECLIPSE-1105
+    public void testMethodAndFieldWithSameName2() throws Exception {
+        createUnit("A", 
+                "class A {\n" + 
+                        "    String field;\n" + 
+                        "    public A field(){}\n" + 
+                "}");
+        
+        String contents = 
+                "A a = new A()\n" +
+                        "a.field('').field";
+        int start =  contents.lastIndexOf("field");
+        int end = start + "field".length();
+        assertDeclaration(contents, start, end, "A", "field", DeclarationKind.PROPERTY);
+    }
+    
+    // GRECLIPSE-1105
+    public void testMethodAndFieldWithSameName3() throws Exception {
+        createUnit("A", 
+                "class A {\n" + 
+                        "    String field;\n" + 
+                        "    public A field(){}\n" + 
+                "}");
+        
+        String contents = 
+                "A a = new A()\n" +
+                        "a.field";
+        int start =  contents.lastIndexOf("field");
+        int end = start + "field".length();
+        assertDeclaration(contents, start, end, "A", "field", DeclarationKind.PROPERTY);
+    }
+    
+    // GRECLIPSE-1105
+    public void testMethodAndFieldWithSameName4() throws Exception {
+        createUnit("A", 
+                "class A {\n" + 
+                        "    String field;\n" + 
+                        "    public A field(){}\n" + 
+                "}");
+        
+        String contents = 
+                "A a = new A()\n" +
+                        "a.field.field";
+        int start =  contents.lastIndexOf("field");
+        int end = start + "field".length();
+        assertUnknownConfidence(contents, start, end, "A", false);
+    }
+    
+    // GRECLIPSE-1105
+    public void testMethodAndFieldWithSameName5() throws Exception {
+        createUnit("A", 
+                "class A {\n" + 
+                        "    String field;\n" + 
+                        "    public A field(){}\n" + 
+                "}");
+        
+        String contents = 
+                "A a = new A()\n" +
+                        "a.getField()";
+        int start =  contents.lastIndexOf("getField");
+        int end = start + "getField".length();
+        assertDeclaration(contents, start, end, "A", "getField", DeclarationKind.METHOD);
+    }
+    
+    // GRECLIPSE-1105
+    public void testMethodAndFieldWithSameName6() throws Exception {
+        createUnit("A", 
+                "class A {\n" + 
+                        "    String field;\n" + 
+                        "    public A field(){}\n" + 
+                "}");
+        
+        String contents = 
+                "A a = new A()\n" +
+                "a.setField('')";
+        int start =  contents.lastIndexOf("setField");
+        int end = start + "setField".length();
+        assertDeclaration(contents, start, end, "A", "setField", DeclarationKind.METHOD);
+    }
+    
+    // GRECLIPSE-1105
+    public void testMethodAndFieldWithSameName7() throws Exception {
+        createUnit("A", 
+                "class A {\n" + 
+                        "    String field;\n" + 
+                        "    public A field(){}\n" + 
+                "}");
+        
+        String contents = 
+                "A a = new A()\n" +
+                "a.field = a.field";
+        int start =  contents.lastIndexOf("field");
+        int end = start + "field".length();
+        assertDeclaration(contents, start, end, "A", "field", DeclarationKind.PROPERTY);
+    }
+    
+    // GRECLIPSE-1105
+    public void testMethodAndFieldWithSameName8() throws Exception {
+        createUnit("A", 
+                "class A {\n" + 
+                        "    String field;\n" + 
+                        "    public A field(){}\n" + 
+                "}");
+        
+        String contents = 
+                "A a = new A()\n" +
+                "a.field = a.field()";
+        int start =  contents.lastIndexOf("field");
+        int end = start + "field".length();
+        assertDeclaration(contents, start, end, "A", "field", DeclarationKind.METHOD);
+    }
+    
+    // GRECLIPSE-1105
+    public void testMethodAndFieldWithSameName9() throws Exception {
+        createUnit("A", 
+                "class A {\n" + 
+                        "    String field;\n" + 
+                        "    public A field(){}\n" + 
+                "}");
+        
+        String contents = 
+                "A a = new A()\n" +
+                "a.field(a.field)";
+        int start =  contents.lastIndexOf("field");
+        int end = start + "field".length();
+        assertDeclaration(contents, start, end, "A", "field", DeclarationKind.PROPERTY);
+    }
 }
