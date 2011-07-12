@@ -20,14 +20,10 @@ import junit.framework.TestSuite;
 
 public class AllCoreTests {
     public static Test suite() {
-        final TestSuite suite = new TestSuite("Test for "
-                + AllCoreTests.class.getPackage().getName());
-        // $JUnit-BEGIN$
+        final TestSuite suite = new TestSuite(AllCoreTests.class.getPackage().getName());
         suite.addTestSuite(ClasspathContainerTest.class);
         suite.addTestSuite(CompilerSwitchTests.class);
-        // $JUnit-END$
-        suite.addTest(org.codehaus.groovy.eclipse.core.compiler.AllTests
-                .suite());
+        suite.addTest(org.codehaus.groovy.eclipse.core.compiler.AllTests.suite());
         suite.addTest(org.codehaus.groovy.eclipse.core.impl.AllTests.suite());
         suite.addTest(org.codehaus.groovy.eclipse.core.util.AllTests.suite());
         return suite;
