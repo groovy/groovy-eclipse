@@ -316,6 +316,40 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len);
     }
     
+    // shuold not find occurrences in string literals
+    public void testLiterals1() throws Exception {
+        String contents = "'fff'";
+        
+        String name = "'fff'";
+        int len = name.length();
+        
+        int start = contents.indexOf(name);
+        doTest(contents, start, len);
+    }
+    
+    // shuold not find occurrences in multi-line string literals
+    public void testLiterals2() throws Exception {
+        String contents = "'''fff'''";
+        
+        String name = "'''fff'''";
+        int len = name.length();
+        
+        int start = contents.indexOf(name);
+        doTest(contents, start, len);
+    }
+    
+    // shuold not find occurrences in number literals
+    public void testLiterals3() throws Exception {
+        String contents = "'''fff'''";
+        
+        String name = "'''fff'''";
+        int len = name.length();
+        
+        int start = contents.indexOf(name);
+        doTest(contents, start, len);
+    }
+    
+    
     private void doTest(String contents, int start, int length, int ... expected) throws JavaModelException {
         GroovyCompilationUnit unit = createUnit("Occurrences", contents);
         try {

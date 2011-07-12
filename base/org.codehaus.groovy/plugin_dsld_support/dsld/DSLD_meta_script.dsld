@@ -32,7 +32,7 @@ import org.codehaus.groovy.ast.expr.MapEntryExpression
 // we can add more version checking on request
 supportsVersion(groovy:"1.7.10",groovyEclipse:"2.5.1")  
 
-interface IPointcut {
+interface IPointcut { 
 	/**
 	 * Accepts a contribution group to this Pointcut. What this means
 	 * is that whenever this pointcut evaluates to a match, then the
