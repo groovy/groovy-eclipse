@@ -53,10 +53,10 @@ public class GroovyActivator extends Plugin {
     public void start(BundleContext context) throws Exception {
         super.start(context);
         try {
-            GROOVY_JAR_URL = FileLocator.resolve(Platform.getBundle(PLUGIN_ID).getEntry(GroovyActivator.GROOVY_JAR));
-            GROOVY_ALL_JAR_URL = FileLocator.resolve(Platform.getBundle(PLUGIN_ID).getEntry(GroovyActivator.GROOVY_ALL_JAR));
-            ASM_JAR_URL = FileLocator.resolve(Platform.getBundle(PLUGIN_ID).getEntry(GroovyActivator.ASM_JAR));
-            GROOVY_GPP_URL = FileLocator.resolve(Platform.getBundle(PLUGIN_ID).getEntry(GroovyActivator.GROOVY_GPP_JAR));
+            GROOVY_JAR_URL = FileLocator.resolve(context.getBundle().getEntry(GroovyActivator.GROOVY_JAR));
+            GROOVY_ALL_JAR_URL = FileLocator.resolve(context.getBundle().getEntry(GroovyActivator.GROOVY_ALL_JAR));
+            ASM_JAR_URL = FileLocator.resolve(context.getBundle().getEntry(GroovyActivator.ASM_JAR));
+            GROOVY_GPP_URL = FileLocator.resolve(context.getBundle().getEntry(GroovyActivator.GROOVY_GPP_JAR));
         } catch (Exception e) {
             getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, "Error starting groovy plugin", e));
         }

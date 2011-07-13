@@ -82,6 +82,11 @@
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
+		<copy todir="${pluginsDestDir}/org.codehaus.groovy.frameworkadapter">
+			<fileset dir="${workspaceDirBase}/org.codehaus.groovy.frameworkadapter">
+					<exclude name="**/bin"/>
+			</fileset>
+		</copy>
   	
   	<!-- Base Test Plugins -->
 		<copy todir="${pluginsDestDir}/org.eclipse.jdt.groovy.core.tests.builder">
