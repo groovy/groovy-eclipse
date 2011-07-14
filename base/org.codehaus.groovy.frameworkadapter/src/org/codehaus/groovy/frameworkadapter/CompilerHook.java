@@ -89,7 +89,7 @@ public class CompilerHook implements HookConfigurator, AdaptorHook {
     
     private final SpecifiedVersion version;
     
-    private BaseAdaptor adaptor;
+    private BaseAdaptor adapter;
     
     private boolean versionFound = false;
 
@@ -98,7 +98,7 @@ public class CompilerHook implements HookConfigurator, AdaptorHook {
     }
     
     public void initialize(BaseAdaptor adaptor) {
-        this.adaptor = adaptor;
+        this.adapter = adaptor;
     }
 
     
@@ -107,21 +107,26 @@ public class CompilerHook implements HookConfigurator, AdaptorHook {
             return;
         }
         
+        // ServiceReference is parameterized in 3.7, not 3.6
+        final ServiceReference serviceReference = context
+                .getServiceReference(PackageAdmin.class.getName());
+        final PackageAdmin packageAdmin = (PackageAdmin) context
+                .getService(serviceReference);
         
-        State state = ((StateManager) adaptor.getPlatformAdmin()).getSystemState();
+        State state = ((StateManager) adapter.getPlatformAdmin()).getSystemState();
         BundleDescription[] disabledBundles = state.getDisabledBundles();
         List<Bundle> bundlesToRefresh = new ArrayList<Bundle>();
         for (BundleDescription bundle : disabledBundles) {
             if (bundle.getSymbolicName().equals(GROOVY_PLUGIN_ID)) {
                 handleBundle(bundle, state);
-                bundlesToRefresh.add(bundle.getBundle());
+                bundlesToRefresh.add(getBundle(bundle));
             }
         }
         
         BundleDescription[] bundles = state.getBundles(GROOVY_PLUGIN_ID);
         for (BundleDescription bundle : bundles) {
             handleBundle(bundle, state);
-            bundlesToRefresh.add(bundle.getBundle());
+            bundlesToRefresh.add(getBundle(bundle));
         }
         
         checkVersionFound(bundlesToRefresh);
@@ -131,11 +136,15 @@ public class CompilerHook implements HookConfigurator, AdaptorHook {
         state.resolve(bundles);
         state.resolve(disabledBundles);
         
-        final ServiceReference<?> serviceReference = context
-                .getServiceReference(PackageAdmin.class.getName());
-        final PackageAdmin packageAdmin = (PackageAdmin) context
-                .getService(serviceReference);
         packageAdmin.refreshPackages(allBundles);
+    }
+
+    /**
+     * @param bundle
+     * @return
+     */
+    private Bundle getBundle(BundleDescription bundle) {
+        return adapter.getBundle(bundle.getBundleId());
     }
 
 
@@ -155,12 +164,12 @@ public class CompilerHook implements HookConfigurator, AdaptorHook {
 
     private void handleBundle(BundleDescription bundle, State state) throws BundleException {
         if (bundle.getVersion().getMinor() == version.minorVersion) {
-            bundle.getBundle().start();
-            adaptor.getPlatformAdmin().removeDisabledInfo(createDisabledInfo(state, bundle));
+            getBundle(bundle).start();
+            adapter.getPlatformAdmin().removeDisabledInfo(createDisabledInfo(state, bundle));
             versionFound = true;
         } else {
-            bundle.getBundle().stop();
-            adaptor.getPlatformAdmin().addDisabledInfo(createDisabledInfo(state, bundle));
+            getBundle(bundle).stop();
+            adapter.getPlatformAdmin().addDisabledInfo(createDisabledInfo(state, bundle));
         }
     }
 
