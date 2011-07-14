@@ -107,6 +107,8 @@ public class CompilerHook implements HookConfigurator, AdaptorHook {
             return;
         }
         
+        System.out.println("Starting Groovy-Eclipse compiler hook.  Specified compiler level: " + version);
+        
         // ServiceReference is parameterized in 3.7, not 3.6
         final ServiceReference serviceReference = context
                 .getServiceReference(PackageAdmin.class.getName());
@@ -118,15 +120,15 @@ public class CompilerHook implements HookConfigurator, AdaptorHook {
         List<Bundle> bundlesToRefresh = new ArrayList<Bundle>();
         for (BundleDescription bundle : disabledBundles) {
             if (bundle.getSymbolicName().equals(GROOVY_PLUGIN_ID)) {
-                handleBundle(bundle, state);
-                bundlesToRefresh.add(getBundle(bundle));
+                handleBundle(bundle, state, context);
+                bundlesToRefresh.add(getBundle(bundle, context));
             }
         }
         
         BundleDescription[] bundles = state.getBundles(GROOVY_PLUGIN_ID);
         for (BundleDescription bundle : bundles) {
-            handleBundle(bundle, state);
-            bundlesToRefresh.add(getBundle(bundle));
+            handleBundle(bundle, state, context);
+            bundlesToRefresh.add(getBundle(bundle, context));
         }
         
         checkVersionFound(bundlesToRefresh);
@@ -143,8 +145,8 @@ public class CompilerHook implements HookConfigurator, AdaptorHook {
      * @param bundle
      * @return
      */
-    private Bundle getBundle(BundleDescription bundle) {
-        return adapter.getBundle(bundle.getBundleId());
+    private Bundle getBundle(BundleDescription bundle, BundleContext context) {
+        return context.getBundle(bundle.getBundleId());
     }
 
 
@@ -162,13 +164,13 @@ public class CompilerHook implements HookConfigurator, AdaptorHook {
         return null;
     }
 
-    private void handleBundle(BundleDescription bundle, State state) throws BundleException {
+    private void handleBundle(BundleDescription bundle, State state, BundleContext context) throws BundleException {
         if (bundle.getVersion().getMinor() == version.minorVersion) {
-            getBundle(bundle).start();
+            getBundle(bundle, context).start();
             adapter.getPlatformAdmin().removeDisabledInfo(createDisabledInfo(state, bundle));
             versionFound = true;
         } else {
-            getBundle(bundle).stop();
+            getBundle(bundle, context).stop();
             adapter.getPlatformAdmin().addDisabledInfo(createDisabledInfo(state, bundle));
         }
     }
