@@ -42,6 +42,8 @@ public class AllCompletionTests {
         suite.addTestSuite(StaticImportsCompletionTests.class);
         suite.addTestSuite(GenericCompletionTests.class);
         suite.addTestSuite(ExtendedCompletionContextTests.class);
+        suite.addTestSuite(ContentAssistLocationTests.class);
+        suite.addTestSuite(ContextInformationTests.class);
         
         return suite;
     }

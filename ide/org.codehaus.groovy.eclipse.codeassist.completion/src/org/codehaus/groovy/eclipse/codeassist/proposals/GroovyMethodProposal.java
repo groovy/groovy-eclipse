@@ -23,6 +23,7 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -32,6 +33,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -81,16 +83,33 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     public IJavaCompletionProposal createJavaProposal(
             ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext) {
-        GroovyCompletionProposal proposal = new GroovyCompletionProposal(
-                CompletionProposal.METHOD_REF, context.completionLocation);
 
-        proposal.setCompletion(completionName(!isParens(context, javaContext)));
+        // hmmm...not sure why we need -1 here. This is the only way that I can
+        // get
+        // context information hovers to show, and it doesn't seem to affect
+        // anything else.
+        GroovyCompletionProposal proposal = new GroovyCompletionProposal(CompletionProposal.METHOD_REF,
+                context.completionLocation - 1);
+
+        if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
+            // only show context information and only for methods
+            // that exactly match the name. This happens when we are at the
+            // start
+            // of an argument or an open paren
+            if (!context.completionExpression.equals(method.getName())) {
+                return null;
+            }
+            proposal.setReplaceRange(context.completionLocation, context.completionLocation);
+            proposal.setCompletion(CharOperation.NO_CHAR);
+        } else {
+            // otherwise this is a normal method proposal
+            proposal.setCompletion(completionName(!isParens(context, javaContext)));
+            proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), context.completionEnd);
+        }
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(method.getDeclaringClass()));
         proposal.setName(method.getName().toCharArray());
         proposal.setParameterNames(createParameterNames(context.unit));
         proposal.setParameterTypeNames(createParameterTypeNames(method));
-        proposal.setReplaceRange(context.completionLocation
-                - context.completionExpression.length(), context.completionEnd);
         proposal.setFlags(getModifiers());
         proposal.setAdditionalFlags(CompletionFlags.Default);
         char[] methodSignature = createMethodSignature();
@@ -98,9 +117,6 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         proposal.setSignature(methodSignature);
         proposal.setRelevance(computeRelevance());
 
-        // would be nice to use a ParameterGuessingProposal, but that requires
-        // setting the extended data of the coreContext. We don't really have
-        // access to all that information
         LazyJavaCompletionProposal lazyProposal = null;
         ProposalFormattingOptions groovyProposalOptions = getGroovyProposalOptions();
         if (groovyProposalOptions.doParameterGuessing) {
@@ -109,6 +125,9 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         }
         if (lazyProposal == null) {
             lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, javaContext, groovyProposalOptions, contributor);
+            if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
+                ((GroovyJavaMethodCompletionProposal) lazyProposal).contextOnly();
+            }
         }
         return lazyProposal;
 

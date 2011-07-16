@@ -40,6 +40,9 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     private final ProposalFormattingOptions proposalOptions;
     private String contributor;
 
+    // if true, shows the context only and does not
+    private boolean contextOnly;
+
     public GroovyJavaMethodCompletionProposal(CompletionProposal proposal,
             JavaContentAssistInvocationContext context, ProposalFormattingOptions groovyFormatterPrefs) {
         super(proposal, context);
@@ -53,6 +56,10 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         this.contributor = contributor;
     }
 
+
+    public void contextOnly() {
+        contextOnly = true;
+    }
 
     @Override
     protected StyledString computeDisplayString() {
@@ -130,8 +137,11 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
      */
     @Override
     protected String computeReplacementString() {
+        if (contextOnly) {
+            return "";
+        }
         // with no arguments, there is nothing groovy to do.
-        if (!hasArgumentList() || !hasArgumentList()) {
+        if (!hasParameters() || !hasArgumentList()) {
             return super.computeReplacementString();
         }
 

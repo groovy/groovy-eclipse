@@ -219,6 +219,9 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
     // all the types in the target Compilation unit
     private IType[] allTypesInUnit;
 
+    // instead of inserting text, show context information only for constructors
+    private boolean contextOnly;
+
     public GroovyProposalTypeSearchRequestor(ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext, int exprStart,
             int replaceLength, NameLookup nameLookup, IProgressMonitor monitor) {
@@ -234,7 +237,17 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         importCachesInitialized = false;
         this.nameLookup = nameLookup;
         this.isImport = context.location == ContentAssistLocation.IMPORT;
-        this.shouldAcceptConstructors = context.location == ContentAssistLocation.CONSTRUCTOR;
+        this.shouldAcceptConstructors = context.location == ContentAssistLocation.CONSTRUCTOR
+                || context.location == ContentAssistLocation.METHOD_CONTEXT;
+        this.contextOnly = context.location == ContentAssistLocation.METHOD_CONTEXT; // do
+                                                                                     // not
+                                                                                     // insert
+                                                                                     // any
+                                                                                     // text.
+                                                                                     // only
+                                                                                     // show
+                                                                                     // context
+                                                                                     // information
         this.completionExpression = context.completionExpression;
 		groovyRewriter = new GroovyImportRewriteFactory(this.unit, this.module);
         try {
@@ -694,12 +707,15 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
                         if (!Flags.isEnum(typeModifiers)) {
                             boolean isQualified = !CharOperation.equals(
                                     fullyQualifiedName, importName[1]);
-                            proposals.add(proposeConstructor(simpleTypeName,
+                            ICompletionProposal constructorProposal = proposeConstructor(simpleTypeName,
                                     parameterCount, signature, parameterTypes,
                                     parameterNames, modifiers, packageName,
                                     typeModifiers, accessibility,
                                     simpleTypeName, fullyQualifiedName,
-                                    isQualified, extraFlags));
+                                    isQualified, extraFlags);
+                            if (constructorProposal != null) {
+                                proposals.add(constructorProposal);
+                            }
                         }
                         continue next;
                     }
@@ -707,11 +723,14 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
 
                 if (CharOperation.equals(currentPackageName, packageName)) {
                     if (!Flags.isEnum(typeModifiers)) {
-                        proposals.add(proposeConstructor(simpleTypeName,
+                        ICompletionProposal constructorProposal = proposeConstructor(simpleTypeName,
                                 parameterCount, signature, parameterTypes,
                                 parameterNames, modifiers, packageName,
                                 typeModifiers, accessibility, simpleTypeName,
-                                fullyQualifiedName, false, extraFlags));
+ fullyQualifiedName, false, extraFlags);
+                        if (constructorProposal != null) {
+                            proposals.add(constructorProposal);
+                        }
                     }
                 }
 
@@ -737,6 +756,13 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
             int typeModifiers, int accessibility, char[] typeName,
             char[] fullyQualifiedName, boolean isQualified, int extraFlags) {
 
+        // only show context information and only for methods
+        // that exactly match the name. This happens when we are at the
+        // start of an argument or an open paren
+        if (contextOnly && !completionExpression.equals(String.valueOf(fullyQualifiedName))) {
+            return null;
+        }
+
         char[] typeCompletion;
         if(isQualified) {
             typeCompletion = fullyQualifiedName;
@@ -758,23 +784,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
             augmentedModifiers |= Flags.AccDeprecated;
         }
 
-        GroovyCompletionProposal typeProposal = createProposal(CompletionProposal.TYPE_REF, this.actualCompletionPosition);
-        typeProposal.setNameLookup(nameLookup);
-        typeProposal.setDeclarationSignature(Signature.createTypeSignature(
-                typeName, isQualified).toCharArray());
-        typeProposal.setSignature(CompletionEngine
-                .createNonGenericTypeSignature(packageName, typeName));
-        typeProposal.setPackageName(packageName);
-        typeProposal.setTypeName(typeName);
-        typeProposal.setCompletion(typeCompletion);
-        typeProposal.setFlags(typeModifiers);
-        typeProposal.setReplaceRange(this.offset, this.offset
-                + this.replaceLength);
-        typeProposal.setTokenRange(this.offset, this.offset
-                + this.replaceLength);
-        typeProposal.setRelevance(RelevanceRules.ALL_RULES.getRelevance(
-                fullyQualifiedName, allTypesInUnit, accessibility,
-                augmentedModifiers));
 
 
         if (parameterCount == -1) {
@@ -789,10 +798,30 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
             }
         }
 
+        GroovyCompletionProposal proposal = createProposal(contextOnly ? CompletionProposal.METHOD_REF
+                : CompletionProposal.CONSTRUCTOR_INVOCATION, offset - 1);
+        char[] declarationSignature = CompletionEngine.createNonGenericTypeSignature(packageName, typeName);
+        proposal.setDeclarationSignature(declarationSignature);
 
-        GroovyCompletionProposal proposal = createProposal(
-                CompletionProposal.CONSTRUCTOR_INVOCATION, offset);
-        proposal.setDeclarationSignature(typeProposal.getSignature());
+        if (contextOnly) {
+            proposal.setReplaceRange(actualCompletionPosition, actualCompletionPosition);
+            proposal.setTokenRange(actualCompletionPosition, actualCompletionPosition);
+            proposal.setCompletion(CharOperation.NO_CHAR);
+        } else {
+            // otherwise this is a normal constructor proposal
+            proposal.setCompletion(this.completionExpression.toCharArray());
+            // looks strange, but this is just copying similar code in
+            // CompletionEngine.java
+            proposal.setReplaceRange(this.offset + this.replaceLength, this.offset + this.replaceLength);
+            proposal.setTokenRange(this.offset, this.actualCompletionPosition);
+            proposal.setCompletion(new char[] { '(', ')' });
+
+            // provides the import statement
+            GroovyCompletionProposal typeProposal = createTypeProposal(packageName, typeModifiers, accessibility, typeName,
+                    fullyQualifiedName, isQualified, typeCompletion, augmentedModifiers, declarationSignature);
+            proposal.setRequiredProposals(new CompletionProposal[] { typeProposal });
+        }
+
         if (signature == null) {
             proposal.setSignature(createConstructorSignature(parameterTypes,
                     isQualified));
@@ -826,35 +855,65 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         proposal.setParameterTypeNames(parameterTypes);
         // proposal.setParameterPackageNames(); not right
         proposal.setName(simpleTypeName);
-        proposal.setRequiredProposals(new CompletionProposal[] { typeProposal });
+
         proposal.setIsContructor(true);
 
-        proposal.setCompletion(this.completionExpression.toCharArray());
         proposal.setRelevance(Relevance.MEDIUM_HIGH
                 .getRelevance(relevanceMultiplier));
 
-        proposal.setCompletion(new char[] { '(', ')' });
         proposal.setFlags(augmentedModifiers);
 
-        // looks strange, but this is just copying similar code in CompletionEngine.java
-        proposal.setReplaceRange(this.offset + this.replaceLength, this.offset
-                + this.replaceLength);
-        proposal.setTokenRange(this.offset, this.actualCompletionPosition);
         proposal.setTypeName(simpleTypeName);
         proposal.setAccessibility(typeModifiers);
         proposal.setPackageName(packageName);
 
 
-        LazyJavaCompletionProposal javaCompletionProposal = new GroovyJavaMethodCompletionProposal(
-                proposal, javaContext, getProposalOptions());
-        javaCompletionProposal.setRelevance(proposal.getRelevance());
+        LazyJavaCompletionProposal lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, javaContext,
+                getProposalOptions());
+
+        lazyProposal.setRelevance(proposal.getRelevance());
 		ImportRewrite r = groovyRewriter.getImportRewrite(monitor);
         if (r != null) {
-            ReflectionUtils.setPrivateField(
-                    LazyJavaTypeCompletionProposal.class, "fImportRewrite",
-                    javaCompletionProposal, r);
+            ReflectionUtils.setPrivateField(LazyJavaTypeCompletionProposal.class, "fImportRewrite", lazyProposal, r);
         }
-        return javaCompletionProposal;
+        if (contextOnly) {
+            ((GroovyJavaMethodCompletionProposal) lazyProposal).contextOnly();
+        }
+
+        return lazyProposal;
+    }
+
+    /**
+     * @param packageName
+     * @param typeModifiers
+     * @param accessibility
+     * @param typeName
+     * @param fullyQualifiedName
+     * @param isQualified
+     * @param typeCompletion
+     * @param augmentedModifiers
+     * @param declarationSignature
+     * @return
+     */
+    private GroovyCompletionProposal createTypeProposal(char[] packageName, int typeModifiers, int accessibility, char[] typeName,
+            char[] fullyQualifiedName, boolean isQualified, char[] typeCompletion, int augmentedModifiers,
+            char[] declarationSignature) {
+        GroovyCompletionProposal typeProposal = createProposal(CompletionProposal.TYPE_REF, this.actualCompletionPosition - 1);
+        typeProposal.setNameLookup(nameLookup);
+        typeProposal.setDeclarationSignature(declarationSignature);
+        typeProposal.setSignature(CompletionEngine
+                .createNonGenericTypeSignature(packageName, typeName));
+        typeProposal.setPackageName(packageName);
+        typeProposal.setTypeName(typeName);
+        typeProposal.setFlags(typeModifiers);
+
+        typeProposal.setCompletion(typeCompletion);
+        typeProposal.setReplaceRange(this.offset, this.offset + this.replaceLength);
+        typeProposal.setTokenRange(this.offset, this.offset + this.replaceLength);
+        typeProposal.setRelevance(RelevanceRules.ALL_RULES.getRelevance(
+                fullyQualifiedName, allTypesInUnit, accessibility,
+                augmentedModifiers));
+        return typeProposal;
     }
 
     private ProposalFormattingOptions getProposalOptions() {

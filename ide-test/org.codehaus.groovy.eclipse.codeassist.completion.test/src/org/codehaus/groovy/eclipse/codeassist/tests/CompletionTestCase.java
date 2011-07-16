@@ -15,10 +15,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.eclipse.codeassist.processors.NewFieldCompletionProcessor;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
@@ -36,6 +33,8 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.internal.core.JavaModel;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
@@ -402,6 +401,7 @@ public abstract class CompletionTestCase extends BuilderTests {
     }
 
     public void performDummySearch(IJavaElement element) throws Exception{
+        JavaModelManager.getIndexManager().indexAll(element.getJavaProject().getProject());
         new SearchEngine().searchAllTypeNames(
             null,
             SearchPattern.R_EXACT_MATCH,

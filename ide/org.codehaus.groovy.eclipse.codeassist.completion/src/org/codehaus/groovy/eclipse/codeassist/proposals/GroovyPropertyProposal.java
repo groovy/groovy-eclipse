@@ -19,6 +19,7 @@ package org.codehaus.groovy.eclipse.codeassist.proposals;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.internal.codeassist.InternalCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
@@ -48,13 +49,13 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
     public IJavaCompletionProposal createJavaProposal(
             ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext) {
+        if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
+            return null;
+        }
 
         CompletionProposal proposal = createProposal(context);
         return new GroovyJavaFieldCompletionProposal(proposal,
                 ProposalUtils.getImage(proposal), createDisplayString(property));
-//        return new JavaCompletionProposal(property.getName(), context.completionLocation-context.completionExpression.length(),
-//                property.getName().length(), getImageFor(property),
-//                createDisplayString(property), 2000);
     }
 
     protected StyledString createDisplayString(PropertyNode property) {

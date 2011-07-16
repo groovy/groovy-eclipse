@@ -54,7 +54,7 @@ public class GroovyCompletionProposalComputer implements
         factories.add(new NewVariableCompletionProcessorFactory());
         locationFactoryMap.put(ContentAssistLocation.CLASS_BODY, factories);
 
-        factories = new ArrayList<IGroovyCompletionProcessorFactory>(2);
+        factories = new ArrayList<IGroovyCompletionProcessorFactory>(3);
         factories.add(new TypeCompletionProcessorFactory());
         factories.add(new PackageCompletionProcessorFactory());
         factories.add(new ConstructorCompletionProcessorFactory());
@@ -64,6 +64,10 @@ public class GroovyCompletionProposalComputer implements
         locationFactoryMap.put(ContentAssistLocation.IMPORT, factories);
         locationFactoryMap.put(ContentAssistLocation.CONSTRUCTOR, factories);
         locationFactoryMap.put(ContentAssistLocation.PARAMETER, factories);
+
+        factories = new ArrayList<IGroovyCompletionProcessorFactory>(3);
+        factories.add(new PackageCompletionProcessorFactory());
+        locationFactoryMap.put(ContentAssistLocation.PACKAGE, factories);
 
         factories = new ArrayList<IGroovyCompletionProcessorFactory>(2);
         factories.add(new ExpressionCompletionProcessorFactory());
@@ -89,6 +93,10 @@ public class GroovyCompletionProposalComputer implements
         factories.add(new NewVariableCompletionProcessorFactory());
         locationFactoryMap.put(ContentAssistLocation.SCRIPT, factories);
 
+        factories = new ArrayList<IGroovyCompletionProcessorFactory>(2);
+        factories.add(new ExpressionCompletionProcessorFactory());
+        factories.add(new ConstructorCompletionProcessorFactory());
+        locationFactoryMap.put(ContentAssistLocation.METHOD_CONTEXT, factories);
     }
 
 
@@ -97,7 +105,11 @@ public class GroovyCompletionProposalComputer implements
 
     public List<ICompletionProposal> computeCompletionProposals(
             ContentAssistInvocationContext context, IProgressMonitor monitor) {
+        return internalComputeCompletionProposals(context.getInvocationOffset(), context, monitor);
+    }
 
+    public List<ICompletionProposal> internalComputeCompletionProposals(int invocationOffset,
+            ContentAssistInvocationContext context, IProgressMonitor monitor) {
         if (! (context instanceof JavaContentAssistInvocationContext)) {
             return Collections.EMPTY_LIST;
         }
@@ -127,7 +139,6 @@ public class GroovyCompletionProposalComputer implements
             return Collections.EMPTY_LIST;
         }
 
-        int invocationOffset = context.getInvocationOffset();
         IDocument document = context.getDocument();
         ContentAssistContext assistContext = createContentAssistContext(gunit, invocationOffset, document);
         List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
@@ -162,7 +173,7 @@ public class GroovyCompletionProposalComputer implements
 
     /**
      * Make public to allow for testing
-     * 
+     *
      * @param gunit
      * @param invocationOffset
      * @param document
@@ -237,11 +248,16 @@ public class GroovyCompletionProposalComputer implements
         return new ExpressionFinder().findTokenEnd(buffer, offset);
     }
 
-    private static final List<IContextInformation> NO_CONTEXTS= Collections.emptyList();
-
     public List<IContextInformation> computeContextInformation(
             ContentAssistInvocationContext context, IProgressMonitor monitor) {
-        return NO_CONTEXTS;
+        List<ICompletionProposal> proposals = computeCompletionProposals(context, monitor);
+        ArrayList<IContextInformation> contexts = new ArrayList<IContextInformation>(proposals.size());
+        for (ICompletionProposal proposal : proposals) {
+            if (proposal.getContextInformation() != null) {
+                contexts.add(proposal.getContextInformation());
+            }
+        }
+        return contexts;
     }
 
     public String getErrorMessage() {

@@ -22,16 +22,70 @@ package org.codehaus.groovy.eclipse.codeassist.requestor;
  * The set of different contexts available for content assist
  */
 public enum ContentAssistLocation {
-    IMPORT, // import statements.  Type proposals are available.  They do not cause an additional import statement, and filter out proposals of types already imported
-    PARAMETER, // types for parameters.  Types proposals are available only.  They cause the standard import statement to appear if required
-    IMPLEMENTS,  // types for implements statements
-    EXTENDS,  // types for extends statements
-    EXCEPTIONS,  // exception types
-    EXPRESSION, // part of an expression.  (eg- foo.bar^, or foo().bar^)
-    CONSTRUCTOR, // a constructor call types and their constructors are available
-    STATEMENT, // start of a new statement.  So, everything from expressions are available, but also local variables and types should be included
-    CLASS_BODY,  // inside a class body.  Here, type proposals, modifiers, and overridable methods should appear
-    SCRIPT, // inside a script, but not in an expression. Here, type proposals,
-            // modifiers, and overridable methods, as well as statements should
-            // appear
+    /**
+     * import statements.  Type proposals are available.  They do not cause an additional import statement, and filter out proposals of types already imported
+     */
+    IMPORT,
+
+    /**
+     * package declarations. package proposals only.
+     */
+    PACKAGE,
+
+    /**
+     * types for parameters. Types proposals are available only. They cause the
+     * standard import statement to appear if required
+     */
+    PARAMETER,
+    /**
+     * types for implements clauses
+     */
+    IMPLEMENTS,
+    /**
+     * types for extends clauses
+     */
+    EXTENDS,
+    /**
+     * exception types
+     */
+    EXCEPTIONS,
+    /**
+     * part of an expression.  (eg- foo.bar^, or foo().bar^)
+     */
+    EXPRESSION,
+    /**
+     * a constructor call types and their constructors are available
+     */
+    CONSTRUCTOR,
+    /**
+     * start of a new statement. So, everything from expressions are available,
+     * but also local variables and types should be included
+     * Eg- all cases of 'A' fall into the STATEMENT location
+     *
+     * A
+     * foo.bar(A)
+     * foo.bar(B, A)
+     * foo.bar A
+     * foo.bar() A // even though syntax error
+     *
+     * Hmmm...this is not really a 'statement' in the normal sense, but really a
+     * new expression
+     * that is not part of a dotted expression
+     */
+    STATEMENT,
+    /**
+     * inside a class body.  Here, type proposals, modifiers, and overridable methods should appear
+     */
+    CLASS_BODY,
+    /**
+     * inside a script, but not in an expression. Here, type proposals,
+     * modifiers, and overridable methods, as well as statements should
+     * appear
+     */
+    SCRIPT,
+    /**
+     * Method call at a paren or a comma. Here should show
+     * context information of the relevant method only
+     */
+    METHOD_CONTEXT
 }

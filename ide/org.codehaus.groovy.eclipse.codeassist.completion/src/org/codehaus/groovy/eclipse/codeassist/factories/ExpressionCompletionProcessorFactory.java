@@ -16,8 +16,8 @@
 
 package org.codehaus.groovy.eclipse.codeassist.factories;
 
-import org.codehaus.groovy.eclipse.codeassist.processors.StatementAndExpressionCompletionProcessor;
 import org.codehaus.groovy.eclipse.codeassist.processors.IGroovyCompletionProcessor;
+import org.codehaus.groovy.eclipse.codeassist.processors.StatementAndExpressionCompletionProcessor;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -25,12 +25,10 @@ import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 /**
  * @author Andrew Eisenberg
  * @created Nov 10, 2009
- *
  */
 public class ExpressionCompletionProcessorFactory implements IGroovyCompletionProcessorFactory {
     public IGroovyCompletionProcessor createProcessor(
             ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         return new StatementAndExpressionCompletionProcessor(context, javaContext, nameEnvironment);
     }
-
 }

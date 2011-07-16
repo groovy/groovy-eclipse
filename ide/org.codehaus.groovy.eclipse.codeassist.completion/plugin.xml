@@ -42,13 +42,4 @@
          </partition>
       </javaCompletionProposalComputer>
    </extension>
-   <extension
-         point="org.codehaus.groovy.eclipse.codeassist.completion.completionProposalProvider">
-      <proposalProvider
-            proposalProvider="org.codehaus.groovy.eclipse.codeassist.proposals.StandardASTTransformProposalProvider">
-         <appliesTo
-               projectNature="org.eclipse.jdt.groovy.core.groovyNature">
-         </appliesTo>
-      </proposalProvider>
-   </extension>
 </plugin>

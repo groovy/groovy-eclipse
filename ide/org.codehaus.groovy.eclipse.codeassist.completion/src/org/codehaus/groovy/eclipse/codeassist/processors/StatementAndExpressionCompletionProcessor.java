@@ -62,6 +62,7 @@ import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.codeassist.InternalCompletionContext;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.core.util.Util;
+import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
@@ -402,11 +403,12 @@ public class StatementAndExpressionCompletionProcessor extends
         JavaContentAssistInvocationContext javaContext = getJavaContext();
         for (IGroovyProposal groovyProposal : groovyProposals) {
             try {
-                javaProposals.add(groovyProposal.createJavaProposal(context,
-                        javaContext));
+                IJavaCompletionProposal javaProposal = groovyProposal.createJavaProposal(context, javaContext);
+                if (javaProposal != null) {
+                    javaProposals.add(javaProposal);
+                }
             } catch (Exception e) {
-                GroovyCore
-                        .logException(
+                GroovyCore.logException(
                                 "Exception when creating groovy completion proposal",
                                 e);
             }
@@ -445,9 +447,19 @@ public class StatementAndExpressionCompletionProcessor extends
      * @return
      */
     private ClassNode getCompletionType(ExpressionCompletionRequestor requestor) {
-         return getContext().location == ContentAssistLocation.EXPRESSION ? requestor.resultingType :
-                // use the current 'this' type so that closure types are correct
-             requestor.currentScope.lookupName("this").type;
+        if (getContext().location == ContentAssistLocation.EXPRESSION
+                || getContext().location == ContentAssistLocation.METHOD_CONTEXT) {
+            return requestor.resultingType;
+        } else {
+            // use the current 'this' type so that closure types are correct
+            VariableInfo info= requestor.currentScope.lookupName("this");
+            if (info != null) {
+                return info.type;
+            } else {
+                // will only happen if in top level scope
+                return requestor.resultingType;
+            }
+        }
     }
 
     /**
