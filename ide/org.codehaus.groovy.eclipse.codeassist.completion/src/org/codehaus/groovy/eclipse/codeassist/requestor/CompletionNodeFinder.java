@@ -487,9 +487,16 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
 
     @Override
     public void visitMethodCallExpression(MethodCallExpression call) {
-        if (!doTest(call) || afterLastArgument(call.getArguments())) {
+        if (!doTest(call)) {
             return;
         }
+
+        if (afterLastArgument(call.getArguments())) {
+            // we are at this situation (completing on 'x'):
+            // foo().x
+            createContext(call.getType(), blockStack.peek(), expressionOrStatement());
+        }
+
         call.getObjectExpression().visit(this);
         call.getMethod().visit(this);
 
@@ -517,20 +524,27 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
      *         argument list
      */
     private boolean afterLastArgument(Expression e) {
+        int end = e.getEnd();
         if (e instanceof ArgumentListExpression) {
             ArgumentListExpression ale = (ArgumentListExpression) e;
             if (ale.getExpressions() != null && ale.getExpressions().size() > 0) {
-                return ale.getExpression(ale.getExpressions().size() - 1).getEnd() < completionOffset;
+                end = ale.getExpression(ale.getExpressions().size() - 1).getEnd();
             }
         }
-        return e.getEnd() < completionOffset;
+        return end <= supportingNodeEnd && end <= completionOffset;
     }
 
     @Override
     public void visitConstructorCallExpression(
             ConstructorCallExpression call) {
-        if (!doTest(call) || afterLastArgument(call.getArguments())) {
+        if (!doTest(call)) {
             return;
+        }
+
+        if (afterLastArgument(call.getArguments())) {
+            // we are at this situation (completing on 'x'):
+            // new Foo().x
+            createContext(call.getType(), blockStack.peek(), expressionOrStatement());
         }
 
 
@@ -568,6 +582,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
      * @param arguments
      */
     private void internalVisitCallArguments(Expression arguments) {
+        // check to see if we are definitely doing the context
         boolean doContext = false;
         if (arguments instanceof ArgumentListExpression) {
             ArgumentListExpression ale = (ArgumentListExpression) arguments;
@@ -644,7 +659,6 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
                 completionEnd);
         throw new VisitCompleteException();
     }
-
 
     protected boolean doTest(ASTNode node) {
         return node.getEnd() > 0

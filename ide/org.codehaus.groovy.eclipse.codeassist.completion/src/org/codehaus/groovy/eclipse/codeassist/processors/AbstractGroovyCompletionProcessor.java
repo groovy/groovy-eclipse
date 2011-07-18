@@ -20,7 +20,6 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.CategoryProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.proposals.FieldProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.proposals.MethodProposalCreator;
-import org.codehaus.groovy.eclipse.codeassist.proposals.PropertyProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -66,7 +65,6 @@ public abstract class AbstractGroovyCompletionProcessor implements
         return new IProposalCreator[] { 
                 new MethodProposalCreator(), 
                 new FieldProposalCreator(), 
-                new PropertyProposalCreator(), 
                 new CategoryProposalCreator() };
     }
 
