@@ -140,13 +140,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         if (contextOnly) {
             return "";
         }
-        // with no arguments, there is nothing groovy to do.
-        if (!hasParameters() || !hasArgumentList()) {
-            return super.computeReplacementString();
-        }
 
-        // we're inserting a method plus the argument list - respect formatter preferences
-        StringBuffer buffer= new StringBuffer();
         char[] proposalName = fProposal.getName();
         boolean hasWhitespace = false;
         for (int i = 0; i < proposalName.length; i++) {
@@ -154,6 +148,14 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 hasWhitespace = true;
             }
         }
+        // with no arguments, there is nothing groovy to do.
+        if ((!hasParameters() || !hasArgumentList()) && !hasWhitespace) {
+            return super.computeReplacementString();
+        }
+
+        // we're inserting a method plus the argument list - respect formatter
+        // preferences
+        StringBuffer buffer = new StringBuffer();
         char[] newProposalName;
         if (hasWhitespace) {
             newProposalName = CharOperation.concat(new char[] {'"'}, CharOperation.append(proposalName, '"'));

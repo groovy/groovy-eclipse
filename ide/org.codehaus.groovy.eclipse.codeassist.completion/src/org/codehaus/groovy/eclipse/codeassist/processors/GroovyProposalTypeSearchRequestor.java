@@ -699,42 +699,18 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
                     initializeImportCaches();
                 }
 
-                for (int j = 0; j < this.imports.length; j++) {
-
-                    char[][] importName = this.imports[j];
-                    if (CharOperation.equals(simpleTypeName, importName[0])) {
-
-                        if (!Flags.isEnum(typeModifiers)) {
-                            boolean isQualified = !CharOperation.equals(
-                                    fullyQualifiedName, importName[1]);
-                            ICompletionProposal constructorProposal = proposeConstructor(simpleTypeName,
-                                    parameterCount, signature, parameterTypes,
-                                    parameterNames, modifiers, packageName,
-                                    typeModifiers, accessibility,
-                                    simpleTypeName, fullyQualifiedName,
-                                    isQualified, extraFlags);
-                            if (constructorProposal != null) {
-                                proposals.add(constructorProposal);
-                            }
-                        }
-                        continue next;
+                // propose all constructors regardless of package, but ignore
+                // enums
+                if (!Flags.isEnum(typeModifiers)) {
+                    ICompletionProposal constructorProposal = proposeConstructor(simpleTypeName, parameterCount, signature,
+                            parameterTypes, parameterNames, modifiers, packageName, typeModifiers, accessibility, simpleTypeName,
+                            fullyQualifiedName, false, extraFlags);
+                    if (constructorProposal != null) {
+                        proposals.add(constructorProposal);
                     }
                 }
-
-                if (CharOperation.equals(currentPackageName, packageName)) {
-                    if (!Flags.isEnum(typeModifiers)) {
-                        ICompletionProposal constructorProposal = proposeConstructor(simpleTypeName,
-                                parameterCount, signature, parameterTypes,
-                                parameterNames, modifiers, packageName,
-                                typeModifiers, accessibility, simpleTypeName,
- fullyQualifiedName, false, extraFlags);
-                        if (constructorProposal != null) {
-                            proposals.add(constructorProposal);
-                        }
-                    }
-                }
-
             }
+
         } finally {
             this.acceptedTypes = null; // reset
         }

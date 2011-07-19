@@ -244,11 +244,12 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     }
 
     private boolean isRunMethod(MethodNode node) {
-        if (node.getName().equals("run") && node.getParameters().length == 0) {
-            ClassNode declaring = node.getDeclaringClass();
-            return (node.getStart() == declaring.getStart() && node.getEnd() == declaring.getEnd());
-        }
-        return false;
+        // copied from MethodNode.isScriptBody().
+        // however, this method does not exist on Groovy 1.7, so can't call it
+        return node.getDeclaringClass() != null && node.getDeclaringClass().isScript()
+                && node.getName().equals("run")
+                && (node.getParameters() == null || node.getParameters().length == 0)
+                && (node.getReturnType() != null && node.getReturnType().getName().equals("java.lang.Object"));
     }
 
 
@@ -491,11 +492,10 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             return;
         }
 
-        if (afterLastArgument(call.getArguments())) {
-            // we are at this situation (completing on 'x'):
-            // foo().x
-            createContext(call.getType(), blockStack.peek(), expressionOrStatement());
-        }
+        // here, we check to see if we are after the closing paren or before
+        // not quite as easy as I would have hoped since the AST
+        Expression arguments = call.getArguments();
+        checkForAfterClosingParen(call.getMethod(), arguments);
 
         call.getObjectExpression().visit(this);
         call.getMethod().visit(this);
@@ -506,7 +506,6 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         // any expression in an argument list,
         // we want to do the context instead of normal completion.
         // do that check below
-        Expression arguments = call.getArguments();
         internalVisitCallArguments(arguments);
 
         // if we get here, then we still want to do the context
@@ -517,23 +516,6 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
                 call.getMethod().getText());
     }
 
-    /**
-     *
-     * @param call
-     * @return true iff comlpetion offset is after the last argument of the
-     *         argument list
-     */
-    private boolean afterLastArgument(Expression e) {
-        int end = e.getEnd();
-        if (e instanceof ArgumentListExpression) {
-            ArgumentListExpression ale = (ArgumentListExpression) e;
-            if (ale.getExpressions() != null && ale.getExpressions().size() > 0) {
-                end = ale.getExpression(ale.getExpressions().size() - 1).getEnd();
-            }
-        }
-        return end <= supportingNodeEnd && end <= completionOffset;
-    }
-
     @Override
     public void visitConstructorCallExpression(
             ConstructorCallExpression call) {
@@ -541,12 +523,8 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             return;
         }
 
-        if (afterLastArgument(call.getArguments())) {
-            // we are at this situation (completing on 'x'):
-            // new Foo().x
-            createContext(call.getType(), blockStack.peek(), expressionOrStatement());
-        }
-
+        Expression arguments = call.getArguments();
+        checkForAfterClosingParen(call.getType(), arguments);
 
         if (doTest(call.getType())) {
             createContext(call.getType(), blockStack.peek(),
@@ -554,12 +532,68 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         }
 
         // see comments in visitMethodCallExpression
-        Expression arguments = call.getArguments();
         internalVisitCallArguments(arguments);
 
         fullCompletionExpression = "new " + call.getType().getName();
 
         createContextForCallContext(call.getType(), call.getType().getName());
+    }
+
+    private void checkForAfterClosingParen(AnnotatedNode contextTarget, Expression arguments) {
+        int lastArgEnd = findLastArgumentEnd(arguments);
+        boolean dontLookAtArguments = lastArgEnd == arguments.getStart() && completionOffset == arguments.getStart();
+        if (dontLookAtArguments) {
+            // completion inside of empty argument list:
+            // foo()
+            // should show context
+        } else {
+            if (after(lastArgEnd)) {
+                // we are at this situation (completing on 'x'):
+                // foo().x
+                createContext(contextTarget, blockStack.peek(), expressionOrStatement());
+            }
+        }
+    }
+
+    /**
+     * finds end of the last argument of an argument list expression
+     *
+     * @param call
+     * @return
+     */
+    private int findLastArgumentEnd(Expression args) {
+        // need to look at the last argument expression as well as the argument
+        // list itself.
+        // problem is that closure expressions are not included in the end
+        // offset
+        int listEnd = args.getEnd();
+        int lastExpressionEnd = -1;
+        if (args instanceof ArgumentListExpression) {
+            ArgumentListExpression list = (ArgumentListExpression) args;
+            if (list.getExpressions().size() > 0) {
+                Expression lastExpression = list.getExpression(list.getExpressions().size() - 1);
+                lastExpressionEnd = lastExpression.getEnd();
+            }
+        }
+        return Math.max(listEnd, lastExpressionEnd);
+    }
+
+    /**
+     *
+     * @param call
+     * @return true iff comlpetion offset is after the last argument of the
+     *         argument list
+     */
+    private boolean after(int callEnd) {
+        // int end = e.getEnd();
+        // if (e instanceof ArgumentListExpression) {
+        // ArgumentListExpression ale = (ArgumentListExpression) e;
+        // if (ale.getExpressions() != null && ale.getExpressions().size() > 0)
+        // {
+        // end = ale.getExpression(ale.getExpressions().size() - 1).getEnd();
+        // }
+        // }
+        return (supportingNodeEnd == -1 && callEnd <= completionOffset) || callEnd <= supportingNodeEnd;
     }
 
     /**
