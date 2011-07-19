@@ -85,7 +85,9 @@ public abstract class OCompilationUnit extends GroovyCompilationUnit implements 
      * refresh children
      */
     protected void refresh() {
-        this.children = refreshChildren();
+        if (this.exists()) {
+            this.children = refreshChildren();
+        }
     }
 
     /**

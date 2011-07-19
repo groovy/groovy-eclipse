@@ -37,7 +37,14 @@ public class GatherSemanticReferences {
     }
 
     public Collection<HighlightedTypedPosition> findSemanticHighlightingReferences() {
-        if (preferences.getBoolean(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING) && unit.isOnBuildPath()) {
+        if (preferences.getBoolean(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING) /*
+                                                                                      * &&
+                                                                                      * unit
+                                                                                      * .
+                                                                                      * isOnBuildPath
+                                                                                      * (
+                                                                                      * )
+                                                                                      */) {
 
             try {
                 SemanticHighlightingReferenceRequestor typeRequestor = new SemanticHighlightingReferenceRequestor(unit.getContents());

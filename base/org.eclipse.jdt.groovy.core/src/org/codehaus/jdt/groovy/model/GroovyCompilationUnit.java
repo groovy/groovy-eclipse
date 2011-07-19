@@ -182,9 +182,9 @@ public class GroovyCompilationUnit extends CompilationUnit {
 		try {
 			depth.set(depth.get() + 1);
 
-			if (!isOnBuildPath()) {
-				return false;
-			}
+			// if (!isOnBuildPath()) {
+			// return false;
+			// }
 
 			if (GroovyLogManager.manager.hasLoggers()) {
 				GroovyLogManager.manager.log(TraceCategory.COMPILER, "Build Structure starting for " + this.name);
@@ -499,7 +499,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	protected IJavaElement[] codeSelect(org.eclipse.jdt.internal.compiler.env.ICompilationUnit cu, int offset, int length,
 			WorkingCopyOwner o) throws JavaModelException {
 
-		if (CodeSelectHelperFactory.selectHelper != null && isOnBuildPath()) {
+		if (CodeSelectHelperFactory.selectHelper != null /* && isOnBuildPath() */) {
 			return CodeSelectHelperFactory.selectHelper.select(this, offset, length);
 		}
 		return new IJavaElement[0];
@@ -588,4 +588,13 @@ public class GroovyCompilationUnit extends CompilationUnit {
 			super.codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor);
 		}
 	}
+
+//	@Override
+//	public IJavaProject getJavaProject() {
+//		IJavaProject javaProject = super.getJavaProject();
+//		if (!isOnBuildPath()) {
+//			javaProject = new WrappedJavaProject(javaProject);
+//		}
+//		return javaProject;
+//	}
 }

@@ -124,6 +124,13 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     if (declaringType != null) {
                         // find it in the java model
                         IType type = project.groovyClassToJavaType(declaringType);
+                        if (type == null && !unit.isOnBuildPath()) {
+                            // try to find it in the current compilation unit
+                            type = unit.getType(declaringType.getNameWithoutPackage());
+                            if (! type.exists()) {
+                                type = null;
+                            }
+                        }
                         if (type != null) {
                             try {
                                 // find the requested java element
