@@ -334,7 +334,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			// must keep the cast for Groovy 1.6.
 			@SuppressWarnings("cast")
 			MapEntryExpression entry = (MapEntryExpression) node.getMapEntryExpressions().get(0);
-			ClassNode map = VariableScope.clone(VariableScope.MAP_CLASS_NODE);
+			ClassNode map = VariableScope.clonedMap();
 			GenericsType[] unresolvedGenericsForMap = unresolvedGenericsForType(map);
 			unresolvedGenericsForMap[0].setType(entry.getKeyExpression().getType());
 			unresolvedGenericsForMap[0].setName(entry.getKeyExpression().getType().getName());
@@ -342,7 +342,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			unresolvedGenericsForMap[1].setName(entry.getValueExpression().getType().getName());
 			return map;
 		}
-		return VariableScope.clone(VariableScope.MAP_CLASS_NODE);
+		return VariableScope.clonedMap();
 	}
 
 	/**
@@ -353,7 +353,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 	 * @return a parameterized list
 	 */
 	private ClassNode parameterizeThisList(Expression node) {
-		ClassNode list = VariableScope.clone(VariableScope.LIST_CLASS_NODE);
+		ClassNode list = VariableScope.clonedList();
 		if (node instanceof TupleExpression) {
 			TupleExpression tuple = (TupleExpression) node;
 			if (tuple.getExpressions().size() > 0) {
@@ -610,23 +610,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		}
 		return allGs.toArray(NO_GENERICS);
 	}
-
-	// FIXADE consider deleting
-	// protected GenericsType[] resolvedGenericsForType(ClassNode unresolvedType) {
-	// ClassNode candidate = unresolvedType;
-	// GenericsType[] gts = candidate.getGenericsTypes();
-	// gts = gts == null ? NO_GENERICS : gts;
-	// List<GenericsType> allGs = new ArrayList<GenericsType>(2);
-	// while (candidate != null) {
-	// gts = candidate.getGenericsTypes();
-	// gts = gts == null ? NO_GENERICS : gts;
-	// for (GenericsType gt : gts) {
-	// allGs.add(gt);
-	// }
-	// candidate = candidate.getUnresolvedSuperClass();
-	// }
-	// return allGs.toArray(NO_GENERICS);
-	// }
 
 	/**
 	 * Looks for the named member in the declaring type. Also searches super types. The result can be a field, method, or property.
