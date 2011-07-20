@@ -116,7 +116,13 @@ public class ClassHelper {
         final SoftReference<ClassNode> classNodeSoftReference = ClassHelperCache.classCache.get(c);
         ClassNode classNode;
         if (classNodeSoftReference == null || (classNode = classNodeSoftReference.get()) == null) {
+            // GRECLIPSE: start: made public, was private
+            /* old
             classNode = new ClassNode(c);
+            */
+            // new
+            classNode = new ImmutableClassNode(c);
+            // GRECLIPSE: end
             ClassHelperCache.classCache.put(c, new SoftReference<ClassNode>(classNode));
 
             VMPluginFactory.getPlugin().setAdditionalClassInformation(classNode);
