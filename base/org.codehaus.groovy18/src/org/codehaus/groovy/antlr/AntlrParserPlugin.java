@@ -672,6 +672,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         output.addClass(classNode);
         AnonymousInnerClassCarrier ret = new AnonymousInnerClassCarrier();
         ret.innerClass = classNode;
+        // GRECLIPSE start - configure the locations
+        configureAST(classNode, node);
+        // GRECLIPSE end
         classNode = oldNode;
         
         return ret;
