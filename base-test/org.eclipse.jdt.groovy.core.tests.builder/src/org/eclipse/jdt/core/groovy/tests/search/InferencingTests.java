@@ -82,15 +82,16 @@ public class InferencingTests extends AbstractInferencingTest {
     }
     
     public void testInferList1() throws Exception {
-        assertType("[]", "java.util.List<java.lang.Object<E>>");
+        assertType("[]", "java.util.List<java.lang.Object>");
     }
     
+    // Should be java.util.List<java.lang.String>
     public void testInferList2() throws Exception {
-        assertType("[] << \"\"", "java.util.List<java.lang.Object<E>>");
+        assertType("[] << \"\"", "java.util.List<java.lang.Object>");
     }
     
     public void testInferMap1() throws Exception {
-        assertType("[:]", "java.util.Map<java.lang.Object<K>,java.lang.Object<V>>");
+        assertType("[:]", "java.util.Map<java.lang.Object,java.lang.Object>");
     }
     
     public void testInferBoolean1() throws Exception {

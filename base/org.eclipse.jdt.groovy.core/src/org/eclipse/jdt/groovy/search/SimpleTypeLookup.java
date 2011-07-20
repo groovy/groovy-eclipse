@@ -269,7 +269,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			// Object expression was null, so go for the left expression.
 			// The final type of this BinaryExpression could be more complicated. Have to look at the operation and
 			// the left and right sides. This happens in the TypeInferencingVisitorWithRequestor
-			return new TypeLookupResult(((BinaryExpression) node).getLeftExpression().getType(), null, null, confidence, scope);
+		    // We can be a bit more precise here and try calling the associated oeprator expression
+			ClassNode maybeType = objectExpressionType != null ? objectExpressionType : ((BinaryExpression) node)
+					.getLeftExpression().getType();
+			return new TypeLookupResult(maybeType, null, null, confidence, scope);
 
 		} else if (node instanceof BooleanExpression || node instanceof NotExpression) {
 			return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, null, null, confidence, scope);
