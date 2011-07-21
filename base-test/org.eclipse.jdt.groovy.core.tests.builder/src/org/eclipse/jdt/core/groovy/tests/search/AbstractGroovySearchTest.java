@@ -248,12 +248,13 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     protected void doTestForTwoMethodReferences(String firstContents, String secondContents, boolean contentsIsScript, int offsetInParent, String matchName) throws JavaModelException {
         String firstClassName = "First";
         String secondClassName = "Second";
-        String matchedMethodName = "xxx";
         GroovyCompilationUnit first = createUnit(firstClassName, firstContents);
-        IMethod firstField = findType(firstClassName, first).getMethod(matchedMethodName, new String[0]);
-        SearchPattern pattern = SearchPattern.createPattern(firstField, IJavaSearchConstants.REFERENCES);
+        IMethod firstMethod = (IMethod) findType(firstClassName, first).getChildren()[0];
+        SearchPattern pattern = SearchPattern.createPattern(firstMethod, IJavaSearchConstants.REFERENCES);
         
         GroovyCompilationUnit second = createUnit(secondClassName, secondContents);
+        
+        env.fullBuild();
         IJavaElement firstMatchEnclosingElement;
         IJavaElement secondMatchEnclosingElement;
         if (contentsIsScript) {

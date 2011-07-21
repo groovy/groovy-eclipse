@@ -165,12 +165,12 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 
 	// recursively check the hierarchy
 	private boolean qualifiedNameMatches(ClassNode declaringType) {
-		if (declaringQualifiedName == null || declaringQualifiedName.equals("")) { //$NON-NLS-1$
+		if (declaringType == null) {
+			// no declaring type---probably a variable declaration
+			return false;
+		} else if (declaringQualifiedName == null || declaringQualifiedName.equals("")) { //$NON-NLS-1$
 			// no type specified, accept all
 			return true;
-		}
-		if (declaringType == null) {
-			return false;
 		} else if (declaringType.getName().equals(declaringQualifiedName)) {
 			return true;
 		} else {

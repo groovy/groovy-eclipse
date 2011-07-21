@@ -354,6 +354,12 @@ public class CodeSelectRequestor implements ITypeRequestor {
      * @return
      */
     private String createUniqueKey(AnnotatedNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType, IJavaElement maybeRequested) {
+        if (resolvedDeclaringType == null) {
+            resolvedDeclaringType = node.getDeclaringClass();
+            if (resolvedDeclaringType == null) {
+                resolvedDeclaringType = VariableScope.OBJECT_CLASS_NODE;
+            }
+        }
         StringBuilder sb = new StringBuilder();
         if (node instanceof PropertyNode) {
             node = ((PropertyNode) node).getField();
