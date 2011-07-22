@@ -169,6 +169,37 @@ public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
                 "}", false, 0, "xxx" );
     }
     
+    public void testOverloadedMethodReferences4() throws Exception {
+        // should match on the method reference with precise # of args as well as method reference with unmatched number of args
+        createUnit("Sub", 
+                "interface Sub extends First {\n" +
+                "    void xxx(a)\n" +
+                "    void xxx(a,b,c)\n" +
+                "}");
+        doTestForTwoMethodReferences(
+                "interface First {\n" + 
+                "    void xxx(a,b)\n" + 
+                "    void xxx(a)\n" + 
+                "}",
+                "public class Second implements Sub {\n" + 
+                "    public void other() {\n" +
+                "        First f\n" +
+                "        f.xxx(a,b,c)\n" +
+                "    }\n" +
+                "    public void xxx() {\n" +
+                "        xxx(a)\n" +
+                "        xxx(a,b,c)\n" +
+                "        Sub s\n" +
+                "        s.xxx(a)\n" +
+                "        s.xxx(a,b,c)\n" +
+                "    }\n" +
+                "    void xxx(a) {\n" +
+                "        Sub s\n" +
+                "        s.xxx(a,b)\n" +
+                "    }\n" +
+                "}", false, 0, "xxx" );
+    }
+    
     private void doTestForTwoMethodReferencesInScript(String secondContents) throws JavaModelException {
         doTestForTwoMethodReferences(FIRST_CONTENTS_CLASS_FOR_METHODS, secondContents, true, 3, "xxx");
     }

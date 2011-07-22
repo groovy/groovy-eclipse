@@ -126,4 +126,13 @@ public class RenameMethodTests extends RefactoringTest {
 	    helperDelegate();
 	}
 	
+    public void testOverload1() throws Exception {
+        helper2_0("A", "m", "k", new String[] { "Ljava.lang.Object;" }, true, false);
+    }
+    public void testOverload2() throws Exception {
+        helper2_0("A", "m", "k", new String[] { "Ljava.lang.Object;" }, true, false);
+    }
+    public void testOverload3() throws Exception {
+        helper2_0("A", "m", "k", new String[] { "Ljava.lang.Object;" }, true, false);
+    }
 }

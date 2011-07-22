@@ -50,6 +50,10 @@ import org.eclipse.jface.text.Position;
  */
 @SuppressWarnings("nls")
 public class MethodReferenceSearchRequestor implements ITypeRequestor {
+	/**
+	 * 
+	 */
+	private static final int MAX_PARAMS = 10;
 	private final SearchRequestor requestor;
 	private final SearchParticipant participant;
 
@@ -62,6 +66,8 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 	private char[][] parameterQualifications;
 	@SuppressWarnings("unused")
 	private char[][] parameterSimpleNames;
+
+	private final int declaredParameterCount;
 
 	private final Set<Position> acceptedPositions = new HashSet<Position>();
 
@@ -80,6 +86,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 
 		parameterQualifications = pattern.parameterQualifications;
 		parameterSimpleNames = pattern.parameterSimpleNames;
+		declaredParameterCount = pattern.parameterSimpleNames == null ? 0 : pattern.parameterSimpleNames.length;
 	}
 
 	public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
@@ -169,6 +176,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 	}
 
 	private Map<ClassNode, Boolean> cachedDeclaringNameMatches = new HashMap<ClassNode, Boolean>();
+	private Map<ClassNode, boolean[]> cachedParameterCounts = new HashMap<ClassNode, boolean[]>();
 
 	/**
 	 * Recursively checks the hierarchy for matching names
@@ -176,35 +184,39 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 	 * @param declaringType
 	 * @return
 	 */
-	private boolean nameAndArgsMatch(ClassNode declaringType, int expectedParamCount) {
+	private boolean nameAndArgsMatch(ClassNode declaringType, int currentCallCount) {
+		return matchOnName(declaringType) && matchOnNumberOfParameters(declaringType, currentCallCount);
+	}
+
+	private boolean matchOnName(ClassNode declaringType) {
 		if (declaringType == null ||
 		// since local variables have a declaring type of object, we don't accidentally want to return them as a match
-				(declaringType.getName().equals("java.lang.Object") && declaringType.getMethods(String.valueOf(name)).size() == 0)) {
+				(declaringType.getName().equals("java.lang.Object") && declaringType.getDeclaredMethods(String.valueOf(name))
+						.size() == 0)) {
 			return false;
 		}
-
 		if (declaringQualifiedName == null || declaringQualifiedName.equals("")) {
 			// no type specified, accept all
-			return matchOnNumberOfParameters(declaringType, expectedParamCount);
+			return true;
 		}
 
 		Boolean maybeMatch = cachedDeclaringNameMatches.get(declaringType);
 		if (maybeMatch != null) {
-			return maybeMatch && matchOnNumberOfParameters(declaringType, expectedParamCount);
+			return maybeMatch;
 		}
 
 		if (declaringType.getName().equals(declaringQualifiedName)) {
 			cachedDeclaringNameMatches.put(declaringType, true);
 
 			// the name matches, now what about number of arguments?
-			return matchOnNumberOfParameters(declaringType, expectedParamCount);
+			return true;
 		} else {
 
 			// check the supers
-			maybeMatch = nameAndArgsMatch(declaringType.getSuperClass(), expectedParamCount);
+			maybeMatch = matchOnName(declaringType.getSuperClass());
 			if (!maybeMatch) {
 				for (ClassNode iface : declaringType.getInterfaces()) {
-					maybeMatch = nameAndArgsMatch(iface, expectedParamCount);
+					maybeMatch = matchOnName(iface);
 					if (maybeMatch) {
 						break;
 					}
@@ -226,30 +238,48 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 	 * method call is an alternative way of calling the method and return a match
 	 * 
 	 * @param declaringType
-	 * @param expectedParamCount
+	 * @param currentCallCount
 	 * @return true if there is a precise match between number of arguments and numner of parameters. false if there exists a
 	 *         different method with same number of arguments in current type, or true otherwise
 	 * 
 	 */
-	private boolean matchOnNumberOfParameters(ClassNode declaringType, int expectedParamCount) {
+	private boolean matchOnNumberOfParameters(ClassNode declaringType, int currentCallCount) {
 		boolean methodParamNumberMatch;
-		if (expectedParamCount == parameterSimpleNames.length) {
+		if (currentCallCount == declaredParameterCount) {
 			// precise match
 			methodParamNumberMatch = true;
 		} else {
-			List<MethodNode> methods = declaringType.getDeclaredMethods(String.valueOf(name));
-			boolean exactCountFound = false;
-			for (MethodNode method : methods) {
-				if (method.getParameters().length == expectedParamCount) {
-					// match found in different method
-					// so there is a failure
-					exactCountFound = true;
-					break;
-				}
+
+			boolean[] foundParameterNumbers = cachedParameterCounts.get(declaringType);
+			if (foundParameterNumbers == null) {
+				foundParameterNumbers = new boolean[MAX_PARAMS + 1];
+				gatherParameters(declaringType, foundParameterNumbers);
+				cachedParameterCounts.put(declaringType, foundParameterNumbers);
 			}
-			methodParamNumberMatch = methods.size() > 0 && !exactCountFound;
+			// now, if we find a method that has the same number of parameters in the call,
+			// then assume the call is for this target method (and therefore there is no match)
+			methodParamNumberMatch = !foundParameterNumbers[Math.min(MAX_PARAMS, currentCallCount)];
 		}
 		return methodParamNumberMatch;
+	}
+
+	/**
+	 * @param declaringType
+	 * @param foundParameterNumbers
+	 */
+	private void gatherParameters(ClassNode declaringType, boolean[] foundParameterNumbers) {
+		if (declaringType == null) {
+			return;
+		}
+		List<MethodNode> methods = declaringType.getMethods(String.valueOf(name));
+		for (MethodNode method : methods) {
+			foundParameterNumbers[Math.min(method.getParameters().length, MAX_PARAMS)] = true;
+		}
+
+		gatherParameters(declaringType.getSuperClass(), foundParameterNumbers);
+		for (ClassNode iface : declaringType.getInterfaces()) {
+			gatherParameters(iface, foundParameterNumbers);
+		}
 	}
 
 	private int getAccuracy(TypeConfidence confidence, boolean isCompleteMatch) {
