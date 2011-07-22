@@ -1209,7 +1209,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			return VariableScope.BYTE_CLASS_NODE;
 		}
 
-		return VariableScope.OBJECT_CLASS_NODE;
+		// else assume collection of size 1 (itself)
+		return collectionType;
 	}
 
 	@Override

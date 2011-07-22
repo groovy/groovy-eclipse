@@ -619,4 +619,29 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.util.Map<java.lang.Class,java.lang.Class<java.lang.Integer>>");
     }
     
+    // See GRECLIPSE-1131
+    public void testEachOnNonIterables1() throws Exception {
+        String contents = "1.each { it }";
+        String toFind = "it";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    // See GRECLIPSE-1131
+    public void testEachOnNonIterables2() throws Exception {
+        String contents = "each { it }";
+        String toFind = "it";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "Search");
+    }
+    // See GRECLIPSE-1131
+    public void testEachOnNonIterables3() throws Exception {
+        String contents = "1.reverseEach { it }";
+        String toFind = "it";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
 }
