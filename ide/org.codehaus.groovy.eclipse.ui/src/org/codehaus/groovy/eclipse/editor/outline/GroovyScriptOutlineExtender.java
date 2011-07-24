@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.editor.outline;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -26,6 +27,9 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -218,12 +222,16 @@ class GroovyScriptOCompilationUnit extends OCompilationUnit {
  */
 class GroovyScriptVariable extends OField {
 
+    /**
+     * 
+     */
+    private static final String NO_NAME = "no name";
     private static final String DEF_SIGNATURE = "Qdef;";
     private String typeSignature;
 
     public GroovyScriptVariable(JavaElement parent, DeclarationExpression node) {
-        super(parent, node, node.getVariableExpression().getName());
-        ClassNode fieldType = node.getVariableExpression().getType();
+        super(parent, node, extractName(node));
+        ClassNode fieldType = node.getLeftExpression().getType();
         if (ClassHelper.DYNAMIC_TYPE == fieldType) {
             typeSignature = DEF_SIGNATURE;
         } else {
@@ -235,10 +243,32 @@ class GroovyScriptVariable extends OField {
         }
     }
 
+    private static String extractName(DeclarationExpression node) {
+        Expression leftExpression = node.getLeftExpression();
+        if (leftExpression instanceof VariableExpression) {
+            return ((VariableExpression) leftExpression).getName();
+        } else {
+            // multi-variable expression
+            if (leftExpression instanceof TupleExpression) {
+                List<Expression> exprs = ((TupleExpression) leftExpression).getExpressions();
+                StringBuilder sb = new StringBuilder();
+                for (Iterator<Expression> exprIter = exprs.iterator(); exprIter.hasNext();) {
+                    Expression expr = exprIter.next();
+                    sb.append(expr.getText());
+                    if (exprIter.hasNext()) {
+                        sb.append(", ");
+                    }
+                }
+                return sb.toString();
+            }
+        }
+        return NO_NAME;
+    }
+
     @Override
     public ASTNode getElementNameNode() {
         DeclarationExpression decl = (DeclarationExpression) getNode();
-        return decl.getVariableExpression();
+        return decl.getLeftExpression();
     }
 
     @Override
