@@ -223,6 +223,21 @@ public class OtherCompletionTests extends CompletionTestCase {
         checkReplacementString(proposals, "xx", 1);
     }
     
+    public void testListCompletion1() throws Exception {
+        String groovyClass = "[].";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "."), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "removeAll(arg0)", 1);
+    }
+    
+    public void testListCompletion2() throws Exception {
+        String groovyClass = "[].re";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".re"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "removeAll(arg0)", 1);
+    }
     
     // not working in multiline strings yet
 //    public void testGString2() throws Exception {

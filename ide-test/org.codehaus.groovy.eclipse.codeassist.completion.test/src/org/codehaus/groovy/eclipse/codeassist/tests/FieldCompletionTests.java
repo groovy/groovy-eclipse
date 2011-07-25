@@ -154,4 +154,32 @@ public class FieldCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "setX", 0);
         proposalExists(proposals, "x", 1);
     }
+    
+    public void testClosure1() throws Exception {
+        String contents = "class Other { def xxx = { a, b -> }  } \n def o = new Other()\no.x";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
+        // the field
+        proposalExists(proposals, "xxx", 2);
+        // the method
+        proposalExists(proposals, "xxx(Object a, Object b)", 1);
+    }
+    public void testClosure2() throws Exception {
+        String contents = "class Other { def xxx = { int a, int b -> }  } \n def o = new Other()\no.x";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
+        // the field
+        proposalExists(proposals, "xxx", 2);
+        // the method
+        proposalExists(proposals, "xxx(int a, int b)", 1);
+    }
+    public void testClosure3() throws Exception {
+        String contents = "class Other { def xxx = { }  } \n def o = new Other()\no.x";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
+        // the field
+        proposalExists(proposals, "xxx", 2);
+        // the method
+        proposalExists(proposals, "xxx()", 1);
+    }
 }

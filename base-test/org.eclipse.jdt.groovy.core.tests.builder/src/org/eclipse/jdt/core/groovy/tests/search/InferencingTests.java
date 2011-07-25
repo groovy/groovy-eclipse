@@ -531,4 +531,45 @@ public class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, textStart, textEnd, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
     
+    public void testClassReference1() throws Exception {
+        String contents = "String";
+        assertDeclaringType(contents, 0, contents.length(), "java.lang.String");
+    }
+    
+    public void testClassReference2() throws Exception {
+        String contents = "String.substring";
+        int textStart = contents.indexOf("substring");
+        int textEnd = textStart + "substring".length();
+        assertDeclaringType(contents, textStart, textEnd, "java.lang.String", false, true);
+    }
+    
+    public void testClassReference3() throws Exception {
+        String contents = "String.getPackage()";
+        int textStart = contents.indexOf("getPackage");
+        int textEnd = textStart + "getPackage".length();
+        assertType(contents, textStart, textEnd, "java.lang.Package");
+    }
+    
+    public void testClassReference4() throws Exception {
+        String contents = "String.class.getPackage()";
+        int textStart = contents.indexOf("getPackage");
+        int textEnd = textStart + "getPackage".length();
+        assertType(contents, textStart, textEnd, "java.lang.Package");
+    }
+    
+    public void testClassReference5() throws Exception {
+        String contents = "String.class.package";
+        int textStart = contents.indexOf("package");
+        int textEnd = textStart + "package".length();
+        assertType(contents, textStart, textEnd, "java.lang.Package");
+    }
+    
+    public void testClassReference6() throws Exception {
+        String contents = "String.class";
+        // in the groovy AST, this is all one ast expression node (a class expression)
+        int textStart = contents.indexOf("String.class");
+        int textEnd = textStart + "String.class".length();
+        assertDeclaringType(contents, textStart, textEnd, "java.lang.Class<java.lang.Object<T>>", false, false);
+    }
+    
 }

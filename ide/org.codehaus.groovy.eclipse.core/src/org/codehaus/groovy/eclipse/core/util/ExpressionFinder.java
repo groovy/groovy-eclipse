@@ -421,6 +421,10 @@ public class ExpressionFinder {
 				return braceBlock(stream);
             case Token.BRACK_BLOCK:
                 return brackBlock(stream);
+            case Token.SEMI:
+            case Token.LINE_BREAK:
+                // expression in paren
+                return stream.last();
 			default:
 				throw new ParseException(token);
 		}

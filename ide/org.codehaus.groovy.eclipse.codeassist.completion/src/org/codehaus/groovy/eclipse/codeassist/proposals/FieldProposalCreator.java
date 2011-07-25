@@ -30,7 +30,12 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.objectweb.asm.Opcodes;
@@ -46,6 +51,8 @@ import org.objectweb.asm.Opcodes;
  */
 public class FieldProposalCreator extends AbstractProposalCreator implements IProposalCreator {
 
+    private static final Parameter[] NO_PARAMETERS = new Parameter[0];
+    private static final ClassNode[] NO_CLASSES = new ClassNode[0];
     private static final GroovyFieldProposal CLASS_PROPOSAL = createClassProposal();
 
     private static GroovyFieldProposal createClassProposal() {
@@ -69,6 +76,11 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
                 fieldProposal.setRelevanceMultiplier(relevanceMultiplier);
                 groovyProposals.add(fieldProposal);
             }
+
+            if (field.getInitialExpression() instanceof ClosureExpression) {
+                // also add a method-like proposal
+                groovyProposals.add(new GroovyMethodProposal(convertToMethodProposal(field)));
+            }
         }
 
         if (isStatic && "class".startsWith(prefix)) {
@@ -85,6 +97,28 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
         }
 
         return groovyProposals;
+    }
+
+    /**
+     * @param field
+     * @return
+     */
+    private MethodNode convertToMethodProposal(FieldNode field) {
+        MethodNode method = new MethodNode(field.getName(), field.getModifiers(), field.getType(),
+                extractParameters(field.getInitialExpression()), NO_CLASSES, new BlockStatement());
+        method.setDeclaringClass(field.getDeclaringClass());
+        return method;
+    }
+
+    /**
+     * @param getI
+     * @return
+     */
+    private Parameter[] extractParameters(Expression expr) {
+        if (expr instanceof ClosureExpression) {
+            return ((ClosureExpression) expr).getParameters();
+        }
+        return NO_PARAMETERS;
     }
 
     private List<IGroovyProposal> getStaticImportProposals(

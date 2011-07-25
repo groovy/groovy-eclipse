@@ -102,7 +102,7 @@ public class SemanticHighlightingTests extends EclipseTestCase {
                 new HighlightedTypedPosition(contents.lastIndexOf("x"), "x".length(), DEPRECATED));
     }
     
-    public void testNumberWithSuffic() throws Exception {
+    public void testNumberWithSuffix() throws Exception {
         String contents = "11";
         assertHighlighting(contents, 
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
@@ -169,6 +169,26 @@ public class SemanticHighlightingTests extends EclipseTestCase {
         String contents = "8881.23";
         assertHighlighting(contents, 
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
+    }
+    
+    // GRECLIPSE-1138
+    public void testMultipleStaticMethods() throws Exception {
+        String contents = "f(1,2)\n" + 
+        		"\n" + 
+        		"static f(List a, List b) {\n" + 
+        		"}\n" + 
+        		"static f(int a, int b) {\n" + 
+        		"}";
+        int first = contents.indexOf("f");
+        int second = contents.indexOf("f", first+1);
+        int third = contents.indexOf("f", second+1);
+        
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(first, "f".length(), STATIC_METHOD),
+                new HighlightedTypedPosition(contents.indexOf("1"), "1".length(), NUMBER),
+                new HighlightedTypedPosition(contents.indexOf("2"), "2".length(), NUMBER),
+                new HighlightedTypedPosition(second, "f".length(), STATIC_METHOD),
+                new HighlightedTypedPosition(third, "f".length(), STATIC_METHOD));
     }
     
     private void assertHighlighting(String contents, HighlightedTypedPosition... expectedPositions) throws Exception {

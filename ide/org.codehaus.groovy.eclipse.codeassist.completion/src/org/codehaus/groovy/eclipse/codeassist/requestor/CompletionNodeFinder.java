@@ -53,6 +53,7 @@ import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -552,6 +553,15 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
                 // foo().x
                 createContext(contextTarget, blockStack.peek(), expressionOrStatement());
             }
+        }
+    }
+
+    @Override
+    public void visitListExpression(ListExpression expression) {
+        super.visitListExpression(expression);
+        if (doTest(expression)) {
+            // completion after a list expression: []._ or [10]._
+            createContext(expression, currentDeclaration, EXPRESSION);
         }
     }
 

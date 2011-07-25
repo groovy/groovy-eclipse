@@ -269,7 +269,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			// Object expression was null, so go for the left expression.
 			// The final type of this BinaryExpression could be more complicated. Have to look at the operation and
 			// the left and right sides. This happens in the TypeInferencingVisitorWithRequestor
-		    // We can be a bit more precise here and try calling the associated oeprator expression
+			// We can be a bit more precise here and try calling the associated oeprator expression
 			ClassNode maybeType = objectExpressionType != null ? objectExpressionType : ((BinaryExpression) node)
 					.getLeftExpression().getType();
 			return new TypeLookupResult(maybeType, null, null, confidence, scope);
@@ -445,7 +445,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		}
 
 		// now check to see if the object expression is static, but the declaration is not
-		if (declaration != null) {
+		if (declaration != null && !realDeclaringType.equals(VariableScope.CLASS_CLASS_NODE)) {
 			if (declaration instanceof FieldNode) {
 				if (isStaticObjectExpression && !((FieldNode) declaration).isStatic()) {
 					confidence = UNKNOWN;

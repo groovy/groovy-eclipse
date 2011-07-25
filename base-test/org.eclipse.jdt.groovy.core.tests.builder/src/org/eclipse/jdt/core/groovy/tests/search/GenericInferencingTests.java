@@ -521,6 +521,111 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Integer");
     }
+    public void testDGMClosure9() throws Exception {
+        String contents = "[new Date()].eachWithIndex { val, i -> val }";
+        String toFind = "val";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Date");
+    }
+    
+    public void testDGMClosure10() throws Exception {
+        String contents = "[''].eachWithIndex { val, i -> i }";
+        String toFind = "i";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testDGMClosure11() throws Exception {
+        String contents = "[1:new Date()].eachWithIndex { key, val, i -> val }";
+        String toFind = "val";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Date");
+    }
+    
+    public void testDGMClosure12() throws Exception {
+        String contents = "[1:new Date()].eachWithIndex { key, val, i -> key }";
+        String toFind = "key";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testDGMClosure13() throws Exception {
+        String contents = "[1:new Date()].eachWithIndex { key, val, i -> i }";
+        String toFind = "i";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testDGMClosure14() throws Exception {
+        String contents = "[1:new Date()].each { key, val -> key }";
+        String toFind = "key";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testDGMClosure15() throws Exception {
+        String contents = "[1:new Date()].each { key, val -> val }";
+        String toFind = "val";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Date");
+    }
+    
+    public void testDGMClosure16() throws Exception {
+        String contents = "[1:new Date()].collect { key, val -> key }";
+        String toFind = "key";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testDGMClosure17() throws Exception {
+        String contents = "[1:new Date()].collect { key, val -> val }";
+        String toFind = "val";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Date");
+    }
+    
+    public void testDGMClosure18() throws Exception {
+        String contents = "[1].inject { a, b -> a }";
+        String toFind = "a";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testDGMClosure19() throws Exception {
+        String contents = "[1].inject { a, b -> b }";
+        String toFind = "b";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testDGMClosure21() throws Exception {
+        String contents = "[1].unique { a, b -> a }";
+        String toFind = "a";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testDGMClosure20() throws Exception {
+        String contents = "[1].unique { a, b -> b }";
+        String toFind = "b";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    
     
     // See GRECLIPSE-997
     public void testNestedGenerics1() throws Exception {

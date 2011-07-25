@@ -40,6 +40,7 @@ import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jface.text.Position;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Find all unknown references, regex expressions, field references, and static
@@ -109,7 +110,11 @@ public class SemanticHighlightingReferenceRequestor implements ITypeRequestor {
             }
         }
 
-        if (pos != null && (pos.getOffset() > 0 || pos.getLength() > 1)) {
+        if (pos != null && ((pos.getOffset() > 0 || pos.getLength() > 1) ||
+        // Expression nodes can be still valid and have an offset of 0 and a
+        // length of 1
+        // whereas field/method nodes, this is not allowed.
+                node instanceof Expression)) {
             typedPosition.add(pos);
         }
 
@@ -171,6 +176,10 @@ public class SemanticHighlightingReferenceRequestor implements ITypeRequestor {
     }
 
     private boolean hasDeprecatedAnnotation(AnnotatedNode declaration) {
+        // only DSLDs will have the deprecation flag set
+        if (isDeprecated(declaration)) {
+            return true;
+        }
         List<AnnotationNode> anns = declaration.getAnnotations();
         for (AnnotationNode ann : anns) {
             if (ann.getClassNode() != null && ann.getClassNode().getName().equals("java.lang.Deprecated")) {
@@ -178,6 +187,22 @@ public class SemanticHighlightingReferenceRequestor implements ITypeRequestor {
             }
         }
         return false;
+    }
+
+    private boolean isDeprecated(AnnotatedNode declaration) {
+        int flags;
+
+        if (declaration instanceof ClassNode) {
+            flags = ((ClassNode) declaration).getModifiers();
+        } else if (declaration instanceof MethodNode) {
+            flags = ((MethodNode) declaration).getModifiers();
+        } else if (declaration instanceof FieldNode) {
+            flags = ((FieldNode) declaration).getModifiers();
+        } else {
+            flags = 0;
+        }
+
+        return (flags & Opcodes.ACC_DEPRECATED) != 0;
     }
 
     private boolean isStatic(ASTNode declaration) {
