@@ -298,7 +298,7 @@ public class InnerClassVisitor extends InnerClassVisitorHelper implements Opcode
             expressions.add(pCount, ve);
 
             // GRECLIPSE - use plain ref
-            ClassNode rawReferenceType = ClassHelper.REFERENCE_TYPE.getPlainNodeReference();
+            ClassNode rawReferenceType = ClassHelper.REFERENCE_TYPE;//.getPlainNodeReference();
             Parameter p = new Parameter(rawReferenceType, "p" + pCount);
             parameters.add(pCount, p);
             final VariableExpression initial = new VariableExpression(p);
