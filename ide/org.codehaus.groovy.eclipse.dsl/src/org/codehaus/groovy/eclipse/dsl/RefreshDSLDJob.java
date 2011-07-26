@@ -162,11 +162,11 @@ public class RefreshDSLDJob extends Job {
         }
 
         protected boolean isDSLD(IStorage file) {
-            return isFile(file, ".dsld");
+            return isFile(file, "dsld");
         }
         
         protected boolean isSuggestionFile(IStorage file) {
-            return isFile(file, ".sxml");
+            return isFile(file, "sxml");
         }
         
         protected boolean isFile(IStorage file, String extension) {
