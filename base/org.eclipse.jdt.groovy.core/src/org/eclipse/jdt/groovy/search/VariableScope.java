@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
@@ -383,10 +384,11 @@ public class VariableScope {
 		}
 	}
 
-	public static boolean isVoidOrObject(ClassNode maybeVoid) {
-		return maybeVoid.getName().equals(VOID_CLASS_NODE.getName())
-				|| maybeVoid.getName().equals(VOID_WRAPPER_CLASS_NODE.getName())
-				|| maybeVoid.getName().equals(OBJECT_CLASS_NODE.getName());
+	static boolean isVoidOrObject(ClassNode maybeVoid) {
+		return maybeVoid != null
+				&& (maybeVoid.getName().equals(VOID_CLASS_NODE.getName())
+						|| maybeVoid.getName().equals(VOID_WRAPPER_CLASS_NODE.getName()) || maybeVoid.getName().equals(
+						OBJECT_CLASS_NODE.getName()));
 	}
 
 	/**
@@ -726,5 +728,63 @@ public class VariableScope {
 				throw new UnsupportedOperationException();
 			}
 		};
+	}
+
+	/**
+	 * Extracts an element type from a collection
+	 * 
+	 * @param collectionType a collection object, or an object that is iterable
+	 * @return
+	 */
+	public static ClassNode extractElementType(ClassNode collectionType) {
+
+		// if array, then use the component type
+		if (collectionType.isArray()) {
+			return collectionType.getComponentType();
+		}
+
+		// check to see if this type has an iterator method
+		// if so, then resolve the type parameters
+		MethodNode iterator = collectionType.getMethod("iterator", new Parameter[0]);
+		ClassNode typeToResolve = null;
+		if (iterator != null) {
+			typeToResolve = iterator.getReturnType();
+		}
+
+		// if the type is an iterator or an enumeration, then resolve the type parameter
+		if (collectionType.declaresInterface(ITERATOR_CLASS) || collectionType.equals(ITERATOR_CLASS)
+				|| collectionType.declaresInterface(ENUMERATION_CLASS) || collectionType.equals(ENUMERATION_CLASS)) {
+			typeToResolve = collectionType;
+		} else if (collectionType.declaresInterface(MAP_CLASS_NODE) || collectionType.equals(MAP_CLASS_NODE)) {
+			MethodNode entrySetMethod = collectionType.getMethod("entrySet", new Parameter[0]);
+			if (entrySetMethod != null) {
+				typeToResolve = entrySetMethod.getReturnType();
+			}
+		}
+
+		if (typeToResolve != null) {
+			// if (typeToResolve instanceof JDTClassNode) {
+			// JDTClassNodes are immutable, must change that
+			typeToResolve = clone(typeToResolve);
+			// }
+			ClassNode unresolvedCollectionType = collectionType.redirect();
+			GenericsMapper mapper = GenericsMapper.gatherGenerics(collectionType, unresolvedCollectionType);
+			ClassNode resolved = resolveTypeParameterization(mapper, typeToResolve);
+
+			// the first type parameter of resolvedReturn should be what we want
+			GenericsType[] resolvedReturnGenerics = resolved.getGenericsTypes();
+			if (resolvedReturnGenerics != null && resolvedReturnGenerics.length > 0) {
+				return resolvedReturnGenerics[0].getType();
+			}
+		}
+
+		// this is hardcoded from DGM
+		if (collectionType.declaresInterface(INPUT_STREAM_CLASS) || collectionType.declaresInterface(DATA_INPUT_STREAM_CLASS)
+				|| collectionType.equals(INPUT_STREAM_CLASS) || collectionType.equals(DATA_INPUT_STREAM_CLASS)) {
+			return BYTE_CLASS_NODE;
+		}
+
+		// else assume collection of size 1 (itself)
+		return collectionType;
 	}
 }

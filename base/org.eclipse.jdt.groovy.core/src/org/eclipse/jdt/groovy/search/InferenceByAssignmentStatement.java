@@ -16,6 +16,7 @@
 
 package org.eclipse.jdt.groovy.search;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -26,9 +27,12 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -58,37 +62,38 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 		if (node instanceof DeclarationExpression) {
 			DeclarationExpression declExpr = (DeclarationExpression) node;
 
-			// we don't support multiple assignments yet
 			if (declExpr.isMultipleAssignmentDeclaration()) {
+				TupleExpression tuple = (TupleExpression) declExpr.getLeftExpression();
+
+				handleMultiAssignment(scope, objectExpressionType, declExpr, tuple);
 				return null;
-			}
-
-			// use the declared type if not void and not object expression
-			VariableExpression variableExpression = declExpr.getVariableExpression();
-			ClassNode varType;
-			if (variableExpression.getOriginType() != null) {
-				varType = variableExpression.getOriginType();
 			} else {
-				varType = variableExpression.getType();
-			}
-			ClassNode typeToStore;
-			if (!VariableScope.isVoidOrObject(varType) && !varType.equals(VariableScope.OBJECT_CLASS_NODE)) {
-				typeToStore = varType;
-			} else if (objectExpressionType != null) {
-				typeToStore = objectExpressionType;
-			} else {
-				typeToStore = VariableScope.OBJECT_CLASS_NODE;
-			}
-			// store the variable. declaring type is always null since the
-			// variable is being declared right here.
-			scope.addVariable(variableExpression.getName(), typeToStore, null);
 
+				// use the declared type if not void and not object expression
+				VariableExpression variableExpression = declExpr.getVariableExpression();
+				ClassNode varType;
+				if (variableExpression.getOriginType() != null) {
+					varType = variableExpression.getOriginType();
+				} else {
+					varType = variableExpression.getType();
+				}
+				ClassNode typeToStore;
+				if (!VariableScope.isVoidOrObject(varType) && !varType.equals(VariableScope.OBJECT_CLASS_NODE)) {
+					typeToStore = varType;
+				} else if (objectExpressionType != null) {
+					typeToStore = objectExpressionType;
+				} else {
+					typeToStore = VariableScope.OBJECT_CLASS_NODE;
+				}
+				// store the variable. declaring type is always null since the
+				// variable is being declared right here.
+				scope.addVariable(variableExpression.getName(), typeToStore, null);
+			}
 		} else if (node instanceof BinaryExpression) {
 			BinaryExpression assign = (BinaryExpression) node;
 			// only look at assignments and can't do much if objectExpressionType is null
 			// and only re-set if we have a real type for the object expression
-			if (isInterestingOperation(assign) && objectExpressionType != null
-					&& !VariableScope.isVoidOrObject(objectExpressionType)) {
+			if (isInterestingOperation(assign) && !VariableScope.isVoidOrObject(objectExpressionType)) {
 
 				if (assign.getLeftExpression() instanceof VariableExpression) {
 					VariableExpression var = (VariableExpression) assign.getLeftExpression();
@@ -97,13 +102,54 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 					scope.updateOrAddVariable(var.getName(), objectExpressionType, declaringType);
 					return new TypeLookupResult(objectExpressionType, declaringType, assign.getLeftExpression(),
 							TypeConfidence.INFERRED, scope);
+				} else if (assign.getLeftExpression() instanceof TupleExpression) {
+					TupleExpression tuple = (TupleExpression) assign.getLeftExpression();
+					handleMultiAssignment(scope, objectExpressionType, assign, tuple);
+					return null;
 				} else {
-					// FIXADE this is a property node, eg- 'foo.bar = somevalue' just do Object type
+					// FIXADE this is probably a property node, eg- 'foo.bar = somevalue' just do Object type
 				}
 			}
 
 		}
 		return null;
+	}
+
+	/**
+	 * @param scope
+	 * @param objectExpressionType
+	 * @param binaryExpr
+	 * @param tuple
+	 */
+	private void handleMultiAssignment(VariableScope scope, ClassNode objectExpressionType, BinaryExpression binaryExpr,
+			TupleExpression tuple) {
+		// the type to use if rhs is not a List literal expression
+		ClassNode maybeType = findComponentType(objectExpressionType);
+		// try to associate the individual tuple expression elements
+		// with something on the rhs
+		ListExpression rhs = binaryExpr.getRightExpression() instanceof ListExpression ? (ListExpression) binaryExpr
+				.getRightExpression() : null;
+		List<Expression> lhsExprs = (List<Expression>) (tuple == null ? Collections.emptyList() : tuple.getExpressions());
+		List<Expression> rhsExprs = (List<Expression>) (rhs == null ? Collections.emptyList() : rhs.getExpressions());
+		for (int i = 0, lhsSize = lhsExprs.size(), rhsSize = rhsExprs.size(); i < lhsSize; i++) {
+			Expression lhsExpr = lhsExprs.get(i);
+			Expression rhsExpr = i < rhsSize ? rhsExprs.get(i) : null;
+			if (lhsExpr instanceof VariableExpression) {
+				scope.addVariable(((Variable) lhsExpr).getName(), rhsExpr == null ? maybeType : rhsExpr.getType(), null);
+			}
+		}
+	}
+
+	/**
+	 * @param objectExpressionType
+	 * @return
+	 */
+	private ClassNode findComponentType(ClassNode objectExpressionType) {
+		if (objectExpressionType == null) {
+			return VariableScope.OBJECT_CLASS_NODE;
+		} else {
+			return VariableScope.extractElementType(objectExpressionType);
+		}
 	}
 
 	/**

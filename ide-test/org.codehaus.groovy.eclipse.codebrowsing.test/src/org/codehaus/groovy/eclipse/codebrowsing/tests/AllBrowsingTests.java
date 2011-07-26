@@ -34,6 +34,7 @@ public class AllBrowsingTests {
         suite.addTestSuite(IsSameExpressionTests.class);
         suite.addTestSuite(PartialVisitTest.class);
         suite.addTestSuite(CodeSelectFieldsPropertiesTest.class);
+        suite.addTestSuite(CodeSelectLocalTest.class);
         return suite;
     }
 }

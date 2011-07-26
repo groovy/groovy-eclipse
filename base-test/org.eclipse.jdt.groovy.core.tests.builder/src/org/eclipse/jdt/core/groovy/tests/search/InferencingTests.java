@@ -571,5 +571,82 @@ public class InferencingTests extends AbstractInferencingTest {
         int textEnd = textStart + "String.class".length();
         assertDeclaringType(contents, textStart, textEnd, "java.lang.Class<java.lang.Object<T>>", false, false);
     }
-    
+ 
+    public void testMultiDecl1() throws Exception {
+        String contents = "def (x, y) = []\nx\ny";
+        int xStart = contents.lastIndexOf("x");
+        int yStart = contents.lastIndexOf("y");
+        assertType(contents, xStart, xStart+1, "java.lang.Object");
+        assertType(contents, yStart, yStart+1, "java.lang.Object");
+    }
+    public void testMultiDecl2() throws Exception {
+        String contents = "def (x, y) = [1]\nx\ny";
+        int xStart = contents.lastIndexOf("x");
+        int yStart = contents.lastIndexOf("y");
+        assertType(contents, xStart, xStart+1, "java.lang.Integer");
+        assertType(contents, yStart, yStart+1, "java.lang.Integer");
+    }
+    public void testMultiDecl3() throws Exception {
+        String contents = "def (x, y) = [1,1]\nx\ny";
+        int xStart = contents.lastIndexOf("x");
+        int yStart = contents.lastIndexOf("y");
+        assertType(contents, xStart, xStart+1, "java.lang.Integer");
+        assertType(contents, yStart, yStart+1, "java.lang.Integer");
+    }
+    public void testMultiDecl4() throws Exception {
+        String contents = "def (x, y) = [1,'']\nx\ny";
+        int xStart = contents.lastIndexOf("x");
+        int yStart = contents.lastIndexOf("y");
+        assertType(contents, xStart, xStart+1, "java.lang.Integer");
+        assertType(contents, yStart, yStart+1, "java.lang.String");
+    }
+    public void testMultiDecl6() throws Exception {
+        String contents = "def (x, y) = new ArrayList()\nx\ny";
+        int xStart = contents.lastIndexOf("x");
+        int yStart = contents.lastIndexOf("y");
+        assertType(contents, xStart, xStart+1, "java.lang.Object<E>");
+        assertType(contents, yStart, yStart+1, "java.lang.Object<E>");
+    }
+    public void testMultiDecl7() throws Exception {
+        String contents = "def (x, y) = new ArrayList<Double>()\nx\ny";
+        int xStart = contents.lastIndexOf("x");
+        int yStart = contents.lastIndexOf("y");
+        assertType(contents, xStart, xStart+1, "java.lang.Double");
+        assertType(contents, yStart, yStart+1, "java.lang.Double");
+    }
+    public void testMultiDecl8() throws Exception {
+        String contents = "Double[] meth() { }\ndef (x, y) = meth()\nx\ny";
+        int xStart = contents.lastIndexOf("x");
+        int yStart = contents.lastIndexOf("y");
+        assertType(contents, xStart, xStart+1, "java.lang.Double");
+        assertType(contents, yStart, yStart+1, "java.lang.Double");
+    }
+    public void testMultiDecl9() throws Exception {
+        String contents = "List<Double> meth() { }\ndef (x, y) = meth()\nx\ny";
+        int xStart = contents.lastIndexOf("x");
+        int yStart = contents.lastIndexOf("y");
+        assertType(contents, xStart, xStart+1, "java.lang.Double");
+        assertType(contents, yStart, yStart+1, "java.lang.Double");
+    }
+    public void testMultiDecl10() throws Exception {
+        String contents = "List<Double> field\ndef (x, y) = field\nx\ny";
+        int xStart = contents.lastIndexOf("x");
+        int yStart = contents.lastIndexOf("y");
+        assertType(contents, xStart, xStart+1, "java.lang.Double");
+        assertType(contents, yStart, yStart+1, "java.lang.Double");
+    }
+    public void testMultiDecl11() throws Exception {
+        String contents = "List<Double> field\ndef x\ndef y\n (x, y)= field\nx\ny";
+        int xStart = contents.lastIndexOf("x");
+        int yStart = contents.lastIndexOf("y");
+        assertType(contents, xStart, xStart+1, "java.lang.Double");
+        assertType(contents, yStart, yStart+1, "java.lang.Double");
+    }
+    public void testMultiDecl12() throws Exception {
+        String contents = "def (x, y) = 1d\nx\ny";
+        int xStart = contents.lastIndexOf("x");
+        int yStart = contents.lastIndexOf("y");
+        assertType(contents, xStart, xStart+1, "java.lang.Double");
+        assertType(contents, yStart, yStart+1, "java.lang.Double");
+    }
 }

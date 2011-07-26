@@ -1093,7 +1093,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		if (call != null) {
 			String methodName = call.call.getMethodAsString();
 			if (dgmClosureMethods.contains(methodName)) {
-				ClassNode inferredType = extractElementType(call.declaringType);
+				ClassNode inferredType = VariableScope.extractElementType(call.declaringType);
 				Arrays.fill(allInferred, inferredType);
 				// special cases: eachWithIndex has last element an integer
 				if (methodName.equals("eachWithIndex") && allInferred.length > 1) {
@@ -1140,6 +1140,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		dgmClosureMethods.add("grep");
 		dgmClosureMethods.add("split");
 		dgmClosureMethods.add("sum");
+		dgmClosureMethods.add("any");
 	}
 
 	@Override
@@ -1184,7 +1185,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 			// now update the type of the parameter with the collection type
 			if (param.getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
-				ClassNode extractedElementType = extractElementType(collectionType);
+				ClassNode extractedElementType = VariableScope.extractElementType(collectionType);
 				scopes.peek().addVariable(param.getName(), extractedElementType, null);
 			}
 		}
@@ -1192,68 +1193,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		node.getLoopBlock().visit(this);
 
 		scopes.pop();
-	}
-
-	/**
-	 * Extracts an element type from a collection
-	 * 
-	 * @param collectionType a collection object, or an object that is iterable
-	 * @return
-	 */
-	private ClassNode extractElementType(ClassNode collectionType) {
-
-		// if array, then use the component type
-		if (collectionType.isArray()) {
-			return collectionType.getComponentType();
-		}
-
-		// check to see if this type has an iterator method
-		// if so, then resolve the type parameters
-		MethodNode iterator = collectionType.getMethod("iterator", new Parameter[0]);
-		ClassNode typeToResolve = null;
-		if (iterator != null) {
-			typeToResolve = iterator.getReturnType();
-		}
-
-		// if the type is an iterator or an enumeration, then resolve the type parameter
-		if (collectionType.declaresInterface(VariableScope.ITERATOR_CLASS) || collectionType.equals(VariableScope.ITERATOR_CLASS)
-				|| collectionType.declaresInterface(VariableScope.ENUMERATION_CLASS)
-				|| collectionType.equals(VariableScope.ENUMERATION_CLASS)) {
-			typeToResolve = collectionType;
-		} else if (collectionType.declaresInterface(VariableScope.MAP_CLASS_NODE)
-				|| collectionType.equals(VariableScope.MAP_CLASS_NODE)) {
-			MethodNode entrySetMethod = collectionType.getMethod("entrySet", new Parameter[0]);
-			if (entrySetMethod != null) {
-				typeToResolve = entrySetMethod.getReturnType();
-			}
-		}
-
-		if (typeToResolve != null) {
-			// if (typeToResolve instanceof JDTClassNode) {
-			// JDTClassNodes are immutable, must change that
-			typeToResolve = VariableScope.clone(typeToResolve);
-			// }
-			ClassNode unresolvedCollectionType = collectionType.redirect();
-			GenericsMapper mapper = GenericsMapper.gatherGenerics(collectionType, unresolvedCollectionType);
-			ClassNode resolved = VariableScope.resolveTypeParameterization(mapper, typeToResolve);
-
-			// the first type parameter of resolvedReturn should be what we want
-			GenericsType[] resolvedReturnGenerics = resolved.getGenericsTypes();
-			if (resolvedReturnGenerics != null && resolvedReturnGenerics.length > 0) {
-				return resolvedReturnGenerics[0].getType();
-			}
-		}
-
-		// this is hardcoded from DGM
-		if (collectionType.declaresInterface(VariableScope.INPUT_STREAM_CLASS)
-				|| collectionType.declaresInterface(VariableScope.DATA_INPUT_STREAM_CLASS)
-				|| collectionType.equals(VariableScope.INPUT_STREAM_CLASS)
-				|| collectionType.equals(VariableScope.DATA_INPUT_STREAM_CLASS)) {
-			return VariableScope.BYTE_CLASS_NODE;
-		}
-
-		// else assume collection of size 1 (itself)
-		return collectionType;
 	}
 
 	@Override
