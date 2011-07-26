@@ -106,6 +106,17 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
     
+    // GRECLIPSE-1040
+    public void testList8() throws Exception {
+        assertType("def x = new LinkedList()", "java.util.LinkedList");
+    }
+
+    // GRECLIPSE-1040
+    public void testSet1() throws Exception {
+        assertType("def x = new HashSet()", "java.util.HashSet");
+    }
+    
+    
     public void testMap1() throws Exception {
         String contents = "new HashMap<String,Integer>()";
         assertType(contents, "java.util.HashMap<java.lang.String,java.lang.Integer>");
@@ -193,6 +204,12 @@ public class GenericInferencingTests extends AbstractInferencingTest {
 //        } else {
 //            assertType(contents, start, end, "java.util.Map<int,int>");
 //        }
+    }
+
+    // GRECLIPSE-1040
+    public void testMap10() throws Exception {
+        String contents = "new HashMap()";
+        assertType(contents, "java.util.HashMap");
     }
 
     

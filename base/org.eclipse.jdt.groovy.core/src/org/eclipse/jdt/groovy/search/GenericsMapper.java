@@ -77,8 +77,9 @@ public class GenericsMapper {
 	 */
 	public ClassNode resolveParameter(GenericsType topGT, int depth) {
 		if (depth > 10) {
-			// I don't like this solution. I would like to remove this
 			// don't recur forever
+			// FIXADE This problem is believed fixed. If this conidtional is never reached, then
+			// we should be able to delete this section.
 			Util.log(new Status(IStatus.WARNING, "org.eclipse.jdt.groovy.core", //$NON-NLS-1$
 					"GRECLIPSE-1040: prevent infinite recursion when resolving type parameters on generics type: " + topGT)); //$NON-NLS-1$
 			return topGT.getType();
@@ -96,7 +97,7 @@ public class GenericsMapper {
 			origType = VariableScope.clone(origType);
 			GenericsType[] genericsTypes = origType.getGenericsTypes();
 			for (GenericsType genericsType : genericsTypes) {
-				if (genericsType == topGT) {
+				if (genericsType.getName().equals(topGT.getName())) {
 					// avoid infinite loops
 					// I still don't like this solution, but better than using a depth counter.
 					continue;
