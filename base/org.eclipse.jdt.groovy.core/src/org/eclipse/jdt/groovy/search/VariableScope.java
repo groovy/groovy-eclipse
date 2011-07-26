@@ -384,7 +384,7 @@ public class VariableScope {
 		}
 	}
 
-	static boolean isVoidOrObject(ClassNode maybeVoid) {
+	public static boolean isVoidOrObject(ClassNode maybeVoid) {
 		return maybeVoid != null
 				&& (maybeVoid.getName().equals(VOID_CLASS_NODE.getName())
 						|| maybeVoid.getName().equals(VOID_WRAPPER_CLASS_NODE.getName()) || maybeVoid.getName().equals(
