@@ -66,7 +66,8 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
         int i = 0;
         while (i < projectNames.length && i < projects.size()) {
 
-            projectNames[i++] = projects.get(i).getName();
+            projectNames[i] = projects.get(i).getName();
+            i++;
         }
 
         dropDown = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
