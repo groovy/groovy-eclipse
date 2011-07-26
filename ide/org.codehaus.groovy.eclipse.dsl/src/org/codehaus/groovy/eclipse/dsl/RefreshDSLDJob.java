@@ -162,12 +162,20 @@ public class RefreshDSLDJob extends Job {
         }
 
         protected boolean isDSLD(IStorage file) {
+            return isFile(file, ".dsld");
+        }
+        
+        protected boolean isSuggestionFile(IStorage file) {
+            return isFile(file, ".sxml");
+        }
+        
+        protected boolean isFile(IStorage file, String extension) {
             if (file instanceof IFile) {
                 IFile iFile = (IFile) file;
-                return !iFile.isDerived() && "dsld".equals(iFile.getFileExtension());
+                return !iFile.isDerived() && extension.equals(iFile.getFileExtension());
             } else {
                 String name = file.getName();
-                return name != null && name.endsWith(".dsld");
+                return name != null && name.endsWith(extension);
             }
         }
     

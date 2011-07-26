@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Codehaus.org, SpringSource, and others.
+ * Copyright (c) 2009, 2011 Codehaus.org, SpringSource, and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,8 +8,12 @@
  * Contributors:
  *     Andy Clement        - Initial API and implementation
  *     Andrew Eisenberg - Additional work
+ *     Nieraj Singh - Additional work
  *******************************************************************************/
 package org.codehaus.jdt.groovy.model;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectNature;
@@ -98,4 +102,18 @@ public class GroovyNature implements IProjectNature {
 		}
 		return false;
 	}
+
+	public static List<IProject> getAllAccessibleGroovyProjects() {
+		IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+		List<IProject> groovyProjects = new ArrayList<IProject>();
+		if (projects != null) {
+			for (IProject project : projects) {
+				if (project.isAccessible() && hasGroovyNature(project)) {
+					groovyProjects.add(project);
+				}
+			}
+		}
+		return groovyProjects;
+	}
+
 }
