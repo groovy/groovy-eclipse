@@ -626,6 +626,14 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
     
+    public void testDGMClosure20() throws Exception {
+        String contents = "[1].unique { a, b -> b }";
+        String toFind = "b";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
     public void testDGMClosure21() throws Exception {
         String contents = "[1].unique { a, b -> a }";
         String toFind = "a";
@@ -634,12 +642,20 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
     
-    public void testDGMClosure20() throws Exception {
-        String contents = "[1].unique { a, b -> b }";
-        String toFind = "b";
+    public void testDGMClosure22() throws Exception {
+        String contents = "[1f: 1d].collectEntries { key, value -> [value, key] } ";
+        String toFind = "value";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertType(contents, start, end, "java.lang.Double");
+    }
+    
+    public void testDGMClosure23() throws Exception {
+        String contents = "[1f: 1d].collectEntries { key, value -> [value, key] } ";
+        String toFind = "key";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.lang.Float");
     }
     
     

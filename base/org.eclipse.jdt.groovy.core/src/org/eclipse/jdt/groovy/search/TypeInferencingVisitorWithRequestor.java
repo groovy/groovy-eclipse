@@ -1101,7 +1101,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 				// if declaring type is a map and
 				if (call.declaringType.getName().equals(VariableScope.MAP_CLASS_NODE.getName())) {
-					if (((methodName.equals("each") || methodName.equals("collect")) && numParams == 2)
+					if (((methodName.equals("each") || methodName.equals("collect")) && numParams == 2 || methodName
+							.equals("collectEntries") && numParams == 2)
 							|| (methodName.equals("eachWithIndex") && numParams == 3)) {
 						GenericsType[] typeParams = inferredType.getGenericsTypes();
 						if (typeParams != null && typeParams.length == 2) {
@@ -1130,6 +1131,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		dgmClosureMethods.add("unique");
 		dgmClosureMethods.add("every");
 		dgmClosureMethods.add("collect");
+		dgmClosureMethods.add("collectEntries");
 		dgmClosureMethods.add("findAll");
 		dgmClosureMethods.add("groupBy");
 
