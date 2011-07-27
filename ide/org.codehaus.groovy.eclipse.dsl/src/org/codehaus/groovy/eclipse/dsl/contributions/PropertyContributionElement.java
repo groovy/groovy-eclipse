@@ -39,20 +39,28 @@ public class PropertyContributionElement implements IContributionElement {
     
     private final String provider;
     private final String doc;
+
+    private final int relevanceMultiplier;
+
+    private final boolean isDeprecated;
     
-    public PropertyContributionElement(String propName, String propType, String declaringType, boolean isStatic, String provider, String doc) {
+    public PropertyContributionElement(String propName, String propType, String declaringType, boolean isStatic, String provider, String doc, boolean isDeprecated, int relevanceMultiplier) {
         super();
         this.propName = propName;
         this.propType = propType;
         this.isStatic = isStatic;
         this.declaringType = declaringType;
+        this.isDeprecated = isDeprecated;
+        this.relevanceMultiplier = relevanceMultiplier;
         
         this.provider = provider == null ? GROOVY_DSL_PROVIDER : provider;
         this.doc = doc == null ? NO_DOC + this.provider : doc;
     }
 
     public IGroovyProposal toProposal(ClassNode declaringType, ResolverCache resolver) {
-        return new GroovyPropertyProposal(toProperty(declaringType, resolver), provider);
+        GroovyPropertyProposal groovyPropertyProposal = new GroovyPropertyProposal(toProperty(declaringType, resolver), provider);
+        groovyPropertyProposal.setRelevanceMultiplier(relevanceMultiplier);
+        return groovyPropertyProposal;
     }
 
     public TypeAndDeclaration lookupType(String name, ClassNode declaringType, ResolverCache resolver) {
@@ -70,7 +78,9 @@ public class PropertyContributionElement implements IContributionElement {
     }
 
     protected int opcode() {
-        return isStatic ? Opcodes.ACC_STATIC : Opcodes.ACC_PUBLIC;
+        int modifiers = isStatic ? Opcodes.ACC_STATIC : Opcodes.ACC_PUBLIC;
+        modifiers |= isDeprecated ? Opcodes.ACC_DEPRECATED : 0;
+        return modifiers;
     }
 
     protected ClassNode ensureReturnType(ResolverCache resolver) {

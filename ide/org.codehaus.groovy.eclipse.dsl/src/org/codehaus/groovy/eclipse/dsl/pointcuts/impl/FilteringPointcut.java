@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
@@ -87,6 +88,8 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
             return ((Class<?>) o).getName();
         } else if (o instanceof ClassNode) {
             return ((ClassNode) o).getName();
+        } else if (o instanceof ClassExpression) {
+            return ((ClassExpression) o).getType().getName();
         }
         return null;
     }

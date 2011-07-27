@@ -35,6 +35,8 @@ public class FindAnnotationPointcut extends FilteringPointcut<AnnotationNode> {
         super(containerIdentifier, pointcutName, AnnotationNode.class);
     }
     
+//    FIXADE pointcut with two hasAttributes is not working
+    
     /**
      * Converts toMatch to a collection of annotation nodes.  Might be null or empty list
      * In either of these cases, this is considered a non-match

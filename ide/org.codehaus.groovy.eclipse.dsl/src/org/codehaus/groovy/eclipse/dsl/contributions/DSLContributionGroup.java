@@ -168,10 +168,10 @@ public class DSLContributionGroup extends ContributionGroup {
         }
 
         boolean isStatic = isStatic(args);
-
+        boolean isDeprecated = isDeprecated(args);
         if (!scope.isStatic() || (scope.isStatic() && isStatic)) {
             contributions.add(new MethodContributionElement(name == null ? NO_NAME : name, params, returnType == null ? NO_TYPE
-                    : returnType, declaringType, isStatic, provider == null ? this.provider : provider, doc, useNamedArgs));
+                    : returnType, declaringType, isStatic, provider == null ? this.provider : provider, doc, useNamedArgs, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         }
     }
 
@@ -191,6 +191,8 @@ public class DSLContributionGroup extends ContributionGroup {
                str.equalsIgnoreCase("yes");
     }
 
+    
+    
     /**
      * Called by closure to add a property
      * @param args
@@ -207,10 +209,12 @@ public class DSLContributionGroup extends ContributionGroup {
         value = args.get("provider");
         String provider = value == null ? this.provider : asString(value); // might be null
         String doc = asString(args.get("doc")); // might be null
+        
         boolean isStatic = isStatic(args);
+        boolean isDeprecated = isDeprecated(args);
         if (!scope.isStatic() || (scope.isStatic() && isStatic)) {
             contributions.add(new PropertyContributionElement(name == null ? NO_NAME : name, type,
-                    declaringType, isStatic, provider, doc));
+                    declaringType, isStatic, provider, doc, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         }
     }
 
@@ -225,11 +229,12 @@ public class DSLContributionGroup extends ContributionGroup {
     void delegatesTo(Map<String, Object> args) {
         String name = asString(args.get("type"));
         boolean isStatic = isStatic(args);
+        boolean isDeprecated = isDeprecated(args);
         boolean asCategory = getBoolean("asCategory", args);
         boolean useNamed = getBoolean("useNamed", args);
         List<String> except = (List<String>) args.get("except");
         ClassNode type = this.resolver.resolve(name);
-        internalDelegatesTo(type, useNamed, isStatic, asCategory, except);
+        internalDelegatesTo(type, useNamed, isStatic, asCategory, isDeprecated, except);
     }
 
     void delegatesTo(String className) {
@@ -255,7 +260,7 @@ public class DSLContributionGroup extends ContributionGroup {
      * class reference.
      */
     void delegatesTo(AnnotatedNode expr) {
-        internalDelegatesTo(expr, false, false, false, null);
+        internalDelegatesTo(expr, false, false, false, false, null);
     }
 
     void delegatesToUseNamedArgs(String className) {
@@ -272,7 +277,7 @@ public class DSLContributionGroup extends ContributionGroup {
      * class reference.
      */
     void delegatesToUseNamedArgs(AnnotatedNode expr) {
-        internalDelegatesTo(expr, true, false, false, null);
+        internalDelegatesTo(expr, true, false, false, false, null);
     }
     
     void delegatesToCategory(String className) {
@@ -289,7 +294,7 @@ public class DSLContributionGroup extends ContributionGroup {
      * class reference.
      */
     void delegatesToCategory(AnnotatedNode expr) {
-        internalDelegatesTo(expr, false, false, true, null);
+        internalDelegatesTo(expr, false, false, true, false, null);
     }
 
     /**
@@ -311,7 +316,7 @@ public class DSLContributionGroup extends ContributionGroup {
         return sb.toString();
     }
 
-    private void internalDelegatesTo(AnnotatedNode expr, boolean useNamedArgs, boolean isStatic, boolean asCategory, List<String> exceptions) {
+    private void internalDelegatesTo(AnnotatedNode expr, boolean useNamedArgs, boolean isStatic, boolean asCategory, boolean isDeprecated, List<String> exceptions) {
         ClassNode type;
         if (expr instanceof ClassNode) {
             type = (ClassNode) expr;
@@ -336,9 +341,9 @@ public class DSLContributionGroup extends ContributionGroup {
                 if ((exceptions == null || !exceptions.contains(method.getName())) && !(method instanceof ConstructorNode) && ! method.getName().contains("$")) {
                     ClassNode resolvedReturnType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(method.getReturnType()));
                     if (asCategory) {
-                        delegateToCategoryMethod(useNamedArgs, isStatic, type, method, resolvedReturnType);
+                        delegateToCategoryMethod(useNamedArgs, isStatic, type, method, resolvedReturnType, isDeprecated);
                     } else {
-                        delegateToNonCategoryMethod(useNamedArgs, isStatic, type, method, resolvedReturnType);
+                        delegateToNonCategoryMethod(useNamedArgs, isStatic, type, method, resolvedReturnType, isDeprecated);
                     }
                 }
             }
@@ -352,17 +357,17 @@ public class DSLContributionGroup extends ContributionGroup {
      * @param method
      * @param mapper
      */
-    private void delegateToNonCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method, ClassNode resolvedReturnType) {
+    private void delegateToNonCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method, ClassNode resolvedReturnType, boolean isDeprecated) {
         String name = method.getName();
         contributions.add(new MethodContributionElement(name, toParameterContribution(method
                 .getParameters()), getTypeName(resolvedReturnType),
                 getTypeName(type), (method.isStatic() || isStatic), provider,
-                null, useNamedArgs));
+                null, useNamedArgs, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         
         // also add the associated property if applicable
         if (name.startsWith("get") && name.length() > 3 && (method.getParameters() == null || method.getParameters().length == 0)) {
             contributions.add(new PropertyContributionElement(Character.toLowerCase(name.charAt(3)) + name.substring(4), getTypeName(resolvedReturnType), 
-                    getTypeName(method.getDeclaringClass()), (method.isStatic() || isStatic), provider, null));
+                    getTypeName(method.getDeclaringClass()), (method.isStatic() || isStatic), provider, null, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         }
     }
 
@@ -373,14 +378,14 @@ public class DSLContributionGroup extends ContributionGroup {
      * @param method
      * @param mapper
      */
-    private void delegateToCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method, ClassNode resolvedReturnType) {
+    private void delegateToCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method, ClassNode resolvedReturnType, boolean isDeprecated) {
         if (method.getParameters() != null && method.getParameters().length > 0) {
             ClassNode firstType = method.getParameters()[0].getType();
             if ((firstType.isInterface() && currentType.implementsInterface(firstType)) ||
                     currentType.isDerivedFrom(firstType)) {
                 contributions.add(new MethodContributionElement(method.getName(), toParameterContributionRemoveFirst(method
                         .getParameters()), getTypeName(resolvedReturnType), getTypeName(type), isStatic, provider,
-                        null, useNamedArgs));
+                        null, useNamedArgs, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
             }
         }
     }
@@ -422,6 +427,10 @@ public class DSLContributionGroup extends ContributionGroup {
         return getBoolean("isStatic", args);
     }
 
+    private boolean isDeprecated(Map<?, ?> args) {
+        return getBoolean("isDeprecated", args);
+    }
+    
     private boolean getBoolean(String name, Map<?,?> args) {
         Object maybeStatic = args.get(name);
         if (maybeStatic == null) {
@@ -461,5 +470,16 @@ public class DSLContributionGroup extends ContributionGroup {
         } else {
             return value.toString();
         }
+    }
+    
+    /**
+     * Logs a message to the groovy console log if open
+     * @param msg
+     */
+    Object log(Object msg) {
+        if (GroovyLogManager.manager.hasLoggers()) {
+            GroovyLogManager.manager.log(TraceCategory.DSL, "========== " + msg);
+        }
+        return msg;
     }
 }

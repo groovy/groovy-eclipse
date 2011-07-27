@@ -13,7 +13,9 @@ package org.codehaus.groovy.eclipse.dsl.script;
 import groovy.lang.Closure;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
@@ -26,9 +28,11 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AbstractModifierPointcut.S
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.AndPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.BindPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentIdentifierPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentTypeIsEnclosingTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingCallDeclaringTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingCallNamePointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingCallPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingClassPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingClosurePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingFieldPointcut;
@@ -40,6 +44,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindAnnotationPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindFieldPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindMethodPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindPropertyPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.HasArgumentsPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.HasAttributesPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.NamePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.NotPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.OrPointcut;
@@ -49,6 +55,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SourceFolderOfFilePointcut
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SourceFolderOfTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SubTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.UserExtensiblePointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.ValuePointcut;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IStorage;
 
@@ -61,6 +68,7 @@ public class PointcutFactory {
 
     private static final Map<String, Class<? extends IPointcut>> registry = new HashMap<String, Class<? extends IPointcut>>();
     private static final Map<String, String> docRegistry = new HashMap<String, String>();
+    private static final Set<String> deprecatedRegistry = new HashSet<String>();
     static {
         // combinatorial pointcuts
         registerGlobalPointcut(
@@ -70,7 +78,7 @@ public class PointcutFactory {
                         + "pointcut matches when all containing pointcuts match.  Also, the bindings of all containing pointcuts "
                         + "are combined.  This pointcut is implicitly created when using the '<em>&</em>' operator to combine two or more pointcuts.", 
                         "This pointcut expects one or more pointcuts as arguments.  These pointcuts can be of any kind.",
-                        "a combined set of all of the matches of all contained pointcuts"));
+                        "a combined set of all of the matches of all contained pointcuts"), false);
         registerGlobalPointcut(
                 "or",
                 OrPointcut.class,
@@ -79,14 +87,14 @@ public class PointcutFactory {
                         + "pointcut matches when all containing pointcuts match.  Also, the bindings of all containing pointcuts "
                         + "are combined.  This pointcut is implicitly created when using the '<em>|</em>' operator to combine two or more pointcuts.", 
                         "This pointcut expects one or more pointcuts as arguments.  These pointcuts can be of any kind.",
-                        "a combined set of all of the matches of all contained pointcuts"));
+                        "a combined set of all of the matches of all contained pointcuts"), false);
         registerGlobalPointcut(
                 "not",
                 NotPointcut.class,
                 createDoc("Negates the match of the contained pointcut.  This pointcut will match if the contained pointcut does not match and the reverse is true", 
                         "any pointcut",
                         "If the contained pointcut is not matched, then the return value is a singleton set consisting of <code>new Object()</code>, " +
-                        "or else it is null"));
+                        "or else it is null"), false);
 
         // binding pointcuts
         registerGlobalPointcut(
@@ -94,7 +102,7 @@ public class PointcutFactory {
                 BindPointcut.class,
                 createDoc("Adds a named binding for the contained pointcut.  This pointcut is implicitly used when a named argument is applied to any other pointcut",
                         "any pointcut",
-                        "the return value of the contained pointcut"));
+                        "the return value of the contained pointcut"), false);
 
         // semantic pointcuts
         registerGlobalPointcut(
@@ -103,22 +111,22 @@ public class PointcutFactory {
                 createDoc(
                         "Attempts to match on the declared type of the current expression.",
                         "A String, Class, or ClassNode to match against.  Alternatively, another pointcut can be passed in to match against",
-                        "The singleton set of the current type as a ClassNode."));
+                        "The singleton set of the current type as a ClassNode."), false);
         registerGlobalPointcut(
-                "currentTypeIsEnclosingType",
-                CurrentTypePointcut.class,
+                "isThisType",
+                CurrentTypeIsEnclosingTypePointcut.class,
                 createDoc(
                         "Matches when the current type being inferred is the same as the enclosing type declaration.  "
                                 + "This happens on references to <code>this</code> or when inferencing is occurring in the new statement position.",
-                        "This pointcut does not take any arguments", 
-                        "The singleton set of the current type as a ClassNode."));
+                                "This pointcut does not take any arguments", 
+                        "The singleton set of the current type as a ClassNode."), false);
 
         // filtering pointcuts
         registerGlobalPointcut("subType", SubTypePointcut.class, 
                 createDoc(
                         "Matches when the containing pointcut passes in a type (or a field or method declaration whose type) is a sub-type of the argument.", 
                         "A String, Class, or ClassNode specifying a type.  The type passed in must be a sub-type of this argument.", 
-                        "The type specified by the argument (i.e., it will be the super-type that matches the type that is passed in)."));
+                        "The type specified by the argument (i.e., it will be the super-type that matches the type that is passed in)."), false);
         registerGlobalPointcut(
                 "annotatedBy",
                 FindAnnotationPointcut.class,
@@ -126,19 +134,19 @@ public class PointcutFactory {
                         "Matches when the containing pointcut passes in an <code>AnnotatedNode</code> that is annotated "
                                 + "by the argument to this pointcut.",
                         "A String, Class, or ClassNode corresponding to an annotation, or another pointcut that specifies a set of annotations to match.",
-                        "A set of <code>AnnotationNode</code>s that are matched by the argument."));
+                        "A set of <code>AnnotationNode</code>s that are matched by the argument."), false);
         registerGlobalPointcut(
                 "fields",
                 FindFieldPointcut.class,
-                createFind("field", "fields"));
+                createFind("field", "fields"), false);
         registerGlobalPointcut(
                 "methods",
                 FindMethodPointcut.class,
-                createFind("method", "methods"));
+                createFind("method", "methods"), false);
         registerGlobalPointcut(
                 "properties",
                 FindPropertyPointcut.class,
-                createFind("property", "properties"));
+                createFind("property", "properties"), false);
         registerGlobalPointcut(
                 "name",
                 NamePointcut.class,
@@ -150,27 +158,27 @@ public class PointcutFactory {
                                 + "<pre>currentType( fields( name ('reference') & isStatic() ) )</pre>",
                         "A string corresponding to the name on which to match.  If a non-null object is an argument, then its <code>toString()</code> method will " +
                         "be called in order to determine the string to match on.",
-                        "The matched objects as a set."));
+                        "The matched objects as a set."), false);
         registerGlobalPointcut(
                 "isFinal",
                 FinalPointcut.class,
-                createModifier("final"));
+                createModifier("final"), false);
         registerGlobalPointcut(
                 "isPrivate",
                 PrivatePointcut.class,
-                createModifier("private"));
+                createModifier("private"), false);
         registerGlobalPointcut(
                 "isPublic",
                 PublicPointcut.class,
-                createModifier("public"));
+                createModifier("public"), false);
         registerGlobalPointcut(
                 "isStatic",
                 StaticPointcut.class,
-                createModifier("static"));
+                createModifier("static"), false);
         registerGlobalPointcut(
                 "isSynchronized",
                 SynchronizedPointcut.class,
-                createModifier("synchronized"));
+                createModifier("synchronized"), false);
         registerGlobalPointcut(
                 "sourceFolderOfCurrentType",
                 SourceFolderOfTypePointcut.class,
@@ -178,7 +186,30 @@ public class PointcutFactory {
                         "Matches on the source folder of the current type.",
                         "the name of the source folder to match on.  Do not include the project name or a slash at the beginning of the name.  For example, the following will match the controller folder:"
                             + "<pre>SourceFolderOfTypePointcut('grails-app/controllers')</pre>",
-                        "If there is a match, then the source folder name is returned as a singleton set, otherwise null."));
+                        "If there is a match, then the source folder name is returned as a singleton set, otherwise null."), false);
+
+        // inside of method calls
+        registerGlobalPointcut("hasAttribute", HasAttributesPointcut.class, 
+                createDoc(
+                        "Matches if the enclosing <code>annotatedBy</code> pointcut has attributes specified by the pointcut argument.",
+                        "If the enclosing argument is a String, then the match will be on the attribute name.  Otherwise, the <code>name</code> and <code>value</code> pointcuts can be used instead.", 
+                        "The value expression of the annotation argument as a Groovy AST node"), false);
+        registerGlobalPointcut("hasArgument", HasArgumentsPointcut.class, 
+                createDoc(
+                        "Matches if the enclosing <code>enclosingCall</code> pointcut has named arguments specified by the pointcut argument.", 
+                        "If the enclosing argument is a string, then the match is on the name of the named argumemt. Otherwise, the <code>name</code> and <code>value</code> pointcuts can be used instead.", 
+                        "The value expression of the method call as a Groovy AST node"), false);
+        registerGlobalPointcut("value", ValuePointcut.class, createDoc(
+                "Matches on the value of an argument to a method call or an annoation.", 
+                "A constant or literal to match against, or empty to match against any value.", 
+                "A reifed representation of the matched value."), false);
+
+        registerGlobalPointcut("enclosingCall", EnclosingCallPointcut.class, 
+                createDoc(
+                        "Matches on the method call that is enclosing the current location.", 
+                        "Can match on the name of the method call and the arguments (using the <code>hasArguments</code> pointcut.",
+                        "The method call expression as a Groovy AST node."), false);
+        
 
         // lexical pointcuts
         registerGlobalPointcut(
@@ -187,93 +218,92 @@ public class PointcutFactory {
                 createDoc(
                         "Matches if the current inferencing location is inside of a class or enum declaration.  A synonym for <code>isClass</code>",
                         "A string, Class, ClassNode, or Pointcut further constraining what to match on.  If there are no arguments, then a simple check on the enclosing type is performed.",
-                        "The matched ClassNode as a singleton set or null if there was no match"));
+                        "The matched ClassNode as a singleton set or null if there was no match"), false);
         registerGlobalPointcut(
                 "isClass",
                 EnclosingClassPointcut.class,
                 createDoc(
                         "Matches if the current inferencing location is inside of a class or enum declaration.  A synonym for <code>enclosingClass</code>",
                         "A string, Class, ClassNode, or Pointcut further constraining what to match on.  If there are no arguments, then a simple check on the enclosing type is performed.",
-                        "The matched ClassNode as a singleton set or null if there was no match")); // synonym
+                        "The matched ClassNode as a singleton set or null if there was no match"), false); // synonym
         registerGlobalPointcut(
                 "enclosingScript",
                 EnclosingScriptPointcut.class,
                 createDoc(
                         "Matches if the current inferencing location is inside of a script declaration.  A synonym for <code>isScript</code>",
                         "A string, Class, ClassNode, or Pointcut further constraining what to match on.  If there are no arguments, then a simple check on the enclosing type is performed.",
-                        "The matched ClassNode as a singleton set or null if there was no match"));
+                        "The matched ClassNode as a singleton set or null if there was no match"), false);
         registerGlobalPointcut(
                 "isScript",
                 EnclosingScriptPointcut.class,
                 createDoc(
                         "Matches if the current inferencing location is inside of a script declaration.  A synonym for <code>enclosingScript</code>",
                         "A string, Class, ClassNode, or Pointcut further constraining what to match on.  If there are no arguments, then a simple check on the enclosing type is performed.",
-                        "The matched ClassNode as a singleton set or null if there was no match")); // synonym
+                        "The matched ClassNode as a singleton set or null if there was no match"), false); // synonym
         registerGlobalPointcut(
                 "enclosingField",
                 EnclosingFieldPointcut.class,
                 createDoc(
                         "Matches if the current inferencing location is inside of a field declaration.",
                         "A string or Pointcut further constraining what to match on.  If there are no arguments, then a simple check on the enclosing field is performed.",
-                        "The matched FieldNode as a singleton set or null if there was no match"));
+                        "The matched FieldNode as a singleton set or null if there was no match"), false);
         registerGlobalPointcut(
                 "enclosingMethod",
                 EnclosingMethodPointcut.class,
                 createDoc(
                         "Matches if the current inferencing location is inside of a method declaration.",
                         "A string or Pointcut further constraining what to match on.  If there are no arguments, then a simple check on the enclosing methoid is performed.",
-                        "The matched MethodNode as a singleton set or null if there was no match"));
+                        "The matched MethodNode as a singleton set or null if there was no match"), false);
         registerGlobalPointcut(
                 "enclosingCallName",
                 EnclosingCallNamePointcut.class,
                 createDoc(
                         "Matches on the name of the enclosing method call.  The current inferencing location is enclosed by a method call if it is in the argument list of a method call",
-                        "The method name to match on", "The name of the method that was matched as a singleton set."));
+                        "The method name to match on", "The name of the method that was matched as a singleton set."), false);
         registerGlobalPointcut(
                 "enclosingCallDeclaringType",
                 EnclosingCallDeclaringTypePointcut.class,
                 createDoc(
                         "Matches on the declaring type of the enclosing method call.  The current inferencing location is enclosed by a method call if it is in the argument list of a method call.",
                         "The declaring type of the method to match on.   This could be a string, Class, ClassNode, or a pointcut.",
-                        "The declaring type of the method that was matched as a singleton set."));
+                        "The declaring type of the method that was matched as a singleton set."), false);
 
-//        must change the implementation of isClosrure
         registerGlobalPointcut(
                 "enclosingClosure",
                 EnclosingClosurePointcut.class,
                 createDoc(
                         "Matches if the inferencing location is inside of a ClosureExpression. A synonnym for <code>inClosure</code>.",
-                        "none", "A set of <code>ClosureExpression</code>s corresponding to all of the closures enclosing the current expression."));
+                        "none", "A set of <code>ClosureExpression</code>s corresponding to all of the closures enclosing the current expression."), false);
         registerGlobalPointcut(
                 "inClosure",
                 EnclosingClosurePointcut.class,
                 createDoc(
                         "Matches if the inferencing location is inside of a ClosureExpression. A synonnym for <code>enclosingClosure</code>.",
-                        "none", "A set of <code>ClosureExpression</code>s corresponding to all of the closures enclosing the current expression."));
+                        "none", "A set of <code>ClosureExpression</code>s corresponding to all of the closures enclosing the current expression."), false);
         registerGlobalPointcut(
                 "currentIdentifier",
                 CurrentIdentifierPointcut.class,
                 createDoc("Matches when the current node being evaluated is a VariableExpression", "The identifier name on which to match",
-                        "The matchd variable expression as a singleton set"));
+                        "The matchd variable expression as a singleton set"), false);
 
         // structural pointcuts
         registerGlobalPointcut(
                 "fileExtension",
                 FileExtensionPointcut.class,
                 createDoc("Matches on the file extension of the file being inferred.", "The file extension without the '.'",
-                        "The full file name being matched, or null if there was no match."));
+                        "The full file name being matched, or null if there was no match."), false);
         registerGlobalPointcut(
                 "fileName",
                 FileNamePointcut.class,
                 createDoc("Matches on the simple file name of the file being inferred.",
                         "The file name to match. Should include the file extension, but not the path.",
-                        "The simple file name that was matched, or null if there was no match."));
+                        "The simple file name that was matched, or null if there was no match."), false);
         registerGlobalPointcut(
                 "packageFolder",
                 PackageFolderPointcut.class,
                 createDoc("Matches on the package folder name of the file being inferred.  The package folder is the sub-path from the package root to the file name (exclusive).",
                         "The package folder name to match.  Should not include the file name itself.",
-                "The package folder name that was matched, or null if there was no match."));
+                "The package folder name that was matched, or null if there was no match."), false);
         registerGlobalPointcut(
                 "nature",
                 ProjectNaturePointcut.class,
@@ -281,7 +311,7 @@ public class PointcutFactory {
                         + "For example:<blockquote>Groovy proejcts: <code>org.eclipse.jdt.groovy.core.groovyNature</code><br>"
                         + "Grails project: <code>com.springsource.sts.grails.core.nature</code></blockquote>",
                         "The name of the project nature to check",
-                        "The project nature that was matched, or null if there was no match."));
+                        "The project nature that was matched, or null if there was no match."), false);
         registerGlobalPointcut(
                 "sourceFolderOfCurrentFile",
                 SourceFolderOfFilePointcut.class,
@@ -289,7 +319,20 @@ public class PointcutFactory {
                         "Matches on the source folder of the file being inferred. Do not include the project name or a slash at the beginning of the name.  For example, the following will match the controller folder:"
                                 + "<pre>sourceFolderOfCurrentFile('grails-app/controllers')</pre>",
                         "The name of the source folder to match",
-                        "The full name of the source folder, or null if there was no match."));
+                        "The full name of the source folder, or null if there was no match."), false);
+        
+        
+        
+        // deprecated
+        registerGlobalPointcut(
+                "currentTypeIsEnclosingType",
+                CurrentTypePointcut.class,
+                createDoc(
+                        "<b>Deprecated:</b> use <code>isThisType</code> instead.<br/><br/>" +
+                        "Matches when the current type being inferred is the same as the enclosing type declaration.  "
+                                + "This happens on references to <code>this</code> or when inferencing is occurring in the new statement position.",
+                        "This pointcut does not take any arguments", 
+                        "The singleton set of the current type as a ClassNode."), true);
     }
 
     /**
@@ -332,9 +375,12 @@ public class PointcutFactory {
     }
     
     
-    private static void registerGlobalPointcut(String name, Class<? extends IPointcut> pcClazz, String doc) {
+    private static void registerGlobalPointcut(String name, Class<? extends IPointcut> pcClazz, String doc, boolean isDeprecated) {
         registry.put(name, pcClazz);
         docRegistry.put(name, doc);
+        if (isDeprecated) {
+            deprecatedRegistry.add(name);
+        }
     }
     
     

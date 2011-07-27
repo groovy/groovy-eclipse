@@ -13,6 +13,7 @@ package org.codehaus.groovy.eclipse.dsl.script;
 import groovy.lang.Binding;
 import groovy.lang.Closure;
 import groovy.lang.GroovyClassLoader;
+import groovy.lang.MissingMethodException;
 import groovy.lang.Script;
 
 import java.io.BufferedReader;
@@ -46,7 +47,7 @@ public class DSLDScriptExecutor {
     
     private final class UnsupportedDSLVersion extends RuntimeException {
 
-        private static final long serialVersionUID = 282885748470678955L;
+        private static final long serialVersionUID = 1L;
 
         public UnsupportedDSLVersion(String why) {
             super(scriptFile.getName() + " is not supported because:\n" + why);
@@ -75,12 +76,37 @@ public class DSLDScriptExecutor {
 
     
     private final class DSLDScriptBinding extends Binding {
+        private final Script dsldScript;
+
+        public DSLDScriptBinding(Script dsldScript) {
+            this.dsldScript = dsldScript;
+        }
+
+
         @Override
         public Object invokeMethod(String name, Object args) {
             if (name.equals("registerPointcut")) {
                 return tryRegister(args);
             } else if (name.equals("supportsVersion")) {
-                return checkVersion(new Object[] {args});
+                String result = (String) checkVersion(new Object[] {args});
+                return result == null;
+            } else if (name.equals("assertVersion")) {
+                String result = (String) checkVersion(new Object[] {args});
+                if (result != null) {
+                    throw new UnsupportedDSLVersion(result);
+                }
+                return null;
+            } else if (name.equals("contribution")) {
+                Object result = contribution(args);
+                if (result == null) {
+                    throw new MissingMethodException(name, dsldScript.getClass(), new Object[] { args });
+                }
+                return result;
+            } else if (name.equals("log")) {
+                if (GroovyLogManager.manager.hasLoggers()) {
+                    GroovyLogManager.manager.log(TraceCategory.DSL, "========== " + args);
+                }
+                return args;
             }
             
             IPointcut pc = factory.createPointcut(name);
@@ -92,6 +118,7 @@ public class DSLDScriptExecutor {
             }
         }
 
+
         @SuppressWarnings("rawtypes")
         @Override
         public Object getVariable(String name) {
@@ -102,9 +129,54 @@ public class DSLDScriptExecutor {
                     private static final long serialVersionUID = 1L;
 
                     @Override
-                	public Object call(Object[] arguments) {
-                	    return checkVersion(arguments);
+                	public Object call(Object[] args) {
+                        String result = (String) checkVersion(args);
+                        return result == null;
                 	}
+                };
+            } else if ("assertVersion".equals(name)) {
+                return new Closure(this) {
+                    private static final long serialVersionUID = 1L;
+                    
+                    @Override
+                    public Object call(Object[] args) {
+                        String result = (String) checkVersion(args);
+                        if (result != null) {
+                            throw new UnsupportedDSLVersion(result);
+                        }
+                        return null;
+                    }
+                };
+            } else if ("contribution".equals(name)) {
+                return new Closure(this) {
+                    private static final long serialVersionUID = 1L;
+                    @Override
+                    public Object call(Object[] args) {
+                        Object result = contribution(args);
+                        if (result == null) {
+                            throw new MissingMethodException("contribution", dsldScript.getClass(), new Object[] { args });
+                        }
+                        return result;
+                    }
+                };
+            } else if ("log".equals(name)) {
+                return new Closure(this) {
+                    private static final long serialVersionUID = 1L;
+                    @Override
+                    public Object call(Object[] args) {
+                        if (GroovyLogManager.manager.hasLoggers()) {
+                            String msg;
+                            if (args == null) {
+                                msg = "null";
+                            } else if (args.length == 0) {
+                                msg = "";
+                            } else {
+                                msg = args[0].toString();
+                            }
+                            GroovyLogManager.manager.log(TraceCategory.DSL, "========== " + msg);
+                        }
+                        return args;
+                    }
                 };
             }
             
@@ -186,7 +258,7 @@ public class DSLDScriptExecutor {
                     return result;
                 }
                 Script dsldScript = clazz.newInstance();
-                dsldScript.setBinding(new DSLDScriptBinding());
+                dsldScript.setBinding(new DSLDScriptBinding(dsldScript));
                 result = dsldScript.run();
             } catch (UnsupportedDSLVersion e) {
                 if (GroovyLogManager.manager.hasLoggers()) {
@@ -232,6 +304,27 @@ public class DSLDScriptExecutor {
             return null;
         }
     }
+    
+    protected Object[] extractArgsContribution(Object args) {
+        if (args instanceof Object[]) {
+            Object[] arr = (Object[]) args;
+            if (arr.length == 2 && arr[0] instanceof IPointcut && arr[1] instanceof Closure) {
+                return arr;
+            } 
+        } else if (args instanceof Collection<?>) {
+            Collection<Object> coll = (Collection<Object>) args;
+            Object[] arr = new Object[2];
+            Iterator<Object> iter = coll.iterator();
+            if (iter.hasNext() && (arr[0] = iter.next()) instanceof IPointcut && 
+                iter.hasNext() && (arr[1] = iter.next()) instanceof Closure &&
+                !iter.hasNext()) {
+                return arr;
+            }
+        } else if (args instanceof Map<?, ?>) {
+            return extractArgsContribution(((Map<Object, Object>) args).values());
+        }
+        return null;
+    }
 
     protected Object[] extractArgsForRegister(Object args) {
         if (args instanceof Object[]) {
@@ -271,9 +364,25 @@ public class DSLDScriptExecutor {
         }
     }
 
+    /**
+     * a synonym for IPointcut.accept()
+     * @param args
+     * @return
+     */
+    public Object contribution(Object args) {
+        Object[] contributionArgs = extractArgsContribution(args);
+        if (args == null) {
+            return null;
+        }
+        IPointcut p = (IPointcut) contributionArgs[0];
+        p.accept((Closure) contributionArgs[1]);
+        return Boolean.TRUE;
+    }
+
+    
     public Object checkVersion(Object[] array) {
     	if (array == null || array.length != 1) {
-    		throw new UnsupportedDSLVersion(createInvalidVersionString(array));
+    		return createInvalidVersionString(array);
     	}
     	Object args = array[0];
     	
@@ -284,13 +393,13 @@ public class DSLDScriptExecutor {
         }
         
         if (! (args instanceof Map<?,?>)) {
-            throw new UnsupportedDSLVersion(createInvalidVersionString(args));
+            return createInvalidVersionString(args);
         }
         
         Map<?,?> versions = (Map<?,?>) args;
         for (Entry<?,?> entry : versions.entrySet()) {
             if (! (entry.getValue() instanceof String)) {
-                throw new UnsupportedDSLVersion(createInvalidVersionString(args));
+                return createInvalidVersionString(args);
             }
             Version v = null;
             try {
@@ -300,24 +409,24 @@ public class DSLDScriptExecutor {
             }
             if ("groovy".equals(entry.getKey())) {
                 if (groovyVersion != null && v.compareTo(groovyVersion) > 0) {
-                    throw new UnsupportedDSLVersion("Invalid Groovy version.  Expected: " + v + " Installed: " + groovyVersion);
+                    return "Invalid Groovy version.  Expected: " + v + " Installed: " + groovyVersion;
                 } else if (groovyVersion == null) {
-                    throw new UnsupportedDSLVersion("Could not find a Groovy version.  Expected: " + groovyVersion);
+                    return "Could not find a Groovy version.  Expected: " + groovyVersion;
                 }
             } else if ("groovyEclipse".equals(entry.getKey())) {
                 if (groovyEclipseVersion != null && v.compareTo(groovyEclipseVersion) > 0) {
-                    throw new UnsupportedDSLVersion("Invalid Groovy-Eclipse version.  Expected: " + v + " Installed: " + groovyEclipseVersion);
+                    return "Invalid Groovy-Eclipse version.  Expected: " + v + " Installed: " + groovyEclipseVersion;
                 } else if (groovyEclipseVersion == null) {
-                    throw new UnsupportedDSLVersion("Could not find a Groovy-Eclipse version.  Expected: " + groovyEclipseVersion);
+                    return "Could not find a Groovy-Eclipse version.  Expected: " + groovyEclipseVersion;
                 }
             } else if ("grailsTooling".equals(entry.getKey()) || "sts".equals(entry.getKey())) {
                 if (grailsToolingVersion != null && v.compareTo(grailsToolingVersion) > 0) {
-                    throw new UnsupportedDSLVersion("Invalid Grails Tooling version.  Expected: " + v + " Installed: " + grailsToolingVersion);
+                    return "Invalid Grails Tooling version.  Expected: " + v + " Installed: " + grailsToolingVersion;
                 } else if (grailsToolingVersion == null) {
-                    throw new UnsupportedDSLVersion("Could not find a Grails Tooling version.  Expected: " + grailsToolingVersion);
+                    return "Could not find a Grails Tooling version.  Expected: " + grailsToolingVersion;
                 }
             } else {
-                throw new UnsupportedDSLVersion(createInvalidVersionString(args));
+                return createInvalidVersionString(args);
             }
         }
         

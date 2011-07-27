@@ -40,7 +40,10 @@ interface IPointcut {
 	 * been generated from the pointcut match
 	 *   
 	 * @param group the contribution group to accept
+	 * 
+	 * @deprecated Use <code>contribution(<pointcut_expression>)</code> instead
 	 */
+    @Deprecated
 	def accept(Closure group);
 } 
  
@@ -52,7 +55,7 @@ def dsldFile = nature("org.eclipse.jdt.groovy.core.groovyNature") & fileExtensio
 
 // You can also create a closure around pointcuts and assign them to  
 // a variable.  Note that when using these variables, you must include parens.
-def insideContribution = { enclosingCallName("accept") & inClosure() }
+def insideContribution = { (enclosingCallName("accept") | enclosingCallName("contribution")) & inClosure() }
 
 // Ensure that the 'accept' method is available for all closures and variables that correspond to pointcuts
 (dsldFile & ( ~ insideContribution() )  & ( ~currentType(subType(Script)) )).accept {
@@ -85,10 +88,15 @@ def insideContribution = { enclosingCallName("accept") & inClosure() }
 	// ...the PointcutFactory class is a secret class that is declared by groovy-eclipse
 	// Yes, you can use many Eclipse classes here.  The editor won't like them, so they must be fully qualified
 	// and you cannot import them or use them as types for variables 
-	Map<String, String> pointcutNames = org.codehaus.groovy.eclipse.dsl.script.PointcutFactory.docRegistry
-	for (pointcutName in pointcutNames.entrySet()) {
-		method name : pointcutName.key, type: IPointcut, params : [pointcutArg : Object], doc : pointcutName.value
-	}
+
+    Map<String, String> pointcutNames = org.codehaus.groovy.eclipse.dsl.script.PointcutFactory.docRegistry
+    pointcutNames.each { pointcutName, pointcutDoc ->
+        method name : pointcutName, type: IPointcut, params : [pointcutArg : Object], doc : pointcutDoc,
+            isDeprecated : org.codehaus.groovy.eclipse.dsl.script.PointcutFactory.deprecatedRegistry.contains(pointcutName)
+    }
+    
+    method name : "contribution", type : void, params : [pointcut : IPointcut, contributionBlock : Closure], 
+    doc : "Associates a pointcut expression with a contribution block."
 	
 	method name : "supportsVersion", type : void, params : [versionKindToName : Map.class ], 
 	doc : '''Specifies that this script is only active when the specified version constraints are met.  
@@ -102,6 +110,7 @@ def insideContribution = { enclosingCallName("accept") & inClosure() }
 	Registers a custom pointcut.  This pointcut is only available from within the current script.
 	You must specify a name for the pointcut as well as a closure that evaluates whether or not there is a match'''
 	
+    property name : "log", type: void, doc: "Logs a message to the Groovy Event Console.  Useful for debugging,"
 }
 
 // Here, specify everything that can be used inside of an accept block (also called a Contribution Group)
@@ -161,6 +170,8 @@ def insideContribution = { enclosingCallName("accept") & inClosure() }
 	property name : "currentNode", type : ASTNode, doc : "This is the ASTNode being evaluated"
 	property name : "enclosingNode", type : ASTNode, doc : "This is the ASTNode enclosing the ASTNode being evaluated"
 	
+    property name : "log", type: void, doc: "Logs a message to the Groovy Event Console.  Useful for debugging,"
+    
 	// Now, extract all bindings from the wormhole and add them as contributions 
 	for (binding in wormhole.bindings) {
 		property name : binding, type : Collection, doc : "Binding created from pointcut"

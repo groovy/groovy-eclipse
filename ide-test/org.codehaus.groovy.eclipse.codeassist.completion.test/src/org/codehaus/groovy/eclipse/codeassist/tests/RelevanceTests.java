@@ -125,16 +125,4 @@ public class RelevanceTests extends CompletionTestCase {
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, PU)));
         assertProposalOrdering(proposals, "f = ", "az", "aa");
     }
-    
-    
-    private void assertProposalOrdering(ICompletionProposal[] proposals, String...order) {
-        int startFrom = 0;
-        for (String propName : order) {
-            startFrom = findProposal(proposals, propName, false, startFrom) + 1;
-            if (startFrom == -1) {
-                fail("Failed to find '" + propName + "' in order inside of:\n" + printProposals(proposals));
-            }
-        }
-    }
-    
 }

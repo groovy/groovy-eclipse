@@ -50,16 +50,20 @@ public class MethodContributionElement implements IContributionElement {
     private ClassNode cachedReturnType;
     private Parameter[] cachedParameters;
     private ProposalFormattingOptions options = ProposalFormattingOptions.newFromOptions();
+    private final int relevanceMultiplier;
+    private final boolean isDeprecated;
 
     
     
-    public MethodContributionElement(String methodName, ParameterContribution[] params, String returnType, String declaringType, boolean isStatic, String provider, String doc, boolean useNamedArgs) {
+    public MethodContributionElement(String methodName, ParameterContribution[] params, String returnType, String declaringType, boolean isStatic, String provider, String doc, boolean useNamedArgs, boolean isDeprecated, int relevanceMultiplier) {
         this.methodName = methodName;
         this.params = params;
         this.returnType = returnType;
         this.isStatic = isStatic;
         this.declaringType = declaringType;
         this.useNamedArgs = useNamedArgs;
+        this.isDeprecated = isDeprecated;
+        this.relevanceMultiplier = relevanceMultiplier;
         
         this.provider = provider == null ? GROOVY_DSL_PROVIDER : provider;
         this.doc = doc == null ? NO_DOC + this.provider : doc;
@@ -76,6 +80,7 @@ public class MethodContributionElement implements IContributionElement {
     public IGroovyProposal toProposal(ClassNode declaringType, ResolverCache resolver) {
         GroovyMethodProposal groovyMethodProposal = new GroovyMethodProposal(toMethod(declaringType.redirect(), resolver), provider, options);
         groovyMethodProposal.setUseNamedArguments(useNamedArgs);
+        groovyMethodProposal.setRelevanceMultiplier(relevanceMultiplier);
         return groovyMethodProposal;
     }
     
@@ -117,7 +122,9 @@ public class MethodContributionElement implements IContributionElement {
     }
     
     protected int opcode() {
-        return isStatic ? Opcodes.ACC_STATIC : Opcodes.ACC_PUBLIC;
+        int modifiers = isStatic ? Opcodes.ACC_STATIC : Opcodes.ACC_PUBLIC;
+        modifiers |= isDeprecated ? Opcodes.ACC_DEPRECATED : 0;
+        return modifiers;
     }
 
     public String contributionName() {

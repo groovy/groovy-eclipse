@@ -191,7 +191,7 @@ public abstract class CompletionTestCase extends BuilderTests {
                 return i;
             } else
             // if a keyword
-            if (propName.equals(proposal.getDisplayString())) {
+            if (name.equals(proposal.getDisplayString())) {
                 return i;
             }
         }
@@ -397,6 +397,16 @@ public abstract class CompletionTestCase extends BuilderTests {
                 fail("Expected at least one proposal, but found none");
             }
             applyProposalAndCheck(new Document(contents), firstProposal, expecteds[i]);
+        }
+    }
+
+    protected void assertProposalOrdering(ICompletionProposal[] proposals, String...order) {
+        int startFrom = 0;
+        for (String propName : order) {
+            startFrom = findProposal(proposals, propName, false, startFrom) + 1;
+            if (startFrom == 0) {
+                fail("Failed to find '" + propName + "' in order inside of:\n" + printProposals(proposals));
+            }
         }
     }
 

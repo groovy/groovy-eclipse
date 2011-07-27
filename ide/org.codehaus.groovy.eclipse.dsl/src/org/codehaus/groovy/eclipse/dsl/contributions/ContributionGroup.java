@@ -32,6 +32,8 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
     
     private final static String DEFAULT_PROVIDER = "User";
     
+    protected final static int DEFAULT_RELEVANCE_MULTIPLIER = 11;
+    
     protected List<IContributionElement> contributions = new ArrayList<IContributionElement>();
     
     
@@ -39,12 +41,12 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
     // alternative way to add a method contribution
     public void addMethodContribution(String name, ParameterContribution[] params, String returnType, String declaringType,
             boolean isStatic, boolean useNamedArgs) {
-        contributions.add(new MethodContributionElement(name, params, returnType, declaringType, isStatic, DEFAULT_PROVIDER, null, useNamedArgs));
+        contributions.add(new MethodContributionElement(name, params, returnType, declaringType, isStatic, DEFAULT_PROVIDER, null, useNamedArgs, false, DEFAULT_RELEVANCE_MULTIPLIER));
     }
 
     // alternative way to add a property contribution
     public void addPropertyContribution(String name, String type, String declaringType, boolean isStatic) {
-        contributions.add(new PropertyContributionElement(name, type, declaringType, isStatic, DEFAULT_PROVIDER, null));
+        contributions.add(new PropertyContributionElement(name, type, declaringType, isStatic, DEFAULT_PROVIDER, null, false, DEFAULT_RELEVANCE_MULTIPLIER));
     }
 
     public List<IContributionElement> getContributions(

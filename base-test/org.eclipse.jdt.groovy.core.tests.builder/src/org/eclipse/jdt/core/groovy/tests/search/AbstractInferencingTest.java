@@ -16,8 +16,6 @@
 
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import java.util.List;
-
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
@@ -32,8 +30,8 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
-import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
+import org.eclipse.jdt.groovy.search.VariableScope;
 import org.objectweb.asm.Opcodes;
 
 /**
