@@ -8,6 +8,7 @@
  * Contributors:
  *     Andrew Eisenberg        - Initial API and implementation
  *     Justin Edelson          - patch from GRECLIPSE-857
+ *     Benson Margulies        - patch from GRECLIPSE-1068 (update for compatibility with m2e 0.13)
  *******************************************************************************/
 package org.codehaus.groovy.m2eclipse;
 
@@ -26,11 +27,11 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.maven.ide.eclipse.jdt.IClasspathDescriptor;
-import org.maven.ide.eclipse.jdt.IJavaProjectConfigurator;
-import org.maven.ide.eclipse.project.IMavenProjectFacade;
-import org.maven.ide.eclipse.project.configurator.AbstractProjectConfigurator;
-import org.maven.ide.eclipse.project.configurator.ProjectConfigurationRequest;
+import org.eclipse.m2e.core.project.IMavenProjectFacade;
+import org.eclipse.m2e.core.project.configurator.AbstractProjectConfigurator;
+import org.eclipse.m2e.core.project.configurator.ProjectConfigurationRequest;
+import org.eclipse.m2e.jdt.IClasspathDescriptor;
+import org.eclipse.m2e.jdt.IJavaProjectConfigurator;
 
 public class GroovyProjectConfigurator extends AbstractProjectConfigurator
         implements IJavaProjectConfigurator {

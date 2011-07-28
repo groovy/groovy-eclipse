@@ -2,14 +2,15 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         point="org.maven.ide.eclipse.projectConfigurators">
+         point="org.eclipse.m2e.core.projectConfigurators">
       <configurator
             class="org.codehaus.groovy.m2eclipse.GroovyProjectConfigurator"
-            generic="true"
             id="org.codehaus.groovy.m2eclipse.configurator1"
             name="Groovy-Eclipse"
-            priority="101">
+    >
       </configurator>
    </extension>
-
+    <extension
+         point="org.eclipse.m2e.core.lifecycleMappingMetadataSource">
+   </extension>
 </plugin>

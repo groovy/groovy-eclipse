@@ -20,8 +20,6 @@
    <requires>
       <import plugin="org.eclipse.core.runtime"/>
       <import plugin="org.codehaus.groovy" version="1.6.7" match="greaterOrEqual"/>
-      <import plugin="org.maven.ide.eclipse"/>
-      <import plugin="org.maven.ide.eclipse.jdt"/>
       <import plugin="org.eclipse.core.resources" version="3.5.1" match="greaterOrEqual"/>
       <import plugin="org.eclipse.jdt.groovy.core" version="2.0.1" match="greaterOrEqual"/>
       <import plugin="org.codehaus.groovy.eclipse.core" version="2.0.1" match="greaterOrEqual"/>
