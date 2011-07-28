@@ -71,7 +71,7 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
                     ProposalUtils.looselyMatches(prefix, field.getName())) {
                 GroovyFieldProposal fieldProposal = new GroovyFieldProposal(field);
                 float relevanceMultiplier = isInterestingType(field
-                        .getType()) ? 11 : 1;
+                        .getType()) ? 101 : 1;
                 relevanceMultiplier *= field.isStatic() ? 0.1 : 1;
                 fieldProposal.setRelevanceMultiplier(relevanceMultiplier);
                 groovyProposals.add(fieldProposal);

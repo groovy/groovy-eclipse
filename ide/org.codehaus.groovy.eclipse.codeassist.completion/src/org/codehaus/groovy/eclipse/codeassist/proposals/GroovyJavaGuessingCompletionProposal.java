@@ -112,6 +112,12 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         this.proposalOptions = proposalOptions;
     }
 
+    @Override
+    protected int computeRelevance() {
+        // precomputed
+        return fProposal.getRelevance();
+    }
+
     private IJavaElement getEnclosingElement() {
         return fCoreContext.getEnclosingElement();
     }

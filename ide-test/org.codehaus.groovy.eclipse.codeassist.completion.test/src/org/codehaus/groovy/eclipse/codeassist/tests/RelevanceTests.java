@@ -65,64 +65,64 @@ public class RelevanceTests extends CompletionTestCase {
     // now test that fields and methods of the assigned type are above other methods
     // this one should do alphabetical ordering
     public void testFieldOfAssignedType1() throws Exception {
-        String contents = "class Other {\ndef x() { def f =  }\n String az\n int aa }";
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, PU)));
-        assertProposalOrdering(proposals, "f = ", "aa", "az");
+        String contents = "class Other {\ndef x() { def f = a }\n String az\n int aa }";
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")));
+        assertProposalOrdering(proposals, "aa", "az");
     }
 
     // this one should do the string first
     public void testFieldOfAssignedType2() throws Exception {
-        String contents = "class Other {\ndef x() { String f =  }\n String az\n int aa }";
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, PU)));
-        assertProposalOrdering(proposals, "f = ", "az", "aa");
+        String contents = "class Other {\ndef x() { String f = a }\n String az\n int aa }";
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")));
+        assertProposalOrdering(proposals, "az", "aa");
     }
     
     // this one should do the int first
     public void testFieldOfAssignedType3() throws Exception {
-        String contents = "class Other {\ndef x() { int f =  }\n String aa\n int az }";
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, PU)));
-        assertProposalOrdering(proposals, "f = ", "az", "aa");
+        String contents = "class Other {\ndef x() { int f = a }\n String aa\n int az }";
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")));
+        assertProposalOrdering(proposals, "az", "aa");
     }
     
     // this one should do alphabetical ordering
     public void testMethodOfAssignedType1() throws Exception {
-        String contents = "class Other {\ndef x() { def f =  }\n String az() { }\n int aa() { } }";
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, PU)));
-        assertProposalOrdering(proposals, "f = ", "aa", "az");
+        String contents = "class Other {\ndef x() { def f = a }\n String az() { }\n int aa() { } }";
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")));
+        assertProposalOrdering(proposals, "aa", "az");
     }
     
     // this one should do the string first
     public void testMethodOfAssignedType2() throws Exception {
-        String contents = "class Other {\ndef x() { String f =  }\n String az() { }\n int aa() { } }";
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, PU)));
-        assertProposalOrdering(proposals, "f = ", "az", "aa");
+        String contents = "class Other {\ndef x() { String f = a }\n String az() { }\n int aa() { } }";
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")));
+        assertProposalOrdering(proposals, "az", "aa");
     }
     
     // this one should do the int first
     public void testMethodOfAssignedType3() throws Exception {
-        String contents = "class Other {\ndef x() { int f =  }\n String aa() { }\n int az() { } }";
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, PU)));
-        assertProposalOrdering(proposals, "f = ", "az", "aa");
+        String contents = "class Other {\ndef x() { int f = a }\n String aa() { }\n int az() { } }";
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")));
+        assertProposalOrdering(proposals, "az", "aa");
     }
     
     // this one should do alphabetical ordering
     public void testMethodAndFieldOfAssignedType1() throws Exception {
-        String contents = "class Other {\ndef x() { def f =  }\n String az() { }\n int aa }";
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, PU)));
-        assertProposalOrdering(proposals, "f = ", "aa", "az");
+        String contents = "class Other {\ndef x() { def f = a }\n String az() { }\n int aa }";
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")));
+        assertProposalOrdering(proposals, "aa", "az");
     }
     
     // this one should do the string first
     public void testMethodAndFieldOfAssignedType2() throws Exception {
-        String contents = "class Other {\ndef x() { String f =  }\n String az() { }\n int aa }";
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, PU)));
-        assertProposalOrdering(proposals, "f = ", "az", "aa");
+        String contents = "class Other {\ndef x() { String f = a }\n String az() { }\n int aa }";
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")));
+        assertProposalOrdering(proposals, "az", "aa");
     }
     
     // this one should do the int first
     public void testMethodAndFieldOfAssignedType3() throws Exception {
-        String contents = "class Other {\ndef x() { int f =  }\n String aa() { }\n int az }";
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, PU)));
-        assertProposalOrdering(proposals, "f = ", "az", "aa");
+        String contents = "class Other {\ndef x() { int f = a }\n String aa() { }\n int az }";
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, " = a")));
+        assertProposalOrdering(proposals, "az", "aa");
     }
 }
