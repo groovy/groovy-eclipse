@@ -161,7 +161,7 @@ public class CompilerHook implements HookConfigurator, AdaptorHook {
         for (Bundle bundle : bundlesToRefresh) {
             sb.append(bundle.getVersion() + "\n");
         }
-        return null;
+        return sb.toString();
     }
 
     private void handleBundle(BundleDescription bundle, State state, BundleContext context) throws BundleException {
