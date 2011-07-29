@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2010 the original author or authors.
+ * Copyright 2008-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,12 +81,12 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
     static final String MY_TYPE_NAME = "@" + MY_TYPE.getNameWithoutPackage();
     private static final ClassNode DATE_TYPE = ClassHelper.make(Date.class);
     private static final ClassNode CLONEABLE_TYPE = ClassHelper.make(Cloneable.class);
-    private static final ClassNode COLLECTION_TYPE = ClassHelper.make(Collection.class);
+    private static final ClassNode COLLECTION_TYPE = ClassHelper.makeWithoutCaching(Collection.class, false);
     private static final ClassNode READONLYEXCEPTION_TYPE = ClassHelper.make(ReadOnlyPropertyException.class);
     private static final ClassNode DGM_TYPE = ClassHelper.make(DefaultGroovyMethods.class);
     private static final ClassNode SELF_TYPE = ClassHelper.make(ImmutableASTTransformation.class);
-    private static final ClassNode HASHMAP_TYPE = ClassHelper.make(HashMap.class);
-    private static final ClassNode MAP_TYPE = ClassHelper.make(Map.class);
+    private static final ClassNode HASHMAP_TYPE = ClassHelper.makeWithoutCaching(HashMap.class, false);
+    private static final ClassNode MAP_TYPE = ClassHelper.makeWithoutCaching(Map.class, false);
 
     public void visit(ASTNode[] nodes, SourceUnit source) {
         init(nodes, source);
@@ -116,9 +116,9 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
                 ensureNotPublic(cName, fNode);
             }
             createConstructors(cNode);
-            createHashCode(cNode, true, false, false, new ArrayList<String>());
-            createEquals(cNode, false, false, new ArrayList<String>());
-            createToString(cNode, false, false, new ArrayList<String>());
+            createHashCode(cNode, true, false, false, null, null);
+            createEquals(cNode, false, false, false, null, null);
+            createToString(cNode, false, false, null, null);
     }
     }
 
@@ -432,6 +432,7 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
         return safeExpression(fieldExpr, expression);
     }
 
+    @SuppressWarnings("Unchecked")
     public static Object checkImmutable(String className, String fieldName, Object field) {
         if (field == null || field instanceof Enum || inImmutableList(field.getClass().getName())) return field;
         if (field instanceof Collection) return DefaultGroovyMethods.asImmutable((Collection) field);

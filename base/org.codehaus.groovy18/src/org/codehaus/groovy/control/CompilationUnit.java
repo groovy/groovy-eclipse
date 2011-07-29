@@ -55,7 +55,7 @@ import java.util.*;
  * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
  * @author <a href="mailto:roshandawrani@codehaus.org">Roshan Dawrani</a>
- * @version $Id: CompilationUnit.java 21957 2011-04-08 16:07:33Z blackdrag $
+ * @version $Id: CompilationUnit.java 21958 2011-04-08 16:07:34Z blackdrag $
  */
 
 public class CompilationUnit extends ProcessingUnit {
@@ -648,12 +648,6 @@ public class CompilationUnit extends ProcessingUnit {
         public void call(SourceUnit source) throws CompilationFailedException {
             List<ClassNode> classes = source.ast.getClasses();
             for (ClassNode node : classes) {
-
-//                if (node instanceof InnerClassNode && ((InnerClassNode)node).getVariableScope() != null) {
-//                    // what we want to do is not to process anonymous here as they were processed already
-//                    continue;
-//                }
-            	
                 VariableScopeVisitor scopeVisitor = new VariableScopeVisitor(source);
                 scopeVisitor.visitClass(node);
 

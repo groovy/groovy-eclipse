@@ -17,8 +17,8 @@
 package org.codehaus.groovy.ast;
 
 /**
- * This class is used to describe generic type signatures
- * for ClassNodes. 
+ * This class is used to describe generic type signatures for ClassNodes.
+ *
  * @author Jochen Theodorou
  * @see ClassNode
  */
@@ -84,15 +84,15 @@ public class GenericsType extends ASTNode {
     }
     
     public String toString() {
-        String ret = name;
+        String ret = (type == null || placeholder || wildcard) ? name : type.getName();
         if (upperBounds!=null) {
             ret += " extends ";
             for (int i = 0; i < upperBounds.length; i++) {
-                ret += upperBounds[i].toString();
+                ret += upperBounds[i].getName();
                 if (i+1<upperBounds.length) ret += " & ";
             }
         } else if (lowerBound!=null) {
-            ret += " super "+lowerBound;
+            ret += " super " + lowerBound.getName();
         }
         return ret;
     }
@@ -111,7 +111,7 @@ public class GenericsType extends ASTNode {
 
     public void setPlaceholder(boolean placeholder) {
         this.placeholder = placeholder;
-        type.setGenericsPlaceHolder(true);
+        type.setGenericsPlaceHolder(placeholder);
     }
     
     public boolean isResolved() {

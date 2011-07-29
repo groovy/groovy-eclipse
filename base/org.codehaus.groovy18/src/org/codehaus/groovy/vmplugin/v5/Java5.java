@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2003-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -265,8 +265,7 @@ public class Java5 implements VMPlugin {
         }
         else {
             Method[] declaredMethods = type.getDeclaredMethods();
-            for (int i = 0; i < declaredMethods.length; i++) {
-                Method declaredMethod = declaredMethods[i];
+            for (Method declaredMethod : declaredMethods) {
                 try {
                     Object value = declaredMethod.invoke(annotation);
                     Expression valueExpression = annotationValueToExpression(value);
@@ -350,12 +349,14 @@ public class Java5 implements VMPlugin {
         Field[] fields = clazz.getDeclaredFields();
         for (Field f : fields) {
             ClassNode ret = makeClassNode(compileUnit, f.getGenericType(), f.getType());
-            classNode.addField(f.getName(), f.getModifiers(), ret, null);
+            FieldNode fn = new FieldNode(f.getName(), f.getModifiers(), ret, classNode, null);
+            setAnnotationMetaData(f.getAnnotations(), fn);
+            classNode.addField(fn);
         }
         Method[] methods = clazz.getDeclaredMethods();
         for (Method m : methods) {
             ClassNode ret = makeClassNode(compileUnit, m.getGenericReturnType(), m.getReturnType());
-            Parameter[] params = makeParameters(compileUnit, m.getGenericParameterTypes(), m.getParameterTypes());
+            Parameter[] params = makeParameters(compileUnit, m.getGenericParameterTypes(), m.getParameterTypes(), m.getParameterAnnotations());
             ClassNode[] exceptions = makeClassNodes(compileUnit, m.getGenericExceptionTypes(), m.getExceptionTypes());
             MethodNode mn = new MethodNode(m.getName(), m.getModifiers(), ret, params, exceptions, null);
             setMethodDefaultValue(mn, m);
@@ -365,7 +366,7 @@ public class Java5 implements VMPlugin {
         }
         Constructor[] constructors = clazz.getDeclaredConstructors();
         for (Constructor ctor : constructors) {
-            Parameter[] params = makeParameters(compileUnit, ctor.getGenericParameterTypes(), ctor.getParameterTypes());
+            Parameter[] params = makeParameters(compileUnit, ctor.getGenericParameterTypes(), ctor.getParameterTypes(), ctor.getParameterAnnotations());
             ClassNode[] exceptions = makeClassNodes(compileUnit, ctor.getGenericExceptionTypes(), ctor.getExceptionTypes());
             classNode.addConstructor(ctor.getModifiers(), params, exceptions, null);
         }
@@ -415,20 +416,22 @@ public class Java5 implements VMPlugin {
         return back;
     }
 
-    private Parameter[] makeParameters(CompileUnit cu, Type[] types, Class[] cls) {
+    private Parameter[] makeParameters(CompileUnit cu, Type[] types, Class[] cls, Annotation[][] parameterAnnotations) {
         Parameter[] params = Parameter.EMPTY_ARRAY;
         if (types.length > 0) {
             params = new Parameter[types.length];
             for (int i = 0; i < params.length; i++) {
-                params[i] = makeParameter(cu, types[i], cls[i], i);
+                params[i] = makeParameter(cu, types[i], cls[i], parameterAnnotations[i], i);
             }
         }
         return params;
     }
 
-    private Parameter makeParameter(CompileUnit cu, Type type, Class cl, int idx) {
+    private Parameter makeParameter(CompileUnit cu, Type type, Class cl, Annotation[] annotations, int idx) {
         ClassNode cn = makeClassNode(cu, type, cl);
-        return new Parameter(cn, "param" + idx);
+        Parameter parameter = new Parameter(cn, "param" + idx);
+        setAnnotationMetaData(annotations, parameter);
+        return parameter;
     }
 }
 

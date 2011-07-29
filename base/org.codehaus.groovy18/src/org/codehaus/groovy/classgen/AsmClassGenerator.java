@@ -43,7 +43,7 @@ import java.util.*;
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
  * @author <a href='mailto:the[dot]mindstorm[at]gmail[dot]com'>Alex Popescu</a>
  * @author Alex Tkachman
- * @version $Revision: 21594 $
+ * @version $Revision: 22582 $
  */
 public class AsmClassGenerator extends ClassGenerator {
 
@@ -162,7 +162,7 @@ public class AsmClassGenerator extends ClassGenerator {
                 if (owner instanceof InnerClassNode) {
                     owner = owner.getOuterClass();
                 }
-                String outerClassName = owner.getName();
+                String outerClassName = classNode.getName();
                 String name = outerClassName + "$" + context.getNextInnerClassIdx();
                 controller.setInterfaceClassLoadingClass(
                         new InterfaceHelperClassNode (
@@ -620,6 +620,7 @@ public class AsmClassGenerator extends ClassGenerator {
         subExpression.visit(this);
         controller.getOperandStack().box();
         bitwiseNegate.call(controller.getMethodVisitor());
+        controller.getOperandStack().replace(ClassHelper.OBJECT_TYPE);
         controller.getAssertionWriter().record(expression);
     }
 

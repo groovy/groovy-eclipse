@@ -1559,12 +1559,16 @@ classField!  {Token first = LT(1);}
         	consumeUntil(NLS);
         }    ;
 
-// Now the various things that can be defined inside a interface
+// Now the various things that can be defined inside an interface
 interfaceField!
-    :   // method, constructor, or variable declaration
+    :   // method or variable declaration or inner interface
         (declarationStart)=>
         d:declaration
         {#interfaceField = #d;}
+    |
+        (genericMethodStart)=>
+        dg:genericMethod
+        {#interfaceField = #dg;}
     |
         //TODO - unify typeDeclaration and typeDefinitionInternal names
         // type declaration
@@ -2904,7 +2908,7 @@ conditionalExpression[int lc_stmt]
     :   logicalOrExpression[lc_stmt]
         (
           (ELVIS_OPERATOR)=> ELVIS_OPERATOR^ nls! conditionalExpression[0]
-          | QUESTION^ nls! assignmentExpression[0] COLON! nls! conditionalExpression[0]
+          | QUESTION^ nls! assignmentExpression[0] nls! COLON! nls! conditionalExpression[0]
         )?
     ;
 

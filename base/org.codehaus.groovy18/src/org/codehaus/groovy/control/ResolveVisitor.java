@@ -328,7 +328,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     	}
     	
     	for (ClassNode classToCheck : hierClasses.values()) {
-    		if (classToCheck.mightHaveInners()) { 
+    		if (classToCheck.mightHaveInners()) {  // GRECLIPSE
             name = classToCheck.getName()+"$"+type.getName();
             val = ClassHelper.make(name);
 	        if (resolveFromCompileUnit(val)) {
@@ -1015,10 +1015,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     protected Expression transformVariableExpression(VariableExpression ve) {
-        // FIXADE force annotations on variables to be included in the transform 
-        // GRECLIPSE: start
         visitAnnotations(ve);
-        // end
         Variable v = ve.getAccessedVariable();
         
         if(!(v instanceof DynamicVariable) && !checkingVariableTypeInDeclaration) {

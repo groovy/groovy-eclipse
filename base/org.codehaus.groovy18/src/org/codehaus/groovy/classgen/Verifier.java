@@ -42,7 +42,7 @@ import java.util.*;
  * bytecode generation occurs.
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision: 21957 $
+ * @version $Revision: 22578 $
  */
 public class Verifier implements GroovyClassVisitor, Opcodes {
 
@@ -211,7 +211,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         }
     }
 
-    private void addDefaultConstructor(ClassNode node) {
+    protected void addDefaultConstructor(ClassNode node) {
         if (!node.getDeclaredConstructors().isEmpty()) return;
         
         BlockStatement empty = new BlockStatement();
@@ -602,7 +602,8 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         }
         Statement setterBlock = node.getSetterBlock();
         if (setterBlock == null) {
-            MethodNode setter = classNode.getSetterMethod(setterName);
+            // 2nd arg false below: though not usual, allow setter with non-void return type
+            MethodNode setter = classNode.getSetterMethod(setterName, false);
             if ( !node.isPrivate() && 
                  (propNodeModifiers & ACC_FINAL)==0 && 
                     methodNeedsReplacement(setter)) {
@@ -1206,9 +1207,16 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                         mv.visitVarInsn(ALOAD,0);
                         Parameter[] para = oldMethod.getParameters();
                         Parameter[] goal = overridingMethod.getParameters();
+                        int doubleSlotOffset = 0;
                         for (int i = 0; i < para.length; i++) {
-                            BytecodeHelper.load(mv, para[i].getType(), i+1);
-                            if (!para[i].getType().equals(goal[i].getType())) {
+                            ClassNode type = para[i].getType();
+                            BytecodeHelper.load(mv, type, i+1+doubleSlotOffset);
+                            if (type.redirect()==ClassHelper.double_TYPE ||
+                                type.redirect()==ClassHelper.long_TYPE)
+                            {
+                                doubleSlotOffset++;
+                            }
+                            if (!type.equals(goal[i].getType())) {
                                 BytecodeHelper.doCast(mv,goal[i].getType());
                             }
                         }

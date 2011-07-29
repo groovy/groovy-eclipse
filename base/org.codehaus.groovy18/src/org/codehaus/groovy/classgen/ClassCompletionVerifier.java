@@ -36,7 +36,7 @@ import static java.lang.reflect.Modifier.*;
 /**
  * ClassCompletionVerifier
  */
-public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
+public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements Opcodes {
 
     private ClassNode currentClass;
     private SourceUnit source;
@@ -57,6 +57,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         checkImplementsAndExtends(node);
         if (source != null && !source.getErrorCollector().hasErrors()) {
             checkClassForIncorrectModifiers(node);
+            checkInterfaceMethodVisibility(node);
             checkClassForOverwritingFinal(node);
             checkMethodsForIncorrectModifiers(node);
             checkMethodsForWeakerAccess(node);
@@ -65,6 +66,17 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
         super.visitClass(node);
         currentClass = oldClass;
+    }
+
+    private void checkInterfaceMethodVisibility(ClassNode node) {
+        if (!node.isInterface()) return;
+        for (MethodNode method : node.getMethods()) {
+            if (method.isPrivate()) {
+                addError("Method '" + method.getName() + "' is private but should be public in " + getDescription(currentClass) + ".", method);
+            } else if (method.isProtected()) {
+                addError("Method '" + method.getName() + "' is protected but should be public in " + getDescription(currentClass) + ".", method);
+            }
+        }
     }
 
     private void checkNoAbstractMethodsNonabstractClass(ClassNode node) {
@@ -127,7 +139,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     }
 
     private void checkAbstractDeclaration(MethodNode methodNode) {
-        if (!isAbstract(methodNode.getModifiers())) return;
+        if (!methodNode.isAbstract()) return;
         if (isAbstract(currentClass.getModifiers())) return;
         addError("Can't have an abstract method in a non-abstract class." +
                 " The " + getDescription(currentClass) + " must be declared abstract or the method '" +
@@ -138,7 +150,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         ClassNode superCN = cn.getSuperClass();
         if (superCN == null) return;
         if (!isFinal(superCN.getModifiers())) return;
-        StringBuffer msg = new StringBuffer();
+        StringBuilder msg = new StringBuilder();
         msg.append("You are not allowed to overwrite the final ");
         msg.append(getDescription(superCN));
         msg.append(".");
@@ -167,7 +179,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
                 addError("The " + getDescription(method) + " from " + getDescription(cn) +
                         " must not be final. It is by definition abstract.", method);
             }
-            if (isStatic(method.getModifiers()) && !isConstructor(method)) {
+            if (method.isStatic() && !isConstructor(method)) {
                 addError("The " + getDescription(method) + " from " + getDescription(cn) +
                         " must not be static. Only fields may be static in an interface.", method);
             }
@@ -198,7 +210,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     }
 
     private void addInvalidUseOfFinalError(MethodNode method, Parameter[] parameters, ClassNode superCN) {
-        StringBuffer msg = new StringBuffer();
+        StringBuilder msg = new StringBuilder();
         msg.append("You are not allowed to override the final method ").append(method.getName());
         msg.append("(");
         boolean needsComma = false;
@@ -216,7 +228,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     }
 
     private void addWeakerAccessError(ClassNode cn, MethodNode method, Parameter[] parameters, MethodNode superMethod) {
-        StringBuffer msg = new StringBuffer();
+        StringBuilder msg = new StringBuilder();
         msg.append(method.getName());
         msg.append("(");
         boolean needsComma = false;
@@ -235,7 +247,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         msg.append(" in ");
         msg.append(superMethod.getDeclaringClass().getName());
         msg.append("; attempting to assign weaker access privileges; was ");
-        msg.append(isPublic(superMethod.getModifiers()) ? "public" : "protected");
+        msg.append(superMethod.isPublic() ? "public" : "protected");
         addError(msg.toString(), method);
     }
 
@@ -267,7 +279,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     private void checkMethodModifiers(MethodNode node) {
         // don't check volatile here as it overlaps with ACC_BRIDGE
         // additional modifiers not allowed for interfaces
-        if ((this.currentClass.getModifiers() & Opcodes.ACC_INTERFACE) != 0) {
+        if ((this.currentClass.getModifiers() & ACC_INTERFACE) != 0) {
             checkMethodForModifier(node, isStrict(node.getModifiers()), "strictfp");
             checkMethodForModifier(node, isSynchronized(node.getModifiers()), "synchronized");
             checkMethodForModifier(node, isNative(node.getModifiers()), "native");
@@ -279,8 +291,8 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         for (MethodNode superMethod : cn.getSuperClass().getMethods(mn.getName())) {
             Parameter[] superParams = superMethod.getParameters();
             if (!hasEqualParameterTypes(params, superParams)) continue;
-            if ((isPrivate(mn.getModifiers()) && !isPrivate(superMethod.getModifiers())) ||
-                    (isProtected(mn.getModifiers()) && isPublic(superMethod.getModifiers()))) {
+            if ((mn.isPrivate() && !superMethod.isPrivate()) ||
+                    (mn.isProtected() && superMethod.isPublic())) {
                 addWeakerAccessError(cn, mn, params, superMethod);
                 return;
         	}
@@ -294,8 +306,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         for (MethodNode method : currentClass.getMethods(node.getName())) {
             if (method == node) continue;
             if (!method.getDeclaringClass().equals(node.getDeclaringClass())) continue;
-            int modifiers = method.getModifiers();
-            if (isPublic(modifiers) || isProtected(modifiers)) {
+            if (method.isPublic() || method.isProtected()) {
                 hasPublic=true;
             } else {
                 hasPrivate=true;
@@ -363,8 +374,9 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     
     private void checkInterfaceFieldModifiers(FieldNode node) {
         if (!currentClass.isInterface()) return;
-        if ((node.getModifiers() & (Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_FINAL)) == 0) {
-            addError("The " + getDescription(node) + " is not 'public final static' but is defined in the " +
+        if ((node.getModifiers() & (ACC_PUBLIC | ACC_STATIC | ACC_FINAL)) == 0 ||
+                (node.getModifiers() & (ACC_PRIVATE | ACC_PROTECTED)) != 0) {
+            addError("The " + getDescription(node) + " is not 'public static final' but is defined in " +
                     getDescription(currentClass) + ".", node);
         }
     }
@@ -418,14 +430,13 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         }
         if (v instanceof FieldNode) {
             FieldNode fn = (FieldNode) v;
-            int modifiers = fn.getModifiers();
 
             /*
              *  if it is static final but not accessed inside a static constructor, or,
              *  if it is an instance final but not accessed inside a instance constructor, it is an error
              */
-            boolean isFinal = (modifiers & Opcodes.ACC_FINAL) != 0;
-            boolean isStatic = (modifiers & Opcodes.ACC_STATIC) != 0;
+            boolean isFinal = fn.isFinal();
+            boolean isStatic = fn.isStatic();
             boolean error = isFinal && ((isStatic && !inStaticConstructor) || (!isStatic && !inConstructor));
 
             if (error) addError("cannot modify" + (isStatic ? " static" : "") + " final field '" + fn.getName() +
@@ -463,8 +474,21 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     public void visitDeclarationExpression(DeclarationExpression expression) {
         super.visitDeclarationExpression(expression);
         if (expression.isMultipleAssignmentDeclaration()) return;
-        if ((expression.getVariableExpression().getModifiers() & Opcodes.ACC_STATIC) != 0) {
-            addError("Variable definition has an incorrect modifier 'static'.", expression);
+        checkInvalidDeclarationModifier(expression, ACC_ABSTRACT, "abstract");
+        checkInvalidDeclarationModifier(expression, ACC_NATIVE, "native");
+        checkInvalidDeclarationModifier(expression, ACC_PRIVATE, "private");
+        checkInvalidDeclarationModifier(expression, ACC_PROTECTED, "protected");
+        checkInvalidDeclarationModifier(expression, ACC_PUBLIC, "public");
+        checkInvalidDeclarationModifier(expression, ACC_STATIC, "static");
+        checkInvalidDeclarationModifier(expression, ACC_STRICT, "strictfp");
+        checkInvalidDeclarationModifier(expression, ACC_SYNCHRONIZED, "synchronized");
+        checkInvalidDeclarationModifier(expression, ACC_TRANSIENT, "transient");
+        checkInvalidDeclarationModifier(expression, ACC_VOLATILE, "volatile");
+    }
+
+    private void checkInvalidDeclarationModifier(DeclarationExpression expression, int modifier, String modName) {
+        if ((expression.getVariableExpression().getModifiers() & modifier) != 0) {
+            addError("Modifier '" + modName + "' not allowed here.", expression);
         }
     }
 

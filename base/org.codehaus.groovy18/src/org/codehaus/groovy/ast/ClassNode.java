@@ -106,7 +106,7 @@ import org.objectweb.asm.Opcodes;
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author Jochen Theodorou
- * @version $Revision: 21269 $
+ * @version $Revision: 22589 $
  */
 public class ClassNode extends AnnotatedNode implements Opcodes {
     private static class MapOfLists {
@@ -337,7 +337,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         isPrimaryNode=false;
     }
 
-    // GRECLIPSE: from private to protected
     /**
      * The complete class structure will be initialized only when really
      * needed to avoid having too many objects during compilation
@@ -784,6 +783,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public boolean equals(Object o) {
         if (redirect!=null) return redirect().equals(o);
+        if (!(o instanceof ClassNode)) return false;
         ClassNode cn = (ClassNode) o;
         return (cn.getName().equals(getName()));
     }
@@ -1023,7 +1023,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      *         i.e. it implements GroovyObject
      */
     public boolean isDerivedFromGroovyObject() {
-        return implementsInterface(ClassHelper.make(GroovyObject.class));
+        return implementsInterface(ClassHelper.GROOVY_OBJECT_TYPE);
     }
 
     /**
@@ -1190,15 +1190,19 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public MethodNode getSetterMethod(String setterName) {
+        return getSetterMethod(setterName, true);
+    }
+
+    public MethodNode getSetterMethod(String setterName, boolean voidOnly) {
         for (MethodNode method : getDeclaredMethods(setterName)) {
             if (setterName.equals(method.getName())
-                    && ClassHelper.VOID_TYPE==method.getReturnType()
+                    && (!voidOnly || ClassHelper.VOID_TYPE==method.getReturnType())
                     && method.getParameters().length == 1) {
                 return method;
             }
         }
         ClassNode parent = getSuperClass();
-        if (parent!=null) return parent.getSetterMethod(setterName);
+        if (parent!=null) return parent.getSetterMethod(setterName, voidOnly);
         return null;
     }
 
@@ -1448,6 +1452,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             setRedirect(cn);
             return redirect().clazz;
         }
+        // GRECLIPSE
         if (redirect().getClass().getName().endsWith("JDTClassNode")) {
         	// special!
         	return redirect().getTypeClass();
