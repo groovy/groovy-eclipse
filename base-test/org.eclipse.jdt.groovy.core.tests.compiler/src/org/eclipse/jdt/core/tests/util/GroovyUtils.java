@@ -23,7 +23,7 @@ public class GroovyUtils {
     static public final int GROOVY_LEVEL;
     static {
         int groovyLevel = 18;
-        URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.0.jar");
+        URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.1.jar");
         if (groovyJar==null) {
             groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.10.jar");
             groovyLevel=17;
