@@ -68,7 +68,7 @@ public class CompilerUtils {
 
         // it might be that there is no 1.8 jar. If the 1.8 jar is missing, we
         // use 1.7
-        Bundle[] active = Platform.getBundles("org.codehaus.groovy", "1.8.0");
+        Bundle[] active = Platform.getBundles("org.codehaus.groovy", "1.8.1");
         return active == null || active.length == 0;
     }
 
@@ -89,8 +89,8 @@ public class CompilerUtils {
     }
 
     public static Bundle getActiveGroovyBundle() {
-        String version17 = "[1.7.0,1.8.0)";
-        String version18 = "1.8.0";
+        String version17 = "[1.7.0,1.8.1)";
+        String version18 = "1.8.1";
         Bundle[] active = Platform.getBundles("org.codehaus.groovy", (isGroovy18DisabledOrMissing() ? version17 : version18));
         return active.length > 0 ? active[0] : null;
     }
@@ -188,8 +188,8 @@ public class CompilerUtils {
      *         contains the exception thrown otherwise
      */
     public static IStatus switchVersions(boolean toVersion18) {
-        String version17 = "[1.7.0,1.8.0)";
-        String version18 = "1.8.0";
+        String version17 = "[1.7.0,1.8.1)";
+        String version18 = "1.8.1";
 
 
         try {
