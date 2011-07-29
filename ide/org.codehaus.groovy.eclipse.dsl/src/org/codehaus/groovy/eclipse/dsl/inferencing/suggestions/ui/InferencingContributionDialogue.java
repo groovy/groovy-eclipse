@@ -176,7 +176,7 @@ public class InferencingContributionDialogue extends AbstractDialogue {
             }
         });
 
-        JavaTextDialogueControl declaringTypeControl = new JavaTextDialogueControl( ControlTypes.DECLARING_TYPE,
+        JavaTextDialogueControl declaringTypeControl = new JavaTextDialogueControl(ControlTypes.DECLARING_TYPE,
                 getOffsetLabelLocation(), suggestion.declaringTypeName, getJavaProject());
         declaringTypeControl.createControlArea(parent);
         if (!mutableDeclaringType) {
@@ -234,6 +234,15 @@ public class InferencingContributionDialogue extends AbstractDialogue {
 
         ButtonDialogueControl useName = new ButtonDialogueControl(ControlTypes.USE_NAMED_ARGUMENTS, SWT.CHECK, useNamedParameters);
         useName.createControlArea(parent);
+        useName.addSelectionListener(new IControlSelectionListener() {
+
+            public void handleSelection(ControlSelectionEvent event) {
+                Object selection = event.getSelectionData();
+                if (selection instanceof Boolean) {
+                    suggestion.useArgumentNames = ((Boolean) selection).booleanValue();
+                }
+            }
+        });
 
         radialSelection.addSelectionListener(new IControlSelectionListener() {
 
@@ -241,9 +250,10 @@ public class InferencingContributionDialogue extends AbstractDialogue {
                 IDialogueControlDescriptor descriptor = event.getControlDescriptor();
                 if (descriptor == ControlTypes.PROPERTY) {
                     table.setEnabled(false);
-
+                    suggestion.isMethod = false;
                 } else if (descriptor == ControlTypes.METHOD) {
                     table.setEnabled(true);
+                    suggestion.isMethod = true;
                 }
             }
         });

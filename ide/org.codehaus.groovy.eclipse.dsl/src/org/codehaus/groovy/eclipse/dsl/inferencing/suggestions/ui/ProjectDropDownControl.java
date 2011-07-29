@@ -55,6 +55,9 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
         // If zero or one projects exit, delegate to super class to create
         // a single label to display the project
         if (projects == null || projects.isEmpty() || projects.size() == 1) {
+            if (projects.size() == 1) {
+                super.setProject(projects.get(0));
+            }
             super.createProjectDisplayControl(parent);
             return;
         }
