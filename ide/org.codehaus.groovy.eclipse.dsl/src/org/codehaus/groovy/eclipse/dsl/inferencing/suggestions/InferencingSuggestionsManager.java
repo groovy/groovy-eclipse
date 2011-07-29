@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -60,9 +59,8 @@ public class InferencingSuggestionsManager {
         // session.
         ProjectSuggestions suggestionList = perProjectSuggestions.get(project);
         if (suggestionList == null) {
-
-            perProjectSuggestions.put(project, new ProjectSuggestions());
-
+            suggestionList = new ProjectSuggestions();
+            perProjectSuggestions.put(project, suggestionList);
         }
         return suggestionList;
     }
@@ -132,7 +130,7 @@ public class InferencingSuggestionsManager {
          * @return
          */
         public Map<String, GroovySuggestionDeclaringType> getSuggestions() {
-            return Collections.unmodifiableMap(suggestions);
+            return suggestions;
         }
 
     }

@@ -61,7 +61,7 @@ public class ProjectDisplayControl implements IProjectUIControl {
         GridLayoutFactory.fillDefaults().numColumns(2).equalWidth(false).applyTo(projectComposite);
         GridDataFactory.fillDefaults().grab(true, false).applyTo(projectComposite);
 
-        Label projectLabel = new Label(parent, SWT.NONE);
+        Label projectLabel = new Label(projectComposite, SWT.NONE);
         GridDataFactory.fillDefaults().align(SWT.LEFT, SWT.CENTER).grab(false, false).applyTo(projectLabel);
         projectLabel.setText("Project: ");
 

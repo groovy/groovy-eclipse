@@ -60,12 +60,10 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
         }
 
         // Otherwise create the drop down
-
         String[] projectNames = new String[projects.size()];
 
         int i = 0;
         while (i < projectNames.length && i < projects.size()) {
-
             projectNames[i] = projects.get(i).getName();
             i++;
         }
@@ -100,7 +98,7 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
         int selectedIndex = -1;
         String[] allProjects = dropDown.getItems();
         for (int i = 0; i < allProjects.length; i++) {
-            if (selectedProject.equals(allProjects[i])) {
+            if (selectedProject.getName().equals(allProjects[i])) {
                 selectedIndex = i;
                 break;
             }

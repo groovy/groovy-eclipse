@@ -30,8 +30,8 @@ import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSugges
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.IProjectUIControl;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.ISelectionHandler;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.InferencingContributionDialogue;
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.ProjectDropDownControl;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.InferencingContributionDialogue.SuggestionChange;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.ProjectDropDownControl;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
@@ -108,7 +108,7 @@ public class GroovySuggestionsTable {
 
     enum ColumnTypes implements ITreeViewerColumn {
         SUGGESTIONS("Suggestions", 60);
-        
+
         private String label;
 
         private int weight;
@@ -153,8 +153,8 @@ public class GroovySuggestionsTable {
 
             }
         };
-        ProjectDropDownControl projectSelector = new ProjectDropDownControl(projects, parent.getShell(), subparent, handler);
-        projectSelector.createControls();
+        selector = new ProjectDropDownControl(projects, parent.getShell(), subparent, handler);
+        selector.createControls();
 
     }
 
@@ -237,7 +237,11 @@ public class GroovySuggestionsTable {
     }
 
     protected void handleSelectionButtonEnablement(List<Object> selectedObjects) {
-        if (selectedObjects == null || selectedObjects.isEmpty()) {
+        if (projects == null || projects.isEmpty()) {
+            selectionButtons.get(ButtonTypes.ADD).setEnabled(false);
+            selectionButtons.get(ButtonTypes.EDIT).setEnabled(false);
+            selectionButtons.get(ButtonTypes.REMOVE).setEnabled(false);
+        } else if (selectedObjects == null || selectedObjects.isEmpty()) {
             selectionButtons.get(ButtonTypes.ADD).setEnabled(true);
             selectionButtons.get(ButtonTypes.EDIT).setEnabled(false);
             selectionButtons.get(ButtonTypes.REMOVE).setEnabled(false);
@@ -281,14 +285,15 @@ public class GroovySuggestionsTable {
                 Object selectedObj = getSelections().get(0);
                 if (selectedObj instanceof GroovySuggestionDeclaringType) {
                     dialogue = new InferencingContributionDialogue(viewer.getTreeViewer().getTree().getShell(),
-                            (GroovySuggestionDeclaringType) selectedObj);
+                            (GroovySuggestionDeclaringType) selectedObj, getSelectedProject());
                 } else if (selectedObj instanceof IGroovySuggestion) {
                     IGroovySuggestion suggestion = (IGroovySuggestion) selectedObj;
                     dialogue = new InferencingContributionDialogue(viewer.getTreeViewer().getTree().getShell(), suggestion,
-                            suggestion.getDeclaringType());
+                            suggestion.getDeclaringType(), getSelectedProject());
                 }
             } else {
-                dialogue = new InferencingContributionDialogue(viewer.getTreeViewer().getTree().getShell(), null);
+                dialogue = new InferencingContributionDialogue(viewer.getTreeViewer().getTree().getShell(), null,
+                        getSelectedProject());
             }
 
             if (dialogue != null && dialogue.open() == Window.OK) {
@@ -306,7 +311,7 @@ public class GroovySuggestionsTable {
         if (selectedProject == null || suggestionChange == null) {
             return;
         }
-        IGroovySuggestion suggestion = suggestionChange.addSuggestion(selectedProject);
+        IGroovySuggestion suggestion = suggestionChange.getSuggestion();
         if (suggestionChange != null) {
             Map<String, GroovySuggestionDeclaringType> types = InferencingSuggestionsManager.getInstance()
                     .getSuggestions(selectedProject).getSuggestions();

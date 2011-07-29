@@ -44,7 +44,7 @@ public class LabeledTextControl extends AbstractLabeledDialogueControl {
 
 
     @Override
-    void setControlValue(Control control, Object value) {
+    protected void setControlValue(Control control, Object value) {
         if (control instanceof Text && value instanceof String) {
             ((Text) control).setText((String) value);
         }

@@ -36,8 +36,6 @@ import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -274,15 +272,6 @@ public class ParameterTable extends AbstractControl {
 
         });
 
-        viewer.getTable().addKeyListener(new KeyAdapter() {
-            public void keyPressed(KeyEvent e) {
-                if (e.keyCode == SWT.F2 && e.stateMask == SWT.NONE) {
-
-                  
-                    e.doit = false;
-                }
-            }
-        });
 
         viewer.getTable().addMouseListener(new MouseListener() {
 

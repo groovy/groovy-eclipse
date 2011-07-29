@@ -84,7 +84,7 @@ public class ButtonDialogueControl extends AbstractControl {
         return controls;
     }
 
-    void setControlValue(Control control, Object value) {
+    protected void setControlValue(Control control, Object value) {
         if (control instanceof Button && value instanceof Boolean) {
             ((Button) control).setSelection(((Boolean) value).booleanValue());
         }

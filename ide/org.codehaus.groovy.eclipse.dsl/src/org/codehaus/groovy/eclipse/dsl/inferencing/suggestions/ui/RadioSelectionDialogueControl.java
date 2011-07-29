@@ -95,7 +95,7 @@ public class RadioSelectionDialogueControl extends AbstractControl {
     }
 
     @Override
-    void setControlValue(Control control, Object value) {
+    protected void setControlValue(Control control, Object value) {
         if (control instanceof Button && value instanceof Boolean) {
             ((Button) control).setSelection(((Boolean) value).booleanValue());
         }

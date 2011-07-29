@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -59,7 +58,7 @@ public class GroovySuggestionDeclaringType {
     }
 
     public List<IGroovySuggestion> getSuggestions() {
-        return Collections.unmodifiableList(suggestions);
+        return suggestions;
     }
 
     public boolean hasSuggestions() {

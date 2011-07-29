@@ -24,6 +24,8 @@ import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovySuggestionD
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IGroovySuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
@@ -109,19 +111,21 @@ public class InferencingContributionDialogue extends AbstractDialogue {
 
     private ParameterTable table;
 
+    private IProject project;
+
     //
     // private IProject contextProject;
 
     public InferencingContributionDialogue(Shell parentShell, IGroovySuggestion suggestion,
-            GroovySuggestionDeclaringType declaringType) {
-        this(parentShell, declaringType);
+            GroovySuggestionDeclaringType declaringType, IProject project) {
+        this(parentShell, declaringType, project);
         setSuggestion(suggestion);
     }
 
-    public InferencingContributionDialogue(Shell parentShell, GroovySuggestionDeclaringType declaringType) {
+    public InferencingContributionDialogue(Shell parentShell, GroovySuggestionDeclaringType declaringType, IProject project) {
         super(parentShell);
         suggestion = new SuggestionChange();
-
+        this.project = project;
         if (declaringType != null) {
             suggestion.declaringTypeName = declaringType.getName();
             mutableDeclaringType = false;
@@ -155,6 +159,10 @@ public class InferencingContributionDialogue extends AbstractDialogue {
         createDocumentationArea(parent);
     }
 
+    protected IJavaProject getJavaProject() {
+        return project != null ? JavaCore.create(project) : null;
+    }
+
     protected void createFieldAreas(Composite parent) {
         LabeledTextControl nameControl = new LabeledTextControl(ControlTypes.NAME, getOffsetLabelLocation(), suggestion.name);
         nameControl.createControlArea(parent);
@@ -168,8 +176,8 @@ public class InferencingContributionDialogue extends AbstractDialogue {
             }
         });
 
-        JavaTextDialogueControl declaringTypeControl = new JavaTextDialogueControl(ControlTypes.DECLARING_TYPE,
-                getOffsetLabelLocation(), suggestion.declaringTypeName);
+        JavaTextDialogueControl declaringTypeControl = new JavaTextDialogueControl( ControlTypes.DECLARING_TYPE,
+                getOffsetLabelLocation(), suggestion.declaringTypeName, getJavaProject());
         declaringTypeControl.createControlArea(parent);
         if (!mutableDeclaringType) {
             declaringTypeControl.setEnabled(false);
@@ -185,7 +193,7 @@ public class InferencingContributionDialogue extends AbstractDialogue {
         });
 
         JavaTextDialogueControl typeControl = new JavaTextDialogueControl(ControlTypes.TYPE, getOffsetLabelLocation(),
-                suggestion.type);
+                suggestion.type, getJavaProject());
         typeControl.createControlArea(parent);
         typeControl.addSelectionListener(new IControlSelectionListener() {
 
@@ -338,9 +346,9 @@ public class InferencingContributionDialogue extends AbstractDialogue {
 
         boolean useArgumentNames;
 
-        public IGroovySuggestion addSuggestion(IProject contextProject) {
+        public IGroovySuggestion getSuggestion() {
             GroovySuggestionDeclaringType declaringType = InferencingSuggestionsManager.getInstance().getDeclaringType(
-                    declaringTypeName, contextProject);
+                    declaringTypeName, project);
             if (declaringType != null) {
                 return isMethod ? new GroovyMethodSuggestion(table.getMethodParameter(), useNamedParameters, name, type, isStatic,
                         javaDoc, declaringType) : new GroovyPropertySuggestion(name, type, isStatic, javaDoc, declaringType);

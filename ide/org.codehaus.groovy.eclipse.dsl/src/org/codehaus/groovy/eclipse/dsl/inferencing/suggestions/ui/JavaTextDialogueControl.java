@@ -15,16 +15,19 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 
+import org.codehaus.groovy.eclipse.ui.browse.IBrowseTypeHandler;
+import org.codehaus.groovy.eclipse.ui.browse.TypeBrowseSupport;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 
 /**
  * 
@@ -33,10 +36,19 @@ import org.eclipse.swt.widgets.Control;
  */
 public class JavaTextDialogueControl extends LabeledTextControl {
 
+    /**
+     * 
+     */
+    private static final String BROWSE = "Browse...";
+
     private Button browse;
 
-    public JavaTextDialogueControl(IDialogueControlDescriptor labelDescriptor, Point offsetLabelLocation, String initialValue) {
+    private IJavaProject project;
+
+    public JavaTextDialogueControl(IDialogueControlDescriptor labelDescriptor, Point offsetLabelLocation, String initialValue,
+            IJavaProject project) {
         super(labelDescriptor, offsetLabelLocation, initialValue);
+        this.project = project;
     }
 
     @Override
@@ -46,7 +58,7 @@ public class JavaTextDialogueControl extends LabeledTextControl {
         // and the other for the browse button
         Composite fieldComposite = new Composite(parent, SWT.NONE);
         GridLayoutFactory.fillDefaults().numColumns(2).applyTo(fieldComposite);
-        GridDataFactory.fillDefaults().grab(false, false).applyTo(fieldComposite);
+        GridDataFactory.fillDefaults().grab(true, false).applyTo(fieldComposite);
 
         // Create the text control first in the first column
         Control text = super.getLabeledControl(fieldComposite);
@@ -55,23 +67,30 @@ public class JavaTextDialogueControl extends LabeledTextControl {
         browse = new Button(fieldComposite, SWT.PUSH);
 
         browse.setEnabled(true);
-        browse.setText("Browse...");
-        
-        browse.addSelectionListener(new SelectionAdapter(   ) {
+        browse.setText(BROWSE);
 
-   
-            public void widgetSelected(SelectionEvent e) {
- 
-                
-            }});
-        
         GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(false, false).applyTo(browse);
 
         GridData data = new GridData(SWT.FILL, SWT.CENTER, false, false);
         data.heightHint = getButtonHeight();
 
         browse.setLayoutData(data);
+
+        addTypeBrowseSupport((Text) text, browse, parent.getShell());
         return text;
+    }
+
+    protected void addTypeBrowseSupport(Text text, Button browse, Shell shell) {
+        final Text finText = text;
+
+        new TypeBrowseSupport(shell, project, new IBrowseTypeHandler() {
+
+            public void handleTypeSelection(String qualifiedName) {
+                setControlValue(finText, qualifiedName);
+
+            }
+
+        }).applySupport(browse, text);
     }
 
     protected int getButtonHeight() {

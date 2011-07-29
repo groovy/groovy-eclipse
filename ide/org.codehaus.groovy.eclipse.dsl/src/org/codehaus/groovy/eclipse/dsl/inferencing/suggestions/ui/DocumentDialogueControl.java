@@ -23,6 +23,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Text;
 
 /**
  * 
@@ -35,14 +36,22 @@ public class DocumentDialogueControl extends AbstractLabeledDialogueControl {
         super(labelDescriptor, offsetLabelLocation);
     }
 
-    void setControlValue(Control control, Object value) {
+    protected void setControlValue(Control control, Object value) {
         if (control instanceof Browser && value instanceof String) {
             ((Browser) control).setText((String) value);
         }
     }
 
+    // One column, to have the label and browser on separate rows
+    protected int numberofColumns() {
+        return 1;
+    }
+
     protected Control getLabeledControl(Composite parent) {
-        final Browser browser = new Browser(parent, SWT.BORDER);
+//        final Browser browser = new Browser(parent, SWT.BORDER);
+        
+        final Text browser = new Text(parent, SWT.BORDER | SWT.MULTI);
+
         browser.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
         browser.setVisible(true);
 

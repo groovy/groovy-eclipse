@@ -24,6 +24,7 @@ Export-Package: greclipse.org.eclipse.jdt.core.dom.rewrite,
  org.codehaus.groovy.eclipse.refactoring.actions,
  org.codehaus.groovy.eclipse.search,
  org.codehaus.groovy.eclipse.ui,
+ org.codehaus.groovy.eclipse.ui.browse,
  org.codehaus.groovy.eclipse.ui.cpcontainer,
  org.codehaus.groovy.eclipse.ui.utils,
  org.codehaus.groovy.eclipse.wizards

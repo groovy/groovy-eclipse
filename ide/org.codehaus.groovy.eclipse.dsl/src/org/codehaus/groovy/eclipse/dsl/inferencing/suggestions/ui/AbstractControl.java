@@ -72,7 +72,7 @@ public abstract class AbstractControl implements IDialogueControl {
      * @param control
      * @param value
      */
-    abstract void setControlValue(Control control, Object value);
+    abstract protected void setControlValue(Control control, Object value);
 
     public void changeControlValue(ControlSelectionEvent event) {
         IDialogueControlDescriptor descriptor = event.getControlDescriptor();

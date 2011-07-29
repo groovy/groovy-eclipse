@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
-
-import org.eclipse.swt.widgets.Label;
+package org.codehaus.groovy.eclipse.ui.browse;
 
 /**
- * 
+ *
  * @author Nieraj Singh
- * @created 2011-05-13
+ * @created 2011-07-26
  */
-public interface ILabeledControl {
-	
-    public Label getLabel();
+public interface IBrowseTypeHandler {
 
-
+    public void handleTypeSelection(String qualifiedName);
 }
