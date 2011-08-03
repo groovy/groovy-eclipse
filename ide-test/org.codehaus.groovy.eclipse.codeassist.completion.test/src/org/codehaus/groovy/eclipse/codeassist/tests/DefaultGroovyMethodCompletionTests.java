@@ -149,7 +149,7 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
             proposalExists(proposals, "encodeBase64", 2);
         } else {
             // groovy 1.7
-            proposalExists(proposals, "encodeBase64", 2);
+            proposalExists(proposals, "encodeBase64", 4);
         }
     }
     
