@@ -52,7 +52,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     
 
     public void testContiribution1() throws Exception {
-        createDsls("contribution(currentType('Foo')) { delegatesTo 'Other' }");
+        createDsls("contribute(currentType('Foo')) { delegatesTo 'Other' }");
         String contents = 
                 "class Foo { }\n" +
                         "class Other { Class<String> blar() { } }\n" +
@@ -215,7 +215,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     
     public void testAssertVersion1() throws Exception {
         createDsls("assertVersion(groovyEclipse:\"9.5.9\")\n" +
-                "contribution(currentType('Foo')) { property name: 'fooProp', type: 'Map< Integer, Long>' }");
+                "contribute(currentType('Foo')) { property name: 'fooProp', type: 'Map< Integer, Long>' }");
         String contents = 
                 "class Foo {\n" +
                         "}\n" +
@@ -230,7 +230,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     
     public void testAssertVersion2() throws Exception {
         createDsls("assertVersion(groovyEclipse:\"1.5.9\")\n" +
-                "contribution(currentType('Foo')) { property name: 'fooProp', type: 'Map< Integer, Long>' }");
+                "contribute(currentType('Foo')) { property name: 'fooProp', type: 'Map< Integer, Long>' }");
         String contents = 
                 "class Foo {\n" +
                         "}\n" +
@@ -243,7 +243,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     
     public void testSupportsVersion3() throws Exception {
         createDsls("if (supportsVersion(groovyEclipse:\"9.5.9\"))\n" +
-                "  contribution(currentType('Foo')) { property name: 'fooProp', type: 'Map< Integer, Long>' }");
+                "  contribute(currentType('Foo')) { property name: 'fooProp', type: 'Map< Integer, Long>' }");
         String contents = 
                 "class Foo {\n" +
                         "}\n" +
@@ -257,7 +257,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     
     public void testSupportsVersion2() throws Exception {
         createDsls("if (supportsVersion(groovyEclipse:\"1.5.9\"))\n" +
-                "  contribution(currentType('Foo')) { property name: 'fooProp', type: 'Map< Integer, Long>' }");
+                "  contribute(currentType('Foo')) { property name: 'fooProp', type: 'Map< Integer, Long>' }");
         String contents = 
                 "class Foo {\n" +
                         "}\n" +
@@ -270,7 +270,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     
     
     public void testIsThisType1() throws Exception {
-        createDsls("contribution(isThisType()) { property name: 'thisType', type:Integer }");
+        createDsls("contribute(isThisType()) { property name: 'thisType', type:Integer }");
         String contents = 
                 "class Foo { \n" +
                 "def k() { \n" +
@@ -300,7 +300,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     }
     
     public void testEnclosingCall1() throws Exception {
-        createDsls("contribution(enclosingCall(name('foo')) & isThisType()) {  " +
+        createDsls("contribute(enclosingCall(name('foo')) & isThisType()) {  " +
         		"property name: 'yes', type: Double } ");
         
         String contents = "foo( yes )";
@@ -310,7 +310,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     }
     
     public void testEnclosingCall2() throws Exception {
-        createDsls("contribution(enclosingCall('foo') & isThisType()) {  " +
+        createDsls("contribute(enclosingCall('foo') & isThisType()) {  " +
                 "property name: 'yes', type: Double } ");
         
         String contents = "foo( yes )";
@@ -320,7 +320,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     }
     
     public void testEnclosingCall3() throws Exception {
-        createDsls("contribution(enclosingCall(name('foo') & hasArgument(name('arg') & bind(value : value()))) & isThisType()) {  " +
+        createDsls("contribute(enclosingCall(name('foo') & hasArgument(name('arg') & bind(value : value()))) & isThisType()) {  " +
                 "value.each { property name: \"${it}Prop\", type: Double } }");
         
         String contents = "foo(arg:'yes', arg2:yesProp)";
@@ -330,7 +330,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     }
     
     public void testEnclosingCall4() throws Exception {
-        createDsls("contribution(enclosingCall(name('foo') & hasArgument(value : name('arg'))) & isThisType()) {  " +
+        createDsls("contribute(enclosingCall(name('foo') & hasArgument(value : name('arg'))) & isThisType()) {  " +
                 "value.each { property name: \"${it}Prop\", type: Double } }");
         
         String contents = "foo(arg:argProp)";
@@ -340,7 +340,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     }
     
     public void testEnclosingCall5() throws Exception {
-        createDsls("contribution(enclosingCall(name('foo') & hasArgument(bind(value : name('arg')) | bind(value : name('arg2')))) & isThisType()) {  " +
+        createDsls("contribute(enclosingCall(name('foo') & hasArgument(bind(value : name('arg')) | bind(value : name('arg2')))) & isThisType()) {  " +
                 "value.each { property name: \"${it}Prop\", type: Double } }");
         
         String contents = "foo(arg:argProp)";
@@ -350,7 +350,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     }
     
     public void testEnclosingCall6() throws Exception {
-        createDsls("contribution(enclosingCall(name('foo') & hasArgument(bind(value : name('arg'))) & hasArgument(name('arg2'))) & isThisType()) {  " +
+        createDsls("contribute(enclosingCall(name('foo') & hasArgument(bind(value : name('arg'))) & hasArgument(name('arg2'))) & isThisType()) {  " +
                 "value.each { property name: \"${it}Prop\", type: Double } }");
         
         String contents = "foo(arg:argProp, arg2: nuthin)";
@@ -360,7 +360,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     }
     
     public void testEnclosingCall7() throws Exception {
-        createDsls("contribution(enclosingCall(name('foo') & hasArgument(bind(value : value()) & name('arg'))) & isThisType()) {  " +
+        createDsls("contribute(enclosingCall(name('foo') & hasArgument(bind(value : value()) & name('arg'))) & isThisType()) {  " +
                 "value.each { property name: \"${it}Prop\", type: Double } }");
         
         String contents = "foo(arg:'arg', arg2:argProp)";
@@ -370,7 +370,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     }
     
     public void testAnnotatedBy1() throws Exception {
-        createDsls("contribution(enclosingMethod(annotatedBy(\n" + 
+        createDsls("contribute(enclosingMethod(annotatedBy(\n" + 
         		"    name(\"MyAnno\") &   \n" + 
         		"    hasAttribute(\n" + 
         		"        name(\"name\") & \n" + 
@@ -390,7 +390,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     }
     
     public void testAnnotatedBy2() throws Exception {
-        createDsls("contribution(enclosingMethod(annotatedBy(\n" + 
+        createDsls("contribute(enclosingMethod(annotatedBy(\n" + 
         		"    name(\"MyAnno\") &   \n" + 
         		"    hasAttribute(\n" + 
         		"        name(\"name\") & \n" + 

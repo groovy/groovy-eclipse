@@ -14,6 +14,7 @@ package org.codehaus.groovy.eclipse.codeassist.tests;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
@@ -144,7 +145,12 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
                 "p.encodeBase64";
         ICompilationUnit unit = createGroovyWithContents("Script", contents);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "encodeBase64"), GroovyCompletionProposalComputer.class);
-        proposalExists(proposals, "encodeBase64", 2);
+        if (GroovyUtils.GROOVY_LEVEL >= 18) {
+            proposalExists(proposals, "encodeBase64", 2);
+        } else {
+            // groovy 1.7
+            proposalExists(proposals, "encodeBase64", 2);
+        }
     }
     
     // tests GRECLIPSE-1158
@@ -153,7 +159,12 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
                 "p.iterator";
         ICompilationUnit unit = createGroovyWithContents("Script", contents);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "iterator"), GroovyCompletionProposalComputer.class);
-        proposalExists(proposals, "iterator", 2);
+        if (GroovyUtils.GROOVY_LEVEL >= 18) {
+            proposalExists(proposals, "iterator", 1);
+        } else {
+            // groovy 1.7
+            proposalExists(proposals, "iterator", 3);
+        }
     }
     
     

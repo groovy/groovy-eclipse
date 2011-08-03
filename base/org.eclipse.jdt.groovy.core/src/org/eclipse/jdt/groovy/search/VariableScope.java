@@ -20,6 +20,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -86,9 +87,14 @@ public class VariableScope {
 	public static final ClassNode XGM_CLASS_NODE = ClassHelper.make(XmlGroovyMethods.class);
 	public static final ClassNode DGSM_CLASS_NODE = ClassHelper.make(DefaultGroovyStaticMethods.class);
 	public static final ClassNode DATE_GM_CLASS_NODE = ClassHelper.make(DateGroovyMethods.class);
+	public static final ClassNode PLUGIN5_GM_CLASS_NODE = ClassHelper
+			.make(org.codehaus.groovy.vmplugin.v5.PluginDefaultGroovyMethods.class);
+	public static final ClassNode PLUGIN6_GM_CLASS_NODE = ClassHelper
+			.make(org.codehaus.groovy.vmplugin.v6.PluginDefaultGroovyMethods.class);
 
-	public static final Set<ClassNode> ALL_DEFAULT_CATEGORIES = Collections.unmodifiableSet(new HashSet<ClassNode>(Arrays.asList(
-			DGM_CLASS_NODE, DGSM_CLASS_NODE, EGM_CLASS_NODE, PGM_CLASS_NODE, SGM_CLASS_NODE, XGM_CLASS_NODE, DATE_GM_CLASS_NODE)));
+	public static final Set<ClassNode> ALL_DEFAULT_CATEGORIES = Collections.unmodifiableSet(new LinkedHashSet<ClassNode>(Arrays
+			.asList(DGM_CLASS_NODE, DGSM_CLASS_NODE, EGM_CLASS_NODE, PGM_CLASS_NODE, SGM_CLASS_NODE, XGM_CLASS_NODE,
+					DATE_GM_CLASS_NODE, PLUGIN5_GM_CLASS_NODE, PLUGIN6_GM_CLASS_NODE)));
 
 	// don't cache because we have to add properties
 	public static final ClassNode CLASS_CLASS_NODE = ClassHelper.makeWithoutCaching(Class.class);
