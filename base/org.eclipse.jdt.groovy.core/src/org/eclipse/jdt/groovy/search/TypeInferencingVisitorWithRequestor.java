@@ -12,9 +12,11 @@ package org.eclipse.jdt.groovy.search;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
@@ -77,6 +79,7 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -938,7 +941,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 
 		// keep track of the enclosing assignment statement when visiting the RHS.
-		boolean isAssignment = node.getOperation().getText().equals("=");
+		boolean isAssignment = node.getOperation().getType() == Types.EQUALS;
 		BinaryExpression oldEnclosingAssignment = enclosingAssignment;
 		if (isAssignment) {
 			enclosingAssignment = node;
@@ -1092,8 +1095,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		CallAndType call = scope.getEnclosingMethodCallExpression();
 		if (call != null) {
 			String methodName = call.call.getMethodAsString();
+			ClassNode inferredType;
+
 			if (dgmClosureMethods.contains(methodName)) {
-				ClassNode inferredType = VariableScope.extractElementType(call.declaringType);
+				inferredType = VariableScope.extractElementType(call.declaringType);
+			} else {
+				// inferredType might be null
+				inferredType = dgmClosureMethodsMap.get(methodName);
+			}
+
+			if (inferredType != null) {
 				Arrays.fill(allInferred, inferredType);
 				// special cases: eachWithIndex has last element an integer
 				if (methodName.equals("eachWithIndex") && allInferred.length > 1) {
@@ -1143,6 +1154,36 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		dgmClosureMethods.add("split");
 		dgmClosureMethods.add("sum");
 		dgmClosureMethods.add("any");
+		dgmClosureMethods.add("flatten");
+		dgmClosureMethods.add("findIndexOf");
+		dgmClosureMethods.add("findIndexValues");
+		dgmClosureMethods.add("findLastIndexOf");
+		dgmClosureMethods.add("collectAll");
+		dgmClosureMethods.add("min");
+		dgmClosureMethods.add("max");
+		dgmClosureMethods.add("eachPermutation");
+		dgmClosureMethods.add("sort");
+
+		// these don't take collections, but can be handled inthe same way
+		dgmClosureMethods.add("identity");
+		dgmClosureMethods.add("times");
+		dgmClosureMethods.add("upto");
+		dgmClosureMethods.add("downto");
+		dgmClosureMethods.add("step");
+		dgmClosureMethods.add("eachFile");
+		dgmClosureMethods.add("eachDir");
+		dgmClosureMethods.add("eachFileRecurse");
+		dgmClosureMethods.add("eachDirRecurse");
+		dgmClosureMethods.add("traverse");
+	}
+
+	// These methods have a fixed type for the closure argument
+	private static final Map<String, ClassNode> dgmClosureMethodsMap = new HashMap<String, ClassNode>();
+	static {
+		dgmClosureMethodsMap.put("eachLine", VariableScope.STRING_CLASS_NODE);
+		dgmClosureMethodsMap.put("splitEachLine", VariableScope.STRING_CLASS_NODE);
+		dgmClosureMethodsMap.put("withObjectOutputStream", VariableScope.OBJECT_OUTPUT_STREAM);
+		dgmClosureMethodsMap.put("withObjectInputStream", VariableScope.OBJECT_INPUT_STREAM);
 	}
 
 	@Override
@@ -1838,7 +1879,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 						return VariableScope.BOOLEAN_CLASS_NODE;
 					} else if (operation.charAt(1) == '~') {
 						// consider regex to be string
-						return VariableScope.STRING_CLASS_NODE;
+						return VariableScope.MATCHER_CLASS_NODE;
 					}
 				}
 				// drop through

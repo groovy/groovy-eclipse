@@ -96,7 +96,7 @@ public class DSLDScriptExecutor {
                     throw new UnsupportedDSLVersion(result);
                 }
                 return null;
-            } else if (name.equals("contribution")) {
+            } else if (name.equals("contribute")) {
                 Object result = contribution(args);
                 if (result == null) {
                     throw new MissingMethodException(name, dsldScript.getClass(), new Object[] { args });
@@ -147,14 +147,14 @@ public class DSLDScriptExecutor {
                         return null;
                     }
                 };
-            } else if ("contribution".equals(name)) {
+            } else if ("contribute".equals(name)) {
                 return new Closure(this) {
                     private static final long serialVersionUID = 1L;
                     @Override
                     public Object call(Object[] args) {
                         Object result = contribution(args);
                         if (result == null) {
-                            throw new MissingMethodException("contribution", dsldScript.getClass(), new Object[] { args });
+                            throw new MissingMethodException("contribute", dsldScript.getClass(), new Object[] { args });
                         }
                         return result;
                     }

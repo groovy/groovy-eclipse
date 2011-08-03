@@ -12,16 +12,21 @@ package org.eclipse.jdt.groovy.search;
 
 import java.io.DataInputStream;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.Stack;
-import java.util.Map.Entry;
+import java.util.regex.Matcher;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -35,8 +40,13 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.runtime.DateGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
+import org.codehaus.groovy.runtime.EncodingGroovyMethods;
+import org.codehaus.groovy.runtime.ProcessGroovyMethods;
+import org.codehaus.groovy.runtime.SwingGroovyMethods;
+import org.codehaus.groovy.runtime.XmlGroovyMethods;
 import org.codehaus.jdt.groovy.internal.compiler.ast.LazyGenericsType;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.core.Signature;
@@ -54,11 +64,10 @@ public class VariableScope {
 	public static final ClassNode OBJECT_CLASS_NODE = ClassHelper.OBJECT_TYPE;
 	public static final ClassNode LIST_CLASS_NODE = ClassHelper.LIST_TYPE;
 	public static final ClassNode PATTERN_CLASS_NODE = ClassHelper.PATTERN_TYPE;
+	public static final ClassNode MATCHER_CLASS_NODE = ClassHelper.make(Matcher.class);
 	public static final ClassNode MAP_CLASS_NODE = ClassHelper.MAP_TYPE;
 	public static final ClassNode STRING_CLASS_NODE = ClassHelper.STRING_TYPE;
 	public static final ClassNode GSTRING_CLASS_NODE = ClassHelper.GSTRING_TYPE;
-	public static final ClassNode DGM_CLASS_NODE = ClassHelper.make(DefaultGroovyMethods.class);
-	public static final ClassNode DGSM_CLASS_NODE = ClassHelper.make(DefaultGroovyStaticMethods.class);
 	public static final ClassNode VOID_CLASS_NODE = ClassHelper.make(void.class);
 	public static final ClassNode VOID_WRAPPER_CLASS_NODE = ClassHelper.void_WRAPPER_TYPE;
 	public static final ClassNode NUMBER_CLASS_NODE = ClassHelper.make(Number.class);
@@ -66,6 +75,20 @@ public class VariableScope {
 	public static final ClassNode ENUMERATION_CLASS = ClassHelper.make(Enumeration.class);
 	public static final ClassNode INPUT_STREAM_CLASS = ClassHelper.make(InputStream.class);
 	public static final ClassNode DATA_INPUT_STREAM_CLASS = ClassHelper.make(DataInputStream.class);
+	public static final ClassNode OBJECT_OUTPUT_STREAM = ClassHelper.make(ObjectOutputStream.class);
+	public static final ClassNode OBJECT_INPUT_STREAM = ClassHelper.make(ObjectInputStream.class);
+
+	// standard category classes
+	public static final ClassNode DGM_CLASS_NODE = ClassHelper.make(DefaultGroovyMethods.class);
+	public static final ClassNode EGM_CLASS_NODE = ClassHelper.make(EncodingGroovyMethods.class);
+	public static final ClassNode PGM_CLASS_NODE = ClassHelper.make(ProcessGroovyMethods.class);
+	public static final ClassNode SGM_CLASS_NODE = ClassHelper.make(SwingGroovyMethods.class);
+	public static final ClassNode XGM_CLASS_NODE = ClassHelper.make(XmlGroovyMethods.class);
+	public static final ClassNode DGSM_CLASS_NODE = ClassHelper.make(DefaultGroovyStaticMethods.class);
+	public static final ClassNode DATE_GM_CLASS_NODE = ClassHelper.make(DateGroovyMethods.class);
+
+	public static final Set<ClassNode> ALL_DEFAULT_CATEGORIES = Collections.unmodifiableSet(new HashSet<ClassNode>(Arrays.asList(
+			DGM_CLASS_NODE, DGSM_CLASS_NODE, EGM_CLASS_NODE, PGM_CLASS_NODE, SGM_CLASS_NODE, XGM_CLASS_NODE, DATE_GM_CLASS_NODE)));
 
 	// don't cache because we have to add properties
 	public static final ClassNode CLASS_CLASS_NODE = ClassHelper.makeWithoutCaching(Class.class);
@@ -244,10 +267,7 @@ public class VariableScope {
 			}
 			return categories;
 		} else {
-			Set<ClassNode> categories = new HashSet<ClassNode>();
-			categories.add(DGM_CLASS_NODE); // default category
-			categories.add(DGSM_CLASS_NODE); // default category
-			return categories;
+			return new HashSet<ClassNode>(ALL_DEFAULT_CATEGORIES);
 		}
 	}
 

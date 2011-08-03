@@ -105,8 +105,7 @@ public class CategoryTypeLookup implements ITypeLookup {
 	 * @return
 	 */
 	private TypeConfidence getConfidence(ClassNode declaringClass) {
-		return declaringClass.getName().equals(VariableScope.DGM_CLASS_NODE.getName())
-				|| declaringClass.getName().equals(VariableScope.DGSM_CLASS_NODE.getName()) ? TypeConfidence.LOOSELY_INFERRED
+		return VariableScope.ALL_DEFAULT_CATEGORIES.contains(declaringClass) ? TypeConfidence.LOOSELY_INFERRED
 				: TypeConfidence.INFERRED;
 	}
 

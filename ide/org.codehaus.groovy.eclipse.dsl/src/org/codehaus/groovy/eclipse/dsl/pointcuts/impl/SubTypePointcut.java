@@ -13,6 +13,7 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -45,7 +46,7 @@ public class SubTypePointcut extends FilteringPointcut<ClassNode> {
     @Override
     protected Collection<ClassNode> explodeObject(Object toMatch) {
         if (toMatch instanceof Collection<?>) {
-            Set<ClassNode> classes = new HashSet<ClassNode>();
+            Set<ClassNode> classes = new LinkedHashSet<ClassNode>();
             for (Object elt : (Collection<?>) toMatch) {
                 if (elt instanceof ClassNode) {
                     classes.addAll(getAllSupers((ClassNode) elt));

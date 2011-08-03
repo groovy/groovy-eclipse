@@ -50,4 +50,11 @@ public class ParameterContribution {
         }
         return cachedParameter;
     }
+
+    @Override
+    public String toString() {
+        return type + " " + name;
+    }
+    
+    
 }

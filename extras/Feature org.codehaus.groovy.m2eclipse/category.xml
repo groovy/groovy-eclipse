@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
    <description>
-      Maven Integration for Groo
+      Maven Integration for Groovy-Eclipse
    </description>
-   <feature url="features/org.codehaus.groovy.m2eclipse_1.0.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse" version="1.0.0.qualifier">
+   <feature url="features/org.codehaus.groovy.m2eclipse_2.0.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse" version="1.0.0.qualifier">
       <category name="org.codehaus.groovy.m2eclipse"/>
    </feature>
-   <feature url="features/org.codehaus.groovy.m2eclipse.source_1.0.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse.source" version="1.0.0.qualifier">
+   <feature url="features/org.codehaus.groovy.m2eclipse.source_2.0.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse.source" version="1.0.0.qualifier">
       <category name="org.codehaus.groovy.m2eclipse"/>
    </feature>
    <category-def name="org.codehaus.groovy.m2eclipse" label="Maven integration (optional)">
       <description>
-         Optional Maven (M2Eclipse) integration for Groovy-Eclipse.  (Beta)
+         Optional Maven (M2Eclipse) integration for Groovy-Eclipse.  These features are targetting the
+         1.0 version of M2Eclipse and will not install against earlier versions.  For that, you must use a
+         different update site:
+         http://dist.codehaus.org/groovy/distributions/greclipse/groovy-m2eclipse/
       </description>
    </category-def>
 </site>

@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
+import java.util.Arrays;
+
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -137,5 +139,12 @@ public class MethodContributionElement implements IContributionElement {
     
     public String getDeclaringTypeName() {
         return declaringType;
+    }
+
+    @Override
+    public String toString() {
+        return "public " + (isStatic ? "static " : "") + (isDeprecated ? "deprecated " : "")
+                + (useNamedArgs ? "useNamedArgs " : "") + returnType + " " + declaringType + "." + methodName + "("
+                + Arrays.toString(params) + ") (" + provider + ")";
     }
 }

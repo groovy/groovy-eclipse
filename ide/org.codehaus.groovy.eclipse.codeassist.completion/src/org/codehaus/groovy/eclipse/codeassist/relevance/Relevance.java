@@ -131,9 +131,7 @@ public enum Relevance {
             }
 
             MethodNode method = (MethodNode) node;
-            if (method.getDeclaringClass().equals(VariableScope.DGM_CLASS_NODE)
-                    || method.getDeclaringClass().equals(
-                            VariableScope.DGSM_CLASS_NODE)) {
+            if (VariableScope.ALL_DEFAULT_CATEGORIES.contains(method.getDeclaringClass())) {
                 return VERY_LOW;
             } else {
                 // should be higher relevance than regular methods

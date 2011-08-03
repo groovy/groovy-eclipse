@@ -55,7 +55,7 @@ def dsldFile = nature("org.eclipse.jdt.groovy.core.groovyNature") & fileExtensio
 
 // You can also create a closure around pointcuts and assign them to  
 // a variable.  Note that when using these variables, you must include parens.
-def insideContribution = { (enclosingCallName("accept") | enclosingCallName("contribution")) & inClosure() }
+def insideContribution = { (enclosingCallName("accept") | enclosingCallName("contribute")) & inClosure() }
 
 // Ensure that the 'accept' method is available for all closures and variables that correspond to pointcuts
 (dsldFile & ( ~ insideContribution() )  & ( ~currentType(subType(Script)) )).accept {
@@ -95,7 +95,7 @@ def insideContribution = { (enclosingCallName("accept") | enclosingCallName("con
             isDeprecated : org.codehaus.groovy.eclipse.dsl.script.PointcutFactory.deprecatedRegistry.contains(pointcutName)
     }
     
-    method name : "contribution", type : void, params : [pointcut : IPointcut, contributionBlock : Closure], 
+    method name : "contribute", type : void, params : [pointcut : IPointcut, contributionBlock : Closure], 
     doc : "Associates a pointcut expression with a contribution block."
 	
 	method name : "supportsVersion", type : void, params : [versionKindToName : Map.class ], 

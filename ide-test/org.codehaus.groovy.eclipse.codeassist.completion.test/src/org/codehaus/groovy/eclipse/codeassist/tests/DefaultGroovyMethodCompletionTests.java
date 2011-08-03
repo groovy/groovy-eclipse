@@ -121,6 +121,41 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "text", 1);
     }
     
+    // tests GRECLIPSE-1158
+    public void testDateGM() throws Exception {
+        String contents = "new Date().toCal";
+        ICompilationUnit unit = createGroovyWithContents("Script", contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "toCal"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "toCalendar", 1);
+    }
+    
+    // tests GRECLIPSE-1158
+    public void testProcessGM() throws Exception {
+        String contents = "Process p\n" +
+        		"p.get";
+        ICompilationUnit unit = createGroovyWithContents("Script", contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "get"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "getIn", 2);
+    }
+    
+    // tests GRECLIPSE-1158
+    public void testXmlGM() throws Exception {
+        String contents = "byte[] p\n" +
+                "p.encodeBase64";
+        ICompilationUnit unit = createGroovyWithContents("Script", contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "encodeBase64"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "encodeBase64", 2);
+    }
+    
+    // tests GRECLIPSE-1158
+    public void testOfEncodingGM() throws Exception {
+        String contents = "org.w3c.dom.NodeList p\n" +
+                "p.iterator";
+        ICompilationUnit unit = createGroovyWithContents("Script", contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "iterator"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "iterator", 2);
+    }
+    
     
     private ICompilationUnit createJava() throws Exception {
         IPath projectPath = createGenericProject();

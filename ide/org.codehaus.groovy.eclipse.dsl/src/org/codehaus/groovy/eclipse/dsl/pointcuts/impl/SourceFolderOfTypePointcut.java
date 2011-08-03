@@ -89,9 +89,6 @@ public class SourceFolderOfTypePointcut extends AbstractPointcut {
         }
         
         // will be "" for primitive and other core types loaded by ClassHelper.
-        if (GroovyLogManager.manager.hasLoggers()) {
-            GroovyLogManager.manager.log(TraceCategory.DSL, "Cannot find file for type " + type.getName());
-        }
         return "";
     }
 

@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
+import java.util.Arrays;
+
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -108,4 +110,11 @@ public class PropertyContributionElement implements IContributionElement {
     public String getDeclaringTypeName() {
         return declaringType;
     }
+    
+    @Override
+    public String toString() {
+        return "public " + (isStatic ? "static " : "") + (isDeprecated ? "deprecated " : "")
+                + propType + " " + declaringType + "." + propName + " (" + provider + ")";
+    }
+
 }

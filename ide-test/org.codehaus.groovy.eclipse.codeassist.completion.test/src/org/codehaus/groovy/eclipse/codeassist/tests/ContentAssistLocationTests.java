@@ -195,6 +195,31 @@ public class ContentAssistLocationTests extends CompletionTestCase {
         assertLocation(contents, contents.indexOf(",")+1, ContentAssistLocation.METHOD_CONTEXT);
     }
     
+    public void testMethodContext16() throws Exception {
+        String contents = "foo \nh";
+        assertLocation(contents, contents.indexOf("foo ")+4, ContentAssistLocation.METHOD_CONTEXT);
+    }
+    
+    public void testMethodContext17() throws Exception {
+        String contents = "foo a, \nh";
+        assertLocation(contents, contents.indexOf(", ")+2, ContentAssistLocation.METHOD_CONTEXT);
+    }
+    
+    public void testMethodContext18() throws Exception {
+        String contents = "foo a, b \nh";
+        assertLocation(contents, contents.indexOf("b ")+2, ContentAssistLocation.METHOD_CONTEXT);
+    }
+    
+    public void testMethodContext19() throws Exception {
+        String contents = "foo (a, b )\nh";
+        assertLocation(contents, contents.indexOf("b ")+2, ContentAssistLocation.METHOD_CONTEXT);
+    }
+    
+    public void testMethodContext20() throws Exception {
+        String contents = "foo (a, )\nh";
+        assertLocation(contents, contents.indexOf(", ")+1, ContentAssistLocation.METHOD_CONTEXT);
+    }
+    
 
     public void testExpression1() throws Exception {
         assertLocation("a.a", 3, ContentAssistLocation.EXPRESSION);

@@ -81,6 +81,21 @@ public class InferencingTests extends AbstractInferencingTest {
         assertType(contents, "java.lang.String");
     }
     
+    public void testMatcher1() throws Exception {
+        assertType("\"\" =~ /pattern/", "java.util.regex.Matcher");
+    }
+    
+    public void testMatcher2() throws Exception {
+        String contents = "(\"\" =~ /pattern/).hasGroup()";
+        int start = contents.indexOf("hasGroup");
+        int end = start + "hasGroup".length();
+        assertType(contents, start, end, "java.lang.Boolean");
+    }
+    
+    public void testPattern() throws Exception {
+        assertType("\"\" ==~ /pattern/", "java.lang.Boolean");
+    }
+    
     public void testInferList1() throws Exception {
         assertType("[]", "java.util.List<java.lang.Object>");
     }

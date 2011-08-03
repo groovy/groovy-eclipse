@@ -112,7 +112,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		if (baseType != null) {
 			return new TypeLookupResult(baseType, baseType, baseType, EXACT, scope);
 		} else {
-			// * import
+			// this is a * import
 			return new TypeLookupResult(VariableScope.OBJECT_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE,
 					VariableScope.OBJECT_CLASS_NODE, INFERRED, scope);
 		}
@@ -138,11 +138,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		return new TypeLookupResult(type, scope.getEnclosingTypeDeclaration(), node /* should be methodnode? */, EXACT, scope);
 	}
 
-	/**
-	 * @param node
-	 * @param scope
-	 * @return
-	 */
 	private ClassNode findDeclaringType(Expression node, VariableScope scope, TypeConfidence[] confidence) {
 		if (node instanceof ClassExpression || node instanceof ConstructorCallExpression) {
 			return node.getType();
@@ -217,6 +212,14 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			} else if (node instanceof BinaryExpression && ((BinaryExpression) node).getOperation().getType() == Types.EQUALS) {
 				// this is an assignment expression, return the object expression, which is the right hand side
 				return new TypeLookupResult(objectExpressionType, declaringType, null, confidence, scope);
+			} else if (node instanceof BinaryExpression && ((BinaryExpression) node).getOperation().getType() == Types.FIND_REGEX) {
+				// this is a match expression, return the Matcher class node
+				return new TypeLookupResult(VariableScope.MATCHER_CLASS_NODE, VariableScope.MATCHER_CLASS_NODE, null, confidence,
+						scope);
+			} else if (node instanceof BinaryExpression && ((BinaryExpression) node).getOperation().getType() == Types.MATCH_REGEX) {
+				// this is a regex find expression. Return a boolean
+				return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, VariableScope.BOOLEAN_CLASS_NODE, null, confidence,
+						scope);
 			} else if (node instanceof TernaryExpression) {
 				// return the object expression type
 				return new TypeLookupResult(objectExpressionType, declaringType, null, confidence, scope);
@@ -464,11 +467,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		return new TypeLookupResult(type, realDeclaringType, declaration, confidence, scope);
 	}
 
-	/**
-	 * @param declaringType
-	 * @param scope
-	 * @return
-	 */
 	private boolean checkDeclaringType(ClassNode declaringType, VariableScope scope) {
 		if (declaringType.equals(scope.getEnclosingTypeDeclaration())) {
 			// this or implicit this
@@ -532,11 +530,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		return new TypeLookupResult(type, declaringType, declaration, confidence, scope);
 	}
 
-	/**
-	 * @param declaringType
-	 * @param info
-	 * @return
-	 */
 	private ClassNode getMorePreciseType(ClassNode declaringType, VariableInfo info) {
 		ClassNode maybeDeclaringType = info != null ? info.declaringType : VariableScope.OBJECT_CLASS_NODE;
 		if (maybeDeclaringType.equals(VariableScope.OBJECT_CLASS_NODE) && !VariableScope.OBJECT_CLASS_NODE.equals(declaringType)) {
@@ -546,10 +539,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		}
 	}
 
-	/**
-	 * @param declaration
-	 * @return
-	 */
 	private ClassNode declaringTypeFromDeclaration(ASTNode declaration, ClassNode resolvedTypeOfDeclaration) {
 		ClassNode typeOfDeclaration;
 		if (declaration instanceof FieldNode) {
@@ -735,10 +724,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		return null;
 	}
 
-	/**
-	 * @param declaringType
-	 * @return
-	 */
 	private ASTNode createLengthField(ClassNode declaringType) {
 		FieldNode lengthField = new FieldNode("length", Opcodes.ACC_PUBLIC, VariableScope.INTEGER_CLASS_NODE, declaringType, null);
 		lengthField.setType(VariableScope.INTEGER_CLASS_NODE);
@@ -746,11 +731,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		return lengthField;
 	}
 
-	/**
-	 * @param objectExpressionType
-	 * @param name
-	 * @return
-	 */
 	private MethodNode findMethodInInterface(String name, Set<ClassNode> allInterfaces) {
 		for (ClassNode interf : allInterfaces) {
 			List<MethodNode> methods = interf.getDeclaredMethods(name);

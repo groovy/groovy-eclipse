@@ -75,12 +75,13 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
                 relevanceMultiplier *= field.isStatic() ? 0.1 : 1;
                 fieldProposal.setRelevanceMultiplier(relevanceMultiplier);
                 groovyProposals.add(fieldProposal);
+
+                if (field.getInitialExpression() instanceof ClosureExpression) {
+                    // also add a method-like proposal
+                    groovyProposals.add(new GroovyMethodProposal(convertToMethodProposal(field)));
+                }
             }
 
-            if (field.getInitialExpression() instanceof ClosureExpression) {
-                // also add a method-like proposal
-                groovyProposals.add(new GroovyMethodProposal(convertToMethodProposal(field)));
-            }
         }
 
         if (isStatic && "class".startsWith(prefix)) {

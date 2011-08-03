@@ -42,7 +42,6 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
@@ -55,10 +54,13 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
@@ -338,6 +340,60 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         }
     }
 
+    /**
+     * There is a special case here, where there is a completion after a method
+     * name with no parens
+     *
+     * <pre>
+     *  obj.myMethodCall _
+     * </pre>
+     *
+     * In this case, the expression of the {@link ExpressionStatement} is
+     * either a {@link PropertyExpression} or a {@link VariableExpression}.
+     * Perhaps there are other possibilities, too, though.
+     */
+    @Override
+    public void visitExpressionStatement(ExpressionStatement statement) {
+        super.visitExpressionStatement(statement);
+        if (doTest(statement)) {
+            Expression expression = statement.getExpression();
+            int exprEnd = expression.getEnd();
+            int stateEnd = statement.getEnd();
+            // check if either the completionoffset or the supprting node end
+            // is in the space between the end of the expression and the end
+            // of the statement
+            if ((completionOffset <= stateEnd && completionOffset > exprEnd)
+                    || (supportingNodeEnd <= stateEnd && supportingNodeEnd > exprEnd)) {
+                if (expression instanceof VariableExpression || expression instanceof ConstantExpression
+                        || expression instanceof PropertyExpression) {
+                    if (expression instanceof PropertyExpression) {
+                        expression = getRightMost(expression);
+                    }
+                    if (expression != null) {
+                        createContextForCallContext(expression, expression.getText());
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns rightmost expression in s property expression
+     *
+     * @param expression
+     * @return
+     */
+    private Expression getRightMost(Expression expression) {
+        if (expression instanceof VariableExpression || expression instanceof ConstantExpression) {
+            return expression;
+        } else if (expression instanceof PropertyExpression) {
+            return getRightMost(((PropertyExpression) expression).getProperty());
+        } else if (expression instanceof BinaryExpression) {
+            return getRightMost(((BinaryExpression) expression).getRightExpression());
+        }
+        return null;
+    }
+
     @Override
     public void visitField(FieldNode node) {
         if (!doTest(node)) {
@@ -440,6 +496,10 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     @Override
     public void visitStaticMethodCallExpression(
             StaticMethodCallExpression call) {
+        if (!doTest(call)) {
+            return;
+        }
+
         // don't check here if the type reference is implicit
         // we know that the type is not implicit if the name
         // location is filled in.
@@ -447,10 +507,10 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
                 doTest(call.getOwnerType())) {
             createContext(call.getOwnerType(), blockStack.peek(), expressionOrStatement());
         }
-        super.visitStaticMethodCallExpression(call);
+        internalVisitCallArguments(call.getArguments());
 
         // the method itself is not an expression, but only a string
-        // so this check call will test for open declaration on the method
+
         if (doTest(call)) {
             createContext(call, blockStack.peek(), expressionOrStatement());
         }
@@ -509,11 +569,19 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         // do that check below
         internalVisitCallArguments(arguments);
 
+        // hmmm...don't know if this is good practice, but here we
+        // ensure that there is a source location for the implicit this
+        // so that we can have something to check for later
+        if (call.isImplicitThis()) {
+            call.getObjectExpression().setSourcePosition(call.getMethod());
+        }
+
         // if we get here, then we still want to do the context
-        // we are either at a paren, at a comman, or at a start of an expression
-        createContextForCallContext(call.getObjectExpression(),
+        // we are either at a paren, at a comma, or at a start of an expression
+        createContextForCallContext(call.isImplicitThis() ? call.getObjectExpression() : call.getObjectExpression(),
         // this is not exactly right since it will
-        // fail on funky kinds of method calls
+        // fail on funky kinds of method calls, like those that are called by a
+        // GString
                 call.getMethod().getText());
     }
 
@@ -542,17 +610,23 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
 
     private void checkForAfterClosingParen(AnnotatedNode contextTarget, Expression arguments) {
         int lastArgEnd = findLastArgumentEnd(arguments);
-        boolean dontLookAtArguments = lastArgEnd == arguments.getStart() && completionOffset == arguments.getStart();
-        if (dontLookAtArguments) {
-            // completion inside of empty argument list:
-            // foo()
-            // should show context
-        } else {
+        int start = arguments.getStart();
+        if (start == 0 && arguments instanceof TupleExpression && ((TupleExpression) arguments).getExpressions().size() > 0) {
+            // Tuple expressions as argument lists do not always have slocs
+            // available
+            start = ((TupleExpression) arguments).getExpression(0).getStart();
+        }
+        boolean shouldLookAtArguments = !(lastArgEnd == start && completionOffset == start);
+        if (shouldLookAtArguments) {
             if (after(lastArgEnd)) {
                 // we are at this situation (completing on 'x'):
                 // foo().x
                 createContext(contextTarget, blockStack.peek(), expressionOrStatement());
             }
+        } else {
+            // completion inside of empty argument list:
+            // foo()
+            // should show context
         }
     }
 
@@ -578,10 +652,15 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         // offset
         int listEnd = args.getEnd();
         int lastExpressionEnd = -1;
-        if (args instanceof ArgumentListExpression) {
-            ArgumentListExpression list = (ArgumentListExpression) args;
-            if (list.getExpressions().size() > 0) {
-                Expression lastExpression = list.getExpression(list.getExpressions().size() - 1);
+        if (args instanceof TupleExpression) {
+            TupleExpression list = (TupleExpression) args;
+            int numExprs = list.getExpressions().size();
+            if (numExprs > 0) {
+                if (listEnd == 0) {
+                    listEnd = list.getExpression(numExprs - 1).getEnd();
+                }
+
+                Expression lastExpression = list.getExpression(numExprs - 1);
                 lastExpressionEnd = lastExpression.getEnd();
             }
         }
@@ -595,15 +674,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
      *         argument list
      */
     private boolean after(int callEnd) {
-        // int end = e.getEnd();
-        // if (e instanceof ArgumentListExpression) {
-        // ArgumentListExpression ale = (ArgumentListExpression) e;
-        // if (ale.getExpressions() != null && ale.getExpressions().size() > 0)
-        // {
-        // end = ale.getExpression(ale.getExpressions().size() - 1).getEnd();
-        // }
-        // }
-        return (supportingNodeEnd == -1 && callEnd <= completionOffset) || callEnd <= supportingNodeEnd;
+        return (supportingNodeEnd == -1 && callEnd < completionOffset) || callEnd <= supportingNodeEnd;
     }
 
     /**
@@ -628,9 +699,9 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     private void internalVisitCallArguments(Expression arguments) {
         // check to see if we are definitely doing the context
         boolean doContext = false;
-        if (arguments instanceof ArgumentListExpression) {
-            ArgumentListExpression ale = (ArgumentListExpression) arguments;
-            for (Expression expr : ale.getExpressions()) {
+        if (arguments instanceof TupleExpression) {
+            TupleExpression tuple = (TupleExpression) arguments;
+            for (Expression expr : tuple.getExpressions()) {
                 if (expr.getStart() == completionOffset) {
                     doContext = true;
                     break;

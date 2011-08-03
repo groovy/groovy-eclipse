@@ -17,7 +17,6 @@
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -36,6 +35,7 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.codeassist.proposals.AbstractProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.proposals.CategoryProposalCreator;
@@ -341,7 +341,7 @@ public class StatementAndExpressionCompletionProcessor extends
             }
             if (containingClass != null) {
                 groovyProposals.addAll(new CategoryProposalCreator().findAllProposals(containingClass,
-                        Collections.singleton(VariableScope.DGM_CLASS_NODE), context.completionExpression, false));
+                        VariableScope.ALL_DEFAULT_CATEGORIES, context.completionExpression, false));
             }
             completionType = context.containingDeclaration instanceof ClassNode ? (ClassNode) context.containingDeclaration
                     : context.unit.getModuleNode().getScriptClassDummy();
@@ -447,9 +447,15 @@ public class StatementAndExpressionCompletionProcessor extends
      * @return
      */
     private ClassNode getCompletionType(ExpressionCompletionRequestor requestor) {
-        if (getContext().location == ContentAssistLocation.EXPRESSION
-                || getContext().location == ContentAssistLocation.METHOD_CONTEXT) {
+        if (getContext().location == ContentAssistLocation.EXPRESSION) {
             return requestor.resultingType;
+        } else if (getContext().location == ContentAssistLocation.METHOD_CONTEXT) {
+            // if we are completing on a variable expression here, that means
+            // we have something like this:
+            // myMethodCall _
+            // so, we want to look at the type of 'this' to complete on
+            return completionNode instanceof VariableExpression ? requestor.currentScope.lookupName("this").type
+                    : requestor.resultingType;
         } else {
             // use the current 'this' type so that closure types are correct
             VariableInfo info= requestor.currentScope.lookupName("this");
