@@ -15,12 +15,18 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 
+import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontMetrics;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
@@ -32,74 +38,89 @@ import org.eclipse.swt.widgets.Shell;
  */
 public abstract class AbstractDialogue extends TitleAreaDialog {
 
-	public AbstractDialogue(Shell parentShell) {
-		super(parentShell);
+    private DialogueDescriptor descriptor;
 
-	}
+    public AbstractDialogue(Shell parentShell, DialogueDescriptor descriptor) {
+        super(parentShell);
+        this.descriptor = descriptor;
+    }
 
-	@Override
-	protected boolean isResizable() {
-		return true;
-	}
+    @Override
+    protected boolean isResizable() {
+        return true;
+    }
 
-	@Override
-	protected void configureShell(Shell newShell) {
-		super.configureShell(newShell);
-		newShell.setText(getTitle());
-	}
+    protected String iconLocation() {
+        return null;
+    }
 
-	protected String iconLocation() {
-		return null;
-	}
+    @Override
+    protected Control createDialogArea(Composite parent) {
 
-	@Override
-	protected Control createDialogArea(Composite parent) {
+        setTitle(descriptor.getTitle());
+        setMessage(descriptor.getMessage());
+        String iconLocation = descriptor.getIconLocation();
+        if (iconLocation != null && iconLocation.length() > 0) {
+            setTitleImage(GroovyDSLCoreActivator.getImageDescriptor(iconLocation).createImage());
+        }
+        Composite composite = new Composite(parent, SWT.NONE);
 
-		setTitle(getTitle());
-		setMessage(getMessage());
-		String iconLocation = iconLocation();
+        GridLayoutFactory
+                .fillDefaults()
+                .margins(getDefaultCompositeHMargin(), getDefaultCompositeVMargin())
+                .spacing(convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_SPACING),
+                        convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_SPACING)).applyTo(composite);
 
-		if (iconLocation != null && iconLocation.length() > 0) {
-//			setTitleImage(GrailsUiActivator.getImageDescriptor(iconLocation)
-//					.createImage());
-		}
+        Dialog.applyDialogFont(composite);
 
-		Composite composite = new Composite(parent, SWT.NONE);
+        GridDataFactory.fillDefaults().grab(true, true).applyTo(composite);
 
-		GridLayoutFactory
-				.fillDefaults()
-				.margins(getDefaultCompositeHMargin(),
-						getDefaultCompositeVMargin())
-				.spacing(
-						convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_SPACING),
-						convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_SPACING))
-				.applyTo(composite);
+        createCommandArea(composite);
 
-		Dialog.applyDialogFont(composite);
+        return composite;
+    }
 
-		GridDataFactory.fillDefaults().grab(true, true).applyTo(composite);
+    protected Point getOffsetLabelLocation(String[] labels) {
 
-		createCommandArea(composite);
+        int length = SWT.DEFAULT;
+        int charLength = 0;
 
-		return composite;
-	}
+        for (String label : labels) {
+            int nameLength = label.length();
+            if (nameLength > charLength) {
+                charLength = nameLength;
+            }
+        }
+        if (charLength > 0) {
+            Control control = getShell();
+            GC gc = new GC(control);
+            Font requiredLabelFont = getRequiredParameterFont();
+            gc.setFont(requiredLabelFont != null ? requiredLabelFont : control.getFont());
+            FontMetrics fontMetrics = gc.getFontMetrics();
+            length = Dialog.convertWidthInCharsToPixels(fontMetrics, charLength);
+            gc.dispose();
+        }
+        Point longestLabelWidth = new Point(length, -1);
+        longestLabelWidth.x += getLabelNameSeparatorOffset();
+        return longestLabelWidth;
+    }
 
-	protected int getDefaultCompositeVMargin() {
-		return convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_MARGIN);
-	}
+    protected int getLabelNameSeparatorOffset() {
+        return 5;
+    }
 
-	protected int getDefaultCompositeHMargin() {
-		return convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_MARGIN);
-	}
+    protected Font getRequiredParameterFont() {
+        return JFaceResources.getFontRegistry().getBold(JFaceResources.DIALOG_FONT);
+    }
 
-	public String getMessage() {
-		return "";
-	}
+    protected int getDefaultCompositeVMargin() {
+        return convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_MARGIN);
+    }
 
-	public String getTitle() {
-		return "";
-	}
+    protected int getDefaultCompositeHMargin() {
+        return convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_MARGIN);
+    }
 
-	abstract protected void createCommandArea(Composite parent);
+    abstract protected void createCommandArea(Composite parent);
 
 }

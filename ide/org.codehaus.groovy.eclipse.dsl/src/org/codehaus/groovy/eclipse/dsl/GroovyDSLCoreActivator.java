@@ -19,6 +19,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -106,5 +107,8 @@ public class GroovyDSLCoreActivator extends AbstractUIPlugin {
         log(IStatus.WARNING, message, null);
     }
     
+    public static ImageDescriptor getImageDescriptor(String path) {
+        return imageDescriptorFromPlugin(PLUGIN_ID, path);
+    }
 
 }

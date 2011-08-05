@@ -54,10 +54,10 @@ public abstract class AbstractLabeledDialogueControl extends AbstractControl imp
     }
 
     protected Map<IDialogueControlDescriptor, Control> createManagedControls(Composite parent) {
-        Composite labelArea = parent;
+
         Map<IDialogueControlDescriptor, Control> controls = new HashMap<IDialogueControlDescriptor, Control>();
         if (labelDescriptor != null) {
-            labelArea = new Composite(parent, SWT.NONE);
+            Composite labelArea = new Composite(parent, SWT.NONE);
             GridLayoutFactory.fillDefaults().numColumns(numberofColumns()).margins(0, 0).equalWidth(false).applyTo(labelArea);
             GridDataFactory.fillDefaults().grab(true, false).applyTo(labelArea);
 

@@ -15,8 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 
@@ -24,41 +24,68 @@ import java.util.List;
  * @created Apr 19, 2011
  */
 public class GroovySuggestionDeclaringType {
-
-    protected GroovySuggestionDeclaringType(String name, List<IGroovySuggestion> suggestions) {
-        this.suggestions = suggestions;
-        this.name = name;
-    }
-
-    protected GroovySuggestionDeclaringType(String name) {
-        this.suggestions = new ArrayList<IGroovySuggestion>();
-        this.name = name;
-    }
-
-    private List<IGroovySuggestion> suggestions;
+    private Set<IGroovySuggestion> suggestions;
 
     private String name;
+
+    public GroovySuggestionDeclaringType(String name) {
+        this.suggestions = new HashSet<IGroovySuggestion>();
+        this.name = name;
+    }
 
     public String getName() {
         return name;
     }
 
-    public boolean addSuggestion(IGroovySuggestion suggestion) {
-        if (suggestions != null) {
-            if (suggestions.contains(suggestion)) {
-                suggestions.remove(suggestion);
-            }
-            return suggestions.add(suggestion);
+    /**
+     * Creates a new instance of the suggestion in the specified declaring type.
+     * 
+     * @param type
+     * @param isActive whether the suggestion should be active in the declaring
+     *            type
+     * @return
+     */
+    public IGroovySuggestion createSuggestion(SuggestionDescriptor descriptor) {
+
+        IGroovySuggestion suggestion = new SuggestionFactory(descriptor).createSuggestion(this);
+
+        suggestions.add(suggestion);
+        return suggestion;
+    }
+
+    public boolean containsSuggestion(IGroovySuggestion suggestion) {
+        return suggestions.contains(suggestion);
+    }
+
+    public IGroovySuggestion changeActiveState(IGroovySuggestion suggestion, boolean isActive) {
+        if (suggestions.contains(suggestion) && suggestion.isActive() != isActive) {
+            removeSuggestion(suggestion);
+            SuggestionDescriptor descriptor = new SuggestionDescriptor(suggestion, isActive);
+            IGroovySuggestion nwSuggestion = createSuggestion(descriptor);
+            return nwSuggestion;
         }
-        return false;
+        return null;
+
+    }
+
+    public IGroovySuggestion replaceSuggestion(SuggestionDescriptor descriptor, IGroovySuggestion suggestion) {
+
+        if (suggestions.contains(suggestion)) {
+            removeSuggestion(suggestion);
+
+            IGroovySuggestion nwSuggestion = createSuggestion(descriptor);
+            return nwSuggestion;
+        }
+        return null;
+
     }
 
     public boolean removeSuggestion(IGroovySuggestion suggestion) {
         return suggestions.remove(suggestion);
     }
 
-    public List<IGroovySuggestion> getSuggestions() {
-        return suggestions;
+    public Set<IGroovySuggestion> getSuggestions() {
+        return new HashSet<IGroovySuggestion>(suggestions);
     }
 
     public boolean hasSuggestions() {

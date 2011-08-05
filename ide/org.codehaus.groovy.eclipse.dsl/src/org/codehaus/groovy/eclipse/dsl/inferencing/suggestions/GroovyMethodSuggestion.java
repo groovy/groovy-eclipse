@@ -28,10 +28,9 @@ public class GroovyMethodSuggestion extends AbstractGroovyTypeProperty {
 
     private boolean useNamedArgument;
 
-    public GroovyMethodSuggestion(List<MethodParameter> arguments, boolean useNameArguments, String name, String type,
-            boolean isStatic, String javaDoc, GroovySuggestionDeclaringType declaringType) {
-        super(name, type, isStatic, javaDoc, declaringType);
-
+    public GroovyMethodSuggestion(GroovySuggestionDeclaringType declaringType, List<MethodParameter> arguments, boolean useNameArguments, String name, String type,
+            boolean isStatic, String javaDoc, boolean isActive) {
+        super(declaringType, name, type, isStatic, javaDoc, isActive);
         this.useNamedArgument = useNameArguments;
         this.arguments = arguments;
     }
@@ -64,5 +63,7 @@ public class GroovyMethodSuggestion extends AbstractGroovyTypeProperty {
         }
 
     }
+
+
 
 }

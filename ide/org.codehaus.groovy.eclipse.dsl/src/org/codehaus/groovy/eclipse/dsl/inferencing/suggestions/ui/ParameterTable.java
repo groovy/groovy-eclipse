@@ -23,21 +23,18 @@ import java.util.Map;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion.MethodParameter;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.InferencingContributionDialogue.ControlTypes;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
-import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
-import org.eclipse.jface.viewers.ICellModifier;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerCell;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
@@ -84,17 +81,20 @@ public class ParameterTable extends AbstractControl {
 
     private TableViewer viewer;
 
-    public ParameterTable() {
-        this.arguments = new ArrayList<ParameterTableElement>();
-    }
+    private IJavaProject project;
 
-    public void setInput(List<MethodParameter> arguments) {
-        if (arguments != null) {
-            this.arguments = new ArrayList<ParameterTable.ParameterTableElement>();
-            for (MethodParameter arg : arguments) {
+    private boolean useNamedArguments;
+
+    public ParameterTable(IJavaProject project, List<MethodParameter> parameters, boolean useNamedArguments) {
+        this.arguments = new ArrayList<ParameterTable.ParameterTableElement>();
+        if (parameters != null) {
+            for (MethodParameter arg : parameters) {
                 this.arguments.add(new ParameterTableElement(arg));
             }
         }
+
+        this.project = project;
+        this.useNamedArguments = useNamedArguments;
     }
 
     protected int getLabelRowColumns() {
@@ -142,8 +142,8 @@ public class ParameterTable extends AbstractControl {
             public void widgetSelected(SelectionEvent e) {
                 Object obj = e.getSource();
                 if (obj instanceof Button) {
-                    IDialogueControlDescriptor type = (IDialogueControlDescriptor) ((Button) obj).getData();
-                    handleButtonSelection(type);
+                    IDialogueControlDescriptor descriptor = (IDialogueControlDescriptor) ((Button) obj).getData();
+                    handleButtonSelection(descriptor);
                 }
             }
 
@@ -166,7 +166,7 @@ public class ParameterTable extends AbstractControl {
             if (selectionIndex > 0) {
                 ParameterTableElement element = arguments.remove(selectionIndex);
                 arguments.add(selectionIndex - 1, element);
-                setInput();
+                refreshTable();
             }
 
         } else if (type == ControlTypes.DOWN) {
@@ -174,7 +174,7 @@ public class ParameterTable extends AbstractControl {
             if (selectionIndex >= 0 && selectionIndex < arguments.size() - 1) {
                 ParameterTableElement element = arguments.remove(selectionIndex);
                 arguments.add(selectionIndex + 1, element);
-                setInput();
+                refreshTable();
             }
         }
     }
@@ -213,8 +213,6 @@ public class ParameterTable extends AbstractControl {
         table.setLinesVisible(true);
 
         setTableProviders(viewer);
-
-        addCellEditorSupport(viewer);
 
         return viewer;
     }
@@ -272,23 +270,6 @@ public class ParameterTable extends AbstractControl {
 
         });
 
-
-        viewer.getTable().addMouseListener(new MouseListener() {
-
-            public void mouseUp(MouseEvent e) {
-
-            }
-
-            public void mouseDown(MouseEvent e) {
-
-            }
-
-            public void mouseDoubleClick(MouseEvent e) {
-
-     
-            }
-        });
-
         viewer.setInput(arguments);
     }
 
@@ -311,30 +292,54 @@ public class ParameterTable extends AbstractControl {
         return null;
     }
 
-
-
     protected void addElement() {
-        ParameterTableElement selected = new ParameterTableElement();
+        ParameterDialogue dialogue = new ParameterDialogue(getShell(), project, null, null);
+        if (dialogue.open() == Window.OK) {
 
-        int selectionIndex = viewer.getTable().getSelectionIndex();
+            String name = dialogue.getName();
+            String type = dialogue.getType();
+            if (type != null && type.length() > 0 && name != null && name.length() > 0) {
+                ParameterTableElement selected = new ParameterTableElement(name, type);
 
-        // Add element at given selection index
-        if (selectionIndex >= 0) {
-            arguments.add(selectionIndex, selected);
-        } else {
-            arguments.add(selected);
+                int selectionIndex = viewer.getTable().getSelectionIndex();
+
+                // Add element at given selection index
+                if (selectionIndex >= 0) {
+                    arguments.add(selectionIndex, selected);
+                } else {
+                    arguments.add(selected);
+                }
+            }
+
+            refreshTable();
         }
 
-        viewer.editElement(selected, ColumnTypes.NAME.ordinal());
-        setInput();
     }
-    
+
     protected void editElement() {
         ParameterTableElement selected = getSelectedElement();
         if (selected != null) {
-            viewer.editElement(selected, ColumnTypes.NAME.ordinal());
+            ParameterDialogue dialogue = new ParameterDialogue(getShell(), project, null, null);
+            if (dialogue.open() == Window.OK) {
+
+                String name = dialogue.getName();
+                String type = dialogue.getType();
+                if (type != null && type.length() > 0 && name != null && name.length() > 0) {
+                    int selectionIndex = viewer.getTable().getSelectionIndex();
+                    arguments.remove(selected);
+                    selected = new ParameterTableElement(name, type);
+                    // Add element at given selection index
+                    if (selectionIndex >= 0) {
+                        arguments.add(selectionIndex, selected);
+                    } else {
+                        arguments.add(selected);
+                    }
+                }
+
+                refreshTable();
+            }
         }
-        setInput();
+        refreshTable();
     }
 
     protected void removeElement() {
@@ -347,24 +352,10 @@ public class ParameterTable extends AbstractControl {
                 }
             }
         }
-        setInput();
+        refreshTable();
     }
 
-    protected void moveUp() {
-        ParameterTableElement selected = getSelectedElement();
-        if (selected != null) {
-
-        }
-    }
-
-    protected void moveDown() {
-        ParameterTableElement selected = getSelectedElement();
-        if (selected != null) {
-
-        }
-    }
-
-    protected void setInput() {
+    protected void refreshTable() {
         viewer.getTable().setFocus();
         viewer.setInput(arguments);
         viewer.refresh(true);
@@ -385,11 +376,90 @@ public class ParameterTable extends AbstractControl {
         return arg;
     }
 
+    @Override
+    public void changeControlValue(ControlSelectionEvent event) {
+        // nothing for now
+
+    }
+
+    protected Button createCheckButton(Composite parent, IDialogueControlDescriptor type) {
+        if (type == null) {
+            return null;
+        }
+
+        Button button = new Button(parent, SWT.CHECK);
+        button.setText(type.getLabel());
+        button.setData(type);
+
+        Point minSize = button.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
+        int widthHint = 0;
+
+        GridDataFactory.fillDefaults().hint(Math.max(widthHint, minSize.x), SWT.DEFAULT).applyTo(button);
+
+        button.addSelectionListener(new SelectionAdapter() {
+
+            public void widgetSelected(SelectionEvent e) {
+                Object obj = e.getSource();
+                if (obj instanceof Button) {
+                    IDialogueControlDescriptor descriptor = (IDialogueControlDescriptor) ((Button) obj).getData();
+                    notifyControlChange(new Boolean(((Button) obj).getSelection()), descriptor);
+                }
+            }
+
+        });
+        return button;
+    }
+
+    @Override
+    protected Map<IDialogueControlDescriptor, Control> createManagedControls(Composite parent) {
+
+        Composite viewerArea = new Composite(parent, SWT.NONE);
+        GridLayoutFactory.fillDefaults().numColumns(2).equalWidth(false).applyTo(viewerArea);
+        GridDataFactory.fillDefaults().grab(true, true).applyTo(viewerArea);
+
+        Map<IDialogueControlDescriptor, Control> allControls = new HashMap<IDialogueControlDescriptor, Control>();
+
+        TableViewer viewer = createTableViewer(viewerArea);
+        if (viewer != null) {
+            allControls.put(ControlTypes.PARAMETERS, viewer.getTable());
+        }
+
+        Map<IDialogueControlDescriptor, Button> buttonControls = createOperationButtonArea(viewerArea);
+
+        if (buttonControls != null) {
+            allControls.putAll(buttonControls);
+        }
+
+        Button useNamedButton = createCheckButton(parent, ControlTypes.USE_NAMED_ARGUMENTS);
+        if (useNamedButton != null) {
+            useNamedButton.setSelection(useNamedArguments);
+            allControls.put(ControlTypes.USE_NAMED_ARGUMENTS, useNamedButton);
+        }
+
+        return allControls;
+    }
+
+    public void setControlValue(Control control, Object value) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public List<MethodParameter> getMethodParameter() {
+        List<GroovyMethodSuggestion.MethodParameter> methodArguments = new ArrayList<GroovyMethodSuggestion.MethodParameter>();
+        if (arguments != null) {
+            for (ParameterTableElement element : arguments) {
+                methodArguments.add(new MethodParameter(element.getName(), element.getType()));
+            }
+        }
+
+        return methodArguments;
+    }
+
     /**
      * Mutable element in a table as the argument elements can be modified via
      * cell editors.
      * 
-     * @author ns
+     * @author Nieraj Singh
      * @created 2011-05-11
      */
     static class ParameterTableElement {
@@ -403,25 +473,17 @@ public class ParameterTable extends AbstractControl {
             this.type = argument.getType();
         }
 
-        public ParameterTableElement() {
-            this.name = "";
-            this.type = "";
+        public ParameterTableElement(String name, String type) {
+            this.name = name;
+            this.type = type;
         }
 
         public String getName() {
             return name;
         }
 
-        public void setName(String name) {
-            this.name = name;
-        }
-
         public String getType() {
             return type;
-        }
-
-        public void setType(String type) {
-            this.type = type;
         }
 
         public int hashCode() {
@@ -468,111 +530,4 @@ public class ParameterTable extends AbstractControl {
         }
 
     }
-
-    @Override
-    public void changeControlValue(ControlSelectionEvent event) {
-        // TODO Auto-generated method stub
-
-    }
-
-    protected void addCellEditorSupport(TableViewer viewer) {
-        int totalColumns = ColumnTypes.values().length;
-
-        CellEditor[] cellEditors = null;
-
-        if (totalColumns == 2) {
-            cellEditors = new CellEditor[ColumnTypes.values().length];
-            cellEditors[ColumnTypes.NAME.ordinal()] = new TextCellEditor(viewer.getTable());
-            cellEditors[ColumnTypes.TYPE.ordinal()] = new TextCellEditor(viewer.getTable());
-        }
-
-        if (cellEditors != null) {
-            viewer.setCellEditors(cellEditors);
-            viewer.setCellModifier(new ICellModifier() {
-
-                public void modify(Object element, String property, Object value) {
-                    ParameterTableElement arg = getArgumentElementFromSelectionObject(element);
-
-                    if (arg != null) {
-                        if (property.equals(ColumnTypes.NAME.getLabel())) {
-                            arg.setName((String) value);
-                        } else if (property.equals(ColumnTypes.TYPE.getLabel())) {
-                            arg.setType((String) value);
-                        }
-                    }
-
-                }
-
-                public Object getValue(Object element, String property) {
-
-                    ParameterTableElement arg = getArgumentElementFromSelectionObject(element);
-
-                    if (arg != null) {
-                        if (property.equals(ColumnTypes.NAME.getLabel())) {
-                            return arg.getName();
-                        } else if (property.equals(ColumnTypes.TYPE.getLabel())) {
-                            return arg.getType();
-                        }
-                    }
-                    return null;
-                }
-
-                public boolean canModify(Object element, String property) {
-
-                    return getArgumentElementFromSelectionObject(element) != null;
-                }
-            });
-
-            ColumnTypes[] types = ColumnTypes.values();
-            int length = types.length;
-            String[] columnProperties = new String[length];
-
-            for (int i = 0; i < length; i++) {
-                columnProperties[i] = types[i].getLabel();
-            }
-            viewer.setColumnProperties(columnProperties);
-        }
-
-    }
-
-    @Override
-    protected Map<IDialogueControlDescriptor, Control> createManagedControls(Composite parent) {
-
-        Composite viewerArea = new Composite(parent, SWT.NONE);
-        GridLayoutFactory.fillDefaults().numColumns(2).equalWidth(false).applyTo(viewerArea);
-        GridDataFactory.fillDefaults().grab(true, true).applyTo(viewerArea);
-
-        Map<IDialogueControlDescriptor, Control> allControls = new HashMap<IDialogueControlDescriptor, Control>();
-
-        TableViewer viewer = createTableViewer(viewerArea);
-        if (viewer != null) {
-            allControls.put(ControlTypes.PARAMETERS, viewer.getTable());
-        }
-
-        Map<IDialogueControlDescriptor, Button> buttonControls = createOperationButtonArea(viewerArea);
-
-        if (buttonControls != null) {
-            allControls.putAll(buttonControls);
-        }
-
-        return allControls;
-    }
-
-    @Override
-    public void setControlValue(Control control, Object value) {
-        // TODO Auto-generated method stub
-
-    }
-
-    public List<MethodParameter> getMethodParameter() {
-        List<GroovyMethodSuggestion.MethodParameter> methodArguments = new ArrayList<GroovyMethodSuggestion.MethodParameter>();
-        if (arguments != null) {
-            for (ParameterTableElement element : arguments) {
-                methodArguments.add(new MethodParameter(element.getName(), element.getType()));
-            }
-        }
-
-        return methodArguments;
-    }
-
 }

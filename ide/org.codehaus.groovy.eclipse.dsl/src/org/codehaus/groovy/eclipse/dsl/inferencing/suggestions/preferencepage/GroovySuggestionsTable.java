@@ -19,27 +19,32 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import org.codehaus.groovy.eclipse.codeassist.Activator;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovySuggestionDeclaringType;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IGroovySuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.SuggestionDescriptor;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.IProjectUIControl;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.ISelectionHandler;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.InferencingContributionDialogue;
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.InferencingContributionDialogue.SuggestionChange;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.ProjectDropDownControl;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.viewers.CheckStateChangedEvent;
+import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreePathContentProvider;
+import org.eclipse.jface.viewers.ITreeViewerListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TreeExpansionEvent;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
@@ -56,6 +61,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 
@@ -66,9 +72,7 @@ import org.eclipse.swt.widgets.TreeColumn;
  */
 public class GroovySuggestionsTable {
 
-    /**
-	 * 
-	 */
+
     private static final String DEACTIVATE_REMOVE_EDIT_OR_ADD_A_TYPE_SUGGESTION = "Deactivate, remove, edit, or add a type suggestion:";
 
     private Map<ButtonTypes, Button> selectionButtons;
@@ -149,8 +153,7 @@ public class GroovySuggestionsTable {
         ISelectionHandler handler = new ISelectionHandler() {
 
             public void selectionChanged(IProject project) {
-                setInput(project);
-
+                refreshViewerInput(project);
             }
         };
         selector = new ProjectDropDownControl(projects, parent.getShell(), subparent, handler);
@@ -213,14 +216,81 @@ public class GroovySuggestionsTable {
     protected void createTableViewer(Composite parent) {
         viewer = new SuggestionsViewer(getColumns(), ColumnTypes.SUGGESTIONS);
         viewer.createControls(parent);
-        TreeViewer tree = viewer.getTreeViewer();
+        final CheckboxTreeViewer treeViewer = viewer.getTreeViewer();
 
-        tree.setLabelProvider(new ViewerLabelProvider());
-        tree.setContentProvider(new ViewerContentProvider());
-        tree.setComparator(new SuggestionViewerSorter());
-        setViewerListeners(tree);
-        setInput(getSelectedProject());
+        treeViewer.addCheckStateListener(new ICheckStateListener() {
 
+            public void checkStateChanged(CheckStateChangedEvent event) {
+                Object obj = event.getElement();
+                boolean checkState = event.getChecked();
+                handleCheckStateChange(obj, checkState);
+
+            }
+        });
+
+        treeViewer.addTreeListener(new ITreeViewerListener() {
+
+            @Override
+            public void treeExpanded(TreeExpansionEvent event) {
+                setCheckState(event.getElement());
+
+            }
+
+            @Override
+            public void treeCollapsed(TreeExpansionEvent event) {
+                // do nothing
+            }
+        });
+
+        treeViewer.setLabelProvider(new ViewerLabelProvider());
+        treeViewer.setContentProvider(new ViewerContentProvider());
+        treeViewer.setComparator(new SuggestionViewerSorter());
+        setViewerListeners(treeViewer);
+        refreshViewerInput(getSelectedProject());
+
+        // Only expand all the first time the viewer is created.
+        expandAll();
+
+    }
+
+    protected void handleCheckStateChange(Object viewerElement, boolean checkState) {
+        if (viewerElement instanceof GroovySuggestionDeclaringType) {
+            GroovySuggestionDeclaringType declaringType = (GroovySuggestionDeclaringType) viewerElement;
+            Set<IGroovySuggestion> suggestions = declaringType.getSuggestions();
+            for (IGroovySuggestion suggestion : suggestions) {
+                // Only change states of those suggestions that require
+                // it.
+                if (suggestion.isActive() != checkState) {
+                    declaringType.changeActiveState(suggestion, checkState);
+                }
+
+            }
+
+        } else if (viewerElement instanceof IGroovySuggestion) {
+            IGroovySuggestion suggestion = (IGroovySuggestion) viewerElement;
+            GroovySuggestionDeclaringType type = suggestion.getDeclaringType();
+            type.changeActiveState(suggestion, checkState);
+        }
+
+    }
+
+    protected void setCheckState(Object viewerElement) {
+        if (viewerElement instanceof GroovySuggestionDeclaringType) {
+            GroovySuggestionDeclaringType declaringType = (GroovySuggestionDeclaringType) viewerElement;
+            Set<IGroovySuggestion> suggestions = declaringType.getSuggestions();
+            boolean isDeclaringTypeActive = false;
+            // if one of the suggestions is active, the declared type is also
+            // active
+            for (Iterator<IGroovySuggestion> it = suggestions.iterator(); it.hasNext() && !isDeclaringTypeActive;) {
+                IGroovySuggestion suggestion = it.next();
+                isDeclaringTypeActive = suggestion.isActive();
+
+            }
+            viewer.getTreeViewer().setChecked(declaringType, isDeclaringTypeActive);
+        } else if (viewerElement instanceof IGroovySuggestion) {
+            IGroovySuggestion suggestion = (IGroovySuggestion) viewerElement;
+            viewer.getTreeViewer().setChecked(suggestion, suggestion.isActive());
+        }
     }
 
     protected void setViewerListeners(TreeViewer tree) {
@@ -268,14 +338,40 @@ public class GroovySuggestionsTable {
      * Dialogue can only be opened on ONE selection or no selections. It will
      * not be opened on multiple selections.
      */
-    protected void openSuggestionsDialogue() {
-        IProject selectedProject = getSelectedProject();
-        if (selectedProject == null) {
-            Activator.logError("No Groovy project selected. Create a Groovy project", null);
+    protected void editSuggestion() {
+
+        if (getSelections().size() > 1) {
+            return;
+        } else {
+
+            if (getSelections().size() == 1) {
+                Object selectedObj = getSelections().get(0);
+                if (selectedObj instanceof IGroovySuggestion) {
+                    // This edits an existing suggestion. Retain active state.
+                    IGroovySuggestion suggestion = (IGroovySuggestion) selectedObj;
+                    InferencingContributionDialogue dialogue = new InferencingContributionDialogue(getShell(), suggestion,
+                            getSelectedProject());
+                    if (dialogue.open() == Window.OK) {
+                        SuggestionDescriptor descriptor = dialogue.getSuggestionChange();
+                        GroovySuggestionDeclaringType declaringType = suggestion.getDeclaringType();
+                        declaringType.replaceSuggestion(descriptor, suggestion);
+
+                        // reset it in the viewer
+                        refreshViewerInput();
+                    }
+                }
+
+            }
+
         }
-        // do not open the dialogue if multiple selections are present, as it is
-        // not possible to know
-        // which one to edit
+
+    }
+
+    protected Shell getShell() {
+        return viewer != null ? viewer.getTreeViewer().getTree().getShell() : null;
+    }
+
+    protected void addSuggestion() {
         if (getSelections().size() > 1) {
             return;
         } else {
@@ -284,45 +380,35 @@ public class GroovySuggestionsTable {
             if (getSelections().size() == 1) {
                 Object selectedObj = getSelections().get(0);
                 if (selectedObj instanceof GroovySuggestionDeclaringType) {
-                    dialogue = new InferencingContributionDialogue(viewer.getTreeViewer().getTree().getShell(),
-                            (GroovySuggestionDeclaringType) selectedObj, getSelectedProject());
-                } else if (selectedObj instanceof IGroovySuggestion) {
-                    IGroovySuggestion suggestion = (IGroovySuggestion) selectedObj;
-                    dialogue = new InferencingContributionDialogue(viewer.getTreeViewer().getTree().getShell(), suggestion,
-                            suggestion.getDeclaringType(), getSelectedProject());
+                    dialogue = new InferencingContributionDialogue(getShell(), (GroovySuggestionDeclaringType) selectedObj,
+                            getSelectedProject());
                 }
             } else {
-                dialogue = new InferencingContributionDialogue(viewer.getTreeViewer().getTree().getShell(), null,
-                        getSelectedProject());
+                dialogue = new InferencingContributionDialogue(getShell(), getSelectedProject());
+
             }
 
             if (dialogue != null && dialogue.open() == Window.OK) {
-                SuggestionChange suggestion = dialogue.getSuggestionChange();
+                SuggestionDescriptor descriptor = dialogue.getSuggestionChange();
 
-                handleSuggestionChange(suggestion, selectedProject);
+                GroovySuggestionDeclaringType type = getDeclaringType(descriptor.getDeclaringTypeName());
+                if (type != null) {
+                    type.createSuggestion(descriptor);
+                }
+
+                refreshViewerInput();
             }
 
         }
 
     }
 
-    protected void handleSuggestionChange(SuggestionChange suggestionChange, IProject selectedProject) {
-
-        if (selectedProject == null || suggestionChange == null) {
-            return;
-        }
-        IGroovySuggestion suggestion = suggestionChange.getSuggestion();
-        if (suggestionChange != null) {
-            Map<String, GroovySuggestionDeclaringType> types = InferencingSuggestionsManager.getInstance()
-                    .getSuggestions(selectedProject).getSuggestions();
-
-            GroovySuggestionDeclaringType editedDeclaringType = suggestion.getDeclaringType();
-            // for now just overwrite any existing declaring type
-            types.put(editedDeclaringType.getName(), editedDeclaringType);
-
-            // reset it in the viewer
-            refreshViewerInput(types);
-
+    protected GroovySuggestionDeclaringType getDeclaringType(String declaringTypeName) {
+        IProject project = getSelectedProject();
+        if (project != null) {
+            return InferencingSuggestionsManager.getInstance().getSuggestions(project).getDeclaringType(declaringTypeName);
+        } else {
+            return null;
         }
     }
 
@@ -330,10 +416,10 @@ public class GroovySuggestionsTable {
         if (button != null) {
             switch (button) {
                 case ADD:
-                    openSuggestionsDialogue();
+                    addSuggestion();
                     break;
                 case EDIT:
-                    openSuggestionsDialogue();
+                    editSuggestion();
                     break;
                 case COLLAPSE_ALL:
                     collapseAll();
@@ -356,46 +442,46 @@ public class GroovySuggestionsTable {
 
     protected void handleRemove() {
         List<Object> selections = getSelections();
-        Map<String, GroovySuggestionDeclaringType> types = InferencingSuggestionsManager.getInstance()
-                .getSuggestions(getSelectedProject()).getSuggestions();
 
         for (Object obj : selections) {
             if (obj instanceof GroovySuggestionDeclaringType) {
-                GroovySuggestionDeclaringType declaringType = (GroovySuggestionDeclaringType) obj;
-                types.remove(declaringType.getName());
+                InferencingSuggestionsManager.getInstance().getSuggestions(getSelectedProject())
+                        .removeDeclaringType((GroovySuggestionDeclaringType) obj);
             } else if (obj instanceof IGroovySuggestion) {
                 IGroovySuggestion suggestion = (IGroovySuggestion) obj;
                 GroovySuggestionDeclaringType containingType = suggestion.getDeclaringType();
                 containingType.removeSuggestion(suggestion);
             }
         }
-        refreshViewerInput(types);
+        refreshViewerInput();
 
     }
 
-    protected void setInput(IProject project) {
+    protected void refreshViewerInput() {
+        IProject project = getSelectedProject();
+        refreshViewerInput(project);
+    }
 
+    protected void refreshViewerInput(IProject project) {
         if (isViewerDisposed() || project == null) {
             return;
         }
 
-        refreshViewerInput(InferencingSuggestionsManager.getInstance().getSuggestions(project).getSuggestions());
-    }
-
-    protected void refreshViewerInput(Map<String, GroovySuggestionDeclaringType> suggestions) {
-        if (suggestions == null) {
+        List<GroovySuggestionDeclaringType> declaringTypes = InferencingSuggestionsManager.getInstance().getSuggestions(project)
+                .getDeclaringTypes();
+        if (declaringTypes == null) {
             return;
         }
-        viewer.getTreeViewer().setInput(new HashSet<GroovySuggestionDeclaringType>(suggestions.values()));
-        viewer.getTreeViewer().expandAll();
-        refreshViewer(true);
-    }
+        List<GroovySuggestionDeclaringType> input = new ArrayList<GroovySuggestionDeclaringType>(declaringTypes);
 
-    protected void refreshViewer(boolean updateLabel) {
-        if (isViewerDisposed()) {
-            return;
+        viewer.getTreeViewer().setInput(input);
+
+        viewer.getTreeViewer().refresh(true);
+
+        // Set check state of each element
+        for (GroovySuggestionDeclaringType declaringType : input) {
+            setCheckState(declaringType);
         }
-        viewer.getTreeViewer().refresh(updateLabel);
     }
 
     protected boolean isViewerDisposed() {
@@ -425,7 +511,7 @@ public class GroovySuggestionsTable {
             if (lastElement instanceof GroovySuggestionDeclaringType) {
                 GroovySuggestionDeclaringType treeElement = (GroovySuggestionDeclaringType) lastElement;
 
-                List<IGroovySuggestion> properties = treeElement.getSuggestions();
+                Set<IGroovySuggestion> properties = treeElement.getSuggestions();
 
                 if (properties != null) {
                     return properties.toArray();

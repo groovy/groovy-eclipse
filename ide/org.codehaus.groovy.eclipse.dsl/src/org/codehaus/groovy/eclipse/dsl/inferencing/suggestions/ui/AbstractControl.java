@@ -20,6 +20,7 @@ import java.util.Map;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Shell;
 
 /**
  * 
@@ -31,6 +32,8 @@ public abstract class AbstractControl implements IDialogueControl {
     private IControlSelectionListener listener;
 
     private Map<IDialogueControlDescriptor, Control> controls;
+
+    private Shell shell;
 
     protected void notifyControlChange(Object data, IDialogueControlDescriptor descriptor) {
 
@@ -46,8 +49,16 @@ public abstract class AbstractControl implements IDialogueControl {
         if (createdControls != null) {
             controls.putAll(createdControls);
         }
-
+        shell = parent.getShell();
         return parent;
+    }
+    
+    /**
+     * Shell where controls are shown.
+     * @return
+     */
+    protected Shell getShell() {
+        return shell;
     }
 
     public void setEnabled(boolean enable) {

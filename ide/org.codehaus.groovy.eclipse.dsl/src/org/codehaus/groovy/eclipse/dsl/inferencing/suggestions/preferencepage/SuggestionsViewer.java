@@ -18,8 +18,8 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.preferencepage;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.layout.PixelConverter;
+import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ICheckStateProvider;
-import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -35,7 +35,7 @@ import org.eclipse.swt.widgets.TreeItem;
  */
 public class SuggestionsViewer {
 
-    private TreeViewer viewer;
+    private CheckboxTreeViewer viewer;
 
     private ITreeViewerColumn[] columns;
 
@@ -78,7 +78,7 @@ public class SuggestionsViewer {
 
         GridDataFactory.fillDefaults().grab(true, true).hint(SWT.DEFAULT, getHeightHint()).applyTo(tree);
 
-        viewer = new TreeViewer(tree);
+        viewer = new CheckboxTreeViewer(tree);
 
         if (columns != null && columns.length > 0) {
             PixelConverter converter = new PixelConverter(treeComposite);
@@ -113,7 +113,7 @@ public class SuggestionsViewer {
 
     }
 
-    public TreeViewer getTreeViewer() {
+    public CheckboxTreeViewer getTreeViewer() {
         return viewer;
     }
 
@@ -144,6 +144,10 @@ public class SuggestionsViewer {
         return null;
     }
 
+    public void setChecked(Object child, boolean newState) {
+        viewer.setChecked(child, newState);
+    }
+    
     public void dispose() {
         removeListeners();
     }
@@ -157,6 +161,8 @@ public class SuggestionsViewer {
         TreeItem[] items = viewer.getTree().getItems();
         setCheckStateAll(items, false);
     }
+    
+
 
     protected void removeListeners() {
 

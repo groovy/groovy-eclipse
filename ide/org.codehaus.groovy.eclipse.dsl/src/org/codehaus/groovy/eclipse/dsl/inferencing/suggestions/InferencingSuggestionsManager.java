@@ -15,9 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 
@@ -43,6 +44,14 @@ public class InferencingSuggestionsManager {
         return manager;
     }
 
+    public void commitChanges() {
+        // Serialise
+    }
+
+    public void restore() {
+        // Discard any in memory changes and restore from current XML.
+    }
+
     /**
      * Never null. may be empty. Original copy.
      * 
@@ -54,53 +63,13 @@ public class InferencingSuggestionsManager {
         if (perProjectSuggestions == null) {
             perProjectSuggestions = new HashMap<IProject, ProjectSuggestions>();
         }
-        // TODO: no support yet for XML file being changed outside off the
-        // manager. Assume for now that only one lookup is necessary per runtime
-        // session.
+
         ProjectSuggestions suggestionList = perProjectSuggestions.get(project);
         if (suggestionList == null) {
             suggestionList = new ProjectSuggestions();
             perProjectSuggestions.put(project, suggestionList);
         }
         return suggestionList;
-    }
-
-    public boolean addSuggestion(IGroovySuggestion suggestion) {
-        return false;
-
-    }
-
-    protected Set<GroovySuggestionDeclaringType> lookUpSuggestions(IProject project) {
-        return null;
-    }
-
-    public boolean deleteDeclaringType(GroovySuggestionDeclaringType type) {
-        return false;
-    }
-
-    public boolean deleteSuggestion(IGroovySuggestion suggestion) {
-        return false;
-    }
-
-    /**
-     * Declaring types are unique per project, even though they conceptually
-     * model the same declaring type (for example, a declaring type
-     * object for type java.lang.String will be different for projects P1 and
-     * P2).
-     * 
-     * @param declaringTypeName
-     * @param project
-     * @return
-     */
-    public GroovySuggestionDeclaringType getDeclaringType(String declaringTypeName, IProject project) {
-        if (declaringTypeName == null || project == null) {
-            return null;
-        }
-        ProjectSuggestions suggestion = perProjectSuggestions.get(project);
-        if (suggestion != null) {
-            return suggestion.get(declaringTypeName);
-        }
-        return null;
     }
 
     public class ProjectSuggestions {
@@ -110,7 +79,7 @@ public class InferencingSuggestionsManager {
             suggestions = new HashMap<String, GroovySuggestionDeclaringType>();
         }
 
-        public GroovySuggestionDeclaringType get(String declaringTypeName) {
+        public GroovySuggestionDeclaringType getDeclaringType(String declaringTypeName) {
             GroovySuggestionDeclaringType declaringType = suggestions.get(declaringTypeName);
             if (declaringType == null) {
                 declaringType = new GroovySuggestionDeclaringType(declaringTypeName);
@@ -119,18 +88,16 @@ public class InferencingSuggestionsManager {
             return declaringType;
         }
 
-        public void remove(String declaringTypeName) {
-            suggestions.remove(declaringTypeName);
+        public void removeDeclaringType(GroovySuggestionDeclaringType declaringType) {
+            suggestions.remove(declaringType);
         }
 
         /**
-         * Copy of the suggestions. Changes will not reflect in the actual
-         * suggestions.
          * 
          * @return
          */
-        public Map<String, GroovySuggestionDeclaringType> getSuggestions() {
-            return suggestions;
+        public List<GroovySuggestionDeclaringType> getDeclaringTypes() {
+            return new ArrayList<GroovySuggestionDeclaringType>(suggestions.values());
         }
 
     }

@@ -19,22 +19,15 @@ import java.util.List;
 
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion.MethodParameter;
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyPropertySuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovySuggestionDeclaringType;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IGroovySuggestion;
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.SuggestionDescriptor;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontMetrics;
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
 /**
@@ -52,6 +45,8 @@ import org.eclipse.swt.widgets.Shell;
  * @created 2011-05-13
  */
 public class InferencingContributionDialogue extends AbstractDialogue {
+    public static final DialogueDescriptor DIALOGUE_DESCRIPTOR = new DialogueDescriptor("Add a Groovy Inferencing Suggestion",
+            "Groovy Inferencing Suggestion", "icons/GROOVY.png");
 
     enum ControlTypes implements IDialogueControlDescriptor {
         NAME("Name", "Enter a type name"),
@@ -101,11 +96,27 @@ public class InferencingContributionDialogue extends AbstractDialogue {
 
     }
 
-    private SuggestionChange suggestion;
+    private Point labelControlOffset;
 
-    private IGroovySuggestion initialSuggestion;
+    private boolean isStatic;
 
-    private boolean mutableDeclaringType = true;
+    private boolean isMethod = false;
+
+    private String name;
+
+    private String javaDoc;
+
+    private String declaringTypeName;
+
+    private String suggestionType;
+
+    private boolean isActive;
+
+    private List<MethodParameter> initialParameters;
+
+    private IGroovySuggestion currentSuggestion;
+
+    private boolean editDeclaringType = true;
 
     private boolean useNamedParameters;
 
@@ -113,43 +124,79 @@ public class InferencingContributionDialogue extends AbstractDialogue {
 
     private IProject project;
 
-    //
-    // private IProject contextProject;
-
-    public InferencingContributionDialogue(Shell parentShell, IGroovySuggestion suggestion,
-            GroovySuggestionDeclaringType declaringType, IProject project) {
-        this(parentShell, declaringType, project);
+    /**
+     * This constructor is used to edit an existing suggestion. Editing a
+     * declaring type is not yet supported.
+     */
+    public InferencingContributionDialogue(Shell parentShell, IGroovySuggestion suggestion, IProject project) {
+        super(parentShell, DIALOGUE_DESCRIPTOR);
+        this.project = project;
         setSuggestion(suggestion);
     }
 
+    /**
+     * This constructor is used to add new suggestion to an existing declaring
+     * type
+     */
     public InferencingContributionDialogue(Shell parentShell, GroovySuggestionDeclaringType declaringType, IProject project) {
-        super(parentShell);
-        suggestion = new SuggestionChange();
-        this.project = project;
-        if (declaringType != null) {
-            suggestion.declaringTypeName = declaringType.getName();
-            mutableDeclaringType = false;
-        }
+        this(parentShell, project, null, declaringType, false, true);
     }
 
     /**
-     * May be null if no declaring type is specified.
+     * This constructor is used to add a new suggestion. The user is expected to
+     * specify the declaring type in the UI controls.
+     */
+    public InferencingContributionDialogue(Shell parentShell, IProject project) {
+        this(parentShell, project, null, null, true, true);
+
+    }
+
+    protected InferencingContributionDialogue(Shell parentShell, IProject project, IGroovySuggestion currentSuggestion,
+            GroovySuggestionDeclaringType declaringType, boolean editDeclaringType, boolean isActive) {
+        super(parentShell, DIALOGUE_DESCRIPTOR);
+        this.project = project;
+        this.currentSuggestion = currentSuggestion;
+        this.declaringTypeName = declaringType != null ? declaringType.getName() : null;
+        this.editDeclaringType = editDeclaringType;
+        this.isActive = isActive;
+    }
+
+    /**
+     * May be null if there is no suggestion that is being edited. If the
+     * dialogue is
+     * being used to add a new suggestion, current suggestion will return null,
+     * as the dialogue
+     * doesn't create a suggestion. Rather the dialogue creates a suggestion
+     * descriptor that can be
+     * used to either create the actual suggestion or edit an existing one
+     * outside of the dialogue logic.
      * 
      * @return
      */
-    public SuggestionChange getSuggestionChange() {
-        return suggestion;
+    public IGroovySuggestion getCurrentSuggestion() {
+        return currentSuggestion;
     }
 
-    protected void setSuggestion(IGroovySuggestion sugg) {
-        this.initialSuggestion = sugg;
-        if (initialSuggestion != null) {
+    public SuggestionDescriptor getSuggestionChange() {
+        return new SuggestionDescriptor(declaringTypeName, isStatic, isMethod, declaringTypeName, javaDoc, suggestionType,
+                useNamedParameters, table.getMethodParameter(), isActive);
+    }
 
-            suggestion.isStatic = initialSuggestion.isStatic();
-            suggestion.name = initialSuggestion.getName();
-
-            suggestion.javaDoc = initialSuggestion.getJavaDoc();
-            suggestion.type = initialSuggestion.getType();
+    protected void setSuggestion(IGroovySuggestion suggestion) {
+        this.currentSuggestion = suggestion;
+        if (currentSuggestion != null) {
+            isStatic = currentSuggestion.isStatic();
+            name = currentSuggestion.getName();
+            declaringTypeName = currentSuggestion.getDeclaringType().getName();
+            javaDoc = currentSuggestion.getJavaDoc();
+            suggestionType = currentSuggestion.getType();
+            isActive = currentSuggestion.isActive();
+            if (currentSuggestion instanceof GroovyMethodSuggestion) {
+                GroovyMethodSuggestion method = (GroovyMethodSuggestion) currentSuggestion;
+                initialParameters = method.getMethodArguments();
+                useNamedParameters = method.useNamedArguments();
+                isMethod = true;
+            }
         }
     }
 
@@ -164,22 +211,22 @@ public class InferencingContributionDialogue extends AbstractDialogue {
     }
 
     protected void createFieldAreas(Composite parent) {
-        LabeledTextControl nameControl = new LabeledTextControl(ControlTypes.NAME, getOffsetLabelLocation(), suggestion.name);
+        LabeledTextControl nameControl = new LabeledTextControl(ControlTypes.NAME, getOffsetLabelLocation(), name);
         nameControl.createControlArea(parent);
         nameControl.addSelectionListener(new IControlSelectionListener() {
 
             public void handleSelection(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (selection instanceof String) {
-                    suggestion.name = (String) selection;
+                    name = (String) selection;
                 }
             }
         });
 
         JavaTextDialogueControl declaringTypeControl = new JavaTextDialogueControl(ControlTypes.DECLARING_TYPE,
-                getOffsetLabelLocation(), suggestion.declaringTypeName, getJavaProject());
+                getOffsetLabelLocation(), declaringTypeName, getJavaProject());
         declaringTypeControl.createControlArea(parent);
-        if (!mutableDeclaringType) {
+        if (!editDeclaringType) {
             declaringTypeControl.setEnabled(false);
         }
         declaringTypeControl.addSelectionListener(new IControlSelectionListener() {
@@ -187,185 +234,106 @@ public class InferencingContributionDialogue extends AbstractDialogue {
             public void handleSelection(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (selection instanceof String) {
-                    suggestion.declaringTypeName = (String) selection;
+                    declaringTypeName = (String) selection;
                 }
             }
         });
 
         JavaTextDialogueControl typeControl = new JavaTextDialogueControl(ControlTypes.TYPE, getOffsetLabelLocation(),
-                suggestion.type, getJavaProject());
+                suggestionType, getJavaProject());
         typeControl.createControlArea(parent);
         typeControl.addSelectionListener(new IControlSelectionListener() {
 
             public void handleSelection(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (selection instanceof String) {
-                    suggestion.type = (String) selection;
+                    suggestionType = (String) selection;
                 }
             }
         });
 
-        ButtonDialogueControl isStaticButton = new ButtonDialogueControl(ControlTypes.IS_STATIC, SWT.CHECK, suggestion.isStatic);
+        ButtonDialogueControl isStaticButton = new ButtonDialogueControl(ControlTypes.IS_STATIC, SWT.CHECK, isStatic);
         isStaticButton.createControlArea(parent);
         isStaticButton.addSelectionListener(new IControlSelectionListener() {
 
             public void handleSelection(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (selection instanceof Boolean) {
-                    suggestion.isStatic = ((Boolean) selection).booleanValue();
+                    isStatic = ((Boolean) selection).booleanValue();
                 }
             }
         });
 
         // Set Property as the default selected button
-        ControlTypes defaultSuggestionTypeButton = ControlTypes.PROPERTY;
+        ControlTypes defaultSuggestionTypeButton = isMethod ? ControlTypes.METHOD : ControlTypes.PROPERTY;
 
-        RadioSelectionDialogueControl radialSelection = new RadioSelectionDialogueControl(new IDialogueControlDescriptor[] {
+        RadioSelectionDialogueControl radioSelection = new RadioSelectionDialogueControl(new IDialogueControlDescriptor[] {
                 ControlTypes.PROPERTY, ControlTypes.METHOD }, defaultSuggestionTypeButton);
 
-        radialSelection.createControlArea(parent);
+        radioSelection.createControlArea(parent);
 
-        table = new ParameterTable();
-        List<MethodParameter> arguments = getMethodArguments();
-        if (arguments != null) {
-            table.setInput(arguments);
-        }
+        table = new ParameterTable(getJavaProject(), initialParameters, useNamedParameters);
+
         table.createControlArea(parent);
 
-        ButtonDialogueControl useName = new ButtonDialogueControl(ControlTypes.USE_NAMED_ARGUMENTS, SWT.CHECK, useNamedParameters);
-        useName.createControlArea(parent);
-        useName.addSelectionListener(new IControlSelectionListener() {
+        // If the default is not a method suggestion, disable the parameter tree
+        if (!isMethod) {
+            table.setEnabled(false);
+        }
+
+        table.addSelectionListener(new IControlSelectionListener() {
 
             public void handleSelection(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
-                if (selection instanceof Boolean) {
-                    suggestion.useArgumentNames = ((Boolean) selection).booleanValue();
+                if (event.getControlDescriptor() == ControlTypes.USE_NAMED_ARGUMENTS && selection instanceof Boolean) {
+                    useNamedParameters = ((Boolean) selection).booleanValue();
                 }
             }
         });
 
-        radialSelection.addSelectionListener(new IControlSelectionListener() {
+        radioSelection.addSelectionListener(new IControlSelectionListener() {
 
             public void handleSelection(ControlSelectionEvent event) {
                 IDialogueControlDescriptor descriptor = event.getControlDescriptor();
                 if (descriptor == ControlTypes.PROPERTY) {
                     table.setEnabled(false);
-                    suggestion.isMethod = false;
+                    isMethod = false;
                 } else if (descriptor == ControlTypes.METHOD) {
                     table.setEnabled(true);
-                    suggestion.isMethod = true;
+                    isMethod = true;
                 }
             }
         });
 
     }
 
-    protected List<MethodParameter> getMethodArguments() {
-        if (initialSuggestion instanceof GroovyMethodSuggestion) {
-            return ((GroovyMethodSuggestion) initialSuggestion).getMethodArguments();
-        }
-        return null;
-    }
-
     protected Point getOffsetLabelLocation() {
+        if (labelControlOffset == null) {
+            IDialogueControlDescriptor[] descriptors = new IDialogueControlDescriptor[] { ControlTypes.DECLARING_TYPE,
+                    ControlTypes.IS_STATIC, ControlTypes.TYPE, ControlTypes.NAME
 
-        int length = SWT.DEFAULT;
-        int charLength = 0;
-        IDialogueControlDescriptor[] descriptors = new IDialogueControlDescriptor[] { ControlTypes.DECLARING_TYPE,
-                ControlTypes.IS_STATIC, ControlTypes.TYPE, ControlTypes.NAME
-
-        };
-        for (IDialogueControlDescriptor descriptor : descriptors) {
-            // only compute label length of Base and Java editors
-            String name = descriptor.getLabel();
-            if (name != null) {
-                int nameLength = name.length();
-                if (nameLength > charLength) {
-                    charLength = nameLength;
-                }
+            };
+            String[] labelNames = new String[descriptors.length];
+            for (int i = 0; i < descriptors.length; ++i) {
+                labelNames[i] = descriptors[i].getLabel();
             }
+            labelControlOffset = getOffsetLabelLocation(labelNames);
         }
-        if (charLength > 0) {
-            Control control = getShell();
-            GC gc = new GC(control);
-            Font requiredLabelFont = getRequiredParameterFont();
-            gc.setFont(requiredLabelFont != null ? requiredLabelFont : control.getFont());
-            FontMetrics fontMetrics = gc.getFontMetrics();
-            // Increment the length by a few pixels to cover colon that may be
-            // appended
-            length = Dialog.convertWidthInCharsToPixels(fontMetrics, charLength);
-            gc.dispose();
-        }
-        Point longestLabelWidth = new Point(length, -1);
-        longestLabelWidth.x += getLabelNameSeparatorOffset();
-        return longestLabelWidth;
-    }
-
-    protected int getLabelNameSeparatorOffset() {
-        return 0;
-    }
-
-    protected Font getRequiredParameterFont() {
-        return JFaceResources.getFontRegistry().getBold(JFaceResources.DIALOG_FONT);
+        return labelControlOffset;
     }
 
     protected void createDocumentationArea(Composite parent) {
 
-        DocumentDialogueControl docControl = new DocumentDialogueControl(ControlTypes.JAVA_DOC, null);
+        DocumentDialogueControl docControl = new DocumentDialogueControl(ControlTypes.JAVA_DOC, null, javaDoc);
         docControl.createControlArea(parent);
         docControl.addSelectionListener(new IControlSelectionListener() {
 
             public void handleSelection(ControlSelectionEvent event) {
                 if (event.getSelectionData() instanceof String) {
-                    suggestion.javaDoc = (String) event.getSelectionData();
+                    javaDoc = (String) event.getSelectionData();
                 }
             }
         });
-
-    }
-
-    protected String iconLocation() {
-        return "icons/full/mockup/newgroovyclass_wiz.gif";
-    }
-
-    public String getMessage() {
-        return "Add a Groovy Inferencing Suggestion";
-    }
-
-    public String getTitle() {
-        return "Groovy Inferencing Suggestion";
-    }
-
-    /**
-     * 
-     * @author Nieraj Singh
-     * @created 2011-05-13
-     */
-    public class SuggestionChange {
-        boolean isStatic;
-
-        boolean isMethod = false;
-
-        String name;
-
-        String javaDoc;
-
-        String declaringTypeName;
-
-        String type;
-
-        boolean useArgumentNames;
-
-        public IGroovySuggestion getSuggestion() {
-            GroovySuggestionDeclaringType declaringType = InferencingSuggestionsManager.getInstance().getDeclaringType(
-                    declaringTypeName, project);
-            if (declaringType != null) {
-                return isMethod ? new GroovyMethodSuggestion(table.getMethodParameter(), useNamedParameters, name, type, isStatic,
-                        javaDoc, declaringType) : new GroovyPropertySuggestion(name, type, isStatic, javaDoc, declaringType);
-            }
-            return null;
-
-        }
 
     }
 

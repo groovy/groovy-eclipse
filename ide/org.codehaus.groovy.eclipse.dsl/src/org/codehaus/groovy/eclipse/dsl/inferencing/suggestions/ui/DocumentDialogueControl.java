@@ -15,25 +15,35 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.eclipse.jface.layout.GridDataFactory;
+import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Label;
 
 /**
  * 
  * @author Nieraj Singh
  * @created 2011-05-13
  */
-public class DocumentDialogueControl extends AbstractLabeledDialogueControl {
+public class DocumentDialogueControl extends AbstractControl {
 
-    public DocumentDialogueControl(IDialogueControlDescriptor labelDescriptor, Point offsetLabelLocation) {
-        super(labelDescriptor, offsetLabelLocation);
+    private String initialValue;
+
+    private IDialogueControlDescriptor descriptor;
+
+    public DocumentDialogueControl(IDialogueControlDescriptor descriptor, Point offsetLabelLocation, String initialValue) {
+        this.descriptor = descriptor;
+        this.initialValue = initialValue;
     }
 
     protected void setControlValue(Control control, Object value) {
@@ -47,24 +57,47 @@ public class DocumentDialogueControl extends AbstractLabeledDialogueControl {
         return 1;
     }
 
-    protected Control getLabeledControl(Composite parent) {
-//        final Browser browser = new Browser(parent, SWT.BORDER);
-        
-        final Text browser = new Text(parent, SWT.BORDER | SWT.MULTI);
+    protected int getDocumentControlHeight() {
+        return 100;
+    }
 
-        browser.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-        browser.setVisible(true);
+    @Override
+    protected Map<IDialogueControlDescriptor, Control> createManagedControls(Composite parent) {
 
-        browser.addKeyListener(new KeyListener() {
+        Map<IDialogueControlDescriptor, Control> controls = new HashMap<IDialogueControlDescriptor, Control>();
+        if (descriptor != null) {
+            Composite labelArea = new Composite(parent, SWT.NONE);
+            GridLayoutFactory.fillDefaults().numColumns(numberofColumns()).margins(0, 0).equalWidth(false).applyTo(labelArea);
+            GridDataFactory.fillDefaults().grab(true, true).applyTo(labelArea);
 
-            public void keyReleased(KeyEvent e) {
-                notifyLabeledControlChange(browser.getText());
+            Label parameterNameLabel = new Label(labelArea, SWT.READ_ONLY);
+
+            parameterNameLabel.setText(descriptor.getLabel() + ": ");
+            parameterNameLabel.setToolTipText(descriptor.getToolTipText());
+
+            GridDataFactory.fillDefaults().grab(false, false).align(SWT.FILL, SWT.CENTER).applyTo(parameterNameLabel);
+
+            final StyledText styledText = new StyledText(labelArea, SWT.BORDER | SWT.MULTI);
+
+            GridDataFactory.fillDefaults().grab(true, true).minSize(SWT.DEFAULT, getDocumentControlHeight()).applyTo(styledText);
+            styledText.setVisible(true);
+
+            styledText.addKeyListener(new KeyListener() {
+
+                public void keyReleased(KeyEvent e) {
+                    notifyControlChange(styledText.getText(), descriptor);
+                }
+
+                public void keyPressed(KeyEvent e) {
+                    // nothing.
+                }
+            });
+
+            if (initialValue != null) {
+                styledText.setText(initialValue);
             }
-
-            public void keyPressed(KeyEvent e) {
-                // nothing.
-            }
-        });
-        return browser;
+            controls.put(descriptor, styledText);
+        }
+        return controls;
     }
 }

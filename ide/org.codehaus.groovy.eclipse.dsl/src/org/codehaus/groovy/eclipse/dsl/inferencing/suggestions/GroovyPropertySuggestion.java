@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
-
 /**
  * 
  * @author Nieraj Singh
@@ -23,8 +22,10 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
  */
 public class GroovyPropertySuggestion extends AbstractGroovyTypeProperty {
 
-    public GroovyPropertySuggestion(String name, String type, boolean isStatic, String javaDoc,
-            GroovySuggestionDeclaringType declaringType) {
-        super(name, type, isStatic, javaDoc, declaringType);
+    public GroovyPropertySuggestion(GroovySuggestionDeclaringType declaringType, String name, String type, boolean isStatic,
+            String javaDoc, boolean isActive) {
+        super(declaringType, name, type, isStatic, javaDoc, isActive);
     }
+
+
 }
