@@ -57,8 +57,4 @@ public class CodeSelectCategoriesTest extends BrowsingTestCase {
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found local variable 'doNothing'", "doNothing", elt[0].getElementName());
     }
-
-    public void testDummy() throws Exception {
-        fail("This dummy test should be removed");
-    }
 }

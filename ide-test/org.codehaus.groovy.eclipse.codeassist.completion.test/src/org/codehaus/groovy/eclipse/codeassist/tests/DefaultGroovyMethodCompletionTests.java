@@ -136,7 +136,12 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
         		"p.get";
         ICompilationUnit unit = createGroovyWithContents("Script", contents);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "get"), GroovyCompletionProposalComputer.class);
-        proposalExists(proposals, "getIn", 2);
+        if (GroovyUtils.GROOVY_LEVEL >= 18) {
+            proposalExists(proposals, "getIn", 1);
+        } else {
+            // groovy 1.7
+            proposalExists(proposals, "getIn", 2);
+        }
     }
     
     // tests GRECLIPSE-1158
@@ -154,13 +159,13 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
     }
     
     // tests GRECLIPSE-1158
-    public void testOfEncodingGM() throws Exception {
+    public void testEncodingGM() throws Exception {
         String contents = "org.w3c.dom.NodeList p\n" +
                 "p.iterator";
         ICompilationUnit unit = createGroovyWithContents("Script", contents);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "iterator"), GroovyCompletionProposalComputer.class);
         if (GroovyUtils.GROOVY_LEVEL >= 18) {
-            proposalExists(proposals, "iterator", 1);
+            proposalExists(proposals, "iterator", 2);
         } else {
             // groovy 1.7
             proposalExists(proposals, "iterator", 3);
