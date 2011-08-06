@@ -43,7 +43,6 @@ public abstract class AbstractGroovyTypeProperty implements IGroovySuggestion {
         this.isActive = isActive;
     }
 
-    @Override
     public GroovySuggestionDeclaringType getDeclaringType() {
         return declaringType;
     }

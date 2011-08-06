@@ -230,13 +230,11 @@ public class GroovySuggestionsTable {
 
         treeViewer.addTreeListener(new ITreeViewerListener() {
 
-            @Override
             public void treeExpanded(TreeExpansionEvent event) {
                 setCheckState(event.getElement());
 
             }
 
-            @Override
             public void treeCollapsed(TreeExpansionEvent event) {
                 // do nothing
             }
