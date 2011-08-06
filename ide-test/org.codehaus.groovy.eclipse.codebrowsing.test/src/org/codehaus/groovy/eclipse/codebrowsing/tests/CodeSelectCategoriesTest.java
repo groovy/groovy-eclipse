@@ -30,7 +30,7 @@ public class CodeSelectCategoriesTest extends BrowsingTestCase {
     public void testDGM() throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");
-        String contents = "each { }";
+        String contents = "this.each { }";
         env.addGroovyClass(root, "", "Hello", contents);
         incrementalBuild(projectPath);
         env.waitForAutoBuild();
@@ -38,7 +38,7 @@ public class CodeSelectCategoriesTest extends BrowsingTestCase {
         GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
         IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf("each"), 1);
         assertEquals("Should have found a selection", 1, elt.length);
-        assertEquals("Should have found local variable 'each'", "each", elt[0].getElementName());
+        assertEquals("Should have found local variable 'each'.  Why is this still aproblem?", "each", elt[0].getElementName());
     }
 
     public void testGroovyCategory() throws Exception {

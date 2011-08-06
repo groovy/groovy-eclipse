@@ -91,7 +91,7 @@ public class FindSurroundingNodeTests extends BrowsingTestCase {
     }
 
     public void testFindSurrounding5() throws Exception {
-        String contents = "foo().foo()";
+        String contents = "foo() .foo()";
         Region initialRegion = new Region(contents.indexOf('f'), 1);
         Region expectedRegion = new Region(contents.indexOf("foo"), "foo".length());
         GroovyCompilationUnit unit = checkRegion(contents, initialRegion, expectedRegion);
