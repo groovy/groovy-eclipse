@@ -124,4 +124,15 @@ public class CodeSelectFieldsPropertiesTest extends BrowsingTestCase {
         String elementName = "xxx";
         assertCodeSelect(null, null, contents, toFind, elementName);
     }
+
+    // GRECLIPSE-1162
+    public void testIsGetter1() throws Exception {
+        String contents = "class Other {\n" +
+                "  boolean xxx\n" +
+                "}\n" +
+                "new Other().isXxx";
+        String toFind = "isXxx";
+        String elementName = "xxx";
+        assertCodeSelect(null, null, contents, toFind, elementName);
+    }
 }

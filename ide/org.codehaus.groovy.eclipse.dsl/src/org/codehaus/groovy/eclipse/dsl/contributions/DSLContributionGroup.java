@@ -365,10 +365,22 @@ public class DSLContributionGroup extends ContributionGroup {
                 null, useNamedArgs, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         
         // also add the associated property if applicable
-        if (name.startsWith("get") && name.length() > 3 && (method.getParameters() == null || method.getParameters().length == 0)) {
-            contributions.add(new PropertyContributionElement(Character.toLowerCase(name.charAt(3)) + name.substring(4), getTypeName(resolvedReturnType), 
+        String prefix;
+        if ((prefix = isAccessor(method, name)) != null) {
+            contributions.add(new PropertyContributionElement(Character.toLowerCase(name.charAt(prefix.length())) + name.substring(prefix.length()+1), getTypeName(resolvedReturnType), 
                     getTypeName(method.getDeclaringClass()), (method.isStatic() || isStatic), provider, null, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         }
+    }
+
+    private String isAccessor(MethodNode method, String name) {
+        if (method.getParameters() == null || method.getParameters().length == 0) {
+            if (name.startsWith("get") && name.length() > 3) {
+                return "get";
+            } else if (name.startsWith("is") && name.length() > 2) {
+                return "is";
+            }
+        }
+        return null;
     }
 
     

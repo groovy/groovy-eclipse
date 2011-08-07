@@ -713,6 +713,14 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 				return maybeMethods.get(0);
 			}
 		}
+		// try converting to a boolean getter and see if the getter version of the method exists
+		if (numOfArgs < 0 && !name.startsWith("is") && name.length() > 0) {
+			String getter = "is" + Character.toUpperCase(name.charAt(0)) + (name.length() > 1 ? name.substring(1) : "");
+			maybeMethods = declaringType.getMethods(getter);
+			if (maybeMethods != null && maybeMethods.size() > 0) {
+				return maybeMethods.get(0);
+			}
+		}
 		// try converting to a setter and see if the getter version of the method exists
 		if (numOfArgs < 0 && !name.startsWith("set") && name.length() > 0) {
 			String getter = "set" + Character.toUpperCase(name.charAt(0)) + (name.length() > 1 ? name.substring(1) : "");

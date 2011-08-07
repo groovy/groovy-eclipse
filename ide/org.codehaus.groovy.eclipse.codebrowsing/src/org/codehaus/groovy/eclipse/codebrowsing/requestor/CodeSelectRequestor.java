@@ -461,6 +461,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         String capitalized = Character.toTitleCase(text.charAt(0)) + text.substring(1);
         String setMethod = "set" + capitalized;
         String getMethod = "get" + capitalized;
+        String isMethod = "is" + capitalized;
         
         
         IMethod lastFound = null;
@@ -479,10 +480,10 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
         
         IField field = type.getField(text);
-        if (!field.exists() && text.length() > 3 &&
-                (text.startsWith("get") || text.startsWith("set"))) {
+        String prefix;
+        if (!field.exists() && (prefix = extractPrefix(text)) != null) {
             // this is a property
-            String newName = Character.toLowerCase(text.charAt(3)) + text.substring(4);
+            String newName = Character.toLowerCase(text.charAt(prefix.length())) + text.substring(prefix.length()+1);
             field = type.getField(newName);
         }
         if (field.exists()) {
@@ -491,8 +492,26 @@ public class CodeSelectRequestor implements ITypeRequestor {
         
         for (IMethod method : type.getMethods()) {
             if (method.getElementName().equals(setMethod) ||
-                    method.getElementName().equals(getMethod)) {
+                    method.getElementName().equals(getMethod) ||
+                    method.getElementName().equals(isMethod)) {
                 return method;
+            }
+        }
+        return null;
+    }
+    
+    private String extractPrefix(String text) {
+        if (text.startsWith("is")) {
+            if (text.length() > 2) {
+                return "is";
+            }
+        } else if (text.startsWith("get")) {
+            if (text.length() > 3) {
+                return "get";
+            }
+        } else if (text.startsWith("set")) {
+            if (text.length() > 3) {
+                return "set";
             }
         }
         return null;

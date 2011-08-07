@@ -540,8 +540,10 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 	 *         return type and taking no parameters
 	 */
 	private boolean isGetter(MethodNode methodNode) {
-		return methodNode.getReturnType() != ClassHelper.VOID_TYPE && methodNode.getParameters().length == 0
-				&& methodNode.getName().startsWith("get") && methodNode.getName().length() > 3;
+		return methodNode.getReturnType() != ClassHelper.VOID_TYPE
+				&& methodNode.getParameters().length == 0
+				&& ((methodNode.getName().startsWith("get") && methodNode.getName().length() > 3) || (methodNode.getName()
+						.startsWith("is") && methodNode.getName().length() > 2));
 	}
 
 	@Override

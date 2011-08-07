@@ -399,8 +399,10 @@ public class VariableScope {
 	 *         return type and taking no parameters
 	 */
 	private static boolean isGetter(MethodNode methodNode) {
-		return methodNode.getReturnType() != VOID_CLASS_NODE && methodNode.getParameters().length == 0
-				&& methodNode.getName().startsWith("get") && methodNode.getName().length() > 3; //$NON-NLS-1$
+		return methodNode.getReturnType() != VOID_CLASS_NODE
+				&& methodNode.getParameters().length == 0
+				&& ((methodNode.getName().startsWith("get") && methodNode.getName().length() > 3) || (methodNode.getName()
+						.startsWith("is") && methodNode.getName().length() > 2));
 	}
 
 	private static void initializeProperties(ClassNode node) {

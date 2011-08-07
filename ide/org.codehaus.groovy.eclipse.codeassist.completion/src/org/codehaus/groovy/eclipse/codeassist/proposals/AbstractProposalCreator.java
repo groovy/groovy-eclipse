@@ -105,18 +105,24 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
     }
 
     protected boolean looselyMatchesGetterName(String prefix, String methodName) {
-        // fail fast if name is < 4 chars, it doesn't start with get or set, or
-        // its 4th char is lower case
-        if (methodName.length() < 4) {
-            return false;
-        } else if (!(methodName.startsWith("get") || methodName
-                .startsWith("set"))
-                || Character.isLowerCase(methodName.charAt(3))) {
-            return false;
+        // first try 'is'
+        boolean isGetterName = false;
+        if (methodName.length() >= 2 && methodName.startsWith("is") && Character.isLowerCase(methodName.charAt(2))) {
+            isGetterName = true;
         }
 
-        String newName = createMockFieldName(methodName);
-        return ProposalUtils.looselyMatches(prefix, newName);
+        if (!isGetterName) {
+            if (methodName.length() > 3 && (methodName.startsWith("get") || methodName.startsWith("set"))
+                    && Character.isLowerCase(methodName.charAt(3))) {
+                isGetterName = true;
+            }
+        }
+        if (isGetterName) {
+            String newName = createMockFieldName(methodName);
+            return ProposalUtils.looselyMatches(prefix, newName);
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -125,8 +131,10 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
      * @return
      */
     protected String createMockFieldName(String methodName) {
-        return methodName.length() > 3 ? Character.toLowerCase(methodName
-                .charAt(3)) + methodName.substring(4) : "$$$$$";
+        int prefix = methodName.startsWith("is") ? 2 : 3;
+
+        return methodName.length() > prefix ? Character.toLowerCase(methodName.charAt(prefix)) + methodName.substring(prefix + 1)
+                : "$$$$$";
     }
 
     /**
