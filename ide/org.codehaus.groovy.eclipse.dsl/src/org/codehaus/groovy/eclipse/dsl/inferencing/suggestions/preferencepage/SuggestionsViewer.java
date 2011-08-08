@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.preferencepage;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.layout.PixelConverter;
-import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ICheckStateProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -26,7 +25,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
-import org.eclipse.swt.widgets.TreeItem;
+import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 
 /**
  * 
@@ -35,7 +34,7 @@ import org.eclipse.swt.widgets.TreeItem;
  */
 public class SuggestionsViewer {
 
-    private CheckboxTreeViewer viewer;
+    private ContainerCheckedTreeViewer viewer;
 
     private ITreeViewerColumn[] columns;
 
@@ -56,18 +55,6 @@ public class SuggestionsViewer {
         return null;
     }
 
-    protected void setCheckStateAll(TreeItem[] items, boolean checkState) {
-        if (items != null) {
-            for (TreeItem item : items) {
-                item.setChecked(checkState);
-                TreeItem[] children = item.getItems();
-                if (children != null) {
-                    setCheckStateAll(children, checkState);
-                }
-            }
-        }
-    }
-
     public void createControls(Composite parent) {
 
         Composite treeComposite = new Composite(parent, SWT.NONE);
@@ -78,7 +65,7 @@ public class SuggestionsViewer {
 
         GridDataFactory.fillDefaults().grab(true, true).hint(SWT.DEFAULT, getHeightHint()).applyTo(tree);
 
-        viewer = new CheckboxTreeViewer(tree);
+        viewer = new ContainerCheckedTreeViewer(tree);
 
         if (columns != null && columns.length > 0) {
             PixelConverter converter = new PixelConverter(treeComposite);
@@ -113,7 +100,7 @@ public class SuggestionsViewer {
 
     }
 
-    public CheckboxTreeViewer getTreeViewer() {
+    public ContainerCheckedTreeViewer getTreeViewer() {
         return viewer;
     }
 
@@ -147,22 +134,10 @@ public class SuggestionsViewer {
     public void setChecked(Object child, boolean newState) {
         viewer.setChecked(child, newState);
     }
-    
+
     public void dispose() {
         removeListeners();
     }
-
-    public void checkAll() {
-        TreeItem[] items = viewer.getTree().getItems();
-        setCheckStateAll(items, true);
-    }
-
-    public void uncheckAll() {
-        TreeItem[] items = viewer.getTree().getItems();
-        setCheckStateAll(items, false);
-    }
-    
-
 
     protected void removeListeners() {
 
@@ -196,5 +171,4 @@ public class SuggestionsViewer {
         }
 
     }
-
 }

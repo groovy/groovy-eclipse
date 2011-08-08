@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.Label;
  * @author Nieraj Singh
  * @created 2011-05-13
  */
-public abstract class AbstractLabeledDialogueControl extends AbstractControl implements ILabeledControl {
+public abstract class AbstractLabeledDialogueControl extends AbstractControlManager implements ILabeledControl {
 
     private Point offsetLabelLocation;
 
@@ -53,9 +53,9 @@ public abstract class AbstractLabeledDialogueControl extends AbstractControl imp
         return 2;
     }
 
-    protected Map<IDialogueControlDescriptor, Control> createManagedControls(Composite parent) {
+    protected Map<Control, IDialogueControlDescriptor> createManagedControls(Composite parent) {
 
-        Map<IDialogueControlDescriptor, Control> controls = new HashMap<IDialogueControlDescriptor, Control>();
+        Map<Control, IDialogueControlDescriptor> controls = new HashMap<Control, IDialogueControlDescriptor>();
         if (labelDescriptor != null) {
             Composite labelArea = new Composite(parent, SWT.NONE);
             GridLayoutFactory.fillDefaults().numColumns(numberofColumns()).margins(0, 0).equalWidth(false).applyTo(labelArea);
@@ -79,21 +79,18 @@ public abstract class AbstractLabeledDialogueControl extends AbstractControl imp
                     data.widthHint = widthHint;
                 }
             }
-            Control labeledControl = getLabeledControl(labelArea);
+            Control labeledControl = getManagedControl(labelArea);
             if (labeledControl != null) {
                 // Although the label descriptor is used to create the label
                 // control, it actually
                 // also defines the control rendered after the label itself.
-                controls.put(getLabelDescriptor(), labeledControl);
+                controls.put(labeledControl, getLabelDescriptor());
 
             }
         }
         return controls;
     }
 
-    protected void notifyLabeledControlChange(Object data) {
-        notifyControlChange(data, getLabelDescriptor());
-    }
 
     /**
      * Create the control that is rendered on the right side of the label
@@ -106,7 +103,7 @@ public abstract class AbstractLabeledDialogueControl extends AbstractControl imp
      * @param parent
      * @return
      */
-    abstract protected Control getLabeledControl(Composite parent);
+    abstract protected Control getManagedControl(Composite parent);
 
     public Label getLabel() {
         return parameterNameLabel != null && !parameterNameLabel.isDisposed() ? parameterNameLabel : null;

@@ -15,9 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.resources.IProject;
@@ -89,15 +88,15 @@ public class InferencingSuggestionsManager {
         }
 
         public void removeDeclaringType(GroovySuggestionDeclaringType declaringType) {
-            suggestions.remove(declaringType);
+            suggestions.remove(declaringType.getName());
         }
 
         /**
          * 
          * @return
          */
-        public List<GroovySuggestionDeclaringType> getDeclaringTypes() {
-            return new ArrayList<GroovySuggestionDeclaringType>(suggestions.values());
+        public Collection<GroovySuggestionDeclaringType> getDeclaringTypes() {
+            return suggestions.values();
         }
 
     }

@@ -23,4 +23,6 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 public interface IControlSelectionListener {
 
     public void handleSelection(ControlSelectionEvent event);
+
+    public void handleInvalidSelection(ControlSelectionEvent event);
 }

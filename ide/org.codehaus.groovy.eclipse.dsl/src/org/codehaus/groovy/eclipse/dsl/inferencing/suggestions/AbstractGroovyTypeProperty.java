@@ -47,8 +47,6 @@ public abstract class AbstractGroovyTypeProperty implements IGroovySuggestion {
         return declaringType;
     }
 
-
-
     public boolean isActive() {
         return isActive;
     }
@@ -67,6 +65,10 @@ public abstract class AbstractGroovyTypeProperty implements IGroovySuggestion {
 
     public String getJavaDoc() {
         return javaDoc;
+    }
+
+    public void changeActiveState(boolean isActive) {
+        this.isActive = isActive;
     }
 
 }

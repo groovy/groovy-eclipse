@@ -35,7 +35,7 @@ import org.eclipse.swt.widgets.Label;
  * @author Nieraj Singh
  * @created 2011-05-13
  */
-public class DocumentDialogueControl extends AbstractControl {
+public class DocumentDialogueControl extends AbstractControlManager {
 
     private String initialValue;
 
@@ -61,10 +61,9 @@ public class DocumentDialogueControl extends AbstractControl {
         return 100;
     }
 
-    @Override
-    protected Map<IDialogueControlDescriptor, Control> createManagedControls(Composite parent) {
+    protected Map<Control, IDialogueControlDescriptor> createManagedControls(Composite parent) {
 
-        Map<IDialogueControlDescriptor, Control> controls = new HashMap<IDialogueControlDescriptor, Control>();
+        Map<Control, IDialogueControlDescriptor> controls = new HashMap<Control, IDialogueControlDescriptor>();
         if (descriptor != null) {
             Composite labelArea = new Composite(parent, SWT.NONE);
             GridLayoutFactory.fillDefaults().numColumns(numberofColumns()).margins(0, 0).equalWidth(false).applyTo(labelArea);
@@ -85,7 +84,7 @@ public class DocumentDialogueControl extends AbstractControl {
             styledText.addKeyListener(new KeyListener() {
 
                 public void keyReleased(KeyEvent e) {
-                    notifyControlChange(styledText.getText(), descriptor);
+                    notifyControlChange(styledText.getText(), styledText);
                 }
 
                 public void keyPressed(KeyEvent e) {
@@ -96,8 +95,9 @@ public class DocumentDialogueControl extends AbstractControl {
             if (initialValue != null) {
                 styledText.setText(initialValue);
             }
-            controls.put(descriptor, styledText);
+            controls.put(styledText, descriptor);
         }
         return controls;
     }
+
 }

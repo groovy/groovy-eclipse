@@ -62,7 +62,6 @@ public class SuggestionDescriptor {
      */
     public SuggestionDescriptor(IGroovySuggestion suggestion) {
         this(suggestion, suggestion.isActive());
-
     }
 
     /**
@@ -71,11 +70,11 @@ public class SuggestionDescriptor {
      */
     public SuggestionDescriptor(IGroovySuggestion suggestion, boolean isActive) {
         this.isStatic = suggestion.isStatic();
-
+        this.isActive = isActive;
         this.name = suggestion.getName();
         this.javaDoc = suggestion.getJavaDoc();
         this.suggestionType = suggestion.getType();
-
+        this.declaringTypeName = suggestion.getDeclaringType().getName();
         if (suggestion instanceof GroovyMethodSuggestion) {
             GroovyMethodSuggestion methodSuggestion = (GroovyMethodSuggestion) suggestion;
             this.useArgumentNames = methodSuggestion.useNamedArguments();

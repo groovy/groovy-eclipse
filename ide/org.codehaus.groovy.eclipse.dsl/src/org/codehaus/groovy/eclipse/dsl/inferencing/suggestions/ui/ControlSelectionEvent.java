@@ -26,9 +26,25 @@ public class ControlSelectionEvent {
 
     private IDialogueControlDescriptor descriptor;
 
+    private String errorMessage;
+
+    /**
+     * Use this constructor if an error event is generated due to invalid value.
+     * The value is set to null
+     */
+    public ControlSelectionEvent(IDialogueControlDescriptor descriptor, String errorMessage) {
+        this.data = null;
+        this.descriptor = descriptor;
+        this.errorMessage = errorMessage;
+    }
+
+    /**
+     * Use this constructor if a value is successfully validated in the control.
+     */
     public ControlSelectionEvent(Object data, IDialogueControlDescriptor descriptor) {
         this.data = data;
         this.descriptor = descriptor;
+        this.errorMessage = null;
     }
 
     public Object getSelectionData() {
@@ -37,5 +53,9 @@ public class ControlSelectionEvent {
 
     public IDialogueControlDescriptor getControlDescriptor() {
         return descriptor;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
     }
 }

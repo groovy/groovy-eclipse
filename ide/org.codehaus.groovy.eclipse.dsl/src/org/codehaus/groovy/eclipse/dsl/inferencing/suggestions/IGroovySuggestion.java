@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
 /**
- * This is meant to be immutable. 
  * 
  * @author Nieraj Singh
  * @created Apr 19, 2011
@@ -34,6 +33,7 @@ public interface IGroovySuggestion {
     public String getType();
 
     public boolean isActive();
-
+    
+    public void changeActiveState(boolean isActive);
 
 }

@@ -15,6 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -27,6 +31,7 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontMetrics;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
@@ -40,12 +45,15 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
 
     private DialogueDescriptor descriptor;
 
+    private Map<IDialogueControlDescriptor, SetValue> invalidValues;
+
+    protected static final String EMPTY_ERROR_MESSAGE = "  ";
+
     public AbstractDialogue(Shell parentShell, DialogueDescriptor descriptor) {
         super(parentShell);
         this.descriptor = descriptor;
     }
 
-    @Override
     protected boolean isResizable() {
         return true;
     }
@@ -54,9 +62,8 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
         return null;
     }
 
-    @Override
     protected Control createDialogArea(Composite parent) {
-
+        invalidValues = new HashMap<IDialogueControlDescriptor, SetValue>();
         setTitle(descriptor.getTitle());
         setMessage(descriptor.getMessage());
         String iconLocation = descriptor.getIconLocation();
@@ -78,6 +85,22 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
         createCommandArea(composite);
 
         return composite;
+    }
+
+    protected Control createContents(Composite parent) {
+
+        Control control = super.createContents(parent);
+        // Set "OK" button state after all dialogue contents are created to
+        // ensure the
+        // dialogue buttons have already been created.
+        if (invalidValues != null) {
+            for (SetValue setValue : invalidValues.values()) {
+                if (setValue.getValue() == null) {
+                    enableOKButton(false);
+                }
+            }
+        }
+        return control;
     }
 
     protected Point getOffsetLabelLocation(String[] labels) {
@@ -122,5 +145,115 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
     }
 
     abstract protected void createCommandArea(Composite parent);
+
+    /**
+     * Control listener to be used if the dialogue has required values that
+     * determine if
+     * the user can click "OK" on the dialogue. If any required value is not
+     * set, or is invalid as determined by the control, the "OK"
+     * button is grayed out.
+     * 
+     * @author Nieraj Singh
+     * @created 2011-08-06
+     */
+    abstract protected class RequiredValueControlSelectionListener implements IControlSelectionListener {
+
+        public RequiredValueControlSelectionListener(IDialogueControlDescriptor descriptor, Object initialValue) {
+            // Add any instances of the listener to the list of descriptors that
+            // need to
+            // be observed for value validation
+            invalidValues.put(descriptor, new SetValue(initialValue, null));
+        }
+
+        public void handleSelection(ControlSelectionEvent event) {
+            handleRequiredValue(event);
+            notifyValidValueSet(event.getControlDescriptor(), event.getSelectionData());
+        }
+
+        public void handleInvalidSelection(ControlSelectionEvent event) {
+            IDialogueControlDescriptor descriptor = event.getControlDescriptor();
+            invalidValues.put(descriptor, new SetValue(event.getSelectionData(), event.getErrorMessage()));
+            displayInvalidValueError(descriptor, event.getErrorMessage(), true);
+        }
+
+        abstract protected void handleRequiredValue(ControlSelectionEvent event);
+    }
+
+    protected void notifyValidValueSet(IDialogueControlDescriptor descriptor, Object value) {
+        invalidValues.remove(descriptor);
+
+        // Check if there are any remaining inValid values and display the next error
+        if (invalidValues != null) {
+
+            for (Entry<IDialogueControlDescriptor, SetValue> entry : invalidValues.entrySet()) {
+                if (entry.getValue().getValue() == null) {
+                    displayInvalidValueError(entry.getKey(), entry.getValue().getErrorMessage(), true);
+                    return;
+                }
+            }
+        }
+        setErrorMessage(null);
+        enableOKButton(true);
+    }
+
+    /**
+     * Checks if any required values are set with valid values before enabling
+     * the "OK" button.
+     */
+    protected void displayInvalidValueError(IDialogueControlDescriptor descriptor, String errorMessage, boolean displayErrorMessage) {
+
+        StringBuffer missingFields = new StringBuffer();
+
+        missingFields.append("Required value (");
+        missingFields.append(descriptor.getLabel());
+        missingFields.append(')');
+        if (errorMessage != null && errorMessage.length() > 0) {
+            missingFields.append(':');
+            missingFields.append(' ');
+
+            missingFields.append(errorMessage);
+        } else {
+            missingFields.append(" is missing");
+        }
+
+        if (displayErrorMessage) {
+            setErrorMessage(missingFields.toString());
+        }
+        enableOKButton(false);
+    }
+
+    /**
+     * Should only be called once the button bars have been created for the
+     * dialogue
+     * 
+     * @param enable
+     */
+    protected void enableOKButton(boolean enable) {
+        Button okButton = getButton(IDialogConstants.OK_ID);
+        if (okButton != null && !okButton.isDisposed()) {
+            okButton.setEnabled(enable);
+        }
+    }
+
+    protected class SetValue {
+
+        private Object value;
+
+        private String errorMessage;
+
+        public SetValue(Object value, String errorMessage) {
+            this.value = value;
+            this.errorMessage = errorMessage;
+        }
+
+        public Object getValue() {
+            return value;
+        }
+
+        public String getErrorMessage() {
+            return errorMessage;
+        }
+
+    }
 
 }

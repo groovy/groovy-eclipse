@@ -57,17 +57,6 @@ public class GroovySuggestionDeclaringType {
         return suggestions.contains(suggestion);
     }
 
-    public IGroovySuggestion changeActiveState(IGroovySuggestion suggestion, boolean isActive) {
-        if (suggestions.contains(suggestion) && suggestion.isActive() != isActive) {
-            removeSuggestion(suggestion);
-            SuggestionDescriptor descriptor = new SuggestionDescriptor(suggestion, isActive);
-            IGroovySuggestion nwSuggestion = createSuggestion(descriptor);
-            return nwSuggestion;
-        }
-        return null;
-
-    }
-
     public IGroovySuggestion replaceSuggestion(SuggestionDescriptor descriptor, IGroovySuggestion suggestion) {
 
         if (suggestions.contains(suggestion)) {
@@ -79,13 +68,15 @@ public class GroovySuggestionDeclaringType {
         return null;
 
     }
+    
+    
 
     public boolean removeSuggestion(IGroovySuggestion suggestion) {
         return suggestions.remove(suggestion);
     }
 
     public Set<IGroovySuggestion> getSuggestions() {
-        return new HashSet<IGroovySuggestion>(suggestions);
+        return suggestions;
     }
 
     public boolean hasSuggestions() {

@@ -34,25 +34,29 @@ import org.eclipse.swt.widgets.Text;
  * @author Nieraj Singh
  * @created 2011-05-13
  */
-public class JavaTextDialogueControl extends LabeledTextControl {
+public class JavaTypeBrowsingControl extends JavaIdentifierTextControl {
 
     /**
      * 
      */
     private static final String BROWSE = "Browse...";
 
+    private static final String INVALID_VALUE_MESSAGE = "Invalid Java identifier";
+
     private Button browse;
 
     private IJavaProject project;
 
-    public JavaTextDialogueControl(IDialogueControlDescriptor labelDescriptor, Point offsetLabelLocation, String initialValue,
+    public JavaTypeBrowsingControl(IDialogueControlDescriptor labelDescriptor, Point offsetLabelLocation, String initialValue,
             IJavaProject project) {
         super(labelDescriptor, offsetLabelLocation, initialValue);
         this.project = project;
     }
 
-    @Override
-    protected Control getLabeledControl(Composite parent) {
+    /**
+     * Must return the control that is managed by the manager.
+     */
+    protected Control getManagedControl(Composite parent) {
         // First create a composite with 2 columns, one for the labeled text
         // control
         // and the other for the browse button
@@ -61,7 +65,7 @@ public class JavaTextDialogueControl extends LabeledTextControl {
         GridDataFactory.fillDefaults().grab(true, false).applyTo(fieldComposite);
 
         // Create the text control first in the first column
-        Control text = super.getLabeledControl(fieldComposite);
+        Text text = (Text) super.getManagedControl(fieldComposite);
 
         // create the browse button in the second column
         browse = new Button(fieldComposite, SWT.PUSH);
@@ -76,7 +80,7 @@ public class JavaTextDialogueControl extends LabeledTextControl {
 
         browse.setLayoutData(data);
 
-        addTypeBrowseSupport((Text) text, browse, parent.getShell());
+        addTypeBrowseSupport(text, browse, parent.getShell());
         return text;
     }
 
@@ -86,8 +90,8 @@ public class JavaTextDialogueControl extends LabeledTextControl {
         new TypeBrowseSupport(shell, project, new IBrowseTypeHandler() {
 
             public void handleTypeSelection(String qualifiedName) {
-                setControlValue(finText, qualifiedName);
-
+                finText.setText(qualifiedName);
+                notifyControlChange(qualifiedName, finText);
             }
 
         }).applySupport(browse, text);
@@ -100,6 +104,30 @@ public class JavaTextDialogueControl extends LabeledTextControl {
     public void setEnabled(boolean enable) {
         super.setEnabled(enable);
         browse.setEnabled(enable);
+    }
+
+    protected ValueStatus isControlValueValid(Control control) {
+        if (getTextControl() == control) {
+            String stringValue = getTextControl().getText();
+
+            if (stringValue == null || stringValue.length() == 0) {
+                return new ValueStatus(MISSING_REQUIRED_VALUE, false);
+            }
+
+            for (int i = 0; i < stringValue.length(); i++) {
+                if (!Character.isJavaIdentifierPart(stringValue.charAt(i))) {
+                    // May be fully qualified name
+                    if (stringValue.charAt(i) == '.') {
+                        continue;
+                    }
+                    return new ValueStatus(INVALID_VALUE_MESSAGE, false);
+                }
+            }
+
+            return new ValueStatus(stringValue);
+
+        }
+        return null;
     }
 
 }

@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.Control;
  * @author Nieraj Singh
  * @created 2011-05-13
  */
-public class RadioSelectionDialogueControl extends AbstractControl {
+public class RadioSelectionDialogueControl extends AbstractControlManager {
 
     private IDialogueControlDescriptor[] radioValues;
 
@@ -43,14 +43,13 @@ public class RadioSelectionDialogueControl extends AbstractControl {
         this.defaultValue = defaultValue;
     }
 
-    @Override
-    protected Map<IDialogueControlDescriptor, Control> createManagedControls(Composite parent) {
+    protected Map<Control, IDialogueControlDescriptor> createManagedControls(Composite parent) {
         Composite buttonArea = new Composite(parent, SWT.NONE);
 
         GridLayoutFactory.fillDefaults().numColumns(2).equalWidth(true).applyTo(buttonArea);
         GridDataFactory.fillDefaults().grab(true, false).applyTo(buttonArea);
 
-        Map<IDialogueControlDescriptor, Control> controls = new HashMap<IDialogueControlDescriptor, Control>();
+        Map<Control, IDialogueControlDescriptor> controls = new HashMap<Control, IDialogueControlDescriptor>();
 
         for (IDialogueControlDescriptor descriptor : radioValues) {
 
@@ -67,7 +66,7 @@ public class RadioSelectionDialogueControl extends AbstractControl {
             button.setSelection(false);
 
             if (button != null) {
-                controls.put(descriptor, button);
+                controls.put(button, descriptor);
 
                 button.setData(descriptor);
                 String toolTipText = descriptor.getToolTipText();
@@ -82,24 +81,14 @@ public class RadioSelectionDialogueControl extends AbstractControl {
 
                     public void widgetSelected(SelectionEvent e) {
                         if (button.getData() instanceof IDialogueControlDescriptor) {
-                            notifyControlChange(button.getData(), (IDialogueControlDescriptor) button.getData());
+                            notifyControlChange(button.getData(), button);
                         }
-
                     }
 
                 });
-
             }
         }
-        return null;
-    }
-
-    @Override
-    protected void setControlValue(Control control, Object value) {
-        if (control instanceof Button && value instanceof Boolean) {
-            ((Button) control).setSelection(((Boolean) value).booleanValue());
-        }
-
+        return controls;
     }
 
 }

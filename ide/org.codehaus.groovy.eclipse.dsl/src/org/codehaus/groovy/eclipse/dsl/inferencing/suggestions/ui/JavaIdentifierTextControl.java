@@ -16,8 +16,6 @@
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Point;
@@ -31,28 +29,23 @@ import org.eclipse.swt.widgets.Text;
  * @author Nieraj Singh
  * @created 2011-05-13
  */
-public class LabeledTextControl extends AbstractLabeledDialogueControl {
-
-    private boolean firstFocus = true;
+public class JavaIdentifierTextControl extends AbstractLabeledDialogueControl {
 
     private String initialValue;
 
-    public LabeledTextControl(IDialogueControlDescriptor labelDescriptor, Point offsetLabelLocation, String initialValue) {
+    private Text textControl;
+
+    protected static final String MISSING_REQUIRED_VALUE = "Missing required value";
+
+    protected static final String INVALID_JAVA_IDENTIFIER = "Invalid Java identifier";
+
+    public JavaIdentifierTextControl(IDialogueControlDescriptor labelDescriptor, Point offsetLabelLocation, String initialValue) {
         super(labelDescriptor, offsetLabelLocation);
         this.initialValue = initialValue;
     }
 
-
-    @Override
-    protected void setControlValue(Control control, Object value) {
-        if (control instanceof Text && value instanceof String) {
-            ((Text) control).setText((String) value);
-        }
-    }
-
-    @Override
-    protected Control getLabeledControl(Composite parent) {
-        final Text textControl = new Text(parent, SWT.BORDER);
+    protected Control getManagedControl(Composite parent) {
+        textControl = new Text(parent, SWT.BORDER);
         if (initialValue != null) {
             textControl.setText(initialValue);
         }
@@ -67,26 +60,38 @@ public class LabeledTextControl extends AbstractLabeledDialogueControl {
 
         textControl.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
-                notifyLabeledControlChange(textControl.getText());
+                notifyControlChange(textControl.getText(), textControl);
             }
         });
 
-        textControl.addFocusListener(new FocusListener() {
-
-            public void focusLost(FocusEvent e) {
-                // Nothing
-            }
-
-            public void focusGained(FocusEvent e) {
-                // Notify the wizard that focus has been set the first
-                // time to allow the wizard to output any error messages
-                if (firstFocus) {
-                    notifyLabeledControlChange(textControl.getText());
-                    firstFocus = false;
-                }
-            }
-        });
         return textControl;
+    }
+
+    protected Text getTextControl() {
+        return textControl;
+    }
+
+    protected ValueStatus isControlValueValid(Control control) {
+        if (control == textControl) {
+            String stringVal = textControl.getText();
+            if (stringVal.length() > 0) {
+                for (int i = 0; i < stringVal.length(); i++) {
+                    if (!Character.isJavaIdentifierPart(stringVal.charAt(i))) {
+                        return new ValueStatus(INVALID_JAVA_IDENTIFIER, false);
+                    }
+                }
+                return new ValueStatus(stringVal);
+            }
+        }
+        return new ValueStatus(MISSING_REQUIRED_VALUE, false);
+    }
+
+    protected boolean isWhiteSpace(String value) {
+        boolean isWhiteSpace = true;
+        for (int i = 0; i < value.length() && isWhiteSpace; i++) {
+            isWhiteSpace = Character.isWhitespace(value.charAt(i));
+        }
+        return isWhiteSpace;
     }
 
 }

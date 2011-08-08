@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
@@ -25,36 +28,10 @@ import org.eclipse.swt.widgets.Shell;
  * @author Nieraj Singh
  * @created 2011-08-04
  */
-public class ParameterDialogue extends AbstractDialogue {
+public class MethodArgumentDialogue extends AbstractDialogue {
 
     public static final DialogueDescriptor DIALOGUE_DESCRIPTOR = new DialogueDescriptor("Add parameter", "Suggestion Parameter",
             "icons/GROOVY.png");
-
-    enum ControlTypes implements IDialogueControlDescriptor {
-        NAME("Name", "Enter a type name"),
-
-        TYPE("Type", "Enter or browse for a type");
-
-        private String label;
-
-        private String toolTipText;
-
-        private ControlTypes(String label, String toolTipText) {
-            this.label = label;
-            this.toolTipText = toolTipText;
-        }
-
-        public String getLabel() {
-
-            return label;
-        }
-
-        public String getToolTipText() {
-
-            return toolTipText;
-        }
-
-    }
 
     private Point labelOffset;
 
@@ -64,11 +41,11 @@ public class ParameterDialogue extends AbstractDialogue {
 
     private IJavaProject javaProject;
 
-    public ParameterDialogue(Shell parentShell, IJavaProject javaProject, String name, String type) {
+    public MethodArgumentDialogue(Shell parentShell, IJavaProject javaProject, String name, String type) {
         super(parentShell, DIALOGUE_DESCRIPTOR);
         this.javaProject = javaProject;
-        this.name = name != null ? name : "";
-        this.type = type != null ? type : "";
+        this.name = name;
+        this.type = type;
     }
 
     public String getName() {
@@ -95,11 +72,11 @@ public class ParameterDialogue extends AbstractDialogue {
 
     @Override
     protected void createCommandArea(Composite parent) {
-        LabeledTextControl nameControl = new LabeledTextControl(ControlTypes.NAME, getOffsetLabelLocation(), name);
+        JavaIdentifierTextControl nameControl = new JavaIdentifierTextControl(ControlTypes.NAME, getOffsetLabelLocation(), name);
         nameControl.createControlArea(parent);
-        nameControl.addSelectionListener(new IControlSelectionListener() {
+        nameControl.addSelectionListener(new RequiredValueControlSelectionListener(ControlTypes.NAME, name) {
 
-            public void handleSelection(ControlSelectionEvent event) {
+            protected void handleRequiredValue(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (selection instanceof String) {
                     name = (String) selection;
@@ -107,13 +84,13 @@ public class ParameterDialogue extends AbstractDialogue {
             }
         });
 
-        JavaTextDialogueControl declaringTypeControl = new JavaTextDialogueControl(ControlTypes.TYPE, getOffsetLabelLocation(),
+        JavaTypeBrowsingControl declaringTypeControl = new JavaTypeBrowsingControl(ControlTypes.TYPE, getOffsetLabelLocation(),
                 type, javaProject);
         declaringTypeControl.createControlArea(parent);
 
-        declaringTypeControl.addSelectionListener(new IControlSelectionListener() {
+        declaringTypeControl.addSelectionListener(new RequiredValueControlSelectionListener(ControlTypes.TYPE, type) {
 
-            public void handleSelection(ControlSelectionEvent event) {
+            protected void handleRequiredValue(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (selection instanceof String) {
                     type = (String) selection;

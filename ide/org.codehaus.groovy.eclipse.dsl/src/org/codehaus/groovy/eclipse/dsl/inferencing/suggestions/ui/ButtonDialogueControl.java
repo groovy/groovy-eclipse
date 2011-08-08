@@ -23,6 +23,7 @@ import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -32,7 +33,7 @@ import org.eclipse.swt.widgets.Control;
  * @author Nieraj Singh
  * @created 2011-05-13
  */
-public class ButtonDialogueControl extends AbstractControl {
+public class ButtonDialogueControl extends AbstractControlManager {
 
     private Button boolButton;
 
@@ -51,18 +52,10 @@ public class ButtonDialogueControl extends AbstractControl {
         this.initialValue = initialValue;
     }
 
-    @Override
-    public void changeControlValue(ControlSelectionEvent event) {
-        if (event.getSelectionData() instanceof Boolean) {
-            boolButton.setSelection(((Boolean) event.getSelectionData()).booleanValue());
-        }
-    }
-
-    @Override
-    protected Map<IDialogueControlDescriptor, Control> createManagedControls(Composite parent) {
+    protected Map<Control, IDialogueControlDescriptor> createManagedControls(Composite parent) {
         Composite baseCommandArea = new Composite(parent, SWT.NONE);
-        GridLayoutFactory.fillDefaults().numColumns(1).margins(0, 0).applyTo(baseCommandArea);
-        GridDataFactory.fillDefaults().grab(false, false).applyTo(baseCommandArea);
+        GridLayoutFactory.fillDefaults().numColumns(1).applyTo(baseCommandArea);
+        GridDataFactory.fillDefaults().applyTo(baseCommandArea);
 
         boolButton = new Button(baseCommandArea, buttonType);
         boolButton.setText(descriptor.getLabel());
@@ -70,24 +63,21 @@ public class ButtonDialogueControl extends AbstractControl {
         boolButton.setSelection(initialValue);
         boolButton.setToolTipText(descriptor.getToolTipText());
 
-        GridDataFactory.fillDefaults().grab(false, false).applyTo(boolButton);
-
+        GridData gd = new GridData();
+        gd.horizontalAlignment = GridData.FILL;
+        gd.grabExcessHorizontalSpace = false;
+        gd.horizontalSpan = 1;
+        boolButton.setLayoutData(gd);
         boolButton.addSelectionListener(new SelectionAdapter() {
 
             public void widgetSelected(SelectionEvent e) {
-                notifyControlChange(new Boolean(boolButton.getSelection()), descriptor);
+                notifyControlChange(new Boolean(boolButton.getSelection()), boolButton);
             }
 
         });
-        Map<IDialogueControlDescriptor, Control> controls = new HashMap<IDialogueControlDescriptor, Control>();
-        controls.put(descriptor, boolButton);
+        Map<Control, IDialogueControlDescriptor> controls = new HashMap<Control, IDialogueControlDescriptor>();
+        controls.put(boolButton, descriptor);
         return controls;
-    }
-
-    protected void setControlValue(Control control, Object value) {
-        if (control instanceof Button && value instanceof Boolean) {
-            ((Button) control).setSelection(((Boolean) value).booleanValue());
-        }
     }
 
 }

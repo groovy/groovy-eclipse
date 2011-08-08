@@ -18,15 +18,22 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 import org.eclipse.swt.widgets.Composite;
 
 /**
+ * Manage a set of related controls displayed in a dialogue. In particular, the
+ * disabled and enabled state of
+ * the set of controls is managed based on events generated external to the
+ * manager. This allows all controls in the manager
+ * to be enabled or disabled based on events driven by other parts of a dialogue
+ * or underlying model or functionality.
  * 
  * @author Nieraj Singh
  * @created 2011-05-13
  */
-public interface IDialogueControl {
+public interface IDialogueControlManager {
 
-	public Composite createControlArea(Composite parent);
+    public Composite createControlArea(Composite parent);
 
-	public void setEnabled(boolean disable);
+    public void setEnabled(boolean disable);
 
-	public void addSelectionListener(IControlSelectionListener listener);
+    public void addSelectionListener(IControlSelectionListener listener);
+
 }
