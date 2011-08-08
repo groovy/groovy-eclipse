@@ -349,6 +349,56 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         doTest(contents, start, len);
     }
     
+    public void testOverloaded1() throws Exception {
+        String contents = 
+                "class LotsOfMethods { \n" + 
+        		"    def meth() { }\n" + 
+        		"    def meth(int a) { }\n" + 
+        		"    def meth(String a, LotsOfMethods b) { }\n" + 
+        		"}\n" + 
+        		"new LotsOfMethods().meth(1)\n" + 
+        		"new LotsOfMethods().meth(\"\", null)\n" +
+        		"new LotsOfMethods().meth()";
+        int start = contents.indexOf("meth");
+        int len = "meth".length();
+        int start1 = start;
+        int start2 = contents.lastIndexOf("meth");
+        doTest(contents, start, len, start1, len, start2, len);
+    }
+    
+    public void testOverloaded2() throws Exception {
+        String contents = 
+                "class LotsOfMethods { \n" + 
+                        "    def meth() { }\n" + 
+                        "    def meth(int a) { }\n" + 
+                        "    def meth(String a, LotsOfMethods b) { }\n" + 
+                        "}\n" + 
+                        "new LotsOfMethods().meth()\n" +
+                        "new LotsOfMethods().meth(\"\", null)\n" +
+                        "new LotsOfMethods().meth(1)\n"; 
+        int start = contents.indexOf("meth", contents.indexOf("meth")+1);
+        int len = "meth".length();
+        int start1 = start;
+        int start2 = contents.lastIndexOf("meth");
+        doTest(contents, start, len, start1, len, start2, len);
+    }
+    
+    public void testOverloaded3() throws Exception {
+        String contents = 
+                "class LotsOfMethods { \n" + 
+                        "    def meth() { }\n" + 
+                        "    def meth(int a) { }\n" + 
+                        "    def meth(String a, LotsOfMethods b) { }\n" + 
+                        "}\n" + 
+                        "new LotsOfMethods().meth(1)\n" + 
+                        "new LotsOfMethods().meth()\n" +
+                        "new LotsOfMethods().meth(\"\", null)\n";
+        int start = contents.indexOf("meth", contents.indexOf("meth", contents.indexOf("meth")+1)+1);
+        int len = "meth".length();
+        int start1 = start;
+        int start2 = contents.lastIndexOf("meth");
+        doTest(contents, start, len, start1, len, start2, len);
+    }
     
     private void doTest(String contents, int start, int length, int ... expected) throws JavaModelException {
         GroovyCompilationUnit unit = createUnit("Occurrences", contents);

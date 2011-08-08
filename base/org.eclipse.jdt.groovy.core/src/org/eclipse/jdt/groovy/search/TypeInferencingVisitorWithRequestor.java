@@ -1638,7 +1638,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					if (groovyParams.length != jdtParamTypes.length) {
 						continue;
 					}
-					for (int i = 0; i < groovyParams.length; i++) {
+					inner: for (int i = 0; i < groovyParams.length; i++) {
+						String simpleGroovyClassType = groovyParams[i].getType().getNameWithoutPackage();
+						if (!simpleGroovyClassType.startsWith("[")) { //$NON-NLS-1$
+							simpleGroovyClassType = Signature.createTypeSignature(simpleGroovyClassType, false);
+						}
+						if (simpleGroovyClassType.equals(jdtParamTypes[i])) {
+							continue inner;
+						}
+
 						String groovyClassType = groovyParams[i].getType().getName();
 						if (!groovyClassType.startsWith("[")) { //$NON-NLS-1$
 							groovyClassType = Signature.createTypeSignature(groovyClassType, false);

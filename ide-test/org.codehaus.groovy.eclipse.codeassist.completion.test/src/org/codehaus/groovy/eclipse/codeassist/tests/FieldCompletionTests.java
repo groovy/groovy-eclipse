@@ -201,6 +201,26 @@ public class FieldCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "xx", 1);
     }
     
+    // GRECLIPSE-1162
+    // 'is' method proposals
+    public void testProperties8() throws Exception {
+        String contents = "class Other { boolean isxx() {} } \n def o = new Other()\no.x";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "isxx", 1);
+        proposalExists(proposals, "xx", 0);
+    }
+    
+    // GRECLIPSE-1162
+    // 'get' method proposals
+    public void testProperties9() throws Exception {
+        String contents = "class Other { boolean getxx() {} } \n def o = new Other()\no.x";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "getxx", 1);
+        proposalExists(proposals, "xx", 0);
+    }
+    
     public void testClosure1() throws Exception {
         String contents = "class Other { def xxx = { a, b -> }  } \n def o = new Other()\no.x";
         ICompilationUnit unit = create(contents);
