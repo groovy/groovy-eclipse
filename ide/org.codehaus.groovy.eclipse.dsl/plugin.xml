@@ -116,12 +116,14 @@
                id="org.codehaus.groovy.eclipse.dsl.keywords">
          </keywordReference>
       </page>
+     <!--  GRECLIPSE-998. Feature still in development. Enable when complete.
       <page
             category="org.codehaus.groovy.eclipse.preferences"
             class="org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.preferencepage.InferencingPreferencesPage"
             id="org.codehaus.groovy.eclipse.dsl.inferencing.preferences"
             name="Inferencing">
       </page>
+      -->
    </extension>
    <extension
          point="org.eclipse.ui.newWizards">
