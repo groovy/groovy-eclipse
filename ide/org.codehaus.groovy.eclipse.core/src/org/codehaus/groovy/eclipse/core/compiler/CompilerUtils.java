@@ -89,10 +89,10 @@ public class CompilerUtils {
     }
 
     public static Bundle getActiveGroovyBundle() {
-        String version17 = "[1.7.0,1.8.1)";
+        String version17 = "[1.7.0,1.7.99)";
         String version18 = "1.8.1";
         Bundle[] active = Platform.getBundles("org.codehaus.groovy", (isGroovy18DisabledOrMissing() ? version17 : version18));
-        return active.length > 0 ? active[0] : null;
+        return active != null && active.length > 0 ? active[0] : null;
     }
 
 
