@@ -28,6 +28,8 @@ import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
+import org.codehaus.groovy.frameworkadapter.util.CompilerLevelUtils;
+import org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
@@ -228,6 +230,10 @@ public class CompilerUtils {
                     }
                 }
             }
+
+            CompilerLevelUtils.writeConfigurationVersion(toVersion18 ? SpecifiedVersion._18 : SpecifiedVersion._17,
+ state
+                    .getBundle(0).getBundle().getBundleContext());
             return Status.OK_STATUS;
         } catch (Exception e) {
             GroovyCore.logException(e.getMessage(), e);

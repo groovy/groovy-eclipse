@@ -6,3 +6,4 @@ Bundle-Version: 2.5.2.qualifier
 Bundle-Vendor: The Codehaus
 Fragment-Host: org.eclipse.osgi;bundle-version="3.6.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Export-Package: org.codehaus.groovy.frameworkadapter.util

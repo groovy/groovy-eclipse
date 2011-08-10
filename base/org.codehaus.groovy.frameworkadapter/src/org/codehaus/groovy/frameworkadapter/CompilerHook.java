@@ -21,11 +21,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.codehaus.groovy.frameworkadapter.util.CompilerLevelUtils;
+import org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion;
 import org.eclipse.osgi.baseadaptor.BaseAdaptor;
 import org.eclipse.osgi.baseadaptor.HookConfigurator;
 import org.eclipse.osgi.baseadaptor.HookRegistry;
 import org.eclipse.osgi.baseadaptor.hooks.AdaptorHook;
-import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.eclipse.osgi.framework.log.FrameworkLog;
 import org.eclipse.osgi.internal.baseadaptor.StateManager;
 import org.eclipse.osgi.service.resolver.BundleDescription;
@@ -50,59 +51,28 @@ import org.osgi.service.packageadmin.PackageAdmin;
  */
 @SuppressWarnings("deprecation")
 public class CompilerHook implements HookConfigurator, AdaptorHook {
-    enum SpecifiedVersion { 
-        _16(6), _17(7), _18(8), _19(9), _20(0), UNSPECIFIED(-1); 
-        final int minorVersion;
-        SpecifiedVersion(int minorVersion) {
-            this.minorVersion = minorVersion;
-        }
-        
-        static SpecifiedVersion find() {
-            String compilerLevel = FrameworkProperties.getProperty("groovy.compiler.level");
-            
-            if (compilerLevel == null) {
-                return UNSPECIFIED;
-            }
-            
-            if ("16".equals(compilerLevel) || "1.6".equals(compilerLevel)) {
-                return _16;
-            }
-            if ("17".equals(compilerLevel) || "1.7".equals(compilerLevel)) {
-                return _17;
-            }
-            if ("18".equals(compilerLevel) || "1.8".equals(compilerLevel)) {
-                return _18;
-            }
-            if ("19".equals(compilerLevel) || "1.9".equals(compilerLevel)) {
-                return _19;
-            }
-            if ("20".equals(compilerLevel) || "2.0".equals(compilerLevel)) {
-                return _20;
-            }
-            
-            // this is an error prevent startup
-            throw new IllegalArgumentException("Invalid Groovy compiler level specified: " + compilerLevel + 
-                    "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, or 2.0");
-        }
-    }
     private static final String GROOVY_PLUGIN_ID = "org.codehaus.groovy";
     
-    private final SpecifiedVersion version;
+    private SpecifiedVersion version;
     
     private BaseAdaptor adapter;
     
     private boolean versionFound = false;
 
-    public CompilerHook() {
-        version = SpecifiedVersion.find();
-    }
-    
     public void initialize(BaseAdaptor adaptor) {
         this.adapter = adaptor;
     }
 
     
     public void frameworkStart(BundleContext context) throws BundleException {
+        version = CompilerLevelUtils.findSysPropVersion();
+        if (version == SpecifiedVersion.UNSPECIFIED) {
+            try {
+                version = CompilerLevelUtils.findConfigurationVersion(context);
+            } catch (IOException e) {
+                throw new BundleException("Exception when trying to find Groovy compiler startup configuration file.", e);
+            }
+        }
         if (version == SpecifiedVersion.UNSPECIFIED) {
             return;
         }
