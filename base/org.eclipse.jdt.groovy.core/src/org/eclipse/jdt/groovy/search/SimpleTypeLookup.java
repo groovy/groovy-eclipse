@@ -454,7 +454,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 					confidence = UNKNOWN;
 				}
 			} else if (declaration instanceof PropertyNode) {
-				if (isStaticObjectExpression && !((PropertyNode) declaration).isStatic()) {
+				FieldNode underlyingField = ((PropertyNode) declaration).getField();
+				if (underlyingField != null) {
+					// prefer looking at the underlying field
+					if (isStaticObjectExpression && !underlyingField.isStatic()) {
+						confidence = UNKNOWN;
+					}
+				} else if (isStaticObjectExpression && !((PropertyNode) declaration).isStatic()) {
 					confidence = UNKNOWN;
 				}
 			} else if (declaration instanceof MethodNode) {
