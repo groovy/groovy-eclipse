@@ -110,6 +110,7 @@ public class CompilerHook implements HookConfigurator, AdaptorHook {
         System.out.println("Starting Groovy-Eclipse compiler hook.  Specified compiler level: " + version);
         
         // ServiceReference is parameterized in 3.7, not 3.6
+        @SuppressWarnings("rawtypes")
         final ServiceReference serviceReference = context
                 .getServiceReference(PackageAdmin.class.getName());
         final PackageAdmin packageAdmin = (PackageAdmin) context
@@ -141,14 +142,9 @@ public class CompilerHook implements HookConfigurator, AdaptorHook {
         packageAdmin.refreshPackages(allBundles);
     }
 
-    /**
-     * @param bundle
-     * @return
-     */
     private Bundle getBundle(BundleDescription bundle, BundleContext context) {
         return context.getBundle(bundle.getBundleId());
     }
-
 
     private void checkVersionFound(List<Bundle> bundlesToRefresh) {
         if (!versionFound) {

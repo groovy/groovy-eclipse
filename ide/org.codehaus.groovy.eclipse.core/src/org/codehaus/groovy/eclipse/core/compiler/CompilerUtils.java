@@ -219,6 +219,13 @@ public class CompilerUtils {
                 if (!toVersion18) {
                     DisabledInfo info = createDisabledInfo(state, bundle.getBundleId());
                     Platform.getPlatformAdmin().addDisabledInfo(info);
+                    switch (bundle.getState()) {
+                        case Bundle.ACTIVE:
+                        case Bundle.INSTALLED:
+                        case Bundle.STARTING:
+                        case Bundle.RESOLVED:
+                            bundle.stop();
+                    }
                 }
             }
             return Status.OK_STATUS;

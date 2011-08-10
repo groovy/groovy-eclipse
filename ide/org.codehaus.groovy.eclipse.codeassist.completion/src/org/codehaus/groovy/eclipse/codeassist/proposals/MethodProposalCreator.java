@@ -69,7 +69,6 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                     // with the name being gotten
                     String mockFieldName = createMockFieldName(methodName);
                     if (!alreadySeenFields.contains(mockFieldName)) {
-
                         // be careful not to add fields twice
                         alreadySeenFields.add(mockFieldName);
                         if (hasNoField(method.getDeclaringClass(), method.getName())) {
