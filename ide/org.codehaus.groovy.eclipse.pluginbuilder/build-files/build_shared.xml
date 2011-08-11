@@ -15,6 +15,8 @@
  -->
 <project name="Shared build targets">
     
+	<import file="get-dependencies.xml" />
+
 	<target name="unpack.eclipse">
 		<condition property="unpack.eclipse">
 			<not>
@@ -62,6 +64,9 @@
 		</condition>
 		<antcall target="-unpack.eclipse.windows"/>
 		<antcall target="-unpack.eclipse.linux"/>
+		
+		<!-- now install m2eclipse if necessary -->
+		<install-bundle eclipse.loc="${eclipse.installation.dir}" feature.id="org.eclipse.m2e.feature" updatesite.url="${m2e-update-site}"/>
 	</target>
 	
 	<target name="-unpack.eclipse.windows" if="is.windows" depends="-set.eclipse.local.tar.server,-set.target.eclipse.zip">

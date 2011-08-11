@@ -10,6 +10,10 @@
          Andrew Eisenberg     - install-bundle macro
  -->
 <project name="Download files and provide provisioning for existing eclipse installatins">
+	
+	<property name="m2e-update-site" value="http://download.eclipse.org/technology/m2e/releases/1.0/1.0.0.20110607-2117"/>
+
+	
 	<macrodef name="install-bundle" description="Install a bundle into a given Eclipse">
 		<attribute name="eclipse.loc" />
 		<attribute name="updatesite.url" />
