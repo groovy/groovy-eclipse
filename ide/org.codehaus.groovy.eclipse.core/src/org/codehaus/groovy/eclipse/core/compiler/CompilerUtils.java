@@ -232,8 +232,8 @@ public class CompilerUtils {
             }
 
             CompilerLevelUtils.writeConfigurationVersion(toVersion18 ? SpecifiedVersion._18 : SpecifiedVersion._17,
- state
-                    .getBundle(0).getBundle().getBundleContext());
+            // need to get the system bundle
+                    GroovyCoreActivator.getDefault().getBundle().getBundleContext().getBundle(0).getBundleContext());
             return Status.OK_STATUS;
         } catch (Exception e) {
             GroovyCore.logException(e.getMessage(), e);
