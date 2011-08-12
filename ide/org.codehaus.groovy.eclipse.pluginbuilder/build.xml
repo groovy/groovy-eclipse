@@ -48,7 +48,7 @@
 			<jvmarg value="-DworkspaceDirBaseTest=${workspaceDirBaseTest}"/>
 			<jvmarg value="-DworkspaceDirIde=${workspaceDirIde}"/>
 			<jvmarg value="-DworkspaceDirIdeTest=${workspaceDirIdeTest}"/>
-			<jvmarg value="-DworkspaceDirExtras=${workspaceDirIdeExtras}"/>
+			<jvmarg value="-DworkspaceDirExtras=${workspaceDirExtras}"/>
 			<jvmarg value="-Declipse.target.version=${eclipse.target.version}"/>
 			<jvmarg value="-DskipFetch=true"/>
 			<jvmarg value="-DallowBinaryCycles=true"/>
