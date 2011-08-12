@@ -5,12 +5,8 @@
          point="org.eclipse.m2e.core.projectConfigurators">
       <configurator
             class="org.codehaus.groovy.m2eclipse.GroovyProjectConfigurator"
-            id="org.codehaus.groovy.m2eclipse.configurator1"
-            name="Groovy-Eclipse"
-    >
-      </configurator>
+            id="org.codehaus.groovy.m2eclipse.configurator"
+            name="Groovy-Eclipse"/>
    </extension>
-    <extension
-         point="org.eclipse.m2e.core.lifecycleMappingMetadataSource">
-   </extension>
+    <extension point="org.eclipse.m2e.core.lifecycleMappingMetadataSource" />
 </plugin>

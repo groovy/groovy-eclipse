@@ -19,6 +19,7 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -28,27 +29,36 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.m2e.core.project.IMavenProjectFacade;
-import org.eclipse.m2e.core.project.configurator.AbstractProjectConfigurator;
 import org.eclipse.m2e.core.project.configurator.ProjectConfigurationRequest;
 import org.eclipse.m2e.jdt.IClasspathDescriptor;
 import org.eclipse.m2e.jdt.IJavaProjectConfigurator;
+import org.eclipse.m2e.jdt.internal.AbstractJavaProjectConfigurator;
 
-public class GroovyProjectConfigurator extends AbstractProjectConfigurator
+public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
         implements IJavaProjectConfigurator {
 
     @Override
     public void configure(ProjectConfigurationRequest request,
             IProgressMonitor monitor) throws CoreException {
+        super.configure(request, monitor);
         MavenProject mavenProject = request.getMavenProject();
         IProject project = request.getProject();
         if (getSourceType(mavenProject) != null) {
             if (!project.hasNature(GroovyNature.GROOVY_NATURE)) {
+                if (!project.hasNature(JavaCore.NATURE_ID)) {
+                    addJavaNature(project);
+                }
                 GroovyRuntime.addGroovyNature(project);
+            }
+            
+            // add dsl support if not already there
+            IJavaProject javaProject = JavaCore.create(project);
+            if (!GroovyRuntime.hasClasspathContainer(javaProject, GroovyRuntime.DSLD_CONTAINER_ID)) {
+                GroovyRuntime.addLibraryToClasspath(javaProject, GroovyRuntime.DSLD_CONTAINER_ID);
             }
         } else {
             GroovyRuntime.removeGroovyNature(project);
         }
-
     }
 
     public void configureClasspath(IMavenProjectFacade facade,
@@ -102,10 +112,15 @@ public class GroovyProjectConfigurator extends AbstractProjectConfigurator
             throws CoreException {
     }
 
+    /**
+     * Determine if this mavan project uses src/main/groovy and/or src/test/groovy.  Only 
+     * applicable for gmaven.  With groovy-eclipse-compiler, this is configured by the build-helper-maven-plugin
+     * @param mavenProject
+     * @return
+     */
     private SourceType getSourceType(MavenProject mavenProject) {
         Plugin plugin = getGMavenPlugin(mavenProject);
         SourceType result = null;
-
         if (plugin == null) {
             // look to see if there is the maven-compiler-plugin
             // with a compilerId of the groovy eclipse compiler
@@ -172,4 +187,23 @@ public class GroovyProjectConfigurator extends AbstractProjectConfigurator
     private enum SourceType {
     	MAIN, TEST, BOTH, NONE
     }
+    
+    public static void addJavaNature(final IProject project)
+            throws CoreException {
+        final IProjectDescription description = project.getDescription();
+        final String[] ids = description.getNatureIds();
+
+        // add groovy nature at the start so that its image will be shown
+        final String[] newIds = new String[ids == null ? 1 : ids.length + 1];
+        newIds[0] = JavaCore.NATURE_ID;
+        if (ids != null) {
+            for (int i = 1; i < newIds.length; i++) {
+                newIds[i] = ids[i - 1];
+            }
+        }
+
+        description.setNatureIds(newIds);
+        project.setDescription(description, null);
+    }
+
 }

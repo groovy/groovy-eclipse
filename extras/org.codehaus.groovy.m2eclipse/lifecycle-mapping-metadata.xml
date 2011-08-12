@@ -3,19 +3,20 @@
 	<pluginExecutions>
 		<pluginExecution>
 			<pluginExecutionFilter>
-				<groupId>org.codehaus.gmaven</groupId>
-				<artifactId>gmaven-plugin</artifactId>
-				<versionRange>[1.3,)</versionRange>
-				<goals>
-				    <goal>generateStubs</goal>
-					<goal>compile</goal>
-					<goal>generateTestStubs</goal>
-					<goal>testCompile</goal>
-				</goals>
-			</pluginExecutionFilter>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <versionRange>[2.0,)</versionRange>
+        <goals>
+          <goal>compile</goal>
+          <goal>testCompile</goal>
+        </goals>
+        <parameters>
+          <compilerId>groovy-eclipse-compiler</compilerId>
+        </parameters>
+      </pluginExecutionFilter>
 			<action>
 				<configurator>
-					<id>org.codehaus.groovy.m2eclipse.configurator1</id>
+					<id>org.codehaus.groovy.m2eclipse.configurator</id>
 				</configurator>
 			</action>
 		</pluginExecution>
