@@ -248,4 +248,15 @@ public class FieldCompletionTests extends CompletionTestCase {
         // the method
         proposalExists(proposals, "xxx()", 1);
     }
+    
+    // GRECLIPSE-1175
+    public void testInitializer1() throws Exception {
+        String contents = 
+                "class MyClass {\n" + 
+        		"    def something = Class.\n" + 
+        		"}";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "forName", 2);  // two public and one private
+    }
 }

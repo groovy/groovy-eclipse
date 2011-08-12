@@ -195,7 +195,17 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
                 }
             }
         }
-        node.visitContents(this);
+        for (FieldNode fn : node.getFields()) {
+            visitField(fn);
+        }
+
+        for (ConstructorNode cn : node.getDeclaredConstructors()) {
+            visitConstructor(cn);
+        }
+
+        for (MethodNode mn : node.getMethods()) {
+            visitMethod(mn);
+        }
 
         // visit <clinit> body because this is where static field initializers are placed
         MethodNode clinit = node.getMethod("<clinit>", new Parameter[0]);
