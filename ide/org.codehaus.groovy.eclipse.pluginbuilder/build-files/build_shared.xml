@@ -67,6 +67,7 @@
 		
 		<!-- now install m2eclipse if necessary -->
 		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.wst.xml_core.feature" updatesite.url="http://download.eclipse.org/releases/indigo"/>
+		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.wst.xml_ui.feature" updatesite.url="http://download.eclipse.org/releases/indigo"/>
 		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.m2e.feature" updatesite.url="${m2e-update-site}"/>
 	</target>
 	
