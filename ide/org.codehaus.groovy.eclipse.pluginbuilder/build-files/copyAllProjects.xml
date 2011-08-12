@@ -214,6 +214,19 @@
 			</fileset>
 		</copy>
   	
+  	
+		<!-- m2e configurator -->
+		<copy todir="${featuresDestDir}/org.codehaus.groovy.m2eclipse">
+			<fileset dir="${workspaceDirExtras}/Feature org.codehaus.groovy.m2eclipse">
+					<exclude name="**/bin"/>
+			</fileset>
+		</copy>
+		<copy todir="${pluginsDestDir}/org.codehaus.groovy.m2eclipse">
+			<fileset dir="${workspaceDirExtras}/org.codehaus.groovy.m2eclipse">
+					<exclude name="**/bin"/>
+			</fileset>
+		</copy>
+  	
 		<!-- Update site -->
 		<copy todir="${featuresDestDir}/Site Groovy">
 			<fileset dir="${workspaceDirIde}/Site Groovy">
