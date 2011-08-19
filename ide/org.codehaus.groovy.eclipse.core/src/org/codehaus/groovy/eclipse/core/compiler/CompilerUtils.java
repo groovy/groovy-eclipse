@@ -190,8 +190,8 @@ public class CompilerUtils {
      *         contains the exception thrown otherwise
      */
     public static IStatus switchVersions(boolean toVersion18) {
-        String version17 = "[1.7.0,1.8.1)";
-        String version18 = "1.8.1";
+        String version17 = "[1.7.0,1.8.0)";
+        String version18 = "[1.8.0,1.9.0)";
 
 
         try {

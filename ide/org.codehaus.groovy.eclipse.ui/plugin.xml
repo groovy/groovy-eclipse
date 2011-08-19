@@ -977,5 +977,16 @@
              supportsArgument="false">
        </variable>
     </extension>
+    <extension
+          point="org.eclipse.ui.workbench.texteditor.hyperlinkDetectorTargets">
+       <target
+             description="Hyperlink target for URL Mappings"
+             id="org.codehaus.groovy.eclipse.groovyCode"
+             name="Hyperlink target for URL Mappings">
+          <context
+                type="org.codehaus.groovy.eclipse.editor.GroovyEditor">
+          </context>
+       </target>
+    </extension>
  
 </plugin>

@@ -148,26 +148,8 @@ public class StatementAndExpressionCompletionProcessor extends
             }
             if (success) {
                 maybeRememberLHSType(result);
-                resultingType = result.type;
-                if (derefList) {
+                resultingType = findResultingType(result, derefList);
 
-                    // GRECLIPSE-742: does the LHS type have a 'getAt' method?
-                    boolean getAtFound = false;
-                    List<MethodNode> getAts = resultingType.getMethods("getAt");
-                    for (MethodNode getAt : getAts) {
-                        if (getAt.getParameters() != null
-                                && getAt.getParameters().length == 1) {
-                            resultingType = getAt.getReturnType();
-                            getAtFound = true;
-                        }
-                    }
-
-                    if (!getAtFound) {
-                        for (int i = 0; i < derefCount; i++) {
-                            resultingType = VariableScope.deref(resultingType);
-                        }
-                    }
-                }
                 categories = result.scope.getCategoryNames();
                 visitSuccessful = true;
                 isStatic = node instanceof StaticMethodCallExpression ||
@@ -178,6 +160,45 @@ public class StatementAndExpressionCompletionProcessor extends
                 return VisitStatus.STOP_VISIT;
             }
             return VisitStatus.CONTINUE;
+        }
+
+        private ClassNode findResultingType(TypeLookupResult result, boolean derefList) {
+            ClassNode candidate = result.type;
+            if (derefList) {
+                // GRECLIPSE-742: does the LHS type have a 'getAt' method?
+                boolean getAtFound = false;
+                List<MethodNode> getAts = candidate.getMethods("getAt");
+                for (MethodNode getAt : getAts) {
+                    if (getAt.getParameters() != null
+                            && getAt.getParameters().length == 1) {
+                        candidate = getAt.getReturnType();
+                        getAtFound = true;
+                    }
+                }
+
+                if (!getAtFound) {
+                    for (int i = 0; i < derefCount; i++) {
+                        candidate = VariableScope.extractElementType(candidate);
+                    }
+                }
+            }
+
+            // now look at spread expressions
+            // might be part of a spread operation
+            boolean extractElementType = false; // for spread operations
+            ASTNode enclosing = result.scope.getEnclosingNode();
+            if (enclosing instanceof MethodCallExpression) {
+                extractElementType = ((MethodCallExpression) enclosing).isSpreadSafe();
+            } else if (enclosing instanceof PropertyExpression) {
+                extractElementType = ((PropertyExpression) enclosing).isSpreadSafe();
+            }
+            if (extractElementType) {
+                candidate = VariableScope.extractElementType(candidate);
+            }
+            if (ClassHelper.isPrimitiveType(candidate)) {
+                candidate = ClassHelper.getWrapper(candidate);
+            }
+            return candidate;
         }
 
         /**

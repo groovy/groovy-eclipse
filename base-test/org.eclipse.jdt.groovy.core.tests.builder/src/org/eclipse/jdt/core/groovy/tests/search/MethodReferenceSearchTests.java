@@ -38,6 +38,11 @@ public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
     public void testMethodReferencesInScript1() throws Exception {
         doTestForTwoMethodReferencesInScript("new First().xxx\nnew First()\n.\nxxx");
     }
+    
+    public void testMethodReferencesInScript1GRE_1180() throws Exception {
+        doTestForTwoMethodReferencesInScript("new First().xxx\n'xxx'\n\"xxx\"\n\"\"\"xxx\"\"\"\nnew First()\n.\nxxx");
+    }
+
     public void testMethodReferencesInScript2() throws Exception {
         doTestForTwoMethodReferencesInScript("First f = new First()\n f.xxx = f.xxx");
     }

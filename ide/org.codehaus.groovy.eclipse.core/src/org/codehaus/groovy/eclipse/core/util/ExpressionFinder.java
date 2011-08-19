@@ -187,7 +187,9 @@ public class ExpressionFinder {
             if ((token0.type == Token.DOT || token0.type == Token.SAFE_DEREF || token0.type == Token.SPREAD) && isValidBeforeDot(token1.type)) {
                 ret[0] = expression.substring(0, token1.endOffset);
                 ret[1] = "";
-            } else if (token0.type == Token.IDENT && token1.type == Token.DOT && isValidBeforeDot(token2.type)) {
+            } else if (token0.type == Token.IDENT
+                    && (token1.type == Token.DOT || token1.type == Token.SAFE_DEREF || token1.type == Token.SPREAD)
+                    && isValidBeforeDot(token2.type)) {
                 ret[0] = expression.substring(0, token2.endOffset);
                 ret[1] = expression.substring(token0.startOffset, expression.length());
             } else if (token0.type == Token.IDENT) {

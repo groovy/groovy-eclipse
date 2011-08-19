@@ -41,6 +41,8 @@ import static org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion.*;
  */
 public class CompilerLevelUtils {
     private static final String GROOVY_COMPILER_LEVEL = "groovy.compiler.level";
+    private static final String DASH_GROOVY_COMPILER_LEVEL = "-groovy.compiler.level";
+    private static final String ECLIPSE_COMMANDS = "eclipse.commands";
 
     private CompilerLevelUtils() {
         // uninstantiable
@@ -50,7 +52,33 @@ public class CompilerLevelUtils {
      * Finds the compiler version that is specified in the system properties
      */
     public static SpecifiedVersion findSysPropVersion() {
-        return internalFindVersion(FrameworkProperties.getProperty(GROOVY_COMPILER_LEVEL));
+        SpecifiedVersion version = internalFindSysProperVersion(FrameworkProperties.getProperty(GROOVY_COMPILER_LEVEL));
+        if (version == UNSPECIFIED) {
+            // now look at the non vmwargs
+            version = internalFindCommandLineVersion(FrameworkProperties.getProperty(ECLIPSE_COMMANDS));
+        }
+        return version;
+    }
+
+    /**
+     * @param property
+     * @return
+     */
+    private static SpecifiedVersion internalFindCommandLineVersion(
+            String property) {
+        if (property == null) {
+            return UNSPECIFIED;
+        }
+        
+        String[] split = property.split("\\\n");
+        String versionText = null;
+        for (int i = 0; i < split.length; i++) {
+            if (DASH_GROOVY_COMPILER_LEVEL.equals(split[i]) && i < split.length-1) {
+                versionText = split[i+1];
+                break;
+            }
+        }
+        return internalFindSysProperVersion(versionText);
     }
 
     /**
@@ -69,7 +97,7 @@ public class CompilerLevelUtils {
         } catch (FileNotFoundException e) {
             return UNSPECIFIED;
         }
-        return internalFindVersion((String) props.get(GROOVY_COMPILER_LEVEL));
+        return internalFindSysProperVersion((String) props.get(GROOVY_COMPILER_LEVEL));
     }
     
     /**
@@ -100,7 +128,7 @@ public class CompilerLevelUtils {
         props.store(new FileOutputStream(properties), "The Groovy compiler level to load at startup");
     }
 
-    private static SpecifiedVersion internalFindVersion(String compilerLevel) {
+    private static SpecifiedVersion internalFindSysProperVersion(String compilerLevel) {
         if (compilerLevel == null) {
             return UNSPECIFIED;
         }

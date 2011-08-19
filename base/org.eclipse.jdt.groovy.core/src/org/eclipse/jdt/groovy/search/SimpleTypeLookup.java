@@ -86,8 +86,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 	public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType,
 			boolean isStaticObjectExpression) {
 		TypeConfidence[] confidence = new TypeConfidence[] { EXACT };
+		if (ClassHelper.isPrimitiveType(objectExpressionType)) {
+			objectExpressionType = ClassHelper.getWrapper(objectExpressionType);
+		}
 		ClassNode declaringType = objectExpressionType != null ? objectExpressionType : findDeclaringType(node, scope, confidence);
-
 		TypeLookupResult result = findType(node, objectExpressionType, declaringType, scope, confidence[0],
 				isStaticObjectExpression || (objectExpressionType == null && scope.isStatic()));
 
@@ -572,12 +574,23 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 	 */
 	private ClassNode typeFromDeclaration(ASTNode declaration, ClassNode resolvedType) {
 		ClassNode typeOfDeclaration, declaringType = declaringTypeFromDeclaration(declaration, resolvedType);
+		if (declaration instanceof PropertyNode) {
+			FieldNode field = ((PropertyNode) declaration).getField();
+			if (field != null) {
+				declaration = field;
+			}
+		}
 		if (declaration instanceof FieldNode) {
-			typeOfDeclaration = ((FieldNode) declaration).getType();
+			FieldNode fieldNode = (FieldNode) declaration;
+			typeOfDeclaration = fieldNode.getType();
+			if (VariableScope.OBJECT_CLASS_NODE.equals(typeOfDeclaration)) {
+				// check to see if we can do better by looking at the initializer of the field
+				if (fieldNode.hasInitialExpression()) {
+					typeOfDeclaration = fieldNode.getInitialExpression().getType();
+				}
+			}
 		} else if (declaration instanceof MethodNode) {
 			typeOfDeclaration = ((MethodNode) declaration).getReturnType();
-		} else if (declaration instanceof PropertyNode) {
-			typeOfDeclaration = ((PropertyNode) declaration).getType();
 		} else if (declaration instanceof Expression) {
 			typeOfDeclaration = ((Expression) declaration).getType();
 		} else {

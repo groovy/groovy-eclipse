@@ -126,6 +126,9 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
         if (pTab != null) {
             if (pTab.equals(JavaCore.SPACE)) {
                 useTabs = false;
+                // GRECLIPSE-1137 strange, but editor appears to use the tab
+                // size here for indenting.
+                indentSize = tabSize;
             } else if (pTab.equals(JavaCore.TAB)) {
                 useTabs = true;
                 indentSize = tabSize; // If only tabs are allowed indentSize

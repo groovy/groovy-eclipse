@@ -76,6 +76,18 @@ public class BracketInserterTests extends EclipseTestCase {
     public void testInsertAngle() throws Exception {
         assertClosing("", "<>", '<', 0);
     }
+    public void testInsertBraces1() throws Exception {
+        assertClosing("\"$\"", "\"${}\"", '{', 2);
+    }
+    public void testInsertBraces2() throws Exception {
+        assertClosing("\"\"\"$\"\"\"", "\"\"\"${}\"\"\"", '{', 4);
+    }
+    public void testInsertBraces3() throws Exception {
+        assertClosing("$", "${", '{', 1);
+    }
+    public void testInsertBraces4() throws Exception {
+        assertClosing("\"\"\"\n$\"\"\"", "\"\"\"\n${}\"\"\"", '{', 5);
+    }
     
     
     
@@ -100,7 +112,7 @@ public class BracketInserterTests extends EclipseTestCase {
             assertEquals("Invalid bracket insertion.\nInserted char: \'" + inserted + "\' at location " + location,
                     expectedDoc, actual);
         } finally {
-            GroovyPlugin.getDefault().getActiveWorkbenchWindow().getActivePage().closeAllEditors(false);
+            GroovyPlugin.getActiveWorkbenchWindow().getActivePage().closeAllEditors(false);
         }
     }
 }

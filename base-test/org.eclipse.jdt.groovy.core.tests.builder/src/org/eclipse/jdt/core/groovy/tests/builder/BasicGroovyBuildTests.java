@@ -16,7 +16,15 @@ import java.util.StringTokenizer;
 
 import junit.framework.Test;
 
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
@@ -28,6 +36,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.CompilerUtils;
+import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
 
 /**
@@ -2750,6 +2759,32 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
         ClassNode url = resolver.resolve("java.net.URL");
         assertNotNull("Should have found the java.net.URL ClassNode", url);
         assertEquals("Wrong classnode found", "java.net.URL", url.getName());
+    }
+	
+	// GRECLIPSE-1170
+	public void testFieldInitializerFromOtherFile() throws Exception {
+        IPath projectPath = env.addProject("Project");
+        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        env.addGroovyJars(projectPath);
+        env.addGroovyNature("Project");
+        // remove old package fragment root so that names don't collide
+        env.removePackageFragmentRoot(projectPath, "");
+        env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
+        env.addGroovyClass(projectPath.append("src"), "p", "Other", "package p\nclass Other {\ndef x = 9 }");
+        env.addGroovyClass(projectPath.append("src"), "p", "Target", "package p\nnew Other()");
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) env.getJavaProject("Project").findType("p.Target").getCompilationUnit();
+        
+        // now find the class reference
+        ClassNode type = ((ConstructorCallExpression) ((ReturnStatement) unit
+                .getModuleNode().getStatementBlock().getStatements().get(0))
+                .getExpression()).getType();
+        
+        // now check that the field initializer exists
+        Expression initialExpression = type.getField("x").getInitialExpression();
+        assertNotNull(initialExpression);
+        assertEquals("Should have been an int", VariableScope.INTEGER_CLASS_NODE, ClassHelper.getWrapper(initialExpression.getType()));
+        assertEquals("Should have been the number 9", "9", initialExpression.getText());
     }
 
 	//

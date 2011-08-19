@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.editor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
@@ -194,5 +195,12 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         hover.setEditor(this.getEditor());
         ReflectionUtils.setPrivateField(JavaTypeHover.class, "fJavadocHover", implementation, hover);
         return informationPresenter;
+    }
+
+    @Override
+    protected Map<String, ITextEditor> getHyperlinkDetectorTargets(ISourceViewer sourceViewer) {
+        Map<String, ITextEditor> targets = super.getHyperlinkDetectorTargets(sourceViewer);
+        targets.put("org.codehaus.groovy.eclipse.groovyCode", getEditor()); //$NON-NLS-1$
+        return targets;
     }
 }

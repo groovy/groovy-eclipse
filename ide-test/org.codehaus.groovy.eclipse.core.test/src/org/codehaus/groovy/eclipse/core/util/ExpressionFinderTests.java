@@ -227,6 +227,18 @@ public class ExpressionFinderTests extends TestCase {
         doSplit("\n\n\t[1:1].do", "[1:1]", "do");
     }
 
+    public void testSplit13() {
+        doSplit("[x:1,y:2,z:3]*.g", "[x:1,y:2,z:3]", "g");
+    }
+
+    public void testSplit14() {
+        doSplit("[x:1,y:2,z:3].g", "[x:1,y:2,z:3]", "g");
+    }
+
+    public void testSplit15() {
+        doSplit("[x:1,y:2,z:3]?.g", "[x:1,y:2,z:3]", "g");
+    }
+
     public void testFailSplit1() {
 		failSplit("boo()");
 	}

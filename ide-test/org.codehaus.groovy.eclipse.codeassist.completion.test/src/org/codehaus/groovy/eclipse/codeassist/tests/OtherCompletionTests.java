@@ -239,6 +239,103 @@ public class OtherCompletionTests extends CompletionTestCase {
         checkReplacementString(proposals, "removeAll(arg0)", 1);
     }
     
+    // GRECLIPSE-1165
+    public void testSpreadCompletion1() throws Exception {
+        String groovyClass = "[1,2,3]*.intValue()[0].value";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "."), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "value", 1);
+    }
+    // GRECLIPSE-1165
+    public void testSpreadCompletion2() throws Exception {
+        String groovyClass = "[1,2,3]*.intValue()[0].value";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".va"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "value", 1);
+    }
+    // GRECLIPSE-1165
+    public void testSpreadCompletion3() throws Exception {
+        String groovyClass = "[x:1,y:2,z:3]*.getKey()";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "."), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "getKey()", 1);
+    }
+    // GRECLIPSE-1165
+    public void testSpreadCompletion4() throws Exception {
+        String groovyClass = "[x:1,y:2,z:3]*.getKey()";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".get"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "getKey()", 1);
+    }
+    // GRECLIPSE-1165
+    public void testSpreadCompletion5() throws Exception {
+        String groovyClass = "[x:1,y:2,z:3]*.key[0].toLowerCase()";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "."), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "toLowerCase()", 1);
+    }
+    // GRECLIPSE-1165
+    public void testSpreadCompletion6() throws Exception {
+        String groovyClass = "[x:1,y:2,z:3]*.key[0].toLowerCase()";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".to"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "toLowerCase()", 1);
+    }
+    // GRECLIPSE-1165
+    public void testSpreadCompletion7() throws Exception {
+        String groovyClass = "[x:1,y:2,z:3]*.value[0].intValue()";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "."), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "intValue()", 1);
+    }
+    // GRECLIPSE-1165
+    public void testSpreadCompletion8() throws Exception {
+        String groovyClass = "[x:1,y:2,z:3]*.value[0].intValue()";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".int"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "intValue()", 1);
+    }
+    // GRECLIPSE-1165
+    public void testSpreadCompletion9() throws Exception {
+        String groovyClass = "[1,2,3]*.value[0].value";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "."), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "value", 1);
+    }
+    // GRECLIPSE-1165
+    public void testSpreadCompletion10() throws Exception {
+        String groovyClass = "[1,2,3]*.value[0].value";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".val"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "value", 1);
+    }
+    // GRECLIPSE-1165
+    public void testSpreadCompletion11() throws Exception {
+        String groovyClass = "[1,2,3]*.value";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "."), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "value", 1);
+    }
+    // GRECLIPSE-1165
+    public void testSpreadCompletion12() throws Exception {
+        String groovyClass = "[1,2,3]*.value";
+        ICompilationUnit groovyUnit = create(groovyClass);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".val"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "value", 1);
+    }
+    
     // not working in multiline strings yet
 //    public void testGString2() throws Exception {
 //        String groovyClass = 

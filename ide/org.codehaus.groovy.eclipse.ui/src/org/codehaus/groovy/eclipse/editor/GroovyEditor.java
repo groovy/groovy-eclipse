@@ -73,6 +73,7 @@ import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectio
 import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder;
 import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder.OccurrenceLocation;
 import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner;
+import org.eclipse.jdt.internal.ui.text.JavaPartitionScanner;
 import org.eclipse.jdt.internal.ui.text.JavaWordFinder;
 import org.eclipse.jdt.internal.ui.text.Symbols;
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener;
@@ -288,6 +289,8 @@ public class GroovyEditor extends CompilationUnitEditor {
     private class GroovyBracketInserter implements VerifyKeyListener, ILinkedModeListener {
 
         private boolean fCloseBrackets= true;
+
+        private boolean fCloseBraces = true; // GROOVY change
         private boolean fCloseStrings= true;
         private boolean fCloseAngularBrackets= true;
         private final String CATEGORY= toString();
@@ -300,6 +303,15 @@ public class GroovyEditor extends CompilationUnitEditor {
 
         public void setCloseStringsEnabled(boolean enabled) {
             fCloseStrings= enabled;
+        }
+
+        /**
+         * closing curly braces
+         *
+         * @param enabled
+         */
+        public void setCloseBracesEnabled(boolean enabled) {
+            fCloseBraces = enabled;
         }
 
         public void setCloseAngularBracketsEnabled(boolean enabled) {
@@ -339,6 +351,10 @@ public class GroovyEditor extends CompilationUnitEditor {
                 case '[':
                 case '\'':
                 case '\"':
+                    // GROOVY change. Allow autoclosing of curly braces in
+                    // GStrings
+                case '{':
+                    // GROOVy end change
                     break;
                 default:
                     return;
@@ -404,14 +420,26 @@ public class GroovyEditor extends CompilationUnitEditor {
                             return;
                         break;
 
+                    // GROOVY change, allow curly braces closing in GStrings
+                    case '{':
+                        if (!fCloseBraces || nextToken == Symbols.TokenIDENT || next != null && next.length() > 1)
+                            return;
+                        break;
+                        // GROOVY end change
                     default:
                         return;
                 }
 
                 ITypedRegion partition= TextUtilities.getPartition(document, IJavaPartitions.JAVA_PARTITIONING, offset, true);
-                if (!IDocument.DEFAULT_CONTENT_TYPE.equals(partition.getType()) &&
-                    !GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS.equals(partition.getType()) &&  // GROOVY change
-                    !shouldCloseTripleQuotes(document, offset, partition, getPeerCharacter(event.character))) { // GROOVY change
+                if (event.character != '{' && !IDocument.DEFAULT_CONTENT_TYPE.equals(partition.getType()) && // original
+                        // GROOVY change autoclose triple quotes
+                        !shouldCloseTripleQuotes(document, offset, partition, getPeerCharacter(event.character))) { // GROOVY
+                                                                                                                    // change
+                    return;
+                }
+
+                // GROOVY change check for autoclose curly braces
+                if (event.character == '{' && !shouldCloseCurly(document, offset, partition, getPeerCharacter(event.character))) {
                     return;
                 }
 
@@ -496,15 +524,47 @@ public class GroovyEditor extends CompilationUnitEditor {
                 JavaPlugin.log(e);
             }
         }
+
         /**
+         * GROOVY change
+         *
          * @param document
          * @param offset
          * @param partition
-         * @return
+         * @param peer
+         * @return true iff we should be closing a curly bracket. Only happens
+         *         as part of a GString
+         * @throws BadLocationException
+         */
+        private boolean shouldCloseCurly(IDocument document, int offset, ITypedRegion partition, char peer)
+                throws BadLocationException {
+            if (offset < 2
+                    || !(JavaPartitionScanner.JAVA_STRING.equals(partition.getType()) || GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS
+                            .equals(partition.getType()))) {
+                return false;
+            }
+
+            char maybeOpen = document.getChar(offset - 1);
+            if (maybeOpen != '$') {
+                return false;
+            }
+
+            char maybeNext = document.getChar(offset);
+            return Character.isWhitespace(maybeNext) || maybeNext == '\"' || maybeNext == '\'';
+        }
+
+        /**
+         * GROOVY change
+         *
+         * @param document
+         * @param offset
+         * @param partition
+         * @param quote
+         * @return true if we are at a position of triple quotes
          * @throws BadLocationException
          */
         private boolean shouldCloseTripleQuotes(IDocument document, int offset, ITypedRegion partition, char quote) throws BadLocationException {
-            if (offset < 3 || !IJavaPartitions.JAVA_STRING.equals(partition.getType())) {
+            if (offset < 3 || GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS.equals(partition.getType())) {
                 return false;
             }
             String maybequotes = document.get(offset-3, 3);
@@ -907,11 +967,13 @@ public class GroovyEditor extends CompilationUnitEditor {
 
         boolean closeBrackets= preferenceStore.getBoolean(CLOSE_BRACKETS);
         boolean closeStrings= preferenceStore.getBoolean(CLOSE_STRINGS);
+        boolean closeBraces = preferenceStore.getBoolean(CLOSE_BRACES);
         boolean closeAngularBrackets= JavaCore.VERSION_1_5.compareTo(preferenceStore.getString(JavaCore.COMPILER_SOURCE)) <= 0;
 
         groovyBracketInserter.setCloseBracketsEnabled(closeBrackets);
         groovyBracketInserter.setCloseStringsEnabled(closeStrings);
         groovyBracketInserter.setCloseAngularBracketsEnabled(closeAngularBrackets);
+        groovyBracketInserter.setCloseBracesEnabled(closeBraces);
 
 
         ISourceViewer sourceViewer= getSourceViewer();
@@ -1212,12 +1274,14 @@ public class GroovyEditor extends CompilationUnitEditor {
     /** Preference key for automatically closing brackets and parenthesis */
     private final static String CLOSE_BRACKETS= PreferenceConstants.EDITOR_CLOSE_BRACKETS;
 
+    /** Preference key for automatically closing curly braces */
+    private final static String CLOSE_BRACES = PreferenceConstants.EDITOR_CLOSE_BRACES;
+
     @Override
     protected void handlePreferenceStoreChanged(PropertyChangeEvent event) {
         super.handlePreferenceStoreChanged(event);
         ISourceViewer sv= getSourceViewer();
         if (sv != null) {
-
             String p= event.getProperty();
 
             if (CLOSE_BRACKETS.equals(p)) {
@@ -1228,6 +1292,11 @@ public class GroovyEditor extends CompilationUnitEditor {
 
             if (CLOSE_STRINGS.equals(p)) {
                 groovyBracketInserter.setCloseStringsEnabled(getPreferenceStore().getBoolean(p));
+                disableBracketInserter();
+                return;
+            }
+            if (CLOSE_BRACES.equals(p)) {
+                groovyBracketInserter.setCloseBracesEnabled(getPreferenceStore().getBoolean(p));
                 disableBracketInserter();
                 return;
             }
@@ -1272,6 +1341,11 @@ public class GroovyEditor extends CompilationUnitEditor {
 
             case '\'':
                 return character;
+
+                // GROOVY change
+            case '{':
+                return '}';
+                // GROOVY change end
 
             default:
                 throw new IllegalArgumentException();

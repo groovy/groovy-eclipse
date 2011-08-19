@@ -96,6 +96,11 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 		int start = 0;
 		int end = 0;
 
+		if (result.declaringType == null) {
+			// GRECLIPSE-1180 probably a literal of some kind
+			return VisitStatus.CONTINUE;
+		}
+
 		if (node instanceof ConstantExpression) {
 			String cName = ((ConstantExpression) node).getText();
 			if (cName != null && CharOperation.equals(name, cName.toCharArray())) {

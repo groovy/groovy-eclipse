@@ -1298,6 +1298,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     //-------------------------------------------------------------------------
 
     protected Statement statement(AST node) {
+        // GRECLIPSE: start
+        // GRECLIPSE-1038 avoid NPE on bad code
+        if (node == null) {
+            return new EmptyStatement();
+        }
+        // GRECLIPSE: end
         Statement statement = null;
         int type = node.getType();
         switch (type) {

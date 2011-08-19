@@ -653,26 +653,6 @@ public class VariableScope {
 	}
 
 	/**
-	 * attempt to get the component type of rhs
-	 * 
-	 * @param c
-	 * @return component type, generic type of collection, or c
-	 */
-	public static ClassNode deref(ClassNode c) {
-		if (c.isArray()) {
-			return c.getComponentType();
-		} else {
-			GenericsType[] genericsTypes = c.getGenericsTypes();
-			if (genericsTypes != null && genericsTypes.length > 0) {
-				// use length-1 so that both Maps and Collections are handled
-				// for maps, we return the type of <value>.
-				return genericsTypes[genericsTypes.length - 1].getType();
-			}
-		}
-		return c;
-	}
-
-	/**
 	 * @return true iff this is a static stack frame
 	 */
 	public boolean isStatic() {

@@ -27,7 +27,10 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.FieldDeclarationWithInitializer;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.BooleanConstant;
@@ -233,6 +236,16 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 	}
 
 	private void initializeMembers() {
+		TypeDeclaration groovyDecl = null;
+		if (jdtBinding instanceof SourceTypeBinding) {
+			SourceTypeBinding sourceType = (SourceTypeBinding) jdtBinding;
+			if (sourceType.scope != null) {
+				TypeDeclaration typeDecl = sourceType.scope.referenceContext;
+				if (typeDecl instanceof GroovyTypeDeclaration) {
+					groovyDecl = typeDecl;
+				}
+			}
+		}
 		MethodBinding[] bindings = null;
 		if (jdtBinding instanceof ParameterizedTypeBinding) {
 			ReferenceBinding genericType = ((ParameterizedTypeBinding) jdtBinding).genericType();
@@ -297,7 +310,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		}
 		if (fieldBindings != null) {
 			for (int i = 0; i < fieldBindings.length; i++) {
-				FieldNode fNode = fieldBindingToFieldNode(fieldBindings[i]);
+				FieldNode fNode = fieldBindingToFieldNode(fieldBindings[i], groovyDecl);
 				addField(fNode);
 			}
 		}
@@ -391,14 +404,25 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		return ctorNode;
 	}
 
-	private FieldNode fieldBindingToFieldNode(FieldBinding fieldBinding) {
+	private FieldNode fieldBindingToFieldNode(FieldBinding fieldBinding, TypeDeclaration groovyTypeDecl) {
 		String name = new String(fieldBinding.name);
 		int modifiers = fieldBinding.modifiers;
 		ClassNode fieldType = resolver.convertToClassNode(fieldBinding.type);
 		Constant c = fieldBinding.constant();
+
 		Expression initializerExpression = null;
 		// FIXASC for performance reasons could fetch the initializer lazily if a JDTFieldNode were created
-		if (c != Constant.NotAConstant) {
+		if (c == Constant.NotAConstant) {
+			/**
+			 * If the field binding is for a real source field, we should be able to see any initializer in it.
+			 */
+			if (groovyTypeDecl != null) {
+				FieldDeclaration fieldDecl = groovyTypeDecl.declarationOf(fieldBinding);
+				if (fieldDecl instanceof FieldDeclarationWithInitializer) {
+					initializerExpression = ((FieldDeclarationWithInitializer) fieldDecl).getGroovyInitializer();
+				}
+			}
+		} else {
 			if (c instanceof StringConstant) {
 				initializerExpression = new ConstantExpression(((StringConstant) c).stringValue());
 			} else if (c instanceof BooleanConstant) {
@@ -420,7 +444,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			}
 		}
 		FieldNode fNode = new JDTFieldNode(fieldBinding, resolver, name, modifiers, fieldType, this, initializerExpression);
-		// Object o = fNode.getAnnotations();
 		return fNode;
 	}
 

@@ -48,7 +48,9 @@ public class TestPrefInitializer {
 
         String indentsize = properties.get("indentsize");
         if (indentsize != null) {
-            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE, Integer.parseInt(indentsize));
+            // GRECLIPSE-1137  This is strange, but it looks like the JDT preferences are switched for spaces mode
+            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_TAB_SIZE, Integer.parseInt(indentsize));
+//            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE, Integer.parseInt(indentsize));
         }
 
         String multiInd = properties.get("multilineIndentation");

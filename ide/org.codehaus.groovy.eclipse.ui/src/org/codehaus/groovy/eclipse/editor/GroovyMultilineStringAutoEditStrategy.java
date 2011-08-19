@@ -46,6 +46,9 @@ public class GroovyMultilineStringAutoEditStrategy extends AbstractAutoEditStrat
     }
 
     public void customizeDocumentCommand(IDocument d, DocumentCommand c) {
+        if (true)
+            return;
+
         if (c.text.length() > 2) {
             if (DEBUG) {
                 System.out.println("Paste into a String");

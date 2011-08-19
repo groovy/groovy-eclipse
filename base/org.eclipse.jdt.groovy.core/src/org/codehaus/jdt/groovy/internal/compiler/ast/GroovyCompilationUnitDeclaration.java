@@ -752,6 +752,26 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	}
 
 	/**
+	 * Hold onto the groovy initializer so we can return it later. This is much easier than translating it into a JDT initializer
+	 * and back again later.
+	 */
+	static class FieldDeclarationWithInitializer extends FieldDeclaration {
+		private Expression initializer;
+
+		public FieldDeclarationWithInitializer(char[] name, int sourceStart, int sourceEnd) {
+			super(name, sourceStart, sourceEnd);
+		}
+
+		public void setGroovyInitializer(Expression initializer) {
+			this.initializer = initializer;
+		}
+
+		public Expression getGroovyInitializer() {
+			return this.initializer;
+		}
+	}
+
+	/**
 	 * Build JDT representations of all the fields on the groovy type. <br>
 	 * Enum field handling<br>
 	 * Groovy handles them as follows: they have the ACC_ENUM bit set and the type is the type of the declaring enum type. When
@@ -769,7 +789,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				if (!isSynthetic) {
 					// JavaStubGenerator ignores private fields but I don't
 					// think we want to here
-					FieldDeclaration fieldDeclaration = new FieldDeclaration(fieldNode.getName().toCharArray(), 0, 0);
+					FieldDeclarationWithInitializer fieldDeclaration = new FieldDeclarationWithInitializer(fieldNode.getName()
+							.toCharArray(), 0, 0);
 					fieldDeclaration.annotations = transformAnnotations(fieldNode.getAnnotations());
 					if (!isEnumField) {
 						fieldDeclaration.modifiers = fieldNode.getModifiers() & ~0x4000; // 4000 == AccEnum
@@ -777,6 +798,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 					}
 					fieldDeclaration.javadoc = new Javadoc(108, 132);
 					fixupSourceLocationsForFieldDeclaration(fieldDeclaration, fieldNode, isEnumField);
+					fieldDeclaration.setGroovyInitializer(fieldNode.getInitialExpression());
 					fieldDeclarations.add(fieldDeclaration);
 				}
 			}
@@ -1415,20 +1437,20 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		if (classNode.isUsingGenerics()) {
 			GenericsType[] genericsInfo = classNode.getGenericsTypes();
 			if (genericsInfo != null) {
-			for (int g = 0; g < genericsInfo.length; g++) {
-				// ClassNode typeArgumentClassNode = genericsInfo[g].getType();
-				TypeReference tr = createTypeReferenceForClassNode(genericsInfo[g]);
-				if (tr != null) {
-					if (typeArguments == null) {
-						typeArguments = new ArrayList<TypeReference>();
+				for (int g = 0; g < genericsInfo.length; g++) {
+					// ClassNode typeArgumentClassNode = genericsInfo[g].getType();
+					TypeReference tr = createTypeReferenceForClassNode(genericsInfo[g]);
+					if (tr != null) {
+						if (typeArguments == null) {
+							typeArguments = new ArrayList<TypeReference>();
+						}
+						typeArguments.add(tr);
 					}
-					typeArguments.add(tr);
+					// if (!typeArgumentClassNode.isGenericsPlaceHolder()) {
+					// typeArguments.add(createTypeReferenceForClassNode(typeArgumentClassNode));
+					// }
 				}
-				// if (!typeArgumentClassNode.isGenericsPlaceHolder()) {
-				// typeArguments.add(createTypeReferenceForClassNode(typeArgumentClassNode));
-				// }
 			}
-		}
 		}
 
 		String name = classNode.getName();

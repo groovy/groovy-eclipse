@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -1292,6 +1293,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitGStringExpression(GStringExpression node) {
+		scopes.peek().setCurrentNode(node);
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
 			super.visitGStringExpression(node);
@@ -1300,6 +1302,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitListExpression(ListExpression node) {
+		scopes.peek().setCurrentNode(node);
 		boolean shouldContinue = handleExpression(node);
 		if (shouldContinue) {
 			super.visitListExpression(node);
@@ -1335,6 +1338,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		boolean shouldContinue = handleExpression(node);
 		// boolean shouldContinue = true;
 		if (shouldContinue) {
+			if (node.isSpreadSafe()) {
+				// most find the component type of the object expression type
+				ClassNode objType = objectExpressionType.pop();
+				objectExpressionType.push(VariableScope.extractElementType(objType));
+			}
+
 			node.getMethod().visit(this);
 			// this is the inferred return type of this method
 			// must pop now before visiting any other nodes
@@ -1361,6 +1370,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 			// returns true if this method call expression is the property field of another property expression
 			if (isObjectExpression(node)) {
+				if (node.isSpreadSafe()) {
+					ClassNode list = VariableScope.clonedList();
+					list.getGenericsTypes()[0].setType(propType);
+					list.getGenericsTypes()[0].setName(propType.getName());
+					propType = list;
+				}
 				objectExpressionType.push(propType);
 			}
 		} else {
@@ -1406,6 +1421,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitPropertyExpression(PropertyExpression node) {
+		scopes.peek().setCurrentNode(node);
 		propertyExpression.push(node);
 		node.getObjectExpression().visit(this);
 		boolean shouldContinue;
@@ -1418,6 +1434,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			shouldContinue = true;
 		}
 		if (shouldContinue) {
+			if (node.isSpreadSafe()) {
+				// most find the component type of the object expression type
+				ClassNode objType = objectExpressionType.pop();
+				objectExpressionType.push(VariableScope.extractElementType(objType));
+			}
+
 			node.getProperty().visit(this);
 
 			// don't care about either of these
@@ -1427,6 +1449,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			// this is the type of this property expression
 			ClassNode propType = propertyExpressionType.pop();
 			if (isObjectExpression(node)) {
+				if (node.isSpreadSafe()) {
+					ClassNode list = VariableScope.clonedList();
+					list.getGenericsTypes()[0].setType(propType);
+					list.getGenericsTypes()[0].setName(propType.getName());
+					propType = list;
+				}
 				// returns true if this property expression is the property field of another property expression
 				objectExpressionType.push(propType);
 			}
@@ -1679,6 +1707,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		return fieldNode;
 	}
 
+	/**
+	 * Since AST transforms are turned off for reconcile operations, this method will always return null. But keep it here just in
+	 * case we decide to re-enable transforms for reconciles.
+	 * 
+	 * @param field
+	 * @return
+	 */
 	private boolean isLazy(FieldNode field) {
 		List<AnnotationNode> annotations = field.getAnnotations();
 		for (AnnotationNode annotation : annotations) {
@@ -1845,10 +1880,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 
 				// deref...get component type of lhs
-				return VariableScope.deref(lhs);
+				return VariableScope.extractElementType(lhs);
+			case '*':
+				if (operation.equals("*.") || operation.equals("*.@")) {
+					// can we do better and parameterize the list?
+					return VariableScope.clonedList();
+				}
+				// fall through
 			case '-':
 			case '/':
-			case '*':
 			case '%':
 				// arithmetic operation
 				// lhs, if number type, else rhs if number type, else number
@@ -1866,20 +1906,41 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				// includes != and !== and !!
 			case '<':
 			case '>':
-			case '&':
-			case '^':
 				if (operation.length() > 1) {
 					if (operation.equals("<<")) {
 						// list of rhs type
 						ClassNode listType = VariableScope.clone(VariableScope.LIST_CLASS_NODE);
 						listType.getGenericsTypes()[0].setType(rhs);
 						listType.getGenericsTypes()[0].setName(rhs.getName());
+						return listType;
+					} else if (operation.equals("<=>")) {
+						return VariableScope.INTEGER_CLASS_NODE;
 					}
-					// all booleans
-					return VariableScope.BOOLEAN_CLASS_NODE;
 				}
+				// all booleans
+				return VariableScope.BOOLEAN_CLASS_NODE;
+
+			case '&':
+			case '^':
+			case '|':
 				// bitwse operations, return lhs
 				return lhs;
+
+			case 'i':
+				if (operation.equals("is") || operation.equals("in")) {
+					return VariableScope.BOOLEAN_CLASS_NODE;
+				} else {
+					// unknown
+					return rhs;
+				}
+
+			case '.':
+				if (operation.equals(".&")) {
+					return ClassHelper.CLOSURE_TYPE;
+				} else {
+					// includes ".", "?:", "?.", ".@"
+					return rhs;
+				}
 
 			case '=':
 				if (operation.length() > 1) {
@@ -1891,7 +1952,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					}
 				}
 				// drop through
+
 			default:
+				// "as"
 				// rhs by default
 				return rhs;
 		}

@@ -29,8 +29,16 @@ public class PreferenceConstants {
 
     // Formatter
     public static final String GROOVY_FORMATTER_INDENTATION = DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR;
+
     public static final String GROOVY_FORMATTER_INDENTATION_SIZE = DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE;
+
     public static final String GROOVY_FORMATTER_TAB_SIZE = DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE;
+    // FIXADE wierd
+    // public static final String GROOVY_FORMATTER_INDENTATION_SIZE =
+    // DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE;
+    //
+    // public static final String GROOVY_FORMATTER_TAB_SIZE =
+    // DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE;
     public static final String GROOVY_FORMATTER_MULTILINE_INDENTATION = "groovy.formatter.multiline.indentation";
 
     public static final String GROOVY_FORMATTER_BRACES_START = "groovy.formatter.braces.start";

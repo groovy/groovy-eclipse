@@ -634,6 +634,8 @@ public class Blah {
 }
 '''
     }
+    
+    
 	void testAutoCloseBracesInString2() {
 		makeEditor("""
 public class Blah {
