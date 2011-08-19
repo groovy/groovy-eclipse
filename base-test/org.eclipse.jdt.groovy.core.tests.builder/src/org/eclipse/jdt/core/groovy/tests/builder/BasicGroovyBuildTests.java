@@ -19,6 +19,7 @@ import junit.framework.Test;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
@@ -2785,6 +2786,20 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
         assertNotNull(initialExpression);
         assertEquals("Should have been an int", VariableScope.INTEGER_CLASS_NODE, ClassHelper.getWrapper(initialExpression.getType()));
         assertEquals("Should have been the number 9", "9", initialExpression.getText());
+        
+        // now check to ensure that there are no duplicate fields or properties
+        int declCount = 0;
+        for (FieldNode field : type.getFields()) {
+            if (field.getName().equals("x")) declCount++;
+        }
+        assertEquals("Should have found 'x' field exactly one time", 1, declCount);
+        
+        declCount = 0;
+        for (PropertyNode prop : type.getProperties()) {
+            if (prop.getName().equals("x")) declCount++;
+        }
+        assertEquals("Should have found 'x' property exactly one time", 1, declCount);
+        
     }
 
 	//

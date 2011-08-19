@@ -19,7 +19,6 @@ import java.net.URL;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.Status;
 import org.osgi.framework.BundleContext;
@@ -31,7 +30,7 @@ public class GroovyActivator extends Plugin {
     public static final String GROOVY_ALL_JAR = "lib/groovy-all-1.7.10.jar"; //$NON-NLS-1$
     public static final String GROOVY_JAR = "lib/groovy-1.7.10.jar"; //$NON-NLS-1$
     public static final String ASM_JAR = "lib/asm-3.2.jar"; //$NON-NLS-1$
-    public static final String GROOVY_GPP_JAR = "lib/groovypp-0.4.248_1.7.10.jar"; //$NON-NLS-1$
+    public static final String GROOVY_GPP_JAR = "extras/groovypp-0.4.248_1.7.10.jar"; //$NON-NLS-1$
     public static final int GROOVY_LEVEL = 17;
 
     public static URL GROOVY_JAR_URL;

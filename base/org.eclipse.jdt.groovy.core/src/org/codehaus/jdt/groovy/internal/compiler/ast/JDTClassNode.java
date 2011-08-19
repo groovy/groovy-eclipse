@@ -543,9 +543,19 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			propertyName.append(methodName.substring(4));
 		}
 		int mods = methodNode.getModifiers();
-		PropertyNode property = new PropertyNode(propertyName.toString(), mods, propertyType, this, null, null, null);
+		String name = propertyName.toString();
+		FieldNode field = this.getField(name);
+		if (field == null) {
+			field = new FieldNode(name, mods, propertyType, this, null);
+			field.setDeclaringClass(this);
+		} else {
+			// field already exists
+			// must remove this field since when "addProperty" is called
+			// later on, it will add it again. We do not want dups.
+			this.removeField(name);
+		}
+		PropertyNode property = new PropertyNode(field, mods, null, null);
 		property.setDeclaringClass(this);
-		property.getField().setDeclaringClass(this);
 		return property;
 	}
 

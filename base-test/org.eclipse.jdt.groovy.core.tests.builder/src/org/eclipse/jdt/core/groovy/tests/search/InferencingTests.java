@@ -254,6 +254,21 @@ public class InferencingTests extends AbstractInferencingTest {
         assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
     }
     
+    public void testInferFieldWithInitializer1() throws Exception {
+        String contents = "class A {\ndef x = 9\n}\n new A().x";
+        int start = contents.lastIndexOf('x');
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testInferFieldWithInitializer2() throws Exception {
+        createUnit("A", "class A {\ndef x = 9\n} ");
+        String contents = "new A().x";
+        int start = contents.lastIndexOf('x');
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
     public void testTernaryExpression() throws Exception {
         String contents = "true ? '' : ''";
         assertType(contents, "java.lang.String");
