@@ -1298,6 +1298,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		if (shouldContinue) {
 			super.visitGStringExpression(node);
 		}
+		scopes.peek().forgetCurrentNode();
 	}
 
 	@Override
@@ -1307,6 +1308,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		if (shouldContinue) {
 			super.visitListExpression(node);
 		}
+		scopes.peek().forgetCurrentNode();
 	}
 
 	@Override
@@ -1465,6 +1467,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			// not popped earlier because the property field of the expression was not examined
 			objectExpressionType.pop();
 		}
+		scopes.peek().forgetCurrentNode();
 	}
 
 	@Override
@@ -1877,6 +1880,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					if (getAt.getParameters() != null && getAt.getParameters().length == 1) {
 						return getAt.getReturnType();
 					}
+				}
+
+				if (VariableScope.MAP_CLASS_NODE.equals(lhs)) {
+					// for maps, always use the type of value
+					return lhs.getGenericsTypes()[1].getType();
 				}
 
 				// deref...get component type of lhs

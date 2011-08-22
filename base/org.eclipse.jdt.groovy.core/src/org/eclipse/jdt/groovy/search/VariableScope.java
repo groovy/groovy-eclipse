@@ -773,10 +773,7 @@ public class VariableScope {
 		}
 
 		if (typeToResolve != null) {
-			// if (typeToResolve instanceof JDTClassNode) {
-			// JDTClassNodes are immutable, must change that
 			typeToResolve = clone(typeToResolve);
-			// }
 			ClassNode unresolvedCollectionType = collectionType.redirect();
 			GenericsMapper mapper = GenericsMapper.gatherGenerics(collectionType, unresolvedCollectionType);
 			ClassNode resolved = resolveTypeParameterization(mapper, typeToResolve);

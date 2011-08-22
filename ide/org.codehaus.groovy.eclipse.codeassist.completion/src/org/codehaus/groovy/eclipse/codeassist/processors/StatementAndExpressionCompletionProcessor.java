@@ -165,20 +165,27 @@ public class StatementAndExpressionCompletionProcessor extends
         private ClassNode findResultingType(TypeLookupResult result, boolean derefList) {
             ClassNode candidate = result.type;
             if (derefList) {
-                // GRECLIPSE-742: does the LHS type have a 'getAt' method?
-                boolean getAtFound = false;
-                List<MethodNode> getAts = candidate.getMethods("getAt");
-                for (MethodNode getAt : getAts) {
-                    if (getAt.getParameters() != null
-                            && getAt.getParameters().length == 1) {
-                        candidate = getAt.getReturnType();
-                        getAtFound = true;
-                    }
-                }
+                for (int i = 0; i < derefCount; i++) {
 
-                if (!getAtFound) {
-                    for (int i = 0; i < derefCount; i++) {
-                        candidate = VariableScope.extractElementType(candidate);
+                    // GRECLIPSE-742: does the LHS type have a 'getAt' method?
+                    boolean getAtFound = false;
+                    List<MethodNode> getAts = candidate.getMethods("getAt");
+                    for (MethodNode getAt : getAts) {
+                        if (getAt.getParameters() != null && getAt.getParameters().length == 1) {
+                            candidate = getAt.getReturnType();
+                            getAtFound = true;
+                        }
+                    }
+
+                    if (!getAtFound) {
+                        if (VariableScope.MAP_CLASS_NODE.equals(candidate)) {
+                            // for maps, always use the type of value
+                            candidate = candidate.getGenericsTypes()[1].getType();
+                        } else {
+                            for (int j = 0; j < derefCount; j++) {
+                                candidate = VariableScope.extractElementType(candidate);
+                            }
+                        }
                     }
                 }
             }
