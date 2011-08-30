@@ -65,11 +65,11 @@
 		<antcall target="-unpack.eclipse.windows"/>
 		<antcall target="-unpack.eclipse.linux"/>
 		
-		<!-- now install m2eclipse if necessary -->
-		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.wst.xml_core.feature" updatesite.url="http://download.eclipse.org/releases/indigo"/>
-		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.wst.xml_ui.feature" updatesite.url="http://download.eclipse.org/releases/indigo"/>
-		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.equinox.p2.discovery.feature" updatesite.url="http://download.eclipse.org/releases/indigo"/>
-		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.m2e.feature" updatesite.url="http://download.eclipse.org/releases/indigo"/>
+		<!-- now install m2eclipse -->
+		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.wst.xml_core.feature" updatesite.url="${eclipse.update.site}"/>
+		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.wst.xml_ui.feature" updatesite.url="${eclipse.update.site}"/>
+		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.equinox.p2.discovery.feature" updatesite.url="${eclipse.update.site}"/>
+		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.m2e.feature" updatesite.url="${m2e-update-site}"/>
 	</target>
 	
 	<target name="-unpack.eclipse.windows" if="is.windows" depends="-set.eclipse.local.tar.server,-set.target.eclipse.zip">
