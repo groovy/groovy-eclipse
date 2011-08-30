@@ -69,7 +69,7 @@
 		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.wst.xml_core.feature" updatesite.url="${eclipse.update.site}"/>
 		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.wst.xml_ui.feature" updatesite.url="${eclipse.update.site}"/>
 		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.equinox.p2.discovery.feature" updatesite.url="${eclipse.update.site}"/>
-		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.epp.usagedata.gathering" updatesite.url="http://download.eclipse.org/technology/epp/updates/1.0"/>
+		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.epp.usagedata.feature" updatesite.url="http://download.eclipse.org/technology/epp/updates/1.0"/>
 		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.m2e.feature" updatesite.url="${m2e-update-site}"/>
 	</target>
 	
