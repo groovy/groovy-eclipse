@@ -114,7 +114,12 @@ public class InferencingTests extends AbstractInferencingTest {
     
     
     public void testInferClosure1() throws Exception {
-        assertType("x.&y", "groovy.lang.Closure<java.lang.Object<V>>");
+        if (GroovyUtils.GROOVY_LEVEL >= 18) {
+            assertType("x.&y", "groovy.lang.Closure<java.lang.Object<V>>");
+        } else {
+            // closure is not parameterized in groovy 1.7 and earlier
+            assertType("x.&y", "groovy.lang.Closure");
+        }
     }
     
     public void testSpread1() throws Exception {
@@ -282,22 +287,48 @@ public class InferencingTests extends AbstractInferencingTest {
     public void testRangeExpression1() throws Exception {
         String contents = "0 .. 5";
         if (GroovyUtils.GROOVY_LEVEL < 18) {
-            assertType(contents, "java.util.List<java.lang.Integer>");
+            assertType(contents, "groovy.lang.Range<java.lang.Integer>");
         } else {
-            assertType(contents, "java.util.List<int>");
+            assertType(contents, "groovy.lang.Range<int>");
         }
     }
     
     public void testRangeExpression2() throws Exception {
         String contents = "0 ..< 5";
         if (GroovyUtils.GROOVY_LEVEL < 18) {
-            assertType(contents, "java.util.List<java.lang.Integer>");
+            assertType(contents, "groovy.lang.Range<java.lang.Integer>");
         } else {
-            assertType(contents, "java.util.List<int>");
+            assertType(contents, "groovy.lang.Range<int>");
         }
     }
     
-
+    public void testRangeExpression3() throws Exception {
+        String contents = "(1..10).getFrom()";
+        int start = contents.lastIndexOf("getFrom");
+        int end = start + "getFrom".length();
+        assertType(contents, start, end, "java.lang.Comparable<java.lang.Integer>");
+    }
+    
+    public void testRangeExpression4() throws Exception {
+        String contents = "(1..10).getTo()";
+        int start = contents.lastIndexOf("getTo");
+        int end = start + "getTo".length();
+        assertType(contents, start, end, "java.lang.Comparable<java.lang.Integer>");
+    }
+    
+    public void testRangeExpression5() throws Exception {
+        String contents = "(1..10).step(0)";
+        int start = contents.lastIndexOf("step");
+        int end = start + "step".length();
+        assertType(contents, start, end, "java.util.List<java.lang.Integer>");
+    }
+    
+    public void testRangeExpression6() throws Exception {
+        String contents = "(1..10).step(0, { })";
+        int start = contents.lastIndexOf("step");
+        int end = start + "step".length();
+        assertType(contents, start, end, "java.lang.Void");
+    }
     
     public void testInnerClass1() throws Exception {
         String contents = "class Outer { class Inner { } \nInner x }\nnew Outer().x ";

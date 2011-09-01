@@ -361,8 +361,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 	 * @return a parameterized list
 	 */
 	private ClassNode parameterizeThisList(Expression node) {
-		ClassNode list = VariableScope.clonedList();
+		ClassNode list = VariableScope.OBJECT_CLASS_NODE;
 		if (node instanceof TupleExpression) {
+			list = VariableScope.clonedTuple();
 			TupleExpression tuple = (TupleExpression) node;
 			if (tuple.getExpressions().size() > 0) {
 				GenericsType[] unresolvedGenericsForList = unresolvedGenericsForType(list);
@@ -371,6 +372,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 				return list;
 			}
 		} else if (node instanceof ListExpression) {
+			list = VariableScope.clonedList();
 			ListExpression listExpr = (ListExpression) node;
 			if (listExpr.getExpressions().size() > 0) {
 				GenericsType[] unresolvedGenericsForList = unresolvedGenericsForType(list);
@@ -379,6 +381,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 				return list;
 			}
 		} else if (node instanceof RangeExpression) {
+			list = VariableScope.clonedRange();
 			RangeExpression rangeExpr = (RangeExpression) node;
 			Expression expr = rangeExpr.getFrom() != null ? rangeExpr.getFrom() : rangeExpr.getTo();
 			if (expr != null) {

@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.groovy.search;
 
+import groovy.lang.Tuple;
+
 import java.io.DataInputStream;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -64,6 +66,8 @@ public class VariableScope {
 
 	public static final ClassNode OBJECT_CLASS_NODE = ClassHelper.OBJECT_TYPE;
 	public static final ClassNode LIST_CLASS_NODE = ClassHelper.LIST_TYPE;
+	public static final ClassNode RANGE_CLASS_NODE = ClassHelper.RANGE_TYPE;
+	public static final ClassNode TUPLE_CLASS_NODE = ClassHelper.make(Tuple.class);
 	public static final ClassNode PATTERN_CLASS_NODE = ClassHelper.PATTERN_TYPE;
 	public static final ClassNode MATCHER_CLASS_NODE = ClassHelper.make(Matcher.class);
 	public static final ClassNode MAP_CLASS_NODE = ClassHelper.MAP_TYPE;
@@ -567,6 +571,20 @@ public class VariableScope {
 		ClassNode clone = clone(LIST_CLASS_NODE);
 		cleanGenerics(clone.getGenericsTypes()[0]);
 		return clone;
+	}
+
+	public static ClassNode clonedRange() {
+		ClassNode clone = clone(RANGE_CLASS_NODE);
+		cleanGenerics(clone.getGenericsTypes()[0]);
+		return clone;
+	}
+
+	public static ClassNode clonedTuple() {
+		// ClassNode clone = clone(TUPLE_CLASS_NODE);
+		// cleanGenerics(clone.getGenericsTypes()[0]);
+		// return clone;
+		// the typle class is not parameterized in Groovy 1.7, so just return list.
+		return clonedList();
 	}
 
 	private static void cleanGenerics(GenericsType gt) {
