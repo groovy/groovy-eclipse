@@ -85,11 +85,4 @@ public abstract class EclipseTestCase extends TestCase {
     protected void waitForIndexes() {
     	SynchronizationUtils.waitForIndexingToComplete();
     }
-
-    protected IMarker[] getFailureMarkers() throws CoreException {
-        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-        return root.findMarkers("org.codehaus.groovy.eclipse.groovyFailure",
-                false, IResource.DEPTH_INFINITE);
-    }
-
 }

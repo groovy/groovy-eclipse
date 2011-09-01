@@ -50,15 +50,6 @@
             sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
       </launchConfigurationType>
    </extension>
-   <extension
-         id="groovyFailure"
-         name="GroovyFailureMarker"
-         point="org.eclipse.core.resources.markers">
-      <super type="org.eclipse.jdt.core.problem"/>
-      <super type="org.eclipse.core.resources.textmarker"/>
-			<super type="org.eclipse.core.resources.problemmarker"/>
-      <persistent value="true" />
-   </extension>
    <extension point="org.eclipse.core.runtime.adapters">
 	  <factory class= "org.codehaus.groovy.eclipse.core.adapters.GroovyFileAdapterFactory"
 			 adaptableType="org.eclipse.core.resources.IFile" >

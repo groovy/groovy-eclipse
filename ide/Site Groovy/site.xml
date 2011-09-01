@@ -16,7 +16,7 @@
    <feature url="features/org.codehaus.groovy.m2eclipse_0.0.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse" version="0.0.0.qualifier">
       <category name="org.codehaus.groovy.m2eclipse"/>
    </feature>
-   <feature url="features/org.codehaus.groovy.m2eclipse.source_0.0.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse" version="0.0.0.qualifier">
+   <feature url="features/org.codehaus.groovy.m2eclipse.source_0.0.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse.source" version="0.0.0.qualifier">
       <category name="org.codehaus.groovy.m2eclipse"/>
    </feature>
    <feature url="features/org.codehaus.groovy17.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy17.feature" version="0.0.0.qualifier"/>
@@ -32,12 +32,12 @@
    </category-def>
    <category-def name="org.codehaus.groovy.compilers" label="Extra Groovy compilers (Optional)">
       <description>
-         The Groovy 1.7 compiler is installed automatically, but you may optionally want to install the Groovy 1.8 compiler as well.
+         The Groovy 1.7 compiler is installed automatically, but you may optionally install the Groovy 1.8 compiler as well.
       </description>
    </category-def>
-   <category-def name="org.codehaus.groovy.m2eclipse" label="m2e Configurator for Groovy-Eclipse">
+   <category-def name="org.codehaus.groovy.m2eclipse" label="m2e Configurator for Groovy-Eclipse (Optional)">
       <description>
-         Provides support for Groovy-Eclipse in m2eclipse.
+         Provides support for Groovy-Eclipse in m2eclipse. This is only compatible with m2eclipse v1.0 and greater.
       </description>
    </category-def>
 </site>

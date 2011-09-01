@@ -8,9 +8,10 @@
  * Contributors:
  *      Andrew Eisenberg - Initial implemenation
  *******************************************************************************/
-package org.codehaus.groovy.eclipse.dsl;
+package org.codehaus.groovy.eclipse.dsl.ui;
 
 
+import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.jobs.Job;

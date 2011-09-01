@@ -37,6 +37,8 @@ public class GroovyDSLCoreActivator extends AbstractUIPlugin {
     
     private AutoAddContainerSupport containerListener;
 
+    public final static String MARKER_ID = "org.codehaus.groovy.eclipse.dsl.inferencing_problem";
+
     public static IPath CLASSPATH_CONTAINER_ID = new Path("GROOVY_DSL_SUPPORT");
     
     public GroovyDSLCoreActivator() {

@@ -32,6 +32,18 @@
             id="org.codehaus.groovy.eclipse.dsl.command.category"
             name="DSLD-related commands">
       </category>
+      <command
+            categoryId="org.codehaus.groovy.eclipse.dsl.command.category"
+            description="Perform static type checking on selected resources"
+            id="org.codehaus.groovy.eclipse.dsl.command.type_check"
+            name="Type check">
+      </command>
+      <command
+            categoryId="org.codehaus.groovy.eclipse.dsl.command.category"
+            description="Removes type checking annotations from selected resources"
+            id="org.codehaus.groovy.eclipse.dsl.command.type_check.remove"
+            name="Remove type checking annotations">
+      </command>
    </extension>
       <extension
          point="org.eclipse.ui.decorators">
@@ -65,10 +77,10 @@
             id="org.codehaus.groovy.eclipse.dsl.objectContribution"
             objectClass="org.eclipse.core.resources.IProject">
          <action
-               class="org.codehaus.groovy.eclipse.dsl.RefreshDSLDFilesActionDelegate"
+               class="org.codehaus.groovy.eclipse.dsl.ui.RefreshDSLDFilesActionDelegate"
                definitionId="org.codehaus.groovy.eclipse.dsl.command.refresh"
                enablesFor="+"
-               id="org.codehaus.groovy.eclipse.dsl.action1"
+               id="org.codehaus.groovy.eclipse.dsl.action.refresh"
                label="Refresh DSLD files"
                menubarPath="groovy/dsl"
                tooltip="Refresh Groovy DSLs for currentl selected Groovy Project(s)">
@@ -87,6 +99,43 @@
                    value="org.eclipse.jdt.groovy.core.groovyNature">
              </objectState>
           </visibility>
+      </objectContribution>
+      <objectContribution
+            adaptable="true"
+            id="org.codehaus.groovy.eclipse.dsl.objectContribution1"
+            objectClass="org.eclipse.core.resources.IResource">
+         <action
+               class="org.codehaus.groovy.eclipse.dsl.ui.StaticTypeCheckAction"
+               definitionId="org.codehaus.groovy.eclipse.dsl.command.type_check"
+               enablesFor="+"
+               id="org.codehaus.groovy.eclipse.dsl.action.type_check"
+               label="Type check"
+               menubarPath="groovyresource/dsl1"
+               tooltip="Perform static type checking of selected resources.">
+         </action>
+         <action
+               class="org.codehaus.groovy.eclipse.dsl.ui.RemoveCheckerWarnings"
+               definitionId="org.codehaus.groovy.eclipse.dsl.command.type_check.remove"
+               enablesFor="+"
+               id="org.codehaus.groovy.eclipse.dsl.action.type_check.remove"
+               label="Remove checks"
+               menubarPath="groovyresource/dsl2"
+               tooltip="Perform static type checking of selected resources.">
+         </action>
+         <menu
+               id="groovyresource"
+               label="Groovy Type Checking"
+               path="additions">
+            <separator
+                  name="defaultGroup">
+            </separator>
+         </menu>
+         <visibility>
+            <objectState
+                  name="projectNature"
+                  value="org.eclipse.jdt.groovy.core.groovyNature">
+            </objectState>
+         </visibility>
       </objectContribution>
    </extension>
    <extension
@@ -160,5 +209,66 @@
       <initializer
             class="org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer">
       </initializer>
+   </extension>
+   <extension
+         id="inferencing_problem"
+         name="Groovy type checking problem"
+         point="org.eclipse.core.resources.markers">
+      <super type="org.eclipse.core.resources.textmarker"/>
+			<super type="org.eclipse.core.resources.problemmarker"/>
+      <persistent
+            value="true">
+      </persistent>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors.markerAnnotationSpecification">
+      <specification
+            annotationType="org.codehaus.groovy.eclipse.dsl.annotation.inferencing"
+            colorPreferenceKey="typeCheckIndicationColor"
+            colorPreferenceValue="191,171,95"
+            contributesToHeader="true"
+            highlightPreferenceKey="typeCheckIndicationHighlighting"
+            highlightPreferenceValue="false"
+            icon="icons/warn_type_check.gif"
+            isGoToNextNavigationTarget="true"
+            isGoToNextNavigationTargetKey="istypeCheckGoToNextNavigationTarget"
+            isGoToPreviousNavigationTarget="true"
+            isGoToPreviousNavigationTargetKey="istypeCheckGoToPreviousNavigationTarget"
+            label="Groovy type check problem"
+            overviewRulerPreferenceKey="typeCheckIndicationInOverviewRuler"
+            overviewRulerPreferenceValue="true"
+            presentationLayer="6"
+            showInNextPrevDropdownToolbarAction="true"
+            showInNextPrevDropdownToolbarActionKey="showtypeCheckInNextPrevDropdownToolbarAction"
+            symbolicIcon="warning"
+            textPreferenceKey="typeCheckIndication"
+            textPreferenceValue="true"
+            textStylePreferenceKey="typeCheckTextStyle"
+            textStylePreferenceValue="DASHED_BOX"
+            verticalRulerPreferenceKey="typeCheckIndicationInVerticalRuler"
+            verticalRulerPreferenceValue="true">
+      </specification>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors.annotationTypes">
+      <type
+            markerSeverity="1"
+            markerType="org.codehaus.groovy.eclipse.dsl.inferencing_problem"
+            name="org.codehaus.groovy.eclipse.dsl.annotation.inferencing"
+            super="org.eclipse.jdt.ui.warning">
+      </type>
+   </extension>
+   <extension
+         id="staticCheck"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            icon="icons/GROOVY.png"
+            thread="main"
+            visible="true">
+         <run
+               class="org.codehaus.groovy.eclipse.dsl.checker.StaticCheckerApplication">
+         </run>
+      </application>
    </extension>
 </plugin>
