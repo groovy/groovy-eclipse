@@ -47,7 +47,7 @@ public class SysoutStaticCheckerHandler implements IStaticCheckerHandler {
     }
     
     private String createInvalidTypeMessage(ASTNode node, String expectedType, String actualType, int line) {
-        return "\tLine " + line + ": Invalied inferred type.  Expected: " + expectedType + " Actual: " + actualType;
+        return "\tLine " + line + ": Invalid inferred type.  " + node.getText() + "  Expected: " + expectedType + " Actual: " + actualType;
     }
 
     public int numProblemsFound() {

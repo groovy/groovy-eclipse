@@ -14,8 +14,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.eclipse.GroovyLogManager;
-import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;

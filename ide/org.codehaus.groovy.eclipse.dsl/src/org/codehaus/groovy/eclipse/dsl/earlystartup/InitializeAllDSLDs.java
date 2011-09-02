@@ -75,6 +75,7 @@ public class InitializeAllDSLDs implements IStartup {
      * Avoids accidentally loading the plugin
      * @return
      */
+    @SuppressWarnings("deprecation")
     public IPreferenceStore getPreferenceStore() {
         return new ScopedPreferenceStore(new InstanceScope(), PLUGIN_ID);
     }

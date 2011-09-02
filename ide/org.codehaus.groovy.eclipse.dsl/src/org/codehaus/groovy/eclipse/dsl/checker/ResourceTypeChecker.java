@@ -16,8 +16,12 @@
 package org.codehaus.groovy.eclipse.dsl.checker;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 
+import org.codehaus.groovy.ast.Comment;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
@@ -34,6 +38,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
+import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * Performs static checking on all groovy files contained in the resource passed in
@@ -53,6 +58,9 @@ public class ResourceTypeChecker {
             if (resource.isDerived()) {
                 return false;
             }
+            if (Util.isExcluded(resource, includes, excludes)) {
+                return false;
+            }
             
             // first delete old markers
             resource.deleteMarkers(GroovyDSLCoreActivator.MARKER_ID, true, IResource.DEPTH_ZERO);
@@ -65,26 +73,74 @@ public class ResourceTypeChecker {
                     }
                     monitor.subTask(resource.getName());
                     handler.setResource((IFile) resource);
-                    StaticTypeCheckerRequestor requestor = new StaticTypeCheckerRequestor(handler);
+                    Map<Integer, String> commentsMap = findComments(unit);
+                    StaticTypeCheckerRequestor requestor = new StaticTypeCheckerRequestor(handler, commentsMap, onlyAssertions);
                     TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
-                    visitor.visitCompilationUnit(requestor);
+                    try {
+                        unit.becomeWorkingCopy(monitor);
+                        visitor.visitCompilationUnit(requestor);
+                    } finally {
+                        unit.discardWorkingCopy();
+                    }
                 }
             }
             return true;
+        }
+
+        private Map<Integer, String> findComments(GroovyCompilationUnit unit) {
+            List<Comment> comments = unit.getModuleNode().getContext().getComments();
+            Map<Integer, String> allComments = new HashMap<Integer, String>(comments.size());
+            for (Comment comment : comments) {
+                StringTokenizer stok = new StringTokenizer(comment.toString());
+                String type = null;
+                if (stok.hasMoreTokens()) {
+                    // consume the comment start
+                    String val = stok.nextToken();
+                    int typeIndex = val.indexOf("TYPE:");
+                    if (typeIndex > 0) {
+                        type = val.substring(typeIndex + "TYPE:".length());
+                        if (type.length() == 0) {
+                            type = null;
+                        }
+                    }
+                }
+                String candidate;
+                if (stok.hasMoreTokens() && (candidate = stok.nextToken()).startsWith("TYPE:")) {
+                    // may or may not have a space after the colon
+                    if (candidate.equals("TYPE:")) {
+                        type = stok.nextToken();
+                    } else {
+                        String[] split = candidate.split("\\:");
+                        type = split[1];
+                    }
+                }
+                if (type != null) {
+                    allComments.put(comment.sline, type);
+                }
+            }
+            return allComments;
         }
     }
     
     private final IStaticCheckerHandler handler;
     private final List<IResource> resources;
 
-    public ResourceTypeChecker(IStaticCheckerHandler handler, String projectName) {
-        this(handler, createProject(projectName));
+    protected boolean onlyAssertions;
+    protected final char[][] includes;
+    protected final char[][] excludes;
+    
+    public ResourceTypeChecker(IStaticCheckerHandler handler, String projectName, char[][] includes, char[][] excludes, boolean onlyAssertions) {
+        this(handler, createProject(projectName), includes, excludes, onlyAssertions);
     }
 
-    /**
-     * @param projectName
-     * @return
-     */
+    public ResourceTypeChecker(IStaticCheckerHandler handler, List<IResource> resources, char[][] includes, char[][] excludes, boolean onlyAssertions) {
+        this.handler = handler;
+        this.resources = resources;
+        this.includes = includes;
+        this.excludes = excludes;
+        this.onlyAssertions = onlyAssertions;
+    }
+
     private static List<IResource> createProject(String projectName) {
         IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
         if (!GroovyNature.hasGroovyNature(project)) {
@@ -93,11 +149,6 @@ public class ResourceTypeChecker {
         return Collections.<IResource>singletonList(project);
     }
 
-    public ResourceTypeChecker(IStaticCheckerHandler handler, List<IResource> resources) {
-        this.handler = handler;
-        this.resources = resources;
-    }
-    
     public void doCheck(IProgressMonitor monitor) throws CoreException {
         if (monitor == null) {
             monitor = new NullProgressMonitor();

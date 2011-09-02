@@ -108,6 +108,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
      * @author andrew
      * @created Feb 26, 2011
      */
+    @SuppressWarnings("rawtypes")
     private final class CheckedTreeListDialogField extends TreeListDialogField {
         private ContainerCheckedTreeViewer checkboxViewer;
         
@@ -175,6 +176,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
         }
     }
     
+    @SuppressWarnings("rawtypes")
     class DSLListAdapter implements ITreeListAdapter {
 
         public void customButtonPressed(TreeListDialogField field, int index) {

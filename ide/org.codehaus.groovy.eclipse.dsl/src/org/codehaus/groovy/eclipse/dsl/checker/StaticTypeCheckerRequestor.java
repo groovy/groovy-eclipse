@@ -15,20 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.dsl.checker;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.BooleanExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.stmt.AssertStatement;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.editor.highlighting.SemanticReferenceRequestor;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
@@ -39,7 +32,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
  * The {@link StaticTypeCheckerRequestor} walks through a single ModuleNode and reports all unknown types.
  * It further handles type assertion statements of the form:
  * <pre>
- * assert expr == java.lang.String || true
+ * expr // TYPE:java.lang.String
  * </pre>
  * 
  * Where:
@@ -57,10 +50,14 @@ public class StaticTypeCheckerRequestor extends SemanticReferenceRequestor imple
 
     private final IStaticCheckerHandler handler;
     
-    private final Map<Expression, String> expressionToType = new HashMap<Expression, String>();
+    private final Map<Integer, String> commentsMap;
 
-    StaticTypeCheckerRequestor(IStaticCheckerHandler handler) {
+    private final boolean onlyAssertions;
+
+    StaticTypeCheckerRequestor(IStaticCheckerHandler handler, Map<Integer, String> commentsMap, boolean onlyAssertions) {
         this.handler = handler;
+        this.commentsMap = commentsMap;
+        this.onlyAssertions = onlyAssertions;
     }
 
 
@@ -69,12 +66,9 @@ public class StaticTypeCheckerRequestor extends SemanticReferenceRequestor imple
             if (((BlockStatement) node).getStatements() == null) {
                 return VisitStatus.CANCEL_BRANCH;
             }
-            for (Statement s : ((BlockStatement) node).getStatements()) {
-                isAppropriateAssertionStatement(s);
-            }
         }
         
-        // ignore statements
+        // ignore statements and declarations
         if (!(node instanceof AnnotatedNode)) {
             return VisitStatus.CONTINUE;
         }
@@ -84,12 +78,12 @@ public class StaticTypeCheckerRequestor extends SemanticReferenceRequestor imple
             return VisitStatus.CONTINUE;
         }
         
-        if (result.confidence == TypeConfidence.UNKNOWN && node.getEnd() > 0) {
+        if (!onlyAssertions && result.confidence == TypeConfidence.UNKNOWN && node.getEnd() > 0) {
             handler.handleUnknownReference(node, getPosition(node), node.getLineNumber());
             return VisitStatus.CONTINUE;
         }
         
-        String expectedType = expressionToType.remove(node);
+        String expectedType = commentsMap.remove(node.getLineNumber());
         if (expectedType != null && !typeMatches(result.type, expectedType)) {
             handler.handleTypeAssertionFailed(node, expectedType, printTypeName(result.type), getPosition(node), node.getLineNumber());
         }
@@ -105,48 +99,6 @@ public class StaticTypeCheckerRequestor extends SemanticReferenceRequestor imple
     private boolean typeMatches(ClassNode type, String expectedType) {
         String actualType = printTypeName(type);
         return expectedType.equals(actualType);
-    }
-
-
-    /**
-     * look for statements of the form:
-     * <pre>assert true || expr == "java.lang.String"</pre>
-     * @param s the statement
-     * @return true iff this is an assertion stqtement of the appropriate form
-     */
-    private boolean isAppropriateAssertionStatement(Statement s) {
-       if (! (s instanceof AssertStatement)) {
-           return false;
-       }
-       AssertStatement a = (AssertStatement) s;
-       BooleanExpression b = a.getBooleanExpression();
-       Expression e = b.getExpression();
-       if (! (e instanceof BinaryExpression)) {
-           return false;
-       }
-       
-       BinaryExpression be = (BinaryExpression) e;
-       if (! be.getOperation().getText().equals("||")) {
-           return false;
-       }
-       if (!be.getLeftExpression().getText().equals("true")) {
-           return false;
-       }
-       
-       if (! (be.getRightExpression() instanceof BinaryExpression)) {
-           return false;
-       }
-       BinaryExpression be2 = (BinaryExpression) be.getRightExpression();
-       if (! be2.getOperation().getText().equals("==")) {
-           return false;
-       }
-       
-       if (! (be2.getRightExpression() instanceof ConstantExpression)) {
-           return false;
-       }
-       
-       expressionToType.put(be2.getLeftExpression(), be2.getRightExpression().getText());
-       return true;
     }
 
 

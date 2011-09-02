@@ -31,11 +31,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.MultiRule;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
-import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.progress.UIJob;
 
 /**
@@ -70,7 +66,7 @@ public class StaticTypeCheckAction extends AbstractCheckerAction implements IObj
 
     public void perform(List<IResource> selectionList, IProgressMonitor monitor) {
         IStaticCheckerHandler handler = new ResourceMarkerHandler();
-        ResourceTypeChecker checker = new ResourceTypeChecker(handler, selectionList);
+        ResourceTypeChecker checker = new ResourceTypeChecker(handler, selectionList, null, null, false);
         try {
             checker.doCheck(monitor);
         } catch (CoreException e) {

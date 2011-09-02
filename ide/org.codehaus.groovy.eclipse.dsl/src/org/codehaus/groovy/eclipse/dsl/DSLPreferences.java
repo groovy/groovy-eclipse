@@ -15,15 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.dsl;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.Path;
 
 /**
  * Manipulator of all preferences for DSLD settings

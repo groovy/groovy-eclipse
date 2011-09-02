@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
