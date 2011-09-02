@@ -19,7 +19,7 @@ class Example {
     JavaClass j
     def show() {
         println 'Hello World'
-        foo "foo" bar "hello"
+        foo "foo" bar "hello"  // some Groovy 1.8 syntax
     } 
     Example foo(x) { this }
     def bar(x) { println x }
