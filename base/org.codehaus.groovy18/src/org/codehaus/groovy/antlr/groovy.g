@@ -468,8 +468,8 @@ tokens {
         Map row = new HashMap();
         row.put("error", e.getMessage());
         row.put("filename", getFilename());
-        row.put("line",new Integer(lt.getLine()));
-        row.put("column", new Integer(lt.getColumn()));
+        row.put("line",     Integer.valueOf(lt.getLine()));
+        row.put("column",   Integer.valueOf(lt.getColumn()));
         errorList.add(row);
     }
 

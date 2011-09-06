@@ -330,6 +330,7 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
 
     private boolean isKnownImmutable(ClassNode fieldType) {
         if (!fieldType.isResolved()) return false;
+        // GRECLIPSE: need the check in here for whether it is immutable..
         // GRECLIPSE: start - one check missing from here maybe, compared to 180
         /*{
         return fieldType.isEnum() ||

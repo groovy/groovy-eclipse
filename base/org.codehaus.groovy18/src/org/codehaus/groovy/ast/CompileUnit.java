@@ -38,7 +38,7 @@ import org.codehaus.groovy.syntax.SyntaxException;
  * resolve imports, and that sort of thing.
  * 
  * @author <a href="mailto:james@coredevelopers.net">James Strachan </a>
- * @version $Revision: 21309 $
+ * @version $Revision$
  */
 public class CompileUnit {
 

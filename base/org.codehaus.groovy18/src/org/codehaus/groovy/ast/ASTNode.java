@@ -38,7 +38,7 @@ import org.codehaus.groovy.util.ListHashMap;
  * future versions of Groovy</li>
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author <a href="maito:blackdrag@gmx.org>Jochen "blackdrag" Theodorou</a>
- * @version $Revision: 21228 $
+ * @version $Revision$
  */
 public class ASTNode {
 

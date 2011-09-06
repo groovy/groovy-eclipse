@@ -27,7 +27,7 @@ import java.util.List;
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author Hamlet D'Arcy
- * @version $Revision: 21721 $
+ * @version $Revision$
  */
 public class MethodNode extends AnnotatedNode implements Opcodes {
 

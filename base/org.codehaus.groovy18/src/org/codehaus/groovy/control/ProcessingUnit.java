@@ -23,7 +23,7 @@ import groovy.lang.GroovyClassLoader;
  * during processing.
  *
  * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
- * @version $Id: ProcessingUnit.java 21283 2010-12-10 20:13:45Z hamletdrc $
+ * @version $Id$
  */
 
 public abstract class ProcessingUnit {

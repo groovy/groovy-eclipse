@@ -28,7 +28,7 @@ import org.objectweb.asm.Opcodes;
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author <a href="mailto:b55r@sina.com">Bing Ran</a>
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
- * @version $Revision: 21223 $
+ * @version $Revision$
  */
 public class BytecodeHelper implements Opcodes {
 

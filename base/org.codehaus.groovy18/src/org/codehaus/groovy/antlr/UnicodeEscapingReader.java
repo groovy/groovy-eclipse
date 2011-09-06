@@ -31,7 +31,7 @@ import antlr.TokenStreamException;
  * <p>No attempt has been made to optimize this class for speed or
  * space.</p>
  *
- * @version $Revision: 21731 $
+ * @version $Revision$
  */
 public class UnicodeEscapingReader extends Reader {
 

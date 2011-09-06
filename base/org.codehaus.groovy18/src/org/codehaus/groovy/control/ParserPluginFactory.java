@@ -20,7 +20,7 @@ import org.codehaus.groovy.antlr.AntlrParserPluginFactory;
 /**
  * A factory of parser plugin instances
  *
- * @version $Revision: 6778 $
+ * @version $Revision$
  */
 public abstract class ParserPluginFactory {
     public static ParserPluginFactory newInstance(boolean useNewParser) {

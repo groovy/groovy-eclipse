@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2003-2011 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -450,7 +450,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             String name = identifier(node);
             // import is like  "import Foo"
             ClassNode type = ClassHelper.make(name);
-            configureAST(type,importNode);
+            configureAST(type, importNode);
             addImport(type, name, alias, annotations);
             return;
         }
@@ -1526,7 +1526,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE: start
         // Using the wrong Antlr AST node to configure the sloc of the block statement
         /*old{
-        if (node!=null) {
+        if (node != null) {
             configureAST(block, node);
         } else {
             configureAST(block, alternativeConfigureNode);
@@ -3068,7 +3068,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     protected ConstantExpression decimalExpression(AST node) {
         String text = node.getText();
-        ConstantExpression constantExpression = new ConstantExpression(Numbers.parseDecimal(text));
+        Object number = Numbers.parseDecimal(text);
+        ConstantExpression constantExpression = new ConstantExpression(number, number instanceof Double);
         configureAST(constantExpression, node);
         return constantExpression;
     }

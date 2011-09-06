@@ -106,7 +106,7 @@ import org.objectweb.asm.Opcodes;
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author Jochen Theodorou
- * @version $Revision: 22589 $
+ * @version $Revision$
  */
 public class ClassNode extends AnnotatedNode implements Opcodes {
     private static class MapOfLists {
