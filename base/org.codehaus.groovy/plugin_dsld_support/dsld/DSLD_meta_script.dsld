@@ -15,6 +15,8 @@
  */
 package dsld
 
+import org.codehaus.groovy.ast.expr.MapEntryExpression;
+
 import groovy.lang.Closure;
 
 /**
