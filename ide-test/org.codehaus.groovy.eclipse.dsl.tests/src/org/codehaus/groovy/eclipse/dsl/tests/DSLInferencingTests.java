@@ -414,6 +414,37 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     }
     
     
+    // GRECLIPSE-1190
+    public void testHasArgument1() throws Exception {
+        createDsls(
+                "enclosingMethod(name(\"foo\") & declaringType(\"Flart\") & hasArgument(\"arg\")).accept {\n" + 
+        		"  property name:\"arg\", type:\"Flart\"\n" + 
+        		"}");
+        
+        String contents = "class Flart {\n" +
+        		"  def foo(arg) { arg } }";
+        
+        int start = contents.lastIndexOf("arg");
+        int end = start + "arg".length();
+        assertType(contents, start, end, "Flart", true);
+    }
+    
+    // GRECLIPSE-1190
+    public void testHasArgument2() throws Exception {
+        createDsls(
+                "enclosingMethod(name(\"foo\") & type(\"Flart\") & hasArgument(\"arg\")).accept {\n" + 
+                        "  property name:\"arg\", type:\"Flart\"\n" + 
+                "}");
+        
+        String contents = "class Flart { }\n" +
+                "class Other {\n" +
+                "  Flart foo(arg) { arg } }";
+        
+        int start = contents.lastIndexOf("arg");
+        int end = start + "arg".length();
+        assertType(contents, start, end, "Flart", true);
+    }
+    
     private void createDSL() throws IOException {
         defaultFileExtension = "dsld";
         createUnit("SomeInterestingExamples", GroovyDSLDTestsActivator.getDefault().getTestResourceContents("SomeInterestingExamples.dsld"));
