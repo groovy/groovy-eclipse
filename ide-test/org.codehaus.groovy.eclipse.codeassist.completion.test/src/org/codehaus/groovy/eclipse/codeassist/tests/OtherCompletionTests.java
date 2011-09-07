@@ -14,6 +14,7 @@ import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
@@ -122,7 +123,12 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompilationUnit groovyUnit = create(groovyClass);
         fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, ".c"), GroovyCompletionProposalComputer.class);
-        proposalExists(proposals, "center", 2);
+        if (GroovyUtils.GROOVY_LEVEL < 18) {
+            proposalExists(proposals, "center", 2);
+        } else {
+            // two new variants of 'center' were added in 1.8.2
+            proposalExists(proposals, "center", 4);
+        }
     }
     
     // GRECLIPSE-706
