@@ -30,6 +30,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.BindPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentIdentifierPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentTypeIsEnclosingTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.CurrentTypePointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.DeclaringTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingCallDeclaringTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingCallNamePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.EnclosingCallPointcut;
@@ -54,6 +55,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.ProjectNaturePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SourceFolderOfFilePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SourceFolderOfTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.SubTypePointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.TypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.UserExtensiblePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.ValuePointcut;
 import org.eclipse.core.resources.IProject;
@@ -188,7 +190,7 @@ public class PointcutFactory {
                             + "<pre>SourceFolderOfTypePointcut('grails-app/controllers')</pre>",
                         "If there is a match, then the source folder name is returned as a singleton set, otherwise null."), false);
 
-        // inside of method calls
+        // inside of method calls, declarations and annotations
         registerGlobalPointcut("hasAttribute", HasAttributesPointcut.class, 
                 createDoc(
                         "Matches if the enclosing <code>annotatedBy</code> pointcut has attributes specified by the pointcut argument.",
@@ -196,13 +198,24 @@ public class PointcutFactory {
                         "The value expression of the annotation argument as a Groovy AST node"), false);
         registerGlobalPointcut("hasArgument", HasArgumentsPointcut.class, 
                 createDoc(
-                        "Matches if the enclosing <code>enclosingCall</code> pointcut has named arguments specified by the pointcut argument.", 
+                        "Matches if the enclosing <code>enclosingCall</code> or <code>enclosingMethod</code> pointcut has named arguments specified by the pointcut argument." +
+                        "Note that when this pointcut is used inside of <code>enclosingCall</code>, the <code>value</code> pointcut can be used, but when it is used" +
+                        "inside of an <code>enclosingMethod</code>, <code>value</code> cannot be used.", 
                         "If the enclosing argument is a string, then the match is on the name of the named argumemt. Otherwise, the <code>name</code> and <code>value</code> pointcuts can be used instead.", 
                         "The value expression of the method call as a Groovy AST node"), false);
         registerGlobalPointcut("value", ValuePointcut.class, createDoc(
-                "Matches on the value of an argument to a method call or an annoation.", 
+                "Matches on the value of an argument to a method call or an annotation.", 
                 "A constant or literal to match against, or empty to match against any value.", 
                 "A reifed representation of the matched value."), false);
+        registerGlobalPointcut("type", TypePointcut.class, createDoc(
+                "Matches on the type of an expression, method, field, property, parameter, or variable.", 
+                "A String, Class object, or ClassNode corresponding to the type to match.", 
+                "A singleton set of the type as a Groovy ClassNode."), false);
+        registerGlobalPointcut("declaringType", DeclaringTypePointcut.class, createDoc(
+                "Matches on the declaring type of an method, field,  or property.", 
+                "A String, Class object, or ClassNode corresponding to the type to match.", 
+                "A singleton set of the type as a Groovy ClassNode."), false);
+        
 
         registerGlobalPointcut("enclosingCall", EnclosingCallPointcut.class, 
                 createDoc(

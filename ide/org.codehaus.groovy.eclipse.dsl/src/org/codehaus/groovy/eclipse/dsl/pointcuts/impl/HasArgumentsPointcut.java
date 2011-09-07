@@ -16,10 +16,14 @@
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
@@ -35,10 +39,10 @@ import org.eclipse.core.resources.IStorage;
  * @author andrew
  * @created Jul 22, 2011
  */
-public class HasArgumentsPointcut extends FilteringPointcut<Expression>  {
+public class HasArgumentsPointcut extends FilteringPointcut<AnnotatedNode>  {
 
     public HasArgumentsPointcut(IStorage containerIdentifier, String pointcutName) {
-        super(containerIdentifier, pointcutName, Expression.class);
+        super(containerIdentifier, pointcutName, AnnotatedNode.class);
     }
     
     
@@ -46,12 +50,12 @@ public class HasArgumentsPointcut extends FilteringPointcut<Expression>  {
      * Converts the method call arguments to expressions
      */
     @Override
-    protected Collection<Expression> explodeObject(Object toMatch) {
+    protected Collection<AnnotatedNode> explodeObject(Object toMatch) {
         if (toMatch instanceof MethodCallExpression) {
             Expression arguments = ((MethodCallExpression) toMatch).getArguments();
             if (arguments instanceof TupleExpression) {
                 List<Expression> innerArgs = ((TupleExpression) arguments).getExpressions();
-                List<Expression> actualArgs = new ArrayList<Expression>(innerArgs.size());
+                List<AnnotatedNode> actualArgs = new ArrayList<AnnotatedNode>(innerArgs.size());
                 for (Expression innerArg : innerArgs) {
                     if (innerArg instanceof MapExpression) {
                         actualArgs.addAll(((MapExpression) innerArg).getMapEntryExpressions());
@@ -61,15 +65,20 @@ public class HasArgumentsPointcut extends FilteringPointcut<Expression>  {
                 }
                 return actualArgs;
             } else if (arguments instanceof ListExpression) {
-                return ((ListExpression) arguments).getExpressions();
+                return new ArrayList<AnnotatedNode>(((ListExpression) arguments).getExpressions());
             } else if (arguments instanceof MapExpression) {
                 List<MapEntryExpression> mapEntryExpressions = ((MapExpression) arguments).getMapEntryExpressions();
-                List<Expression> result = new ArrayList<Expression>(mapEntryExpressions);
+                List<AnnotatedNode> result = new ArrayList<AnnotatedNode>(mapEntryExpressions);
                 result.addAll(mapEntryExpressions);
                 return result;
             } else {
-                return Collections.singleton(arguments);
+                return Collections.<AnnotatedNode>singleton(arguments);
             }
+        } else if (toMatch instanceof MethodNode) {
+        	Parameter[] parameters = ((MethodNode) toMatch).getParameters();
+        	if (parameters != null) {
+        		return Arrays.<AnnotatedNode>asList(parameters);
+        	}
         }
         return null;
     }
@@ -78,7 +87,7 @@ public class HasArgumentsPointcut extends FilteringPointcut<Expression>  {
      * by default, matches on the names of named arguments (if a named expression), otherwise passes the arguments to contained pointcuts 
      */
     @Override
-    protected Expression filterObject(Expression result, GroovyDSLDContext context, String firstArgAsString) {
+    protected AnnotatedNode filterObject(AnnotatedNode result, GroovyDSLDContext context, String firstArgAsString) {
         if (firstArgAsString == null) {
             // always match
             if (result instanceof MapEntryExpression) {
@@ -86,14 +95,18 @@ public class HasArgumentsPointcut extends FilteringPointcut<Expression>  {
             } else {
                 return result;
             }
-        } 
-        if (result instanceof MapEntryExpression) {
+        } else if (result instanceof MapEntryExpression) {
             MapEntryExpression entry = (MapEntryExpression) result;
             if (entry.getKeyExpression() instanceof ConstantExpression) {
                 String argName = entry.getKeyExpression().getText();
                 if (argName.equals(firstArgAsString)) {
                     return entry.getValueExpression();
                 }
+            }
+        } else if (result instanceof Parameter) {
+            String name = ((Parameter) result).getName();
+            if (name.equals(firstArgAsString)) {
+            	return result;
             }
         }
         return null;

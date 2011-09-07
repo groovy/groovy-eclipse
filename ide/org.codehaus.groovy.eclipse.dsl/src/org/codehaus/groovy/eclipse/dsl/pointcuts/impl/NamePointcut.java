@@ -15,6 +15,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -50,6 +51,8 @@ public class NamePointcut extends FilteringPointcut<Object> {
             toCompare = ((MapEntryExpression) result).getKeyExpression().getText();
         } else if (result instanceof MethodCallExpression) {
             toCompare = ((MethodCallExpression) result).getMethodAsString();
+        } else if (result instanceof Variable) {
+            toCompare = ((Variable) result).getName();
         } else if (result instanceof Expression) {
             toCompare = ((Expression) result).getText();
         } else {
