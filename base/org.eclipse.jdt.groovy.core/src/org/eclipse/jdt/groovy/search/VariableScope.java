@@ -759,6 +759,81 @@ public class VariableScope {
 	}
 
 	/**
+	 * Finds all interfaces transitively implemented by the type passed in (including <code>type</code> if it is an interface). The
+	 * ordering is that the interfaces closest to type are first (in declared order) and then interfaces declared on super
+	 * interfaces occur (if they are not duplicates).
+	 * 
+	 * @param type the interface to look for
+	 * @param allInterfaces an accumulator set that will ensure that each interface exists at most once and in a predictible order
+	 * @param useResolved whether or not to use the resolved interfaces.
+	 */
+	public static void findAllInterfaces(ClassNode type, LinkedHashSet<ClassNode> allInterfaces, boolean useResolved) {
+		if (!useResolved) {
+			type = type.redirect();
+		}
+		// do the !isInterface check because if this call is coming from createHierarchy, then
+		// the class would have already been added.
+		if (!type.isInterface() || !allInterfaces.contains(type)) {
+			if (type.isInterface()) {
+				allInterfaces.add(type);
+			}
+			ClassNode[] interfaces;
+			// Urrrgh...I don't like this.
+			// Groovy compiler has a different notion of 'resolved' than we do here.
+			// Groovy compiler considers a resolved ClassNode one that has no redirect.
+			// however, we consider a ClassNode to be resolved if its type parameters are resolved.
+			// that is why we call getUnresolvedInterfaces if useResolved is true (and vice versa).
+			if (useResolved) {
+				interfaces = type.getUnresolvedInterfaces();
+			} else {
+				interfaces = type.getInterfaces();
+			}
+			if (interfaces != null) {
+				for (ClassNode superInterface : interfaces) {
+					findAllInterfaces(superInterface, allInterfaces, useResolved);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Creates a type hierarchy for the <code>clazz</code>>, including self. Classes come first and then interfaces. FIXADE The
+	 * ordering of super interfaces will not be the same as in
+	 * {@link VariableScope#findAllInterfaces(ClassNode, LinkedHashSet, boolean)}. Should we make it the same?
+	 * 
+	 * @param type
+	 * @param allClasses
+	 * @param useResolved
+	 */
+	public static void createTypeHierarchy(ClassNode type, LinkedHashSet<ClassNode> allClasses, boolean useResolved) {
+		if (!useResolved) {
+			type = type.redirect();
+		}
+		if (!allClasses.contains(type)) {
+			if (!type.isInterface()) {
+				allClasses.add(type);
+				ClassNode superClass;
+				// Urrrgh...I don't like this.
+				// Groovy compiler has a different notion of 'resolved' than we do here.
+				// Groovy compiler considers a resolved ClassNode one that has no redirect.
+				// however, we consider a ClassNode to be resolved if its type parameters are resolved.
+				// that is why we call getUnresolvedSuperClass if useResolved is true (and vice versa).
+				if (useResolved) {
+					superClass = type.getUnresolvedSuperClass();
+				} else {
+					superClass = type.getSuperClass();
+				}
+
+				if (superClass != null) {
+					createTypeHierarchy(superClass, allClasses, useResolved);
+				}
+			}
+			// interfaces will be added from the top-most type first
+			findAllInterfaces(type, allClasses, useResolved);
+		}
+	}
+
+	/**
 	 * Extracts an element type from a collection
 	 * 
 	 * @param collectionType a collection object, or an object that is iterable
@@ -775,19 +850,24 @@ public class VariableScope {
 		// if so, then resolve the type parameters
 		MethodNode iterator = collectionType.getMethod("iterator", new Parameter[0]);
 		ClassNode typeToResolve = null;
-		if (iterator != null) {
-			typeToResolve = iterator.getReturnType();
-		}
-
-		// if the type is an iterator or an enumeration, then resolve the type parameter
-		if (collectionType.declaresInterface(ITERATOR_CLASS) || collectionType.equals(ITERATOR_CLASS)
-				|| collectionType.declaresInterface(ENUMERATION_CLASS) || collectionType.equals(ENUMERATION_CLASS)) {
-			typeToResolve = collectionType;
-		} else if (collectionType.declaresInterface(MAP_CLASS_NODE) || collectionType.equals(MAP_CLASS_NODE)) {
-			MethodNode entrySetMethod = collectionType.getMethod("entrySet", new Parameter[0]);
-			if (entrySetMethod != null) {
-				typeToResolve = entrySetMethod.getReturnType();
+		if (iterator == null && collectionType.isInterface()) {
+			// could be a type that implements List
+			if (collectionType.implementsInterface(VariableScope.LIST_CLASS_NODE) && collectionType.getGenericsTypes() != null
+					&& collectionType.getGenericsTypes().length == 1) {
+				typeToResolve = collectionType;
+			} else if (collectionType.declaresInterface(ITERATOR_CLASS) || collectionType.equals(ITERATOR_CLASS)
+					|| collectionType.declaresInterface(ENUMERATION_CLASS) || collectionType.equals(ENUMERATION_CLASS)) {
+				// if the type is an iterator or an enumeration, then resolve the type parameter
+				typeToResolve = collectionType;
+			} else if (collectionType.declaresInterface(MAP_CLASS_NODE) || collectionType.equals(MAP_CLASS_NODE)) {
+				// if the type is a map, then resolve the entrySet
+				MethodNode entrySetMethod = collectionType.getMethod("entrySet", new Parameter[0]);
+				if (entrySetMethod != null) {
+					typeToResolve = entrySetMethod.getReturnType();
+				}
 			}
+		} else if (iterator != null) {
+			typeToResolve = iterator.getReturnType();
 		}
 
 		if (typeToResolve != null) {

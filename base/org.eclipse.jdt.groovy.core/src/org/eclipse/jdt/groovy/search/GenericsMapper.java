@@ -1,6 +1,8 @@
 package org.eclipse.jdt.groovy.search;
 
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Stack;
 
@@ -35,8 +37,18 @@ public class GenericsMapper {
 		GenericsType[] rgts;
 		GenericsMapper mapper = new GenericsMapper();
 
+		LinkedHashSet<ClassNode> uHierarchy = new LinkedHashSet<ClassNode>();
+		VariableScope.createTypeHierarchy(ucandidate, uHierarchy, false);
+		Iterator<ClassNode> uIter = uHierarchy.iterator();
+		LinkedHashSet<ClassNode> rHierarchy = new LinkedHashSet<ClassNode>();
+		VariableScope.createTypeHierarchy(rcandidate, rHierarchy, true);
+		Iterator<ClassNode> rIter = rHierarchy.iterator();
+
 		// travel up the hierarchy
-		while (ucandidate != null && rcandidate != null) {
+		while (uIter.hasNext() && rIter.hasNext()) {
+			ucandidate = uIter.next();
+			rcandidate = rIter.next();
+
 			ugts = ucandidate.getGenericsTypes();
 			ugts = ugts == null ? VariableScope.NO_GENERICS : ugts;
 			rgts = rcandidate.getGenericsTypes();
@@ -56,10 +68,8 @@ public class GenericsMapper {
 				// don't need to travel up the whole hierarchy. We can stop at the declaring class
 				break;
 			}
-
-			ucandidate = ucandidate.getSuperClass();
-			rcandidate = rcandidate.getUnresolvedSuperClass();
 		}
+
 		return mapper;
 	}
 
@@ -108,7 +118,6 @@ public class GenericsMapper {
 				genericsType.setName(genericsType.getType().getName());
 			}
 		}
-
 		return origType;
 	}
 
@@ -129,4 +138,5 @@ public class GenericsMapper {
 		}
 		return type;
 	}
+
 }

@@ -344,10 +344,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			MapEntryExpression entry = (MapEntryExpression) node.getMapEntryExpressions().get(0);
 			ClassNode map = VariableScope.clonedMap();
 			GenericsType[] unresolvedGenericsForMap = unresolvedGenericsForType(map);
-			unresolvedGenericsForMap[0].setType(entry.getKeyExpression().getType());
-			unresolvedGenericsForMap[0].setName(entry.getKeyExpression().getType().getName());
-			unresolvedGenericsForMap[1].setType(entry.getValueExpression().getType());
-			unresolvedGenericsForMap[1].setName(entry.getValueExpression().getType().getName());
+			ClassNode keyType = ClassHelper.getWrapper(entry.getKeyExpression().getType());
+			unresolvedGenericsForMap[0].setType(keyType);
+			unresolvedGenericsForMap[0].setName(keyType.getName());
+			ClassNode valueType = ClassHelper.getWrapper(entry.getValueExpression().getType());
+			unresolvedGenericsForMap[1].setType(valueType);
+			unresolvedGenericsForMap[1].setName(valueType.getName());
 			return map;
 		}
 		return VariableScope.clonedMap();
@@ -367,8 +369,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			TupleExpression tuple = (TupleExpression) node;
 			if (tuple.getExpressions().size() > 0) {
 				GenericsType[] unresolvedGenericsForList = unresolvedGenericsForType(list);
-				unresolvedGenericsForList[0].setType(tuple.getExpression(0).getType());
-				unresolvedGenericsForList[0].setName(tuple.getExpression(0).getType().getName());
+				ClassNode type = ClassHelper.getWrapper(tuple.getExpression(0).getType());
+				unresolvedGenericsForList[0].setType(type);
+				unresolvedGenericsForList[0].setName(type.getName());
 				return list;
 			}
 		} else if (node instanceof ListExpression) {
@@ -376,8 +379,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			ListExpression listExpr = (ListExpression) node;
 			if (listExpr.getExpressions().size() > 0) {
 				GenericsType[] unresolvedGenericsForList = unresolvedGenericsForType(list);
-				unresolvedGenericsForList[0].setType(listExpr.getExpression(0).getType());
-				unresolvedGenericsForList[0].setName(listExpr.getExpression(0).getType().getName());
+				ClassNode type = ClassHelper.getWrapper(listExpr.getExpression(0).getType());
+				unresolvedGenericsForList[0].setType(type);
+				unresolvedGenericsForList[0].setName(type.getName());
 				return list;
 			}
 		} else if (node instanceof RangeExpression) {
@@ -386,8 +390,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			Expression expr = rangeExpr.getFrom() != null ? rangeExpr.getFrom() : rangeExpr.getTo();
 			if (expr != null) {
 				GenericsType[] unresolvedGenericsForList = unresolvedGenericsForType(list);
-				unresolvedGenericsForList[0].setType(expr.getType());
-				unresolvedGenericsForList[0].setName(expr.getType().getName());
+				ClassNode type = ClassHelper.getWrapper(expr.getType());
+				unresolvedGenericsForList[0].setType(type);
+				unresolvedGenericsForList[0].setName(type.getName());
 				return list;
 			}
 		}
@@ -649,14 +654,14 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		AnnotatedNode maybe = null;
 		if (numOfArgs >= 0) {
 			// this expression is part of a method call expression and so, look for methods first
-			maybe = findMethodDeclaration(name, declaringType, numOfArgs);
+			maybe = findMethodDeclaration(name, declaringType, numOfArgs, true);
 			if (maybe != null) {
 				return maybe;
 			}
 		}
 
-		Set<ClassNode> allClasses = new LinkedHashSet<ClassNode>();
-		createTypeHierarchy(declaringType, allClasses);
+		LinkedHashSet<ClassNode> allClasses = new LinkedHashSet<ClassNode>();
+		VariableScope.createTypeHierarchy(declaringType, allClasses, true);
 
 		maybe = findPropertyInClass(name, allClasses);
 		if (maybe != null) {
@@ -667,22 +672,23 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		if (maybe != null) {
 			return maybe;
 		}
-		if (declaringType.isInterface()) {
-			Set<ClassNode> allInterfaces = new LinkedHashSet<ClassNode>();
-			findAllInterfaces(declaringType, allInterfaces);
-
-			// super interface methods on an interface are not returned by getMethods(), so must explicitly look for them
-			MethodNode interfaceMethod = findMethodInInterface(name, allInterfaces);
-			if (interfaceMethod != null) {
-				return interfaceMethod;
-			}
-
-			// do the same for properties
-			PropertyNode interfaceProperty = findPropertyInInterface(name, allInterfaces);
-			if (interfaceProperty != null) {
-				return interfaceProperty;
-			}
-		}
+		// if (declaringType.isInterface()) {
+		// Set<ClassNode> allInterfaces = new LinkedHashSet<ClassNode>();
+		// VariableScope.findAllInterfaces(declaringType, allInterfaces);
+		//
+		// // super interface methods on an interface are not returned by getMethods(), so must explicitly look for them
+		// // this is now handled in findMethodDeclaration
+		// // MethodNode interfaceMethod = findMethodInInterface(name, allInterfaces);
+		// // if (interfaceMethod != null) {
+		// // return interfaceMethod;
+		// // }
+		//
+		// // do the same for properties
+		// PropertyNode interfaceProperty = findPropertyInInterface(name, allInterfaces);
+		// if (interfaceProperty != null) {
+		// return interfaceProperty;
+		// }
+		// }
 
 		// look for constants declared in super class
 		FieldNode constantFromSuper = findConstantInClass(name, allClasses);
@@ -692,7 +698,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
 		if (numOfArgs < 0) {
 			// this expression is not part of a method call expression and so, look for methods last
-			maybe = findMethodDeclaration(name, declaringType, numOfArgs);
+			maybe = findMethodDeclaration(name, declaringType, numOfArgs, true);
 			if (maybe != null) {
 				return maybe;
 			}
@@ -708,9 +714,26 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 	 * @param name
 	 * @param declaringType
 	 * @param numOfArgs
+	 * @param checkSuperInterfaces potentially look through super interfaces for a declaration to this method
 	 * @return
 	 */
-	private AnnotatedNode findMethodDeclaration(String name, ClassNode declaringType, int numOfArgs) {
+	private AnnotatedNode findMethodDeclaration(String name, ClassNode declaringType, int numOfArgs, boolean checkSuperInterfaces) {
+		// if this is an interface, then we also need to check super interfaces
+		// super interface methods on an interface are not returned by getMethods(), so must explicitly look for them
+		// do this piece first since findAllInterfaces will return the current interface as well and this will avoid running this
+		// method on the same interface twice.
+		if (checkSuperInterfaces && declaringType.isInterface()) {
+			LinkedHashSet<ClassNode> allInterfaces = new LinkedHashSet<ClassNode>();
+			VariableScope.findAllInterfaces(declaringType, allInterfaces, true);
+			for (ClassNode interf : allInterfaces) {
+				AnnotatedNode candidate = findMethodDeclaration(name, interf, numOfArgs, false);
+				if (candidate != null) {
+					return candidate;
+				}
+			}
+			return null;
+		}
+
 		List<MethodNode> maybeMethods = declaringType.getMethods(name);
 		if (maybeMethods != null && maybeMethods.size() > 0) {
 			// prefer retrieving the method with the same number of args as specified in the parameter.
@@ -761,15 +784,16 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		return lengthField;
 	}
 
-	private MethodNode findMethodInInterface(String name, Set<ClassNode> allInterfaces) {
-		for (ClassNode interf : allInterfaces) {
-			List<MethodNode> methods = interf.getDeclaredMethods(name);
-			if (methods != null && methods.size() > 0) {
-				return methods.get(0);
-			}
-		}
-		return null;
-	}
+	// FIXADE not used. can probably delete
+	// private MethodNode findMethodInInterface(String name, Set<ClassNode> allInterfaces) {
+	// for (ClassNode interf : allInterfaces) {
+	// List<MethodNode> methods = interf.getDeclaredMethods(name);
+	// if (methods != null && methods.size() > 0) {
+	// return methods.get(0);
+	// }
+	// }
+	// return null;
+	// }
 
 	private PropertyNode findPropertyInClass(String name, Set<ClassNode> allClasses) {
 		for (ClassNode clazz : allClasses) {
@@ -799,28 +823,5 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			}
 		}
 		return null;
-	}
-
-	private void findAllInterfaces(ClassNode interf, Set<ClassNode> allInterfaces) {
-		if (!allInterfaces.contains(interf) && interf.getInterfaces() != null) {
-			allInterfaces.add(interf);
-			for (ClassNode superInterface : interf.getInterfaces()) {
-				findAllInterfaces(superInterface, allInterfaces);
-			}
-		}
-	}
-
-	private void createTypeHierarchy(ClassNode clazz, Set<ClassNode> allClasses) {
-		if (!allClasses.contains(clazz)) {
-			allClasses.add(clazz);
-			if (clazz.getSuperClass() != null) {
-				createTypeHierarchy(clazz.getSuperClass(), allClasses);
-			}
-			if (clazz.getInterfaces() != null) {
-				for (ClassNode superInterface : clazz.getInterfaces()) {
-					findAllInterfaces(superInterface, allClasses);
-				}
-			}
-		}
 	}
 }
