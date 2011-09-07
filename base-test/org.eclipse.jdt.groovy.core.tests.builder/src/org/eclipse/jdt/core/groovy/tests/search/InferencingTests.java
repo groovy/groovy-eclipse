@@ -286,20 +286,12 @@ public class InferencingTests extends AbstractInferencingTest {
     
     public void testRangeExpression1() throws Exception {
         String contents = "0 .. 5";
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            assertType(contents, "groovy.lang.Range<java.lang.Integer>");
-        } else {
-            assertType(contents, "groovy.lang.Range<int>");
-        }
+        assertType(contents, "groovy.lang.Range<java.lang.Integer>");
     }
     
     public void testRangeExpression2() throws Exception {
         String contents = "0 ..< 5";
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            assertType(contents, "groovy.lang.Range<java.lang.Integer>");
-        } else {
-            assertType(contents, "groovy.lang.Range<int>");
-        }
+        assertType(contents, "groovy.lang.Range<java.lang.Integer>");
     }
     
     public void testRangeExpression3() throws Exception {
