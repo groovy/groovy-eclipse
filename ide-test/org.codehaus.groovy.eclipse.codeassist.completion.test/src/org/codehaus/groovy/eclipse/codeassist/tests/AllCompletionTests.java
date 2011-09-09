@@ -43,6 +43,7 @@ public class AllCompletionTests {
         suite.addTestSuite(ExtendedCompletionContextTests.class);
         suite.addTestSuite(ContentAssistLocationTests.class);
         suite.addTestSuite(ContextInformationTests.class);
+        suite.addTestSuite(GuessingCompletionTests.class);
         
         return suite;
     }

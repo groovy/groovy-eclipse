@@ -15,29 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
-import java.util.Arrays;
-
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyExtendedCompletionContext;
-import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
-import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.groovy.search.ITypeRequestor;
-import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
-import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
-import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
-import org.eclipse.jdt.groovy.search.TypeLookupResult;
-import org.eclipse.jdt.groovy.search.VariableScope;
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 import org.eclipse.jdt.internal.core.JavaModelManager;
-import org.eclipse.jface.text.Document;
-import org.eclipse.ui.preferences.WorkingCopyManager;
 
 /**
  * 
@@ -54,26 +35,6 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
     private static final String INT_SIG = "I";
     private static final String LIST_SIG = "Ljava.util.List;";
     private static final String LIST_ARR_SIG = "[Ljava.util.List;";
-
-    public class SearchRequestor implements ITypeRequestor {
-
-        public VariableScope currentScope;
-        public ASTNode node;
-        
-        public SearchRequestor(ASTNode node) {
-            this.node = node;
-        }
-
-        public VisitStatus acceptASTNode(ASTNode visitorNode, TypeLookupResult visitorResult,
-                IJavaElement enclosingElement) {
-            
-            if (node == visitorNode) {
-                this.currentScope = visitorResult.scope;
-                return VisitStatus.STOP_VISIT;
-            }
-            return VisitStatus.CONTINUE;
-        }
-    }
 
     public ExtendedCompletionContextTests(String name) {
         super(name);
@@ -99,9 +60,9 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("run", enclosing.getElementName());
-        assertElements(context, INTEGER_SIG, "x", "a");
-        assertElements(context, STRING_SIG, "y", "b");
-        assertElements(context, LIST_SIG, "z", "c");
+        assertExtendedContextElements(context, INTEGER_SIG, "x", "a");
+        assertExtendedContextElements(context, STRING_SIG, "y", "b");
+        assertExtendedContextElements(context, LIST_SIG, "z", "c");
     }
     
     public void testExtendedContextInScript2() throws Exception {
@@ -109,9 +70,9 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("run", enclosing.getElementName());
-        assertElements(context, INTEGER_ARR_SIG, "x");
-        assertElements(context, STRING_ARR_SIG, "y");
-        assertElements(context, LIST_ARR_SIG, "z");
+        assertExtendedContextElements(context, INTEGER_ARR_SIG, "x");
+        assertExtendedContextElements(context, STRING_ARR_SIG, "y");
+        assertExtendedContextElements(context, LIST_ARR_SIG, "z");
     }
     
     public void testExtendedContextInScript3() throws Exception {
@@ -119,8 +80,8 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("run", enclosing.getElementName());
-        assertElements(context, "LSuper;", "x", "y");
-        assertElements(context, "LSub;", "y");
+        assertExtendedContextElements(context, "LSuper;", "x", "y");
+        assertExtendedContextElements(context, "LSub;", "y");
     }
     
     public void testExtendedContextInScript4() throws Exception {
@@ -128,10 +89,10 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("run", enclosing.getElementName());
-        assertElements(context, "[LSuper;", "x", "y");
-        assertElements(context, "[LSub;", "y");
-        assertElements(context, "LSuper;");
-        assertElements(context, "LSub;");
+        assertExtendedContextElements(context, "[LSuper;", "x", "y");
+        assertExtendedContextElements(context, "[LSub;", "y");
+        assertExtendedContextElements(context, "LSuper;");
+        assertExtendedContextElements(context, "LSub;");
     }
     
     public void testExtendedContextInClass1() throws Exception {
@@ -139,10 +100,10 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("foo", enclosing.getElementName());
-        assertElements(context, "[LSuper;", "x", "y");
-        assertElements(context, "[LSub;", "y");
-        assertElements(context, "LSuper;");
-        assertElements(context, "LSub;");
+        assertExtendedContextElements(context, "[LSuper;", "x", "y");
+        assertExtendedContextElements(context, "[LSub;", "y");
+        assertExtendedContextElements(context, "LSuper;");
+        assertExtendedContextElements(context, "LSub;");
     }
     
     public void testExtendedContextInClass2() throws Exception {
@@ -150,8 +111,8 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("foo", enclosing.getElementName());
-        assertElements(context, "LSuper;", "x", "y");
-        assertElements(context, "LSub;", "y");
+        assertExtendedContextElements(context, "LSuper;", "x", "y");
+        assertExtendedContextElements(context, "LSub;", "y");
     }
     
     public void testExtendedContextInClass3() throws Exception {
@@ -159,8 +120,8 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("foo", enclosing.getElementName());
-        assertElements(context, "LSub;", "y", "b");
-        assertElements(context, "LSuper;", "x", "y", "a", "b", "z");
+        assertExtendedContextElements(context, "LSub;", "y", "b");
+        assertExtendedContextElements(context, "LSuper;", "x", "y", "a", "b", "z");
     }
     
     // We should be using erasure types, so generics need not match
@@ -172,8 +133,8 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("run", enclosing.getElementName());
-        assertElements(context, "Ljava.util.Map;", "y", "x");
-        assertElements(context, "Ljava.util.HashMap;", "y");
+        assertExtendedContextElements(context, "Ljava.util.Map;", "y", "x");
+        assertExtendedContextElements(context, "Ljava.util.HashMap;", "y");
     }
     
     // now look at boxing and unboxing
@@ -187,10 +148,10 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("run", enclosing.getElementName());
-        assertElements(context, "Ljava.lang.Integer;", "y", "x");
-        assertElements(context, "I", "y", "x");
-        assertElements(context, "Ljava.lang.Boolean;", "a", "b");
-        assertElements(context, "Z", "a", "b");
+        assertExtendedContextElements(context, "Ljava.lang.Integer;", "y", "x");
+        assertExtendedContextElements(context, "I", "y", "x");
+        assertExtendedContextElements(context, "Ljava.lang.Boolean;", "a", "b");
+        assertExtendedContextElements(context, "Z", "a", "b");
     }
     // now look at arrayed boxing and unboxing
     public void testExtendedContextWithBoxingAndArrays() throws Exception {
@@ -211,58 +172,17 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
         IJavaElement enclosing = context.getEnclosingElement();
         assertEquals("run", enclosing.getElementName());
-        assertElements(context, "Ljava.lang.Integer;", "y", "x");
-        assertElements(context, "I", "y", "x");
-        assertElements(context, "Ljava.lang.Boolean;", "a", "b");
-        assertElements(context, "Z", "a", "b");
-        assertElements(context, "[Ljava.lang.Integer;", "y1", "x1");
-        assertElements(context, "[I", "y1", "x1");
-        assertElements(context, "[Ljava.lang.Boolean;", "a1", "b1");
-        assertElements(context, "[Z", "a1", "b1");
-        assertElements(context, "[[Ljava.lang.Integer;", "y2", "x2");
-        assertElements(context, "[[I", "y2", "x2");
-        assertElements(context, "[[Ljava.lang.Boolean;", "a2", "b2");
-        assertElements(context, "[[Z", "a2", "b2");
-    }
-    
-    private void assertElements(GroovyExtendedCompletionContext context, String signature, String...expectedNames) {
-        IJavaElement[] visibleElements = context.getVisibleElements(signature);
-        assertEquals("Incorrect number of visible elements\nexpected: " + Arrays.toString(expectedNames) + 
-                "\nfound: " + elementsToNames(visibleElements), expectedNames.length, visibleElements.length);
-        
-        for (String name : expectedNames) {
-            boolean found = false;
-            for (IJavaElement element : visibleElements) {
-                if (element.getElementName().equals(name)) {
-                    found = true;
-                    break;
-                }
-            }
-            if (! found) {
-                fail ("couldn't find element named " + name + " in " + elementsToNames(visibleElements));
-            }
-        }
-    }
-
-    private String elementsToNames(IJavaElement[] visibleElements) {
-        String[] names = new String[visibleElements.length];
-        for (int i = 0; i < names.length; i++) {
-            names[i] = visibleElements[i].getElementName();
-        }
-        return Arrays.toString(names);
-    }
-    
-    private GroovyExtendedCompletionContext getExtendedCoreContext(ICompilationUnit unit, int invocationOffset) throws JavaModelException {
-        GroovyCompilationUnit gunit = (GroovyCompilationUnit) unit;
-        gunit.becomeWorkingCopy(null);
-        
-        GroovyCompletionProposalComputer computer = new GroovyCompletionProposalComputer();
-        ContentAssistContext context = computer.createContentAssistContext(gunit, invocationOffset, new Document(String.valueOf(gunit.getContents())));
-        
-        TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(gunit);
-        SearchRequestor requestor = new SearchRequestor(context.completionNode);
-        visitor.visitCompilationUnit(requestor);
-
-        return new GroovyExtendedCompletionContext(context, requestor.currentScope);
+        assertExtendedContextElements(context, "Ljava.lang.Integer;", "y", "x");
+        assertExtendedContextElements(context, "I", "y", "x");
+        assertExtendedContextElements(context, "Ljava.lang.Boolean;", "a", "b");
+        assertExtendedContextElements(context, "Z", "a", "b");
+        assertExtendedContextElements(context, "[Ljava.lang.Integer;", "y1", "x1");
+        assertExtendedContextElements(context, "[I", "y1", "x1");
+        assertExtendedContextElements(context, "[Ljava.lang.Boolean;", "a1", "b1");
+        assertExtendedContextElements(context, "[Z", "a1", "b1");
+        assertExtendedContextElements(context, "[[Ljava.lang.Integer;", "y2", "x2");
+        assertExtendedContextElements(context, "[[I", "y2", "x2");
+        assertExtendedContextElements(context, "[[Ljava.lang.Boolean;", "a2", "b2");
+        assertExtendedContextElements(context, "[[Z", "a2", "b2");
     }
 }

@@ -15,6 +15,9 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyExtendedCompletionContext;
+import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -27,13 +30,18 @@ import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
-import org.eclipse.jdt.internal.core.JavaModel;
+import org.eclipse.jdt.groovy.search.ITypeRequestor;
+import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
+import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
+import org.eclipse.jdt.groovy.search.TypeLookupResult;
+import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
@@ -57,6 +65,7 @@ import org.eclipse.ui.internal.UIPlugin;
  */
 public abstract class CompletionTestCase extends BuilderTests {
 
+    protected String defaultFileExtension;
     public CompletionTestCase(String name) {
         super(name);
     }
@@ -342,7 +351,7 @@ public abstract class CompletionTestCase extends BuilderTests {
             projectPath = createGenericProject();
         }
         IPath src = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClass(src, cuName, contents);
+        IPath pathToJavaClass = env.addGroovyClassExtension(src, cuName, contents, defaultFileExtension);
         incrementalBuild();
         ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
         return unit;
@@ -407,6 +416,67 @@ public abstract class CompletionTestCase extends BuilderTests {
             if (startFrom == 0) {
                 fail("Failed to find '" + propName + "' in order inside of:\n" + printProposals(proposals));
             }
+        }
+    }
+    
+    protected void assertExtendedContextElements(GroovyExtendedCompletionContext context, String signature, String...expectedNames) {
+        IJavaElement[] visibleElements = context.getVisibleElements(signature);
+        assertEquals("Incorrect number of visible elements\nexpected: " + Arrays.toString(expectedNames) + 
+                "\nfound: " + elementsToNames(visibleElements), expectedNames.length, visibleElements.length);
+        
+        for (String name : expectedNames) {
+            boolean found = false;
+            for (IJavaElement element : visibleElements) {
+                if (element.getElementName().equals(name)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (! found) {
+                fail ("couldn't find element named " + name + " in " + elementsToNames(visibleElements));
+            }
+        }
+    }
+
+    private String elementsToNames(IJavaElement[] visibleElements) {
+        String[] names = new String[visibleElements.length];
+        for (int i = 0; i < names.length; i++) {
+            names[i] = visibleElements[i].getElementName();
+        }
+        return Arrays.toString(names);
+    }
+    
+    protected GroovyExtendedCompletionContext getExtendedCoreContext(ICompilationUnit unit, int invocationOffset) throws JavaModelException {
+        GroovyCompilationUnit gunit = (GroovyCompilationUnit) unit;
+        gunit.becomeWorkingCopy(null);
+        
+        GroovyCompletionProposalComputer computer = new GroovyCompletionProposalComputer();
+        ContentAssistContext context = computer.createContentAssistContext(gunit, invocationOffset, new Document(String.valueOf(gunit.getContents())));
+        
+        TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(gunit);
+        SearchRequestor requestor = new SearchRequestor(context.completionNode);
+        visitor.visitCompilationUnit(requestor);
+
+        return new GroovyExtendedCompletionContext(context, requestor.currentScope);
+    }
+    
+    public class SearchRequestor implements ITypeRequestor {
+
+        public VariableScope currentScope;
+        public ASTNode node;
+        
+        public SearchRequestor(ASTNode node) {
+            this.node = node;
+        }
+
+        public VisitStatus acceptASTNode(ASTNode visitorNode, TypeLookupResult visitorResult,
+                IJavaElement enclosingElement) {
+            
+            if (node == visitorNode) {
+                this.currentScope = visitorResult.scope;
+                return VisitStatus.STOP_VISIT;
+            }
+            return VisitStatus.CONTINUE;
         }
     }
 
