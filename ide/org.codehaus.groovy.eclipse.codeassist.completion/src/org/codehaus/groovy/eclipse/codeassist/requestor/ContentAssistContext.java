@@ -139,4 +139,22 @@ public class ContentAssistContext {
         }
     }
 
+    /**
+     * The completion node that is being used for completion
+     * (may be different than the defailt if doing a method context completon
+     * @return
+     */
+    public ASTNode getPerceivedCompletionNode() {
+        return completionNode;
+    }
+
+    /**
+     * The completion text that is being used for completion
+     * (may be different than the defailt if doing a method context completon
+     * @return
+     */
+    public String getPerceivedCompletionExpression() {
+        return completionExpression;
+    }
+
 }

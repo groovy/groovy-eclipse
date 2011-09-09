@@ -24,6 +24,7 @@ import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
+import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -84,19 +85,15 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
             ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext) {
 
-        // hmmm...not sure why we need -1 here. This is the only way that I can
-        // get
-        // context information hovers to show, and it doesn't seem to affect
-        // anything else.
-        GroovyCompletionProposal proposal = new GroovyCompletionProposal(CompletionProposal.METHOD_REF,
-                context.completionLocation - 1);
+        GroovyCompletionProposal proposal = new GroovyCompletionProposal(CompletionProposal.METHOD_REF, context.completionLocation);
 
         if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
             // only show context information and only for methods
             // that exactly match the name. This happens when we are at the
             // start
             // of an argument or an open paren
-            if (!context.completionExpression.equals(method.getName())) {
+            MethodInfoContentAssistContext methodContext = (MethodInfoContentAssistContext) context;
+            if (!methodContext.methodName.equals(method.getName())) {
                 return null;
             }
             proposal.setReplaceRange(context.completionLocation, context.completionLocation);
@@ -125,9 +122,25 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         }
         if (lazyProposal == null) {
             lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, javaContext, groovyProposalOptions, contributor);
+            // if location is METHOD_CONTEXT, then the type must be
+            // MethodInfoContentAssistContext,
+            // but there are other times when the type is
+            // MethodInfoContentAssistContext as well.
             if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
                 ((GroovyJavaMethodCompletionProposal) lazyProposal).contextOnly();
             }
+        }
+
+        if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
+            // attempt to find the location immediately after the opening
+            // paren.
+            // if this is wrong, no big deal, but the context information
+            // will not be properly
+            // highlighted.
+            // Assume that there is the method name, and then an opening
+            // paren (or a space) and then
+            // the arguments (hence the +2).
+            lazyProposal.setContextInformationPosition(((MethodInfoContentAssistContext) context).methodNameEnd + 1);
         }
         return lazyProposal;
 

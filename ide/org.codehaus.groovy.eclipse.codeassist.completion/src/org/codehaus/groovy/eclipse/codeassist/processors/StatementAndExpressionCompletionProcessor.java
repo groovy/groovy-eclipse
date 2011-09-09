@@ -93,7 +93,7 @@ public class StatementAndExpressionCompletionProcessor extends
         public ExpressionCompletionRequestor() {
             // remember the rightmost part of the LHS of a
             // binary expression
-            ASTNode maybeLHS = getContext().completionNode;
+            ASTNode maybeLHS = getContext().getPerceivedCompletionNode();
             while (maybeLHS != null) {
                 if (maybeLHS instanceof BinaryExpression) {
                     maybeLHS = arrayAccessLHS = ((BinaryExpression) maybeLHS)
@@ -163,7 +163,10 @@ public class StatementAndExpressionCompletionProcessor extends
         }
 
         private ClassNode findResultingType(TypeLookupResult result, boolean derefList) {
-            ClassNode candidate = result.type;
+            // FIXADE careful here.  this may only be necessary
+            // if completing on a method call with an implicit 'this'.
+            ClassNode candidate = getContext().location == ContentAssistLocation.METHOD_CONTEXT ? result.declaringType
+                    : result.type;
             if (derefList) {
                 for (int i = 0; i < derefCount; i++) {
 
@@ -323,7 +326,7 @@ public class StatementAndExpressionCompletionProcessor extends
             JavaContentAssistInvocationContext javaContext,
             SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
-        this.completionNode = context.completionNode;
+        this.completionNode = context.getPerceivedCompletionNode();
         this.lhsNode = context.lhsNode;
     }
 
@@ -353,7 +356,7 @@ public class StatementAndExpressionCompletionProcessor extends
                             .setCurrentScope(requestor.currentScope);
                 }
                 groovyProposals.addAll(creator.findAllProposals(completionType, requestor.categories,
-                        context.completionExpression, isStatic));
+                        context.getPerceivedCompletionExpression(), isStatic));
             }
         } else {
             // we are at the statement location of a script
@@ -369,7 +372,7 @@ public class StatementAndExpressionCompletionProcessor extends
             }
             if (containingClass != null) {
                 groovyProposals.addAll(new CategoryProposalCreator().findAllProposals(containingClass,
-                        VariableScope.ALL_DEFAULT_CATEGORIES, context.completionExpression, false));
+                        VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), false));
             }
             completionType = context.containingDeclaration instanceof ClassNode ? (ClassNode) context.containingDeclaration
                     : context.unit.getModuleNode().getScriptClassDummy();

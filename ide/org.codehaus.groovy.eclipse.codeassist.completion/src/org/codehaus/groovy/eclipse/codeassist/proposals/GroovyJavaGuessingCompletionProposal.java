@@ -118,6 +118,15 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         return fProposal.getRelevance();
     }
 
+    /**
+     * Not API, for testing only.
+     *
+     * @return the guessed parameter proposals
+     */
+    public ICompletionProposal[][] getChoices() {
+        return fChoices;
+    }
+
     private IJavaElement getEnclosingElement() {
         return fCoreContext.getEnclosingElement();
     }
@@ -420,6 +429,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
     // so must call using reflection
     private ICompletionProposal[] parameterProposals(ParameterGuesser guesser, String parameterType, String paramName,
             Position position, IJavaElement[] assignable) {
+        parameterType = convertToPrimitive(parameterType);
 
         Method method = findParameterProposalsMethod();
         try {
@@ -437,6 +447,34 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
             return new ICompletionProposal[0];
         }
 
+    }
+
+    private String convertToPrimitive(String parameterType) {
+        if ("java.lang.Short".equals(parameterType)) { //$NON-NLS-1$
+            return "short";
+        }
+        if ("java.lang.Integer".equals(parameterType)) { //$NON-NLS-1$
+            return "int";
+        }
+        if ("java.lang.Long".equals(parameterType)) { //$NON-NLS-1$
+            return "long";
+        }
+        if ("java.lang.Float".equals(parameterType)) { //$NON-NLS-1$
+            return "float";
+        }
+        if ("java.lang.Double".equals(parameterType)) { //$NON-NLS-1$
+            return "double";
+        }
+        if ("java.lang.Character".equals(parameterType)) { //$NON-NLS-1$
+            return "char";
+        }
+        if ("java.lang.Byte".equals(parameterType)) { //$NON-NLS-1$
+            return "byte";
+        }
+        if ("java.lang.Boolean".equals(parameterType)) { //$NON-NLS-1$
+            return "boolean";
+        }
+        return parameterType;
     }
 
     private static Method parameterProposalsMethod;

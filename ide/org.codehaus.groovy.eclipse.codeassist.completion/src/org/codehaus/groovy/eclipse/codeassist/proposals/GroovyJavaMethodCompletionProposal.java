@@ -94,7 +94,6 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         fSelectedRegion = new Region(baseOffset + replacement.length(), 0);
     }
 
-
     @Override
     protected void setUpLinkedMode(IDocument document, char closingCharacter) {
         if (fArgumentOffsets != null && getTextViewer() != null) {
@@ -236,7 +235,6 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     if (prefs.afterComma)
                         buffer.append(SPACE);
                 }
-
             }
         } else {
             if (prefs.inEmptyList) {
@@ -262,11 +260,8 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
      */
     @Override
     protected boolean needsLinkedMode() {
-        return super.needsLinkedMode(); // we handle it ourselves
-        // return false; // we handle it ourselves
+        return super.needsLinkedMode();
     }
-
-
 
     /**
      * Returns the currently active java editor, or <code>null</code> if it
@@ -281,8 +276,6 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         else
             return null;
     }
-
-
 
     /*
      * @see ICompletionProposal#getSelection(IDocument)

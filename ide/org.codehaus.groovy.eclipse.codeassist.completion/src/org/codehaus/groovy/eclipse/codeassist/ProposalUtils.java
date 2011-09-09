@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
@@ -36,6 +37,7 @@ import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.internal.core.PackageFragmentRoot;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.internal.ui.viewsupport.ImageDescriptorRegistry;
 import org.eclipse.jdt.ui.text.java.CompletionProposalLabelProvider;
 import org.eclipse.jface.viewers.StyledString;
@@ -47,6 +49,8 @@ import org.eclipse.swt.graphics.Image;
  *
  */
 public class ProposalUtils {
+
+    public static final List<IGroovyProposal> NO_PROPOSALS = Collections.emptyList();
 
     private static final ImageDescriptorRegistry registry= JavaPlugin.getImageDescriptorRegistry();
     private static final CompletionProposalLabelProvider labelProvider = new CompletionProposalLabelProvider();
@@ -156,6 +160,9 @@ public class ProposalUtils {
         return registry.get(labelProvider.createImageDescriptor(proposal));
     }
 
+    public static Image getParameterImage() {
+        return registry.get(JavaPluginImages.DESC_OBJS_LOCAL_VARIABLE);
+    }
     public static StyledString createDisplayString(CompletionProposal proposal) {
         return labelProvider.createStyledLabel(proposal);
     }
