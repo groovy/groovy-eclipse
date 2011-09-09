@@ -31,6 +31,7 @@ public class AllDSLTests {
         suite.addTest(DSLStoreTests.suite());
         suite.addTestSuite(StringObjectVectorTests.class);
         suite.addTestSuite(DSLContentAssistTests.class);
+        suite.addTestSuite(DSLNamedArgContentAssistTests.class);
         return suite;
     }
 
