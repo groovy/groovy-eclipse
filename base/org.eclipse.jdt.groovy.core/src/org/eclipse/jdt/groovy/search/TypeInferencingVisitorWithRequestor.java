@@ -1882,9 +1882,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					}
 				}
 
-				if (VariableScope.MAP_CLASS_NODE.equals(lhs)) {
+				GenericsType[] lhsGenericsTypes = lhs.getGenericsTypes();
+				if (VariableScope.MAP_CLASS_NODE.equals(lhs) && lhsGenericsTypes != null && lhsGenericsTypes.length == 2) {
 					// for maps, always use the type of value
-					return lhs.getGenericsTypes()[1].getType();
+					return lhsGenericsTypes[1].getType();
 				}
 
 				// deref...get component type of lhs
