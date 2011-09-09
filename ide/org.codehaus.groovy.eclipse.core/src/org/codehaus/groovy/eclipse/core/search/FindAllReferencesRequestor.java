@@ -74,6 +74,19 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
                     return VisitStatus.CONTINUE;
                 }
 
+                // also ignore sctipt declarations
+                if (node instanceof ClassNode) {
+                    ClassNode script = (ClassNode) node;
+                    if (script.isScript()) {
+                        // ugghh..I don't like this. If the length of the node
+                        // is different from the length of the name of the
+                        // script
+                        // we know that this is the declaration, not a reference
+                        if (script.getNameWithoutPackage().length() != script.getLength()) {
+                            return VisitStatus.CONTINUE;
+                        }
+                    }
+                }
                 maybeDeclaration = ((ClassNode) maybeDeclaration).redirect();
             }
 
