@@ -10,10 +10,14 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
+import java.util.List;
+
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyPropertyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
@@ -113,6 +117,10 @@ public class PropertyContributionElement implements IContributionElement {
     public String toString() {
         return "public " + (isStatic ? "static " : "") + (isDeprecated ? "deprecated " : "")
                 + propType + " " + declaringType + "." + propName + " (" + provider + ")";
+    }
+
+    public List<IGroovyProposal> extraProposals(ClassNode declaringType, ResolverCache resolver, Expression enclosingExpression) {
+        return ProposalUtils.NO_PROPOSALS;
     }
 
 }

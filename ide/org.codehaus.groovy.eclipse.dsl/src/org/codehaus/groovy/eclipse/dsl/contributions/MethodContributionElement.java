@@ -10,14 +10,26 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MapEntryExpression;
+import org.codehaus.groovy.ast.expr.MapExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyNamedArgumentProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
@@ -86,6 +98,59 @@ public class MethodContributionElement implements IContributionElement {
         return groovyMethodProposal;
     }
     
+    public List<IGroovyProposal> extraProposals(ClassNode declaringType, ResolverCache resolver, Expression expression) {
+//        if (! (expression instanceof MethodCallExpression)) {
+//            return ProposalUtils.NO_PROPOSALS;
+//        }
+        if (!useNamedArgs) {
+            return ProposalUtils.NO_PROPOSALS;
+        }
+        // first find the arguments that are possible
+        Map<String, ClassNode> availableParams = findAvailableParamNames(resolver);
+
+        if (expression instanceof MethodCallExpression) {
+            // next find out if there are any existing named args
+            MethodCallExpression call = (MethodCallExpression) expression;
+            Expression arguments = call.getArguments();
+            if (arguments instanceof TupleExpression) {
+                for (Expression maybeArg : ((TupleExpression) arguments).getExpressions()) {
+                    if (maybeArg instanceof MapExpression) {
+                        arguments = maybeArg;
+                        break;
+                    }
+                }
+            }
+            
+            // now remove the arguments that are already written
+            if (arguments instanceof MapExpression) {
+                // Do extra filtering to determine what parameters are still available
+                MapExpression enclosingCallArgs = (MapExpression) arguments;
+                for (MapEntryExpression entry : enclosingCallArgs .getMapEntryExpressions()) {
+                    String paramName = entry.getKeyExpression().getText();
+                    availableParams.remove(paramName);
+                }
+            }
+        }
+        
+        List<IGroovyProposal> extraProposals = new ArrayList<IGroovyProposal>(availableParams.size());
+        for (Entry<String, ClassNode> available : availableParams.entrySet()) {
+            extraProposals.add(new GroovyNamedArgumentProposal(available.getKey(), available.getValue(), toMethod(declaringType.redirect(), resolver), provider));
+        }
+        return extraProposals;
+    }
+    
+    /**
+     * @param resolver 
+     * @return
+     */
+    private Map<String, ClassNode> findAvailableParamNames(ResolverCache resolver) {
+        Map<String, ClassNode> available = new HashMap<String, ClassNode>(params.length);
+        for (ParameterContribution param : params) {
+            available.put(param.name, param.toParameter(resolver).getType());
+        }
+        return available;
+    }
+
     private MethodNode toMethod(ClassNode declaringType, ResolverCache resolver) {
         if (cachedParameters == null) {
             if (params == null) {

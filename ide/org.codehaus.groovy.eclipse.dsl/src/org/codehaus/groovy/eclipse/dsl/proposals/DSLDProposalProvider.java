@@ -16,11 +16,13 @@ import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.codeassist.processors.IProposalProvider;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
@@ -35,8 +37,7 @@ public class DSLDProposalProvider implements IProposalProvider {
     public List<IGroovyProposal> getStatementAndExpressionProposals(
             ContentAssistContext context, ClassNode completionType,
             boolean isStatic, Set<ClassNode> categories) {
-        
-        String event = null;
+                String event = null;
         if (GroovyLogManager.manager.hasLoggers()) {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Getting DSL proposals for " + context.fullCompletionExpression);
             event = "DSL proposals";
@@ -51,9 +52,14 @@ public class DSLDProposalProvider implements IProposalProvider {
             pattern.setTargetType(completionType);
             contributions = store.findContributions(pattern, DSLPreferences.getDisabledScriptsAsSet());
         
+            ResolverCache resolver = new ResolverCache(context.unit.getResolver(), context.unit.getModuleNode());
             for (IContributionElement element : contributions) {
-                if (element.contributionName().startsWith(context.completionExpression)) {
-                    proposals.add(element.toProposal(completionType, new ResolverCache(context.unit.getResolver(), context.unit.getModuleNode())));
+                if (element.contributionName().startsWith(context.getPerceivedCompletionExpression())) {
+                    proposals.add(element.toProposal(completionType, resolver));
+                    if (context instanceof MethodInfoContentAssistContext) { 
+                        // also add any related proposals, like those for method paraetersfuin
+                        proposals.addAll(element.extraProposals(completionType, resolver, (Expression) ((MethodInfoContentAssistContext) context).completionNode));
+                    }
                 }
             }
         } catch (CoreException e) {
