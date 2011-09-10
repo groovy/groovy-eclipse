@@ -1322,6 +1322,46 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"	at Inferer.main(Inferer.groovy:4)\n", "");
 	}
 	
+	public void testGpp1AnnotatedPackage() throws Exception {
+		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		env.addGroovyPlusPlusJar(projectPath);
+		fullBuild(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "p", "Inferer",
+				"@Typed package p\n"+
+				"class Inferer {\n" + 
+				"  public static void main(String []argv) {\n"+
+				"    new Inferer().foo('abc')\n"+
+				"  }\n"+
+				"  public void m(List<String> ls) {\n"+
+				"	 for (l in ls) {\n"+
+				"	   foo(l) \n"+
+				"    }\n" + 
+				"  }\n"+
+				"  public void foo(String s) {\n"+
+				"    new RuntimeException().printStackTrace(System.out)\n"+
+				"  }\n" +
+				"}");
+
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+		expectingCompiledClassesV("p.Inferer");
+
+		// Expecting a minimal stack trace:
+		executeClass(projectPath, "p.Inferer", 
+				"java.lang.RuntimeException\n" + 
+				"	at p.Inferer.foo(Inferer.groovy:12)\n" + 
+				"	at p.Inferer.main(Inferer.groovy:4)\n", "");
+	}
+	
 	/**
 	 * This is the groovy code that grunit stuff replaces, 
 	 * just checking if it works in standard form.

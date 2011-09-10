@@ -403,13 +403,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // TODO should we check package node doesn't already exist? conflict?
         PackageNode packageNode = setPackage(name, annotations);
         configureAST(packageNode, packageDef);
-        }*/
-        // newcode:
+         }new*/
         setPackageName(name);
         if (name!=null && name.length()>0){
             name+='.'; 
         }
         PackageNode packageNode = new PackageNode(name);
+        packageNode.addAnnotations(annotations);
         output.setPackage(packageNode);
         configureAST(packageNode, node);
         // end
