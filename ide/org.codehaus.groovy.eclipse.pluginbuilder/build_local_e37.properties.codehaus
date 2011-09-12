@@ -14,7 +14,7 @@
 # limitations under the License.
 ###############################################################################
 
-workDir=${user.dir}/../GRECLIPSE-V2E37
+workDir=${user.dir}/../GRECLIPSE-V2E37-JOB1
 
 # The location of this project. It provides the base directory for the build scripts.
 buildHome=${workDir}/ide/org.codehaus.groovy.eclipse.pluginbuilder
@@ -74,7 +74,7 @@ eclipseDir=/opt/eclipse/eclipse-rcp-ganymede-SR2-linux-gtk-x86_64
 # specify the location of the JDT sources
 # on the build server, this is in a different location, but locally, this should be the 
 # same place as the other sources.
-workspaceDirJdtPatch=${workDir}/../GRECLIPSE-JDT37
+workspaceDirJdtPatch=${workDir}/../GRECLIPSE-JDT37-JOB1
 
 # Specify publish location
 publishLocation=/opt/ci.repository.codehaus.org/greclipse/snapshot/e37
@@ -83,7 +83,7 @@ publishLocation=/opt/ci.repository.codehaus.org/greclipse/snapshot/e37
 buildTypePresentation=e37
 
 # the location of the eclipse tarball to build against
-target.eclipse.zip=/opt/eclipse/src/eclipse-SDK-3.7M5-linux-gtk.tar-x86_64.gz
+target.eclipse.zip=/opt/eclipse/src/eclipse-SDK-3.7RC4-linux-gtk-x86_64.tar.gz
 
 # the original and new target versions of the JDT feature.  This change gets reflected in the content.xml
 orig.jdt.feature.version.range=[3.7.0.v20110121-7z8fFb7FMTfESMtR15KlAcZ9H155,3.7.0.v20110121-7z8fFb7FMTfESMtR15KlAcZ9H155]
