@@ -29,7 +29,6 @@ public class PropertySuggestionLabel extends AbstractSuggestionLabel {
         this.property = property;
     }
 
-    @Override
     protected String constructName() {
         if (property == null) {
             return null;

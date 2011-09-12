@@ -22,14 +22,14 @@ import java.util.List;
  * @author Nieraj Singh
  * @created Apr 19, 2011
  */
-public class GroovyMethodSuggestion extends GroovyPropertySuggestion {
+public class GroovyMethodSuggestion extends GroovySuggestion {
 
     private List<MethodParameter> parameters;
 
     private boolean useNamedArgument;
 
-    public GroovyMethodSuggestion(GroovySuggestionDeclaringType declaringType, List<MethodParameter> arguments, boolean useNameArguments, String name, String type,
-            boolean isStatic, String javaDoc, boolean isActive) {
+    public GroovyMethodSuggestion(GroovySuggestionDeclaringType declaringType, List<MethodParameter> arguments,
+            boolean useNameArguments, String name, String type, boolean isStatic, String javaDoc, boolean isActive) {
         super(declaringType, name, type, isStatic, javaDoc, isActive);
         this.useNamedArgument = useNameArguments;
         this.parameters = arguments;
@@ -63,7 +63,5 @@ public class GroovyMethodSuggestion extends GroovyPropertySuggestion {
         }
 
     }
-
-
 
 }

@@ -31,7 +31,6 @@ public class SuggestionLabelFactory {
             return new MethodSuggestionLabel((GroovyMethodSuggestion) suggestion);
         } else if (suggestion instanceof GroovyPropertySuggestion) {
             return new PropertySuggestionLabel((GroovyPropertySuggestion) suggestion);
-
         }
         return null;
     }
