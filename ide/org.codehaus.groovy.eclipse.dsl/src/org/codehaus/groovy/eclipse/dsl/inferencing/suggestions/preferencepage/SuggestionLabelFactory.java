@@ -26,16 +26,14 @@ import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IGroovySuggestion
  */
 public class SuggestionLabelFactory {
 
-	public ISuggestionLabel getSuggestionLabel(IGroovySuggestion suggestion) {
-		if (suggestion instanceof GroovyMethodSuggestion) {
-			return new MethodSuggestionLabel(
-					(GroovyMethodSuggestion) suggestion);
-		} else if (suggestion instanceof GroovyPropertySuggestion) {
-			return new PropertySuggestionLabel(
-					(GroovyPropertySuggestion) suggestion);
+    public ISuggestionLabel getSuggestionLabel(IGroovySuggestion suggestion) {
+        if (suggestion instanceof GroovyMethodSuggestion) {
+            return new MethodSuggestionLabel((GroovyMethodSuggestion) suggestion);
+        } else if (suggestion instanceof GroovyPropertySuggestion) {
+            return new PropertySuggestionLabel((GroovyPropertySuggestion) suggestion);
 
-		}
-		return null;
-	}
+        }
+        return null;
+    }
 
 }

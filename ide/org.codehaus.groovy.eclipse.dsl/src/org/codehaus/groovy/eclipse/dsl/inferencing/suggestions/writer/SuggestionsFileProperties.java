@@ -13,22 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
-
-import org.eclipse.core.resources.IProject;
-import org.eclipse.swt.widgets.Control;
+package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.writer;
 
 /**
  * 
  * @author Nieraj Singh
- * @created 2011-05-13
+ * @created 2011-09-06
  */
-public interface IProjectUIControl {
+public class SuggestionsFileProperties {
 
-    public IProject getProject();
+    private static final String LOCATION = "/.groovy/";
 
-    public Control createControls();
+    public static final String FILE_TYPE = "xdsl";
 
-    public IProject setProject(IProject project);
+    private static final String FILE_NAME = "suggestions";
 
+    public String getWritingLocation() {
+        return LOCATION;
+    }
+
+    public String getFileType() {
+        return FILE_TYPE;
+    }
+
+    public String getFileName() {
+        return FILE_NAME;
+    }
 }

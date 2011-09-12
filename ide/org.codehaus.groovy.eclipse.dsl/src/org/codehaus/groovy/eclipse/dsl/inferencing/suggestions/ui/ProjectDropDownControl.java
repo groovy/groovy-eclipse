@@ -27,6 +27,12 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 
 /**
+ * Creates either a combo for multiple project selections, or a label control
+ * with just one project selection.
+ * If a combo is create, the first project in the input list will be set as the
+ * default selection. New selections
+ * can be set via setProject(..). Selection changes trigger a selection change
+ * event that can be handled by registered listeners.
  * 
  * @author Nieraj Singh
  * @created 2011-05-13
@@ -49,12 +55,11 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
         return projects;
     }
 
-    @Override
     public void createProjectDisplayControl(Composite parent) {
 
         // If zero or one projects exit, delegate to super class to create
         // a single label to display the project
-        if (projects == null || projects.isEmpty() || projects.size() == 1) {
+        if (projects == null || projects.size() <= 1) {
             if (projects.size() == 1) {
                 super.setProject(projects.get(0));
             }
@@ -76,32 +81,51 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
 
         dropDown.addSelectionListener(new SelectionAdapter() {
 
-            @Override
             public void widgetSelected(SelectionEvent e) {
                 String newSelection = dropDown.getItem(dropDown.getSelectionIndex());
-                changeProject(newSelection);
+                IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(newSelection);
+                ProjectDropDownControl.super.setProject(project);
+                handleProjectChange(project);
             }
         });
 
         // Set the first project as the displayed selection
-        changeProject(projects.get(0));
+        setProject(projects.get(0));
 
     }
 
-    protected IProject changeProject(String projectName) {
-        IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
-        return changeProject(project);
+    /**
+     * True iff both the current selection and the project to select are the
+     * same. False any other case.
+     * 
+     * @param projectToSelect
+     * @return
+     */
+    protected boolean isSelectionSame(IProject projectToSelect) {
+        int selectionIndex = dropDown.getSelectionIndex();
+        if (selectionIndex >= 0) {
+            String currentSelection = dropDown.getItem(selectionIndex);
+            return projectToSelect.getName().equals(currentSelection);
+        }
+        return false;
     }
 
-    protected IProject changeProject(IProject selectedProject) {
-        if (selectedProject == null) {
-            return null;
+    /**
+     * Return the selected project, or null if the project is not available in
+     * the selection and cannot be selected.
+     * 
+     * @param projectToSelect
+     * @return
+     */
+    public IProject setProject(IProject projectToSelect) {
+        if (projectToSelect == null || isSelectionSame(projectToSelect)) {
+            return projectToSelect;
         }
 
         int selectedIndex = -1;
         String[] allProjects = dropDown.getItems();
         for (int i = 0; i < allProjects.length; i++) {
-            if (selectedProject.getName().equals(allProjects[i])) {
+            if (projectToSelect.getName().equals(allProjects[i])) {
                 selectedIndex = i;
                 break;
             }
@@ -109,55 +133,19 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
 
         if (selectedIndex >= 0) {
 
-            setProject(selectedProject);
-
             dropDown.select(selectedIndex);
+            super.setProject(projectToSelect);
+            handleProjectChange(projectToSelect);
 
-            handleProjectChange(selectedProject);
-            return selectedProject;
+            return projectToSelect;
         }
 
         return null;
 
     }
 
-    protected int getIndex(String name) {
-        if (dropDown == null || name == null) {
-            return -1;
-        }
-
-        String[] items = dropDown.getItems();
-
-        if (items != null) {
-            for (int i = 0; i < items.length; i++) {
-                if (name.equals(items[i])) {
-                    return i;
-                }
-            }
-        }
-        return -1;
-    }
-
-    protected boolean selectProject(IProject project) {
-        if (dropDown == null || dropDown.isDisposed() || project == null) {
-            return false;
-        }
-
-        IProject currentProject = getProject();
-
-        if (currentProject == null || currentProject.getName().equals(project.getName())) {
-            return false;
-        }
-        return changeProject(project) != null;
-    }
-
-    @Override
-    public void setProject(IProject project) {
-        super.setProject(project);
-        selectProject(project);
-    }
-
     protected void handleProjectChange(IProject selectedProject) {
+
         if (handler != null) {
             handler.selectionChanged(selectedProject);
         }

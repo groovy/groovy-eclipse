@@ -49,7 +49,7 @@ public class MethodSuggestionLabel extends AbstractSuggestionLabel {
         String typeName = suggestion.getType();
         buffer.append(typeName);
 
-        List<MethodParameter> methodArguments = suggestion.getMethodArguments();
+        List<MethodParameter> methodArguments = suggestion.getParameters();
         if (methodArguments != null) {
             buffer.append(OPEN_PAR);
             int size = methodArguments.size();

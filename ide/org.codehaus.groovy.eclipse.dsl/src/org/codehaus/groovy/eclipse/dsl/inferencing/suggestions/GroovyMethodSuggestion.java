@@ -22,9 +22,9 @@ import java.util.List;
  * @author Nieraj Singh
  * @created Apr 19, 2011
  */
-public class GroovyMethodSuggestion extends AbstractGroovyTypeProperty {
+public class GroovyMethodSuggestion extends GroovyPropertySuggestion {
 
-    private List<MethodParameter> arguments;
+    private List<MethodParameter> parameters;
 
     private boolean useNamedArgument;
 
@@ -32,11 +32,11 @@ public class GroovyMethodSuggestion extends AbstractGroovyTypeProperty {
             boolean isStatic, String javaDoc, boolean isActive) {
         super(declaringType, name, type, isStatic, javaDoc, isActive);
         this.useNamedArgument = useNameArguments;
-        this.arguments = arguments;
+        this.parameters = arguments;
     }
 
-    public List<MethodParameter> getMethodArguments() {
-        return arguments;
+    public List<MethodParameter> getParameters() {
+        return parameters;
     }
 
     public boolean useNamedArguments() {

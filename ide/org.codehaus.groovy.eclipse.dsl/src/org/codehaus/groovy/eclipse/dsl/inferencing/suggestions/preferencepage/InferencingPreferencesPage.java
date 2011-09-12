@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.preferencepage;
 
 import java.util.List;
 
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.preference.PreferencePage;
@@ -31,33 +32,42 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
  * @author Nieraj Singh
  * @created 2011-04-20
  */
-public class InferencingPreferencesPage extends PreferencePage implements
-		IWorkbenchPreferencePage {
-	private IWorkbenchPage page;
-	public static final String PAGE_DESCRIPTION = "Select a project to manage the Groovy inferencing suggestions.";
+public class InferencingPreferencesPage extends PreferencePage implements IWorkbenchPreferencePage {
+    private IWorkbenchPage page;
 
-	public InferencingPreferencesPage() {
-		// setPreferenceStore(CCLRUIPlugin.getInstance().getPreferenceStore());
-		setDescription(PAGE_DESCRIPTION);
-	}
+    private GroovySuggestionsTable table;
 
-	public void init(IWorkbench workbench) {
-		if (workbench != null && workbench.getActiveWorkbenchWindow() != null) {
-			page = workbench.getActiveWorkbenchWindow().getActivePage();
-		}
+    public static final String PAGE_DESCRIPTION = "Select a project to manage the Groovy inferencing suggestions.";
 
-	}
+    public InferencingPreferencesPage() {
+        // setPreferenceStore(CCLRUIPlugin.getInstance().getPreferenceStore());
+        setDescription(PAGE_DESCRIPTION);
+    }
 
-	protected IWorkbenchPage getPage() {
-		return page;
-	}
+    public void init(IWorkbench workbench) {
+        if (workbench != null && workbench.getActiveWorkbenchWindow() != null) {
+            page = workbench.getActiveWorkbenchWindow().getActivePage();
+        }
+    }
 
-	@Override
-	protected Control createContents(Composite parent) {
-	    List<IProject> projects = GroovyNature.getAllAccessibleGroovyProjects();
-		GroovySuggestionsTable table = new GroovySuggestionsTable(projects);
+    protected IWorkbenchPage getPage() {
+        return page;
+    }
 
-		return table.createTable(parent);
-	}
+    protected Control createContents(Composite parent) {
+        List<IProject> projects = GroovyNature.getAllAccessibleGroovyProjects();
+        table = new GroovySuggestionsTable(projects);
+        return table.createTable(parent);
+    }
+
+    public boolean performOk() {
+
+        if (super.performOk()) {
+            IProject project = table.getSelectedProject();
+            InferencingSuggestionsManager.getInstance().commitChanges(project);
+            return true;
+        }
+        return false;
+    }
 
 }

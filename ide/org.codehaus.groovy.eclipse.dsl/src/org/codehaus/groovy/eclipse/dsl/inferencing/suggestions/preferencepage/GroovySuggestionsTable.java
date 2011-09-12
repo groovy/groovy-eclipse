@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyPropertySuggestion;
@@ -160,13 +159,20 @@ public class GroovySuggestionsTable {
         selector = new ProjectDropDownControl(projects, parent.getShell(), subparent, handler);
         selector.createControls();
 
+        // Check if there is a project that was previously edited. Set that as
+        // the selection
+        IProject previouslyModifiedProject = InferencingSuggestionsManager.getInstance().getlastModifiedProject();
+        if (previouslyModifiedProject != null) {
+            selector.setProject(previouslyModifiedProject);
+        }
+
     }
 
     protected String getViewerLabel() {
         return DEACTIVATE_REMOVE_EDIT_OR_ADD_A_TYPE_SUGGESTION;
     }
 
-    protected IProject getSelectedProject() {
+    public IProject getSelectedProject() {
         if (selector == null) {
             return null;
         }
@@ -263,7 +269,7 @@ public class GroovySuggestionsTable {
     protected void setActiveState(Object viewerElement, boolean checkState) {
         if (viewerElement instanceof GroovySuggestionDeclaringType) {
             GroovySuggestionDeclaringType declaringType = (GroovySuggestionDeclaringType) viewerElement;
-            Set<IGroovySuggestion> suggestions = declaringType.getSuggestions();
+            List<IGroovySuggestion> suggestions = declaringType.getSuggestions();
 
             for (IGroovySuggestion suggestion : suggestions) {
                 suggestion.changeActiveState(checkState);
@@ -291,7 +297,7 @@ public class GroovySuggestionsTable {
         // Parent check state does not require manual setting.
         if (viewerElement instanceof GroovySuggestionDeclaringType) {
             GroovySuggestionDeclaringType declaringType = (GroovySuggestionDeclaringType) viewerElement;
-            Set<IGroovySuggestion> suggestions = declaringType.getSuggestions();
+            List<IGroovySuggestion> suggestions = declaringType.getSuggestions();
 
             for (Iterator<IGroovySuggestion> it = suggestions.iterator(); it.hasNext();) {
                 IGroovySuggestion suggestion = it.next();
@@ -405,27 +411,23 @@ public class GroovySuggestionsTable {
             if (dialogue != null && dialogue.open() == Window.OK) {
                 SuggestionDescriptor descriptor = dialogue.getSuggestionChange();
 
-                GroovySuggestionDeclaringType type = getDeclaringType(descriptor.getDeclaringTypeName());
-                if (type != null) {
-                    IGroovySuggestion suggestion = type.createSuggestion(descriptor);
+                IProject project = getSelectedProject();
+                if (project != null) {
+                    IGroovySuggestion suggestion = InferencingSuggestionsManager.getInstance().getSuggestions(project)
+                            .addSuggestion(descriptor);
 
-                    // Refresh first before setting the check state of the new
-                    // suggestion
-                    refresh();
+                    if (suggestion != null) {
+                        // Refresh first before setting the check state of the
+                        // new
+                        // suggestion
+                        refresh();
 
-                    // Update the check state of the new element
-                    setCheckState(suggestion);
+                        // Update the check state of the new element
+                        setCheckState(suggestion);
+                    }
                 }
             }
         }
-    }
-
-    protected GroovySuggestionDeclaringType getDeclaringType(String declaringTypeName) {
-        IProject project = getSelectedProject();
-        if (project != null) {
-            return InferencingSuggestionsManager.getInstance().getSuggestions(project).getDeclaringType(declaringTypeName);
-        }
-        return null;
     }
 
     protected void handleButtonSelection(ButtonTypes button) {
@@ -536,7 +538,7 @@ public class GroovySuggestionsTable {
             if (lastElement instanceof GroovySuggestionDeclaringType) {
                 GroovySuggestionDeclaringType treeElement = (GroovySuggestionDeclaringType) lastElement;
 
-                Set<IGroovySuggestion> properties = treeElement.getSuggestions();
+                List<IGroovySuggestion> properties = treeElement.getSuggestions();
 
                 if (properties != null) {
                     return properties.toArray();

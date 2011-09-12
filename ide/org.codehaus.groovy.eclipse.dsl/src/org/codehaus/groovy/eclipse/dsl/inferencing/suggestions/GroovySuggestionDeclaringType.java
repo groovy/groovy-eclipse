@@ -15,8 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 
@@ -24,12 +24,12 @@ import java.util.Set;
  * @created Apr 19, 2011
  */
 public class GroovySuggestionDeclaringType {
-    private Set<IGroovySuggestion> suggestions;
+    private List<IGroovySuggestion> suggestions;
 
     private String name;
 
     public GroovySuggestionDeclaringType(String name) {
-        this.suggestions = new HashSet<IGroovySuggestion>();
+        this.suggestions = new ArrayList<IGroovySuggestion>();
         this.name = name;
     }
 
@@ -75,7 +75,7 @@ public class GroovySuggestionDeclaringType {
         return suggestions.remove(suggestion);
     }
 
-    public Set<IGroovySuggestion> getSuggestions() {
+    public List<IGroovySuggestion> getSuggestions() {
         return suggestions;
     }
 

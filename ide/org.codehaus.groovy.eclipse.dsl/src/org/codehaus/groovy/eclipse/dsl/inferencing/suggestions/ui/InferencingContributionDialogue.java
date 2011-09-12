@@ -70,7 +70,7 @@ public class InferencingContributionDialogue extends AbstractDialogue {
 
     private boolean editDeclaringType = true;
 
-    private boolean useNamedParameters;
+    private boolean useNamedArguments;
 
     private MethodArgumentTable table;
 
@@ -130,8 +130,9 @@ public class InferencingContributionDialogue extends AbstractDialogue {
     }
 
     public SuggestionDescriptor getSuggestionChange() {
-        return new SuggestionDescriptor(declaringTypeName, isStatic, isMethod, suggestionName, javaDoc, suggestionType,
-                useNamedParameters, table.getMethodParameter(), isActive);
+        return isMethod ? new SuggestionDescriptor(declaringTypeName, isStatic, suggestionName, javaDoc, suggestionType,
+                useNamedArguments, table.getMethodParameter(), isActive) : new SuggestionDescriptor(declaringTypeName, isStatic,
+                suggestionName, javaDoc, suggestionType, isActive);
     }
 
     protected void setSuggestion(IGroovySuggestion suggestion) {
@@ -147,8 +148,8 @@ public class InferencingContributionDialogue extends AbstractDialogue {
             isActive = currentSuggestion.isActive();
             if (currentSuggestion instanceof GroovyMethodSuggestion) {
                 GroovyMethodSuggestion method = (GroovyMethodSuggestion) currentSuggestion;
-                initialParameters = method.getMethodArguments();
-                useNamedParameters = method.useNamedArguments();
+                initialParameters = method.getParameters();
+                useNamedArguments = method.useNamedArguments();
                 isMethod = true;
             }
         }
@@ -166,7 +167,8 @@ public class InferencingContributionDialogue extends AbstractDialogue {
 
     protected void createFieldAreas(Composite parent) {
 
-        JavaIdentifierTextControl nameControl = new JavaIdentifierTextControl(ControlTypes.NAME, getOffsetLabelLocation(), suggestionName);
+        JavaIdentifierTextControl nameControl = new JavaIdentifierTextControl(ControlTypes.NAME, getOffsetLabelLocation(),
+                suggestionName);
         nameControl.createControlArea(parent);
         nameControl.addSelectionListener(new RequiredValueControlSelectionListener(ControlTypes.NAME, suggestionName) {
 
@@ -233,7 +235,7 @@ public class InferencingContributionDialogue extends AbstractDialogue {
 
         radioSelection.createControlArea(parent);
 
-        table = new MethodArgumentTable(getJavaProject(), initialParameters, useNamedParameters);
+        table = new MethodArgumentTable(getJavaProject(), initialParameters, useNamedArguments);
 
         table.createControlArea(parent);
 
@@ -247,7 +249,7 @@ public class InferencingContributionDialogue extends AbstractDialogue {
             public void handleSelection(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (event.getControlDescriptor() == ControlTypes.USE_NAMED_ARGUMENTS && selection instanceof Boolean) {
-                    useNamedParameters = ((Boolean) selection).booleanValue();
+                    useNamedArguments = ((Boolean) selection).booleanValue();
                 }
             }
         });
@@ -283,7 +285,7 @@ public class InferencingContributionDialogue extends AbstractDialogue {
 
     protected void createDocumentationArea(Composite parent) {
 
-        DocumentDialogueControl docControl = new DocumentDialogueControl(ControlTypes.JAVA_DOC, null, javaDoc);
+        DocumentDialogueControl docControl = new DocumentDialogueControl(ControlTypes.DOC, null, javaDoc);
         docControl.createControlArea(parent);
         docControl.addSelectionListener(new ControlSelectionListener() {
 

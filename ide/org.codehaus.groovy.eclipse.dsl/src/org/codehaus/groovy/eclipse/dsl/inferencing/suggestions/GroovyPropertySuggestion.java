@@ -20,12 +20,55 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
  * @author Nieraj Singh
  * @created Apr 19, 2011
  */
-public class GroovyPropertySuggestion extends AbstractGroovyTypeProperty {
+public class GroovyPropertySuggestion implements IGroovySuggestion {
+    private String name;
 
-    public GroovyPropertySuggestion(GroovySuggestionDeclaringType declaringType, String name, String type, boolean isStatic,
+    private String type;
+
+    private boolean isStatic;
+
+    private String javaDoc;
+
+    private boolean isActive;
+
+    private GroovySuggestionDeclaringType declaringType;
+
+    protected GroovyPropertySuggestion(GroovySuggestionDeclaringType declaringType, String name, String type, boolean isStatic,
             String javaDoc, boolean isActive) {
-        super(declaringType, name, type, isStatic, javaDoc, isActive);
+        this.name = name;
+        this.type = type;
+        this.isStatic = isStatic;
+        this.javaDoc = javaDoc;
+        this.declaringType = declaringType;
+        this.isActive = isActive;
     }
 
+    public GroovySuggestionDeclaringType getDeclaringType() {
+        return declaringType;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public boolean isStatic() {
+        return isStatic;
+    }
+
+    public String getJavaDoc() {
+        return javaDoc;
+    }
+
+    public void changeActiveState(boolean isActive) {
+        this.isActive = isActive;
+    }
 
 }

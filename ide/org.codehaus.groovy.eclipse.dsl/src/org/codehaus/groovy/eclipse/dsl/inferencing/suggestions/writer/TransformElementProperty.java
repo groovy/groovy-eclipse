@@ -13,22 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
-
-import org.eclipse.core.resources.IProject;
-import org.eclipse.swt.widgets.Control;
+package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.writer;
 
 /**
  * 
  * @author Nieraj Singh
- * @created 2011-05-13
+ * @created 2011-08-09
  */
-public interface IProjectUIControl {
+public class TransformElementProperty {
+    private String name;
 
-    public IProject getProject();
+    private String value;
 
-    public Control createControls();
+    public TransformElementProperty(String name, String value) {
+        super();
+        this.name = name;
+        this.value = value;
+    }
 
-    public IProject setProject(IProject project);
+    public String getName() {
+        return name;
+    }
+
+    public String getValue() {
+        return value;
+    }
 
 }

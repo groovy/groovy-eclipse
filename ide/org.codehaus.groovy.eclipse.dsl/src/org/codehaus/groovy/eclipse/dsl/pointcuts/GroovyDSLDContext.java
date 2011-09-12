@@ -78,7 +78,7 @@ public class GroovyDSLDContext {
 
     /**
      * Not API!!!
-     * Shoud not use this constructor.  It is only for testing
+     * Should not use this constructor.  It is only for testing
      */
     @Deprecated
     public GroovyDSLDContext(String[] projectNatures, String fullPathName, String packageRootPath) {
@@ -127,7 +127,7 @@ public class GroovyDSLDContext {
     private Set<ClassNode> cachedHierarchy;
     
     /**
-     * called by the typ lookup, not by the pointcuts
+     * called by the type lookup, not by the pointcuts
      * @param targetType
      */
     public void setTargetType(ClassNode targetType) {

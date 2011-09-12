@@ -12,6 +12,8 @@ package org.codehaus.groovy.eclipse.dsl;
 
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.SuggestionsLoader;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.writer.SuggestionsFileProperties;
 import org.codehaus.groovy.eclipse.dsl.script.DSLDScriptExecutor;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
@@ -43,38 +45,36 @@ public class DSLDResourceListener implements IResourceChangeListener {
 
     private class DSLDChangeResourceDeltaVisitor implements IResourceDeltaVisitor {
         private final int eventType;
-        
+
         private DSLDChangeResourceDeltaVisitor(int eventType) {
             this.eventType = eventType;
         }
 
         public boolean visit(IResourceDelta delta) throws CoreException {
             IResource deltaResource = delta.getResource();
-            
+
             if (deltaResource.isDerived()) {
                 // fail fast
                 return false;
             }
-            
+
             if (deltaResource.getType() == IResource.PROJECT) {
                 IProject project = (IProject) deltaResource;
-                
+
                 // two possibilities handled here:
                 // project being closed/deleted/groovy nature removed
                 // project being opened.
-                if ((eventType == IResourceChangeEvent.PRE_DELETE && delta.getKind() == IResourceDelta.REMOVED) ||
-                        eventType == IResourceChangeEvent.PRE_CLOSE ||
+                if ((eventType == IResourceChangeEvent.PRE_DELETE && delta.getKind() == IResourceDelta.REMOVED)
+                        || eventType == IResourceChangeEvent.PRE_CLOSE ||
                         // just in case nature has been removed for this project
                         !GroovyNature.hasGroovyNature(project)) {
                     // no longer managing state for this project
                     if (GroovyLogManager.manager.hasLoggers()) {
-                        GroovyLogManager.manager.log(TraceCategory.DSL, 
-                                "Deleting DSL context for: " + project.getName());
+                        GroovyLogManager.manager.log(TraceCategory.DSL, "Deleting DSL context for: " + project.getName());
                     }
                     contextStoreManager.clearDSLDStore(project);
                     return false;
-                } else if (! contextStoreManager.hasDSLDStoreFor(project) &&
-                        GroovyNature.hasGroovyNature(project)) {
+                } else if (!contextStoreManager.hasDSLDStoreFor(project) && GroovyNature.hasGroovyNature(project)) {
                     // could be that this project has just been opened
                     Job refreshJob = new RefreshDSLDJob(project);
                     refreshJob.setPriority(Job.LONG);
@@ -82,42 +82,51 @@ public class DSLDResourceListener implements IResourceChangeListener {
                     return false;
                 }
 
-                // not opening or closing the project,  just check to see if we still care about it 
+                // not opening or closing the project, just check to see if we
+                // still care about it
                 if (!GroovyNature.hasGroovyNature(project)) {
                     return false;
                 }
             } else if (deltaResource.getType() == IResource.FILE) {
                 // at this point, we know that we are in a groovy project
-                
+
                 IFile file = (IFile) deltaResource;
-                if (isDSLDFile(file)) {
+                if (isDSLDFile(file) || isXDSL(file)) {
                     IProject project = file.getProject();
                     DSLDStore store = contextStoreManager.getDSLDStore(project);
                     Assert.isNotNull(store, "Context store should not be null");
-                    
+
                     if (GroovyLogManager.manager.hasLoggers()) {
                         GroovyLogManager.manager.log(TraceCategory.DSL, "Processing " + file.getName());
                     }
-                    // this file has been changed or deleted.  Either way, must start by purging
-                    // if this file diden't exist in the past, then this is a no-op
-                    store.purgeFileFromStore(file);
-                    
+                    // this file has been changed or deleted. Either way, must
+                    // start by purging
+                    // if this file diden't exist in the past, then this is a
+                    // no-op
+                    store.purgeIdentifier(file);
+
                     if (file.isAccessible() && eventType == IResourceChangeEvent.POST_CHANGE) {
                         // also refresh the file
-                        DSLDScriptExecutor executor = new DSLDScriptExecutor(JavaCore.create(project));
-                        executor.executeScript(file);
+                        if (isDSLDFile(file)) {
+                            DSLDScriptExecutor executor = new DSLDScriptExecutor(JavaCore.create(project));
+                            executor.executeScript(file);
+                        } else if (isXDSL(file)) {
+                            // At this point the suggestions should already be in the manager. only contribution groups
+                            // and point cuts need to be created
+                            new SuggestionsLoader(file).addSuggestionsContributionGroup();
+                        }
                     }
                 }
             }
-            
+
             // we know that we are in a groovy project
             // so keep on trudging through the delta
             return true;
         }
     }
-    
+
     private static final DSLDStoreManager contextStoreManager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
-    
+
     public void resourceChanged(IResourceChangeEvent event) {
         switch (event.getType()) {
             case IResourceChangeEvent.PRE_DELETE:
@@ -140,5 +149,10 @@ public class DSLDResourceListener implements IResourceChangeListener {
     public boolean isDSLDFile(IFile file) {
         String fileExtension = file.getFileExtension();
         return fileExtension != null && fileExtension.equals("dsld");
+    }
+
+    public boolean isXDSL(IFile file) {
+        String fileExtension = file.getFileExtension();
+        return fileExtension != null && fileExtension.equals(SuggestionsFileProperties.FILE_TYPE);
     }
 }

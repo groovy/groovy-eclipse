@@ -46,10 +46,6 @@ public class ProjectDisplayControl implements IProjectUIControl {
         return shell;
     }
 
-    public void setProject(IProject project) {
-        this.project = project;
-    }
-
     public IProject getProject() {
         return project;
     }
@@ -77,6 +73,11 @@ public class ProjectDisplayControl implements IProjectUIControl {
             projectLabel.setText(project.getName());
         }
 
+    }
+
+    public IProject setProject(IProject project) {
+        this.project = project;
+        return project;
     }
 
 }

@@ -34,11 +34,11 @@ public enum ControlTypes implements IDialogueControlDescriptor {
 
     METHOD("Method", "Is type a method"),
 
-    ARGUMENTS("Method Arguments", "Add, remove or edit method arguments"),
+    PARAMETERS("Parameters", "Add, remove or edit method parameters"),
 
     USE_NAMED_ARGUMENTS("  Use named arguments", "Should use named arguments?"),
 
-    JAVA_DOC("Java Doc", "Enter Java Doc"),
+    DOC("Doc", "Enter documentation for the suggestion"),
 
     ADD("Add", "Add item"),
 

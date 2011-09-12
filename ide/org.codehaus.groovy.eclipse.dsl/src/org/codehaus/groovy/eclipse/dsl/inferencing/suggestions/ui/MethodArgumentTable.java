@@ -428,7 +428,7 @@ public class MethodArgumentTable extends AbstractControlManager {
 
         TableViewer viewer = createTableViewer(viewerArea);
         if (viewer != null) {
-            allControls.put(viewer.getTable(), ControlTypes.ARGUMENTS);
+            allControls.put(viewer.getTable(), ControlTypes.PARAMETERS);
         }
 
         Map<Control, IDialogueControlDescriptor> buttonControls = createOperationButtonArea(viewerArea);

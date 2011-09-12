@@ -64,6 +64,9 @@ public class DSLDStore {
     
     
     public void purgeIdentifier(IStorage identifier) {
+        if (GroovyLogManager.manager.hasLoggers()) {
+            GroovyLogManager.manager.log(TraceCategory.DSL, "Purging pointcut for DSL file " + identifier);
+        }
         Set<IPointcut> pointcuts = keyContextMap.remove(identifier);
         if (pointcuts != null) {
             for (IPointcut pointcut : pointcuts) {
@@ -110,19 +113,7 @@ public class DSLDStore {
         }
     }
     
-    
-    public void purgeFileFromStore(IFile file) {
-        if (GroovyLogManager.manager.hasLoggers()) {
-            GroovyLogManager.manager.log(TraceCategory.DSL, "Purging pointcut for DSL file " + file);
-        }
-        Set<IPointcut> pointcuts = keyContextMap.remove(file);
-        if (pointcuts != null) {
-            for (IPointcut pointcut : pointcuts) {
-                pointcutContributionMap.remove(pointcut);
-            }
-        }
-    }
-
+   
     /**
      * Find all contributions for this pattern and this declaring type
      * @param pattern The pattern to match against

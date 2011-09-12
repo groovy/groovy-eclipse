@@ -44,7 +44,7 @@ public class SuggestionDescriptor {
 
     private List<MethodParameter> parameters;
 
-    public SuggestionDescriptor(String declaringTypeName, boolean isStatic, boolean isMethod, String name, String javaDoc,
+    protected SuggestionDescriptor(String declaringTypeName, boolean isStatic, boolean isMethod, String name, String javaDoc,
             String suggestionType, boolean useArgumentNames, List<MethodParameter> parameters, boolean isActive) {
         this.isStatic = isStatic;
         this.isMethod = isMethod;
@@ -55,6 +55,22 @@ public class SuggestionDescriptor {
         this.declaringTypeName = declaringTypeName;
         this.useArgumentNames = useArgumentNames;
         this.parameters = parameters;
+    }
+
+    /**
+     * Use only if descriptor is for a method
+     */
+    public SuggestionDescriptor(String declaringTypeName, boolean isStatic, String name, String javaDoc, String suggestionType,
+            boolean useArgumentNames, List<MethodParameter> parameters, boolean isActive) {
+        this(declaringTypeName, isStatic, true, name, javaDoc, suggestionType, useArgumentNames, parameters, isActive);
+    }
+
+    /**
+     * Use only if descriptor is for a property
+     */
+    public SuggestionDescriptor(String declaringTypeName, boolean isStatic, String name, String javaDoc, String suggestionType,
+            boolean isActive) {
+        this(declaringTypeName, isStatic, false, name, javaDoc, suggestionType, false, null, isActive);
     }
 
     /**
@@ -78,7 +94,7 @@ public class SuggestionDescriptor {
         if (suggestion instanceof GroovyMethodSuggestion) {
             GroovyMethodSuggestion methodSuggestion = (GroovyMethodSuggestion) suggestion;
             this.useArgumentNames = methodSuggestion.useNamedArguments();
-            this.parameters = methodSuggestion.getMethodArguments();
+            this.parameters = methodSuggestion.getParameters();
             this.isMethod = true;
         }
 

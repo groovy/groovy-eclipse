@@ -103,6 +103,11 @@ public class GroovyNature implements IProjectNature {
 		return false;
 	}
 
+	/**
+	 * Returns a new copy of all available and accessible Groovy projects in the workspace
+	 * 
+	 * @return
+	 */
 	public static List<IProject> getAllAccessibleGroovyProjects() {
 		IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 		List<IProject> groovyProjects = new ArrayList<IProject>();

@@ -30,7 +30,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
  */
 public class ContributionGroup extends GroovyObjectSupport implements IContributionGroup {
     
-    private final static String DEFAULT_PROVIDER = "User";
+    protected final static String DEFAULT_PROVIDER = "User";
     
     protected final static int DEFAULT_RELEVANCE_MULTIPLIER = 11;
     
