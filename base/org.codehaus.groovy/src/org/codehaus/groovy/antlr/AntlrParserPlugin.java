@@ -52,9 +52,6 @@ import java.util.Set;
  */
 public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, GroovyTokenTypes {
 
-
-
-
     private static class AnonymousInnerClassCarrier extends Expression {
         ClassNode innerClass;
 
@@ -348,18 +345,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // end
         String name = qualifiedName(node);
         // GRECLIPSE (groovychange)
-        // oldcode:
-        // TODO should we check package node doesn't already exist? conflict?
         /*old{
+        // TODO should we check package node doesn't already exist? conflict?
         PackageNode packageNode = setPackage(name, annotations);
         configureAST(packageNode, packageDef);
-        }*/
-        // newcode:
+         }new*/
         setPackageName(name);
         if (name!=null && name.length()>0){
-            name+='.';
+            name+='.'; 
         }
         PackageNode packageNode = new PackageNode(name);
+        packageNode.addAnnotations(annotations);
         output.setPackage(packageNode);
         configureAST(packageNode, node);
         // end

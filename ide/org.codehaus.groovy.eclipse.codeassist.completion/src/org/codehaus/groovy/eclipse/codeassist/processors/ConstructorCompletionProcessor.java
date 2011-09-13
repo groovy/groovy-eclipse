@@ -21,6 +21,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
+import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
@@ -44,8 +46,14 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
         if (constructorCompletionText == null) {
             return Collections.emptyList();
         }
-        int completionExprStart = context.completionLocation
-                - constructorCompletionText.length;
+        int completionExprStart;
+        if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
+            completionExprStart = ((MethodInfoContentAssistContext) context).methodNameEnd
+                    - ((MethodInfoContentAssistContext) context).methodName.length();
+        } else {
+            completionExprStart = context.completionLocation - constructorCompletionText.length;
+        }
+
         GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
                 context, getJavaContext(), completionExprStart,
                 context.completionEnd - completionExprStart,

@@ -301,7 +301,7 @@ public class ContentAssistLocationTests extends CompletionTestCase {
     
     public void testClassBody4() throws Exception {
         String contents = "class A extends T { void t }";
-        int loc = contents.indexOf("ds") +3;
+        int loc = contents.indexOf("ds") +4;
         assertLocation(contents, loc, ContentAssistLocation.EXTENDS);
     }
     
@@ -313,7 +313,7 @@ public class ContentAssistLocationTests extends CompletionTestCase {
     
     public void testClassBody6() throws Exception {
         String contents = "class A extends ArrayList implements T { void t }";
-        int loc = contents.indexOf("ents ") +5;
+        int loc = contents.indexOf("ents ") +6;
         assertLocation(contents, loc, ContentAssistLocation.IMPLEMENTS);
     }
     
@@ -392,13 +392,13 @@ public class ContentAssistLocationTests extends CompletionTestCase {
     
     public void testExceptions2() throws Exception {
         String contents = "class A { void t(v y = hh) throws T {} }";
-        int loc = contents.indexOf("ws ") +3;
+        int loc = contents.indexOf("ws ") +4;
         assertLocation(contents, loc, ContentAssistLocation.EXCEPTIONS);
     }
     
     public void testExceptions3() throws Exception {
         String contents = "class A { void t(v y = hh) throws Ex, T {} }";
-        int loc = contents.indexOf(", ") +2;
+        int loc = contents.indexOf(", ") +3;
         assertLocation(contents, loc, ContentAssistLocation.EXCEPTIONS);
     }
     

@@ -29,10 +29,8 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
     
     private static final String STRING_SIG = "Ljava.lang.String;";
     private static final String STRING_ARR_SIG = "[Ljava.lang.String;";
-    private static final String STRING_2ARR_SIG = "[[Ljava.lang.String;";
     private static final String INTEGER_SIG = "Ljava.lang.Integer;";
     private static final String INTEGER_ARR_SIG = "[Ljava.lang.Integer;";
-    private static final String INT_SIG = "I";
     private static final String LIST_SIG = "Ljava.util.List;";
     private static final String LIST_ARR_SIG = "[Ljava.util.List;";
 

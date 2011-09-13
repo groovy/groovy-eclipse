@@ -31,6 +31,7 @@ import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.relevance.RelevanceRules;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
+import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -239,16 +240,11 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         this.isImport = context.location == ContentAssistLocation.IMPORT;
         this.shouldAcceptConstructors = context.location == ContentAssistLocation.CONSTRUCTOR
                 || context.location == ContentAssistLocation.METHOD_CONTEXT;
-        this.contextOnly = context.location == ContentAssistLocation.METHOD_CONTEXT; // do
-                                                                                     // not
-                                                                                     // insert
-                                                                                     // any
-                                                                                     // text.
-                                                                                     // only
-                                                                                     // show
-                                                                                     // context
-                                                                                     // information
-        this.completionExpression = context.completionExpression;
+        // if contextOnly, then do not insert any text, only show context
+        // information
+        this.contextOnly = context.location == ContentAssistLocation.METHOD_CONTEXT;
+        this.completionExpression = context.location == ContentAssistLocation.METHOD_CONTEXT ? ((MethodInfoContentAssistContext) context).methodName
+                : context.completionExpression;
 		groovyRewriter = new GroovyImportRewriteFactory(this.unit, this.module);
         try {
             allTypesInUnit = unit.getAllTypes();
@@ -668,7 +664,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         }
         List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
         try {
-            next: for (int i = 0; i < length; i++) {
+            for (int i = 0; i < length; i++) {
 
                 // does not check cancellation for every types to avoid
                 // performance loss
