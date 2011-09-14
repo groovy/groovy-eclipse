@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion.MethodParameter;
 
 /**
  * 

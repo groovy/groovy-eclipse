@@ -20,8 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion;
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion.MethodParameter;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.MethodParameter;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
@@ -76,7 +75,7 @@ public class MethodArgumentTable extends AbstractControlManager {
     /**
      * Should never be null. Use empty list if no arguments are present
      */
-    private List<ParameterTableElement> arguments;
+    private List<MethodParameter> parameters;
 
     private TableViewer viewer;
 
@@ -85,13 +84,10 @@ public class MethodArgumentTable extends AbstractControlManager {
     private boolean useNamedArguments;
 
     public MethodArgumentTable(IJavaProject project, List<MethodParameter> parameters, boolean useNamedArguments) {
-        this.arguments = new ArrayList<MethodArgumentTable.ParameterTableElement>();
-        if (parameters != null) {
-            for (MethodParameter arg : parameters) {
-                this.arguments.add(new ParameterTableElement(arg));
-            }
+        this.parameters = parameters;
+        if (parameters == null) {
+            this.parameters = new ArrayList<MethodParameter>();
         }
-
         this.project = project;
         this.useNamedArguments = useNamedArguments;
     }
@@ -170,18 +166,18 @@ public class MethodArgumentTable extends AbstractControlManager {
                 int selectionIndex = viewer.getTable().getSelectionIndex();
                 // can only move selection if it is not already at the top
                 if (selectionIndex > 0) {
-                    ParameterTableElement element = arguments.remove(selectionIndex);
+                    MethodParameter element = parameters.remove(selectionIndex);
                     // selectionIndex will never be less than zero
-                    arguments.add(selectionIndex - 1, element);
+                    parameters.add(selectionIndex - 1, element);
                     refreshTable();
                 }
                 break;
             case DOWN:
                 selectionIndex = viewer.getTable().getSelectionIndex();
                 // Can only move down if the selection is second to last
-                if (selectionIndex >= 0 && selectionIndex < arguments.size() - 1) {
-                    ParameterTableElement element = arguments.remove(selectionIndex);
-                    arguments.add(selectionIndex + 1, element);
+                if (selectionIndex >= 0 && selectionIndex < parameters.size() - 1) {
+                    MethodParameter element = parameters.remove(selectionIndex);
+                    parameters.add(selectionIndex + 1, element);
                     refreshTable();
                 }
                 break;
@@ -259,11 +255,11 @@ public class MethodArgumentTable extends AbstractControlManager {
 
             public String getColumnText(Object element, int index) {
                 String text = null;
-                if (element instanceof ParameterTableElement) {
+                if (element instanceof MethodParameter) {
                     ColumnTypes[] values = ColumnTypes.values();
                     if (index >= 0 && index < values.length) {
                         ColumnTypes type = values[index];
-                        ParameterTableElement arg = (ParameterTableElement) element;
+                        MethodParameter arg = (MethodParameter) element;
 
                         switch (type) {
                             case NAME:
@@ -281,22 +277,22 @@ public class MethodArgumentTable extends AbstractControlManager {
 
         });
 
-        viewer.setInput(arguments);
+        viewer.setInput(parameters);
     }
 
-    protected ParameterTableElement getSelectedElement() {
+    protected MethodParameter getSelectedElement() {
         ISelection selection = viewer.getSelection();
         if (selection instanceof IStructuredSelection) {
             Object selectObj = ((IStructuredSelection) selection).getFirstElement();
-            if (selectObj instanceof ParameterTableElement) {
-                return (ParameterTableElement) selectObj;
+            if (selectObj instanceof MethodParameter) {
+                return (MethodParameter) selectObj;
             }
         }
 
         return null;
     }
 
-    protected ParameterTableElement getElement(int index) {
+    protected MethodParameter getElement(int index) {
         if (index < viewer.getTable().getItemCount()) {
             return getArgumentElementFromSelectionObject(viewer.getElementAt(index));
         }
@@ -304,21 +300,19 @@ public class MethodArgumentTable extends AbstractControlManager {
     }
 
     protected void addElement() {
-        MethodArgumentDialogue dialogue = new MethodArgumentDialogue(getShell(), project, null, null);
+        MethodArgumentDialogue dialogue = new MethodArgumentDialogue(getShell(), project, null, parameters);
         if (dialogue.open() == Window.OK) {
 
-            String name = dialogue.getName();
-            String type = dialogue.getType();
-            if (type != null && type.length() > 0 && name != null && name.length() > 0) {
-                ParameterTableElement selected = new ParameterTableElement(name, type);
+            MethodParameter parameter = dialogue.getMethodParameter();
+            if (parameter != null) {
 
                 int selectionIndex = viewer.getTable().getSelectionIndex();
 
                 // Add element at given selection index
                 if (selectionIndex >= 0) {
-                    arguments.add(selectionIndex, selected);
+                    parameters.add(selectionIndex, parameter);
                 } else {
-                    arguments.add(selected);
+                    parameters.add(parameter);
                 }
             }
 
@@ -328,23 +322,20 @@ public class MethodArgumentTable extends AbstractControlManager {
     }
 
     protected void editElement() {
-        ParameterTableElement selected = getSelectedElement();
+        MethodParameter selected = getSelectedElement();
         if (selected != null) {
-            MethodArgumentDialogue dialogue = new MethodArgumentDialogue(getShell(), project, selected.getName(),
-                    selected.getType());
+            MethodArgumentDialogue dialogue = new MethodArgumentDialogue(getShell(), project, selected, parameters);
             if (dialogue.open() == Window.OK) {
-
-                String name = dialogue.getName();
-                String type = dialogue.getType();
-                if (type != null && type.length() > 0 && name != null && name.length() > 0) {
+                MethodParameter editedParameter = dialogue.getMethodParameter();
+                if (editedParameter != null) {
                     int selectionIndex = viewer.getTable().getSelectionIndex();
-                    arguments.remove(selected);
-                    selected = new ParameterTableElement(name, type);
+                    parameters.remove(selected);
+
                     // Add element at given selection index
                     if (selectionIndex >= 0) {
-                        arguments.add(selectionIndex, selected);
+                        parameters.add(selectionIndex, editedParameter);
                     } else {
-                        arguments.add(selected);
+                        parameters.add(editedParameter);
                     }
                 }
 
@@ -354,12 +345,12 @@ public class MethodArgumentTable extends AbstractControlManager {
     }
 
     protected void removeElement() {
-        ParameterTableElement selected = getSelectedElement();
+        MethodParameter selected = getSelectedElement();
         if (selected != null) {
-            for (int i = 0; i < arguments.size(); i++) {
-                ParameterTableElement item = arguments.get(i);
+            for (int i = 0; i < parameters.size(); i++) {
+                MethodParameter item = parameters.get(i);
                 if (item.equals(selected)) {
-                    arguments.remove(i);
+                    parameters.remove(i);
                 }
             }
         }
@@ -368,20 +359,20 @@ public class MethodArgumentTable extends AbstractControlManager {
 
     protected void refreshTable() {
         viewer.getTable().setFocus();
-        viewer.setInput(arguments);
+        viewer.setInput(parameters);
         viewer.refresh(true);
     }
 
-    protected ParameterTableElement getArgumentElementFromSelectionObject(Object element) {
-        ParameterTableElement arg = null;
-        if (element instanceof ParameterTableElement) {
-            arg = (ParameterTableElement) element;
+    protected MethodParameter getArgumentElementFromSelectionObject(Object element) {
+        MethodParameter arg = null;
+        if (element instanceof MethodParameter) {
+            arg = (MethodParameter) element;
 
         } else if (element instanceof TableItem) {
             TableItem item = (TableItem) element;
             Object dataOb = item.getData();
-            if (dataOb instanceof ParameterTableElement) {
-                arg = (ParameterTableElement) dataOb;
+            if (dataOb instanceof MethodParameter) {
+                arg = (MethodParameter) dataOb;
             }
         }
         return arg;
@@ -447,90 +438,7 @@ public class MethodArgumentTable extends AbstractControlManager {
     }
 
     public List<MethodParameter> getMethodParameter() {
-        List<GroovyMethodSuggestion.MethodParameter> methodArguments = new ArrayList<GroovyMethodSuggestion.MethodParameter>();
-        if (arguments != null) {
-            for (ParameterTableElement element : arguments) {
-                methodArguments.add(new MethodParameter(element.getName(), element.getType()));
-            }
-        }
-
-        return methodArguments;
-    }
-
-    /**
-     * Mutable element in a table as the argument elements can be modified via
-     * cell editors.
-     * 
-     * @author Nieraj Singh
-     * @created 2011-05-11
-     */
-    static class ParameterTableElement {
-
-        private String name;
-
-        private String type;
-
-        public ParameterTableElement(MethodParameter argument) {
-            this.name = argument.getName();
-            this.type = argument.getType();
-        }
-
-        public ParameterTableElement(String name, String type) {
-            this.name = name;
-            this.type = type;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((name == null) ? 0 : name.hashCode());
-            result = prime * result + ((type == null) ? 0 : type.hashCode());
-            return result;
-        }
-
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-
-            if (obj == null) {
-                return false;
-            }
-
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-
-            ParameterTableElement other = (ParameterTableElement) obj;
-            if (name == null) {
-                if (other.name != null) {
-                    return false;
-                }
-
-            } else if (!name.equals(other.name)) {
-                return false;
-            }
-
-            if (type == null) {
-                if (other.type != null) {
-                    return false;
-                }
-
-            } else if (!type.equals(other.type)) {
-                return false;
-            }
-
-            return true;
-        }
-
+        return parameters;
     }
 
 }

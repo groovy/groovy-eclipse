@@ -18,9 +18,9 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.writer;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion;
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion.MethodParameter;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovySuggestionDeclaringType;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IGroovySuggestion;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.MethodParameter;
 
 /**
  * 
@@ -94,5 +94,5 @@ public class TransformElementFactory {
 
         return declaringTypeElement;
 
-    }
+    } 
 }

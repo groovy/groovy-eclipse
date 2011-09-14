@@ -27,10 +27,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.codehaus.groovy.eclipse.codeassist.Activator;
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion;
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion.MethodParameter;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager.ProjectSuggestions;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.MethodParameter;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.SuggestionDescriptor;
 import org.eclipse.core.resources.IProject;
 import org.w3c.dom.Document;
@@ -178,7 +177,7 @@ public class SuggestionsReader {
             return null;
         }
         
-        List<MethodParameter> parameters = new ArrayList<GroovyMethodSuggestion.MethodParameter>();
+        List<MethodParameter> parameters = new ArrayList<MethodParameter>();
         NodeList parametersNodeList = parametersElement.getChildNodes();
 
         if (parametersNodeList != null) {

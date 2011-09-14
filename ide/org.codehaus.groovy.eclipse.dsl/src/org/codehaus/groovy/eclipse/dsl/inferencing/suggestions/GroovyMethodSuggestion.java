@@ -43,25 +43,4 @@ public class GroovyMethodSuggestion extends GroovySuggestion {
         return useNamedArgument;
     }
 
-    public static class MethodParameter {
-
-        private String name;
-
-        private String type;
-
-        public MethodParameter(String name, String type) {
-            this.name = name;
-            this.type = type;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-    }
-
 }

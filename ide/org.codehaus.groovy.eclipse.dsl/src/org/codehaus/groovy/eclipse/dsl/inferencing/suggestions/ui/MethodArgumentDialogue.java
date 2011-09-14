@@ -15,9 +15,15 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 
+import java.util.List;
+
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.DuplicateParameterRule;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.MethodParameter;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ValueStatus;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
 /**
@@ -38,19 +44,21 @@ public class MethodArgumentDialogue extends AbstractDialogue {
 
     private IJavaProject javaProject;
 
-    public MethodArgumentDialogue(Shell parentShell, IJavaProject javaProject, String name, String type) {
+    private List<MethodParameter> existingParameters;
+
+    public MethodArgumentDialogue(Shell parentShell, IJavaProject javaProject, MethodParameter parameterToEdit,
+            List<MethodParameter> existingParameters) {
         super(parentShell, DIALOGUE_DESCRIPTOR);
         this.javaProject = javaProject;
-        this.name = name;
-        this.type = type;
+        if (parameterToEdit != null) {
+            this.name = parameterToEdit.getName();
+            this.type = parameterToEdit.getType();
+        }
+        this.existingParameters = existingParameters;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public String getType() {
-        return type;
+    public MethodParameter getMethodParameter() {
+        return new MethodParameter(name, type);
     }
 
     protected Point getOffsetLabelLocation() {
@@ -67,9 +75,20 @@ public class MethodArgumentDialogue extends AbstractDialogue {
         return labelOffset;
     }
 
-    @Override
     protected void createCommandArea(Composite parent) {
-        JavaIdentifierTextControl nameControl = new JavaIdentifierTextControl(ControlTypes.NAME, getOffsetLabelLocation(), name);
+        JavaTextControl nameControl = new JavaTextControl(ControlTypes.NAME, getOffsetLabelLocation(), name) {
+
+            protected ValueStatus isControlValueValid(Control control) {
+                ValueStatus status = super.isControlValueValid(control);
+                // If status is OK, do a further check to see if there are any
+                // duplicate parameters
+                if (!status.isError()) {
+                    status = new DuplicateParameterRule(existingParameters).checkValidity(status.getValue());
+                }
+                return status;
+            }
+
+        };
         nameControl.createControlArea(parent);
         nameControl.addSelectionListener(new RequiredValueControlSelectionListener(ControlTypes.NAME, name) {
 
@@ -96,5 +115,4 @@ public class MethodArgumentDialogue extends AbstractDialogue {
         });
 
     }
-
 }

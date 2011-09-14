@@ -48,7 +48,7 @@ public class SuggestionsViewer {
     }
 
     protected int getConfiguration() {
-        return SWT.BORDER | SWT.SINGLE | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CHECK;
+        return SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CHECK;
     }
 
     protected ICheckStateProvider getCheckStateProvider() {

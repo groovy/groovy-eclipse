@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.JavaValidParameterizedTypeRule;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ValueStatus;
 import org.codehaus.groovy.eclipse.ui.browse.IBrowseTypeHandler;
 import org.codehaus.groovy.eclipse.ui.browse.TypeBrowseSupport;
 import org.eclipse.jdt.core.IJavaProject;
@@ -34,14 +36,12 @@ import org.eclipse.swt.widgets.Text;
  * @author Nieraj Singh
  * @created 2011-05-13
  */
-public class JavaTypeBrowsingControl extends JavaIdentifierTextControl {
+public class JavaTypeBrowsingControl extends JavaTextControl {
 
     /**
      * 
      */
     private static final String BROWSE = "Browse...";
-
-    private static final String INVALID_VALUE_MESSAGE = "Invalid Java identifier";
 
     private Button browse;
 
@@ -106,28 +106,8 @@ public class JavaTypeBrowsingControl extends JavaIdentifierTextControl {
         browse.setEnabled(enable);
     }
 
-    protected ValueStatus isControlValueValid(Control control) {
-        if (getTextControl() == control) {
-            String stringValue = getTextControl().getText();
-
-            if (stringValue == null || stringValue.length() == 0) {
-                return new ValueStatus(MISSING_REQUIRED_VALUE, false);
-            }
-
-            for (int i = 0; i < stringValue.length(); i++) {
-                if (!Character.isJavaIdentifierPart(stringValue.charAt(i))) {
-                    // May be fully qualified name
-                    if (stringValue.charAt(i) == '.') {
-                        continue;
-                    }
-                    return new ValueStatus(INVALID_VALUE_MESSAGE, false);
-                }
-            }
-
-            return new ValueStatus(stringValue);
-
-        }
-        return null;
+    protected ValueStatus isControlValueValid(String value) {
+        return new JavaValidParameterizedTypeRule(project).checkValidity(value);
     }
 
 }

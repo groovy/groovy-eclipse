@@ -18,10 +18,12 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion;
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion.MethodParameter;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovySuggestionDeclaringType;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IGroovySuggestion;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.JavaValidTypeRule;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.MethodParameter;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.SuggestionDescriptor;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ValueStatus;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -155,7 +157,6 @@ public class InferencingContributionDialogue extends AbstractDialogue {
         }
     }
 
-    @Override
     protected void createCommandArea(Composite parent) {
         createFieldAreas(parent);
         createDocumentationArea(parent);
@@ -167,8 +168,7 @@ public class InferencingContributionDialogue extends AbstractDialogue {
 
     protected void createFieldAreas(Composite parent) {
 
-        JavaIdentifierTextControl nameControl = new JavaIdentifierTextControl(ControlTypes.NAME, getOffsetLabelLocation(),
-                suggestionName);
+        JavaTextControl nameControl = new JavaTextControl(ControlTypes.NAME, getOffsetLabelLocation(), suggestionName);
         nameControl.createControlArea(parent);
         nameControl.addSelectionListener(new RequiredValueControlSelectionListener(ControlTypes.NAME, suggestionName) {
 
@@ -181,7 +181,16 @@ public class InferencingContributionDialogue extends AbstractDialogue {
         });
 
         JavaTypeBrowsingControl declaringTypeControl = new JavaTypeBrowsingControl(ControlTypes.DECLARING_TYPE,
-                getOffsetLabelLocation(), declaringTypeName, getJavaProject());
+                getOffsetLabelLocation(), declaringTypeName, getJavaProject()) {
+
+            // Don't check for parameterized types as it not necessary for
+            // declaring types
+            protected ValueStatus isControlValueValid(String value) {
+
+                return new JavaValidTypeRule().checkValidity(value);
+            }
+
+        };
         declaringTypeControl.createControlArea(parent);
 
         // Do not allow edits or required value checks on the declaring type

@@ -32,7 +32,7 @@ import org.eclipse.swt.widgets.Label;
  * @author Nieraj Singh
  * @created 2011-05-13
  */
-public abstract class AbstractLabeledDialogueControl extends AbstractControlManager implements ILabeledControl {
+public abstract class AbstractLabeledDialogueControl extends AbstractControlManager {
 
     private Point offsetLabelLocation;
 
@@ -48,7 +48,7 @@ public abstract class AbstractLabeledDialogueControl extends AbstractControlMana
     protected IDialogueControlDescriptor getLabelDescriptor() {
         return labelDescriptor;
     }
-    
+
     protected int numberofColumns() {
         return 2;
     }
@@ -90,7 +90,6 @@ public abstract class AbstractLabeledDialogueControl extends AbstractControlMana
         }
         return controls;
     }
-
 
     /**
      * Create the control that is rendered on the right side of the label

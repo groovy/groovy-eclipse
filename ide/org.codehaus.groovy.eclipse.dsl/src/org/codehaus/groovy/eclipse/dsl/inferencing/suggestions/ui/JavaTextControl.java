@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.JavaValidIdentifierRule;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ValueStatus;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -29,17 +31,13 @@ import org.eclipse.swt.widgets.Text;
  * @author Nieraj Singh
  * @created 2011-05-13
  */
-public class JavaIdentifierTextControl extends AbstractLabeledDialogueControl {
+public class JavaTextControl extends AbstractLabeledDialogueControl {
 
     private String initialValue;
 
     private Text textControl;
 
-    protected static final String MISSING_REQUIRED_VALUE = "Missing required value";
-
-    protected static final String INVALID_JAVA_IDENTIFIER = "Invalid Java identifier";
-
-    public JavaIdentifierTextControl(IDialogueControlDescriptor labelDescriptor, Point offsetLabelLocation, String initialValue) {
+    public JavaTextControl(IDialogueControlDescriptor labelDescriptor, Point offsetLabelLocation, String initialValue) {
         super(labelDescriptor, offsetLabelLocation);
         this.initialValue = initialValue;
     }
@@ -51,12 +49,6 @@ public class JavaIdentifierTextControl extends AbstractLabeledDialogueControl {
         }
 
         textControl.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-
-        // Set the default value BEFORE adding the modify listener
-        // Object defaultValue = getParameter().getValue();
-        // if (defaultValue instanceof String) {
-        // commandValueText.setText((String) defaultValue);
-        // }
 
         textControl.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
@@ -74,24 +66,14 @@ public class JavaIdentifierTextControl extends AbstractLabeledDialogueControl {
     protected ValueStatus isControlValueValid(Control control) {
         if (control == textControl) {
             String stringVal = textControl.getText();
-            if (stringVal.length() > 0) {
-                for (int i = 0; i < stringVal.length(); i++) {
-                    if (!Character.isJavaIdentifierPart(stringVal.charAt(i))) {
-                        return new ValueStatus(INVALID_JAVA_IDENTIFIER, false);
-                    }
-                }
-                return new ValueStatus(stringVal);
-            }
-        }
-        return new ValueStatus(MISSING_REQUIRED_VALUE, false);
-    }
+            return isControlValueValid(stringVal);
 
-    protected boolean isWhiteSpace(String value) {
-        boolean isWhiteSpace = true;
-        for (int i = 0; i < value.length() && isWhiteSpace; i++) {
-            isWhiteSpace = Character.isWhitespace(value.charAt(i));
         }
-        return isWhiteSpace;
+        return null;
+    }
+    
+    protected ValueStatus isControlValueValid(String value) {
+        return new JavaValidIdentifierRule().checkValidity(value);
     }
 
 }

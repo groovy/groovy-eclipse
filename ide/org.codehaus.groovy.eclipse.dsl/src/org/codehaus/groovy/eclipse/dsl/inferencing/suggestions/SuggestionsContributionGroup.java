@@ -23,7 +23,6 @@ import org.codehaus.groovy.eclipse.dsl.contributions.IContributionElement;
 import org.codehaus.groovy.eclipse.dsl.contributions.MethodContributionElement;
 import org.codehaus.groovy.eclipse.dsl.contributions.ParameterContribution;
 import org.codehaus.groovy.eclipse.dsl.contributions.PropertyContributionElement;
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion.MethodParameter;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.eclipse.core.resources.IFile;

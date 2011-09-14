@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ValueStatus;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
@@ -75,9 +76,9 @@ public abstract class AbstractControlManager implements IDialogueControlManager 
 
         if (control != null) {
             ValueStatus status = isControlValueValid(control);
-            if (status != null && !status.isValid()) {
+            if (status != null && status.isError()) {
                 IDialogueControlDescriptor descriptor = controls.get(control);
-                ControlSelectionEvent event = new ControlSelectionEvent(descriptor, status.getErrorMessage());
+                ControlSelectionEvent event = new ControlSelectionEvent(descriptor, status.getMessage());
                 listener.handleInvalidSelection(event);
                 return false;
             }
@@ -117,47 +118,6 @@ public abstract class AbstractControlManager implements IDialogueControlManager 
 
     public void addSelectionListener(IControlSelectionListener listener) {
         this.listener = listener;
-    }
-
-    class ValueStatus {
-
-        private String errorMessage;
-
-        private Object value;
-
-        private boolean isValid;
-
-        /**
-         * Use if invalid value has been set
-         */
-        public ValueStatus(String errorMessage, boolean isValid) {
-
-            this.errorMessage = errorMessage;
-            this.isValid = isValid;
-            this.value = null;
-        }
-
-        /**
-         * Use if valid value has been set
-         */
-        public ValueStatus(Object value) {
-            this.errorMessage = null;
-            this.isValid = true;
-            this.value = value;
-        }
-
-        public String getErrorMessage() {
-            return errorMessage;
-        }
-
-        public boolean isValid() {
-            return isValid;
-        }
-
-        public Object getValue() {
-            return value;
-        }
-
     }
 
     /**

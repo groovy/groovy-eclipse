@@ -13,18 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
+package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
-import org.eclipse.swt.widgets.Label;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jdt.core.JavaConventions;
+import org.eclipse.jdt.core.JavaCore;
 
 /**
  * 
  * @author Nieraj Singh
- * @created 2011-05-13
+ * @created 2011-09-13
  */
-public interface ILabeledControl {
-	
-    public Label getLabel();
+public class JavaValidTypeRule extends JavaValidIdentifierRule {
 
+    protected IStatus checkJavaType(String value) {
+        return JavaConventions.validateJavaTypeName(value, JavaCore.VERSION_1_3, JavaCore.VERSION_1_3);
+    }
 
 }
