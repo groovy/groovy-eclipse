@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -45,7 +46,7 @@ public class ParameterContribution {
             if (resolver != null) {
                 cachedParameter = new Parameter(resolver.resolve(type), name);
             } else {
-                cachedParameter = new Parameter(VariableScope.OBJECT_CLASS_NODE, name);
+                cachedParameter = new Parameter(ClassHelper.DYNAMIC_TYPE, name);
             }
         }
         return cachedParameter;

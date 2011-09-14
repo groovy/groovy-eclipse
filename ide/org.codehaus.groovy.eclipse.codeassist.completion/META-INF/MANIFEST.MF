@@ -18,6 +18,8 @@ Require-Bundle: org.eclipse.core.runtime,
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Export-Package: org.codehaus.groovy.eclipse.codeassist,
+ org.codehaus.groovy.eclipse.codeassist.completions,
+ org.codehaus.groovy.eclipse.codeassist.creators,
  org.codehaus.groovy.eclipse.codeassist.processors,
  org.codehaus.groovy.eclipse.codeassist.proposals,
  org.codehaus.groovy.eclipse.codeassist.relevance,
