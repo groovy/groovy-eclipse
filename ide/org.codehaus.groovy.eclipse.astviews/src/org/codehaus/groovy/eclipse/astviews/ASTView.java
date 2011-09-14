@@ -78,7 +78,7 @@ public class ASTView extends ViewPart { // implements ISelectionListener {
 			if (! (inputElement instanceof ModuleNode)) {
 				return new Object[0];
 			}
-			root = TreeNodeFactory.createTreeNode(null, (ModuleNode) inputElement, "Module Nodes"); //$NON-NLS-1$
+            root = TreeNodeFactory.createTreeNode(null, inputElement, "Module Nodes"); //$NON-NLS-1$
 			Object[] children = root.getChildren();
 			return children;
 		}
@@ -200,7 +200,7 @@ public class ASTView extends ViewPart { // implements ISelectionListener {
 		}
 
 		listener = new IElementChangedListener() {
-		
+
 			public void elementChanged(ElementChangedEvent event) {
 				// The editor is currently not a GroovyEditor, so
 				// there is not
@@ -209,25 +209,25 @@ public class ASTView extends ViewPart { // implements ISelectionListener {
 					return;
 				}
 				IJavaElementDelta delta = event.getDelta();
-				
+
 				IFile file = (IFile) editor.getEditorInput().getAdapter(IFile.class);
-				
+
 				final GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
-				
+
 				// determine if the delta contains the ICompUnit under question
 				if (isUnitInDelta(delta, unit)) {
 					Display.getDefault().asyncExec(new Runnable() {
 						public void run() {
 							Object[] treePaths = viewer.getExpandedElements();
-							viewer.setInput(((GroovyCompilationUnit) unit).getModuleNode());
+                            viewer.setInput(unit.getModuleNode());
 							viewer.setExpandedElements(treePaths);
 						}
 					});
 				}
 			}
-			
+
 			private boolean isUnitInDelta(IJavaElementDelta delta, GroovyCompilationUnit unit) {
-				
+
 				IJavaElement elt = delta.getElement();
 				if (elt.getElementType() == IJavaElement.COMPILATION_UNIT) {
 					// comparing with a compilation unit
@@ -238,7 +238,7 @@ public class ASTView extends ViewPart { // implements ISelectionListener {
 						return false;
 					}
 				}
-				
+
 				ICompilationUnit candidateUnit = (ICompilationUnit) elt.getAncestor(IJavaElement.COMPILATION_UNIT);
 				if (candidateUnit != null) {
 					// now if test fails, no need to go further
@@ -248,7 +248,7 @@ public class ASTView extends ViewPart { // implements ISelectionListener {
 						return false;
 					}
 				}
-				
+
 				// delta is a potential ancestor of this compilationUnit
 				IJavaElementDelta[] deltas = delta.getAffectedChildren();
 				if (deltas != null) {
@@ -261,9 +261,9 @@ public class ASTView extends ViewPart { // implements ISelectionListener {
 				return false;
 			}
 		};
-		
+
 		JavaCore.addElementChangedListener(listener, ElementChangedEvent.POST_RECONCILE);
-		
+
 	}
 
 	private void unhookGroovy() {
