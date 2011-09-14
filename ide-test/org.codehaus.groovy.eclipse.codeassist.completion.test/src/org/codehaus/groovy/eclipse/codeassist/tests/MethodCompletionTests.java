@@ -40,8 +40,8 @@ public class MethodCompletionTests extends CompletionTestCase {
             super(method);
         }
         @Override
-        protected char[][] createParameterNames(ICompilationUnit unit) {
-            return super.createParameterNames(unit);
+        protected char[][] createAllParameterNames(ICompilationUnit unit) {
+            return super.createAllParameterNames(unit);
         }
     }
 
@@ -106,7 +106,7 @@ public class MethodCompletionTests extends CompletionTestCase {
         for (MethodNode method : methods) {
             if (method.getParameters().length == 2) {
                 MockGroovyMethodProposal proposal = new MockGroovyMethodProposal(method);
-                char[][] names = proposal.createParameterNames(unit);
+                char[][] names = proposal.createAllParameterNames(unit);
                 checkNames(new char[][] {"self".toCharArray(), "other".toCharArray() }, names);
             }
         }
@@ -123,12 +123,12 @@ public class MethodCompletionTests extends CompletionTestCase {
         for (MethodNode method : methods) {
             if (method.getParameters().length == 1) {
                 MockGroovyMethodProposal proposal = new MockGroovyMethodProposal(method);
-                char[][] names = proposal.createParameterNames(unit);
+                char[][] names = proposal.createAllParameterNames(unit);
                 checkNames(new char[][] {"x".toCharArray()}, names);
             }
             if (method.getParameters().length == 2) {
                 MockGroovyMethodProposal proposal = new MockGroovyMethodProposal(method);
-                char[][] names = proposal.createParameterNames(unit);
+                char[][] names = proposal.createAllParameterNames(unit);
                 checkNames(new char[][] {"x".toCharArray(), "y".toCharArray()}, names);
             }
         }
@@ -183,12 +183,12 @@ public class MethodCompletionTests extends CompletionTestCase {
         for (MethodNode method : methods) {
             if (method.getParameters().length == 1) {
                 MockGroovyMethodProposal proposal = new MockGroovyMethodProposal(method);
-                char[][] names = proposal.createParameterNames(unit);
+                char[][] names = proposal.createAllParameterNames(unit);
                 checkNames(new char[][] {"x".toCharArray()}, names);
             }
             if (method.getParameters().length == 2) {
                 MockGroovyMethodProposal proposal = new MockGroovyMethodProposal(method);
-                char[][] names = proposal.createParameterNames(unit);
+                char[][] names = proposal.createAllParameterNames(unit);
                 checkNames(new char[][] {"x".toCharArray(), "y".toCharArray()}, names);
             }
         }

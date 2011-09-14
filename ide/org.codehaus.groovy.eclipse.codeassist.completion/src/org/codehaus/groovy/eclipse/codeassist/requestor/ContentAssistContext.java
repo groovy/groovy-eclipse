@@ -106,7 +106,6 @@ public class ContentAssistContext {
             Expression lhsNode, ContentAssistLocation location,
             GroovyCompilationUnit unit, AnnotatedNode containingDeclaration,
             int completionEnd) {
-        super();
         this.completionLocation = completionLocation;
         this.completionExpression = completionExpression;
         this.fullCompletionExpression = fullCompletionExpression;

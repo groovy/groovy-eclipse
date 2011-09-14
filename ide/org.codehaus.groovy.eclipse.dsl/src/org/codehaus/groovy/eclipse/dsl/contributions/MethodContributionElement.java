@@ -31,6 +31,7 @@ import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyNamedArgumentProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.NamedArgsMethodNode;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 import org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup.TypeAndDeclaration;
@@ -47,10 +48,13 @@ public class MethodContributionElement implements IContributionElement {
     private static final BlockStatement EMPTY_BLOCK = new BlockStatement();
     private static final ClassNode[] NO_EXCEPTIONS = new ClassNode[0];
     private static final Parameter[] NO_PARAMETERS = new Parameter[0];
+    private static final ParameterContribution[] NO_PARAMETER_CONTRIBUTION = new ParameterContribution[0];
     private static final ClassNode UNKNOWN_TYPE = ClassHelper.DYNAMIC_TYPE;
     
     private final String methodName;
     private final ParameterContribution[] params;
+    private final ParameterContribution[] namedParams;
+    private final ParameterContribution[] optionalParams;
     private final String returnType;
     private final String declaringType;
     private final boolean isStatic;
@@ -62,7 +66,9 @@ public class MethodContributionElement implements IContributionElement {
     
     private ClassNode cachedDeclaringType;
     private ClassNode cachedReturnType;
-    private Parameter[] cachedParameters;
+    private Parameter[] cachedRegularParameters;
+    private Parameter[] cachedNamedParameters;
+    private Parameter[] cachedOptionalParameters;
     private ProposalFormattingOptions options = ProposalFormattingOptions.newFromOptions();
     private final int relevanceMultiplier;
     private final boolean isDeprecated;
@@ -70,8 +76,14 @@ public class MethodContributionElement implements IContributionElement {
     
     
     public MethodContributionElement(String methodName, ParameterContribution[] params, String returnType, String declaringType, boolean isStatic, String provider, String doc, boolean useNamedArgs, boolean isDeprecated, int relevanceMultiplier) {
+        this(methodName, params, NO_PARAMETER_CONTRIBUTION, NO_PARAMETER_CONTRIBUTION, returnType, declaringType, isStatic, provider, doc, useNamedArgs, isDeprecated, relevanceMultiplier);
+    }
+    
+    public MethodContributionElement(String methodName, ParameterContribution[] params, ParameterContribution[] namedParams, ParameterContribution[] optionalParams, String returnType, String declaringType, boolean isStatic, String provider, String doc, boolean useNamedArgs, boolean isDeprecated, int relevanceMultiplier) {
         this.methodName = methodName;
         this.params = params;
+        this.namedParams = namedParams;
+        this.optionalParams = optionalParams;
         this.returnType = returnType;
         this.isStatic = isStatic;
         this.declaringType = declaringType;
@@ -81,6 +93,7 @@ public class MethodContributionElement implements IContributionElement {
         
         this.provider = provider == null ? GROOVY_DSL_PROVIDER : provider;
         this.doc = doc == null ? NO_DOC + this.provider : doc;
+        
     }
     
     public TypeAndDeclaration lookupType(String name, ClassNode declaringType, ResolverCache resolver) {
@@ -99,15 +112,13 @@ public class MethodContributionElement implements IContributionElement {
     }
     
     public List<IGroovyProposal> extraProposals(ClassNode declaringType, ResolverCache resolver, Expression expression) {
-//        if (! (expression instanceof MethodCallExpression)) {
-//            return ProposalUtils.NO_PROPOSALS;
-//        }
-        if (!useNamedArgs) {
-            return ProposalUtils.NO_PROPOSALS;
-        }
         // first find the arguments that are possible
         Map<String, ClassNode> availableParams = findAvailableParamNames(resolver);
 
+        if (availableParams.isEmpty()) {
+            return ProposalUtils.NO_PROPOSALS;
+        }
+        
         if (expression instanceof MethodCallExpression) {
             // next find out if there are any existing named args
             MethodCallExpression call = (MethodCallExpression) expression;
@@ -145,22 +156,28 @@ public class MethodContributionElement implements IContributionElement {
      */
     private Map<String, ClassNode> findAvailableParamNames(ResolverCache resolver) {
         Map<String, ClassNode> available = new HashMap<String, ClassNode>(params.length);
-        for (ParameterContribution param : params) {
+        if (useNamedArgs) {
+            for (ParameterContribution param : params) {
+                available.put(param.name, param.toParameter(resolver).getType());
+            }
+        }
+        
+        for (ParameterContribution param : namedParams) {
             available.put(param.name, param.toParameter(resolver).getType());
         }
+
+        for (ParameterContribution param : optionalParams) {
+            available.put(param.name, param.toParameter(resolver).getType());
+        }
+        
         return available;
     }
 
     private MethodNode toMethod(ClassNode declaringType, ResolverCache resolver) {
-        if (cachedParameters == null) {
-            if (params == null) {
-                cachedParameters = NO_PARAMETERS;
-            } else {
-                cachedParameters = new Parameter[params.length];
-                for (int i = 0; i < params.length; i++) {
-                    cachedParameters[i] = params[i].toParameter(resolver);
-                }
-            }
+        if (cachedRegularParameters == null) {
+            cachedRegularParameters = initParams(params, resolver);
+            cachedOptionalParameters = initParams(optionalParams, resolver);
+            cachedNamedParameters = initParams(namedParams, resolver);
             if (cachedReturnType == null) {
                 if (resolver != null) {
                     cachedReturnType = resolver.resolve(returnType);
@@ -169,9 +186,22 @@ public class MethodContributionElement implements IContributionElement {
                 }
             }
         }
-        MethodNode meth = new MethodNode(methodName, opcode(), cachedReturnType, cachedParameters, NO_EXCEPTIONS, EMPTY_BLOCK);
+        MethodNode meth = new NamedArgsMethodNode(methodName, opcode(), cachedReturnType, cachedRegularParameters, cachedNamedParameters, cachedOptionalParameters, NO_EXCEPTIONS, EMPTY_BLOCK);
         meth.setDeclaringClass(ensureDeclaringType(declaringType, resolver));
         return meth;
+    }
+    
+    private Parameter[] initParams(ParameterContribution[] pcs, ResolverCache resolver) {
+        Parameter[] ps;
+        if (pcs == null) {
+            ps = NO_PARAMETERS;
+        } else {
+            ps = new Parameter[pcs.length];
+            for (int i = 0; i < pcs.length; i++) {
+                ps[i] = pcs[i].toParameter(resolver);
+            }
+        }
+        return ps;
     }
 
     protected ClassNode ensureReturnType(ResolverCache resolver) {

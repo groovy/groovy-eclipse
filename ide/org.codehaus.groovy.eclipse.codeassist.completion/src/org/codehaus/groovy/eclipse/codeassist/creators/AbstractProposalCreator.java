@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.codehaus.groovy.eclipse.codeassist.proposals;
+package org.codehaus.groovy.eclipse.codeassist.creators;
 
 import java.util.Set;
 

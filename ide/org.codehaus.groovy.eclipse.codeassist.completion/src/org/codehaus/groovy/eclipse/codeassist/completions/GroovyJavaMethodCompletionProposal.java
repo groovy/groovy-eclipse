@@ -1,7 +1,8 @@
-package org.codehaus.groovy.eclipse.codeassist.proposals;
+package org.codehaus.groovy.eclipse.codeassist.completions;
 
+import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.eclipse.jdt.core.CompletionProposal;
-import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorHighlightingSynchronizer;
@@ -43,14 +44,15 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     // if true, shows the context only and does not
     private boolean contextOnly;
 
-    public GroovyJavaMethodCompletionProposal(CompletionProposal proposal,
+    public GroovyJavaMethodCompletionProposal(GroovyCompletionProposal proposal,
             JavaContentAssistInvocationContext context, ProposalFormattingOptions groovyFormatterPrefs) {
         super(proposal, context);
         this.proposalOptions = groovyFormatterPrefs;
         this.contributor = "Groovy";
         this.setRelevance(proposal.getRelevance());
     }
-    public GroovyJavaMethodCompletionProposal(CompletionProposal proposal,
+
+    public GroovyJavaMethodCompletionProposal(GroovyCompletionProposal proposal,
             JavaContentAssistInvocationContext context, ProposalFormattingOptions groovyFormatterPrefs, String contributor) {
         this(proposal, context, groovyFormatterPrefs);
         this.contributor = contributor;
@@ -169,10 +171,12 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         if (hasParameters()) {
 
             int indexOfLastClosure = -1;
-            char[][] parameterTypes = Signature.getParameterTypes(fProposal.getSignature());
+            char[][] regularParameterTypes = ((GroovyCompletionProposal) fProposal).getRegularParameterTypeNames();
+            char[][] namedParameterTypes = ((GroovyCompletionProposal) fProposal).getNamedParameterTypeNames();
             if (proposalOptions.noParensAroundClosures) {
-                if (lastArgIsClosure(parameterTypes)) {
-                    indexOfLastClosure = parameterTypes.length - 1;
+                // need to check both regular and named parameters for closure
+                if (lastArgIsClosure(regularParameterTypes, namedParameterTypes)) {
+                    indexOfLastClosure = regularParameterTypes.length + namedParameterTypes.length - 1;
                 }
 
                 // remove the opening paren only if there is a single closure
@@ -192,22 +196,38 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             }
 
             // now add the parameters
-            char[][] parameterNames= fProposal.findParameterNames(null);
-            int count= parameterNames.length;
-            fArgumentOffsets= new int[count];
-            fArgumentLengths= new int[count];
+            char[][] regularParameterNames = ((GroovyCompletionProposal) fProposal).getRegularParameterNames();
+            char[][] namedParameterNames = ((GroovyCompletionProposal) fProposal).getNamedParameterNames();
+            int argCount = regularParameterNames.length;
+            int namedCount = namedParameterNames.length;
+            int allCount = argCount + namedCount;
 
-            for (int i= 0; i != count; i++) {
-                if (proposalOptions.useNamedArguments) {
-                    buffer.append(parameterNames[i]).append(":");
+            fArgumentOffsets = new int[allCount];
+            fArgumentLengths = new int[allCount];
+
+            for (int i = 0; i < allCount; i++) {
+                // check for named args (either all of them, or the explicitly
+                // named ones)
+                char[] nextName;
+                char[] nextTypeName;
+                if (i < argCount) {
+                    nextTypeName = regularParameterTypes[i];
+                    nextName = regularParameterNames[i];
+                } else {
+                    // named arg
+                    nextName = namedParameterNames[i - argCount];
+                    nextTypeName = namedParameterNames[i - argCount];
+                }
+
+                if (proposalOptions.useNamedArguments || i >= argCount) {
+                    buffer.append(nextName).append(":");
                 }
 				fArgumentOffsets[i] = buffer.length();
                 if (i == 0) {
                     setCursorPosition(buffer.length());
                 }
                 // handle the argument name
-                if (proposalOptions.useBracketsForClosures
-                        && CharOperation.equals("Closure".toCharArray(), Signature.getSignatureSimpleName(parameterTypes[i]))) {
+                if (proposalOptions.useBracketsForClosures && CharOperation.equals("Closure".toCharArray(), nextTypeName)) {
                     // closure
                     fArgumentOffsets[i] = buffer.length() + 2;
                     fArgumentLengths[i] = 0;
@@ -216,11 +236,11 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 } else {
                     // regular argument
                     fArgumentOffsets[i] = buffer.length();
-                    buffer.append(parameterNames[i]);
-                    fArgumentLengths[i] = parameterNames[i].length;
+                    buffer.append(nextName);
+                    fArgumentLengths[i] = nextName.length;
                 }
 
-                if (i == indexOfLastClosure - 1 || (i != indexOfLastClosure && i == count - 1)) {
+                if (i == indexOfLastClosure - 1 || (i != indexOfLastClosure && i == allCount - 1)) {
                     if (prefs.beforeClosingParen) {
                         buffer.append(SPACE);
                     }
@@ -228,7 +248,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     if (i == indexOfLastClosure - 1) {
                         buffer.append(SPACE);
                     }
-                } else if (i < count - 1) {
+                } else if (i < allCount - 1) {
                     if (prefs.beforeComma)
                         buffer.append(SPACE);
                     buffer.append(COMMA);
@@ -246,13 +266,20 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         return buffer.toString();
     }
 
-    private boolean lastArgIsClosure(char[][] parameterTypes) {
-        if (parameterTypes == null || parameterTypes.length == 0) {
+    private boolean lastArgIsClosure(char[][] regularparameterTypes, char[][] namedParameterTypes) {
+        char[] lastArgType;
+        if (namedParameterTypes != null && namedParameterTypes.length > 0) {
+            lastArgType = namedParameterTypes[namedParameterTypes.length - 1];
+        } else if (regularparameterTypes != null && regularparameterTypes.length > 0) {
+            lastArgType = regularparameterTypes[regularparameterTypes.length - 1];
+        } else {
+            // no args
             return false;
         }
 
-        return CharOperation.equals("Closure".toCharArray(),
-                Signature.getSignatureSimpleName(parameterTypes[parameterTypes.length - 1]));
+        // we should be comparing against a fully qualified type name, but it is not always available
+        // so a simple name is close enough
+        return CharOperation.equals("Closure".toCharArray(), lastArgType);
     }
 
     /*

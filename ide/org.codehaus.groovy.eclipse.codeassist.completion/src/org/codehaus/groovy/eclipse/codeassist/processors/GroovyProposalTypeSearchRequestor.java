@@ -25,7 +25,7 @@ import java.util.Set;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
-import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyJavaMethodCompletionProposal;
+import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaMethodCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.relevance.RelevanceRules;

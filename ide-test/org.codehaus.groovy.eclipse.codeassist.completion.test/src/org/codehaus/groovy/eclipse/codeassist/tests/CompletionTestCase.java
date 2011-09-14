@@ -16,7 +16,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyExtendedCompletionContext;
+import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils;

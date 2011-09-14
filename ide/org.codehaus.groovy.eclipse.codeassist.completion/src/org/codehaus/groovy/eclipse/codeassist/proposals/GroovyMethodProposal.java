@@ -21,6 +21,8 @@ import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaGuessingCompletionProposal;
+import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaMethodCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
@@ -51,10 +53,16 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
     protected final MethodNode method;
     private String contributor;
 
-    private boolean useNamedArguments; // allow individual method proposal contributors to override
-                                       // the setting in the preferences
+    /**
+     * allow individual method proposal contributors to override
+     * the setting in the preferences. If set to true, then *all*
+     * arguments are inserted as named.
+     */
+    private boolean useNamedArguments;
 
     private ProposalFormattingOptions options;
+
+    private IType cachedDeclaringType;
 
     public GroovyMethodProposal(MethodNode method) {
         super();
@@ -105,8 +113,12 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         }
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(method.getDeclaringClass()));
         proposal.setName(method.getName().toCharArray());
-        proposal.setParameterNames(createParameterNames(context.unit));
-        proposal.setParameterTypeNames(createParameterTypeNames(method));
+        if (method instanceof NamedArgsMethodNode) {
+            fillInExtraParameters((NamedArgsMethodNode) method, proposal);
+        } else {
+            proposal.setParameterNames(createAllParameterNames(context.unit));
+            proposal.setParameterTypeNames(getParameterTypeNames(method.getParameters()));
+        }
         proposal.setFlags(getModifiers());
         proposal.setAdditionalFlags(CompletionFlags.Default);
         char[] methodSignature = createMethodSignature();
@@ -146,6 +158,17 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
 
     }
 
+    private void fillInExtraParameters(NamedArgsMethodNode namedArgsMethod, GroovyCompletionProposal proposal) {
+        proposal.setParameterNames(getSpecialParameterNames(namedArgsMethod.getParameters()));
+        proposal.setRegularParameterNames(getSpecialParameterNames(namedArgsMethod.getRegularParams()));
+        proposal.setNamedParameterNames(getSpecialParameterNames(namedArgsMethod.getNamedParams()));
+        proposal.setOptionalParameterNames(getSpecialParameterNames(namedArgsMethod.getOptionalParams()));
+
+        proposal.setParameterTypeNames(getParameterTypeNames(namedArgsMethod.getParameters()));
+        proposal.setRegularParameterTypeNames(getParameterTypeNames(namedArgsMethod.getRegularParams()));
+        proposal.setNamedParameterTypeNames(getParameterTypeNames(namedArgsMethod.getNamedParams()));
+        proposal.setOptionalParameterTypeNames(getParameterTypeNames(namedArgsMethod.getOptionalParams()));
+    }
     private ProposalFormattingOptions getGroovyProposalOptions() {
         if (options == null) {
             options = ProposalFormattingOptions.newFromOptions();
@@ -208,7 +231,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         }
     }
 
-    protected char[][] createParameterNames(ICompilationUnit unit) {
+    protected char[][] createAllParameterNames(ICompilationUnit unit) {
 
         Parameter[] params = method.getParameters();
         int numParams = params == null ? 0 : params.length;
@@ -222,7 +245,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         // if the MethodNode has param names filled in, then use that
         if (params[0].getName().equals("arg0")
                 || params[0].getName().equals("param0")) {
-            paramNames = getParameterNames(unit, method);
+            paramNames = calculateAllParameterNames(unit, method);
         }
 
         if (paramNames == null) {
@@ -235,10 +258,10 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         return paramNames;
     }
 
-    protected char[][] createParameterTypeNames(MethodNode method) {
-        char[][] typeNames = new char[method.getParameters().length][];
+    protected char[][] getParameterTypeNames(Parameter[] parameters) {
+        char[][] typeNames = new char[parameters.length][];
         int i = 0;
-        for (Parameter param : method.getParameters()) {
+        for (Parameter param : parameters) {
             typeNames[i] = ProposalUtils.createSimpleTypeName(param.getType());
             i++;
         }
@@ -250,10 +273,10 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
      * any way to cache?
      * @throws JavaModelException
      */
-    protected char[][] getParameterNames(ICompilationUnit unit, MethodNode method) {
+    protected char[][] calculateAllParameterNames(ICompilationUnit unit, MethodNode method) {
         try {
-            IType type = unit.getJavaProject().findType(method.getDeclaringClass().getName(), new NullProgressMonitor());
-            if (type != null && type.exists()) {
+            IType declaringType = findDeclaringType(unit, method);
+            if (declaringType != null && declaringType.exists()) {
                 Parameter[] params = method.getParameters();
                 int numParams = params == null ? 0 : params.length;
 
@@ -262,7 +285,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
                 }
 
                 String[] parameterTypeSignatures = new String[numParams];
-                boolean doResolved = type.isBinary();
+                boolean doResolved = declaringType.isBinary();
                 for (int i = 0; i < parameterTypeSignatures.length; i++) {
                     if (doResolved) {
                         parameterTypeSignatures[i] = ProposalUtils.createTypeSignatureStr(params[i].getType());
@@ -273,7 +296,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
                 IMethod jdtMethod = null;
 
                 // try to find the precise method
-                IMethod maybeMethod = type.getMethod(method.getName(),
+                IMethod maybeMethod = declaringType.getMethod(method.getName(),
                         parameterTypeSignatures);
                 if (maybeMethod != null && maybeMethod.exists()) {
                     jdtMethod = maybeMethod;
@@ -281,7 +304,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
                     // try something else and be a little more lenient
                     // look for any methods with the same name and number of
                     // arguments
-                    IMethod[] methods = type.getMethods();
+                    IMethod[] methods = declaringType.getMethods();
                     for (IMethod maybeMethod2 : methods) {
                         if (maybeMethod2.getElementName().equals(
                                 method.getName())
@@ -291,7 +314,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
                     }
                 }
 
-                // method was found somehow...return it.
+                // method was found somehow...use it.
                 if (jdtMethod != null) {
                     String[] paramNames = jdtMethod.getParameterNames();
                     char[][] paramNamesChar = new char[paramNames.length][];
@@ -305,6 +328,24 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
             GroovyCore.logException("Exception while looking for parameter types of " + method.getName(), e);
         }
         return null;
+    }
+
+    private char[][] getSpecialParameterNames(Parameter[] params) {
+        // as opposed to getAllParameterNames, we can assume that the names are
+        // correct as is
+        // because these parameters were explicitly set by a script
+        char[][] paramNames = new char[params.length][];
+        for (int i = 0; i < params.length; i++) {
+            paramNames[i] = params[i].getName().toCharArray();
+        }
+        return paramNames;
+    }
+
+    private IType findDeclaringType(ICompilationUnit unit, MethodNode method) throws JavaModelException {
+        if (cachedDeclaringType == null) {
+            cachedDeclaringType = unit.getJavaProject().findType(method.getDeclaringClass().getName(), new NullProgressMonitor());
+        }
+        return cachedDeclaringType;
     }
 
     /**

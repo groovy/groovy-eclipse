@@ -16,10 +16,10 @@
 
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
-import org.codehaus.groovy.eclipse.codeassist.proposals.CategoryProposalCreator;
-import org.codehaus.groovy.eclipse.codeassist.proposals.FieldProposalCreator;
-import org.codehaus.groovy.eclipse.codeassist.proposals.IProposalCreator;
-import org.codehaus.groovy.eclipse.codeassist.proposals.MethodProposalCreator;
+import org.codehaus.groovy.eclipse.codeassist.creators.CategoryProposalCreator;
+import org.codehaus.groovy.eclipse.codeassist.creators.FieldProposalCreator;
+import org.codehaus.groovy.eclipse.codeassist.creators.IProposalCreator;
+import org.codehaus.groovy.eclipse.codeassist.creators.MethodProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;

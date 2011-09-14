@@ -10,10 +10,12 @@
  *		Andrew McCullough - initial API and implementation
  *		IBM Corporation  - general improvement and bug fixes, partial reimplementation
  *******************************************************************************/
-package org.codehaus.groovy.eclipse.codeassist.proposals;
+package org.codehaus.groovy.eclipse.codeassist.completions;
 
 import java.lang.reflect.Method;
 
+import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.CompletionContext;
@@ -118,26 +120,37 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         return fProposal.getRelevance();
     }
 
-    /**
-     * Not API, for testing only.
-     *
-     * @return the guessed parameter proposals
-     */
-    public ICompletionProposal[][] getChoices() {
-        return fChoices;
-    }
-
     private IJavaElement getEnclosingElement() {
         return fCoreContext.getEnclosingElement();
     }
 
-    private IJavaElement[][] getAssignableElements() {
-        char[] signature = SignatureUtil.fix83600(getProposal().getSignature());
-        char[][] types = Signature.getParameterTypes(signature);
+    // includes the regular and the named parameters
+    private String[] cachedVisibleParameterTypes = null;
 
-        IJavaElement[][] assignableElements = new IJavaElement[types.length][];
-        for (int i = 0; i < types.length; i++) {
-            assignableElements[i] = fCoreContext.getVisibleElements(new String(types[i]));
+    private String[] getParameterTypes() {
+        if (cachedVisibleParameterTypes == null) {
+            char[] signature = SignatureUtil.fix83600(fProposal.getSignature());
+            char[][] types = Signature.getParameterTypes(signature);
+
+            String[] ret = new String[types.length];
+            for (int i = 0; i < types.length; i++) {
+                ret[i] = new String(Signature.toCharArray(types[i]));
+            }
+            cachedVisibleParameterTypes = ret;
+        }
+        return cachedVisibleParameterTypes;
+    }
+
+    private IJavaElement[][] getAssignableElements() {
+        // get the visible parameters (ie- the regular and named params
+        // together)
+        String[] parameterTypes = getParameterTypes();
+        IJavaElement[][] assignableElements = new IJavaElement[parameterTypes.length][];
+        for (int i = 0; i < parameterTypes.length; i++) {
+            // hmmmm...I don't like all this back and forth between type names
+            // and signatures
+            String typeName = new String(parameterTypes[i]);
+            assignableElements[i] = fCoreContext.getVisibleElements(Signature.createTypeSignature(typeName, true));
         }
         return assignableElements;
     }
@@ -256,7 +269,6 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
      * @throws JavaModelException if parameter guessing failed
      */
     private String computeGuessingCompletion() throws JavaModelException {
-
         StringBuffer buffer = new StringBuffer();
         char[] proposalName = fProposal.getName();
         boolean hasWhitespace = false;
@@ -283,10 +295,11 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         // argument
         // If the option is set, then we follow that heuristic
         int indexOfLastClosure = -1;
-        String[] parameterTypes = getParameterTypes();
+        char[][] regularParameterTypes = ((GroovyCompletionProposal) fProposal).getRegularParameterTypeNames();
+        char[][] namedParameterTypes = ((GroovyCompletionProposal) fProposal).getNamedParameterTypeNames();
         if (proposalOptions.noParensAroundClosures) {
-            if (lastArgIsClosure(parameterTypes)) {
-                indexOfLastClosure = parameterTypes.length - 1;
+            if (lastArgIsClosure(regularParameterTypes, namedParameterTypes)) {
+                indexOfLastClosure = regularParameterTypes.length + namedParameterTypes.length - 1;
             }
 
             // remove the opening paren only if there is a single closure
@@ -305,19 +318,34 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
                 buffer.append(SPACE);
         }
 
-        char[][] parameterNames = fProposal.findParameterNames(null);
-        fChoices = guessParameters(parameterNames);
-        int count = fChoices.length;
+        // now add the parameters
+        char[][] regularParameterNames = ((GroovyCompletionProposal) fProposal).getRegularParameterNames();
+        char[][] namedParameterNames = ((GroovyCompletionProposal) fProposal).getNamedParameterNames();
+        int argCount = regularParameterNames.length;
+        int namedCount = namedParameterNames.length;
+        int allCount = argCount + namedCount;
+
         int replacementOffset = getReplacementOffset();
+        fChoices = guessParameters(regularParameterNames, namedParameterNames);
 
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < allCount; i++) {
+            char[] nextName;
+            char[] nextTypeName;
+            if (i < argCount) {
+                nextTypeName = regularParameterTypes[i];
+                nextName = regularParameterNames[i];
+            } else {
+                // named arg
+                nextName = namedParameterNames[i - argCount];
+                nextTypeName = namedParameterNames[i - argCount];
+            }
 
-            if (proposalOptions.useNamedArguments) {
-                buffer.append(parameterNames[i]).append(":");
+            if (proposalOptions.useNamedArguments || i >= argCount) {
+                buffer.append(nextName).append(":");
             }
 
             // handle the argument name
-            if (proposalOptions.useBracketsForClosures && Signature.getSimpleName(parameterTypes[i]).equals("Closure")) {
+            if (proposalOptions.useBracketsForClosures && Signature.getSimpleName(nextTypeName).equals("Closure")) {
                 // closure
                 Position position = fPositions[i];
                 position.setOffset(replacementOffset + buffer.length() + 2);
@@ -339,7 +367,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
                 buffer.append(argument);
             }
 
-            if (i == indexOfLastClosure - 1 || (i != indexOfLastClosure && i == count - 1)) {
+            if (i == indexOfLastClosure - 1 || (i != indexOfLastClosure && i == allCount - 1)) {
                 if (prefs.beforeClosingParen) {
                     buffer.append(SPACE);
                 }
@@ -347,7 +375,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
                 if (i == indexOfLastClosure - 1) {
                     buffer.append(SPACE);
                 }
-            } else if (i < count - 1) {
+            } else if (i < allCount - 1) {
                 if (prefs.beforeComma)
                     buffer.append(SPACE);
                 buffer.append(COMMA);
@@ -360,12 +388,20 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         return buffer.toString();
     }
 
-    private boolean lastArgIsClosure(String[] parameterTypes) {
-        if (parameterTypes == null || parameterTypes.length == 0) {
+    private boolean lastArgIsClosure(char[][] regularparameterTypes, char[][] namedParameterTypes) {
+        char[] lastArgType;
+        if (namedParameterTypes != null && namedParameterTypes.length > 0) {
+            lastArgType = namedParameterTypes[namedParameterTypes.length - 1];
+        } else if (regularparameterTypes != null && regularparameterTypes.length > 0) {
+            lastArgType = regularparameterTypes[regularparameterTypes.length - 1];
+        } else {
+            // no args
             return false;
         }
 
-        return "Closure".equals(Signature.getSimpleName(parameterTypes[parameterTypes.length - 1]));
+        // we should be comparing against a fully qualified type name, but it is not always available
+        // so a simple name is close enough
+        return CharOperation.equals("Closure".toCharArray(), lastArgType);
     }
 
     /**
@@ -382,7 +418,8 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
             return null;
     }
 
-    private ICompletionProposal[][] guessParameters(char[][] parameterNames) throws JavaModelException {
+    private ICompletionProposal[][] guessParameters(char[][] regularParameterNames, char[][] namedParameterNames)
+            throws JavaModelException {
         // find matches in reverse order. Do this because people tend to declare
         // the variable meant for the last
         // parameter last. That is, local variables for the last parameter in
@@ -399,11 +436,16 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         // code completion (which avoids
         // "someOtherObject.yourMethod(param1, param1, param1)";
 
+        char[][] parameterNames = new char[regularParameterNames.length + namedParameterNames.length][];
+        System.arraycopy(regularParameterNames, 0, parameterNames, 0, regularParameterNames.length);
+        System.arraycopy(namedParameterNames, 0, parameterNames, regularParameterNames.length, namedParameterNames.length);
+
         int count = parameterNames.length;
         fPositions = new Position[count];
         fChoices = new ICompletionProposal[count][];
 
         String[] parameterTypes = getParameterTypes();
+
         ParameterGuesser guesser = new ParameterGuesser(getEnclosingElement());
         IJavaElement[][] assignableElements = getAssignableElements();
 
@@ -501,20 +543,6 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         return parameterProposalsMethod;
     }
 
-    private String[] cachedParameterTypes = null;
-    private String[] getParameterTypes() {
-        if (cachedParameterTypes == null) {
-            char[] signature = SignatureUtil.fix83600(fProposal.getSignature());
-            char[][] types = Signature.getParameterTypes(signature);
-
-            String[] ret = new String[types.length];
-            for (int i = 0; i < types.length; i++) {
-                ret[i] = new String(Signature.toCharArray(types[i]));
-            }
-            cachedParameterTypes = ret;
-        }
-        return cachedParameterTypes;
-    }
 
     /*
      * @see ICompletionProposal#getSelection(IDocument)
@@ -569,5 +597,14 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
 
     private String getCategory() {
         return "ParameterGuessingProposal_" + toString(); //$NON-NLS-1$
+    }
+
+    /**
+     * Not API, for testing only.
+     *
+     * @return the guessed parameter proposals
+     */
+    public ICompletionProposal[][] getChoices() {
+        return fChoices;
     }
 }

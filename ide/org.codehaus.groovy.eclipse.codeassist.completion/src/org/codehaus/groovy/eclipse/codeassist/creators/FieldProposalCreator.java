@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.codehaus.groovy.eclipse.codeassist.proposals;
+package org.codehaus.groovy.eclipse.codeassist.creators;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,6 +37,9 @@ import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.objectweb.asm.Opcodes;
 

@@ -11,7 +11,7 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
-import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyJavaGuessingCompletionProposal;
+import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaGuessingCompletionProposal;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**

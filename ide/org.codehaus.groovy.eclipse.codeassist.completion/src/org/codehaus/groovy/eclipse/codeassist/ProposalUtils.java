@@ -23,7 +23,9 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.NamedArgsMethodNode;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
@@ -120,21 +122,55 @@ public class ProposalUtils {
 		return null;
 	}
 
+    /**
+     * Includes named params. but not optional params
+     *
+     * @param node
+     * @return
+     */
     public static char[] createMethodSignature(MethodNode node) {
         return createMethodSignatureStr(node, 0).toCharArray();
     }
+
+    /**
+     * Includes named params. but not optional params
+     *
+     * @param node
+     * @return
+     */
     public static String createMethodSignatureStr(MethodNode node) {
         return createMethodSignatureStr(node, 0);
     }
 
+    /**
+     * Includes named params. but not optional params
+     *
+     * @param node
+     * @param ignoreParameters number of parameters to ignore at the start
+     * @return
+     */
     public static char[] createMethodSignature(MethodNode node, int ignoreParameters) {
         return createMethodSignatureStr(node, ignoreParameters).toCharArray();
     }
+
+    /**
+     * Includes named params. but not optional params
+     *
+     * @param node
+     * @param ignoreParameters number of parameters to ignore at the start
+     * @return
+     */
     public static String createMethodSignatureStr(MethodNode node, int ignoreParameters) {
         String returnType = createTypeSignatureStr(node.getReturnType());
-        String[] parameterTypes = new String[node.getParameters().length-ignoreParameters];
+        Parameter[] parameters;
+        if (node instanceof NamedArgsMethodNode) {
+            parameters = ((NamedArgsMethodNode) node).getVisibleParams();
+        } else {
+            parameters = node.getParameters();
+        }
+        String[] parameterTypes = new String[parameters.length-ignoreParameters];
         for (int i = 0; i < parameterTypes.length; i++) {
-            parameterTypes[i] = createTypeSignatureStr(node.getParameters()[i+ignoreParameters].getType());
+            parameterTypes[i] = createTypeSignatureStr(parameters[i+ignoreParameters].getType());
         }
         return Signature.createMethodSignature(parameterTypes, returnType);
     }

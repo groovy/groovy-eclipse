@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package org.codehaus.groovy.eclipse.codeassist.proposals;
+package org.codehaus.groovy.eclipse.codeassist.creators;
 
 import java.util.List;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 
 /**
  * @author Andrew Eisenberg

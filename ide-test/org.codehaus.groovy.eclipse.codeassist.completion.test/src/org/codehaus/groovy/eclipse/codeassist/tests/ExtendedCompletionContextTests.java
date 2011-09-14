@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
-import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyExtendedCompletionContext;
+import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.internal.core.JavaModelManager;

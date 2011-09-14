@@ -17,6 +17,7 @@
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.objectweb.asm.Opcodes;
@@ -51,13 +52,13 @@ public class GroovyCategoryMethodProposal extends GroovyMethodProposal {
     }
 
     @Override
-    protected char[][] createParameterNames(ICompilationUnit unit) {
-        return removeFirst(super.createParameterNames(unit));
+    protected char[][] createAllParameterNames(ICompilationUnit unit) {
+        return removeFirst(super.createAllParameterNames(unit));
     }
 
     @Override
-    protected char[][] createParameterTypeNames(MethodNode method) {
-        return removeFirst(super.createParameterTypeNames(method));
+    protected char[][] getParameterTypeNames(Parameter[] parameters) {
+        return removeFirst(super.getParameterTypeNames(parameters));
     }
 
     private char[][] removeFirst(char[][] array) {

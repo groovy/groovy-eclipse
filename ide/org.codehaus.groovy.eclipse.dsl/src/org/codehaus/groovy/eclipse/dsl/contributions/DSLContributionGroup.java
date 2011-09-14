@@ -152,7 +152,21 @@ public class DSLContributionGroup extends ContributionGroup {
 
         boolean useNamedArgs = asBoolean(args.get("useNamedArgs"));
         
-        Map<Object, Object> paramsMap = (Map<Object, Object>) args.get("params");
+        ParameterContribution[] params = extractParams(args, "params");
+        ParameterContribution[] namedParams = extractParams(args, "namedParams");
+        ParameterContribution[] optionalParams = extractParams(args, "optionalParams");
+
+        boolean isStatic = isStatic(args);
+        boolean isDeprecated = isDeprecated(args);
+        if (!scope.isStatic() || (scope.isStatic() && isStatic)) {
+            contributions.add(new MethodContributionElement(name == null ? NO_NAME : name, params, namedParams, optionalParams, returnType == null ? NO_TYPE
+                    : returnType, declaringType, isStatic, provider == null ? this.provider : provider, doc, useNamedArgs, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
+        }
+    }
+
+    private ParameterContribution[] extractParams(Map<String, Object> args, String paramKind) {
+        Object value;
+        Map<Object, Object> paramsMap = (Map<Object, Object>) args.get(paramKind);
         ParameterContribution[] params;
         if (paramsMap != null) {
             params = new ParameterContribution[paramsMap.size()];
@@ -166,13 +180,7 @@ public class DSLContributionGroup extends ContributionGroup {
         } else {
             params = NO_PARAMS;
         }
-
-        boolean isStatic = isStatic(args);
-        boolean isDeprecated = isDeprecated(args);
-        if (!scope.isStatic() || (scope.isStatic() && isStatic)) {
-            contributions.add(new MethodContributionElement(name == null ? NO_NAME : name, params, returnType == null ? NO_TYPE
-                    : returnType, declaringType, isStatic, provider == null ? this.provider : provider, doc, useNamedArgs, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
-        }
+        return params;
     }
 
     /**

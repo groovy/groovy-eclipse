@@ -130,8 +130,6 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
 
     private AnnotatedNode limitTo;
 
-    private IsSameExpression isSame;
-
     private ASTFragmentFactory factory;
 
     private FragmentMatcherVisitor fragmentMatcher;
@@ -145,7 +143,6 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
     public FindAllOccurrencesVisitor(ModuleNode module, AnnotatedNode limitTo) {
         this.limitTo = limitTo;
         this.module = module;
-        this.isSame = new IsSameExpression();
         this.factory = new ASTFragmentFactory();
         this.fragmentMatcher = new FragmentMatcherVisitor();
         this.associatedExpressionMatcher = new AssociatedExpressionMatcher();

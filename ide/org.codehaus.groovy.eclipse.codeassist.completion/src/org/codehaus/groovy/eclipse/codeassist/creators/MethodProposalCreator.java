@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.codehaus.groovy.eclipse.codeassist.proposals;
+package org.codehaus.groovy.eclipse.codeassist.creators;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,6 +30,10 @@ import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
