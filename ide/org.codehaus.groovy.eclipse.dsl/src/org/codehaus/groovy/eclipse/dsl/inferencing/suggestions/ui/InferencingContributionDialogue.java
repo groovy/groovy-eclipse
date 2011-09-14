@@ -20,10 +20,10 @@ import java.util.List;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovySuggestionDeclaringType;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IGroovySuggestion;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IValueCheckingRule;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.JavaValidTypeRule;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.MethodParameter;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.SuggestionDescriptor;
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ValueStatus;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -185,9 +185,8 @@ public class InferencingContributionDialogue extends AbstractDialogue {
 
             // Don't check for parameterized types as it not necessary for
             // declaring types
-            protected ValueStatus isControlValueValid(String value) {
-
-                return new JavaValidTypeRule().checkValidity(value);
+            protected IValueCheckingRule getCachedValidationRule() {
+                return new JavaValidTypeRule(getJavaProject());
             }
 
         };

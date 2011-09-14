@@ -29,7 +29,6 @@ public class JavaValidIdentifierRule implements IValueCheckingRule {
     protected static final String INVALID_JAVA_IDENTIFIER = "Invalid Java identifier";
 
     public ValueStatus checkValidity(Object value) {
-
         if (value instanceof String) {
             String text = (String) value;
             IStatus status = checkJavaType(text);
@@ -41,7 +40,6 @@ public class JavaValidIdentifierRule implements IValueCheckingRule {
             }
         }
         return ValueStatus.getErrorStatus(value);
-
     }
 
     protected IStatus checkJavaType(String value) {

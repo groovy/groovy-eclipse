@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IValueCheckingRule;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.JavaValidIdentifierRule;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ValueStatus;
 import org.eclipse.swt.SWT;
@@ -27,6 +28,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 
 /**
+ * Validation rules for Java are typically cached as it they may use name
+ * lookups which may be expensive to create frequently.
  * 
  * @author Nieraj Singh
  * @created 2011-05-13
@@ -36,6 +39,8 @@ public class JavaTextControl extends AbstractLabeledDialogueControl {
     private String initialValue;
 
     private Text textControl;
+
+    private IValueCheckingRule cachedValueCheckingRule;
 
     public JavaTextControl(IDialogueControlDescriptor labelDescriptor, Point offsetLabelLocation, String initialValue) {
         super(labelDescriptor, offsetLabelLocation);
@@ -71,9 +76,37 @@ public class JavaTextControl extends AbstractLabeledDialogueControl {
         }
         return null;
     }
-    
+
+    /**
+     * If not explicitly checked, it will be default assume the value is valid
+     * 
+     * @param value
+     * @return
+     */
     protected ValueStatus isControlValueValid(String value) {
-        return new JavaValidIdentifierRule().checkValidity(value);
+        if (cachedValueCheckingRule == null) {
+            cachedValueCheckingRule = getCachedValidationRule();
+        }
+
+        if (cachedValueCheckingRule != null) {
+            return cachedValueCheckingRule.checkValidity(value);
+        }
+        return ValueStatus.getValidStatus(value);
+    }
+
+    /**
+     * Instantiate a validation rule that is cached by the control. Override
+     * this method if a validation rule may be expensive to create every time it
+     * is needed (e.g., a Java validation rule that uses name lookup to validate
+     * a Java type). If null, no validation will be performed on a control
+     * value,
+     * and the control value will be assumed to be valid by default.
+     * 
+     * @return validation rule to cache, or null if no cached validation is
+     *         required.
+     */
+    protected IValueCheckingRule getCachedValidationRule() {
+        return new JavaValidIdentifierRule();
     }
 
 }

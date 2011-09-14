@@ -15,19 +15,48 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
+import org.codehaus.groovy.eclipse.codeassist.Activator;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaConventions;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 
 /**
  * 
  * @author Nieraj Singh
  * @created 2011-09-13
  */
-public class JavaValidTypeRule extends JavaValidIdentifierRule {
+public class JavaValidTypeRule extends AbstractJavaTypeVerifiedRule {
 
-    protected IStatus checkJavaType(String value) {
-        return JavaConventions.validateJavaTypeName(value, JavaCore.VERSION_1_3, JavaCore.VERSION_1_3);
+    public JavaValidTypeRule(IJavaProject project) {
+        super(project);
+    }
+
+    public ValueStatus checkValidity(Object value) {
+        if (value instanceof String) {
+            String name = (String) value;
+            IStatus status = JavaConventions.validateJavaTypeName(name, JavaCore.VERSION_1_3, JavaCore.VERSION_1_3);
+
+            if (status.getSeverity() != IStatus.ERROR) {
+
+                // Check if the type exists
+                try {
+                    IType type = getActualType(name);
+                    if (type != null) {
+                        return ValueStatus.getValidStatus(value);
+                    } else {
+                        return ValueStatus.getErrorStatus(value, THE_SPECIFIED_JAVA_TYPES_DO_NOT_EXIST + name);
+                    }
+                } catch (JavaModelException e) {
+                    Activator.logError(e);
+                }
+            } else {
+                return ValueStatus.getErrorStatus(value, status.getMessage());
+            }
+        }
+        return ValueStatus.getErrorStatus(value, INVALID_JAVA);
     }
 
 }

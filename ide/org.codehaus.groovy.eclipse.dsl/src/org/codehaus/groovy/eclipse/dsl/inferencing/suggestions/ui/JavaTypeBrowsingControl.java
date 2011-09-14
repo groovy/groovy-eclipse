@@ -15,8 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IValueCheckingRule;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.JavaValidParameterizedTypeRule;
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ValueStatus;
 import org.codehaus.groovy.eclipse.ui.browse.IBrowseTypeHandler;
 import org.codehaus.groovy.eclipse.ui.browse.TypeBrowseSupport;
 import org.eclipse.jdt.core.IJavaProject;
@@ -106,8 +106,8 @@ public class JavaTypeBrowsingControl extends JavaTextControl {
         browse.setEnabled(enable);
     }
 
-    protected ValueStatus isControlValueValid(String value) {
-        return new JavaValidParameterizedTypeRule(project).checkValidity(value);
+    protected IValueCheckingRule getCachedValidationRule() {
+        return new JavaValidParameterizedTypeRule(project);
     }
 
 }

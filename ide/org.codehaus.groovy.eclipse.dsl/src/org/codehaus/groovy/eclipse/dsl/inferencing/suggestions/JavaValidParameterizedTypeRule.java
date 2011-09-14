@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,9 +32,6 @@ import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NodeFinder;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.Type;
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
-import org.eclipse.jdt.internal.core.JavaProject;
-import org.eclipse.jdt.internal.core.NameLookup;
 import org.eclipse.jdt.internal.corext.dom.ASTNodes;
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
 
@@ -43,16 +41,10 @@ import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
  * @author Nieraj Singh
  * @created 2011-09-13
  */
-public class JavaValidParameterizedTypeRule implements IValueCheckingRule {
-
-    public static final String INVALID_JAVA = "Invalid Java type.";
-
-    private IJavaProject project;
-
-    private NameLookup nameLookup;
+public class JavaValidParameterizedTypeRule extends AbstractJavaTypeVerifiedRule {
 
     public JavaValidParameterizedTypeRule(IJavaProject project) {
-        this.project = project;
+        super(project);
     }
 
     public ValueStatus checkValidity(Object value) {
@@ -60,11 +52,6 @@ public class JavaValidParameterizedTypeRule implements IValueCheckingRule {
             return ValueStatus.getErrorStatus(value);
         }
         String typeToCheck = (String) value;
-
-        // If there are whitespaces, it's invalid
-        if (!typeToCheck.trim().equals(typeToCheck)) {
-            return ValueStatus.getErrorStatus(typeToCheck, INVALID_JAVA);
-        }
 
         // This only checks if the value is syntactically correct Java. It does
         // not check if
@@ -78,10 +65,14 @@ public class JavaValidParameterizedTypeRule implements IValueCheckingRule {
         // ASTNode only checks for syntactic
         // correctness, not whether the type actually exists or not,
         // therefore an IType is needed.
+        List<String> allNonExistantTypes = new ArrayList<String>();
         if (astType != null) {
             try {
-                boolean isValid = isParameterisedTypeValid(astType, source);
-                if (isValid) {
+                boolean isValid = allTypesExist(astType, source, allNonExistantTypes);
+                if (!isValid) {
+                    String message = composeErrorMessage(allNonExistantTypes);
+                    return ValueStatus.getErrorStatus(value, message);
+                } else {
                     return ValueStatus.getValidStatus(value);
                 }
 
@@ -92,41 +83,6 @@ public class JavaValidParameterizedTypeRule implements IValueCheckingRule {
 
         }
         return ValueStatus.getErrorStatus(value, INVALID_JAVA);
-    }
-
-    protected boolean isParameterisedTypeValid(Type type, StringBuffer source) throws JavaModelException {
-        NameLookup nameLkUp = getNameLookup();
-        if (nameLkUp != null) {
-            String typeName = getTypeName(type, source);
-            IType actualType = nameLkUp.findType(typeName, false, NameLookup.ACCEPT_ALL);
-            // Type exists, but must still check parameters if it is a
-            // parameterized type
-            if (actualType != null) {
-                if (type instanceof ParameterizedType) {
-                    List<?> parameterisedNodes = ((ParameterizedType) type).typeArguments();
-                    // Must check the actual arguments for the parameterised
-                    // type to see if they exists
-
-                    if (parameterisedNodes != null) {
-                        boolean allParamsValid = true;
-                        for (Object node : parameterisedNodes) {
-                            if (node instanceof Type) {
-                                if (!isParameterisedTypeValid((Type) node, source)) {
-                                    allParamsValid = false;
-                                    break;
-                                }
-                            } else {
-                            	   allParamsValid = false;
-                                   break;
-                            }
-                        }
-                        return allParamsValid;
-                    }
-                }
-                return true;
-            }
-        }
-        return false;
     }
 
     protected String getTypeName(Type type, StringBuffer source) {
@@ -143,14 +99,36 @@ public class JavaValidParameterizedTypeRule implements IValueCheckingRule {
         return name;
     }
 
-    protected NameLookup getNameLookup() throws JavaModelException {
-        if (nameLookup == null) {
-            if (project instanceof JavaProject) {
-                nameLookup = ((JavaProject) project).newNameLookup(DefaultWorkingCopyOwner.PRIMARY);
+    protected boolean allTypesExist(Type type, StringBuffer source, List<String> nonExistantTypes) throws JavaModelException {
 
+        // Type exists, but must still check parameters if it is a
+        // parameterized type
+        String typeName = getTypeName(type, source);
+        IType actualType = getActualType(typeName);
+        if (actualType != null) {
+            if (type instanceof ParameterizedType) {
+                List<?> parameterisedNodes = ((ParameterizedType) type).typeArguments();
+                // Must check the actual arguments for the parameterised
+                // type to see if they exists
+
+                if (parameterisedNodes != null) {
+                    boolean allParamsValid = true;
+                    for (Object node : parameterisedNodes) {
+                        if (!(node instanceof Type) || !allTypesExist((Type) node, source, nonExistantTypes)) {
+                            allParamsValid = false;
+                            break;
+                        }
+                    }
+                    return allParamsValid;
+                }
+            }
+            return true;
+        } else {
+            if (nonExistantTypes != null && !nonExistantTypes.contains(typeName)) {
+                nonExistantTypes.add(typeName);
             }
         }
-        return nameLookup;
+        return false;
     }
 
     protected Type getASTType(String typeToCheck, StringBuffer sourceBuffer) {
@@ -166,7 +144,7 @@ public class JavaValidParameterizedTypeRule implements IValueCheckingRule {
         ASTParser parser = ASTParser.newParser(AST.JLS3);
         parser.setSource(sourceBuffer.toString().toCharArray());
 
-        Map<?, ?> options = new HashMap<Object, Object>();
+        Map<String, String> options = new HashMap<String, String>();
         JavaModelUtil.set50ComplianceOptions(options);
         parser.setCompilerOptions(options);
 
