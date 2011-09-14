@@ -67,42 +67,43 @@ public class SuggestionsContributionGroup extends ContributionGroup {
                 List<IGroovySuggestion> suggestions = declaringType.getSuggestions();
                 if (suggestions != null) {
                     for (IGroovySuggestion suggestion : suggestions) {
-                        if (!suggestion.isActive()) {
-                            continue;
-                        }
-                        if (suggestion instanceof GroovyPropertySuggestion) {
-                            GroovyPropertySuggestion prop = (GroovyPropertySuggestion) suggestion;
+                        if (suggestion.isActive()) {
+                            if (suggestion instanceof GroovyPropertySuggestion) {
+                                GroovyPropertySuggestion prop = (GroovyPropertySuggestion) suggestion;
 
-                            currentContributions.add(new PropertyContributionElement(prop.getName(), prop.getType(), prop
-                                    .getDeclaringType().getName(), prop.isStatic(), DEFAULT_PROVIDER, prop.getJavaDoc(), false,
-                                    DEFAULT_RELEVANCE_MULTIPLIER));
+                                currentContributions.add(new PropertyContributionElement(prop.getName(), prop.getType(), prop
+                                        .getDeclaringType().getName(), prop.isStatic(), DEFAULT_PROVIDER, prop.getJavaDoc(), false,
+                                        DEFAULT_RELEVANCE_MULTIPLIER));
 
-                        } else if (suggestion instanceof GroovyMethodSuggestion) {
+                            } else if (suggestion instanceof GroovyMethodSuggestion) {
 
-                            GroovyMethodSuggestion method = (GroovyMethodSuggestion) suggestion;
-                            ParameterContribution[] paramContribution = null;
+                                GroovyMethodSuggestion method = (GroovyMethodSuggestion) suggestion;
+                                ParameterContribution[] paramContribution = null;
 
-                            List<MethodParameter> parameters = method.getParameters();
+                                List<MethodParameter> parameters = method.getParameters();
 
-                            if (parameters != null) {
-                                paramContribution = new ParameterContribution[method.getParameters().size()];
-                                int i = 0;
-                                for (MethodParameter parameter : parameters) {
-                                    if (i < paramContribution.length) {
-                                        paramContribution[i++] = new ParameterContribution(parameter.getName(), parameter.getType());
+                                if (parameters != null) {
+                                    paramContribution = new ParameterContribution[method.getParameters().size()];
+                                    int i = 0;
+                                    for (MethodParameter parameter : parameters) {
+                                        if (i < paramContribution.length) {
+                                            paramContribution[i++] = new ParameterContribution(parameter.getName(),
+                                                    parameter.getType());
+                                        }
                                     }
-                                }
 
+                                }
+                                currentContributions.add(new MethodContributionElement(method.getName(), paramContribution, method
+                                        .getType(), method.getDeclaringType().getName(), method.isStatic(), DEFAULT_PROVIDER,
+                                        method.getJavaDoc(), method.useNamedArguments(), false, DEFAULT_RELEVANCE_MULTIPLIER));
                             }
-                            currentContributions.add(new MethodContributionElement(method.getName(), paramContribution, method
-                                    .getType(), method.getDeclaringType().getName(), method.isStatic(), DEFAULT_PROVIDER, method
-                                    .getJavaDoc(), method.useNamedArguments(), false, DEFAULT_RELEVANCE_MULTIPLIER));
                         }
+
                     }
                 }
 
-                return currentContributions;
             }
+            return currentContributions;
         }
 
         return null;

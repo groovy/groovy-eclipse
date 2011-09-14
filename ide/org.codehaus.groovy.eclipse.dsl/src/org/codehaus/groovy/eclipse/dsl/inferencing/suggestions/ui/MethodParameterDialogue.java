@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Shell;
  * @author Nieraj Singh
  * @created 2011-08-04
  */
-public class MethodArgumentDialogue extends AbstractDialogue {
+public class MethodParameterDialogue extends AbstractDialogue {
 
     public static final DialogueDescriptor DIALOGUE_DESCRIPTOR = new DialogueDescriptor("Add parameter", "Suggestion Parameter",
             "icons/GROOVY.png");
@@ -46,7 +46,7 @@ public class MethodArgumentDialogue extends AbstractDialogue {
 
     private List<MethodParameter> existingParameters;
 
-    public MethodArgumentDialogue(Shell parentShell, IJavaProject javaProject, MethodParameter parameterToEdit,
+    public MethodParameterDialogue(Shell parentShell, IJavaProject javaProject, MethodParameter parameterToEdit,
             List<MethodParameter> existingParameters) {
         super(parentShell, DIALOGUE_DESCRIPTOR);
         this.javaProject = javaProject;
@@ -90,9 +90,9 @@ public class MethodArgumentDialogue extends AbstractDialogue {
 
         };
         nameControl.createControlArea(parent);
-        nameControl.addSelectionListener(new RequiredValueControlSelectionListener(ControlTypes.NAME, name) {
+        nameControl.addSelectionListener(new ValidatedValueSelectionListener(ControlTypes.NAME, name) {
 
-            protected void handleRequiredValue(ControlSelectionEvent event) {
+            protected void handleValidatedValue(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (selection instanceof String) {
                     name = (String) selection;
@@ -100,13 +100,27 @@ public class MethodArgumentDialogue extends AbstractDialogue {
             }
         });
 
+        // Although the declaring type is NOT required, if a user starts to
+        // input data, assume it is required
+        // as to not allow invalid types. Therefore, in addition to checking the
+        // validity of the type, also
+        // also include empty or null type values as "valid".
         JavaTypeBrowsingControl declaringTypeControl = new JavaTypeBrowsingControl(ControlTypes.TYPE, getOffsetLabelLocation(),
-                type, javaProject);
+                type, javaProject) {
+
+            protected ValueStatus isControlValueValid(String value) {
+                if (value == null || value.length() == 0) {
+                    return ValueStatus.getValidStatus(value);
+                }
+                return super.isControlValueValid(value);
+            }
+
+        };
         declaringTypeControl.createControlArea(parent);
 
-        declaringTypeControl.addSelectionListener(new RequiredValueControlSelectionListener(ControlTypes.TYPE, type) {
+        declaringTypeControl.addSelectionListener(new ValidatedValueSelectionListener(ControlTypes.TYPE, type) {
 
-            protected void handleRequiredValue(ControlSelectionEvent event) {
+            protected void handleValidatedValue(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (selection instanceof String) {
                     type = (String) selection;

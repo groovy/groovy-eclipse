@@ -149,16 +149,24 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
     /**
      * Control listener to be used if the dialogue has required values that
      * determine if
-     * the user can click "OK" on the dialogue. If any required value is not
-     * set, or is invalid as determined by the control, the "OK"
-     * button is grayed out.
+     * the user can click "OK" on the dialogue. Two options exist:
+     * 1. The value is not initially required (i.e. value is empty or null), but once a value is set, it needs
+     * to be verified before enabling the OK button
+     * 2. The value is required, and an empty or null value is not acceptable.
      * 
      * @author Nieraj Singh
      * @created 2011-08-06
      */
-    abstract protected class RequiredValueControlSelectionListener implements IControlSelectionListener {
+    abstract protected class ValidatedValueSelectionListener implements IControlSelectionListener {
 
-        public RequiredValueControlSelectionListener(IDialogueControlDescriptor descriptor, Object initialValue) {
+        /**
+         * User this only if values should not be initially marked as required until a value is actually set
+         */
+        public ValidatedValueSelectionListener() {
+
+        }
+
+        public ValidatedValueSelectionListener(IDialogueControlDescriptor descriptor, Object initialValue) {
             // Add any instances of the listener to the list of descriptors that
             // need to
             // be observed for value validation
@@ -166,7 +174,7 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
         }
 
         public void handleSelection(ControlSelectionEvent event) {
-            handleRequiredValue(event);
+            handleValidatedValue(event);
             notifyValidValueSet(event.getControlDescriptor(), event.getSelectionData());
         }
 
@@ -176,13 +184,14 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
             displayInvalidValueError(descriptor, event.getErrorMessage(), true);
         }
 
-        abstract protected void handleRequiredValue(ControlSelectionEvent event);
+        abstract protected void handleValidatedValue(ControlSelectionEvent event);
     }
 
     protected void notifyValidValueSet(IDialogueControlDescriptor descriptor, Object value) {
         invalidValues.remove(descriptor);
 
-        // Check if there are any remaining inValid values and display the next error
+        // Check if there are any remaining inValid values and display the next
+        // error
         if (invalidValues != null) {
 
             for (Entry<IDialogueControlDescriptor, SetValue> entry : invalidValues.entrySet()) {
@@ -204,7 +213,7 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
 
         StringBuffer missingFields = new StringBuffer();
 
-        missingFields.append("Required value (");
+        missingFields.append("Value (");
         missingFields.append(descriptor.getLabel());
         missingFields.append(')');
         if (errorMessage != null && errorMessage.length() > 0) {

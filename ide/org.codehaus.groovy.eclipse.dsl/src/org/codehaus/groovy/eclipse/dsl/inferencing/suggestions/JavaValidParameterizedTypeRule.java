@@ -27,16 +27,18 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.ArrayType;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NodeFinder;
 import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.internal.corext.dom.ASTNodes;
 import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
 
 /**
- * Cache instance per run to improve efficiency
+ * Handles primitive types as well.
  * 
  * @author Nieraj Singh
  * @created 2011-09-13
@@ -122,6 +124,8 @@ public class JavaValidParameterizedTypeRule extends AbstractJavaTypeVerifiedRule
                     return allParamsValid;
                 }
             }
+            return true;
+        } else if (type instanceof PrimitiveType || type instanceof ArrayType) {
             return true;
         } else {
             if (nonExistantTypes != null && !nonExistantTypes.contains(typeName)) {

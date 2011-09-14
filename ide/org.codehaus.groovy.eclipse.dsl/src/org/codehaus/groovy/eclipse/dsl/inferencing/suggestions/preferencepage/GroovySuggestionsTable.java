@@ -28,6 +28,7 @@ import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyPropertySug
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovySuggestionDeclaringType;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IGroovySuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager.ProjectSuggestions;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.SuggestionDescriptor;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.IProjectUIControl;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.ISelectionHandler;
@@ -339,7 +340,7 @@ public class GroovySuggestionsTable {
                 selectionButtons.get(ButtonTypes.EDIT).setEnabled(false);
                 selectionButtons.get(ButtonTypes.REMOVE).setEnabled(true);
             } else if (selectedObj instanceof IGroovySuggestion) {
-                selectionButtons.get(ButtonTypes.ADD).setEnabled(false);
+                selectionButtons.get(ButtonTypes.ADD).setEnabled(true);
                 selectionButtons.get(ButtonTypes.EDIT).setEnabled(true);
                 selectionButtons.get(ButtonTypes.REMOVE).setEnabled(true);
             }
@@ -365,16 +366,34 @@ public class GroovySuggestionsTable {
                 Object selectedObj = getSelections().get(0);
                 if (selectedObj instanceof IGroovySuggestion) {
                     // This edits an existing suggestion. Retain active state.
-                    IGroovySuggestion suggestion = (IGroovySuggestion) selectedObj;
-                    InferencingContributionDialogue dialogue = new InferencingContributionDialogue(getShell(), suggestion,
+                    IGroovySuggestion existingSuggestion = (IGroovySuggestion) selectedObj;
+                    InferencingContributionDialogue dialogue = new InferencingContributionDialogue(getShell(), existingSuggestion,
                             getSelectedProject());
+                    IGroovySuggestion editedSuggestion = null;
                     if (dialogue.open() == Window.OK) {
                         SuggestionDescriptor descriptor = dialogue.getSuggestionChange();
-                        GroovySuggestionDeclaringType declaringType = suggestion.getDeclaringType();
-                        IGroovySuggestion replacedSuggestion = declaringType.replaceSuggestion(descriptor, suggestion);
+
+                        // Must be able to handle declaring type edits
+                        GroovySuggestionDeclaringType declaringType = existingSuggestion.getDeclaringType();
+                        if (!declaringType.getName().equals(descriptor.getDeclaringTypeName())) {
+                            declaringType.removeSuggestion(existingSuggestion);
+                            ProjectSuggestions projectSuggestions = InferencingSuggestionsManager.getInstance().getSuggestions(
+                                    getSelectedProject());
+
+                            // if declaring type does not have any more
+                            // suggestions, remove it.
+                            if (declaringType.getSuggestions().isEmpty()) {
+                                projectSuggestions.removeDeclaringType(declaringType);
+                            }
+
+                            // Add to the new declaring type
+                            editedSuggestion = projectSuggestions.addSuggestion(descriptor);
+                        } else {
+                            editedSuggestion = declaringType.replaceSuggestion(descriptor, existingSuggestion);
+                        }
 
                         refresh();
-                        setCheckState(replacedSuggestion);
+                        setCheckState(editedSuggestion);
                     }
                 }
             }
@@ -467,12 +486,12 @@ public class GroovySuggestionsTable {
                         .removeDeclaringType((GroovySuggestionDeclaringType) obj);
             } else if (obj instanceof IGroovySuggestion) {
                 IGroovySuggestion suggestion = (IGroovySuggestion) obj;
-                GroovySuggestionDeclaringType containingType = suggestion.getDeclaringType();
-                containingType.removeSuggestion(suggestion);
+                GroovySuggestionDeclaringType declaringType = suggestion.getDeclaringType();
+                declaringType.removeSuggestion(suggestion);
                 // Also remove the declaring type if no suggestions are left
-                if (containingType.getSuggestions().isEmpty()) {
+                if (declaringType.getSuggestions().isEmpty()) {
                     InferencingSuggestionsManager.getInstance().getSuggestions(getSelectedProject())
-                            .removeDeclaringType(containingType);
+                            .removeDeclaringType(declaringType);
                 }
             }
         }

@@ -300,7 +300,7 @@ public class MethodArgumentTable extends AbstractControlManager {
     }
 
     protected void addElement() {
-        MethodArgumentDialogue dialogue = new MethodArgumentDialogue(getShell(), project, null, parameters);
+        MethodParameterDialogue dialogue = new MethodParameterDialogue(getShell(), project, null, parameters);
         if (dialogue.open() == Window.OK) {
 
             MethodParameter parameter = dialogue.getMethodParameter();
@@ -324,7 +324,7 @@ public class MethodArgumentTable extends AbstractControlManager {
     protected void editElement() {
         MethodParameter selected = getSelectedElement();
         if (selected != null) {
-            MethodArgumentDialogue dialogue = new MethodArgumentDialogue(getShell(), project, selected, parameters);
+            MethodParameterDialogue dialogue = new MethodParameterDialogue(getShell(), project, selected, parameters);
             if (dialogue.open() == Window.OK) {
                 MethodParameter editedParameter = dialogue.getMethodParameter();
                 if (editedParameter != null) {

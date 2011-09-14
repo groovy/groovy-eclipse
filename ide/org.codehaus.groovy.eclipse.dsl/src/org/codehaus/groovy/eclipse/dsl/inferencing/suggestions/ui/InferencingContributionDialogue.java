@@ -70,8 +70,6 @@ public class InferencingContributionDialogue extends AbstractDialogue {
 
     private IGroovySuggestion currentSuggestion;
 
-    private boolean editDeclaringType = true;
-
     private boolean useNamedArguments;
 
     private MethodArgumentTable table;
@@ -93,7 +91,7 @@ public class InferencingContributionDialogue extends AbstractDialogue {
      * type
      */
     public InferencingContributionDialogue(Shell parentShell, GroovySuggestionDeclaringType declaringType, IProject project) {
-        this(parentShell, project, null, declaringType, false, true);
+        this(parentShell, project, null, declaringType, true);
     }
 
     /**
@@ -101,17 +99,16 @@ public class InferencingContributionDialogue extends AbstractDialogue {
      * specify the declaring type in the UI controls.
      */
     public InferencingContributionDialogue(Shell parentShell, IProject project) {
-        this(parentShell, project, null, null, true, true);
+        this(parentShell, project, null, null, true);
 
     }
 
     protected InferencingContributionDialogue(Shell parentShell, IProject project, IGroovySuggestion currentSuggestion,
-            GroovySuggestionDeclaringType declaringType, boolean editDeclaringType, boolean isActive) {
+            GroovySuggestionDeclaringType declaringType, boolean isActive) {
         super(parentShell, DIALOGUE_DESCRIPTOR);
         this.project = project;
         this.currentSuggestion = currentSuggestion;
         this.declaringTypeName = declaringType != null ? declaringType.getName() : null;
-        this.editDeclaringType = editDeclaringType;
         this.isActive = isActive;
     }
 
@@ -140,8 +137,6 @@ public class InferencingContributionDialogue extends AbstractDialogue {
     protected void setSuggestion(IGroovySuggestion suggestion) {
         this.currentSuggestion = suggestion;
         if (currentSuggestion != null) {
-            // Cannot edit an existing declaring type
-            editDeclaringType = false;
             isStatic = currentSuggestion.isStatic();
             suggestionName = currentSuggestion.getName();
             declaringTypeName = currentSuggestion.getDeclaringType().getName();
@@ -170,9 +165,9 @@ public class InferencingContributionDialogue extends AbstractDialogue {
 
         JavaTextControl nameControl = new JavaTextControl(ControlTypes.NAME, getOffsetLabelLocation(), suggestionName);
         nameControl.createControlArea(parent);
-        nameControl.addSelectionListener(new RequiredValueControlSelectionListener(ControlTypes.NAME, suggestionName) {
+        nameControl.addSelectionListener(new ValidatedValueSelectionListener(ControlTypes.NAME, suggestionName) {
 
-            protected void handleRequiredValue(ControlSelectionEvent event) {
+            protected void handleValidatedValue(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (selection instanceof String) {
                     suggestionName = (String) selection;
@@ -192,30 +187,24 @@ public class InferencingContributionDialogue extends AbstractDialogue {
         };
         declaringTypeControl.createControlArea(parent);
 
-        // Do not allow edits or required value checks on the declaring type
-        // control if it cannot be edited.
-        if (editDeclaringType) {
-            declaringTypeControl.setEnabled(true);
-            declaringTypeControl.addSelectionListener(new RequiredValueControlSelectionListener(ControlTypes.DECLARING_TYPE,
-                    declaringTypeName) {
+        declaringTypeControl.setEnabled(true);
+        declaringTypeControl.addSelectionListener(new ValidatedValueSelectionListener(ControlTypes.DECLARING_TYPE,
+                declaringTypeName) {
 
-                protected void handleRequiredValue(ControlSelectionEvent event) {
-                    Object selection = event.getSelectionData();
-                    if (selection instanceof String) {
-                        declaringTypeName = (String) selection;
-                    }
+            protected void handleValidatedValue(ControlSelectionEvent event) {
+                Object selection = event.getSelectionData();
+                if (selection instanceof String) {
+                    declaringTypeName = (String) selection;
                 }
-            });
-        } else {
-            declaringTypeControl.setEnabled(false);
-        }
+            }
+        });
 
         JavaTypeBrowsingControl suggestionTypeControl = new JavaTypeBrowsingControl(ControlTypes.TYPE, getOffsetLabelLocation(),
                 suggestionType, getJavaProject());
         suggestionTypeControl.createControlArea(parent);
-        suggestionTypeControl.addSelectionListener(new RequiredValueControlSelectionListener(ControlTypes.TYPE, suggestionType) {
+        suggestionTypeControl.addSelectionListener(new ValidatedValueSelectionListener(ControlTypes.TYPE, suggestionType) {
 
-            protected void handleRequiredValue(ControlSelectionEvent event) {
+            protected void handleValidatedValue(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (selection instanceof String) {
                     suggestionType = (String) selection;
