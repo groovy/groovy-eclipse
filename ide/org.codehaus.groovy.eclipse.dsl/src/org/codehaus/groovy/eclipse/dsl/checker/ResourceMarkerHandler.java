@@ -20,6 +20,7 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.Position;
 
@@ -72,6 +73,9 @@ public class ResourceMarkerHandler implements IStaticCheckerHandler {
     }
     public int numProblemsFound() {
         return numFound;
+    }
+    public void handleResourceStart(IResource resource) throws CoreException {
+        resource.deleteMarkers(GroovyDSLCoreActivator.MARKER_ID, true, IResource.DEPTH_ZERO);
     }
 
 }

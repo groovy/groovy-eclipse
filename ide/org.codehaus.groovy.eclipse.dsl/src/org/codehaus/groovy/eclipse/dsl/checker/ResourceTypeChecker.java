@@ -62,8 +62,7 @@ public class ResourceTypeChecker {
                 return false;
             }
             
-            // first delete old markers
-            resource.deleteMarkers(GroovyDSLCoreActivator.MARKER_ID, true, IResource.DEPTH_ZERO);
+            handler.handleResourceStart(resource);
             
             if (resource.getType() == IResource.FILE && ContentTypeUtils.isGroovyLikeFileName(resource.getName())) {
                 GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.create((IFile) resource);

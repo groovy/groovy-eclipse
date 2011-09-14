@@ -17,6 +17,8 @@ package org.codehaus.groovy.eclipse.dsl.checker;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.Position;
 
 /**
@@ -29,4 +31,5 @@ public interface IStaticCheckerHandler {
     void handleTypeAssertionFailed(ASTNode node, String expectedType, String actualType, Position position, int line);
     void setResource(IFile resource);
     int numProblemsFound();
+    void handleResourceStart(IResource resource) throws CoreException;
 }
