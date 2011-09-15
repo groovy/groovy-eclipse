@@ -32,6 +32,7 @@ public class AllDSLTests {
         suite.addTestSuite(StringObjectVectorTests.class);
         suite.addTestSuite(DSLContentAssistTests.class);
         suite.addTestSuite(DSLNamedArgContentAssistTests.class);
+        suite.addTestSuite(SuggestionInferencingTests.class);
         return suite;
     }
 
