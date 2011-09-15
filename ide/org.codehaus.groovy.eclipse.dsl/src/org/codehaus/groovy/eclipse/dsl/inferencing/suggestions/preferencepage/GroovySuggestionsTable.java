@@ -26,13 +26,12 @@ import java.util.Map;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyPropertySuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovySuggestionDeclaringType;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IBaseGroovySuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IGroovySuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager;
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager.ProjectSuggestions;
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.SuggestionDescriptor;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.OperationManager;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.IProjectUIControl;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.ISelectionHandler;
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.InferencingContributionDialogue;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.ProjectDropDownControl;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.layout.GridDataFactory;
@@ -52,7 +51,6 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.viewers.ViewerSorter;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -364,35 +362,19 @@ public class GroovySuggestionsTable {
 
             if (getSelections().size() == 1) {
                 Object selectedObj = getSelections().get(0);
-                if (selectedObj instanceof IGroovySuggestion) {
+                if (selectedObj instanceof IBaseGroovySuggestion) {
                     // This edits an existing suggestion. Retain active state.
-                    IGroovySuggestion existingSuggestion = (IGroovySuggestion) selectedObj;
-                    InferencingContributionDialogue dialogue = new InferencingContributionDialogue(getShell(), existingSuggestion,
-                            getSelectedProject());
-                    IGroovySuggestion editedSuggestion = null;
-                    if (dialogue.open() == Window.OK) {
-                        SuggestionDescriptor descriptor = dialogue.getSuggestionChange();
+                    IBaseGroovySuggestion existingSuggestion = (IBaseGroovySuggestion) selectedObj;
+                    IGroovySuggestion editedSuggestion = new OperationManager().editGroovySuggestion(getSelectedProject(),
+                            existingSuggestion, getShell());
 
-                        // Must be able to handle declaring type edits
-                        GroovySuggestionDeclaringType declaringType = existingSuggestion.getDeclaringType();
-                        if (!declaringType.getName().equals(descriptor.getDeclaringTypeName())) {
-                            declaringType.removeSuggestion(existingSuggestion);
-                            ProjectSuggestions projectSuggestions = InferencingSuggestionsManager.getInstance().getSuggestions(
-                                    getSelectedProject());
-
-                            // if declaring type does not have any more
-                            // suggestions, remove it.
-                            if (declaringType.getSuggestions().isEmpty()) {
-                                projectSuggestions.removeDeclaringType(declaringType);
-                            }
-
-                            // Add to the new declaring type
-                            editedSuggestion = projectSuggestions.addSuggestion(descriptor);
-                        } else {
-                            editedSuggestion = declaringType.replaceSuggestion(descriptor, existingSuggestion);
-                        }
-
+                    if (editedSuggestion != null) {
+                        // Refresh first before setting the check state of the
+                        // new
+                        // suggestion
                         refresh();
+
+                        // Update the check state of the new element
                         setCheckState(editedSuggestion);
                     }
                 }
@@ -405,48 +387,23 @@ public class GroovySuggestionsTable {
     }
 
     protected void addSuggestion() {
-        if (getSelections().size() > 1) {
-            return;
-        } else {
+        Object selectedObj = getSelections().size() == 1 ? getSelections().get(0) : null;
 
-            InferencingContributionDialogue dialogue = null;
-            if (getSelections().size() == 1) {
-                Object selectedObj = getSelections().get(0);
-                // Add to the selected declaring type
-                if (selectedObj instanceof GroovySuggestionDeclaringType) {
-                    dialogue = new InferencingContributionDialogue(getShell(), (GroovySuggestionDeclaringType) selectedObj,
-                            getSelectedProject());
-                } else if (selectedObj instanceof IGroovySuggestion) {
-                    // adds to the declaring type of the selected suggestion
-                    dialogue = new InferencingContributionDialogue(getShell(),
-                            ((IGroovySuggestion) selectedObj).getDeclaringType(), getSelectedProject());
-                }
-            } else {
-                // else no selection made, so allow the user to specify which
-                // declaring type to add to through the suggestions dialogue
-                dialogue = new InferencingContributionDialogue(getShell(), getSelectedProject());
-            }
+        IBaseGroovySuggestion contextSuggestion = selectedObj instanceof IBaseGroovySuggestion ? (IBaseGroovySuggestion) selectedObj
+                : null;
+        IGroovySuggestion suggestion = new OperationManager().addGroovySuggestion(getSelectedProject(), contextSuggestion,
+                getShell());
 
-            if (dialogue != null && dialogue.open() == Window.OK) {
-                SuggestionDescriptor descriptor = dialogue.getSuggestionChange();
+        if (suggestion != null) {
+            // Refresh first before setting the check state of the
+            // new
+            // suggestion
+            refresh();
 
-                IProject project = getSelectedProject();
-                if (project != null) {
-                    IGroovySuggestion suggestion = InferencingSuggestionsManager.getInstance().getSuggestions(project)
-                            .addSuggestion(descriptor);
-
-                    if (suggestion != null) {
-                        // Refresh first before setting the check state of the
-                        // new
-                        // suggestion
-                        refresh();
-
-                        // Update the check state of the new element
-                        setCheckState(suggestion);
-                    }
-                }
-            }
+            // Update the check state of the new element
+            setCheckState(suggestion);
         }
+
     }
 
     protected void handleButtonSelection(ButtonTypes button) {
@@ -479,22 +436,13 @@ public class GroovySuggestionsTable {
 
     protected void handleRemove() {
         List<Object> selections = getSelections();
-
-        for (Object obj : selections) {
-            if (obj instanceof GroovySuggestionDeclaringType) {
-                InferencingSuggestionsManager.getInstance().getSuggestions(getSelectedProject())
-                        .removeDeclaringType((GroovySuggestionDeclaringType) obj);
-            } else if (obj instanceof IGroovySuggestion) {
-                IGroovySuggestion suggestion = (IGroovySuggestion) obj;
-                GroovySuggestionDeclaringType declaringType = suggestion.getDeclaringType();
-                declaringType.removeSuggestion(suggestion);
-                // Also remove the declaring type if no suggestions are left
-                if (declaringType.getSuggestions().isEmpty()) {
-                    InferencingSuggestionsManager.getInstance().getSuggestions(getSelectedProject())
-                            .removeDeclaringType(declaringType);
-                }
+        List<IBaseGroovySuggestion> suggestionsToRemove = new ArrayList<IBaseGroovySuggestion>(selections.size());
+        for (Object selection : selections) {
+            if (selection instanceof IBaseGroovySuggestion) {
+                suggestionsToRemove.add((IBaseGroovySuggestion) selection);
             }
         }
+        new OperationManager().removeGroovySuggestion(getSelectedProject(), suggestionsToRemove);
         refresh();
     }
 

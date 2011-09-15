@@ -17,8 +17,10 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
 import java.util.List;
 
-
 /**
+ * Generic disposable descriptor used to create concrete suggestions (either
+ * property or method suggestion). Useful as a return value from a dialogue where only
+ * one type is returned containing all dialogue field values.
  * 
  * @author Nieraj Singh
  * @created 2011-08-04

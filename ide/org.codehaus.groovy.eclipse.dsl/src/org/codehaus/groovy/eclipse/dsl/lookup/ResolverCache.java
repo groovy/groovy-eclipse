@@ -13,6 +13,7 @@ package org.codehaus.groovy.eclipse.dsl.lookup;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -42,6 +43,9 @@ public class ResolverCache {
      * @return
      */
     public ClassNode resolve(String qName) {
+        if (qName == null) {
+             return ClassHelper.DYNAMIC_TYPE;
+        }
         qName = qName.trim();
         if (qName.equals("java.lang.Void") || qName.equals("void")) {
             return VariableScope.VOID_CLASS_NODE;

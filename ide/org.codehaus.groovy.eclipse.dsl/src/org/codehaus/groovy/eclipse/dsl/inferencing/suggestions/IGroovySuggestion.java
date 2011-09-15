@@ -20,20 +20,18 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
  * @author Nieraj Singh
  * @created Apr 19, 2011
  */
-public interface IGroovySuggestion {
+public interface IGroovySuggestion extends IBaseGroovySuggestion {
 
     public GroovySuggestionDeclaringType getDeclaringType();
 
-    public String getName();
-
     public String getJavaDoc();
-
-    public boolean isStatic();
 
     public String getType();
 
+    public boolean isStatic();
+
     public boolean isActive();
-    
+
     public void changeActiveState(boolean isActive);
 
 }

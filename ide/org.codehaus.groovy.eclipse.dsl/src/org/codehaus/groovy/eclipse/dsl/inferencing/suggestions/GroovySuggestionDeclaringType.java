@@ -23,7 +23,7 @@ import java.util.List;
  * @author Nieraj Singh
  * @created Apr 19, 2011
  */
-public class GroovySuggestionDeclaringType {
+public class GroovySuggestionDeclaringType implements IBaseGroovySuggestion{
     private List<IGroovySuggestion> suggestions;
 
     private String name;
