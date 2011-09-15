@@ -39,22 +39,22 @@ public class GroovySuggestionDeclaringType {
 
     /**
      * Creates a new instance of the suggestion in the specified declaring type.
+     * If a suggestion
+     * already exists that matches the descriptor, null is returned
      * 
      * @param type
      * @param isActive whether the suggestion should be active in the declaring
      *            type
-     * @return
+     * @return new created suggestion, or null if the suggestion already exists
      */
     public IGroovySuggestion createSuggestion(SuggestionDescriptor descriptor) {
 
         IGroovySuggestion suggestion = new SuggestionFactory(descriptor).createSuggestion(this);
-
+        if (suggestions.contains(suggestion)) {
+            return null;
+        }
         suggestions.add(suggestion);
         return suggestion;
-    }
-
-    public boolean containsSuggestion(IGroovySuggestion suggestion) {
-        return suggestions.contains(suggestion);
     }
 
     public IGroovySuggestion replaceSuggestion(SuggestionDescriptor descriptor, IGroovySuggestion suggestion) {
@@ -68,8 +68,6 @@ public class GroovySuggestionDeclaringType {
         return null;
 
     }
-    
-    
 
     public boolean removeSuggestion(IGroovySuggestion suggestion) {
         return suggestions.remove(suggestion);

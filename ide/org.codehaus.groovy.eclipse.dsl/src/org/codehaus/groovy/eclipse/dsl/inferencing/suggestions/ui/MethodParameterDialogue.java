@@ -118,7 +118,7 @@ public class MethodParameterDialogue extends AbstractDialogue {
         };
         declaringTypeControl.createControlArea(parent);
 
-        declaringTypeControl.addSelectionListener(new ValidatedValueSelectionListener(ControlTypes.TYPE, type) {
+        declaringTypeControl.addSelectionListener(new ValidatedValueSelectionListener() {
 
             protected void handleValidatedValue(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();

@@ -152,8 +152,6 @@ public class InferencingSuggestionsManager {
         public GroovySuggestionDeclaringType getExactDeclaringType(String declaringTypeName) {
             return suggestions.get(declaringTypeName);
         }
-        
-  
 
         /**
          * Creates a declaring type or returns an existing one.
@@ -166,9 +164,16 @@ public class InferencingSuggestionsManager {
             GroovySuggestionDeclaringType declaringType = suggestions.get(declaringTypeName);
             if (declaringType == null) {
                 declaringType = new GroovySuggestionDeclaringType(declaringTypeName);
+
+            }
+
+            IGroovySuggestion createdSuggestion = declaringType.createSuggestion(descriptor);
+            // Don't add a new declaring type unless a suggestion was
+            // successfully created
+            if (createdSuggestion != null && !suggestions.containsKey(declaringType.getName())) {
                 suggestions.put(declaringTypeName, declaringType);
             }
-            return declaringType.createSuggestion(descriptor);
+            return createdSuggestion;
         }
 
         public void removeDeclaringType(GroovySuggestionDeclaringType declaringType) {

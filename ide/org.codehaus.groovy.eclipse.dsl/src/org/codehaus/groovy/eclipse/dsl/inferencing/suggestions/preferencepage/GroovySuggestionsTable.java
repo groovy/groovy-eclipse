@@ -418,8 +418,8 @@ public class GroovySuggestionsTable {
                             getSelectedProject());
                 } else if (selectedObj instanceof IGroovySuggestion) {
                     // adds to the declaring type of the selected suggestion
-                    dialogue = new InferencingContributionDialogue(getShell(), (IGroovySuggestion) selectedObj,
-                            getSelectedProject());
+                    dialogue = new InferencingContributionDialogue(getShell(),
+                            ((IGroovySuggestion) selectedObj).getDeclaringType(), getSelectedProject());
                 }
             } else {
                 // else no selection made, so allow the user to specify which

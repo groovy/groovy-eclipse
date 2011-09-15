@@ -43,4 +43,29 @@ public class GroovyMethodSuggestion extends GroovySuggestion {
         return useNamedArgument;
     }
 
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((parameters == null) ? 0 : parameters.hashCode());
+        result = prime * result + (useNamedArgument ? 1231 : 1237);
+        return result;
+    }
+
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        GroovyMethodSuggestion other = (GroovyMethodSuggestion) obj;
+        if (parameters == null) {
+            if (other.parameters != null)
+                return false;
+        } else if (!parameters.equals(other.parameters))
+            return false;
+        if (useNamedArgument != other.useNamedArgument)
+            return false;
+        return true;
+    }
 }
