@@ -133,6 +133,43 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "flar", 1);
     }
     
+    
+    public void testOptionalArgs1() throws Exception {
+        createDSL("currentType().accept {\n" +
+                "method name:\"flar\", optionalParams:[aaa:Integer, bbb:Boolean, ccc:String]\n" +
+                "}");
+        String contents = "flar( )";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "( "));
+        proposalExists(proposals, "aaa : __", 1);
+        proposalExists(proposals, "bbb : __", 1);
+        proposalExists(proposals, "ccc : __", 1);
+        proposalExists(proposals, "flar", 1);
+    }
+    
+    public void testOptionalArgs2() throws Exception {
+        createDSL("currentType().accept {\n" +
+                "method name:\"flar\", namedParams:[aaa:Integer, bbb:Boolean, ccc:String]\n" +
+                "}");
+        String contents = "flar( )";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "( "));
+        proposalExists(proposals, "aaa : __", 1);
+        proposalExists(proposals, "bbb : __", 1);
+        proposalExists(proposals, "ccc : __", 1);
+        proposalExists(proposals, "flar", 1);
+    }
+    
+    public void testOptionalArgs3() throws Exception {
+        createDSL("currentType().accept {\n" +
+                "method name:\"flar\", namedParams:[aaa:Integer], optionalParams: [bbb:Boolean, ccc:String]\n" +
+                "}");
+        String contents = "flar( )";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "( "));
+        proposalExists(proposals, "aaa : __", 1);
+        proposalExists(proposals, "bbb : __", 1);
+        proposalExists(proposals, "ccc : __", 1);
+        proposalExists(proposals, "flar", 1);
+    }
+    
     public void testNamedArgs7() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
@@ -188,8 +225,6 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         checkProposalChoices(contents, "flar(", "aaa", "aaa: __, ", expectedChoices);
     }
     
-
-
     private void createDSL(String dsldContents) throws Exception {
         defaultFileExtension = "dsld";
         create(dsldContents, "MyDsld");

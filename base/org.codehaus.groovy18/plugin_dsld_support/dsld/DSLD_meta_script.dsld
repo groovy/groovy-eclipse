@@ -119,30 +119,35 @@ def insideContribution = { (enclosingCallName("accept") | enclosingCallName("con
 	property name : "provider", type : String, doc : """Specifies a <em>Provider</em> for the current contribution.  
 	    This provider is displayed during content assist and in other places to give a quick hint as to where this 
 	    contribution elementcomes from."""
-	method name : "property", 
-		   useNamedArgs : true, 
-		   params : [name : String, 
-			         type : Object, 
-					 isStatic : boolean, 
-					 declaringType : Object, 
-					 provider: String, 
-					 doc : String],
-		  doc : """
-		  Specifies a new property contribution.  <b>name</b> is mandatory, but all other parameters are optional.
-		  """
-		   
-	method name : "method", 
-	       useNamedArgs : true, 
-		   params : [name : String, 
-			         type : Object, 
-					 params : Map, 
-					 useNamedArgs : boolean, 
-					 isStatic : boolean, 
-					 declaringType : Object, 
-					 provider: String, 
-					 doc : String],
-		  doc : """
-		  Specifies a new method contribution.  <b>name</b> is mandatory, but all other parameters are optional.
+    method name : "property", 
+            namedParams : [
+                     name : String, 
+                     type : Object, 
+                     isStatic : boolean],
+            optionalParams : [ 
+                     declaringType : Object, 
+                     provider: String, 
+                     doc : String],
+          doc : """
+          Specifies a new property contribution.  <b>name</b> is mandatory, but all other parameters are optional.
+          """
+           
+    method name : "method", 
+           namedParams : [
+                     name : String, 
+                     type : Object, 
+                     params : Map],
+           optionalParams : [
+                     optionalParams : Map,
+                     namedParams : Map,
+                     isStatic : boolean, 
+                     declaringType : Object, 
+                     provider: String, 
+                     doc : String],
+          doc : """
+          Specifies a new property contribution.  <b>name</b> is mandatory, but all other parameters are optional.
+          Use <code>namedParams</code> to specify parameters that should be named, and use <code>optionalParams</code> 
+          to specify parameters that will not appear in content assist.
 		  """
 		   
 	method name : "delegatesTo", params : [ type : Object ], doc : """
