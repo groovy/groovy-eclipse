@@ -24,6 +24,7 @@ Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Export-Package: org.codehaus.groovy.eclipse.dsl,
  org.codehaus.groovy.eclipse.dsl.classpath,
  org.codehaus.groovy.eclipse.dsl.contributions,
+ org.codehaus.groovy.eclipse.dsl.inferencing.suggestions,
  org.codehaus.groovy.eclipse.dsl.lookup,
  org.codehaus.groovy.eclipse.dsl.pointcuts,
  org.codehaus.groovy.eclipse.dsl.pointcuts.impl,

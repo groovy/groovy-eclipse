@@ -18,7 +18,10 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.preferencepage;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.SuggestionsLoader;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.writer.SuggestionsFile;
 import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.widgets.Composite;
@@ -68,6 +71,21 @@ public class InferencingPreferencesPage extends PreferencePage implements IWorkb
             return true;
         }
         return false;
+    }
+
+    public boolean performCancel() {
+        IProject project = table.getSelectedProject();
+
+        // For now restore from XML
+        if (project != null) {
+            SuggestionsFile suggestionFile = new SuggestionsFile(project);
+            IFile file = suggestionFile.getFile();
+            if (file.exists()) {
+                new SuggestionsLoader(file).loadExistingSuggestions();
+            }
+        }
+
+        return super.performCancel();
     }
 
 }

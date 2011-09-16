@@ -39,6 +39,10 @@ public abstract class AbstractCreateOperation extends AbstractSuggestionOperatio
         this.descriptor = descriptor;
     }
 
+    public SuggestionDescriptor getDescriptor() {
+        return descriptor;
+    }
+
     public ValueStatus run() {
 
         if (descriptor != null) {

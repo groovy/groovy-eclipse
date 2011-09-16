@@ -44,6 +44,12 @@ public class OperationManager {
         return performGroovyOperation(new AddSuggestionsOperation(project, context), shell);
     }
 
+    public IGroovySuggestion addGroovySuggestion(IProject project, SuggestionDescriptor descriptor, Shell shell) {
+        AddSuggestionsOperation operation = new AddSuggestionsOperation(project, null);
+        operation.setSuggestionDescriptor(descriptor);
+        return performGroovyOperation(operation, shell);
+    }
+
     public IGroovySuggestion editGroovySuggestion(IProject project, IBaseGroovySuggestion context, Shell shell) {
         return performGroovyOperation(new EditSuggestionOperation(project, context), shell);
     }

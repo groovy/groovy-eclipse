@@ -233,6 +233,10 @@ public class VariableScope {
 		return shared.wormhole;
 	}
 
+	public boolean isMethodCall() {
+		return methodCallNumberOfArguments >= 0;
+	}
+
 	public ASTNode getEnclosingNode() {
 		if (nodeStack.size() > 1) {
 			ASTNode current = nodeStack.pop();

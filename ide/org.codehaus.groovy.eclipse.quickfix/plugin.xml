@@ -9,5 +9,13 @@
             id="org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixProcessor">
       </quickFixProcessor>
     </extension>
+   <extension
+         point="org.eclipse.jdt.ui.quickAssistProcessors">
+      <quickAssistProcessor
+            class="org.codehaus.groovy.eclipse.quickassist.GroovyQuickAssist"
+            id="org.codehaus.groovy.eclipse.quickassist.groovy"
+            name="Groovy Quick Assist">
+      </quickAssistProcessor>
+   </extension>
   
 </plugin>

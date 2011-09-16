@@ -11,7 +11,8 @@ Require-Bundle: org.eclipse.ui,
  org.codehaus.groovy.eclipse.ui;bundle-version="2.5.2",
  org.eclipse.jdt.core;bundle-version="3.6.1",
  org.eclipse.jdt.groovy.core;bundle-version="2.5.2",
- org.codehaus.groovy.eclipse.codeassist.completion;bundle-version="2.5.2"
+ org.codehaus.groovy.eclipse.codeassist.completion;bundle-version="2.5.2",
+ org.codehaus.groovy.eclipse.dsl;bundle-version="2.5.2"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-Vendor: The Codehaus

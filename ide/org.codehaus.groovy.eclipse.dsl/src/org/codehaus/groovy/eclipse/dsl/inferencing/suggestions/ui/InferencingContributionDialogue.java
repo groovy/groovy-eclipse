@@ -86,6 +86,12 @@ public class InferencingContributionDialogue extends AbstractDialogue {
         setSuggestion(suggestion);
     }
 
+    public InferencingContributionDialogue(Shell parentShell, SuggestionDescriptor descriptor, IProject project) {
+        super(parentShell, DIALOGUE_DESCRIPTOR);
+        this.project = project;
+        setSuggestion(descriptor);
+    }
+
     /**
      * This constructor is used to add new suggestion to an existing declaring
      * type
@@ -149,6 +155,22 @@ public class InferencingContributionDialogue extends AbstractDialogue {
                 useNamedArguments = method.useNamedArguments();
                 isMethod = true;
             }
+        }
+    }
+
+    protected void setSuggestion(SuggestionDescriptor descriptor) {
+        isStatic = descriptor.isStatic();
+        suggestionName = descriptor.getName();
+        declaringTypeName = descriptor.getDeclaringTypeName();
+        javaDoc = descriptor.getJavaDoc();
+        suggestionType = descriptor.getSuggestionType();
+        isActive = descriptor.isActive();
+
+        if (descriptor.isMethod()) {
+
+            initialParameters = descriptor.getParameters();
+            useNamedArguments = descriptor.isUseArgumentNames();
+            isMethod = true;
         }
     }
 

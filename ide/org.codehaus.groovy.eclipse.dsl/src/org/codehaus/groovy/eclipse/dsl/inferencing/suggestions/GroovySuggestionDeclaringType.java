@@ -23,7 +23,7 @@ import java.util.List;
  * @author Nieraj Singh
  * @created Apr 19, 2011
  */
-public class GroovySuggestionDeclaringType implements IBaseGroovySuggestion{
+public class GroovySuggestionDeclaringType implements IBaseGroovySuggestion {
     private List<IGroovySuggestion> suggestions;
 
     private String name;
@@ -50,11 +50,48 @@ public class GroovySuggestionDeclaringType implements IBaseGroovySuggestion{
     public IGroovySuggestion createSuggestion(SuggestionDescriptor descriptor) {
 
         IGroovySuggestion suggestion = new SuggestionFactory(descriptor).createSuggestion(this);
-        if (suggestions.contains(suggestion)) {
+        if (containsSuggestion(suggestion)) {
             return null;
         }
         suggestions.add(suggestion);
         return suggestion;
+    }
+
+    protected boolean containsSuggestion(IGroovySuggestion suggestion) {
+        boolean isContained = false;
+        if (suggestion instanceof GroovyPropertySuggestion) {
+            String name = suggestion.getName();
+            for (IGroovySuggestion existingSugg : suggestions) {
+                if (existingSugg instanceof GroovyPropertySuggestion && existingSugg.getName().equals(name)) {
+                    isContained = true;
+                    break;
+                }
+            }
+        } else if (suggestion instanceof GroovyMethodSuggestion) {
+            String name = suggestion.getName();
+            for (IGroovySuggestion existingSugg : suggestions) {
+                if (existingSugg instanceof GroovyMethodSuggestion && existingSugg.getName().equals(name)) {
+
+                    List<MethodParameter> existingParameters = ((GroovyMethodSuggestion) existingSugg).getParameters();
+                    List<MethodParameter> parameters = ((GroovyMethodSuggestion) suggestion).getParameters();
+                    if (existingParameters != null) {
+                        if (existingParameters.equals(parameters)) {
+                            isContained = true;
+                            break;
+                        }
+                    } else if (parameters != null) {
+                        if (parameters.equals(existingParameters)) {
+                            isContained = true;
+                            break;
+                        }
+                    } else {
+                        isContained = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return isContained;
     }
 
     public IGroovySuggestion replaceSuggestion(SuggestionDescriptor descriptor, IGroovySuggestion suggestion) {

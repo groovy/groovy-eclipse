@@ -49,7 +49,14 @@ public class SuggestionsUIOperation {
         InferencingContributionDialogue dialogue = null;
         IProject project = operation.getProject();
         if (context == null) {
-            dialogue = new InferencingContributionDialogue(shell, project);
+            // Although no context may exist, a descriptor may still be present. Use the information in the descriptor
+            // to populate the dialogue
+            SuggestionDescriptor descriptor = operation.getDescriptor();
+            if (descriptor != null) {
+                dialogue = new InferencingContributionDialogue(shell, descriptor, project);
+            } else {
+                dialogue = new InferencingContributionDialogue(shell, project);
+            }
         } else {
             if (context instanceof GroovySuggestionDeclaringType) {
                 dialogue = new InferencingContributionDialogue(shell, (GroovySuggestionDeclaringType) context, project);
