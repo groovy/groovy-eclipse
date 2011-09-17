@@ -25,20 +25,20 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.swt.graphics.Point;
 
-public class InferencingSuggestionsQuickAssistProposal extends
+public class AddSuggestionsQuickAssistProposal extends
 		AbstractGroovyCompletionProposal {
 
 	private GroovyCompilationUnit unit;
 	private int length;
 	private int offset;
 
-	static final String LABEL = "Add or edit Groovy suggestion";
+	static final String LABEL = "Add Groovy suggestion";
 
 	/**
 	 * @param unit
 	 * @param node
 	 */
-	public InferencingSuggestionsQuickAssistProposal(IInvocationContext context) {
+	public AddSuggestionsQuickAssistProposal(IInvocationContext context) {
 		super();
 		ICompilationUnit compUnit = context.getCompilationUnit();
 		if (compUnit instanceof GroovyCompilationUnit) {
@@ -59,7 +59,7 @@ public class InferencingSuggestionsQuickAssistProposal extends
 	public void apply(IDocument document) {
 		IProject project = getProject();
 		if (project != null) {
-			new SuggestionCompilationUnitHelper(length, offset, unit, project).getSuggestion();
+			new SuggestionCompilationUnitHelper(length, offset, unit, project).addSuggestion();
 		}
 	}
 

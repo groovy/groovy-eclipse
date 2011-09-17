@@ -26,7 +26,7 @@ import org.eclipse.jdt.core.JavaCore;
  */
 public class JavaValidIdentifierRule implements IValueCheckingRule {
 
-    protected static final String INVALID_JAVA_IDENTIFIER = "Invalid Java identifier";
+    protected static final String INVALID_JAVA_IDENTIFIER = "Invalid value";
 
     public ValueStatus checkValidity(Object value) {
         if (value instanceof String) {
@@ -43,6 +43,6 @@ public class JavaValidIdentifierRule implements IValueCheckingRule {
     }
 
     protected IStatus checkJavaType(String value) {
-        return JavaConventions.validateJavaTypeName(value, JavaCore.VERSION_1_3, JavaCore.VERSION_1_3);
+        return JavaConventions.validateIdentifier(value, JavaCore.VERSION_1_3, JavaCore.VERSION_1_3);
     }
 }

@@ -38,13 +38,17 @@ public class PropertySuggestionLabel extends AbstractSuggestionLabel {
         String name = property.getName();
 
         buffer.append(name);
-        buffer.append(EMPTY_SPACE);
-        buffer.append(COLON);
-        buffer.append(EMPTY_SPACE);
+ 
 
         String type = property.getType();
 
-        buffer.append(type);
+        if (type != null && type.length() > 0) {
+            buffer.append(EMPTY_SPACE);
+            buffer.append(COLON);
+            buffer.append(EMPTY_SPACE);
+            buffer.append(type);
+        }
+
         return buffer.toString();
     }
 

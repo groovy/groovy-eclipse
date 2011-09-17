@@ -105,7 +105,7 @@ public class MethodParameterDialogue extends AbstractDialogue {
         // as to not allow invalid types. Therefore, in addition to checking the
         // validity of the type, also
         // also include empty or null type values as "valid".
-        JavaTypeBrowsingControl declaringTypeControl = new JavaTypeBrowsingControl(ControlTypes.TYPE, getOffsetLabelLocation(),
+        JavaTypeBrowsingControl typeControl = new JavaTypeBrowsingControl(ControlTypes.TYPE, getOffsetLabelLocation(),
                 type, javaProject) {
 
             protected ValueStatus isControlValueValid(String value) {
@@ -116,9 +116,9 @@ public class MethodParameterDialogue extends AbstractDialogue {
             }
 
         };
-        declaringTypeControl.createControlArea(parent);
+        typeControl.createControlArea(parent);
 
-        declaringTypeControl.addSelectionListener(new ValidatedValueSelectionListener() {
+        typeControl.addSelectionListener(new ValidatedValueSelectionListener() {
 
             protected void handleValidatedValue(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();

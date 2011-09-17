@@ -69,22 +69,37 @@ public class GroovySuggestionDeclaringType implements IBaseGroovySuggestion {
             }
         } else if (suggestion instanceof GroovyMethodSuggestion) {
             String name = suggestion.getName();
+            GroovyMethodSuggestion methodSuggestion = (GroovyMethodSuggestion) suggestion;
             for (IGroovySuggestion existingSugg : suggestions) {
                 if (existingSugg instanceof GroovyMethodSuggestion && existingSugg.getName().equals(name)) {
+                    GroovyMethodSuggestion existingMethodSuggestion = (GroovyMethodSuggestion) existingSugg;
 
-                    List<MethodParameter> existingParameters = ((GroovyMethodSuggestion) existingSugg).getParameters();
-                    List<MethodParameter> parameters = ((GroovyMethodSuggestion) suggestion).getParameters();
+                    List<MethodParameter> existingParameters = existingMethodSuggestion.getParameters();
+                    List<MethodParameter> parameters = methodSuggestion.getParameters();
                     if (existingParameters != null) {
-                        if (existingParameters.equals(parameters)) {
-                            isContained = true;
-                            break;
+                        if (parameters != null && parameters.size() == existingParameters.size()) {
+                            // make sure the types of each parameter is the
+                            // same. names don't matter
+                            boolean same = true;
+                            for (int i = 0; i < parameters.size(); i++) {
+                                String existingType = existingParameters.get(i).getType();
+                                String type = parameters.get(i).getType();
+                                if (type != null) {
+                                    if (!type.equals(existingType)) {
+                                        same = false;
+                                        break;
+                                    }
+                                } else if (existingType != null) {
+                                    same = false;
+                                    break;
+                                }
+                            }
+                            if (same) {
+                                isContained = true;
+                                break;
+                            }
                         }
-                    } else if (parameters != null) {
-                        if (parameters.equals(existingParameters)) {
-                            isContained = true;
-                            break;
-                        }
-                    } else {
+                    } else if (parameters == null) {
                         isContained = true;
                         break;
                     }

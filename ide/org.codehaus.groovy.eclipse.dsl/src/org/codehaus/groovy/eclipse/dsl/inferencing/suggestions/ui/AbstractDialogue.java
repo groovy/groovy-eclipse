@@ -170,7 +170,9 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
             // Add any instances of the listener to the list of descriptors that
             // need to
             // be observed for value validation
-            invalidValues.put(descriptor, new SetValue(initialValue, null));
+            if (descriptor != null) {
+                invalidValues.put(descriptor, new SetValue(initialValue, null));
+            }
         }
 
         public void handleSelection(ControlSelectionEvent event) {

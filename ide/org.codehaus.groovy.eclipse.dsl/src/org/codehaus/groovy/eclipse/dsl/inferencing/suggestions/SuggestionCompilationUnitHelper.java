@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.eclipse.codeassist.Activator;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.ASTNodeFinder;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
@@ -53,13 +52,13 @@ public class SuggestionCompilationUnitHelper {
         this.project = project;
     }
 
-    public IGroovySuggestion getSuggestion() {
+    public IGroovySuggestion addSuggestion() {
         IGroovySuggestion suggestion = null;
         Region region = new Region(offset, length);
         ASTNodeFinder finder = new ASTNodeFinder(region);
 
         ASTNode node = finder.doVisit(unit.getModuleNode());
-        if (node instanceof ConstantExpression) {
+        if (SuggestionsRequestor.isValidNode(node)) {
             SuggestionsRequestor requestor = new SuggestionsRequestor(node);
             TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
             visitor.visitCompilationUnit(requestor);
@@ -89,6 +88,9 @@ public class SuggestionCompilationUnitHelper {
         Display display = Display.getCurrent();
         if (display == null) {
             display = Display.getDefault();
+        }
+        if (display == null) {
+            return null;
         }
         Shell shell = display.getActiveShell();
         if (shell == null || shell.isDisposed()) {

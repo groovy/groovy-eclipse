@@ -53,7 +53,7 @@ public class JavaValidTypeRule extends AbstractJavaTypeVerifiedRule {
                     Activator.logError(e);
                 }
             } else {
-                return ValueStatus.getErrorStatus(value, status.getMessage());
+                return ValueStatus.getErrorStatus(value, INVALID_JAVA);
             }
         }
         return ValueStatus.getErrorStatus(value, INVALID_JAVA);

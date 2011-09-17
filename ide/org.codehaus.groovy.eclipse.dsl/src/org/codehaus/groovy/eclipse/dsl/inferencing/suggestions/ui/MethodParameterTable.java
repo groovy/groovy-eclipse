@@ -49,7 +49,7 @@ import org.eclipse.swt.widgets.TableItem;
  * @author Nieraj Singh
  * @created 2011-05-13
  */
-public class MethodArgumentTable extends AbstractControlManager {
+public class MethodParameterTable extends AbstractControlManager {
 
     enum ColumnTypes {
         NAME("Name", 300), TYPE("Type", 300);
@@ -83,7 +83,7 @@ public class MethodArgumentTable extends AbstractControlManager {
 
     private boolean useNamedArguments;
 
-    public MethodArgumentTable(IJavaProject project, List<MethodParameter> parameters, boolean useNamedArguments) {
+    public MethodParameterTable(IJavaProject project, List<MethodParameter> parameters, boolean useNamedArguments) {
         this.parameters = parameters;
         if (parameters == null) {
             this.parameters = new ArrayList<MethodParameter>();

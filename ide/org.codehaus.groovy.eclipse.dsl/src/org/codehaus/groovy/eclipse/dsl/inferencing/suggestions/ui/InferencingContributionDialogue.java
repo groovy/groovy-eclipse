@@ -24,6 +24,7 @@ import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IValueCheckingRul
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.JavaValidTypeRule;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.MethodParameter;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.SuggestionDescriptor;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ValueStatus;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -72,7 +73,7 @@ public class InferencingContributionDialogue extends AbstractDialogue {
 
     private boolean useNamedArguments;
 
-    private MethodArgumentTable table;
+    private MethodParameterTable table;
 
     private IProject project;
 
@@ -222,9 +223,18 @@ public class InferencingContributionDialogue extends AbstractDialogue {
         });
 
         JavaTypeBrowsingControl suggestionTypeControl = new JavaTypeBrowsingControl(ControlTypes.TYPE, getOffsetLabelLocation(),
-                suggestionType, getJavaProject());
+                suggestionType, getJavaProject()) {
+
+            protected ValueStatus isControlValueValid(String value) {
+                if (value == null || value.length() == 0) {
+                    return ValueStatus.getValidStatus(value);
+                }
+                return super.isControlValueValid(value);
+            }
+
+        };
         suggestionTypeControl.createControlArea(parent);
-        suggestionTypeControl.addSelectionListener(new ValidatedValueSelectionListener(ControlTypes.TYPE, suggestionType) {
+        suggestionTypeControl.addSelectionListener(new ValidatedValueSelectionListener() {
 
             protected void handleValidatedValue(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
@@ -254,7 +264,7 @@ public class InferencingContributionDialogue extends AbstractDialogue {
 
         radioSelection.createControlArea(parent);
 
-        table = new MethodArgumentTable(getJavaProject(), initialParameters, useNamedArguments);
+        table = new MethodParameterTable(getJavaProject(), initialParameters, useNamedArguments);
 
         table.createControlArea(parent);
 

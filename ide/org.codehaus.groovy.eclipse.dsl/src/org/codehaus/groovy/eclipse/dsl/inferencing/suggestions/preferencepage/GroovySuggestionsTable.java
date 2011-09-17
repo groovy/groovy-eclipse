@@ -681,14 +681,14 @@ public class GroovySuggestionsTable {
                                 sortDirection = super.compare(viewer, e1, e2);
                             } else {
                                 // Groovy Properties have higher sort order
-                                return sortDirection == SWT.UP ? -1 : 1;
+                                sortDirection = sortDirection == SWT.UP ? -1 : 1;
                             }
                         } else if (e1 instanceof GroovyMethodSuggestion) {
                             if (e2 instanceof GroovyMethodSuggestion) {
                                 sortDirection = super.compare(viewer, e1, e2);
                             } else {
                                 // Groovy Methods have lower sort order
-                                return sortDirection == SWT.UP ? 1 : -1;
+                                sortDirection = sortDirection == SWT.UP ? 1 : -1;
                             }
                         } else {
                             sortDirection = super.compare(viewer, e1, e2);
@@ -703,7 +703,7 @@ public class GroovySuggestionsTable {
         protected ColumnTypes getColumnType(TreeColumn column) {
             String columnName = column.getText();
             for (ColumnTypes type : ColumnTypes.values()) {
-                if (type.equals(columnName)) {
+                if (type.getName().equals(columnName)) {
                     return type;
                 }
             }

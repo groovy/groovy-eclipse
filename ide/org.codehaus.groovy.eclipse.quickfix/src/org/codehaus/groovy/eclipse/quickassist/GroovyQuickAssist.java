@@ -38,7 +38,7 @@ public class GroovyQuickAssist extends GroovyContentProcessor implements
 			IProblemLocation[] locations) throws CoreException {
 		List<IJavaCompletionProposal> proposalList = new ArrayList<IJavaCompletionProposal>();
 
-		IJavaCompletionProposal javaProposal = new InferencingSuggestionsQuickAssistProposal(
+		IJavaCompletionProposal javaProposal = new AddSuggestionsQuickAssistProposal(
 				context).convertToJavaCompletionProposal();
 		proposalList.add(javaProposal);
 		return proposalList.toArray(new IJavaCompletionProposal[] {});

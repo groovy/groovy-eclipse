@@ -21,6 +21,10 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
@@ -63,8 +67,8 @@ public class SuggestionsRequestor implements ITypeRequestor {
 
         }
 
-        if (node instanceof ConstantExpression && doTest(node)) {
-            ConstantExpression expression = (ConstantExpression) node;
+        if (isValidNode(node) && doTest(node)) {
+            Expression expression = (Expression) node;
 
             descriptor = createDescriptor(expression, result);
             return VisitStatus.STOP_VISIT;
@@ -78,7 +82,7 @@ public class SuggestionsRequestor implements ITypeRequestor {
         return descriptor;
     }
 
-    protected SuggestionDescriptor createDescriptor(ConstantExpression suggestionNode, TypeLookupResult result) {
+    protected SuggestionDescriptor createDescriptor(Expression suggestionNode, TypeLookupResult result) {
 
         // get the declaring type and type of the member
         ClassNode declaringTypeNode = result.declaringType;
@@ -87,7 +91,8 @@ public class SuggestionsRequestor implements ITypeRequestor {
 
         String declaringTypeName = declaringTypeNode.getName();
         String suggestionType = suggestionTypeNode.getName();
-        Object suggestionName = suggestionNode.getValue();
+        Object suggestionName = suggestionNode instanceof ConstantExpression ? ((ConstantExpression) suggestionNode).getValue()
+                : suggestionNode.getText();
         String name = suggestionName instanceof String ? (String) suggestionName : null;
         // TODO: must figure out a way to determine if this is static. For now,
         // user has to remember
@@ -134,5 +139,10 @@ public class SuggestionsRequestor implements ITypeRequestor {
     private boolean doTest(ASTNode node) {
         return node.getClass() == nodeToLookFor.getClass() && nodeToLookFor.getStart() == node.getStart()
                 && nodeToLookFor.getEnd() == node.getEnd();
+    }
+
+    public static boolean isValidNode(ASTNode node) {
+        return node instanceof VariableExpression || node instanceof StaticMethodCallExpression || node instanceof FieldExpression
+                || node instanceof ConstantExpression;
     }
 }

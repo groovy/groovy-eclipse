@@ -42,22 +42,28 @@ public class MethodSuggestionLabel extends AbstractSuggestionLabel {
         String name = suggestion.getName();
 
         buffer.append(name);
-        buffer.append(EMPTY_SPACE);
-        buffer.append(COLON);
-        buffer.append(EMPTY_SPACE);
 
         String typeName = suggestion.getType();
-        buffer.append(typeName);
+        if (typeName != null && typeName.length() > 0) {
+            buffer.append(EMPTY_SPACE);
+            buffer.append(COLON);
+            buffer.append(EMPTY_SPACE);
+            buffer.append(typeName);
+        }
 
-        List<MethodParameter> methodArguments = suggestion.getParameters();
-        if (methodArguments != null) {
+        List<MethodParameter> parameters = suggestion.getParameters();
+        if (parameters != null) {
             buffer.append(OPEN_PAR);
-            int size = methodArguments.size();
+            int size = parameters.size();
 
-            for (MethodParameter argument : methodArguments) {
-                buffer.append(argument.getType());
-                buffer.append(EMPTY_SPACE);
-                buffer.append(argument.getName());
+            for (MethodParameter param : parameters) {
+                String paramType = param.getType();
+                if (paramType != null && paramType.length() > 0) {
+                    buffer.append(paramType);
+                    buffer.append(EMPTY_SPACE);
+                }
+
+                buffer.append(param.getName());
 
                 // if there is more than one argument, comma separate them
                 if (--size > 0) {
