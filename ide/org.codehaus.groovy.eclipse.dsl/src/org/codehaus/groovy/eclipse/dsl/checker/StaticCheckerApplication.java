@@ -3,7 +3,6 @@ package org.codehaus.groovy.eclipse.dsl.checker;
 import java.io.File;
 
 import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
-import org.eclipse.core.internal.resources.ProjectDescription;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;

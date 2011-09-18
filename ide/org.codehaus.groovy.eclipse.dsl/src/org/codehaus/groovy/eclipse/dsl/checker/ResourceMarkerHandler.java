@@ -50,11 +50,11 @@ public class ResourceMarkerHandler implements IStaticCheckerHandler {
     }
 
     private String createUnknownMessage(ASTNode node) {
-        return "Type of expresion is statically unknown: " + node.getText();
+        return "Type of expression is statically unknown: " + node.getText();
     }
     
     private String createInvalidTypeMessage(ASTNode node, String expectedType, String actualType) {
-        return "Invalied inferred type.  Expected: " + expectedType + " Actual: " + actualType;
+        return "Invalid inferred type.  Expected: " + expectedType + " Actual: " + actualType;
     }
     
     private void createMarker(Position position, int line, String message) {
