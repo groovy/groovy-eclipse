@@ -102,12 +102,16 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
      * @return
      */
     protected boolean isSelectionSame(IProject projectToSelect) {
-        int selectionIndex = dropDown.getSelectionIndex();
-        if (selectionIndex >= 0) {
-            String currentSelection = dropDown.getItem(selectionIndex);
-            return projectToSelect.getName().equals(currentSelection);
+
+        if (dropDown != null) {
+            int selectionIndex = dropDown.getSelectionIndex();
+            if (selectionIndex >= 0) {
+                String currentSelection = dropDown.getItem(selectionIndex);
+                return projectToSelect.getName().equals(currentSelection);
+            }
         }
-        return false;
+
+        return projectToSelect == getProject();
     }
 
     /**
@@ -122,25 +126,29 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
             return projectToSelect;
         }
 
-        int selectedIndex = -1;
-        String[] allProjects = dropDown.getItems();
-        for (int i = 0; i < allProjects.length; i++) {
-            if (projectToSelect.getName().equals(allProjects[i])) {
-                selectedIndex = i;
-                break;
+        if (dropDown != null) {
+            int selectedIndex = -1;
+            String[] allProjects = dropDown.getItems();
+            for (int i = 0; i < allProjects.length; i++) {
+                if (projectToSelect.getName().equals(allProjects[i])) {
+                    selectedIndex = i;
+                    break;
+                }
             }
+
+            if (selectedIndex >= 0) {
+
+                dropDown.select(selectedIndex);
+                super.setProject(projectToSelect);
+                handleProjectChange(projectToSelect);
+
+                return projectToSelect;
+            } else {
+                return null;
+            }
+        } else {
+            return super.setProject(projectToSelect);
         }
-
-        if (selectedIndex >= 0) {
-
-            dropDown.select(selectedIndex);
-            super.setProject(projectToSelect);
-            handleProjectChange(projectToSelect);
-
-            return projectToSelect;
-        }
-
-        return null;
 
     }
 
