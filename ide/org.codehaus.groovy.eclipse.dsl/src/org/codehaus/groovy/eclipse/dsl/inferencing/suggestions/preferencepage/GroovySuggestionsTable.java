@@ -29,6 +29,7 @@ import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovySuggestionD
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IBaseGroovySuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IGroovySuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager.ProjectSuggestions;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.OperationManager;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.IProjectUIControl;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.ISelectionHandler;
@@ -216,17 +217,18 @@ public class GroovySuggestionsTable {
 
     protected void setCheckStateAll(boolean checkState) {
         IProject project = getSelectedProject();
-        Collection<GroovySuggestionDeclaringType> declaringTypes = InferencingSuggestionsManager.getInstance()
-                .getSuggestions(project).getDeclaringTypes();
-        for (GroovySuggestionDeclaringType declaringType : declaringTypes) {
-            // Set active state in the model
-            setActiveState(declaringType, checkState);
+        ProjectSuggestions suggestions = InferencingSuggestionsManager.getInstance().getSuggestions(project);
+        if (suggestions != null) {
+            Collection<GroovySuggestionDeclaringType> declaringTypes = suggestions.getDeclaringTypes();
+            for (GroovySuggestionDeclaringType declaringType : declaringTypes) {
+                // Set active state in the model
+                setActiveState(declaringType, checkState);
 
-            refresh();
-            // update the viewer check state
-            setCheckState(declaringType);
+                refresh();
+                // update the viewer check state
+                setCheckState(declaringType);
+            }
         }
-
     }
 
     protected ITreeViewerColumn[] getColumns() {
@@ -458,8 +460,11 @@ public class GroovySuggestionsTable {
             return;
         }
 
-        Collection<GroovySuggestionDeclaringType> declaringTypes = InferencingSuggestionsManager.getInstance()
-                .getSuggestions(project).getDeclaringTypes();
+        ProjectSuggestions suggestions = InferencingSuggestionsManager.getInstance().getSuggestions(project);
+        if (suggestions == null) {
+            return;
+        }
+        Collection<GroovySuggestionDeclaringType> declaringTypes = suggestions.getDeclaringTypes();
         if (declaringTypes == null) {
             return;
         }

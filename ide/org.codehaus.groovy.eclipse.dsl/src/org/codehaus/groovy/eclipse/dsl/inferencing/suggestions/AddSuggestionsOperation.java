@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager.ProjectSuggestions;
 import org.eclipse.core.resources.IProject;
 
 /**
@@ -28,12 +29,16 @@ public class AddSuggestionsOperation extends AbstractCreateOperation {
         super(project, suggestionContext);
     }
 
-
     protected ValueStatus run(SuggestionDescriptor descriptor) {
-        IGroovySuggestion suggestion = InferencingSuggestionsManager.getInstance().getSuggestions(getProject())
-                .addSuggestion(descriptor);
 
-        return ValueStatus.getValidStatus(suggestion);
+        ProjectSuggestions suggestions = InferencingSuggestionsManager.getInstance().getSuggestions(getProject());
+        if (suggestions != null) {
+            IGroovySuggestion suggestion = suggestions.addSuggestion(descriptor);
+            return ValueStatus.getValidStatus(suggestion);
+        }
+
+        return ValueStatus.getErrorStatus(descriptor, "Project does not appear to be an accessible Groovy project");
+
     }
 
 }

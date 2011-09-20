@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
 import java.util.List;
 
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager.ProjectSuggestions;
 import org.eclipse.core.resources.IProject;
 
 /**
@@ -38,21 +39,23 @@ public class RemoveSuggestionOperation extends AbstractSuggestionOperation {
     }
 
     public ValueStatus run() {
-        for (Object obj : selections) {
-            if (obj instanceof GroovySuggestionDeclaringType) {
-                InferencingSuggestionsManager.getInstance().getSuggestions(getProject())
-                        .removeDeclaringType((GroovySuggestionDeclaringType) obj);
-            } else if (obj instanceof IGroovySuggestion) {
-                IGroovySuggestion suggestion = (IGroovySuggestion) obj;
-                GroovySuggestionDeclaringType declaringType = suggestion.getDeclaringType();
-                declaringType.removeSuggestion(suggestion);
-                // Also remove the declaring type if no suggestions are left
-                if (declaringType.getSuggestions().isEmpty()) {
-                    InferencingSuggestionsManager.getInstance().getSuggestions(getProject()).removeDeclaringType(declaringType);
+        ProjectSuggestions suggestions = InferencingSuggestionsManager.getInstance().getSuggestions(getProject());
+        if (suggestions != null) {
+            for (Object obj : selections) {
+                if (obj instanceof GroovySuggestionDeclaringType) {
+
+                    suggestions.removeDeclaringType((GroovySuggestionDeclaringType) obj);
+                } else if (obj instanceof IGroovySuggestion) {
+                    IGroovySuggestion suggestion = (IGroovySuggestion) obj;
+                    GroovySuggestionDeclaringType declaringType = suggestion.getDeclaringType();
+                    declaringType.removeSuggestion(suggestion);
+                    // Also remove the declaring type if no suggestions are left
+                    if (declaringType.getSuggestions().isEmpty()) {
+                        suggestions.removeDeclaringType(declaringType);
+                    }
                 }
             }
         }
         return ValueStatus.getValidStatus(null);
     }
-
 }

@@ -58,7 +58,7 @@ public class SuggestionsReader {
     public ProjectSuggestions read() {
 
         try {
-            if (absoluteFile == null) {
+            if (absoluteFile == null || projectSuggestions == null) {
                 return null;
             }
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -176,7 +176,7 @@ public class SuggestionsReader {
         if (parametersElement == null) {
             return null;
         }
-        
+
         List<MethodParameter> parameters = new ArrayList<MethodParameter>();
         NodeList parametersNodeList = parametersElement.getChildNodes();
 

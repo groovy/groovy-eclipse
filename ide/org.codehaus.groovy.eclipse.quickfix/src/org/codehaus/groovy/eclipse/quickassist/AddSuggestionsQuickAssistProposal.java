@@ -32,7 +32,7 @@ public class AddSuggestionsQuickAssistProposal extends
 	private int length;
 	private int offset;
 
-	static final String LABEL = "Add Groovy suggestion";
+	static final String LABEL = "Add inferencing suggestion";
 
 	/**
 	 * @param unit

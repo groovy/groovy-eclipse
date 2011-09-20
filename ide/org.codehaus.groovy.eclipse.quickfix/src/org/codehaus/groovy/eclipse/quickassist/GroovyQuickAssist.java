@@ -36,6 +36,9 @@ public class GroovyQuickAssist extends GroovyContentProcessor implements
 
 	public IJavaCompletionProposal[] getAssists(IInvocationContext context,
 			IProblemLocation[] locations) throws CoreException {
+		if (!hasAssists(context)) {
+			return null;
+		}
 		List<IJavaCompletionProposal> proposalList = new ArrayList<IJavaCompletionProposal>();
 
 		IJavaCompletionProposal javaProposal = new AddSuggestionsQuickAssistProposal(

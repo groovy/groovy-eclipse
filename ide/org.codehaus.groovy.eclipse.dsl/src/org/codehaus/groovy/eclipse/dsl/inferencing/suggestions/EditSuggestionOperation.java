@@ -26,7 +26,7 @@ import org.eclipse.core.resources.IProject;
 public class EditSuggestionOperation extends AbstractCreateOperation {
 
     /**
-     * None of the arguments can be null. 
+     * None of the arguments can be null.
      */
     public EditSuggestionOperation(IProject project, IBaseGroovySuggestion suggestionContext) {
         super(project, suggestionContext);
@@ -42,15 +42,16 @@ public class EditSuggestionOperation extends AbstractCreateOperation {
             if (!declaringType.getName().equals(descriptor.getDeclaringTypeName())) {
                 declaringType.removeSuggestion(existingSuggestion);
                 ProjectSuggestions projectSuggestions = InferencingSuggestionsManager.getInstance().getSuggestions(getProject());
+                if (projectSuggestions != null) {
+                    // if declaring type does not have any more
+                    // suggestions, remove it.
+                    if (declaringType.getSuggestions().isEmpty()) {
+                        projectSuggestions.removeDeclaringType(declaringType);
+                    }
 
-                // if declaring type does not have any more
-                // suggestions, remove it.
-                if (declaringType.getSuggestions().isEmpty()) {
-                    projectSuggestions.removeDeclaringType(declaringType);
+                    // Add to the new declaring type
+                    editedSuggestion = projectSuggestions.addSuggestion(descriptor);
                 }
-
-                // Add to the new declaring type
-                editedSuggestion = projectSuggestions.addSuggestion(descriptor);
             } else {
                 editedSuggestion = declaringType.replaceSuggestion(descriptor, existingSuggestion);
             }

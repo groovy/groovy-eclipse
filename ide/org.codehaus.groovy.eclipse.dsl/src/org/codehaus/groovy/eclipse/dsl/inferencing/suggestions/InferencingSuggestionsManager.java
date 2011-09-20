@@ -23,6 +23,7 @@ import java.util.Map;
 import org.codehaus.groovy.eclipse.codeassist.Activator;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.writer.SuggestionsFile;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.writer.SuggestionsTransform;
+import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
@@ -54,9 +55,16 @@ public class InferencingSuggestionsManager {
 
     /**
      * For now support per project commits
+     * 
+     * @return true if changes for given project are successfully committed.
+     *         False otherwise
      */
-    public void commitChanges(IProject project) {
+    public boolean commitChanges(IProject project) {
 
+        // don't commit if the project is not accessible
+        if (!isValidProject(project)) {
+            return false;
+        }
         // Keep track of the last project that was modified
         lastModifiedProject = project;
 
@@ -67,18 +75,29 @@ public class InferencingSuggestionsManager {
         if (result != null) {
             SuggestionsFile suggestionsFile = new SuggestionsFile(project);
 
-            IFile file = suggestionsFile.getFile();
+            IFile file = suggestionsFile.createFile();
             writeToFile(file, result);
+            return true;
         }
+        return false;
+    }
 
+    public boolean isValidProject(IProject project) {
+        return project != null && project.isAccessible() && GroovyNature.hasGroovyNature(project);
     }
 
     /**
      * 
+     * FIXNS: Hook to a resource change listener in the future.
+     * 
      * @return gets the last project that had suggestion commits. It may be null
+     *         including if the last modified project is no longer accessible.
      */
     public IProject getlastModifiedProject() {
-        return lastModifiedProject;
+        if (isValidProject(lastModifiedProject)) {
+            return lastModifiedProject;
+        }
+        return null;
     }
 
     protected void writeToFile(IFile file, String value) {
@@ -97,13 +116,19 @@ public class InferencingSuggestionsManager {
     }
 
     /**
-     * Never null. may be empty. Original copy.
+     * Not null, unless it is not an accessible Groovy project. may be empty.
+     * Original copy.
      * 
      * @param project
-     * @return
+     * @return Non-null suggestions for any accessible Groovy project. Null
+     *         otherwise
      */
 
     public ProjectSuggestions getSuggestions(IProject project) {
+        // Only Groovy Projects have suggestions
+        if (!isValidProject(project)) {
+            return null;
+        }
         if (perProjectSuggestions == null) {
             perProjectSuggestions = new HashMap<IProject, ProjectSuggestions>();
         }

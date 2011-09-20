@@ -169,7 +169,7 @@
             category="org.codehaus.groovy.eclipse.preferences"
             class="org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.preferencepage.InferencingPreferencesPage"
             id="org.codehaus.groovy.eclipse.dsl.inferencing.preferences"
-            name="Inferencing">
+            name="Inferencing Suggestions">
       </page>
    </extension>
    <extension

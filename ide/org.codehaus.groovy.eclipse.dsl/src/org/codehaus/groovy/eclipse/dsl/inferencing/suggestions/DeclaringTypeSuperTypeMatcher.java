@@ -47,12 +47,14 @@ public class DeclaringTypeSuperTypeMatcher {
     public List<GroovySuggestionDeclaringType> getAllSuperTypes(GroovyDSLDContext context) {
         ProjectSuggestions suggestions = InferencingSuggestionsManager.getInstance().getSuggestions(project);
         List<GroovySuggestionDeclaringType> superTypes = new ArrayList<GroovySuggestionDeclaringType>();
-
-        for (GroovySuggestionDeclaringType declaringType : suggestions.getDeclaringTypes()) {
-            if (context.matchesType(declaringType.getName())) {
-                superTypes.add(declaringType);
+        if (suggestions != null) {
+            for (GroovySuggestionDeclaringType declaringType : suggestions.getDeclaringTypes()) {
+                if (context.matchesType(declaringType.getName())) {
+                    superTypes.add(declaringType);
+                }
             }
         }
+
         return superTypes;
     }
 }

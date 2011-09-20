@@ -50,7 +50,7 @@ public class SuggestionsPointCut implements IPointcut {
         // toMatch is the declaring type with the unresolved property or method
         ProjectSuggestions suggestions = InferencingSuggestionsManager.getInstance().getSuggestions(project);
 
-        if (!suggestions.getDeclaringTypes().isEmpty()) {
+        if (suggestions != null && !suggestions.getDeclaringTypes().isEmpty()) {
 
             // FIXNS: Not optimal. check supertypes. To improve performance per
             // inferencing run (i.e. AST walk)
@@ -70,7 +70,8 @@ public class SuggestionsPointCut implements IPointcut {
             if (superTypes != null && !superTypes.isEmpty()) {
 
                 // Should return ClassNodes. Since toMatch is a ClassNode,
-                // return that for now. Ideally it should return all ClassNodes for the found supertypes above
+                // return that for now. Ideally it should return all ClassNodes
+                // for the found supertypes above
                 return Collections.singletonList(toMatch);
             }
         }

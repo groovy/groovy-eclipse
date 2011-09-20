@@ -52,13 +52,14 @@ public class SuggestionsFile {
     }
 
     /**
-     * Return an existing file, or null if it does not exist
+     * Return an existing file in an accessible project, or attempts to create
+     * it if it does not exist
+     * returns null if file was not created
      * 
      * @return
      */
-    public IFile getFile() {
-        String path = project != null && location != null ? location.getWritingLocation() + location.getFileName() + '.'
-                + location.getFileType() : null;
+    public IFile createFile() {
+        String path = getPath();
 
         if (path != null) {
             IFile suggestionsFile = project.getFile(path);
@@ -67,6 +68,28 @@ public class SuggestionsFile {
             if (!suggestionsFile.exists()) {
                 suggestionsFile = createNewFile(suggestionsFile);
             }
+
+            return suggestionsFile != null && suggestionsFile.exists() ? suggestionsFile : null;
+        }
+        return null;
+    }
+
+    protected String getPath() {
+        return project != null && project.isAccessible() && location != null ? location.getWritingLocation()
+                + location.getFileName() + '.' + location.getFileType() : null;
+    }
+
+    /**
+     * Gets an existing file, or null if not such file exists. It does not
+     * attempt to create a non existing file
+     * 
+     * @return
+     */
+    public IFile getFile() {
+        String path = getPath();
+
+        if (path != null) {
+            IFile suggestionsFile = project.getFile(path);
 
             return suggestionsFile != null && suggestionsFile.exists() ? suggestionsFile : null;
         }

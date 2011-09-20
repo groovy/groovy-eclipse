@@ -43,7 +43,6 @@ public class InferencingPreferencesPage extends PreferencePage implements IWorkb
     public static final String PAGE_DESCRIPTION = "Select a project to manage the Groovy inferencing suggestions.";
 
     public InferencingPreferencesPage() {
-        // setPreferenceStore(CCLRUIPlugin.getInstance().getPreferenceStore());
         setDescription(PAGE_DESCRIPTION);
     }
 
@@ -80,7 +79,7 @@ public class InferencingPreferencesPage extends PreferencePage implements IWorkb
         if (project != null) {
             SuggestionsFile suggestionFile = new SuggestionsFile(project);
             IFile file = suggestionFile.getFile();
-            if (file.exists()) {
+            if (file != null && file.exists()) {
                 new SuggestionsLoader(file).loadExistingSuggestions();
             }
         }

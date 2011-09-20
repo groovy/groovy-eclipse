@@ -48,8 +48,8 @@ import org.eclipse.swt.widgets.Shell;
  * @created 2011-05-13
  */
 public class InferencingContributionDialogue extends AbstractDialogue {
-    public static final DialogueDescriptor DIALOGUE_DESCRIPTOR = new DialogueDescriptor("Add a Groovy Inferencing Suggestion",
-            "Groovy Inferencing Suggestion", "icons/GROOVY.png");
+    public static final DialogueDescriptor DIALOGUE_DESCRIPTOR = new DialogueDescriptor("Add a Groovy inferencing Suggestion",
+            "Inferencing Suggestion", "icons/GROOVY.png");
 
     private Point labelControlOffset;
 

@@ -19,6 +19,7 @@ import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.writer.SuggestionsReader;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 
 /**
@@ -39,11 +40,18 @@ public class SuggestionsLoader {
      * suggestions, and adds corresponding contribution groups and point cutsF
      */
     public void loadExistingSuggestions() {
-        IPath path = file.getLocation();
-        String absoluteFileName = path != null ? path.toString() : null;
-        SuggestionsReader reader = new SuggestionsReader(file.getProject(), absoluteFileName);
-        reader.read();
-        addSuggestionsContributionGroup();
+        if (file != null && file.isAccessible()) {
+            IProject project = file.getProject();
+            // Make sure the file is in a Groovy project, and the project is
+            // accessible
+            if (InferencingSuggestionsManager.getInstance().isValidProject(project)) {
+                IPath path = file.getLocation();
+                String absoluteFileName = path != null ? path.toString() : null;
+                SuggestionsReader reader = new SuggestionsReader(file.getProject(), absoluteFileName);
+                reader.read();
+                addSuggestionsContributionGroup();
+            }
+        }
     }
 
     /**
