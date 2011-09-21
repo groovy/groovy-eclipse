@@ -241,7 +241,12 @@ public class StatementAndExpressionCompletionProcessor extends
         }
 
         private boolean isAssignmentOfLhs(BinaryExpression node) {
-            return node != null && node.getLeftExpression() == lhsNode;
+            if (node != null) {
+                Expression expression = node.getLeftExpression();
+                return expression.getClass() == lhsNode.getClass() && expression.getStart() == lhsNode.getStart()
+                        && expression.getEnd() == lhsNode.getEnd();
+            }
+            return false;
         }
 
         private boolean doTest(ASTNode node) {
