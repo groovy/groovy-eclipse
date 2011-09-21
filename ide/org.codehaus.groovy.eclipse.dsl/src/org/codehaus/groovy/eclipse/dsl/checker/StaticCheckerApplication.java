@@ -245,7 +245,7 @@ public class StaticCheckerApplication implements IApplication {
         System.out.println("where:");
         System.out.println("\t--help OR -h  Print this message and exit.");
         System.out.println("\t--extra_dslds  list of extra dsld files to be included in this check.  Use '|' as a file separator.");
-        System.out.println("\t--asoertions_only  Don't report unknown types.  Only look for type assertions");
+        System.out.println("\t--assertions_only  Don't report unknown types.  Only look for type assertions");
         System.out.println("\t--excludes  Project-relative exclusion filters.");
         System.out.println("\t--includes  Project-relative inclusion filters.");
         System.out.println("\t--project_path  File system path to the project to check (only required if project is not already in workspace).");
