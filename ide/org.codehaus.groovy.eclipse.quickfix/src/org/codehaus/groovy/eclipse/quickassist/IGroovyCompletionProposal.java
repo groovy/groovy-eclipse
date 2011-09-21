@@ -21,6 +21,13 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 public interface IGroovyCompletionProposal extends ICompletionProposal {
 
 	public int getRelevance();
-	
+
+	/**
+	 * Must be a light-weight operation
+	 * 
+	 * @return
+	 */
+	public boolean hasProposals();
+
 	public IJavaCompletionProposal convertToJavaCompletionProposal();
 }

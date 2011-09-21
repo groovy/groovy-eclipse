@@ -156,14 +156,17 @@ public class GroovySuggestionsTable {
                 setViewerInput(project);
             }
         };
-        selector = new ProjectDropDownControl(projects, parent.getShell(), subparent, handler);
-        selector.createControls();
+        selector = ProjectDropDownControl.getProjectSelectionControl(projects, parent.getShell(), subparent, handler);
+        if (selector != null) {
+            selector.createControls();
 
-        // Check if there is a project that was previously edited. Set that as
-        // the selection
-        IProject previouslyModifiedProject = InferencingSuggestionsManager.getInstance().getlastModifiedProject();
-        if (previouslyModifiedProject != null) {
-            selector.setProject(previouslyModifiedProject);
+            // Check if there is a project that was previously edited. Set that
+            // as
+            // the selection
+            IProject previouslyModifiedProject = InferencingSuggestionsManager.getInstance().getlastModifiedProject();
+            if (previouslyModifiedProject != null) {
+                selector.setProject(previouslyModifiedProject);
+            }
         }
 
     }

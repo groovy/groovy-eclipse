@@ -48,7 +48,7 @@ public class MethodParameterDialogue extends AbstractDialogue {
 
     public MethodParameterDialogue(Shell parentShell, IJavaProject javaProject, MethodParameter parameterToEdit,
             List<MethodParameter> existingParameters) {
-        super(parentShell, DIALOGUE_DESCRIPTOR);
+        super(parentShell);
         this.javaProject = javaProject;
         if (parameterToEdit != null) {
             this.name = parameterToEdit.getName();
@@ -59,6 +59,10 @@ public class MethodParameterDialogue extends AbstractDialogue {
 
     public MethodParameter getMethodParameter() {
         return new MethodParameter(name, type);
+    }
+
+    protected DialogueDescriptor getDialogueDescriptor() {
+        return DIALOGUE_DESCRIPTOR;
     }
 
     protected Point getOffsetLabelLocation() {
@@ -105,8 +109,8 @@ public class MethodParameterDialogue extends AbstractDialogue {
         // as to not allow invalid types. Therefore, in addition to checking the
         // validity of the type, also
         // also include empty or null type values as "valid".
-        JavaTypeBrowsingControl typeControl = new JavaTypeBrowsingControl(ControlTypes.TYPE, getOffsetLabelLocation(),
-                type, javaProject) {
+        JavaTypeBrowsingControl typeControl = new JavaTypeBrowsingControl(ControlTypes.TYPE, getOffsetLabelLocation(), type,
+                javaProject) {
 
             protected ValueStatus isControlValueValid(String value) {
                 if (value == null || value.length() == 0) {

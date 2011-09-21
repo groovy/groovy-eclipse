@@ -59,8 +59,14 @@ public class AddSuggestionsQuickAssistProposal extends
 	public void apply(IDocument document) {
 		IProject project = getProject();
 		if (project != null) {
-			new SuggestionCompilationUnitHelper(length, offset, unit, project).addSuggestion();
+			new SuggestionCompilationUnitHelper(length, offset, unit, project)
+					.addSuggestion();
 		}
+	}
+
+	public boolean hasProposals() {
+		return new SuggestionCompilationUnitHelper(length, offset, unit,
+				getProject()).canAddSuggestion();
 	}
 
 	protected IProject getProject() {

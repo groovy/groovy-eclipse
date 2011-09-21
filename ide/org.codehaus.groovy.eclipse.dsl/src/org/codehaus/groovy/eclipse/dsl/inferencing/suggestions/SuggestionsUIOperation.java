@@ -15,7 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
-import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.InferencingContributionDialogue;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.AddInferencingSuggestionDialogue;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.EditInferencingSuggestionDialogue;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
@@ -45,30 +46,36 @@ public class SuggestionsUIOperation {
     }
 
     public ValueStatus run() {
+        // Edit context. If none is present, it means a suggestion is being
+        // added
         IBaseGroovySuggestion context = operation.getContext();
-        InferencingContributionDialogue dialogue = null;
+        AddInferencingSuggestionDialogue dialogue = null;
         IProject project = operation.getProject();
         if (context == null) {
-            // Although no context may exist, a descriptor may still be present. Use the information in the descriptor
+            // Although no context may exist, a descriptor may still be present.
+            // Use the information in the descriptor
             // to populate the dialogue
             SuggestionDescriptor descriptor = operation.getDescriptor();
             if (descriptor != null) {
-                dialogue = new InferencingContributionDialogue(shell, descriptor, project);
+                dialogue = new AddInferencingSuggestionDialogue(shell, descriptor, project);
             } else {
-                dialogue = new InferencingContributionDialogue(shell, project);
+                dialogue = new AddInferencingSuggestionDialogue(shell, project);
             }
         } else {
+            // If the edit context is the declaring type, it means it a
+            // suggestion is being Added to the declaring type
             if (context instanceof GroovySuggestionDeclaringType) {
-                dialogue = new InferencingContributionDialogue(shell, (GroovySuggestionDeclaringType) context, project);
+                dialogue = new AddInferencingSuggestionDialogue(shell, (GroovySuggestionDeclaringType) context, project);
             } else if (context instanceof IGroovySuggestion) {
                 // edits the selected suggestion context. A new suggestion is
                 // created with the edited values
                 if (operation instanceof EditSuggestionOperation) {
-                    dialogue = new InferencingContributionDialogue(shell, (IGroovySuggestion) context, project);
+                    dialogue = new EditInferencingSuggestionDialogue(shell, (IGroovySuggestion) context, project);
                 } else if (operation instanceof AddSuggestionsOperation) {
                     // If adding, only the declaring type is passed, as the new
                     // suggestion will be added to that declaring type
-                    dialogue = new InferencingContributionDialogue(shell, ((IGroovySuggestion) context).getDeclaringType(), project);
+                    dialogue = new AddInferencingSuggestionDialogue(shell, ((IGroovySuggestion) context).getDeclaringType(),
+                            project);
                 }
             }
         }

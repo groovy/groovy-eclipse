@@ -43,7 +43,7 @@ public class ResolverCache {
      * @return
      */
     public ClassNode resolve(String qName) {
-        if (qName == null) {
+        if (qName == null || qName.length() == 0) {
              return ClassHelper.DYNAMIC_TYPE;
         }
         qName = qName.trim();

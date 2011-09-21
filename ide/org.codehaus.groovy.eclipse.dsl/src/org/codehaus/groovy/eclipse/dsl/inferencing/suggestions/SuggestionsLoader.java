@@ -39,7 +39,7 @@ public class SuggestionsLoader {
      * Loads all suggestions from XML, clearing any existing in-memory
      * suggestions, and adds corresponding contribution groups and point cutsF
      */
-    public void loadExistingSuggestions() {
+    public boolean loadExistingSuggestions() {
         if (file != null && file.isAccessible()) {
             IProject project = file.getProject();
             // Make sure the file is in a Groovy project, and the project is
@@ -50,8 +50,10 @@ public class SuggestionsLoader {
                 SuggestionsReader reader = new SuggestionsReader(file.getProject(), absoluteFileName);
                 reader.read();
                 addSuggestionsContributionGroup();
+                return true;
             }
         }
+        return false;
     }
 
     /**

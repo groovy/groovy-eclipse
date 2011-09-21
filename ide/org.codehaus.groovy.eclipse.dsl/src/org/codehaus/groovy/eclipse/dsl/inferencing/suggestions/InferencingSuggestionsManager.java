@@ -82,6 +82,36 @@ public class InferencingSuggestionsManager {
         return false;
     }
 
+    /**
+     * Restores the suggestions for an accessible project back in the
+     * suggestions model.
+     * If the project is not accessible, it removes all the suggestions from the
+     * model, as the model
+     * should reflect whether the suggestions in the file can be read or not.
+     * 
+     * @param project
+     * @return true if suggestions are restored or if project is not accessible,
+     *         suggestions in memory are cleared. False if no restoration took
+     *         place
+     */
+    public boolean restoreSuggestions(IProject project) {
+        // For now restore from XML
+        if (isValidProject(project)) {
+            SuggestionsFile suggestionFile = new SuggestionsFile(project);
+            IFile file = suggestionFile.getFile();
+            if (file != null && file.exists()) {
+                return new SuggestionsLoader(file).loadExistingSuggestions();
+            }
+        }
+        // If restoring was not possible, remove suggestions from model
+        ProjectSuggestions suggestions = getSuggestions(project);
+        if (suggestions != null) {
+            suggestions.removeAll();
+            return true;
+        }
+        return false;
+    }
+
     public boolean isValidProject(IProject project) {
         return project != null && project.isAccessible() && GroovyNature.hasGroovyNature(project);
     }
@@ -97,7 +127,8 @@ public class InferencingSuggestionsManager {
         if (isValidProject(lastModifiedProject)) {
             return lastModifiedProject;
         }
-        return null;
+        // Otherwise, clear the last modified project
+        return lastModifiedProject = null;
     }
 
     protected void writeToFile(IFile file, String value) {
@@ -109,10 +140,6 @@ public class InferencingSuggestionsManager {
                 Activator.logError(e);
             }
         }
-    }
-
-    public void restore() {
-        // Discard any in memory changes and restore from current XML.
     }
 
     /**
@@ -203,6 +230,14 @@ public class InferencingSuggestionsManager {
 
         public void removeDeclaringType(GroovySuggestionDeclaringType declaringType) {
             suggestions.remove(declaringType.getName());
+        }
+
+        /**
+         * Removes all declaring types from the suggestions model for this
+         * project
+         */
+        public void removeAll() {
+            suggestions.clear();
         }
 
         /**

@@ -28,8 +28,10 @@ public class GroovyQuickAssist extends GroovyContentProcessor implements
 		IQuickAssistProcessor {
 
 	public boolean hasAssists(IInvocationContext context) throws CoreException {
-		if (context != null) {
-			return isContentInGroovyProject(context.getCompilationUnit());
+		if (context != null
+				&& isContentInGroovyProject(context.getCompilationUnit())) {
+			return new AddSuggestionsQuickAssistProposal(context)
+					.hasProposals();
 		}
 		return false;
 	}

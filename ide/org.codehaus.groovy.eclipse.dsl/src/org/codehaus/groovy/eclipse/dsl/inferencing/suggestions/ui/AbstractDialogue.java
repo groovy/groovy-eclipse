@@ -43,16 +43,20 @@ import org.eclipse.swt.widgets.Shell;
  */
 public abstract class AbstractDialogue extends TitleAreaDialog {
 
-    private DialogueDescriptor descriptor;
-
     private Map<IDialogueControlDescriptor, SetValue> invalidValues;
 
     protected static final String EMPTY_ERROR_MESSAGE = "  ";
 
-    public AbstractDialogue(Shell parentShell, DialogueDescriptor descriptor) {
+    public AbstractDialogue(Shell parentShell) {
         super(parentShell);
-        this.descriptor = descriptor;
     }
+
+    /**
+     * Must not be null
+     * 
+     * @return
+     */
+    abstract protected DialogueDescriptor getDialogueDescriptor();
 
     protected boolean isResizable() {
         return true;
@@ -64,6 +68,7 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
 
     protected Control createDialogArea(Composite parent) {
         invalidValues = new HashMap<IDialogueControlDescriptor, SetValue>();
+        DialogueDescriptor descriptor = getDialogueDescriptor();
         setTitle(descriptor.getTitle());
         setMessage(descriptor.getMessage());
         String iconLocation = descriptor.getIconLocation();
@@ -150,7 +155,8 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
      * Control listener to be used if the dialogue has required values that
      * determine if
      * the user can click "OK" on the dialogue. Two options exist:
-     * 1. The value is not initially required (i.e. value is empty or null), but once a value is set, it needs
+     * 1. The value is not initially required (i.e. value is empty or null), but
+     * once a value is set, it needs
      * to be verified before enabling the OK button
      * 2. The value is required, and an empty or null value is not acceptable.
      * 
@@ -160,7 +166,8 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
     abstract protected class ValidatedValueSelectionListener implements IControlSelectionListener {
 
         /**
-         * User this only if values should not be initially marked as required until a value is actually set
+         * User this only if values should not be initially marked as required
+         * until a value is actually set
          */
         public ValidatedValueSelectionListener() {
 

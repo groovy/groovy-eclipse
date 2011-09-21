@@ -37,6 +37,8 @@ public class ProjectDisplayControl implements IProjectUIControl {
 
     private IProject project;
 
+    protected static final String NO_PROJECT = "No Groovy project available.";
+
     protected ProjectDisplayControl(Shell shell, Composite parent) {
         this.shell = shell;
         this.parent = parent;
@@ -66,12 +68,10 @@ public class ProjectDisplayControl implements IProjectUIControl {
     }
 
     protected void createProjectDisplayControl(Composite parent) {
-
-        if (project != null) {
-            Label projectLabel = new Label(parent, SWT.NONE);
-            GridDataFactory.fillDefaults().align(SWT.LEFT, SWT.CENTER).grab(false, false).applyTo(projectLabel);
-            projectLabel.setText(project.getName());
-        }
+        Label projectLabel = new Label(parent, SWT.NONE);
+        GridDataFactory.fillDefaults().align(SWT.LEFT, SWT.CENTER).grab(false, false).applyTo(projectLabel);
+        String labelVal = project != null ? project.getName() : NO_PROJECT;
+        projectLabel.setText(labelVal);
 
     }
 

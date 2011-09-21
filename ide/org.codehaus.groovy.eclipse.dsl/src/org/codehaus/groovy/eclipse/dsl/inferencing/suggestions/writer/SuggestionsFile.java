@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.writer;
 import java.lang.reflect.InvocationTargetException;
 
 import org.codehaus.groovy.eclipse.codeassist.Activator;
+import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -75,8 +76,8 @@ public class SuggestionsFile {
     }
 
     protected String getPath() {
-        return project != null && project.isAccessible() && location != null ? location.getWritingLocation()
-                + location.getFileName() + '.' + location.getFileType() : null;
+        return InferencingSuggestionsManager.getInstance().isValidProject(project) && location != null ? location
+                .getWritingLocation() + location.getFileName() + '.' + location.getFileType() : null;
     }
 
     /**

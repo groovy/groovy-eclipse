@@ -45,6 +45,9 @@ public class SuggestionCompilationUnitHelper {
 
     private IProject project;
 
+    /**
+     * Project must not be null
+     */
     public SuggestionCompilationUnitHelper(int length, int offset, GroovyCompilationUnit unit, IProject project) {
         this.length = length;
         this.offset = offset;
@@ -54,11 +57,10 @@ public class SuggestionCompilationUnitHelper {
 
     public IGroovySuggestion addSuggestion() {
         IGroovySuggestion suggestion = null;
-        Region region = new Region(offset, length);
-        ASTNodeFinder finder = new ASTNodeFinder(region);
 
-        ASTNode node = finder.doVisit(unit.getModuleNode());
-        if (SuggestionsRequestor.isValidNode(node)) {
+        ASTNode node = findValidASTNode();
+
+        if (node != null) {
             SuggestionsRequestor requestor = new SuggestionsRequestor(node);
             TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
             visitor.visitCompilationUnit(requestor);
@@ -67,6 +69,23 @@ public class SuggestionCompilationUnitHelper {
         }
 
         return suggestion;
+    }
+
+    public boolean canAddSuggestion() {
+        return findValidASTNode() != null;
+    }
+
+    /**
+     * Returns a valid ASTNode that can be added as a suggestion. Or null if
+     * none are found.
+     * 
+     * @return
+     */
+    protected ASTNode findValidASTNode() {
+        Region region = new Region(offset, length);
+        ASTNodeFinder finder = new ASTNodeFinder(region);
+        ASTNode node = finder.doVisit(unit.getModuleNode());
+        return SuggestionsRequestor.isValidNode(node) ? node : null;
     }
 
     protected IGroovySuggestion createSuggestion(SuggestionDescriptor descriptor) {

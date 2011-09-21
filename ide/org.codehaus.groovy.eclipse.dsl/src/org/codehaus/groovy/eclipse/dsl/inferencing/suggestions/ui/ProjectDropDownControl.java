@@ -45,7 +45,10 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
 
     private ISelectionHandler handler;
 
-    public ProjectDropDownControl(List<IProject> projects, Shell shell, Composite parent, ISelectionHandler handler) {
+    /**
+     * None of the arguments, except the handler can be null
+     */
+    protected ProjectDropDownControl(List<IProject> projects, Shell shell, Composite parent, ISelectionHandler handler) {
         super(shell, parent);
         this.projects = projects;
         this.handler = handler;
@@ -55,17 +58,24 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
         return projects;
     }
 
-    public void createProjectDisplayControl(Composite parent) {
-
+    public static IProjectUIControl getProjectSelectionControl(List<IProject> projects, Shell shell, Composite parent,
+            ISelectionHandler handler) {
         // If zero or one projects exit, delegate to super class to create
         // a single label to display the project
+        IProjectUIControl control = null;
         if (projects == null || projects.size() <= 1) {
+            control = new ProjectDisplayControl(shell, parent);
             if (projects.size() == 1) {
-                super.setProject(projects.get(0));
+                control.setProject(projects.get(0));
             }
-            super.createProjectDisplayControl(parent);
-            return;
+
+        } else {
+            control = new ProjectDropDownControl(projects, shell, parent, handler);
         }
+        return control;
+    }
+
+    public void createProjectDisplayControl(Composite parent) {
 
         // Otherwise create the drop down
         String[] projectNames = new String[projects.size()];
@@ -103,14 +113,11 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
      */
     protected boolean isSelectionSame(IProject projectToSelect) {
 
-        if (dropDown != null) {
-            int selectionIndex = dropDown.getSelectionIndex();
-            if (selectionIndex >= 0) {
-                String currentSelection = dropDown.getItem(selectionIndex);
-                return projectToSelect.getName().equals(currentSelection);
-            }
+        int selectionIndex = dropDown.getSelectionIndex();
+        if (selectionIndex >= 0) {
+            String currentSelection = dropDown.getItem(selectionIndex);
+            return projectToSelect.getName().equals(currentSelection);
         }
-
         return projectToSelect == getProject();
     }
 
@@ -126,28 +133,24 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
             return projectToSelect;
         }
 
-        if (dropDown != null) {
-            int selectedIndex = -1;
-            String[] allProjects = dropDown.getItems();
-            for (int i = 0; i < allProjects.length; i++) {
-                if (projectToSelect.getName().equals(allProjects[i])) {
-                    selectedIndex = i;
-                    break;
-                }
+        int selectedIndex = -1;
+        String[] allProjects = dropDown.getItems();
+        for (int i = 0; i < allProjects.length; i++) {
+            if (projectToSelect.getName().equals(allProjects[i])) {
+                selectedIndex = i;
+                break;
             }
+        }
 
-            if (selectedIndex >= 0) {
+        if (selectedIndex >= 0) {
 
-                dropDown.select(selectedIndex);
-                super.setProject(projectToSelect);
-                handleProjectChange(projectToSelect);
+            dropDown.select(selectedIndex);
+            super.setProject(projectToSelect);
+            handleProjectChange(projectToSelect);
 
-                return projectToSelect;
-            } else {
-                return null;
-            }
+            return projectToSelect;
         } else {
-            return super.setProject(projectToSelect);
+            return null;
         }
 
     }

@@ -47,9 +47,9 @@ import org.eclipse.swt.widgets.Shell;
  * @author Nieraj Singh
  * @created 2011-05-13
  */
-public class InferencingContributionDialogue extends AbstractDialogue {
-    public static final DialogueDescriptor DIALOGUE_DESCRIPTOR = new DialogueDescriptor("Add a Groovy inferencing Suggestion",
-            "Inferencing Suggestion", "icons/GROOVY.png");
+public class AddInferencingSuggestionDialogue extends AbstractDialogue {
+    public static final DialogueDescriptor DIALOGUE_DESCRIPTOR = new DialogueDescriptor(
+            "Add a Groovy inferencing suggestion", "Inferencing Suggestion", "icons/GROOVY.png");
 
     private Point labelControlOffset;
 
@@ -77,18 +77,8 @@ public class InferencingContributionDialogue extends AbstractDialogue {
 
     private IProject project;
 
-    /**
-     * This constructor is used to edit an existing suggestion. Editing a
-     * declaring type is not yet supported.
-     */
-    public InferencingContributionDialogue(Shell parentShell, IGroovySuggestion suggestion, IProject project) {
-        super(parentShell, DIALOGUE_DESCRIPTOR);
-        this.project = project;
-        setSuggestion(suggestion);
-    }
-
-    public InferencingContributionDialogue(Shell parentShell, SuggestionDescriptor descriptor, IProject project) {
-        super(parentShell, DIALOGUE_DESCRIPTOR);
+    public AddInferencingSuggestionDialogue(Shell parentShell, SuggestionDescriptor descriptor, IProject project) {
+        super(parentShell);
         this.project = project;
         setSuggestion(descriptor);
     }
@@ -97,7 +87,7 @@ public class InferencingContributionDialogue extends AbstractDialogue {
      * This constructor is used to add new suggestion to an existing declaring
      * type
      */
-    public InferencingContributionDialogue(Shell parentShell, GroovySuggestionDeclaringType declaringType, IProject project) {
+    public AddInferencingSuggestionDialogue(Shell parentShell, GroovySuggestionDeclaringType declaringType, IProject project) {
         this(parentShell, project, null, declaringType, true);
     }
 
@@ -105,18 +95,21 @@ public class InferencingContributionDialogue extends AbstractDialogue {
      * This constructor is used to add a new suggestion. The user is expected to
      * specify the declaring type in the UI controls.
      */
-    public InferencingContributionDialogue(Shell parentShell, IProject project) {
+    public AddInferencingSuggestionDialogue(Shell parentShell, IProject project) {
         this(parentShell, project, null, null, true);
-
     }
 
-    protected InferencingContributionDialogue(Shell parentShell, IProject project, IGroovySuggestion currentSuggestion,
+    protected AddInferencingSuggestionDialogue(Shell parentShell, IProject project, IGroovySuggestion currentSuggestion,
             GroovySuggestionDeclaringType declaringType, boolean isActive) {
-        super(parentShell, DIALOGUE_DESCRIPTOR);
+        super(parentShell);
         this.project = project;
         this.currentSuggestion = currentSuggestion;
         this.declaringTypeName = declaringType != null ? declaringType.getName() : null;
         this.isActive = isActive;
+    }
+
+    protected DialogueDescriptor getDialogueDescriptor() {
+        return DIALOGUE_DESCRIPTOR;
     }
 
     /**
