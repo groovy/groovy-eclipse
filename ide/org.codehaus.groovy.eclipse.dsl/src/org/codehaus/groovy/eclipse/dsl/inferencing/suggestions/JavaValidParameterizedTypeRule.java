@@ -23,6 +23,7 @@ import java.util.Map;
 import org.codehaus.groovy.eclipse.codeassist.Activator;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -149,7 +150,17 @@ public class JavaValidParameterizedTypeRule extends AbstractJavaTypeVerifiedRule
         parser.setSource(sourceBuffer.toString().toCharArray());
 
         Map<String, String> options = new HashMap<String, String>();
-        JavaModelUtil.set50ComplianceOptions(options);
+        // this method was removed in 3.7.1
+//        JavaModelUtil.set50ComplianceOptions(options);
+        
+        // instead, set explicitly
+        options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
+        options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+        options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
+        options.put(JavaCore.COMPILER_PB_ASSERT_IDENTIFIER, JavaCore.ERROR);
+        options.put(JavaCore.COMPILER_PB_ENUM_IDENTIFIER, JavaCore.ERROR);
+        options.put(JavaCore.COMPILER_CODEGEN_INLINE_JSR_BYTECODE, JavaCore.ENABLED);
+        
         parser.setCompilerOptions(options);
 
         CompilationUnit cu = (CompilationUnit) parser.createAST(null);
