@@ -60,6 +60,8 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.omg.CORBA.Environment;
 
+import antlr.Version;
+
 
 public class GroovySimpleTest extends AbstractRegressionTest {
 
@@ -392,6 +394,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     }
     
     public void testJava7() {
+    	if (isEclipse36()) { return; }
     	complianceLevel = ClassFileConstants.JDK1_7;
     	this.runConformTest(new String[]{
     			"A.java",
@@ -412,7 +415,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"print 'a'\n"},"");
     }
     
-    public void testJava7_2() {
+    public void testJava7_2() {   
+    	if (isEclipse36()) { return; }
     	// should fail if compliance level < 1.7
     	// complianceLevel = ClassFileConstants.JDK1_7;
     	this.runNegativeTest(new String[]{
@@ -441,7 +445,13 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     					"----------\n");
     	
     }
+    
+    private boolean isEclipse36() {
+    	return Platform.getBundle("org.eclipse.jdt.core").getVersion().toString().startsWith("3.6");
+    }
+    
     public void testJava7_3() {
+    	if (isEclipse36()) { return; }
     	// should fail if compliance level < 1.7
     	// complianceLevel = ClassFileConstants.JDK1_7;
     	this.runNegativeTest(new String[]{
