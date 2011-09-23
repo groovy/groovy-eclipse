@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -679,6 +679,32 @@ public class ASTMatcher {
 		}
 		ContinueStatement o = (ContinueStatement) other;
 		return safeSubtreeMatch(node.getLabel(), o.getLabel());
+	}
+
+	/**
+	 * Returns whether the given node and the other object match.
+	 * <p>
+	 * The default implementation provided by this class tests whether the
+	 * other object is a node of the same type with structurally isomorphic
+	 * child subtrees. Subclasses may override this method as needed.
+	 * </p>
+	 *
+	 * @param node the node
+	 * @param other the other object, or <code>null</code>
+	 * @return <code>true</code> if the subtree matches, or
+	 *   <code>false</code> if they do not match or the other object has a
+	 *   different node type or is <code>null</code>
+	 * @since 3.7.1
+	 */
+	public boolean match(UnionType node, Object other) {
+		if (!(other instanceof UnionType)) {
+			return false;
+		}
+		UnionType o = (UnionType) other;
+		return
+			safeSubtreeListMatch(
+				node.types(),
+				o.types());
 	}
 
 	/**
@@ -2093,10 +2119,19 @@ public class ASTMatcher {
 			return false;
 		}
 		TryStatement o = (TryStatement) other;
+		switch(node.getAST().apiLevel) {
+			case AST.JLS2_INTERNAL :
+			case AST.JLS3 :
 		return (
 			safeSubtreeMatch(node.getBody(), o.getBody())
 				&& safeSubtreeListMatch(node.catchClauses(), o.catchClauses())
 				&& safeSubtreeMatch(node.getFinally(), o.getFinally()));
+	}
+		return (
+			safeSubtreeListMatch(node.resources(), o.resources())
+			&& safeSubtreeMatch(node.getBody(), o.getBody())
+			&& safeSubtreeListMatch(node.catchClauses(), o.catchClauses())
+			&& safeSubtreeMatch(node.getFinally(), o.getFinally()));
 	}
 
 	/**

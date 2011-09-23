@@ -9,6 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
+// GROOVY PATCHED
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
@@ -160,6 +161,12 @@ public abstract class Annotation extends Expression {
 				break;
 			case TypeIds.T_JavaLangSuppressWarnings :
 				tagBits |= TagBits.AnnotationSuppressWarnings;
+				break;
+			case TypeIds.T_JavaLangSafeVarargs :
+				tagBits |= TagBits.AnnotationSafeVarargs;
+				break;
+			case TypeIds.T_JavaLangInvokeMethodHandlePolymorphicSignature :
+				tagBits |= TagBits.AnnotationPolymorphicSignature;
 				break;
 		}
 		return tagBits;

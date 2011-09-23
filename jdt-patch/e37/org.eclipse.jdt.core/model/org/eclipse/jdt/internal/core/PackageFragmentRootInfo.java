@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.core;
+package org.eclipse.jdt.internal.core; // GROOVY PATCHED
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.IContainer;
@@ -81,9 +81,9 @@ static Object[] computeFolderNonJavaResources(IPackageFragmentRoot root, IContai
 
 						// ignore .java files that are not excluded
 					    // GROOVY start
-						/*old
+						/* old {
 						 if (Util.isValidCompilationUnitName(fileName, sourceLevel, complianceLevel) && !Util.isExcluded(member, inclusionPatterns, exclusionPatterns))
-						 */// new
+						} new */
 						if ((Util.isValidCompilationUnitName(fileName, sourceLevel, complianceLevel) && !Util.isExcluded(member, inclusionPatterns, exclusionPatterns)) &&
 								// we want to show groovy scripts that are coming from class folders
 								!(isInterestingPackageRoot && LanguageSupportFactory.isInterestingSourceFile(fileName)))

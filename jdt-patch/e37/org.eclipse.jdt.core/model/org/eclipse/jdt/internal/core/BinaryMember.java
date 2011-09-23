@@ -81,6 +81,12 @@ protected IAnnotation[] getStandardAnnotations(long tagBits) {
 	if ((tagBits & TagBits.AnnotationInherited) != 0) {
 		annotations.add(getAnnotation(TypeConstants.JAVA_LANG_ANNOTATION_INHERITED));
 	}
+	if ((tagBits & TagBits.AnnotationPolymorphicSignature) != 0) {
+		annotations.add(getAnnotation(TypeConstants.JAVA_LANG_INVOKE_METHODHANDLE_$_POLYMORPHICSIGNATURE));
+	}
+	if ((tagBits & TagBits.AnnotationSafeVarargs) != 0) {
+		annotations.add(getAnnotation(TypeConstants.JAVA_LANG_SAFEVARARGS));
+	}
 	// note that JAVA_LANG_SUPPRESSWARNINGS and JAVA_LANG_OVERRIDE cannot appear in binaries
 	return (IAnnotation[]) annotations.toArray(new IAnnotation[annotations.size()]);
 }

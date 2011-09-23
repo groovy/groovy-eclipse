@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,9 +12,11 @@ package org.eclipse.jdt.internal.core.dom.rewrite;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.core.runtime.Assert;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Annotation;
@@ -23,6 +25,7 @@ import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.formatter.CodeFormatter;
+import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.jdt.core.formatter.IndentManipulation;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.BadPositionCategoryException;
@@ -126,10 +129,14 @@ import org.eclipse.text.edits.TextEdit;
 	public ASTRewriteFormatter(NodeInfoStore placeholders, RewriteEventStore eventStore, Map options, String lineDelimiter) {
 		this.placeholders= placeholders;
 		this.eventStore= eventStore;
+	
+		this.options= options == null ? JavaCore.getOptions() : (Map) new HashMap(options);
+		this.options.put(
+				DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_RESOURCES_IN_TRY,
+				DefaultCodeFormatterConstants.createAlignmentValue(true, DefaultCodeFormatterConstants.WRAP_NEXT_PER_LINE, DefaultCodeFormatterConstants.INDENT_DEFAULT));
 
-		this.options= options;
 		this.lineDelimiter= lineDelimiter;
-
+	
 		this.tabWidth= IndentManipulation.getTabWidth(options);
 		this.indentWidth= IndentManipulation.getIndentWidth(options);
 	}
@@ -543,7 +550,9 @@ import org.eclipse.text.edits.TextEdit;
 	public final Prefix FIRST_ENUM_CONST= new FormattingPrefix("enum E { X;}", "{ X" , CodeFormatter.K_COMPILATION_UNIT); //$NON-NLS-1$ //$NON-NLS-2$
 	public final Prefix ANNOTATION_SEPARATION= new FormattingPrefix("@A @B class C {}", "A @" , CodeFormatter.K_COMPILATION_UNIT); //$NON-NLS-1$ //$NON-NLS-2$
 	public final Prefix PARAM_ANNOTATION_SEPARATION= new FormattingPrefix("void foo(@A @B p) { }", "A @" , CodeFormatter.K_CLASS_BODY_DECLARATIONS); //$NON-NLS-1$ //$NON-NLS-2$
-
+	public final Prefix TRY_RESOURCES = new FormattingPrefix("try (A a = new A(); B b = new B()) {}", "; B" , CodeFormatter.K_STATEMENTS); //$NON-NLS-1$ //$NON-NLS-2$
+	public final Prefix TRY_RESOURCES_PAREN = new FormattingPrefix("try (A a = new A(); B b = new B()) {}", "y (" , CodeFormatter.K_STATEMENTS); //$NON-NLS-1$ //$NON-NLS-2$
+	
 	public final BlockContext IF_BLOCK_WITH_ELSE= new BlockFormattingPrefixSuffix("if (true)", "else{}", 8); //$NON-NLS-1$ //$NON-NLS-2$
 	public final BlockContext IF_BLOCK_NO_ELSE= new BlockFormattingPrefix("if (true)", 8); //$NON-NLS-1$
 	public final BlockContext ELSE_AFTER_STATEMENT= new BlockFormattingPrefix("if (true) foo();else ", 15); //$NON-NLS-1$

@@ -2048,6 +2048,22 @@ public void generateImplicitConversion(int implicitConversionCode) {
 			break;
 		case TypeIds.Float2Long :
 			f2l();
+			break;
+		case TypeIds.Object2boolean:
+		case TypeIds.Object2byte:
+		case TypeIds.Object2short:
+		case TypeIds.Object2int:
+		case TypeIds.Object2long:
+		case TypeIds.Object2float:
+		case TypeIds.Object2char:
+		case TypeIds.Object2double:
+			// see table 5.1 in JLS S5.5
+			// an Object to x conversion should have a check cast
+			// and an unboxing conversion.
+			int runtimeType = (implicitConversionCode & TypeIds.IMPLICIT_CONVERSION_MASK) >> 4;
+			checkcast(runtimeType);
+			generateUnboxingConversion(runtimeType);
+			break;	
 	}
 	if ((implicitConversionCode & TypeIds.BOXING) != 0) {
 		// need to unbox/box the constant
@@ -4026,6 +4042,26 @@ public void invokeIterableIterator(TypeBinding iterableReceiverType) {
 			ConstantPool.ITERATOR_SIGNATURE);
 }
 
+public void invokeAutoCloseableClose(TypeBinding resourceType) {
+	// invokevirtual/interface: <resourceType>.close()
+	invoke(
+			resourceType.isInterface() ? Opcodes.OPC_invokeinterface : Opcodes.OPC_invokevirtual,
+			1, // receiverAndArgsSize
+			0, // returnTypeSize
+			resourceType.constantPoolName(), 
+			ConstantPool.Close, 
+			ConstantPool.CloseSignature);
+}
+
+public void invokeThrowableAddSuppressed() {
+	invoke(Opcodes.OPC_invokevirtual,
+			2, // receiverAndArgsSize
+			0, // returnTypeSize
+			ConstantPool.JavaLangThrowableConstantPoolName,
+			ConstantPool.AddSuppressed, 
+			ConstantPool.AddSuppressedSignature);
+}
+
 public void invokeJavaLangAssertionErrorConstructor(int typeBindingID) {
 	// invokespecial: java.lang.AssertionError.<init>(typeBindingID)V
 	int receiverAndArgsSize;
@@ -4476,7 +4512,26 @@ public void invokeStringConcatenationToString() {
 			ConstantPool.ToString,
 			ConstantPool.ToStringSignature);
 }
-
+public void invokeStringEquals() {
+	// invokevirtual: java.lang.String.equals()
+	invoke(
+			Opcodes.OPC_invokevirtual,
+			2, // receiverAndArgsSize
+			1, // return type size
+			ConstantPool.JavaLangStringConstantPoolName,
+			ConstantPool.Equals,
+			ConstantPool.EqualsSignature);
+}
+public void invokeStringHashCode() {
+	// invokevirtual: java.lang.String.hashCode()
+	invoke(
+			Opcodes.OPC_invokevirtual,
+			1, // receiverAndArgsSize
+			1, // return type size
+			ConstantPool.JavaLangStringConstantPoolName,
+			ConstantPool.HashCode,
+			ConstantPool.HashCodeSignature);
+}
 public void invokeStringIntern() {
 	// invokevirtual: java.lang.String.intern()
 	invoke(

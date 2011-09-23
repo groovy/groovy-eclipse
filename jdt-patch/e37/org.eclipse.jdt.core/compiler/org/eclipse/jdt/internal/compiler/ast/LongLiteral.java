@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,88 +10,135 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
-import org.eclipse.jdt.internal.compiler.impl.*;
-import org.eclipse.jdt.internal.compiler.codegen.*;
-import org.eclipse.jdt.internal.compiler.lookup.*;
+import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
+import org.eclipse.jdt.internal.compiler.impl.LongConstant;
+import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
+import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 
 public class LongLiteral extends NumberLiteral {
 
-public LongLiteral(char[] token, int s,int e) {
-	super(token, s,e);
-}
+	private static final char[] HEXA_MIN_VALUE        = "0x8000000000000000L".toCharArray(); //$NON-NLS-1$
+	private static final char[] HEXA_MINUS_ONE_VALUE  = "0xffffffffffffffffL".toCharArray(); //$NON-NLS-1$
+	private static final char[] OCTAL_MIN_VALUE       = "01000000000000000000000L".toCharArray(); //$NON-NLS-1$
+	private static final char[] OCTAL_MINUS_ONE_VALUE = "01777777777777777777777L".toCharArray(); //$NON-NLS-1$
+	private static final char[] DECIMAL_MIN_VALUE     = "9223372036854775808L".toCharArray(); //$NON-NLS-1$
+	private static final char[] DECIMAL_MAX_VALUE     = "9223372036854775807L".toCharArray(); //$NON-NLS-1$
 
+	private char[] reducedForm; // no underscores
+
+	public static LongLiteral buildLongLiteral(char[] token, int s, int e) {
+		// remove '_' and prefix '0' first
+		char[] longReducedToken = removePrefixZerosAndUnderscores(token, true);
+		switch(longReducedToken.length) {
+			case 19 :
+				// 0x8000000000000000L
+				if (CharOperation.equals(longReducedToken, HEXA_MIN_VALUE)) {
+					return new LongLiteralMinValue(token, longReducedToken != token ? longReducedToken : null, s, e);
+				}
+				break;
+			case 24 :
+				// 01000000000000000000000L
+				if (CharOperation.equals(longReducedToken, OCTAL_MIN_VALUE)) {
+					return new LongLiteralMinValue(token, longReducedToken != token ? longReducedToken : null, s, e);
+				}
+				break;
+		}
+		return new LongLiteral(token, longReducedToken != token ? longReducedToken : null, s, e);
+	}
+
+LongLiteral(char[] token, char[] reducedForm, int start, int end) {
+	super(token, start, end);
+	this.reducedForm = reducedForm;
+}
+public LongLiteral convertToMinValue() {
+	if (((this.bits & ASTNode.ParenthesizedMASK) >> ASTNode.ParenthesizedSHIFT) != 0) {
+		return this;
+	}
+	char[] token = this.reducedForm != null ? this.reducedForm : this.source;
+	switch(token.length) {
+		case 20 :
+			// 9223372036854775808L
+			if (CharOperation.equals(token, DECIMAL_MIN_VALUE, false)) {
+				return new LongLiteralMinValue(this.source, this.reducedForm, this.sourceStart, this.sourceEnd);
+			}
+			break;
+	}
+	return this;
+}
 public void computeConstant() {
-	//the overflow (when radix=10) is tested using the fact that
-	//the value should always grow during its computation
-	int length = this.source.length - 1; //minus one because the last char is 'l' or 'L'
-	long computedValue ;
-	if (this.source[0] == '0') {
+	char[] token = this.reducedForm != null ? this.reducedForm : this.source;
+	int tokenLength = token.length;
+	int length = tokenLength - 1;
+	int radix = 10;
+	int j = 0;
+	if (token[0] == '0') {
 		if (length == 1) {
 			this.constant = LongConstant.fromValue(0L);
 			return;
 		}
-		final int shift,radix;
-		int j ;
-		if ( (this.source[1] == 'x') || (this.source[1] == 'X') ) {
-			shift = 4 ; j = 2; radix = 16;
+		if ((token[1] == 'x') || (token[1] == 'X')) {
+			radix = 16;
+			j = 2;
+		} else if ((token[1] == 'b') || (token[1] == 'B')) {
+			radix = 2;
+			j = 2;
 		} else {
-			shift = 3 ; j = 1; radix = 8;
+			radix = 8;
+			j = 1;
 		}
-		int nbDigit = 0;
-		while (this.source[j]=='0') {
-			j++; //jump over redondant zero
-			if ( j == length) {
-				//watch for 0000000000000L
-				this.constant = LongConstant.fromValue(0L);
-				return;
+	}
+	switch(radix) {
+		case 2 :
+			if ((length - 2) > 64) { // remove 0b or 0B
+				return; /*constant stays null*/
 			}
-		}
-
-		int digitValue ;
-		if ((digitValue = ScannerHelper.digit(this.source[j++],radix)) < 0 ) {
+			computeValue(token, length, radix, j);
+			break;
+		case 16 :
+			if (tokenLength <= 19) {
+				if (CharOperation.equals(token, HEXA_MINUS_ONE_VALUE)) {
+					this.constant = LongConstant.fromValue(-1L);
+					return;
+				}
+				computeValue(token, length, radix, j);
+			}
+			break;
+		case 10 :
+			if (tokenLength > DECIMAL_MAX_VALUE.length
+					|| (tokenLength == DECIMAL_MAX_VALUE.length
+							&& CharOperation.compareTo(token, DECIMAL_MAX_VALUE, 0, length) > 0)) {
+				return; /*constant stays null*/
+			}
+			computeValue(token, length, radix, j);
+			break;
+		case 8 :
+			if (tokenLength <= 24) {
+				if (tokenLength == 24 && token[j] > '1') {
+					return; /*constant stays null*/
+				}
+				if (CharOperation.equals(token, OCTAL_MINUS_ONE_VALUE)) {
+					this.constant = LongConstant.fromValue(-1L);
+					return;
+				}
+				computeValue(token, length, radix, j);
+			}
+			break;
+	}
+}
+private void computeValue(char[] token, int tokenLength, int radix, int j) {
+	int digitValue;
+	long computedValue = 0;
+	while (j < tokenLength) {
+		if ((digitValue = ScannerHelper.digit(token[j++],radix)) < 0) {
 			return; /*constant stays null*/
 		}
-		if (digitValue >= 8)
-			nbDigit = 4;
-		else if (digitValue >= 4)
-			nbDigit = 3;
-		else if (digitValue >= 2)
-			nbDigit = 2;
-		else
-			nbDigit = 1; //digitValue is not 0
-		computedValue = digitValue ;
-		while (j<length) {
-			if ((digitValue = ScannerHelper.digit(this.source[j++],radix)) < 0) {
-				return; /*constant stays null*/
-			}
-			if ((nbDigit += shift) > 64)
-				return; /*constant stays null*/
-			computedValue = (computedValue<<shift) | digitValue ;
-		}
-	} else {
-		//-----------case radix=10-----------------
-		long previous = 0;
-		computedValue = 0;
-		final long limit = Long.MAX_VALUE / 10; // needed to check prior to the multiplication
-		for (int i = 0 ; i < length; i++) {
-			int digitValue ;
-			if ((digitValue = ScannerHelper.digit(this.source[i], 10)) < 0 ) return /*constant stays null*/;
-			previous = computedValue;
-			if (computedValue > limit)
-				return; /*constant stays null*/
-			computedValue *= 10;
-			if ((computedValue + digitValue) > Long.MAX_VALUE)
-				return; /*constant stays null*/
-			computedValue += digitValue;
-			if (previous > computedValue)
-				return; /*constant stays null*/
-		}
+		computedValue = (computedValue * radix) + digitValue ;
 	}
 	this.constant = LongConstant.fromValue(computedValue);
 }
-
 /**
  * Code generation for long literal
  *
@@ -110,35 +157,6 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 public TypeBinding literalType(BlockScope scope) {
 	return TypeBinding.LONG;
 }
-
-public final boolean mayRepresentMIN_VALUE(){
-	//a special autorized int literral is 9223372036854775808L
-	//which is ONE over the limit. This special case
-	//only is used in combinaison with - to denote
-	//the minimal value of int -9223372036854775808L
-	return ((this.source.length == 20) &&
-			(this.source[0] == '9') &&
-			(this.source[1] == '2') &&
-			(this.source[2] == '2') &&
-			(this.source[3] == '3') &&
-			(this.source[4] == '3') &&
-			(this.source[5] == '7') &&
-			(this.source[6] == '2') &&
-			(this.source[7] == '0') &&
-			(this.source[8] == '3') &&
-			(this.source[9] == '6') &&
-			(this.source[10] == '8') &&
-			(this.source[11] == '5') &&
-			(this.source[12] == '4') &&
-			(this.source[13] == '7') &&
-			(this.source[14] == '7') &&
-			(this.source[15] == '5') &&
-			(this.source[16] == '8') &&
-			(this.source[17] == '0') &&
-			(this.source[18] == '8') &&
-			(((this.bits & ASTNode.ParenthesizedMASK) >> ASTNode.ParenthesizedSHIFT) == 0));
-}
-
 public void traverse(ASTVisitor visitor, BlockScope scope) {
 	visitor.visit(this, scope);
 	visitor.endVisit(this, scope);

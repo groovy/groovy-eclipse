@@ -19,8 +19,8 @@ import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
  * Abstract base class of AST nodes that represent statements.
  * There are many kinds of statements.
  * <p>
- * The grammar combines both Statement and BlockStatement.
- * For JLS2:
+ * The grammar combines both Statement and BlockStatement.</p>
+ * <p>For JLS2:</p>
  * <pre>
  * Statement:
  *    {@link AssertStatement},
@@ -45,13 +45,12 @@ import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
  *    {@link VariableDeclarationStatement},
  *    {@link WhileStatement}
  * </pre>
- * For JLS3, an enhanced for node type was added:
+ * <p>For JLS3, an enhanced for node type was added:</p>
  * <pre>
  * Statement:
  *    <i>&lt;JLS2 statements&gt;...</i>,
  *    {@link EnhancedForStatement}
  * </pre>
- * </p>
  *
  * @since 2.0
  */

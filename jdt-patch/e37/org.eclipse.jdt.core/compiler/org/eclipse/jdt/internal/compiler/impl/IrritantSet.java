@@ -120,7 +120,8 @@ public class IrritantSet {
 			.set(CompilerOptions.UnusedTypeArguments)
 			.set(CompilerOptions.RedundantSuperinterface)
 			.set(CompilerOptions.DeadCode)
-			.set(CompilerOptions.UnusedObjectAllocation);
+			.set(CompilerOptions.UnusedObjectAllocation)
+			.set(CompilerOptions.RedundantSpecificationOfTypeArguments);
 		STATIC_METHOD
 		    .set(CompilerOptions.MethodCanBePotentiallyStatic);
 		String suppressRawWhenUnchecked = System.getProperty("suppressRawWhenUnchecked"); //$NON-NLS-1$

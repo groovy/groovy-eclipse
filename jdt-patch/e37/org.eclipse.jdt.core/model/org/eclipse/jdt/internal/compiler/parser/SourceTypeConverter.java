@@ -9,7 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann <stephan@cs.tu-berlin.de> - TypeConverters don't set enclosingType - https://bugs.eclipse.org/bugs/show_bug.cgi?id=320841
  *******************************************************************************/
-package org.eclipse.jdt.internal.compiler.parser;
+package org.eclipse.jdt.internal.compiler.parser; // GROOVY PATCHED
 
 /**
  * Converter from source element type to parsed compilation unit.
@@ -134,9 +134,9 @@ public class SourceTypeConverter extends TypeConverter {
 	 */
 	private CompilationUnitDeclaration convert(ISourceType[] sourceTypes, CompilationResult compilationResult) throws JavaModelException {
         // GROOVY start
-        /* old
+        /* old {
 		this.unit = new CompilationUnitDeclaration(this.problemReporter, compilationResult, 0);
-        */// new
+        } new */
 		this.unit = LanguageSupportFactory.newCompilationUnitDeclaration((ICompilationUnit) ((SourceTypeElementInfo) sourceTypes[0]).getHandle().getCompilationUnit(), this.problemReporter, compilationResult, 0);
         // GROOVY end
 
@@ -154,7 +154,7 @@ public class SourceTypeConverter extends TypeConverter {
 		// FIXASC think about doing the necessary rewrite below rather than this - does it make things too slow?
 
 //		final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(compilationResult.getCompilationUnit().getjavaBuilder.getProject());
-		// FIXASC should be 'true' here?
+		// GROOVY should be 'true' here?
 		if (LanguageSupportFactory.isInterestingSourceFile(new String(compilationResult.getFileName()))) {
 			try {
 				return LanguageSupportFactory.getParser(this, this.problemReporter.options, this.problemReporter, true, 3).dietParse(this.cu, compilationResult);

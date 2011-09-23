@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -487,7 +487,7 @@ public class CompletionJavadocParser extends JavadocParser {
 						isTypeParam = identifier.length > 0 && identifier[0] == '<';
 						break;
 				}
-				if (identifier != null && identifier.length > 0 && ScannerHelper.isJavaIdentifierPart(identifier[0])) {
+				if (identifier != null && identifier.length > 0 && ScannerHelper.isJavaIdentifierPart(this.complianceLevel, identifier[0])) {
 					name = identifier;
 				}
 				startPosition = (int)(this.identifierPositionStack[0]>>32);

@@ -102,6 +102,12 @@ private void generateStandardAnnotationsInfos(JavaElement javaElement, char[] pa
 	if ((tagBits & TagBits.AnnotationInherited) != 0) {
 		generateStandardAnnotation(javaElement, TypeConstants.JAVA_LANG_ANNOTATION_INHERITED, Annotation.NO_MEMBER_VALUE_PAIRS, newElements);
 	}
+	if ((tagBits & TagBits.AnnotationPolymorphicSignature) != 0) {
+		generateStandardAnnotation(javaElement, TypeConstants.JAVA_LANG_INVOKE_METHODHANDLE_$_POLYMORPHICSIGNATURE, Annotation.NO_MEMBER_VALUE_PAIRS, newElements);
+	}
+	if ((tagBits & TagBits.AnnotationSafeVarargs) != 0) {
+		generateStandardAnnotation(javaElement, TypeConstants.JAVA_LANG_SAFEVARARGS, Annotation.NO_MEMBER_VALUE_PAIRS, newElements);
+	}
 	// note that JAVA_LANG_SUPPRESSWARNINGS and JAVA_LANG_OVERRIDE cannot appear in binaries
 }
 

@@ -542,6 +542,15 @@ class DefaultBindingResolver extends BindingResolver {
 		return false;
 	}
 
+	boolean isResolvedTypeInferredFromExpectedType(ClassInstanceCreation classInstanceCreation) {
+		Object oldNode = this.newAstToOldAst.get(classInstanceCreation);
+		if (oldNode instanceof AllocationExpression) {
+			AllocationExpression allocationExpression = (AllocationExpression) oldNode;
+			return allocationExpression.inferredReturnType;
+		}
+		return false;
+	}
+
 	/*
 	 * Method declared on BindingResolver.
 	 */
@@ -1531,7 +1540,7 @@ class DefaultBindingResolver extends BindingResolver {
 						return getTypeBinding(this.scope.createArrayType(arrayBinding.leafComponentType, arrayType.getDimensions()));
 					}
 				if (typeBinding.isArrayType()) {
-					// 'binding' can still be an array type because 'node' may be "larger" than 'type' (see comment of newAstToOldAst).
+					// 'typeBinding' can still be an array type because 'node' may be "larger" than 'type' (see comment of newAstToOldAst).
 					typeBinding = ((ArrayBinding) typeBinding).leafComponentType;
 				}
 				int index;

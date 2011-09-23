@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.core;
+package org.eclipse.jdt.core; // GROOVY PATCHED
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -213,9 +213,9 @@ public abstract class WorkingCopyOwner {
 		ExternalJavaProject project = new ExternalJavaProject(classpath);
 		IPackageFragment parent = ((PackageFragmentRoot) project.getPackageFragmentRoot(project.getProject())).getPackageFragment(CharOperation.NO_STRINGS);
         // GROOVY start
-        /* old
+        /* old {
 		CompilationUnit result = new CompilationUnit((PackageFragment) parent, name, this);
-        */// new
+        } new */
 		CompilationUnit result = LanguageSupportFactory.newCompilationUnit((PackageFragment) parent, name, this);
         // GROOVY end
 		result.becomeWorkingCopy(problemRequestor, monitor);
@@ -265,12 +265,11 @@ public abstract class WorkingCopyOwner {
 		ExternalJavaProject project = new ExternalJavaProject(classpath);
 		IPackageFragment parent = ((PackageFragmentRoot) project.getPackageFragmentRoot(project.getProject())).getPackageFragment(CharOperation.NO_STRINGS);
         // GROOVY start
-        /* old
+        /* old {
 		CompilationUnit result = new CompilationUnit((PackageFragment) parent, name, this);
-        */// new
+        } new */
 		CompilationUnit result = LanguageSupportFactory.newCompilationUnit((PackageFragment) parent, name, this);
         // GROOVY end
-		
 		result.becomeWorkingCopy(getProblemRequestor(result), monitor);
 		return result;
 	}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -40,6 +40,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ConditionalExpression;
 import org.eclipse.jdt.core.dom.ConstructorInvocation;
 import org.eclipse.jdt.core.dom.ContinueStatement;
+import org.eclipse.jdt.core.dom.UnionType;
 import org.eclipse.jdt.core.dom.DoStatement;
 import org.eclipse.jdt.core.dom.EmptyStatement;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
@@ -622,7 +623,7 @@ public class NaiveASTFlattener extends ASTVisitor {
 		this.buffer.append(";\n");//$NON-NLS-1$
 		return false;
 	}
-
+	
 	/*
 	 * @see ASTVisitor#visit(DoStatement)
 	 */
@@ -1527,6 +1528,20 @@ public class NaiveASTFlattener extends ASTVisitor {
 	public boolean visit(TryStatement node) {
 		printIndent();
 		this.buffer.append("try ");//$NON-NLS-1$
+		List resources = node.resources();
+		if (node.getAST().apiLevel() >= AST.JLS4) {
+			if (!node.resources().isEmpty()) {
+				this.buffer.append('(');
+				for (Iterator it = resources.iterator(); it.hasNext(); ) {
+					VariableDeclarationExpression variable = (VariableDeclarationExpression) it.next();
+					variable.accept(this);
+					if (it.hasNext()) {
+						this.buffer.append(';');
+					}
+				}
+				this.buffer.append(')');
+			}
+		}
 		node.getBody().accept(this);
 		this.buffer.append(" ");//$NON-NLS-1$
 		for (Iterator it = node.catchClauses().iterator(); it.hasNext(); ) {
@@ -1653,6 +1668,21 @@ public class NaiveASTFlattener extends ASTVisitor {
 				if (it.hasNext()) {
 					this.buffer.append(" & ");//$NON-NLS-1$
 				}
+			}
+		}
+		return false;
+	}
+
+	/*
+	 * @see ASTVisitor#visit(UnionType)
+	 * @since 3.7
+	 */
+	public boolean visit(UnionType node) {
+		for (Iterator it = node.types().iterator(); it.hasNext(); ) {
+			Type t = (Type) it.next();
+			t.accept(this);
+			if (it.hasNext()) {
+				this.buffer.append('|');
 			}
 		}
 		return false;

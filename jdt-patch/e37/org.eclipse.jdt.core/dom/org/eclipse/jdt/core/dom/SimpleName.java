@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jdt.core.compiler.InvalidInputException;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
 import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
 
@@ -177,21 +178,31 @@ public class SimpleName extends Name {
 			throw new IllegalArgumentException();
 		}
 		Scanner scanner = this.ast.scanner;
-		char[] source = identifier.toCharArray();
-		scanner.setSource(source);
-		final int length = source.length;
-		scanner.resetTo(0, length - 1);
+		long sourceLevel = scanner.sourceLevel;
+		long complianceLevel = scanner.complianceLevel;
+
 		try {
-			int tokenType = scanner.scanIdentifier();
-			if (tokenType != TerminalTokens.TokenNameIdentifier) {
+			scanner.sourceLevel = ClassFileConstants.JDK1_3;
+			scanner.complianceLevel = ClassFileConstants.JDK1_5;
+			char[] source = identifier.toCharArray();
+			scanner.setSource(source);
+			final int length = source.length;
+			scanner.resetTo(0, length - 1);
+			try {
+				int tokenType = scanner.scanIdentifier();
+				if (tokenType != TerminalTokens.TokenNameIdentifier) {
+					throw new IllegalArgumentException();
+				}
+				if (scanner.currentPosition != length) {
+					// this is the case when there is only one identifier see 87849
+					throw new IllegalArgumentException();
+				}
+			} catch(InvalidInputException e) {
 				throw new IllegalArgumentException();
 			}
-			if (scanner.currentPosition != length) {
-				// this is the case when there is only one identifier see 87849
-				throw new IllegalArgumentException();
-			}
-		} catch(InvalidInputException e) {
-			throw new IllegalArgumentException();
+		} finally {
+			this.ast.scanner.sourceLevel = sourceLevel;
+			this.ast.scanner.complianceLevel = complianceLevel;
 		}
 		preValueChange(IDENTIFIER_PROPERTY);
 		this.identifier = identifier;

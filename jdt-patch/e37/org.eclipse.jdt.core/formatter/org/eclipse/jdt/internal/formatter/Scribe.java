@@ -1606,7 +1606,6 @@ public class Scribe implements IJavaDocTagConstants {
 			addInsertEdit(this.scanner.getCurrentTokenStartPosition(), " "); //$NON-NLS-1$
 		}
 		this.pendingSpace = false;
-		this.needSpace = false;
 		this.column += length;
 		this.needSpace = true;
 	}

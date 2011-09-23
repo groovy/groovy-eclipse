@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2010 IBM Corporation and others.
+ * Copyright (c) 2008, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -29,8 +29,12 @@ import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Initializer;
 import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
+import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
@@ -187,13 +191,13 @@ public class InternalExtendedCompletionContext {
 								break done;
 							}
 						} else {
-							FieldDeclaration fieldDeclaration = fields[i];
+							FieldDeclaration fieldDeclaration = fields[i];							
 							if (fieldDeclaration.initialization != null) {
 								boolean isInsideInitializer = false;
 								if (fieldDeclaration.initialization.sourceEnd > 0) {
 									if (fieldDeclaration.initialization.sourceStart <= astNode.sourceStart &&
-									astNode.sourceEnd <= fieldDeclaration.initialization.sourceEnd) {
-								// completion is inside a field initializer
+											astNode.sourceEnd <= fieldDeclaration.initialization.sourceEnd) {
+										// completion is inside a field initializer
 										isInsideInitializer = true;
 									}
 								} else { // The sourceEnd may not yet be set
@@ -204,7 +208,7 @@ public class InternalExtendedCompletionContext {
 									}
 								}
 								if (isInsideInitializer) {
-								searchVisibleVariablesAndMethods(scope, this.visibleLocalVariables, this.visibleFields, this.visibleMethods, notInJavadoc);
+									searchVisibleVariablesAndMethods(scope, this.visibleLocalVariables, this.visibleFields, this.visibleMethods, notInJavadoc);
 									// remove this field from visibleFields list because completion is being asked in its
 									// intialization and so this has not yet been declared successfully.
 									if (this.visibleFields.size > 0 && this.visibleFields.contains(fieldDeclaration.binding)) {
@@ -219,12 +223,12 @@ public class InternalExtendedCompletionContext {
 										}
 										count++;
 									}
-								break done;
+									break done;
+								}
 							}
 						}
 					}
 				}
-			}
 			}
 		} finally {
 			this.lookupEnvironment.unitBeingCompleted = previousUnitBeingCompleted;
@@ -753,11 +757,11 @@ public class InternalExtendedCompletionContext {
 						if (local.declaration.initialization != null) {
 							/*(use this if-else block if it is found that local.declaration.initialization != null is not sufficient to 
 							  guarantee that proposal is being asked inside a local variable declaration's initializer)
-							if(local.declaration.initialization.sourceEnd > 0) {
-									if (this.assistNode.sourceEnd <= local.declaration.initialization.sourceEnd
-											&& this.assistNode.sourceStart >= local.declaration.initialization.sourceStart) {
-										continue next;
-									}
+							 if(local.declaration.initialization.sourceEnd > 0) {
+								if (this.assistNode.sourceEnd <= local.declaration.initialization.sourceEnd
+										&& this.assistNode.sourceStart >= local.declaration.initialization.sourceStart) {
+									continue next;
+								}
 							} else {
 								CompletionNodeDetector detector = new CompletionNodeDetector(
 										this.assistNode,
@@ -883,5 +887,46 @@ public class InternalExtendedCompletionContext {
 				}
 			}
 		}
+	}
+
+	public boolean canUseDiamond(String[] parameterTypes, char[] fullyQualifiedTypeName) {
+		TypeBinding guessedType = null;
+		char[][] cn = CharOperation.splitOn('.', fullyQualifiedTypeName);
+		Scope scope = this.assistScope;
+		if (scope.compilerOptions().sourceLevel < ClassFileConstants.JDK1_7) return false;
+		// If no LHS or return type expected, then we can safely use diamond
+		char[][] expectedTypekeys= this.completionContext.getExpectedTypesKeys();
+		if (expectedTypekeys == null || expectedTypekeys.length == 0)
+			return true;
+		// Next, find out whether any of the constructor parameters are the same as one of the 
+		// class type variables. If yes, diamond cannot be used.
+		TypeReference ref;
+		if (cn.length == 1) {
+			ref = new SingleTypeReference(cn[0], 0);
+		} else {
+			ref = new QualifiedTypeReference(cn,new long[cn.length]);
+		}
+		switch (scope.kind) {
+			case Scope.METHOD_SCOPE :
+			case Scope.BLOCK_SCOPE :
+				guessedType = ref.resolveType((BlockScope)scope);
+				break;
+			case Scope.CLASS_SCOPE :
+				guessedType = ref.resolveType((ClassScope)scope);
+				break;
+		}
+		if (guessedType != null && guessedType.isValidBinding()) {
+			// the erasure must be used because guessedType can be a RawTypeBinding
+			guessedType = guessedType.erasure();
+			TypeVariableBinding[] typeVars = guessedType.typeVariables();
+			for (int i = 0; i < parameterTypes.length; i++) {
+				for (int j = 0; j < typeVars.length; j++) {
+					if (CharOperation.equals(parameterTypes[i].toCharArray(), typeVars[j].sourceName))
+						return false;
+				}
+			}
+			return true;
+		}
+		return false;
 	}
 }

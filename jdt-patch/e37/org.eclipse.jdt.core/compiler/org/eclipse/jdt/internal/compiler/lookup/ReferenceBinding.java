@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.compiler.lookup;
+package org.eclipse.jdt.internal.compiler.lookup; // GROOVY PATCHED
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -427,8 +427,16 @@ public void computeId() {
 			// remaining types MUST be in java.lang.*
 			switch (typeName[0]) {
 				case 'A' :
+					switch(typeName.length) {
+						case 13 :
+							if (CharOperation.equals(typeName, TypeConstants.JAVA_LANG_AUTOCLOSEABLE[2]))
+								this.id = TypeIds.T_JavaLangAutoCloseable;
+							return;
+						case 14:
 					if (CharOperation.equals(typeName, TypeConstants.JAVA_LANG_ASSERTIONERROR[2]))
 						this.id = TypeIds.T_JavaLangAssertionError;
+					return;
+					}
 					return;
 				case 'B' :
 					switch (typeName.length) {
@@ -544,6 +552,10 @@ public void computeId() {
 							else if (CharOperation.equals(typeName, TypeConstants.JAVA_LANG_SYSTEM[2]))
 								this.id = TypeIds.T_JavaLangSystem;
 							return;
+						case 11 :
+							if (CharOperation.equals(typeName, TypeConstants.JAVA_LANG_SAFEVARARGS[2]))
+								this.id = TypeIds.T_JavaLangSafeVarargs;
+							return;
 						case 12 :
 							if (CharOperation.equals(typeName, TypeConstants.JAVA_LANG_STRINGBUFFER[2]))
 								this.id = TypeIds.T_JavaLangStringBuffer;
@@ -572,8 +584,9 @@ public void computeId() {
 		case 4:
 			if (!CharOperation.equals(TypeConstants.JAVA, this.compoundName[0]))
 				return;
-			if (!CharOperation.equals(TypeConstants.LANG, this.compoundName[1]))
-				return;
+			packageName = this.compoundName[1];
+			if (packageName.length == 0) return; // just to be safe
+
 			packageName = this.compoundName[2];
 			if (packageName.length == 0) return; // just to be safe
 			typeName = this.compoundName[3];
@@ -617,6 +630,17 @@ public void computeId() {
 						}
 					}
 					return;
+				case 'i':
+					if (CharOperation.equals(packageName, TypeConstants.INVOKE)) {
+						if (typeName.length == 0) return; // just to be safe
+						switch (typeName[0]) {
+							case 'M' :
+								if (CharOperation.equals(typeName, TypeConstants.JAVA_LANG_INVOKE_METHODHANDLE_$_POLYMORPHICSIGNATURE[3]))
+									this.id = TypeIds.T_JavaLangInvokeMethodHandlePolymorphicSignature;
+								return;
+						}
+					}
+					return;
 				case 'r' :
 					if (CharOperation.equals(packageName, TypeConstants.REFLECT)) {
 						switch (typeName[0]) {
@@ -637,7 +661,35 @@ public void computeId() {
 					return;
 			}
 			break;
+		case 5 :
+			if (!CharOperation.equals(TypeConstants.JAVA, this.compoundName[0]))
+				return;
+			packageName = this.compoundName[1];
+			if (packageName.length == 0) return; // just to be safe
+
+			if (CharOperation.equals(TypeConstants.LANG, packageName)) {
+				packageName = this.compoundName[2];
+				if (packageName.length == 0) return; // just to be safe
+				switch (packageName[0]) {
+					case 'i' :
+						if (CharOperation.equals(packageName, TypeConstants.INVOKE)) { 
+							typeName = this.compoundName[3];
+							if (typeName.length == 0) return; // just to be safe
+							switch (typeName[0]) {
+								case 'M' :
+									char[] memberTypeName = this.compoundName[4];
+									if (memberTypeName.length == 0) return; // just to be safe
+									if (CharOperation.equals(typeName, TypeConstants.JAVA_LANG_INVOKE_METHODHANDLE_POLYMORPHICSIGNATURE[3])
+											&& CharOperation.equals(memberTypeName, TypeConstants.JAVA_LANG_INVOKE_METHODHANDLE_POLYMORPHICSIGNATURE[4]))
+										this.id = TypeIds.T_JavaLangInvokeMethodHandlePolymorphicSignature;
+									return;
+							}
+						}
+						return;
+				}
+				return;
 	}
+}
 }
 
 /**
@@ -1279,7 +1331,7 @@ public char[] readableName() /*java.lang.Object,  p.X<T> */ {
 }
 
 public AnnotationHolder retrieveAnnotationHolder(Binding binding, boolean forceInitialization) {
-	SimpleLookupTable store = storedAnnotations(false);
+	SimpleLookupTable store = storedAnnotations(forceInitialization);
 	return store == null ? null : (AnnotationHolder) store.get(binding);
 }
 
@@ -1387,7 +1439,7 @@ public FieldBinding[] unResolvedFields() {
 }
 
 // GROOVY start
-// FIXASC (M3:ast_transform_methods) thought required - is this in the right place?
+// more thought required - is this in the right place?
 public MethodBinding[] getAnyExtraMethods(char[] selector) {
 	return null;
 }

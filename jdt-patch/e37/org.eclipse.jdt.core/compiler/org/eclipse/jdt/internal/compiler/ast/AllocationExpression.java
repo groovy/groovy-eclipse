@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for 
@@ -13,12 +13,15 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
+import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.*;
 import org.eclipse.jdt.internal.compiler.flow.*;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.*;
+import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
+import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 
 public class AllocationExpression extends Expression implements InvocationSite {
 
@@ -29,6 +32,8 @@ public class AllocationExpression extends Expression implements InvocationSite {
 	public TypeReference[] typeArguments;
 	public TypeBinding[] genericTypeArguments;
 	public FieldDeclaration enumConstant; // for enum constant initializations
+	protected TypeBinding typeExpected;	  // for <> inference
+	public boolean inferredReturnType;
 
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	// check captured variables are initialized in current context (26134)
@@ -277,6 +282,7 @@ public TypeBinding resolveType(BlockScope scope) {
 	}
 	// will check for null after args are resolved
 
+	final boolean isDiamond = this.type != null && (this.type.bits & ASTNode.IsDiamond) != 0;
 	// resolve type arguments (for generic constructor call)
 	if (this.typeArguments != null) {
 		int length = this.typeArguments.length;
@@ -290,6 +296,10 @@ public TypeBinding resolveType(BlockScope scope) {
 			if (argHasError && typeReference instanceof Wildcard) {
 				scope.problemReporter().illegalUsageOfWildcard(typeReference);
 			}
+		}
+		if (isDiamond) {
+			scope.problemReporter().diamondNotWithExplicitTypeArguments(this.typeArguments);
+			return null;
 		}
 		if (argHasError) {
 			if (this.arguments != null) { // still attempt to resolve arguments
@@ -319,8 +329,15 @@ public TypeBinding resolveType(BlockScope scope) {
 			}
 		}
 		if (argHasError) {
+			/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=345359, if arguments have errors, completely bail out in the <> case.
+			   No meaningful type resolution is possible since inference of the elided types is fully tied to argument types. Do
+			   not return the partially resolved type.
+			 */
+			if (isDiamond) {
+				return null; // not the partially cooked this.resolvedType
+			}
 			if (this.resolvedType instanceof ReferenceBinding) {
-				// record a best guess, for clients who need hint about possible contructor match
+				// record a best guess, for clients who need hint about possible constructor match
 				TypeBinding[] pseudoArgs = new TypeBinding[length];
 				for (int i = length; --i >= 0;) {
 					pseudoArgs[i] = argumentTypes[i] == null ? TypeBinding.NULL : argumentTypes[i]; // replace args with errors with null type
@@ -355,6 +372,14 @@ public TypeBinding resolveType(BlockScope scope) {
 		scope.problemReporter().cannotInstantiate(this.type, this.resolvedType);
 		return this.resolvedType;
 	}
+	if (isDiamond) {
+		TypeBinding [] inferredTypes = inferElidedTypes(((ParameterizedTypeBinding) this.resolvedType).genericType(), null, argumentTypes, scope);
+		if (inferredTypes == null) {
+			scope.problemReporter().cannotInferElidedTypes(this);
+			return this.resolvedType = null;
+		}
+		this.resolvedType = this.type.resolvedType = scope.environment().createParameterizedType(((ParameterizedTypeBinding) this.resolvedType).genericType(), inferredTypes, ((ParameterizedTypeBinding) this.resolvedType).enclosingType());
+ 	}
 	ReferenceBinding allocationType = (ReferenceBinding) this.resolvedType;
 	if (!(this.binding = scope.getConstructor(allocationType, argumentTypes, this)).isValidBinding()) {
 		if (this.binding.declaringClass == null) {
@@ -377,7 +402,57 @@ public TypeBinding resolveType(BlockScope scope) {
 	if (this.typeArguments != null && this.binding.original().typeVariables == Binding.NO_TYPE_VARIABLES) {
 		scope.problemReporter().unnecessaryTypeArgumentsForMethodInvocation(this.binding, this.genericTypeArguments, this.typeArguments);
 	}
+	if (!isDiamond && this.resolvedType.isParameterizedTypeWithActualArguments()) {
+ 		checkTypeArgumentRedundancy((ParameterizedTypeBinding) this.resolvedType, null, argumentTypes, scope);
+ 	}
 	return allocationType;
+}
+
+public TypeBinding[] inferElidedTypes(ReferenceBinding allocationType, ReferenceBinding enclosingType, TypeBinding[] argumentTypes, final BlockScope scope) {
+	/* Given the allocation type and the arguments to the constructor, see if we can synthesize a generic static factory
+	   method that would, given the argument types and the invocation site, manufacture a parameterized object of type allocationType.
+	   If we are successful then by design and construction, the parameterization of the return type of the factory method is identical
+	   to the types elided in the <>.
+	 */   
+	MethodBinding factory = scope.getStaticFactory(allocationType, enclosingType, argumentTypes, this);
+	if (factory instanceof ParameterizedGenericMethodBinding && factory.isValidBinding()) {
+		ParameterizedGenericMethodBinding genericFactory = (ParameterizedGenericMethodBinding) factory;
+		this.inferredReturnType = genericFactory.inferredReturnType;
+		return ((ParameterizedTypeBinding)factory.returnType).arguments;
+	}
+	return null;
+}
+
+public void checkTypeArgumentRedundancy(ParameterizedTypeBinding allocationType, ReferenceBinding enclosingType, TypeBinding[] argumentTypes, final BlockScope scope) {
+	ProblemReporter reporter = scope.problemReporter();
+	if ((reporter.computeSeverity(IProblem.RedundantSpecificationOfTypeArguments) == ProblemSeverities.Ignore) || scope.compilerOptions().sourceLevel < ClassFileConstants.JDK1_7) return;
+	if (allocationType.arguments == null) return;  // raw binding
+	if (this.genericTypeArguments != null) return; // diamond can't occur with explicit type args for constructor
+	if (argumentTypes == Binding.NO_PARAMETERS && this.typeExpected instanceof ParameterizedTypeBinding) {
+		ParameterizedTypeBinding expected = (ParameterizedTypeBinding) this.typeExpected;
+		if (expected.arguments != null && allocationType.arguments.length == expected.arguments.length) {
+			// check the case when no ctor takes no params and inference uses the expected type directly
+			// eg. X<String> x = new X<String>()
+			int i;
+			for (i = 0; i < allocationType.arguments.length; i++) {
+				if (allocationType.arguments[i] != expected.arguments[i])
+					break;
+			}
+			if (i == allocationType.arguments.length) {
+				reporter.redundantSpecificationOfTypeArguments(this.type, allocationType.arguments);
+				return;
+			}	
+		}
+	}
+	TypeBinding [] inferredTypes = inferElidedTypes(allocationType.genericType(), enclosingType, argumentTypes, scope);
+	if (inferredTypes == null) {
+		return;
+	}
+	for (int i = 0; i < inferredTypes.length; i++) {
+		if (inferredTypes[i] != allocationType.arguments[i])
+			return;
+	}
+	reporter.redundantSpecificationOfTypeArguments(this.type, allocationType.arguments);
 }
 
 public void setActualReceiverType(ReferenceBinding receiverType) {
@@ -409,4 +484,17 @@ public void traverse(ASTVisitor visitor, BlockScope scope) {
 	}
 	visitor.endVisit(this, scope);
 }
+/**
+ * @see org.eclipse.jdt.internal.compiler.ast.Expression#setExpectedType(org.eclipse.jdt.internal.compiler.lookup.TypeBinding)
+ */
+public void setExpectedType(TypeBinding expectedType) {
+	this.typeExpected = expectedType;
+}
+/**
+ * @see org.eclipse.jdt.internal.compiler.lookup.InvocationSite#expectedType()
+ */
+public TypeBinding expectedType() {
+	return this.typeExpected;
+}
+
 }

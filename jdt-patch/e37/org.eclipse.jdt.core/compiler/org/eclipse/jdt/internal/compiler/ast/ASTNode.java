@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Matt McCutchen - partial fix for https://bugs.eclipse.org/bugs/show_bug.cgi?id=122995
@@ -26,7 +26,7 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	// storage for internal flags (32 bits)				BIT USAGE
 	public final static int Bit1 = 0x1;					// return type (operator) | name reference kind (name ref) | add assertion (type decl) | useful empty statement (empty statement)
 	public final static int Bit2 = 0x2;					// return type (operator) | name reference kind (name ref) | has local type (type, method, field decl)
-	public final static int Bit3 = 0x4;					// return type (operator) | name reference kind (name ref) | implicit this (this ref) | locals (isArgument)
+	public final static int Bit3 = 0x4;					// return type (operator) | name reference kind (name ref) | implicit this (this ref)
 	public final static int Bit4 = 0x8;					// return type (operator) | first assignment to local (name ref,local decl) | undocumented empty block (block, type and method decl)
 	public final static int Bit5 = 0x10;					// value for return (expression) | has all method bodies (unit) | supertype ref (type ref) | resolved (field decl)
 	public final static int Bit6 = 0x20;					// depth (name ref, msg) | ignore need cast check (cast expression) | error in signature (method declaration/ initializer) | is recovered (annotation reference)
@@ -110,11 +110,11 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	// for name references
 	public static final int RestrictiveFlagMASK = Bit1|Bit2|Bit3;
 
-	// for name refs or local decls
-	public static final int FirstAssignmentToLocal = Bit4;
-
 	// for local decls
 	public static final int IsArgument = Bit3;
+
+	// for name refs or local decls
+	public static final int FirstAssignmentToLocal = Bit4;
 
 	// for msg or field references
 	public static final int NeedReceiverGenericCast = Bit19;
@@ -129,7 +129,7 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	// for statements
 	public static final int IsReachable = Bit32;
 	public static final int LabelUsed = Bit7;
-	public static final int DocumentedFallthrough = Bit30;
+	public static final int DocumentedFallthrough = Bit30; // switch statement
 
 	// local decls
 	public static final int IsLocalDeclarationReachable = Bit31;
@@ -244,6 +244,16 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	public static final int INVOCATION_ARGUMENT_UNCHECKED = 1;
 	public static final int INVOCATION_ARGUMENT_WILDCARD = 2;
 
+	// for type reference (diamond case) - Java 7
+	public static final int IsUnionType = Bit30;
+	// Used to tag ParameterizedSingleTypeReference or ParameterizedQualifiedTypeReference when they are
+	// used without any type args. It is also used to tag CompletionOnQualifiedExpression when the
+	// generics inference has failed and the resolved type still has <>.
+	public static final int IsDiamond = Bit20;
+
+	// this is only used for method invocation as the expression inside an expression statement
+	public static final int InsideExpressionStatement = Bit5;
+
 	public ASTNode() {
 
 		super();
@@ -265,6 +275,10 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 		return INVOCATION_ARGUMENT_OK;
 	}
 	public static boolean checkInvocationArguments(BlockScope scope, Expression receiver, TypeBinding receiverType, MethodBinding method, Expression[] arguments, TypeBinding[] argumentTypes, boolean argsContainCast, InvocationSite invocationSite) {
+		boolean is1_7 = scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_7;
+		if (is1_7 && method.isPolymorphic()) {
+			return false;
+		}
 		TypeBinding[] params = method.parameters;
 		int paramLength = params.length;
 		boolean isRawMemberInvocation = !method.isStatic()
@@ -286,9 +300,10 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 		if (arguments == null) {
 			if (method.isVarargs()) {
 				TypeBinding parameterType = ((ArrayBinding) params[paramLength-1]).elementsType(); // no element was supplied for vararg parameter
-		    	if (!parameterType.isReifiable()) {
-				    scope.problemReporter().unsafeGenericArrayForVarargs(parameterType, (ASTNode)invocationSite);
-		    	}
+				if (!parameterType.isReifiable()
+						&& (!is1_7 || ((method.tagBits & TagBits.AnnotationSafeVarargs) == 0))) {
+					scope.problemReporter().unsafeGenericArrayForVarargs(parameterType, (ASTNode)invocationSite);
+				}
 			}
 		} else {
 			if (method.isVarargs()) {
@@ -298,18 +313,19 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 					TypeBinding originalRawParam = rawOriginalGenericMethod == null ? null : rawOriginalGenericMethod.parameters[i];
 					invocationStatus |= checkInvocationArgument(scope, arguments[i], params[i] , argumentTypes[i], originalRawParam);
 				}
-			   int argLength = arguments.length;
-			   if (lastIndex <= argLength) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=337093
-				   	TypeBinding parameterType = params[lastIndex];
+				int argLength = arguments.length;
+				if (lastIndex <= argLength) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=337093
+					TypeBinding parameterType = params[lastIndex];
 					TypeBinding originalRawParam = null;
 
-				    if (paramLength != argLength || parameterType.dimensions() != argumentTypes[lastIndex].dimensions()) {
-				    	parameterType = ((ArrayBinding) parameterType).elementsType(); // single element was provided for vararg parameter
-				    	if (!parameterType.isReifiable()) {
-						    scope.problemReporter().unsafeGenericArrayForVarargs(parameterType, (ASTNode)invocationSite);
-				    	}
+					if (paramLength != argLength || parameterType.dimensions() != argumentTypes[lastIndex].dimensions()) {
+						parameterType = ((ArrayBinding) parameterType).elementsType(); // single element was provided for vararg parameter
+						if (!parameterType.isReifiable()
+								&& (!is1_7 || ((method.tagBits & TagBits.AnnotationSafeVarargs) == 0))) {
+							scope.problemReporter().unsafeGenericArrayForVarargs(parameterType, (ASTNode)invocationSite);
+						}
 						originalRawParam = rawOriginalGenericMethod == null ? null : ((ArrayBinding)rawOriginalGenericMethod.parameters[lastIndex]).elementsType();
-				    }
+					}
 					for (int i = lastIndex; i < argLength; i++) {
 						invocationStatus |= checkInvocationArgument(scope, arguments[i], parameterType, argumentTypes[i], originalRawParam);
 					}
@@ -348,10 +364,10 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 			}
 		}
 		if ((invocationStatus & INVOCATION_ARGUMENT_WILDCARD) != 0) {
-		    scope.problemReporter().wildcardInvocation((ASTNode)invocationSite, receiverType, method, argumentTypes);
+			scope.problemReporter().wildcardInvocation((ASTNode)invocationSite, receiverType, method, argumentTypes);
 		} else if (!method.isStatic() && !receiverType.isUnboundWildcard() && method.declaringClass.isRawType() && method.hasSubstitutedParameters()) {
 			if (scope.compilerOptions().reportUnavoidableGenericTypeProblems || receiver == null || !receiver.forcedToBeRaw(scope.referenceContext())) {
-		   		scope.problemReporter().unsafeRawInvocation((ASTNode)invocationSite, method);
+				scope.problemReporter().unsafeRawInvocation((ASTNode)invocationSite, method);
 			}
 		} else if (rawOriginalGenericMethod != null 
 				|| uncheckedBoundCheck
@@ -377,7 +393,7 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 				// used, but usage may not be relevant
 				field.original().compoundUseFlag++;
 			else
-			field.original().modifiers |= ExtraCompilerModifiers.AccLocallyUsed;
+				field.original().modifiers |= ExtraCompilerModifiers.AccLocallyUsed;
 		}
 
 		if ((field.modifiers & ExtraCompilerModifiers.AccRestrictedAccess) != 0) {

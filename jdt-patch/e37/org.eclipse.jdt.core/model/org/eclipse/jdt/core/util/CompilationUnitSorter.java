@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -49,6 +49,7 @@ public final class CompilationUnitSorter {
         switch (level) {
         case AST.JLS2 :
         case AST.JLS3 :
+        case AST.JLS4 :
             break;
         default :
             throw new IllegalArgumentException();
@@ -222,8 +223,8 @@ public final class CompilationUnitSorter {
      * representing body declarations at the same level. The nodes are from an
      * AST of the specified level
      * ({@link org.eclipse.jdt.core.dom.ASTParser#newParser(int)}. Clients
-     * will generally specify AST.JLS3 since that will cover all constructs found
-     * in Java 1.0, 1.1, 1.2, 1.3, 1.4, and 1.5 source code.
+     * will generally specify the latest available <code>{@link AST}.JLS*</code> constant since that will
+     * cover all constructs found in all version of Java source code.
      * The comparator is called on body declarations of nested classes, including
      * anonymous and local classes, but always at the same level. Clients need to provide
      * a comparator implementation (there is no standard comparator). The
@@ -288,7 +289,7 @@ public final class CompilationUnitSorter {
      * non-recursive sorting, etc.)
      * </p>
      *
-     * @param level the AST level; one of the AST LEVEL constants
+     * @param level the AST level; one of the <code>{@link AST}.JLS*</code> constants
      * @param compilationUnit the given compilation unit, which must be a
      * working copy
      * @param positions an array of source positions to map, or
@@ -450,7 +451,7 @@ public final class CompilationUnitSorter {
 		if (unit == null || comparator == null) {
 			throw new IllegalArgumentException();
 		}
-		SortElementsOperation operation = new SortElementsOperation(AST.JLS3, new IJavaElement[] { unit.getJavaElement() }, null, comparator);
+		SortElementsOperation operation = new SortElementsOperation(AST.JLS4, new IJavaElement[] { unit.getJavaElement() }, null, comparator);
 		return operation.calculateEdit(unit, group);
 	}
 }

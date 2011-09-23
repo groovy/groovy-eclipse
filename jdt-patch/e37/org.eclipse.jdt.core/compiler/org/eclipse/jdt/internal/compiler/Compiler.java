@@ -10,6 +10,7 @@
  *     Stephan Herrmann - contribution for bug 337868 - [compiler][model] incomplete support for package-info.java when using SearchableEnvironment
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler;
+// GROOVY PATCHED
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.jdt.core.compiler.*;
@@ -267,11 +268,10 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 		// GROOVY start - temporary
 		if (this.options.buildGroovyFiles==0) {
 			// demoted to error message, groovy disabled
-			System.err.println("Build groovy files option has not been set one way or the other: use 'options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);'");//$NON-NLS-1$
+			// disable this println for now - seems to have served its purpose:
+//			System.err.println("Build groovy files option has not been set one way or the other: use 'options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);'");//$NON-NLS-1$
 			this.options.buildGroovyFiles=1;
 			this.options.groovyFlags = 0;
-
-//			throw new RuntimeException("Build groovy files option has not been set one way or the other: use 'options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);'"); //$NON-NLS-1$
 		}
 		// GROOVY end
 		
@@ -735,9 +735,9 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 
 	public void initializeParser() {
 		// GROOVY start
-		/* old
+		/* old {
 		this.parser = new Parser(this.problemReporter, this.options.parseLiteralExpressionsAsConstants);
-		// new */
+		} new */
 		this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, this.options.parseLiteralExpressionsAsConstants, 1);
 		// GROOVY end
 	}

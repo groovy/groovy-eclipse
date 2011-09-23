@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -1078,37 +1078,37 @@ private Statement buildMoreCompletionEnclosingContext(Statement statement) {
 	}
 	while (index >= 0) {
 		// Try to find an enclosing if statement even if one is not found immediately preceding the completion node.
-	if (index != -1 && this.elementInfoStack[index] == IF && this.elementObjectInfoStack[index] != null) {
-		Expression condition = (Expression)this.elementObjectInfoStack[index];
-
-		// If currentElement is a RecoveredLocalVariable then it can be contained in the if statement
-		if (this.currentElement instanceof RecoveredLocalVariable &&
-				this.currentElement.parent instanceof RecoveredBlock) {
-			RecoveredLocalVariable recoveredLocalVariable = (RecoveredLocalVariable) this.currentElement;
-			if (recoveredLocalVariable.localDeclaration.initialization == null &&
-					statement instanceof Expression &&
-					condition.sourceStart < recoveredLocalVariable.localDeclaration.sourceStart) {
-				this.currentElement.add(statement, 0);
-
-				statement = recoveredLocalVariable.updatedStatement(0, new HashSet());
-
-				// RecoveredLocalVariable must be removed from its parent because the IfStatement will be added instead
-				RecoveredBlock recoveredBlock =  (RecoveredBlock) recoveredLocalVariable.parent;
-				recoveredBlock.statements[--recoveredBlock.statementCount] = null;
-
-				this.currentElement = recoveredBlock;
-
+		if (index != -1 && this.elementInfoStack[index] == IF && this.elementObjectInfoStack[index] != null) {
+			Expression condition = (Expression)this.elementObjectInfoStack[index];
+	
+			// If currentElement is a RecoveredLocalVariable then it can be contained in the if statement
+			if (this.currentElement instanceof RecoveredLocalVariable &&
+					this.currentElement.parent instanceof RecoveredBlock) {
+				RecoveredLocalVariable recoveredLocalVariable = (RecoveredLocalVariable) this.currentElement;
+				if (recoveredLocalVariable.localDeclaration.initialization == null &&
+						statement instanceof Expression &&
+						condition.sourceStart < recoveredLocalVariable.localDeclaration.sourceStart) {
+					this.currentElement.add(statement, 0);
+	
+					statement = recoveredLocalVariable.updatedStatement(0, new HashSet());
+	
+					// RecoveredLocalVariable must be removed from its parent because the IfStatement will be added instead
+					RecoveredBlock recoveredBlock =  (RecoveredBlock) recoveredLocalVariable.parent;
+					recoveredBlock.statements[--recoveredBlock.statementCount] = null;
+	
+					this.currentElement = recoveredBlock;
+	
+				}
 			}
-		}
-		if (statement instanceof AND_AND_Expression && this.assistNode instanceof Statement) {
-			statement = (Statement) this.assistNode;
-		}
-		ifStatement =
-			new IfStatement(
-					condition,
-					statement,
-					condition.sourceStart,
-					statement.sourceEnd);
+			if (statement instanceof AND_AND_Expression && this.assistNode instanceof Statement) {
+				statement = (Statement) this.assistNode;
+			}
+			ifStatement =
+				new IfStatement(
+						condition,
+						statement,
+						condition.sourceStart,
+						statement.sourceEnd);
 			index--;
 			break;
 		}
@@ -1131,9 +1131,9 @@ private Statement buildMoreCompletionEnclosingContext(Statement statement) {
 		}
 		index--;
 	}
-		this.enclosingNode = ifStatement;
-		return ifStatement;
-	}
+	this.enclosingNode = ifStatement;
+	return ifStatement;
+}
 private void buildMoreGenericsCompletionContext(ASTNode node, boolean consumeTypeArguments) {
 	int kind = topKnownElementKind(COMPLETION_OR_ASSIST_PARSER);
 	if(kind != 0) {
@@ -1162,8 +1162,39 @@ private void buildMoreGenericsCompletionContext(ASTNode node, boolean consumeTyp
 						}
 						if(this.currentElement instanceof RecoveredType) {
 							this.currentElement = this.currentElement.add(new CompletionOnFieldType(ref, false), 0);
-						} else {
-							this.currentElement = this.currentElement.add(ref, 0);
+						} else {							
+							
+							if (prevKind == K_BETWEEN_NEW_AND_LEFT_BRACKET) {
+								
+								AllocationExpression exp;
+								if (this.expressionPtr > -1 && this.expressionStack[this.expressionPtr] instanceof AllocationExpression) {
+									exp = new QualifiedAllocationExpression();
+									exp.type = ref;
+									((QualifiedAllocationExpression)exp).enclosingInstance = this.expressionStack[this.expressionPtr];
+								} else {
+									exp = new AllocationExpression();
+									exp.type = ref;
+								}
+								if (isInsideReturn()) {
+									ReturnStatement returnStatement = new ReturnStatement(exp, exp.sourceStart, exp.sourceEnd);
+									this.enclosingNode = returnStatement;
+									this.currentElement  = this.currentElement.add(returnStatement,0);
+								} else if (this.currentElement instanceof RecoveredLocalVariable) {
+									if (((RecoveredLocalVariable)this.currentElement).localDeclaration.initialization == null) {
+										this.enclosingNode = ((RecoveredLocalVariable) this.currentElement).localDeclaration;
+										this.currentElement = this.currentElement.add(exp, 0);
+									}
+								} else if (this.currentElement instanceof RecoveredField) {
+									if (((RecoveredField) this.currentElement).fieldDeclaration.initialization == null) {
+										this.enclosingNode = ((RecoveredField) this.currentElement).fieldDeclaration;
+										this.currentElement = this.currentElement.add(exp, 0);
+									}
+								} else {
+									this.currentElement = this.currentElement.add(ref, 0);
+								}
+							} else {
+								this.currentElement = this.currentElement.add(ref, 0);
+							}
 						}
 					} else if (this.currentElement.enclosingMethod() != null &&
 							this.currentElement.enclosingMethod().methodDeclaration.isConstructor()) {
@@ -1175,15 +1206,15 @@ private void buildMoreGenericsCompletionContext(ASTNode node, boolean consumeTyp
 	}
 }
 private void buildMoreTryStatementCompletionContext(TypeReference exceptionRef) {
-	if (this.astLengthPtr > -1 &&
-			this.astPtr > 1 &&
-			this.astStack[this.astPtr] instanceof Block &&
-			this.astStack[this.astPtr - 1] instanceof Argument) {
+	if (this.astLengthPtr > 0 &&
+			this.astPtr > 2 &&
+			this.astStack[this.astPtr -1] instanceof Block &&
+			this.astStack[this.astPtr - 2] instanceof Argument) {
 		TryStatement tryStatement = new TryStatement();
 
-		int newAstPtr = this.astPtr;
+		int newAstPtr = this.astPtr - 1;
 
-		int length = this.astLengthStack[this.astLengthPtr];
+		int length = this.astLengthStack[this.astLengthPtr - 1];
 		Block[] bks = (tryStatement.catchBlocks = new Block[length + 1]);
 		Argument[] args = (tryStatement.catchArguments = new Argument[length + 1]);
 		if (length != 0) {
@@ -1195,7 +1226,12 @@ private void buildMoreTryStatementCompletionContext(TypeReference exceptionRef) 
 		}
 
 		bks[bks.length - 1] = new Block(0);
-		args[args.length - 1] = new Argument(FAKE_ARGUMENT_NAME,0,exceptionRef,0);
+		if (this.astStack[this.astPtr] instanceof UnionTypeReference) {
+			UnionTypeReference unionTypeReference = (UnionTypeReference) this.astStack[this.astPtr];
+			args[args.length - 1] = new Argument(FAKE_ARGUMENT_NAME,0,unionTypeReference,0);
+		} else {
+			args[args.length - 1] = new Argument(FAKE_ARGUMENT_NAME,0,exceptionRef,0);
+		}
 
 		tryStatement.tryBlock = (Block) this.astStack[newAstPtr--];
 
@@ -1203,17 +1239,22 @@ private void buildMoreTryStatementCompletionContext(TypeReference exceptionRef) 
 
 		this.currentElement.add(tryStatement, 0);
 	} else if (this.astLengthPtr > -1 &&
-			this.astPtr > -1 &&
-			this.astStack[this.astPtr] instanceof Block) {
+			this.astPtr > 0 &&
+			this.astStack[this.astPtr - 1] instanceof Block) {
 		TryStatement tryStatement = new TryStatement();
 
-		int newAstPtr = this.astPtr;
+		int newAstPtr = this.astPtr - 1;
 
 		Block[] bks = (tryStatement.catchBlocks = new Block[1]);
 		Argument[] args = (tryStatement.catchArguments = new Argument[1]);
 
 		bks[0] = new Block(0);
-		args[0] = new Argument(FAKE_ARGUMENT_NAME,0,exceptionRef,0);
+		if (this.astStack[this.astPtr] instanceof UnionTypeReference) {
+			UnionTypeReference unionTypeReference = (UnionTypeReference) this.astStack[this.astPtr];
+			args[0] = new Argument(FAKE_ARGUMENT_NAME,0,unionTypeReference,0);
+		} else {
+			args[0] = new Argument(FAKE_ARGUMENT_NAME,0,exceptionRef,0);
+		}
 
 		tryStatement.tryBlock = (Block) this.astStack[newAstPtr--];
 
@@ -1236,23 +1277,6 @@ protected void checkAndSetModifiers(int flag) {
 	if (isInsideMethod()) {
 		this.hasUnusedModifiers = true;
 	}
-}
-/**
- * Checks if the completion is on the exception type of a catch clause.
- * Returns whether we found a completion node.
- */
-private boolean checkCatchClause() {
-	if ((topKnownElementKind(COMPLETION_OR_ASSIST_PARSER) == K_BETWEEN_CATCH_AND_RIGHT_PAREN) && this.identifierPtr > -1) {
-		// NB: if the cursor is on the variable, then it has been reduced (so identifierPtr is -1),
-		//     thus this can only be a completion on the type of the catch clause
-		pushOnElementStack(K_NEXT_TYPEREF_IS_EXCEPTION);
-		this.assistNode = getTypeReference(0);
-		popElement(K_NEXT_TYPEREF_IS_EXCEPTION);
-		this.lastCheckPoint = this.assistNode.sourceEnd + 1;
-		this.isOrphanCompletionNode = true;
-		return true;
-	}
-	return false;
 }
 /**
  * Checks if the completion is on the type following a 'new'.
@@ -1992,7 +2016,6 @@ public void completionIdentifierCheck(){
 	if (this.indexOfAssistIdentifier() < 0) return;
 
 	if (checkClassInstanceCreation()) return;
-	if (checkCatchClause()) return;
 	if (checkMemberAccess()) return;
 	if (checkClassLiteralAccess()) return;
 	if (checkInstanceofKeyword()) return;
@@ -2106,6 +2129,50 @@ protected void consumeCastExpressionWithNameArray() {
 protected void consumeCastExpressionLL1() {
 	popElement(K_CAST_STATEMENT);
 	super.consumeCastExpressionLL1();
+}
+protected void consumeCatchFormalParameter() {
+	if (this.indexOfAssistIdentifier() < 0) {
+		super.consumeCatchFormalParameter();
+		if (this.pendingAnnotation != null) {
+			this.pendingAnnotation.potentialAnnotatedNode = this.astStack[this.astPtr];
+			this.pendingAnnotation = null;
+		}
+	} else {
+		this.identifierLengthPtr--;
+		char[] identifierName = this.identifierStack[this.identifierPtr];
+		long namePositions = this.identifierPositionStack[this.identifierPtr--];
+		this.intPtr--; // dimension from the variabledeclaratorid
+		TypeReference type = (TypeReference) this.astStack[this.astPtr--];
+		this.intPtr -= 2;
+		CompletionOnArgumentName arg =
+			new CompletionOnArgumentName(
+				identifierName,
+				namePositions,
+				type,
+				this.intStack[this.intPtr + 1] & ~ClassFileConstants.AccDeprecated); // modifiers
+		arg.bits &= ~ASTNode.IsArgument;
+		// consume annotations
+		int length;
+		if ((length = this.expressionLengthStack[this.expressionLengthPtr--]) != 0) {
+			System.arraycopy(
+				this.expressionStack,
+				(this.expressionPtr -= length) + 1,
+				arg.annotations = new Annotation[length],
+				0,
+				length);
+		}
+
+		arg.isCatchArgument = topKnownElementKind(COMPLETION_OR_ASSIST_PARSER) == K_BETWEEN_CATCH_AND_RIGHT_PAREN;
+		pushOnAstStack(arg);
+
+		this.assistNode = arg;
+		this.lastCheckPoint = (int) namePositions;
+		this.isOrphanCompletionNode = true;
+
+		/* if incomplete method header, listLength counter will not have been reset,
+			indicating that some arguments are available on the stack */
+		this.listLength++;
+	}
 }
 protected void consumeClassBodyDeclaration() {
 	popElement(K_BLOCK_DELIMITER);
@@ -2574,63 +2641,13 @@ protected void consumeFormalParameter(boolean isVarArgs) {
 		this.listLength++;
 	}
 }
-protected void consumeCatchFormalParameter(boolean isVarArgs) {
-	if (this.indexOfAssistIdentifier() < 0) {
-		super.consumeCatchFormalParameter(isVarArgs);
-		if (this.pendingAnnotation != null) {
-			this.pendingAnnotation.potentialAnnotatedNode = this.astStack[this.astPtr];
-			this.pendingAnnotation = null;
-		}
-	} else {
-
-		this.identifierLengthPtr--;
-		char[] identifierName = this.identifierStack[this.identifierPtr];
-		long namePositions = this.identifierPositionStack[this.identifierPtr--];
-		int extendedDimensions = this.intStack[this.intPtr--];
-		int endOfEllipsis = 0;
-		if (isVarArgs) {
-			endOfEllipsis = this.intStack[this.intPtr--];
-		}
-		int firstDimensions = this.intStack[this.intPtr--];
-		final int typeDimensions = firstDimensions + extendedDimensions;
-		TypeReference type = getTypeReference(typeDimensions);
-		if (isVarArgs) {
-			type = copyDims(type, typeDimensions + 1);
-			if (extendedDimensions == 0) {
-				type.sourceEnd = endOfEllipsis;
-			}
-			type.bits |= ASTNode.IsVarArgs; // set isVarArgs
-		}
-		this.intPtr -= 2;
-		CompletionOnArgumentName arg =
-			new CompletionOnArgumentName(
-				identifierName,
-				namePositions,
-				type,
-				this.intStack[this.intPtr + 1] & ~ClassFileConstants.AccDeprecated); // modifiers
-		arg.bits &= ~ASTNode.IsArgument;
-		// consume annotations
-		int length;
-		if ((length = this.expressionLengthStack[this.expressionLengthPtr--]) != 0) {
-			System.arraycopy(
-				this.expressionStack,
-				(this.expressionPtr -= length) + 1,
-				arg.annotations = new Annotation[length],
-				0,
-				length);
-		}
-
-		arg.isCatchArgument = topKnownElementKind(COMPLETION_OR_ASSIST_PARSER) == K_BETWEEN_CATCH_AND_RIGHT_PAREN;
-		pushOnAstStack(arg);
-
-		this.assistNode = arg;
-		this.lastCheckPoint = (int) namePositions;
-		this.isOrphanCompletionNode = true;
-
-		/* if incomplete method header, listLength counter will not have been reset,
-			indicating that some arguments are available on the stack */
-		this.listLength++;
-	}
+protected void consumeGenericTypeWithDiamond() {
+	super.consumeGenericTypeWithDiamond();
+	// we need to pop the <> of the diamond from the stack.
+	// This is not required in usual case when the type argument isn't elided
+	// since the < and > get popped while parsing the type argument. 
+	popElement(K_BINARY_OPERATOR); // pop >
+	popElement(K_BINARY_OPERATOR); // pop <
 }
 protected void consumeStatementFor() {
 	super.consumeStatementFor();
@@ -3700,7 +3717,9 @@ protected void consumeToken(int token) {
 				pushOnElementStack(K_BINARY_OPERATOR, XOR);
 				break;
 			case TokenNameOR:
-				pushOnElementStack(K_BINARY_OPERATOR, OR);
+				// Don't push the OR operator used for union types in a catch declaration
+				if (topKnownElementKind(COMPLETION_PARSER) != K_BETWEEN_CATCH_AND_RIGHT_PAREN)
+					pushOnElementStack(K_BINARY_OPERATOR, OR);
 				break;
 			case TokenNameAND_AND:
 				pushOnElementStack(K_BINARY_OPERATOR, AND_AND);
@@ -3957,6 +3976,16 @@ protected void consumeTypeParameter1WithExtendsAndBounds() {
 	}
 	popElement(K_EXTENDS_KEYWORD);
 }
+protected void consumeUnionType() {
+	pushOnElementStack(K_NEXT_TYPEREF_IS_EXCEPTION);
+	super.consumeUnionType();
+	popElement(K_NEXT_TYPEREF_IS_EXCEPTION);
+}
+protected void consumeUnionTypeAsClassType() {
+	pushOnElementStack(K_NEXT_TYPEREF_IS_EXCEPTION);
+	super.consumeUnionTypeAsClassType();
+	popElement(K_NEXT_TYPEREF_IS_EXCEPTION);
+}
 protected void consumeWildcard() {
 	super.consumeWildcard();
 	if (assistIdentifier() == null && this.currentToken == TokenNameIdentifier) { // Test below copied from CompletionScanner.getCurrentIdentifierSource()
@@ -4080,6 +4109,8 @@ public NameReference createQualifiedAssistNameReference(char[][] previousIdentif
 public TypeReference createQualifiedAssistTypeReference(char[][] previousIdentifiers, char[] assistName, long[] positions){
 	switch (topKnownElementKind(COMPLETION_OR_ASSIST_PARSER)) {
 		case K_NEXT_TYPEREF_IS_EXCEPTION :
+			if (topKnownElementKind(COMPLETION_OR_ASSIST_PARSER, 1) == K_BETWEEN_CATCH_AND_RIGHT_PAREN)
+				this.isOrphanCompletionNode = true;
 			return new CompletionOnQualifiedTypeReference(
 					previousIdentifiers,
 					assistName,
@@ -4116,6 +4147,8 @@ public TypeReference createParameterizedQualifiedAssistTypeReference(char[][] pr
 	} else {
 		switch (topKnownElementKind(COMPLETION_OR_ASSIST_PARSER)) {
 			case K_NEXT_TYPEREF_IS_EXCEPTION :
+				if (topKnownElementKind(COMPLETION_OR_ASSIST_PARSER, 1) == K_BETWEEN_CATCH_AND_RIGHT_PAREN)
+					this.isOrphanCompletionNode = true;
 				return new CompletionOnParameterizedQualifiedTypeReference(
 					previousIdentifiers,
 					typeArguments,
@@ -4262,6 +4295,8 @@ public NameReference createSingleAssistNameReference(char[] assistName, long pos
 public TypeReference createSingleAssistTypeReference(char[] assistName, long position) {
 	switch (topKnownElementKind(COMPLETION_OR_ASSIST_PARSER)) {
 		case K_NEXT_TYPEREF_IS_EXCEPTION :
+			if (topKnownElementKind(COMPLETION_OR_ASSIST_PARSER, 1) == K_BETWEEN_CATCH_AND_RIGHT_PAREN)
+				this.isOrphanCompletionNode = true;
 			return new CompletionOnSingleTypeReference(assistName, position, CompletionOnSingleTypeReference.K_EXCEPTION) ;
 		case K_NEXT_TYPEREF_IS_CLASS :
 			return new CompletionOnSingleTypeReference(assistName, position, CompletionOnSingleTypeReference.K_CLASS);
@@ -4366,7 +4401,10 @@ public void flushAssistState() {
 
 protected TypeReference getTypeReferenceForGenericType(int dim,	int identifierLength, int numberOfIdentifiers) {
 	TypeReference ref = super.getTypeReferenceForGenericType(dim, identifierLength, numberOfIdentifiers);
-
+	// in completion case we might have encountered the assist node before really parsing
+	// the complete class instance creation, and so a separate check for diamond is needed here.
+	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=346454
+	checkForDiamond(ref);
 	if(this.assistNode != null) {
 		if (identifierLength == 1 && numberOfIdentifiers == 1) {
 			ParameterizedSingleTypeReference singleRef = (ParameterizedSingleTypeReference) ref;

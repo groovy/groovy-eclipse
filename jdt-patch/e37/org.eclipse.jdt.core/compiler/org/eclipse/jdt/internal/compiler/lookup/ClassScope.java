@@ -7,9 +7,13 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Stephan Herrmann <stephan@cs.tu-berlin.de> - Contribution for bug 328281 - visibility leaks not detected when analyzing unused field in private class
+ *     Stephan Herrmann <stephan@cs.tu-berlin.de> - Contributions for 
+ *     						Bug 328281 - visibility leaks not detected when analyzing unused field in private class
+ *     						Bug 300576 - NPE Computing type hierarchy when compliance doesn't match libraries
+ *     						Bug 354536 - compiling package-info.java still depends on the order of compilation units
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
+// GROOVY PATCHED
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -267,9 +271,9 @@ public class ClassScope extends Scope {
 				}
 
 				// GROOVY start: use the factory in order to get the right type of scope
-				// old code:
-				// ClassScope memberScope = new ClassScope(this, memberContext);
-				// new code:
+				/* old {
+				ClassScope memberScope = new ClassScope(this, memberContext);
+				} new */
 				ClassScope memberScope = buildClassScope(this, memberContext);
 				// GROOVY end
 				
@@ -444,8 +448,6 @@ public class ClassScope extends Scope {
 				else
 					modifiers |= ClassFileConstants.AccStatic;
 			}
-			if (enclosingType.isViewedAsDeprecated() && !sourceType.isDeprecated())
-				modifiers |= ExtraCompilerModifiers.AccDeprecatedImplicitly;
 		} else if (sourceType.isLocalType()) {
 			if (sourceType.isEnum()) {
 				problemReporter().illegalLocalTypeDeclaration(this.referenceContext);
@@ -956,6 +958,11 @@ public class ClassScope extends Scope {
 	private boolean connectEnumSuperclass() {
 		SourceTypeBinding sourceType = this.referenceContext.binding;
 		ReferenceBinding rootEnumType = getJavaLangEnum();
+		if ((rootEnumType.tagBits & TagBits.HasMissingType) != 0) {
+			sourceType.tagBits |= TagBits.HierarchyHasProblems; // mark missing supertpye
+			sourceType.superclass = rootEnumType;
+			return false;
+		}
 		boolean foundCycle = detectHierarchyCycle(sourceType, rootEnumType, null);
 		// arity check for well-known Enum<E>
 		TypeVariableBinding[] refTypeVariables = rootEnumType.typeVariables();
@@ -1293,7 +1300,7 @@ public class ClassScope extends Scope {
 	}
 
 	// GROOVY start
-	// FIXASC (M3:ast_transform_methods) thought required - is this in the right place?
+	// more thought required - is this in the right place?
 	public MethodBinding[] getAnyExtraMethods(char[] selector) {
 		return null;
 	}

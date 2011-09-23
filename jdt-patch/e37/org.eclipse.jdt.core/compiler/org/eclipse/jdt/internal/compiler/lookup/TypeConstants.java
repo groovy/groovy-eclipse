@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -134,11 +134,27 @@ public interface TypeConstants {
 			"CORBA".toCharArray(), //$NON-NLS-1$
 			"Stub".toCharArray(), //$NON-NLS-1$
 	};
+	char[][] JAVA_LANG_SAFEVARARGS =  {JAVA, LANG, "SafeVarargs".toCharArray()}; //$NON-NLS-1$
+	char[] INVOKE = "invoke".toCharArray(); //$NON-NLS-1$
+	char[][] JAVA_LANG_INVOKE_METHODHANDLE_POLYMORPHICSIGNATURE = { // Signature while parsing binary file
+			JAVA,
+			LANG,
+			INVOKE,
+			"MethodHandle".toCharArray(), //$NON-NLS-1$
+			"PolymorphicSignature".toCharArray() //$NON-NLS-1$
+	};
+	char[][] JAVA_LANG_INVOKE_METHODHANDLE_$_POLYMORPHICSIGNATURE = { // Signature while parsing source file
+			JAVA,
+			LANG,
+			INVOKE,
+			"MethodHandle$PolymorphicSignature".toCharArray() //$NON-NLS-1$
+	};
+	char[][] JAVA_LANG_AUTOCLOSEABLE =  {JAVA, LANG, "AutoCloseable".toCharArray()}; //$NON-NLS-1$
 
 	// Constraints for generic type argument inference
-    int CONSTRAINT_EQUAL = 0;		// Actual = Formal
-    int CONSTRAINT_EXTENDS = 1;	// Actual << Formal
-    int CONSTRAINT_SUPER = 2;		// Actual >> Formal
+	int CONSTRAINT_EQUAL = 0;		// Actual = Formal
+	int CONSTRAINT_EXTENDS = 1;	// Actual << Formal
+	int CONSTRAINT_SUPER = 2;		// Actual >> Formal
 
 	// Constants used to perform bound checks
 	int OK = 0;
@@ -156,6 +172,7 @@ public interface TypeConstants {
 	char[] SYNTHETIC_ENCLOSING_INSTANCE_PREFIX = "this$".toCharArray(); //$NON-NLS-1$
 	char[] SYNTHETIC_ACCESS_METHOD_PREFIX =  "access$".toCharArray(); //$NON-NLS-1$
 	char[] SYNTHETIC_ENUM_CONSTANT_INITIALIZATION_METHOD_PREFIX =  " enum constant initialization$".toCharArray(); //$NON-NLS-1$
+	char[] SYNTHETIC_STATIC_FACTORY =  "<factory>".toCharArray(); //$NON-NLS-1$
 
 	// synthetic package-info name
 	public static final char[] PACKAGE_INFO_NAME = "package-info".toCharArray(); //$NON-NLS-1$

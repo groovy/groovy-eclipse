@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -47,6 +47,10 @@ public static AnnotationBinding[] addStandardAnnotations(AnnotationBinding[] rec
 		count++;
 	if ((annotationTagBits & TagBits.AnnotationSuppressWarnings) != 0)
 		count++;
+	if ((annotationTagBits & TagBits.AnnotationPolymorphicSignature) != 0)
+		count++;
+	if ((annotationTagBits & TagBits.AnnotationSafeVarargs) != 0)
+		count++;
 	if (count == 0)
 		return recordedAnnotations;
 
@@ -67,7 +71,21 @@ public static AnnotationBinding[] addStandardAnnotations(AnnotationBinding[] rec
 		result[index++] = buildMarkerAnnotation(TypeConstants.JAVA_LANG_OVERRIDE, env);
 	if ((annotationTagBits & TagBits.AnnotationSuppressWarnings) != 0)
 		result[index++] = buildMarkerAnnotation(TypeConstants.JAVA_LANG_SUPPRESSWARNINGS, env);
+	if ((annotationTagBits & TagBits.AnnotationPolymorphicSignature) != 0)
+		result[index++] = buildMarkerAnnotationForMemberType(TypeConstants.JAVA_LANG_INVOKE_METHODHANDLE_$_POLYMORPHICSIGNATURE, env);
+	if ((annotationTagBits & TagBits.AnnotationSafeVarargs) != 0)
+		result[index++] = buildMarkerAnnotation(TypeConstants.JAVA_LANG_SAFEVARARGS, env);
 	return result;
+}
+
+private static AnnotationBinding buildMarkerAnnotationForMemberType(char[][] compoundName, LookupEnvironment env) {
+	ReferenceBinding type = env.getResolvedType(compoundName, null);
+	// since this is a member type name using '$' the return binding is a
+	// problem reference binding with reason ProblemReasons.InternalNameProvided
+	if (!type.isValidBinding()) {
+		type = ((ProblemReferenceBinding) type).closestMatch;
+	}
+	return env.createAnnotation(type, Binding.NO_ELEMENT_VALUE_PAIRS);
 }
 
 private static AnnotationBinding buildMarkerAnnotation(char[][] compoundName, LookupEnvironment env) {

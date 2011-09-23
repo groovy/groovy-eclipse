@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -761,6 +761,14 @@ public abstract class ASTNode {
 	public static final int MODIFIER = 83;
 
 	/**
+	 * Node type constant indicating a node of type
+	 * <code>UnionType</code>.
+	 * @see UnionType
+	 * @since 3.7.1
+	 */
+	public static final int UNION_TYPE = 84;
+
+	/**
 	 * Returns the node class for the corresponding node type.
 	 *
 	 * @param nodeType AST node type
@@ -814,6 +822,8 @@ public abstract class ASTNode {
 				return ConstructorInvocation.class;
 			case CONTINUE_STATEMENT :
 				return ContinueStatement.class;
+			case UNION_TYPE :
+				return UnionType.class;
 			case DO_STATEMENT :
 				return DoStatement.class;
 			case EMPTY_STATEMENT :
@@ -1766,7 +1776,10 @@ public abstract class ASTNode {
 	/**
      * Checks that this AST operation is not used when
      * building JLS2 level ASTs.
-
+     * <p>
+     * Use this method to prevent access to new properties that have been added in JLS3.
+     * </p>
+     * 
      * @exception UnsupportedOperationException
 	 * @since 3.0
      */
@@ -1777,9 +1790,28 @@ public abstract class ASTNode {
 	}
 
 	/**
+     * Checks that this AST operation is not used when
+     * building JLS2 or JLS3 level ASTs.
+     * <p>
+     * Use this method to prevent access to new properties that have been added in JLS4.
+     * </p>
+     * 
+	 * @exception UnsupportedOperationException
+	 * @since 3.7
+	 */
+	final void unsupportedIn2_3() {
+		if (this.ast.apiLevel <= AST.JLS3) {
+			throw new UnsupportedOperationException("Operation only supported in JLS4 AST"); //$NON-NLS-1$
+		}
+	}
+	
+	/**
      * Checks that this AST operation is only used when
      * building JLS2 level ASTs.
-
+     * <p>
+     * Use this method to prevent access to deprecated properties (deprecated in JLS3).
+     * </p>
+     * 
      * @exception UnsupportedOperationException
 	 * @since 3.0
      */

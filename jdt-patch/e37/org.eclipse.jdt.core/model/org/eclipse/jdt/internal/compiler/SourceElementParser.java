@@ -268,6 +268,15 @@ protected void consumeAnnotationTypeDeclarationHeaderNameWithTypeParameters() {
 	if (this.astPtr > currentAstPtr) // if ast node was pushed on the ast stack
 		rememberCategories();
 }
+protected void consumeCatchFormalParameter() {
+	super.consumeCatchFormalParameter();
+
+	// Flush comments prior to this formal parameter so the declarationSourceStart of the following parameter
+	// is correctly set (see bug 80904)
+	// Note that this could be done in the Parser itself, but this would slow down all parsers, when they don't need
+	// the declarationSourceStart to be set
+	flushCommentsDefinedPriorTo(this.scanner.currentPosition);
+}
 protected void consumeClassHeaderName1() {
 	int currentAstPtr = this.astPtr;
 	super.consumeClassHeaderName1();
@@ -374,15 +383,6 @@ protected void consumeFieldAccess(boolean isSuperAccess) {
 }
 protected void consumeFormalParameter(boolean isVarArgs) {
 	super.consumeFormalParameter(isVarArgs);
-
-	// Flush comments prior to this formal parameter so the declarationSourceStart of the following parameter
-	// is correctly set (see bug 80904)
-	// Note that this could be done in the Parser itself, but this would slow down all parsers, when they don't need
-	// the declarationSourceStart to be set
-	flushCommentsDefinedPriorTo(this.scanner.currentPosition);
-}
-protected void consumeCatchFormalParameter(boolean isVarArgs) {
-	super.consumeCatchFormalParameter(isVarArgs);
 
 	// Flush comments prior to this formal parameter so the declarationSourceStart of the following parameter
 	// is correctly set (see bug 80904)
@@ -958,9 +958,9 @@ private void rememberCategories() {
 	}
 }
 // GROOVY start
-// old code:
-// private
-// new code:
+/* old {
+private
+} new */
 public 
 // GROOVY end
 void reset() {

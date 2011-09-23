@@ -9,6 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
+// GROOVY PATCHED
 
 import java.util.ArrayList;
 

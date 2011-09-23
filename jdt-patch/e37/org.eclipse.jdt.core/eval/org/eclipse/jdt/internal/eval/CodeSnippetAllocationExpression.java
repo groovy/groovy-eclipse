@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.eval;
 
+import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.CastExpression;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
@@ -25,6 +26,7 @@ import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
@@ -141,7 +143,7 @@ public TypeBinding resolveType(BlockScope scope) {
 			}
 		}
 	}
-
+	final boolean isDiamond = this.type != null && (this.type.bits & ASTNode.IsDiamond) != 0;
 	// resolve type arguments (for generic constructor call)
 	if (this.typeArguments != null) {
 		int length = this.typeArguments.length;
@@ -155,6 +157,10 @@ public TypeBinding resolveType(BlockScope scope) {
 			if (argHasError && typeReference instanceof Wildcard) {
 				scope.problemReporter().illegalUsageOfWildcard(typeReference);
 			}
+		}
+		if (isDiamond) {
+			scope.problemReporter().diamondNotWithExplicitTypeArguments(this.typeArguments);
+			return null;
 		}
 		if (argHasError) {
 			if (this.arguments != null) { // still attempt to resolve arguments
@@ -194,6 +200,14 @@ public TypeBinding resolveType(BlockScope scope) {
 		scope.problemReporter().cannotInstantiate(this.type, this.resolvedType);
 		return this.resolvedType;
 	}
+	if (isDiamond) {
+		TypeBinding [] inferredTypes = inferElidedTypes(((ParameterizedTypeBinding) this.resolvedType).genericType(), null, argumentTypes, scope);
+		if (inferredTypes == null) {
+			scope.problemReporter().cannotInferElidedTypes(this);
+			return this.resolvedType = null;
+		}
+		this.resolvedType = this.type.resolvedType = scope.environment().createParameterizedType(((ParameterizedTypeBinding) this.resolvedType).genericType(), inferredTypes, ((ParameterizedTypeBinding) this.resolvedType).enclosingType());
+ 	}
 	ReferenceBinding allocatedType = (ReferenceBinding) this.resolvedType;
 	if (!(this.binding = scope.getConstructor(allocatedType, argumentTypes, this)).isValidBinding()) {
 		if (this.binding instanceof ProblemMethodBinding

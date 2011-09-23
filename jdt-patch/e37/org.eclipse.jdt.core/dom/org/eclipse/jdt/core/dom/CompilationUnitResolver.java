@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.core.dom;
+package org.eclipse.jdt.core.dom; // GROOVY PATCHED
 
 import java.io.File;
 import java.io.IOException;
@@ -66,7 +66,7 @@ import org.eclipse.jdt.internal.core.util.BindingKeyResolver;
 import org.eclipse.jdt.internal.core.util.CommentRecorderParser;
 import org.eclipse.jdt.internal.core.util.DOMFinder;
 
-//GROOVY Should we do this???
+//GROOVY Should we do this??? No!
 public
 //GROOVY
 class CompilationUnitResolver extends Compiler {
@@ -338,9 +338,9 @@ class CompilationUnitResolver extends Compiler {
 	 */
 	public void initializeParser() {
 		// GROOVY start
-		/* old
+		/* old {
 		this.parser = new CommentRecorderParser(this.problemReporter, false);
-		*/// new
+		} new */
 		this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, false, LanguageSupportFactory.CommentRecorderParserVariant);
 		// GROOVY end
 	}
@@ -499,15 +499,15 @@ class CompilationUnitResolver extends Compiler {
 		compilerOptions.performMethodsFullRecovery = statementsRecovery;
 		compilerOptions.performStatementsRecovery = statementsRecovery;
 		compilerOptions.ignoreMethodBodies = (flags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0;
-		/* GROOVY Start
-		// original
+		// GROOVY Start
+		/* old {
 		Parser parser = new CommentRecorderParser(
 			new ProblemReporter(
 					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
 					compilerOptions,
 					new DefaultProblemFactory()),
 			false);
-		// new */
+		} new */
 		Parser parser = LanguageSupportFactory.getParser(null, 
 				compilerOptions, new ProblemReporter(
 						DefaultErrorHandlingPolicies.proceedWithAllProblems(),
@@ -1148,8 +1148,18 @@ class CompilationUnitResolver extends Compiler {
 				// build and record parsed units
 				this.parseThreshold = 0; // will request a full parse
 				beginToCompile(new org.eclipse.jdt.internal.compiler.env.ICompilationUnit[] { sourceUnit });
-				// process all units (some more could be injected in the loop by the lookup environment)
-				unit = this.unitsToProcess[0];
+				// find the right unit from what was injected via accept(ICompilationUnit,..):
+				for (int i=0, max = this.totalUnits; i < max; i++) {
+					CompilationUnitDeclaration currentCompilationUnitDeclaration = this.unitsToProcess[i];
+					if (currentCompilationUnitDeclaration != null
+							&& currentCompilationUnitDeclaration.compilationResult.compilationUnit == sourceUnit) {
+						unit = currentCompilationUnitDeclaration;
+						break;
+					}
+				}
+				if (unit == null) {
+					unit = this.unitsToProcess[0]; // fall back to old behavior
+				}
 			} else {
 				// initial type binding creation
 				this.lookupEnvironment.buildTypeBindings(unit, null /*no access restriction*/);

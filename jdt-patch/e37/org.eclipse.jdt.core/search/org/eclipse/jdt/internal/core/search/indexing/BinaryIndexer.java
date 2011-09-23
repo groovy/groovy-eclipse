@@ -76,6 +76,15 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 			char[][] compoundName = TypeConstants.JAVA_LANG_SUPPRESSWARNINGS;
 			addAnnotationTypeReference(compoundName[compoundName.length-1]);
 		}
+		if ((annotationTagBits & TagBits.AnnotationSafeVarargs) != 0) {
+			char[][] compoundName = TypeConstants.JAVA_LANG_SAFEVARARGS;
+			addAnnotationTypeReference(compoundName[compoundName.length-1]);
+		}
+		if ((annotationTagBits & TagBits.AnnotationPolymorphicSignature) != 0) {
+			char[][] compoundName =
+					TypeConstants.JAVA_LANG_INVOKE_METHODHANDLE_$_POLYMORPHICSIGNATURE;
+			addAnnotationTypeReference(compoundName[compoundName.length-1]);
+		}
 	}
 	private void addBinaryTargetAnnotation(long bits) {
 		char[][] compoundName = null;

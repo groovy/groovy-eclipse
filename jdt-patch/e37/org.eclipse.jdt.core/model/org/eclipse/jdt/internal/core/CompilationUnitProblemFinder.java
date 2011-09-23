@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.core;
+package org.eclipse.jdt.internal.core; // GROOVY PATCHED
 
 import java.util.HashMap;
 import java.util.Map;
@@ -290,9 +290,9 @@ public class CompilationUnitProblemFinder extends Compiler {
 	 */
 	public void initializeParser() {
         // GROOVY start
-        /* old
+        /* old {
 		this.parser = new CommentRecorderParser(this.problemReporter, this.options.parseLiteralExpressionsAsConstants);
-        */// new
+        } new */
         this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, this.options.parseLiteralExpressionsAsConstants, 3 /*CommentRecorderParserVariant with no transforms */);
         // GROOVY end
 	}

@@ -58,8 +58,8 @@ public class LoopingFlowContext extends SwitchFlowContext {
 		}
 		void simulateThrowAfterLoopBack(FlowInfo flowInfo) {
 			this.catchingContext.recordHandlingException(this.caughtException,
-					flowInfo.unconditionalInits(), null, // raised exception, irrelevant here
-					null, /* invocation site, irrelevant here */ true // we have no business altering the needed status.
+					flowInfo.unconditionalInits(), null, // raised exception, irrelevant here,
+					null, null, /* invocation site, irrelevant here */ true // we have no business altering the needed status.
 					);
 		}
 	}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2010 IBM Corporation and others.
+ * Copyright (c) 2005, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -740,7 +740,7 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 	    if (erasure() == otherType) {
 	    	return true;
 	    }
-        return false;
+	    return false;
 	}
 
 	public boolean isHierarchyConnected() {
@@ -955,8 +955,12 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 			    // lazy init, since cannot do so during binding creation if during supertype connection
 			    if (currentType.arguments == null)
 					currentType.initializeArguments(); // only for raw types
-			    if (currentType.arguments != null)
-					return currentType.arguments[originalVariable.rank];
+			    if (currentType.arguments != null) {
+			    	 if (currentType.arguments.length == 0) { // diamond type
+					    	return originalVariable;
+					    }
+			    	 return currentType.arguments[originalVariable.rank];
+			    }	
 			}
 			// recurse on enclosing type, as it may hold more substitutions to perform
 			if (currentType.isStatic()) break;

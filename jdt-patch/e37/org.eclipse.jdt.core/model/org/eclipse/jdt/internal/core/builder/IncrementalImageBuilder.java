@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.core.builder;
+package org.eclipse.jdt.internal.core.builder; // GROOVY PATCHED
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.*;
@@ -595,10 +595,10 @@ protected boolean findSourceFiles(IResourceDelta sourceDelta, ClasspathMultiDire
 		    // GROOVY end
 
 		    
-		     // GROOVY start
-		    // old
-		    // if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(resourceName)) {
-		    // new
+		    // GROOVY start
+		    /* old {
+		    if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(resourceName)) {
+		    } new */
 			// GRECLIPSE-404 must call 'isJavaLikeFile' directly in order to make the Scala-Eclipse plugin's weaving happy
 		    if ((!isInterestingProject && org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(resourceName) && !LanguageSupportFactory.isInterestingSourceFile(resourceName)) ||
 		    		(isInterestingProject && LanguageSupportFactory.isSourceFile(resourceName, isInterestingProject))) {

@@ -557,6 +557,20 @@ public class ClassInstanceCreation extends Expression {
 		return this.ast.getBindingResolver().resolveConstructor(this);
 	}
 
+	/**
+	 * Returns <code>true</code> if the resolved class type has been inferred
+	 * from the assignment context (JLS4 15.12.2.8), <code>false</code> otherwise.
+	 * <p>
+	 * This information is available only when bindings are requested when the AST is being built.
+	 *
+	 * @return <code>true</code> if the resolved class type has been inferred
+	 * 	from the assignment context (JLS3 15.12.2.8), <code>false</code> otherwise
+	 * @since 3.7.1
+	 */
+	public boolean isResolvedTypeInferredFromExpectedType() {
+		return this.ast.getBindingResolver().isResolvedTypeInferredFromExpectedType(this);
+	}
+	
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.
 	 */

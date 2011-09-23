@@ -1,27 +1,365 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<component id="org.eclipse.jdt.core" version="2">
-    <resource path="dom/org/eclipse/jdt/core/dom/CompilationUnitResolver.java" type="org.eclipse.jdt.core.dom.CompilationUnitResolver">
-        <filter id="1110441988">
+<?xml version="1.0" encoding="UTF-8"?><component id="org.eclipse.jdt.core" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter comment="Merge Java7 support into R3_7_maintenance" id="924844039">
             <message_arguments>
-                <message_argument value="org.eclipse.jdt.core.dom.CompilationUnitResolver"/>
+                <message_argument value="3.7.1"/>
+                <message_argument value="3.7.0"/>
             </message_arguments>
         </filter>
     </resource>
-    <resource path="groovy/org/codehaus/jdt/groovy/integration/LanguageSupport.java" type="org.codehaus.jdt.groovy.integration.LanguageSupport">
-        <filter id="643846161">
+    <resource path="compiler/org/eclipse/jdt/core/compiler/CharOperation.java" type="org.eclipse.jdt.core.compiler.CharOperation">
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
             <message_arguments>
-                <message_argument value="ProblemReporter"/>
-                <message_argument value="LanguageSupport"/>
-                <message_argument value="getImportMatchLocatorParserParser(ProblemReporter, MatchLocator)"/>
+                <message_argument value="3.7.1"/>
+                <message_argument value="compareTo(char[], char[], int, int)"/>
             </message_arguments>
         </filter>
     </resource>
-    <resource path="model/org/eclipse/jdt/core/util/CompilerUtils.java" type="org.eclipse.jdt.core.util.CompilerUtils">
-        <filter id="643846161">
+    <resource path="compiler/org/eclipse/jdt/core/compiler/IProblem.java" type="org.eclipse.jdt.core.compiler.IProblem">
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
             <message_arguments>
-                <message_argument value="CompilerOptions"/>
-                <message_argument value="CompilerUtils"/>
-                <message_argument value="configureOptionsBasedOnNature(CompilerOptions, IJavaProject)"/>
+                <message_argument value="3.7.1"/>
+                <message_argument value="AssignmentToMultiCatchParameter"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="AssignmentToResource"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="AutoManagedResourceNotBelow17"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="BinaryLiteralNotBelow17"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="CannotInferElidedTypes"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="CannotUseDiamondWithAnonymousClasses"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="CannotUseDiamondWithExplicitTypeArguments"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="DiamondNotBelow17"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="DuplicateInheritedMethods"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="IllegalHexaLiteral"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="IllegalUnderscorePosition"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="IncorrectSwitchType17"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="InvalidBinary"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="InvalidUnionTypeReferenceSequence"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="MultiCatchNotBelow17"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="PolymorphicMethodNotBelow17"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="PotentialHeapPollutionFromVararg"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="RedundantSpecificationOfTypeArguments"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="ResourceHasToImplementAutoCloseable"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="SafeVarargsOnFixedArityMethod"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="SafeVarargsOnNonFinalInstanceMethod"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="SwitchOnStringsNotBelow17"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="UnderscoresInLiteralsNotBelow17"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1210056707">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="UnhandledExceptionOnAutoClose"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/AST.java" type="org.eclipse.jdt.core.dom.AST">
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="JLS4"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="newUnionType()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/ASTMatcher.java" type="org.eclipse.jdt.core.dom.ASTMatcher">
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="match(UnionType, Object)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/ASTNode.java" type="org.eclipse.jdt.core.dom.ASTNode">
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="UNION_TYPE"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/ASTVisitor.java" type="org.eclipse.jdt.core.dom.ASTVisitor">
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="endVisit(UnionType)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="visit(UnionType)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/ClassInstanceCreation.java" type="org.eclipse.jdt.core.dom.ClassInstanceCreation">
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="isResolvedTypeInferredFromExpectedType()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/TryStatement.java" type="org.eclipse.jdt.core.dom.TryStatement">
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="RESOURCES_PROPERTY"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="resources()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/Type.java" type="org.eclipse.jdt.core.dom.Type">
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="isUnionType()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/UnionType.java" type="org.eclipse.jdt.core.dom.UnionType">
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1109393411">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="org.eclipse.jdt.core.dom.UnionType"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="formatter/org/eclipse/jdt/core/formatter/DefaultCodeFormatterConstants.java" type="org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants">
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="FORMATTER_ALIGNMENT_FOR_RESOURCES_IN_TRY"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="FORMATTER_ALIGNMENT_FOR_UNION_TYPE_IN_MULTICATCH"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="FORMATTER_INSERT_SPACE_AFTER_OPENING_PAREN_IN_TRY"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="FORMATTER_INSERT_SPACE_AFTER_SEMICOLON_IN_TRY_RESOURCES"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="FORMATTER_INSERT_SPACE_BEFORE_CLOSING_PAREN_IN_TRY"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="FORMATTER_INSERT_SPACE_BEFORE_OPENING_PAREN_IN_TRY"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="FORMATTER_INSERT_SPACE_BEFORE_SEMICOLON_IN_TRY_RESOURCES"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="FORMATTER_WRAP_BEFORE_OR_OPERATOR_MULTICATCH"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="model/org/eclipse/jdt/core/BindingKey.java" type="org.eclipse.jdt.core.BindingKey">
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="getDeclaringType()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="model/org/eclipse/jdt/core/CompletionProposal.java" type="org.eclipse.jdt.core.CompletionProposal">
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="canUseDiamond(CompletionContext)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="model/org/eclipse/jdt/core/JavaCore.java" type="org.eclipse.jdt.core.JavaCore">
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="COMPILER_PB_REDUNDANT_TYPE_ARGUMENTS"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="model/org/eclipse/jdt/core/Signature.java" type="org.eclipse.jdt.core.Signature">
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="C_INTERSECTION"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="INTERSECTION_TYPE_SIGNATURE"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="createIntersectionTypeSignature(String[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="createIntersectionTypeSignature(char[][])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="getIntersectionTypeBounds(String)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="getIntersectionTypeBounds(char[])"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="model/org/eclipse/jdt/core/compiler/ReconcileContext.java" type="org.eclipse.jdt.core.compiler.ReconcileContext">
+        <filter comment="new APIs added for Java7 support post 3.7.0" id="1142947843">
+            <message_arguments>
+                <message_argument value="3.7.1"/>
+                <message_argument value="getAST4()"/>
             </message_arguments>
         </filter>
     </resource>

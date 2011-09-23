@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -167,7 +167,7 @@ public int getNextToken() throws InvalidInputException {
 					&& (this.completionIdentifier == null)
 					&& (whiteStart <= this.cursorLocation+1)
 					&& (this.cursorLocation < this.startPosition)
-					&& !ScannerHelper.isJavaIdentifierStart(this.currentCharacter)){
+					&& !ScannerHelper.isJavaIdentifierStart(this.complianceLevel, this.currentCharacter)){
 					this.currentPosition = this.startPosition; // for next token read
 					return TokenNameIdentifier;
 				}
@@ -813,7 +813,7 @@ public int getNextToken() throws InvalidInputException {
 							// illegal low surrogate
 							throw new InvalidInputException(INVALID_LOW_SURROGATE);
 						}
-						isJavaIdStart = ScannerHelper.isJavaIdentifierStart(c, low);
+						isJavaIdStart = ScannerHelper.isJavaIdentifierStart(this.complianceLevel, c, low);
 					}
 					else if (c >= LOW_SURROGATE_MIN_VALUE && c <= LOW_SURROGATE_MAX_VALUE) {
 						if (this.complianceLevel < ClassFileConstants.JDK1_5) {

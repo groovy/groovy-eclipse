@@ -9,7 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann <stephan@cs.tu-berlin.de> - inconsistent initialization of classpath container backed by external class folder, see https://bugs.eclipse.org/320618
  *******************************************************************************/
-package org.eclipse.jdt.internal.core;
+package org.eclipse.jdt.internal.core; // GROOVY PATCHED
 
 import java.io.*;
 import java.net.URI;

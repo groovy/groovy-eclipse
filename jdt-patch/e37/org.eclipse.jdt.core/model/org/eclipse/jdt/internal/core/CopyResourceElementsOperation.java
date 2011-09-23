@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.core;
+package org.eclipse.jdt.internal.core; // GROOVY PATCHED
 
 import java.util.*;
 
@@ -91,7 +91,7 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 		initializeASTParser();
 	}
 	private void initializeASTParser() {
-		this.parser = ASTParser.newParser(AST.JLS3);
+		this.parser = ASTParser.newParser(AST.JLS4);
 	}
 	/**
 	 * Returns the children of <code>source</code> which are affected by this operation.
@@ -315,9 +315,9 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 		IContainer destFolder = (IContainer)dest.getResource(); // can be an IFolder or an IProject
 		IFile destFile = destFolder.getFile(new Path(destName));
 	    // GROOVY start
-	    /* old
+	    /* old {
 		org.eclipse.jdt.internal.core.CompilationUnit destCU = new org.eclipse.jdt.internal.core.CompilationUnit(dest, destName, DefaultWorkingCopyOwner.PRIMARY);
-	    */// new
+	    } new */
 		org.eclipse.jdt.internal.core.CompilationUnit destCU = LanguageSupportFactory.newCompilationUnit(dest, destName, DefaultWorkingCopyOwner.PRIMARY);
 	    // GROOVY end
 		

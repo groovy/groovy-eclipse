@@ -599,6 +599,16 @@ void setSourceStart(int sourceStart);
 	int InvalidHighSurrogate = Syntax + Internal + 264;
 	/** @since 3.2 */
 	int UnnecessaryNLSTag = Internal + 265;
+	/** @since 3.7.1 */
+	int InvalidBinary = Syntax + Internal + 266;
+	/** @since 3.7.1 */
+	int BinaryLiteralNotBelow17 = Syntax + Internal + 267;
+	/** @since 3.7.1 */
+	int IllegalUnderscorePosition = Syntax + Internal + 268;
+	/** @since 3.7.1 */
+	int UnderscoresInLiteralsNotBelow17 = Syntax + Internal + 269;
+	/** @since 3.7.1 */
+	int IllegalHexaLiteral = Syntax + Internal + 270;
 
 	// type related problems
 	/** @since 3.1 */
@@ -1139,6 +1149,9 @@ void setSourceStart(int sourceStart);
 	/** @since 3.6*/
 	int InvalidTypeForCollectionTarget14 = Internal + 582;
 
+	/** @since 3.7.1 */
+	int DuplicateInheritedMethods = MethodRelated + 583;
+	
 	/**
 	 * 1.5 Syntax errors (when source level < 1.5)
 	 */
@@ -1316,7 +1329,12 @@ void setSourceStart(int sourceStart);
 	int ConstructorVarargsArgumentNeedCast = ConstructorRelated + 802;
 	/** @since 3.1 */
 	int VarargsConflict = MethodRelated + 803;
-
+	/** @since 3.7.1 */
+	int SafeVarargsOnFixedArityMethod = MethodRelated + 804;
+	/** @since 3.7.1 */
+	int SafeVarargsOnNonFinalInstanceMethod = MethodRelated + 805;
+	/** @since 3.7.1 */
+	int PotentialHeapPollutionFromVararg = MethodRelated + 806;
 	/**
 	 * Javadoc Generic
 	 */
@@ -1341,6 +1359,39 @@ void setSourceStart(int sourceStart);
 	/** @since 3.1 */
 	int JavadocTypeArgumentsForRawGenericConstructor = Javadoc + Internal + 859;
 
+	/**
+	 * Java 7 errors
+	 */
+	/** @since 3.7.1 */
+	int AssignmentToMultiCatchParameter = Internal + 870;
+	/** @since 3.7.1 */
+	int ResourceHasToImplementAutoCloseable = TypeRelated + 871;
+	/** @since 3.7.1 */
+	int AssignmentToResource = Internal + 872;
+	/** @since 3.7.1 */
+	int InvalidUnionTypeReferenceSequence = Internal + TypeRelated + 873; 
+	/** @since 3.7.1 */
+	int AutoManagedResourceNotBelow17 = Syntax + Internal + 874;
+	/** @since 3.7.1 */
+	int MultiCatchNotBelow17 =  Syntax + Internal + 875;
+	/** @since 3.7.1 */
+	int PolymorphicMethodNotBelow17 = MethodRelated + 876;
+	/** @since 3.7.1 */
+	int IncorrectSwitchType17 = TypeRelated + 877;
+	/** @since 3.7.1 */
+	int CannotInferElidedTypes = TypeRelated + 878;
+	/** @since 3.7.1 */
+	int CannotUseDiamondWithExplicitTypeArguments = TypeRelated + 879;
+	/** @since 3.7.1 */
+	int CannotUseDiamondWithAnonymousClasses = TypeRelated + 880;
+	/** @since 3.7.1 */
+	int SwitchOnStringsNotBelow17 = TypeRelated + 881;	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=348492
+	/** @since 3.7.1 */
+	int UnhandledExceptionOnAutoClose =  TypeRelated + 882;
+	/** @since 3.7.1 */
+	int DiamondNotBelow17 =  TypeRelated + 883;
+	/** @since 3.7.1 */
+	int RedundantSpecificationOfTypeArguments = TypeRelated + 884;
 	/**
 	 * External problems -- These are problems defined by other plugins
 	 */

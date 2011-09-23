@@ -143,6 +143,10 @@ public TypeBinding resolveType(BlockScope scope) {
 	if (lhsType != null) {
 		this.resolvedType = lhsType.capture(scope, this.sourceEnd);
 	}
+	LocalVariableBinding localVariableBinding = this.lhs.localVariableBinding();
+	if (localVariableBinding != null) {
+		localVariableBinding.tagBits &= ~TagBits.IsEffectivelyFinal;
+	}
 	TypeBinding rhsType = this.expression.resolveType(scope);
 	if (lhsType == null || rhsType == null) {
 		return null;

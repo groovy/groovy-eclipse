@@ -28,6 +28,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.InvocationSite;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MissingTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.PolymorphicMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
@@ -65,7 +66,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		if (this.receiver.isThis()) {
 			// accessing non-static method without an object
 			currentScope.resetEnclosingMethodStaticFlag();
-	}
+		}
 	} else if (this.receiver.isThis()) {
 		if ((this.receiver.bits & ASTNode.IsImplicitThis) == 0) {
 			// explicit this receiver, not allowed in static context
@@ -143,7 +144,7 @@ public void computeConversion(Scope scope, TypeBinding runtimeTimeType, TypeBind
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	int pc = codeStream.position;
 	// generate receiver/enclosing instance access
-	MethodBinding codegenBinding = this.binding.original();
+	MethodBinding codegenBinding = this.binding instanceof PolymorphicMethodBinding ? this.binding : this.binding.original();
 	boolean isStatic = codegenBinding.isStatic();
 	if (isStatic) {
 		this.receiver.generateCode(currentScope, codeStream, false);
@@ -458,10 +459,21 @@ public TypeBinding resolveType(BlockScope scope) {
 						? this.resolvedType
 						: null;
 	}
+	final CompilerOptions compilerOptions = scope.compilerOptions();
+	if (compilerOptions.complianceLevel <= ClassFileConstants.JDK1_6
+			&& this.binding.isPolymorphic()) {
+		scope.problemReporter().polymorphicMethodNotBelow17(this);
+		return null;
+	}
+
+	if (((this.bits & ASTNode.InsideExpressionStatement) != 0)
+			&& this.binding.isPolymorphic()) {
+		// we only set the return type to be void if this method invocation is used inside an expression statement
+		this.binding = scope.environment().updatePolymorphicMethodReturnType((PolymorphicMethodBinding) this.binding, TypeBinding.VOID);
+	}
 	if ((this.binding.tagBits & TagBits.HasMissingType) != 0) {
 		scope.problemReporter().missingTypeInMethod(this, this.binding);
 	}
-	final CompilerOptions compilerOptions = scope.compilerOptions();
 	if (!this.binding.isStatic()) {
 		// the "receiver" must not be a type
 		if (receiverIsType) {

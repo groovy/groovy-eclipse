@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -261,7 +261,7 @@ public abstract class CreateElementInCUOperation extends JavaModelOperation {
 		// ensure cu is consistent (noop if already consistent)
 		cu.makeConsistent(this.progressMonitor);
 		// create an AST for the compilation unit
-		ASTParser parser = ASTParser.newParser(AST.JLS3);
+		ASTParser parser = ASTParser.newParser(AST.JLS4);
 		parser.setSource(cu);
 		return (CompilationUnit) parser.createAST(this.progressMonitor);
 	}

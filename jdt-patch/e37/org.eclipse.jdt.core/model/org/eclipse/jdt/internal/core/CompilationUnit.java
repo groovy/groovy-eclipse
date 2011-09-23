@@ -10,7 +10,7 @@
  *     Alex Smirnoff (alexsmr@sympatico.ca) - part of the changes to support Java-like extension
  *                                                            (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=71460)
  *******************************************************************************/
-package org.eclipse.jdt.internal.core;
+package org.eclipse.jdt.internal.core; // GROOVY PATCHED
 
 import java.io.IOException;
 import java.util.*;
@@ -587,9 +587,9 @@ public IJavaElement findSharedWorkingCopy(IBufferFactory factory) {
  */
 public ICompilationUnit findWorkingCopy(WorkingCopyOwner workingCopyOwner) {
     // GROOVY start
-    /* old
+    /* old {
 	CompilationUnit cu = new CompilationUnit((PackageFragment)this.parent, getElementName(), workingCopyOwner);
-    */// new
+    } new */
     CompilationUnit cu = LanguageSupportFactory.newCompilationUnit((PackageFragment)this.parent, getElementName(), workingCopyOwner);
     // GROOVY end
 	
@@ -892,9 +892,9 @@ public ICompilationUnit getPrimary() {
 public IJavaElement getPrimaryElement(boolean checkOwner) {
 	if (checkOwner && isPrimary()) return this;
     // GROOVY start
-    /* old
+    /* old {
 	return new CompilationUnit((PackageFragment)getParent(), getElementName(), DefaultWorkingCopyOwner.PRIMARY);
-    */// new
+    } new */
 	return LanguageSupportFactory.newCompilationUnit((PackageFragment)getParent(), getElementName(), DefaultWorkingCopyOwner.PRIMARY);
     // GROOVY end
 }
@@ -987,10 +987,10 @@ public ICompilationUnit getWorkingCopy(WorkingCopyOwner workingCopyOwner, IProbl
 
 	JavaModelManager manager = JavaModelManager.getJavaModelManager();
 
-	/* GROOVY start
-    // original
+	// GROOVY start
+    /* old {
 	CompilationUnit workingCopy = new CompilationUnit((PackageFragment)getParent(), getElementName(), workingCopyOwner);
-    // new */
+    } new */
     CompilationUnit workingCopy = LanguageSupportFactory.newCompilationUnit((PackageFragment)getParent(), getElementName(), workingCopyOwner);
     // GROOVY end
 	JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo =
@@ -1142,9 +1142,9 @@ protected IBuffer openBuffer(IProgressMonitor pm, Object info) throws JavaModelE
 		// ensure that isOpen() is called outside the bufManager synchronized block
 		// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=237772
 	    // GROOVY start
-	    /* old
+	    /* old {
 		mustSetToOriginalContent = !isPrimary() && (original = new CompilationUnit((PackageFragment)getParent(), getElementName(), DefaultWorkingCopyOwner.PRIMARY)).isOpen() ;
-	    */// new
+	    } new */
 	    mustSetToOriginalContent = !isPrimary() && (original = LanguageSupportFactory.newCompilationUnit((PackageFragment)getParent(), getElementName(), DefaultWorkingCopyOwner.PRIMARY)).isOpen() ;
 	    // GROOVY end
 	}

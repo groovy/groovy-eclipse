@@ -9,7 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *     Kelly Campbell <kellyc@google.com> - Hangs in SourceMapper during java proposals - https://bugs.eclipse.org/bugs/show_bug.cgi?id=281575
  *******************************************************************************/
-package org.eclipse.jdt.internal.core;
+package org.eclipse.jdt.internal.core; // GROOVY PATCHED
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -1387,9 +1387,9 @@ public class SourceMapper
 			}
 			boolean doFullParse = hasToRetrieveSourceRangesForLocalClass(fullName);
 	        // GROOVY start
-	        /* old
-			parser = new SourceElementParser(this, factory, new CompilerOptions(this.options), doFullParse, true/*optimize string literals);
-	        */// new
+	        /* old {
+			parser = new SourceElementParser(this, factory, new CompilerOptions(this.options), doFullParse, true/*optimize string literals..);
+	        } new */
 			parser = LanguageSupportFactory.getSourceElementParser(this, factory, new CompilerOptions(this.options), doFullParse, true/*optimize string literals*/, true);
 	        // GROOVY end
 			parser.javadocParser.checkDocComment = false; // disable javadoc parsing

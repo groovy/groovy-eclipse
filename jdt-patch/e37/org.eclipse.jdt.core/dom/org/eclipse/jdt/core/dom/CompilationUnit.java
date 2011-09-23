@@ -9,7 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.jdt.core.dom;
+package org.eclipse.jdt.core.dom; // GROOVY PATCHED
 
 import java.util.ArrayList;
 import java.util.Arrays;

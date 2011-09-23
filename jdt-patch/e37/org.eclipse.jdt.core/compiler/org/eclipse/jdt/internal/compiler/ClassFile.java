@@ -1105,7 +1105,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		ExceptionLabel[] exceptionLabels = this.codeStream.exceptionLabels;
 		int exceptionHandlersCount = 0; // each label holds one handler per range (start/end contiguous)
 		for (int i = 0, length = this.codeStream.exceptionLabelsCounter; i < length; i++) {
-			exceptionHandlersCount += this.codeStream.exceptionLabels[i].count / 2;
+			exceptionHandlersCount += this.codeStream.exceptionLabels[i].getCount() / 2;
 		}
 		int exSize = exceptionHandlersCount * 8 + 2;
 		if (exSize + localContentsOffset >= this.contents.length) {
@@ -1118,7 +1118,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		for (int i = 0, max = this.codeStream.exceptionLabelsCounter; i < max; i++) {
 			ExceptionLabel exceptionLabel = exceptionLabels[i];
 			if (exceptionLabel != null) {
-				int iRange = 0, maxRange = exceptionLabel.count;
+				int iRange = 0, maxRange = exceptionLabel.getCount();
 				if ((maxRange & 1) != 0) {
 					this.codeStream.methodDeclaration.scope.problemReporter().abortDueToInternalError(
 							Messages.bind(Messages.abort_invalidExceptionAttribute, new String(this.codeStream.methodDeclaration.selector)),
@@ -1251,7 +1251,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		ExceptionLabel[] exceptionLabels = this.codeStream.exceptionLabels;
 		int exceptionHandlersCount = 0; // each label holds one handler per range (start/end contiguous)
 		for (int i = 0, length = this.codeStream.exceptionLabelsCounter; i < length; i++) {
-			exceptionHandlersCount += this.codeStream.exceptionLabels[i].count / 2;
+			exceptionHandlersCount += this.codeStream.exceptionLabels[i].getCount() / 2;
 		}
 		int exSize = exceptionHandlersCount * 8 + 2;
 		if (exSize + localContentsOffset >= this.contents.length) {
@@ -1264,7 +1264,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		for (int i = 0, max = this.codeStream.exceptionLabelsCounter; i < max; i++) {
 			ExceptionLabel exceptionLabel = exceptionLabels[i];
 			if (exceptionLabel != null) {
-				int iRange = 0, maxRange = exceptionLabel.count;
+				int iRange = 0, maxRange = exceptionLabel.getCount();
 				if ((maxRange & 1) != 0) {
 					this.codeStream.methodDeclaration.scope.problemReporter().abortDueToInternalError(
 							Messages.bind(Messages.abort_invalidExceptionAttribute, new String(this.codeStream.methodDeclaration.selector)),
@@ -1686,7 +1686,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 			ExceptionLabel[] exceptionLabels = this.codeStream.exceptionLabels;
 			int exceptionHandlersCount = 0; // each label holds one handler per range (start/end contiguous)
 			for (int i = 0, length = this.codeStream.exceptionLabelsCounter; i < length; i++) {
-				exceptionHandlersCount += this.codeStream.exceptionLabels[i].count / 2;
+				exceptionHandlersCount += this.codeStream.exceptionLabels[i].getCount() / 2;
 			}
 			int exSize = exceptionHandlersCount * 8 + 2;
 			if (exSize + localContentsOffset >= this.contents.length) {
@@ -1699,7 +1699,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 			for (int i = 0, max = this.codeStream.exceptionLabelsCounter; i < max; i++) {
 				ExceptionLabel exceptionLabel = exceptionLabels[i];
 				if (exceptionLabel != null) {
-					int iRange = 0, maxRange = exceptionLabel.count;
+					int iRange = 0, maxRange = exceptionLabel.getCount();
 					if ((maxRange & 1) != 0) {
 						this.referenceBinding.scope.problemReporter().abortDueToInternalError(
 								Messages.bind(Messages.abort_invalidExceptionAttribute, new String(binding.selector),
@@ -3813,7 +3813,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 					i++;
 					break;
 				default:
-					throw new IllegalArgumentException();
+					throw new IllegalArgumentException("Invalid starting type character : " + currentCharacter); //$NON-NLS-1$
 			}
 		}
 	}
@@ -3945,24 +3945,14 @@ public class ClassFile implements TypeConstants, TypeIds {
 			int resolvedPosition = 0;
 			// take into account enum constructor synthetic name+ordinal
 			final boolean isConstructor = methodBinding.isConstructor();
-			if (isConstructor) {
-				LocalVariableBinding localVariableBinding = new LocalVariableBinding("this".toCharArray(), methodBinding.declaringClass, 0, false); //$NON-NLS-1$
+			if (isConstructor || !methodBinding.isStatic()) {
+				LocalVariableBinding localVariableBinding = new LocalVariableBinding(ConstantPool.This, methodBinding.declaringClass, 0, false);
 				localVariableBinding.resolvedPosition = 0;
 				this.codeStream.record(localVariableBinding);
 				localVariableBinding.recordInitializationStartPC(0);
 				localVariableBinding.recordInitializationEndPC(codeLength);
 				frame.putLocal(resolvedPosition, new VerificationTypeInfo(
-						VerificationTypeInfo.ITEM_UNINITIALIZED_THIS,
-						methodBinding.declaringClass));
-				resolvedPosition++;
-			} else if (!methodBinding.isStatic()) {
-				LocalVariableBinding localVariableBinding = new LocalVariableBinding("this".toCharArray(), methodBinding.declaringClass, 0, false); //$NON-NLS-1$
-				localVariableBinding.resolvedPosition = 0;
-				this.codeStream.record(localVariableBinding);
-				localVariableBinding.recordInitializationStartPC(0);
-				localVariableBinding.recordInitializationEndPC(codeLength);
-				frame.putLocal(resolvedPosition, new VerificationTypeInfo(
-						VerificationTypeInfo.ITEM_OBJECT,
+						isConstructor ? VerificationTypeInfo.ITEM_UNINITIALIZED_THIS : VerificationTypeInfo.ITEM_OBJECT,
 						methodBinding.declaringClass));
 				resolvedPosition++;
 			}
@@ -4514,8 +4504,8 @@ public class ClassFile implements TypeConstants, TypeIds {
 					break;
 				case Opcodes.OPC_aload_0:
 					VerificationTypeInfo locals0 = frame.locals[0];
-					// special case to handle uninitialized object
-					if (locals0 == null) {
+					if (locals0 == null || locals0.tag != VerificationTypeInfo.ITEM_UNINITIALIZED_THIS) {
+						// special case to handle uninitialized object
 						locals0 = retrieveLocal(currentPC, 0);
 					}
 					frame.addStackItem(locals0);

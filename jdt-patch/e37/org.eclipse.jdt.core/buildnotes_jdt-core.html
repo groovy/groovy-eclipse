@@ -41,11 +41,407 @@
 	</td>
   </tr>
 </table>
+<a name="v_B76_R37x"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7.1 - August 30, 2011 - 3.7.1
+<br>Project org.eclipse.jdt.core v_B76_R37x
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B76_R37x">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=356002">356002</a>
+VerifyError &quot;Inconsistent stackmap frames&quot; for switch-string statement with nested for-loop
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350095">350095</a>
+The 2000th (0-based) enum constant is null
+
+<a name="v_B75_R37x"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7.1 - August 24, 2011
+<br>Project org.eclipse.jdt.core v_B75_R37x
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B75_R37x">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=354536">354536</a>
+compiling package-info.java still depends on the order of compilation units
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348024">348024</a>
+Empty AST for class with static inner class in a package with package-info.java
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353640">353640</a>
+AIOOBE in ParameterizedTypeBinding.substitute
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353535">353535</a>
+Eclipse compiler generates wrong bytecode for nested try-with-resources statements
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=354579">354579</a>
+Fup of bug 289247: Investigate validity of the fix vis-a-vis JLS.
+
+<a name="v_B74_R37x"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7.1 - August 10, 2011
+<br>Project org.eclipse.jdt.core v_B74_R37x
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B74_R37x">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>Added a new API in BindingKey to return it's declaring type(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351165">351165</a> for details):
+<pre>
+/**
+ * Returns the binding key of the declaring type of the element represented by this binding key. If the binding key
+ * does not represent a member or if the member doesn't have a declaring type, returns <code>null</code>.
+ * 
+ * <p>
+ * Note that only binding keys for references to methods and fields
+ * are fully supported. The binding keys for declarations will not have type parameters.
+ * 
+ * @return the type binding key or <code>null</code>
+ * @since 3.7.1
+ */
+public BindingKey getDeclaringType();
+</pre>
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=317719">317719</a>
+Method incorrectly flagged as having same erasure output when return type differs
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=354052">354052</a>
+[1.7] NPE in org.eclipse.jdt.internal.compiler.ClassFile.traverse(ClassFile.java:4507)
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353238">353238</a>
+[1.7] update unusedTypeArgs option description for the batch compiler
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353089">353089</a>
+[1.7][compiler] Incorrect name clash error with ecj
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351165">351165</a>
+[1.7] API to get the type arguments of the declaring type for constructor invocations
+
+<a name="v_B73_R37x"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7.1 - August 3, 2011
+<br>Project org.eclipse.jdt.core v_B73_R37x
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B73_R37x">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353553">353553</a>
+Rename readableNames.properties to avoid translation
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353085">353085</a>
+[1.7] Cannot cast from Object to boolean
+
+<a name="v_B72_R37x"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7.1 - July 28, 2011
+<br>Project org.eclipse.jdt.core v_B72_R37x
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B72">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>Plugin version has been increment to 3.7.1</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353251">353251</a>
+[1.7] merging Java 7 work to R3_7_maintenance branch
+
+<a name="v_B71"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7.1 - July 27, 2011
+<br>Project org.eclipse.jdt.core v_B71
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B71">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351426">351426</a>
+[1.7][code assist] CompletionContext.getExpectedTypesKeys() returns wrong type
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353137">353137</a>
+[1.7] Make sure TagBits.AnnotationSafeVarargs and AnnotationPolymorphicSignature are handled everywhere
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353093">353093</a>
+IMethod#getAnnotations() doesn't return @SafeVarargs of java.util.Arrays#asList(T...)
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=352464">352464</a>
+[1.7] Incorrect Javadoc shown for reference of invokeExact
+
+<a name="v_B70"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7.1 - July 21, 2011
+<br>Project org.eclipse.jdt.core v_B70
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B70">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351498">351498</a>
+[model]java.util.ConcurrentModificationException upon startup
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=352699">352699</a>
+[1.7][compiler] Improve error range for redundant type parameter warning
+
+<a name="v_B69"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7.1 - July 20, 2011
+<br>Project org.eclipse.jdt.core v_B69
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B69">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=352665">352665</a>
+[1.6][compiler] Internal compiler Error: ArrayIndexOutOfBoundsException when compiling certain classes with outer access error
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=352553">352553</a>
+[1.7] 'char a\u200b' is being accepted in 1.6 mode
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=352496">352496</a>
+tests using wrong version of JCL
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=300576">300576</a>
+NPE Computing type hierarchy when compliance doesn't match libraries
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=352145">352145</a>
+[1.7][compiler] VerifyError with aload0 being involved into ConditionalExpression
+
+
+<a name="v_B68"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7.1 - July 14, 2011
+<br>Project org.eclipse.jdt.core v_B68
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B68">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>Added a new API in CompletionProposal to tell whether it diamond operator can be used (see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351444">351444</a> for details):
+<pre>
+/** 
+ * Returns whether it is safe to use the '<>' (diamond) operator in place of explicitly specifying
+ * type arguments for this proposal. 
+ * 
+ * This is only relevant for source level 1.7 or greater.
+ * 
+ * @param coreContext the completion context associated with the proposal
+ * @since 3.7
+ * @return <code>true</code> if it is safe to use the diamond operator for the constructor invocation, 
+ * <code>false</code> otherwise. Also returns <code>false</code> for source levels below 1.7
+ */
+public boolean canUseDiamond(CompletionContext coreContext);
+</pre>
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351965">351965</a>
+[1.7] CCE when using diamond in 1.4
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351444">351444</a>
+[1.7][content assist] Need to know whether I can use diamond
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=352014">352014</a>
+\u1369 no longer accepted as a valid java identifier part
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351653">351653</a>
+[1.7][compiler]: VerifyError in try statement with finally and return statements
+
+<a name="v_B67"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7 - July 13, 2011
+<br>Project org.eclipse.jdt.core v_B67
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B67">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_PB_REDUNDANT_TYPE_ARGUMENTS added to raise warning or error for redundant
+usage of type arguments when diamond operator can be used instead. (see details in bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340747">340747</a>):
+<pre>
+	/**
+	 * Compiler option ID: Reporting redundant specification of type arguments in class instance creation expressions.
+	 * When enabled, the compiler will issue an error or a warning if type arguments are used in a class instance creation,
+	 * when the '<>' operator can be used instead.
+	 *
+	 * This option only has an effect if the compiler compliance is 1.7 or greater.
+	 * 
+	 * Option id:<code>"org.eclipse.jdt.core.compiler.problem.redundantSpecificationOfTypeArguments"</code>
+	 * Possible values:<code>{ "error", "warning", "ignore" }</code>
+	 * Default:<code>"ignore"</code>
+	 * 
+	 * @since 3.7
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_REDUNDANT_TYPE_ARGUMENTS = PLUGIN_ID + ".compiler.problem.redundantSpecificationOfTypeArguments";
+	</pre>
+</li>
+<li>Added a new API in ClassInstanceCreation to tell whether the resolved type is inferred from the assignment context:
+<br>(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350897">350897</a> for details):
+<pre>
+	/**
+	 * Returns <code>true</code> if the resolved class type has been inferred
+	 * from the assignment context (JLS4 15.12.2.8), <code>false</code> otherwise.
+	 *
+	 * This information is available only when bindings are requested when the AST is being built.
+	 *
+	 * @return <code>true</code> if the resolved class type has been inferred
+	 * 	from the assignment context (JLS3 15.12.2.8), <code>false</code> otherwise
+	 * @since 3.7
+	 */
+	public boolean isResolvedTypeInferredFromExpectedType();
+</pre>
+</li>
+</ul>
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340747">340747</a>
+[1.7][compiler] compiler option to warn when diamond can be used, but type args are used instead.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350895">350895</a>
+[1.7][formatter] New option to wrap before/after '|' in multi-catch
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350652">350652</a>
+[1.7][assist] Completion issues with multicatch (FUP of 343637)
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=347503">347503</a>
+[DOM] ASTParser.setEnvironment() ignores includeRunningVMBootclasspath parameter
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350897">350897</a>
+[1.7][api] ClassInstanceCreation#isResolvedTypeInferredFromExpectedType()
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351170">351170</a>
+[1.7] ASTRewrite issues in Try with resources
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348493">348493</a>
+[1.7] Improve error msg for Diamond operator in 1.5 mode
+
+<a name="v_B66"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7 - July 5, 2011
+<br>Project org.eclipse.jdt.core v_B66
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B66">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350885">350885</a>
+[Search] The pull up refactoring throws an NPE when pulling up a member that already exists in the superclass
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350611">350611</a>
+[1.7] Inconsistent error msg and error location for illegal diamond
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350579">350579</a>
+[1.7][compiler] VerifyError running example from bug 338402 comment 5
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350767">350767</a>
+[1.7][assist] CCE while invoking assist on a multi-catch block
+
+<a name="v_B65"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7 - June 30, 2011
+<br>Project org.eclipse.jdt.core v_B65
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B65">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349312">349312</a>
+[1.7][compiler] improved problem messages
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350003">350003</a>
+[1.7] [compiler] AnnotationPolymorphicSignature tag is not being set to invokeExact while compiling MethodHandle source file
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350496">350496</a>
+[1.7] @PolymorphicSignature IMethods are missing the annotation
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349314">349314</a>
+[1.7][formatter] Line wrapping for multi-catch arguments
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350039">350039</a>
+[1.7] ASTParser#createASTs(..) doesn't resolve IMethodBinding for @PolymorphicSignature method reference
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349396">349396</a>
+[1.7][formatter] Line wrapping and indentation options for try with resources
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350361">350361</a>
+[1.7] Unhandled exception type Exception
+
+<a name="v_B64"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7 - June 23, 2011
+<br>Project org.eclipse.jdt.core v_B64
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B64">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349488">349488</a>
+[1.7] IMethodBinding#getMethodDeclaration() should return the declaration of @PolymorphicSignature methods
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349487">349487</a>
+[1.7] IMethodBinding#getJavaElement() returns inexistent element for @PolymorphicSignature methods
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349862">349862</a>
+[1.7] NPE when trying to use UnionType as TryStatement resource
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349864">349864</a>
+[1.7][compiler] Error message considers AutoCloseable as class
+
+<a name="v_B63"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7 - June 17, 2011
+<br>Project org.eclipse.jdt.core v_B63
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B63">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348956">348956</a>
+[1.7] ITypeBinding#isAssignmentCompatible(ITypeBinding) returns different result
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349312">349312</a>
+[1.7][compiler] improved problem messages
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349008">349008</a>
+[1.7] Ugly formatting for try with resources
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349072">349072</a>
+[1.7] &quot;Cannot infer elided type(s)&quot; sounds too elite
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348705">348705</a>
+[1.7][compiler] Improve error message for unhandled IOException generated due to compiler-generated close()
+
+<a name="v_B62"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7 - June 7, 2011
+<br>Project org.eclipse.jdt.core v_B62
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B62">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348050">348050</a>
+[1.7] Error in JDT Core during AST creation
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348406">348406</a>
+[1.7] Incorrect error msg on try with resources in 1.5 mode 
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348492">348492</a>
+[1.7] Improve error msg on strings in switch in 1.5 mode
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348491">348491</a>
+[1.7] Rename IProblem.IllegalBinaryLiteral to BinaryLiteralNotBelow17 and IProblem.IllegalUsageOfUnderscore to UnderscoreInLiteralsNotBelow17
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348369">348369</a>
+[1.7] Missing error &quot;No exception of type Exception[] can be thrown&quot;
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348379">348379</a>
+[1.7][compiler] Null pointer access warning for strings in switch
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=346415">346415</a>
+[1.7][assist] No proposal inside catch statement from 3rd catch block onwards
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=346454">346454</a>
+[1.7][content assist]Getting NegativeArraySizeException while trying content assist after diamond
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=347600">347600</a>
+[1.7][compiler] Suspect bounds check failure after inference.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=347746">347746</a>
+[1.7][compiler] Bounds check failure during method inference
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=283353">283353</a>
+[1.5][compiler] Eclipse compiler shows error on javac-valid construct: Bound mismatch
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=347145">347145</a>
+[1.7][compiler] Bounds check issue with raw types in method inference
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=347426">347426</a>
+[1.7][compiler] ecj behavior differs from javac
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=344522">344522</a>
+[1.7] Incorrect source range for ParameterizedType in case of Diamond
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=341795">341795</a>
+[1.7][compiler] Cannot assign a generic method with multiple bounds return value to any variable
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=242159">242159</a>
+[1.7][compiler] type inference with unbounded wildcard in result type
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=343693">343693</a>
+[1.7] Adjust subclasses of AllocationExpression for &lt;&gt; support
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=343637">343637</a>
+[1.7] Already used exception offered again in a Mulicatch block
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345968">345968</a>
+[1.7][compiler] NPE while using diamond for inner class allocation
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=334313">334313</a>
+[1.5][compiler] Bug in the way eclipse handles overriding of generic abstract method by a non-abstract method
+
 <a name="v_B61"></a>
 <hr><h1>
 Eclipse Platform Build Notes<br>
 Java development tools core</h1>
-Eclipse SDK 3.7 - May 25, 2011 - 3.7.0
+Eclipse SDK 3.7 - June 7, 2011
 <br>Project org.eclipse.jdt.core v_B61
 (<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B61">cvs</a>).
 <h2>What's new in this drop</h2>
@@ -58,7 +454,7 @@ Eclipse SDK 3.7 - May 25, 2011 - 3.7.0
 <hr><h1>
 Eclipse Platform Build Notes<br>
 Java development tools core</h1>
-Eclipse SDK 3.7RC2 - May 19, 2011 - 3.7.0 RC2
+Eclipse SDK 3.7RC2 - May 19, 2011
 <br>Project org.eclipse.jdt.core v_B60
 (<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B60">cvs</a>).
 <h2>What's new in this drop</h2>
@@ -68,6 +464,18 @@ Eclipse SDK 3.7RC2 - May 19, 2011 - 3.7.0 RC2
 Import of User Library with invalid path hoses User Library Dialog -- can not fix
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340181">340181</a>
 Formatter from the command line breaks
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=346029">346029</a>
+[1.7][compiler] Eclipse compiles code rejected by JDK7
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345628">345628</a>
+[1.7] Rename disjunctive type to union type
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345559">345559</a>
+[1.7][compiler] Type inference for generic allocation can be avoided for invalid constructor
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=342819">342819</a>
+Code rejected by javac with name clash error compiles under eclipse.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=334306">334306</a>
+[1.7][compiler] name clash reported in javac 1.7 and not in javac 1.6
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345579">345579</a>
+[1.7][compiler] Weird error message in rethrow site
 
 <a name="v_B59"></a>
 <hr><h1>
@@ -81,6 +489,8 @@ Eclipse SDK 3.7RC1 - May 12, 2011 - 3.7.0 RC1
 <h3>Problem Reports Fixed</h3>
 <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345569">345569</a>
 FUP of bug 345334: CodeSnippetTest has lot of failures
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345522">345522</a>
+[1.7][compiler] Compilers fails to compute precisely rethrown types
 
 <a name="v_B58"></a>
 <hr><h1>
@@ -94,6 +504,14 @@ Eclipse SDK 3.7RC1 - May 11, 2011
 <h3>Problem Reports Fixed</h3>
 <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345334">345334</a>
 CodeSnippet's run method is missing @Override annotation
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=344824">344824</a>
+[1.7][compiler] Incorrect error range for unreachable catch block error in multi-catch
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340486">340486</a>
+[1.7][compiler] Missing error in multi catch scenario
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345359">345359</a>
+[1.7][compiler] AIOOB on diamond construct with argument error
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345239">345239</a>
+[1.7][compiler] Compiler should issue better diagnostics for use of &lt;&gt; with anonymous classes
 
 <a name="v_B57"></a>
 <hr><h1>
@@ -109,6 +527,8 @@ Eclipse SDK 3.7RC1 - May 10, 2011
 &quot;Content Assist&quot; does not complete normally on certain types
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=324987">324987</a>
 [formatter] API compatibility problem with Annotation Newline options
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=344655">344655</a>
+[1.7][compiler] Prohibit use of &lt;&gt; with explicit type arguments to generic constructor
 
 <a name="v_B56"></a>
 <hr><h1>
@@ -123,6 +543,8 @@ Eclipse SDK 3.7RC1 - May 6, 2011
 </ul>
 
 <h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=328575">328575</a>
+Inheritance of annotation fails with generic classes
 
 <a name="v_B55"></a>
 <hr><h1>
@@ -163,6 +585,7 @@ Eclipse SDK 3.7M7 - April 27, 2011 - 3.7.0 M7
 <ul>
 <li>Reverting fix for bug 292087: anonymous class in array member initializer confuses content assist</li>
 </ul>
+
 <h3>Problem Reports Fixed</h3>
 
 <a name="v_B52"></a>
@@ -174,9 +597,11 @@ Eclipse SDK 3.7M7 - April 27, 2011
 (<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B52">cvs</a>).
 <h2>What's new in this drop</h2>
 <ul>
-<li>Only copyright updates have been released.</li>
+<li>Update copyrights</li>
 </ul>
 <h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=343785">343785</a>
+[1.7] Incorrect line numbers in stack trace with try with resources
 
 <a name="v_B51"></a>
 <hr><h1>
@@ -192,6 +617,10 @@ Eclipse SDK 3.7M7 - April 25, 2011
 Document assumptions about DefaultBindingResolver.newAstToOldAst
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=343713">343713</a>
 [compiler] bogus line number in constructor of inner class in 1.5 compliance
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=343687">343687</a>
+[1.7] IAE in NumberLiteral#setToken(String) for binary tokens and tokens with underscore
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=339478">339478</a>
+[1.7][compiler] support for diamond case
 
 <a name="v_B50"></a>
 <hr><h1>
@@ -205,6 +634,12 @@ Eclipse SDK 3.7M7 - April 21, 2011
 <h3>Problem Reports Fixed</h3>
 <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=343607">343607</a>
 [APT] Improve output for javax.annotation.processing.Messager problems
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=343476">343476</a>
+[1.7][assist] propose String variables and fields inside catch expression
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=292087">292087</a>
+anonymous class in array member initializer confuses content assist
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=343475">343475</a>
+[1.7] Compiler warning for invalid type inside switch needs to be improved
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=343342">343342</a>
 [assist] Non constant variables, strings and methods are proposed inside case statements
 
@@ -237,8 +672,6 @@ Eclipse SDK 3.7M7 - April 19, 2011
 <h3>Problem Reports Fixed</h3>
 <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=337415">337415</a>
 External folders project is not created
-<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=342936">342936</a>
-NPEs and inconsistencies when running jdt.compiler.tool.tests against Java 7
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=342455">342455</a>
 AST swallows stars ('*') at end of {@code} and {@literal} Javadoc fragments
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=342757">342757</a>
@@ -252,7 +685,7 @@ ClassCastException: org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding c
 <hr><h1>
 Eclipse Platform Build Notes<br>
 Java development tools core</h1>
-Eclipse SDK 3.7M7 - April 12, 2011
+Eclipse SDK 3.7M7 - April 13, 2011
 <br>Project org.eclipse.jdt.core v_B47
 (<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B47">cvs</a>).
 <h2>What's new in this drop</h2>
@@ -260,6 +693,10 @@ Eclipse SDK 3.7M7 - April 12, 2011
 <h3>Problem Reports Fixed</h3>
 <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=342300">342300</a>
 [null]Spurious &quot;null pointer access&quot; warning on unboxing
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=342416">342416</a>
+[1.7] Signature#createIntersectionTypeSignature(..) should take array of signatures
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340059">340059</a>
+[1.7] IAE when dealing with Signature of disjunctive type
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=341759">341759</a>
 NPE in ITypeBinding#getName() for intersection type
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=341499">341499</a>
@@ -271,7 +708,7 @@ ILocalVariable#isParameter() returns true for exception of catch clause
 <hr><h1>
 Eclipse Platform Build Notes<br>
 Java development tools core</h1>
-Eclipse SDK 3.7M7 - April 5, 2011
+Eclipse SDK 3.7M7 - April 6, 2011
 <br>Project org.eclipse.jdt.core v_B46
 (<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B46">cvs</a>).
 <h2>What's new in this drop</h2>
@@ -286,14 +723,26 @@ Eclipse doesn't show a &quot;never read locally&quot; warning if a private field
 <hr><h1>
 Eclipse Platform Build Notes<br>
 Java development tools core</h1>
-Eclipse SDK 3.7M7 - March 29, 2011
+Eclipse SDK 3.7M7 - April 6, 2011
 <br>Project org.eclipse.jdt.core v_B45
 (<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B45">cvs</a>).
 <h2>What's new in this drop</h2>
 
 <h3>Problem Reports Fixed</h3>
-<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=200827">200827</a>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=338789">338789</a>
+[1.7][assist] No proposal inside a multi catch statement after '|'
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=341333">341333</a>
+[1.7][compiler] DisjunctiveTypeReference#resolveType(..) does not set the value for DisjunctiveTypeReference$resolvedType
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340634">340634</a>
+[1.7][compiler][multicatch] Compiler accepts type variables as catch parameter type
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=200827">200827</a>
 [spec] IElementChangedListener should mention where to register
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340626">340626</a>
+[1.7][compiler] Inconsistent source pinpointing in multi-catch blocks
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340513">340513</a>
+[1.7][compiler] Unicode 6.0 characters work at compiler compliance level 1.5 and 1.6
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340445">340445</a>
+[1.7] ASTRewriteAnalyzer and ASTRewriteFlattener need updates
 
 <a name="v_B44"></a>
 <hr><h1>
@@ -307,14 +756,18 @@ Eclipse SDK 3.7M7 - March 22, 2011
 <h3>Problem Reports Fixed</h3>
 <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=339447">339447</a>
 synchronized access modifier retained on clone() bridge
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340372">340372</a>
+[1.7] NaiveASTFlattener needs to support the new AST nodes
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340365">340365</a>
+[1.7] Problems in new APIs (TryStatementWithResources, DisjunctiveType)
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340375">340375</a>
+[1.7] Merge TryStatementWithResources into TryStatement
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=339891">339891</a>
 NPE when searching for method (with '*' wildcard character)
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340022">340022</a>
+[1.7][compiler] Support for precise rethrow
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340029">340029</a>
 [1.5][compiler] Enum constructor that throws Exception reports a confusing error message
-<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=338011">338011</a>
-COMPILER_PB_UNAVOIDABLE_GENERIC_TYPE_PROBLEMS wrongly suppresses constructor parameter type
-<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=337962">337962</a>
-COMPILER_PB_UNAVOIDABLE_GENERIC_TYPE_PROBLEMS misses reference to field from supertype
 
 <a name="v_B43"></a>
 <hr><h1>
@@ -328,12 +781,22 @@ Eclipse SDK 3.7M7 - March 15, 2011
 <h3>Problem Reports Fixed</h3>
 <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=339337">339337</a>
 isLocal() in IType returns true for anonymous types
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=339837">339837</a>
+[1.7][compiler] Multicatch syntax not rejected at 1.6-
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=337962">337962</a>
+COMPILER_PB_UNAVOIDABLE_GENERIC_TYPE_PROBLEMS misses reference to field from supertype
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=338011">338011</a>
+COMPILER_PB_UNAVOIDABLE_GENERIC_TYPE_PROBLEMS wrongly suppresses constructor parameter type
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=337751">337751</a>
 COMPILER_PB_UNAVOIDABLE_GENERIC_TYPE_PROBLEMS misses references in conditional expression
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=339870">339870</a>
 [1.7] Bad list of subclasses in Statement AST node
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=339913">339913</a>
 [compiler] Misleading error message for annotations inside a method body
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=339864">339864</a>
+[1.7] Add recovery in ASTConverter for all new constructs in JLS3 mode
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=338402">338402</a>
+[1.7][compiler][enh] Open issues in try with resources implementation
 
 <a name="v_B42"></a>
 <hr><h1>
@@ -415,6 +878,10 @@ Eclipse SDK 3.7M6 - March 1, 2011
 [DOM] code that would definitely cause NPE if executed
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=241598">241598</a>
 [API] Constant needed for .classpath
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=337795">337795</a>
+[1.7][compiler] Missing unchecked warning at varargs method/ctor declaration site
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=337802">337802</a>
+[1.7][compiler] Usage of 0x0ffffffff is being reported as out of range.
 
 <a name="v_B38"></a>
 <hr><h1>
@@ -443,11 +910,18 @@ ILocalVariable[] getParameters() throws JavaModelException;
 </pre>
 </li>
 </ul>
+
 <h3>Problem Reports Fixed</h3>
-<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=334783">334783</a>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=337799">337799</a>
+[1.7][compiler][varargs] Eclipse fails to report error on incorrect SafeVarargs usage
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=337738">337738</a>
+[1.7][content assist]Test CompletionParserTest#testEA_1 fails
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=334783">334783</a>
 [API] Add new API to ease the retrieval of the parameter annotations for an IMethod
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=336046">336046</a>
 Source attachment not recovered when importing Projects
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=336782">336782</a>
+[1.7][recovery]Extra error tokens with invalid unary operator
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=313870">313870</a>
 Wrong warnings on Java.Compiler.Errors/Warnings &quot;Redundant null check&quot;
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=337275">337275</a>
@@ -489,7 +963,7 @@ ASTRewrite#replace(..) does not consider the TargetSourceRangeComputer
 <hr><h1>
 Eclipse Platform Build Notes<br>
 Java development tools core</h1>
-Eclipse SDK 3.7M6 - February 8, 2011
+Eclipse SDK 3.7M6 - February 11, 2011
 <br>Project org.eclipse.jdt.core v_B36
 (<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B36">cvs</a>).
 <h2>What's new in this drop</h2>
@@ -507,6 +981,8 @@ and the BREE defined for the project.</li>
 Bogus potential null pointer access warning (regression; works with 3.6)
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=334377">334377</a>
 [1.5][compiler] Invalid 'type mismatch' error in conditional expression (if-else construct behaves correct)
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=336322">336322</a>
+[1.7][search]CCE while searching for a type reference in multiple catch parameters
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=335780">335780</a>
 Compiler says a method can be potentially static but this method contains 'this'
 <br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=310747">310747</a>

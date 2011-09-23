@@ -125,7 +125,10 @@ public int nullStatus(FlowInfo flowInfo) {
 		TypeBinding originalExpressionType = this.expression.resolveType(scope);
 		if (originalLhsType == null || originalExpressionType == null)
 			return null;
-
+		LocalVariableBinding localVariableBinding = this.lhs.localVariableBinding();
+		if (localVariableBinding != null) {
+			localVariableBinding.tagBits &= ~TagBits.IsEffectivelyFinal;
+		}
 		// autoboxing support
 		LookupEnvironment env = scope.environment();
 		TypeBinding lhsType = originalLhsType, expressionType = originalExpressionType;

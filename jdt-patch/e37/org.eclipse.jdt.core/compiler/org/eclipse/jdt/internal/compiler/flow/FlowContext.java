@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -17,12 +17,16 @@ import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
 import org.eclipse.jdt.internal.compiler.ast.LabeledStatement;
 import org.eclipse.jdt.internal.compiler.ast.Reference;
+import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
 import org.eclipse.jdt.internal.compiler.ast.SubRoutineStatement;
+import org.eclipse.jdt.internal.compiler.ast.ThrowStatement;
 import org.eclipse.jdt.internal.compiler.ast.TryStatement;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.BranchLabel;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
+import org.eclipse.jdt.internal.compiler.lookup.CatchParameterBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
@@ -87,6 +91,14 @@ public BranchLabel breakLabel() {
 }
 
 public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location, FlowInfo flowInfo, BlockScope scope) {
+	checkExceptionHandlers(raisedException, location, flowInfo, scope, false);
+}
+/**
+ * @param isExceptionOnAutoClose This is for checking exception handlers for exceptions raised during the
+ * auto close of resources inside a try with resources statement. (Relevant for
+ * source levels 1.7 and above only)
+ */
+public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location, FlowInfo flowInfo, BlockScope scope, boolean isExceptionOnAutoClose) {
 	// LIGHT-VERSION OF THE EQUIVALENT WITH AN ARRAY OF EXCEPTIONS
 	// check that all the argument exception types are handled
 	// JDK Compatible implementation - when an exception type is thrown,
@@ -94,6 +106,16 @@ public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location
 	// until the point where it is safely handled (Smarter - see comment at the end)
 	FlowContext traversedContext = this;
 	ArrayList abruptlyExitedLoops = null;
+	if (scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_7 && location instanceof ThrowStatement) {
+		Expression throwExpression = ((ThrowStatement)location).exception;
+		LocalVariableBinding throwArgBinding = throwExpression.localVariableBinding();
+		if (throwExpression instanceof SingleNameReference // https://bugs.eclipse.org/bugs/show_bug.cgi?id=350361 
+				&& throwArgBinding instanceof CatchParameterBinding && throwArgBinding.isEffectivelyFinal()) {
+			CatchParameterBinding parameter = (CatchParameterBinding) throwArgBinding;
+			checkExceptionHandlers(parameter.getPreciseTypes(), location, flowInfo, scope);
+			return;
+		}
+	}
 	while (traversedContext != null) {
 		SubRoutineStatement sub;
 		if (((sub = traversedContext.subroutine()) != null) && sub.isSubRoutineEscaping()) {
@@ -129,6 +151,7 @@ public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location
 								caughtException,
 								flowInfo.unconditionalInits(),
 								raisedException,
+								raisedException, // precise exception that will be caught
 								location,
 								definitelyCaught);
 							// was it already definitely caught ?
@@ -139,6 +162,7 @@ public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location
 								caughtException,
 								flowInfo.unconditionalInits(),
 								raisedException,
+								caughtException,
 								location,
 								false);
 							// was not caught already per construction
@@ -183,7 +207,11 @@ public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location
 		traversedContext = traversedContext.parent;
 	}
 	// if reaches this point, then there are some remaining unhandled exception types.
-	scope.problemReporter().unhandledException(raisedException, location);
+	if (isExceptionOnAutoClose) {
+		scope.problemReporter().unhandledExceptionFromAutoClose(raisedException, location);
+	} else {
+		scope.problemReporter().unhandledException(raisedException, location);
+	}
 }
 
 public void checkExceptionHandlers(TypeBinding[] raisedExceptions, ASTNode location, FlowInfo flowInfo, BlockScope scope) {
@@ -246,6 +274,7 @@ public void checkExceptionHandlers(TypeBinding[] raisedExceptions, ASTNode locat
 										caughtException,
 										flowInfo.unconditionalInits(),
 										raisedException,
+										raisedException, // precise exception that will be caught
 										location,
 										locallyCaught[raisedIndex]);
 									// was already definitely caught ?
@@ -260,6 +289,7 @@ public void checkExceptionHandlers(TypeBinding[] raisedExceptions, ASTNode locat
 										caughtException,
 										flowInfo.unconditionalInits(),
 										raisedException,
+										caughtException, 
 										location,
 										false);
 									// was not caught already per construction

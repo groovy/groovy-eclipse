@@ -3,7 +3,7 @@ Main-Class: org.eclipse.jdt.internal.compiler.batch.Main
 Bundle-ManifestVersion: 2
 Bundle-Name: %pluginName
 Bundle-SymbolicName: org.eclipse.jdt.core; singleton:=true
-Bundle-Version: 3.7.0.qualifier
+Bundle-Version: 3.7.1.qualifier
 Bundle-Activator: org.eclipse.jdt.core.JavaCore
 Bundle-Vendor: %providerName
 Bundle-Localization: plugin

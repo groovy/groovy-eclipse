@@ -1868,11 +1868,11 @@ public void configure(String[] argv) {
 				}
 
 
-				// FIXASC groovy promote that suffix to a constant elsewhere - respect registered java like languages? (does that work for batch environment)
+				// GROOVY promote that suffix to a constant elsewhere - respect registered java like languages? (does that work for batch environment)
 				/* GROOVY change start: allow .groovy files through as source
-				// old code:
+				// old code:{
 				if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java)) {
-				// new code: */
+				}new code: */
 				if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java) 
 					|| currentArg.endsWith(".groovy")) {				 //$NON-NLS-1$
 				
@@ -2720,7 +2720,7 @@ public void configure(String[] argv) {
 	}
 
 	// GROOVY start
-	// FIXASC (m2) grails 1.1 batch builds need the extra phase
+	// grails 1.1 batch builds need the extra phase
 	//optionMap.put(CompilerOptions.OPTIONG_GroovyFlags,"1");
 	if (encounteredGroovySourceFile) {
 		this.options.put(
@@ -3331,7 +3331,7 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 			break;
 		case 'e' :
 			if (token.equals("enumSwitch") //$NON-NLS-1$
-					|| token.equals("incomplete-switch") /*backward compatible*/) { //$NON-NLS-1$
+					|| token.equals("incomplete-switch")) { //$NON-NLS-1$
 				setSeverity(CompilerOptions.OPTION_ReportIncompleteEnumSwitch, severity, isEnabling);
 				return;
 			} else if (token.equals("emptyBlock")) {//$NON-NLS-1$
@@ -3583,9 +3583,11 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 				setSeverity(CompilerOptions.OPTION_ReportUnusedDeclaredThrownException, severity, isEnabling);
 				setSeverity(CompilerOptions.OPTION_ReportUnusedLabel, severity, isEnabling);
 				setSeverity(CompilerOptions.OPTION_ReportUnusedTypeArgumentsForMethodInvocation, severity, isEnabling);
+				setSeverity(CompilerOptions.OPTION_ReportRedundantSpecificationOfTypeArguments, severity, isEnabling);
 				return;
 			} else if (token.equals("unusedTypeArgs")) { //$NON-NLS-1$
 				setSeverity(CompilerOptions.OPTION_ReportUnusedTypeArgumentsForMethodInvocation, severity, isEnabling);
+				setSeverity(CompilerOptions.OPTION_ReportRedundantSpecificationOfTypeArguments, severity, isEnabling);
 				return;
 			} else if (token.equals("unavoidableGenericProblems")) { //$NON-NLS-1$
 				this.options.put(

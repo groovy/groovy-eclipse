@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.core;
+package org.eclipse.jdt.internal.core; // GROOVY PATCHED
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -95,9 +95,9 @@ private Object[] computeNonJavaResources(ArrayList entryNames) {
 		// consider that a .java file is not a non-java resource (see bug 12246 Packages view shows .class and .java files when JAR has source)
 		// GROOVY start 
 		// we want to show uncompiled groovy scripts that are coming in from a jar file
-		/* old
+		/* old {
 		if (!Util.isJavaLikeFileName(resName)) {
-		 */// new
+		} new */
 		if ( (!Util.isJavaLikeFileName(resName) || 
 				(isInteresting && LanguageSupportFactory.isInterestingSourceFile(resName)))) {
 			// GROOVY end

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -77,7 +77,7 @@ protected StructuralPropertyDescriptor getChildPropertyDescriptor(ASTNode parent
 protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) throws JavaModelException {
 	if (this.createdNode == null) {
 		this.source = removeIndentAndNewLines(this.source, cu);
-		ASTParser parser = ASTParser.newParser(AST.JLS3);
+		ASTParser parser = ASTParser.newParser(AST.JLS4);
 		parser.setSource(this.source.toCharArray());
 		parser.setProject(getCompilationUnit().getJavaProject());
 		parser.setKind(ASTParser.K_CLASS_BODY_DECLARATIONS);
@@ -164,7 +164,7 @@ protected String generateSyntaxIncorrectAST() {
 	buff.append(lineSeparator + " public class A {" + lineSeparator); //$NON-NLS-1$
 	buff.append(this.source);
 	buff.append(lineSeparator).append('}');
-	ASTParser parser = ASTParser.newParser(AST.JLS3);
+	ASTParser parser = ASTParser.newParser(AST.JLS4);
 	parser.setSource(buff.toString().toCharArray());
 	CompilationUnit compilationUnit = (CompilationUnit) parser.createAST(null);
 	TypeDeclaration typeDeclaration = (TypeDeclaration) compilationUnit.types().iterator().next();

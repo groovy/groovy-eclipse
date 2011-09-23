@@ -10,6 +10,7 @@
  *     Stephan Herrmann - contribution for bug 337868 - [compiler][model] incomplete support for package-info.java when using SearchableEnvironment
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
+// GROOVY PATCHED
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,6 +60,9 @@ public class LookupEnvironment implements ProblemReasons, TypeConstants {
 	private SimpleLookupTable uniqueRawTypeBindings;
 	private SimpleLookupTable uniqueWildcardBindings;
 	private SimpleLookupTable uniqueParameterizedGenericMethodBindings;
+	
+	// key is a string with the method selector value is an array of method bindings
+	private SimpleLookupTable uniquePolymorphicMethodBindings;
 	private SimpleLookupTable uniqueGetClassMethodBinding; // https://bugs.eclipse.org/bugs/show_bug.cgi?id=300734
 
 	public CompilationUnitDeclaration unitBeingCompleted = null; // only set while completing units
@@ -94,6 +98,7 @@ public LookupEnvironment(ITypeRequestor typeRequestor, CompilerOptions globalOpt
 	this.uniqueRawTypeBindings = new SimpleLookupTable(3);
 	this.uniqueWildcardBindings = new SimpleLookupTable(3);
 	this.uniqueParameterizedGenericMethodBindings = new SimpleLookupTable(3);
+	this.uniquePolymorphicMethodBindings = new SimpleLookupTable(3);
 	this.missingTypes = null;
 	this.accessRestrictions = new HashMap(3);
 	this.classFilePool = ClassFilePool.newInstance();
@@ -159,10 +164,10 @@ ReferenceBinding askForType(PackageBinding packageBinding, char[] name) {
 * NOTE: This method can be called multiple times as additional source files are needed
 */
 public void buildTypeBindings(CompilationUnitDeclaration unit, AccessRestriction accessRestriction) {
-	/* GROOVY start
-	// original
+	// GROOVY start
+	/* old {
 	CompilationUnitScope scope = new CompilationUnitScope(unit, this);
-	// new */
+	} new */
 	CompilationUnitScope scope = unit.buildCompilationUnitScope(this);
 	// GROOVY end
 	scope.buildTypeBindings(accessRestriction);
@@ -831,7 +836,90 @@ public ParameterizedGenericMethodBinding createParameterizedGenericMethod(Method
 	cachedInfo[index] = parameterizedGenericMethod;
 	return parameterizedGenericMethod;
 }
-
+public PolymorphicMethodBinding createPolymorphicMethod(MethodBinding originalPolymorphicMethod, TypeBinding[] parameters) {
+	// cached info is array of already created polymorphic methods for this type
+	String key = new String(originalPolymorphicMethod.selector);
+	PolymorphicMethodBinding[] cachedInfo = (PolymorphicMethodBinding[]) this.uniquePolymorphicMethodBindings.get(key);
+	int parametersLength = parameters == null ? 0: parameters.length;
+	TypeBinding[] parametersTypeBinding = new TypeBinding[parametersLength]; 
+	for (int i = 0; i < parametersLength; i++) {
+		TypeBinding parameterTypeBinding = parameters[i];
+		if (parameterTypeBinding.id == TypeIds.T_null) {
+			parametersTypeBinding[i] = getType(JAVA_LANG_VOID);
+		} else {
+			parametersTypeBinding[i] = parameterTypeBinding.erasure();
+		}
+	}
+	boolean needToGrow = false;
+	int index = 0;
+	if (cachedInfo != null) {
+		nextCachedMethod :
+			// iterate existing polymorphic method for reusing one with same type arguments if any
+			for (int max = cachedInfo.length; index < max; index++) {
+				PolymorphicMethodBinding cachedMethod = cachedInfo[index];
+				if (cachedMethod == null) {
+					break nextCachedMethod;
+				}
+				if (cachedMethod.matches(parametersTypeBinding, originalPolymorphicMethod.returnType)) {
+					return cachedMethod;
+				}
+		}
+		needToGrow = true;
+	} else {
+		cachedInfo = new PolymorphicMethodBinding[5];
+		this.uniquePolymorphicMethodBindings.put(key, cachedInfo);
+	}
+	// grow cache ?
+	int length = cachedInfo.length;
+	if (needToGrow && index == length) {
+		System.arraycopy(cachedInfo, 0, cachedInfo = new PolymorphicMethodBinding[length*2], 0, length);
+		this.uniquePolymorphicMethodBindings.put(key, cachedInfo);
+	}
+	// add new binding
+	PolymorphicMethodBinding polymorphicMethod = new PolymorphicMethodBinding(
+			originalPolymorphicMethod,
+			parametersTypeBinding);
+	cachedInfo[index] = polymorphicMethod;
+	return polymorphicMethod;
+}
+public MethodBinding updatePolymorphicMethodReturnType(PolymorphicMethodBinding binding, TypeBinding typeBinding) {
+	// update the return type to be the given return type, but reuse existing binding if one can match
+	String key = new String(binding.selector);
+	PolymorphicMethodBinding[] cachedInfo = (PolymorphicMethodBinding[]) this.uniquePolymorphicMethodBindings.get(key);
+	boolean needToGrow = false;
+	int index = 0;
+	TypeBinding[] parameters = binding.parameters;
+	if (cachedInfo != null) {
+		nextCachedMethod :
+			// iterate existing polymorphic method for reusing one with same type arguments if any
+			for (int max = cachedInfo.length; index < max; index++) {
+				PolymorphicMethodBinding cachedMethod = cachedInfo[index];
+				if (cachedMethod == null) {
+					break nextCachedMethod;
+				}
+				if (cachedMethod.matches(parameters, typeBinding)) {
+					return cachedMethod;
+				}
+		}
+		needToGrow = true;
+	} else {
+		cachedInfo = new PolymorphicMethodBinding[5];
+		this.uniquePolymorphicMethodBindings.put(key, cachedInfo);
+	}
+	// grow cache ?
+	int length = cachedInfo.length;
+	if (needToGrow && index == length) {
+		System.arraycopy(cachedInfo, 0, cachedInfo = new PolymorphicMethodBinding[length*2], 0, length);
+		this.uniquePolymorphicMethodBindings.put(key, cachedInfo);
+	}
+	// add new binding
+	PolymorphicMethodBinding polymorphicMethod = new PolymorphicMethodBinding(
+			binding.original(),
+			typeBinding,
+			parameters);
+	cachedInfo[index] = polymorphicMethod;
+	return polymorphicMethod;
+}
 public ParameterizedMethodBinding createGetClassMethod(TypeBinding receiverType, MethodBinding originalMethod, Scope scope) {
 	// see if we have already cached this method for the given receiver type.
 	ParameterizedMethodBinding retVal = null;
@@ -1364,6 +1452,7 @@ public void reset() {
 	this.uniqueRawTypeBindings = new SimpleLookupTable(3);
 	this.uniqueWildcardBindings = new SimpleLookupTable(3);
 	this.uniqueParameterizedGenericMethodBindings = new SimpleLookupTable(3);
+	this.uniquePolymorphicMethodBindings = new SimpleLookupTable(3);
 	this.uniqueGetClassMethodBinding = null;
 	this.missingTypes = null;
 	this.typesBeingConnected = new HashSet();

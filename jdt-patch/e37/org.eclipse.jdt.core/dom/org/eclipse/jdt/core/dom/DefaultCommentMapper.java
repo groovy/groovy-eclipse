@@ -636,13 +636,13 @@ class DefaultCommentMapper {
 			}
 		}
 
+		public boolean visit (Modifier modifier) {
+			// we don't want to map comment to the modifier
+			return false;
+		}
 		public boolean visit ( CompilationUnit node) {
 			// do nothing special, just go down in sub-levels
 			return true;
-		}
-		
-		public boolean visit ( Modifier node) {
-			return false;
 		}
 	}
 }

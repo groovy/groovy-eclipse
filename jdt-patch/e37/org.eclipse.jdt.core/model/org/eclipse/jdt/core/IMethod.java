@@ -117,8 +117,12 @@ ILocalVariable[] getParameters() throws JavaModelException;
 
 /**
  * Returns the binding key for this method only if the given method is {@link #isResolved() resolved}.
- * A binding key is a key that uniquely identifies this method. It allows access
- * to generic info for parameterized methods.
+ * A binding key is a key that uniquely identifies this method. It allows access to:
+ * <ul>
+ * <li>generic info for parameterized methods</li>
+ * <li>the actual return type for references to {@link Object#getClass() Object.getClass()}</li>
+ * <li>the actual parameter types and return type for references to signature polymorphic methods from class MethodHandle</li>
+ * </ul>
  *
  * <p>If the given method is not resolved, the returned key is simply the java element's key.
  * </p>

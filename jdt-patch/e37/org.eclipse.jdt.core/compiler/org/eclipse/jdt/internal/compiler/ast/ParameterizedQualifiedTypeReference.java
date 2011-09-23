@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contribution for Bug 342671 - ClassCastException: org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding cannot be cast to org.eclipse.jdt.internal.compiler.lookup.ArrayBinding
@@ -210,6 +210,7 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 			    	((ClassScope) scope).superTypeReference = null;
 			    }
 				int argLength = args.length;
+				boolean isDiamond = argLength == 0 && (i == (max -1)) && ((this.bits & ASTNode.IsDiamond) != 0);
 				TypeBinding[] argTypes = new TypeBinding[argLength];
 				boolean argHasError = false;
 				ReferenceBinding currentOriginal = (ReferenceBinding)currentType.original();
@@ -243,9 +244,11 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 						? scope.environment().createParameterizedType(currentOriginal, null, qualifyingType)
 						: currentType;
 					return this.resolvedType;
-				} else if (argLength != typeVariables.length) { // check arity
-					scope.problemReporter().incorrectArityForParameterizedType(this, currentType, argTypes, i);
-					return null;
+				} else if (argLength != typeVariables.length) {
+					if (!isDiamond) { // check arity
+						scope.problemReporter().incorrectArityForParameterizedType(this, currentType, argTypes, i);
+						return null;
+					}
 				}
 				// check parameterizing non-static member type of raw type
 				if (typeIsConsistent && !currentType.isStatic()) {
@@ -257,11 +260,13 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 					}
 				}
 				ParameterizedTypeBinding parameterizedType = scope.environment().createParameterizedType(currentOriginal, argTypes, qualifyingType);
-				// check argument type compatibility
-				if (checkBounds) // otherwise will do it in Scope.connectTypeVariables() or generic method resolution
-					parameterizedType.boundCheck(scope, args);
-				else
-					scope.deferBoundCheck(this);
+				// check argument type compatibility for non <> cases - <> case needs no bounds check, we will scream foul if needed during inference.
+				if (!isDiamond) {
+					if (checkBounds) // otherwise will do it in Scope.connectTypeVariables() or generic method resolution
+						parameterizedType.boundCheck(scope, args);
+					else
+						scope.deferBoundCheck(this);
+				}
 				qualifyingType = parameterizedType;
 		    } else {
 				ReferenceBinding currentOriginal = (ReferenceBinding)currentType.original();
@@ -301,12 +306,15 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 			TypeReference[] typeArgument = this.typeArguments[i];
 			if (typeArgument != null) {
 				output.append('<');
-				int max = typeArgument.length - 1;
-				for (int j = 0; j < max; j++) {
-					typeArgument[j].print(0, output);
-					output.append(", ");//$NON-NLS-1$
+				int typeArgumentLength = typeArgument.length;
+				if (typeArgumentLength > 0) {
+					int max = typeArgumentLength - 1;
+					for (int j = 0; j < max; j++) {
+						typeArgument[j].print(0, output);
+						output.append(", ");//$NON-NLS-1$
+					}
+					typeArgument[max].print(0, output);
 				}
-				typeArgument[max].print(0, output);
 				output.append('>');
 			}
 			output.append('.');
@@ -315,12 +323,15 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 		TypeReference[] typeArgument = this.typeArguments[length - 1];
 		if (typeArgument != null) {
 			output.append('<');
-			int max = typeArgument.length - 1;
-			for (int j = 0; j < max; j++) {
-				typeArgument[j].print(0, output);
-				output.append(", ");//$NON-NLS-1$
+			int typeArgumentLength = typeArgument.length;
+			if (typeArgumentLength > 0) {
+				int max = typeArgumentLength - 1;
+				for (int j = 0; j < max; j++) {
+					typeArgument[j].print(0, output);
+					output.append(", ");//$NON-NLS-1$
+				}
+				typeArgument[max].print(0, output);
 			}
-			typeArgument[max].print(0, output);
 			output.append('>');
 		}
 		if ((this.bits & IsVarArgs) != 0) {

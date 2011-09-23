@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -68,7 +68,7 @@ public abstract class Type extends ASTNode {
 
 	/**
 	 * Returns whether this type is a primitive type
-	 * (<code>PrimitiveType</code>).
+	 * ({@link PrimitiveType}).
 	 *
 	 * @return <code>true</code> if this is a primitive type, and
 	 *    <code>false</code> otherwise
@@ -79,7 +79,7 @@ public abstract class Type extends ASTNode {
 
 	/**
 	 * Returns whether this type is a simple type
-	 * (<code>SimpleType</code>).
+	 * ({@link SimpleType}).
 	 *
 	 * @return <code>true</code> if this is a simple type, and
 	 *    <code>false</code> otherwise
@@ -90,7 +90,7 @@ public abstract class Type extends ASTNode {
 
 	/**
 	 * Returns whether this type is an array type
-	 * (<code>ArrayType</code>).
+	 * ({@link ArrayType}).
 	 *
 	 * @return <code>true</code> if this is an array type, and
 	 *    <code>false</code> otherwise
@@ -101,7 +101,7 @@ public abstract class Type extends ASTNode {
 
 	/**
 	 * Returns whether this type is a parameterized type
-	 * (<code>ParameterizedType</code>).
+	 * ({@link ParameterizedType}).
 	 *
 	 * @return <code>true</code> if this is a parameterized type, and
 	 *    <code>false</code> otherwise
@@ -113,7 +113,7 @@ public abstract class Type extends ASTNode {
 
 	/**
 	 * Returns whether this type is a qualified type
-	 * (<code>QualifiedType</code>).
+	 * ({@link QualifiedType}).
 	 * <p>
 	 * Note that a type like "A.B" can be represented either of two ways:
 	 * <ol>
@@ -140,11 +140,23 @@ public abstract class Type extends ASTNode {
 	}
 
 	/**
+	 * Returns whether this type is a union type
+	 * ({@link UnionType}).
+	 *
+	 * @return <code>true</code> if this is a union type, and
+	 *    <code>false</code> otherwise
+	 * @since 3.7.1
+	 */
+	public final boolean isUnionType() {
+		return (this instanceof UnionType);
+	}
+
+	/**
 	 * Returns whether this type is a wildcard type
-	 * (<code>WildcardType</code>).
+	 * ({@link WildcardType}).
 	 * <p>
 	 * Note that a wildcard type is only meaningful as a
-	 * type argument of a <code>ParameterizedType</code> node.
+	 * type argument of a {@link ParameterizedType} node.
 	 * </p>
 	 *
 	 * @return <code>true</code> if this is a wildcard type, and

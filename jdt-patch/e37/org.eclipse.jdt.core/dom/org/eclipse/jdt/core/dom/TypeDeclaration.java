@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -212,7 +212,7 @@ public class TypeDeclaration extends AbstractTypeDeclaration {
 	private boolean isInterface = false;
 
 	/**
-	 * The type paramters (element type: {@link TypeParameter}).
+	 * The type parameters (element type: {@link TypeParameter}).
 	 * Null in JLS2. Added in JLS3; defaults to an empty list
 	 * (see constructor).
 	 * @since 3.1

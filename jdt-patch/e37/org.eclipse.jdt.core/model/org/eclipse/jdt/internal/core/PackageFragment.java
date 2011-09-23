@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.core;
+package org.eclipse.jdt.internal.core; // GROOVY PATCHED
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -86,9 +86,9 @@ protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, 
 					IJavaElement childElement;
 					if (kind == IPackageFragmentRoot.K_SOURCE && Util.isValidCompilationUnitName(child.getName(), sourceLevel, complianceLevel)) {
 					    // GROOVY start
-	                    /* old
+	                    /* old {
 						childElement = new CompilationUnit(this, child.getName(), DefaultWorkingCopyOwner.PRIMARY);
-	                    */// new
+	                    } new */
 					    childElement = LanguageSupportFactory.newCompilationUnit(this, child.getName(), DefaultWorkingCopyOwner.PRIMARY);
 	                    // GROOVY end
 						
@@ -151,9 +151,9 @@ public ICompilationUnit createCompilationUnit(String cuName, String contents, bo
 	CreateCompilationUnitOperation op= new CreateCompilationUnitOperation(this, cuName, contents, force);
 	op.runOperation(monitor);
     // GROOVY start
-    /* old
+    /* old {
 	return new CompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
-    */// new
+    } new */
     return LanguageSupportFactory.newCompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
     // GROOVY end
 }
@@ -226,9 +226,9 @@ public ICompilationUnit getCompilationUnit(String cuName) {
 		throw new IllegalArgumentException(Messages.convention_unit_notJavaName);
 	}
     // GROOVY start
-    // old
-    // return new CompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
-    // new
+    /* old {
+    return new CompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
+    } new */
 	return LanguageSupportFactory.newCompilationUnit(this, cuName, DefaultWorkingCopyOwner.PRIMARY);
     // GROOVY end
 }
@@ -290,9 +290,9 @@ public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento,
 			if (!memento.hasMoreTokens()) return this;
 			String cuName = memento.nextToken();
 		    // GROOVY start
-		    // old
-		    // JavaElement cu = new CompilationUnit(this, cuName, owner);
-		    // new
+		    /* old {
+		    JavaElement cu = new CompilationUnit(this, cuName, owner);
+		    } new */
 			JavaElement cu = LanguageSupportFactory.newCompilationUnit(this, cuName, owner);
 		    // GROOVY end
 			

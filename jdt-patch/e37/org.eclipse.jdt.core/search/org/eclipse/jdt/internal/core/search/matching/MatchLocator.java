@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.core.search.matching;
+package org.eclipse.jdt.internal.core.search.matching; // GROOVY PATCHED
 
 import java.io.IOException;
 import java.util.ArrayList;

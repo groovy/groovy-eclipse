@@ -207,7 +207,7 @@ void computeLocalVariablePositions(int ilocal, int initOffset, CodeStream codeSt
 				if (local.declaration != null && compilerOptions().preserveAllLocalVariables) {
 					generateCurrentLocalVar = true; // force it to be preserved in the generated code
 					if (local.useFlag == LocalVariableBinding.UNUSED)
-					local.useFlag = LocalVariableBinding.USED;
+						local.useFlag = LocalVariableBinding.USED;
 				}
 			}
 
@@ -476,10 +476,10 @@ public Binding getBinding(char[][] compoundName, int mask, InvocationSite invoca
 				break; // binding is now a field
 			}
 			problemFieldBinding = new ProblemFieldBinding(
-					((ProblemFieldBinding)binding).closestMatch,
-					((ProblemFieldBinding)binding).declaringClass,
-					CharOperation.concatWith(CharOperation.subarray(compoundName, 0, currentIndex), '.'),
-					binding.problemId());
+				((ProblemFieldBinding)binding).closestMatch,
+				((ProblemFieldBinding)binding).declaringClass,
+				CharOperation.concatWith(CharOperation.subarray(compoundName, 0, currentIndex), '.'),
+				binding.problemId()); 
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=317858 : If field is inaccessible,
 			// don't give up yet, continue to look for a visible member type 
 			if (binding.problemId() != ProblemReasons.NotVisible) {  
@@ -838,8 +838,10 @@ public int maxShiftedOffset() {
 	int max = -1;
 	if (this.shiftScopes != null){
 		for (int i = 0, length = this.shiftScopes.length; i < length; i++){
-			int subMaxOffset = this.shiftScopes[i].maxOffset;
-			if (subMaxOffset > max) max = subMaxOffset;
+			if (this.shiftScopes[i] != null) {
+				int subMaxOffset = this.shiftScopes[i].maxOffset;
+				if (subMaxOffset > max) max = subMaxOffset;
+			}
 		}
 	}
 	return max;

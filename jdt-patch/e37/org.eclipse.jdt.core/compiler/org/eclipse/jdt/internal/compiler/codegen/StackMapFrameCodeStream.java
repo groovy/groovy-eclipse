@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2010 IBM Corporation and others.
+ * Copyright (c) 2006, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,13 +19,16 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ClassFile;
+import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
+import org.eclipse.jdt.internal.compiler.problem.AbortMethod;
 
 public class StackMapFrameCodeStream extends CodeStream {
 	public static class ExceptionMarker implements Comparable {
@@ -345,6 +348,14 @@ public void generateClassLiteralAccessForType(TypeBinding accessedType, FieldBin
 		endLabel.place();
 		addStackMarker(fromPC, this.position);
 		this.stackDepth = savedStackDepth;
+	}
+}
+public void generateOuterAccess(Object[] mappingSequence, ASTNode invocationSite, Binding target, Scope scope) {
+	int currentPosition = this.position;
+	super.generateOuterAccess(mappingSequence, invocationSite, target, scope);
+	if (currentPosition == this.position) {
+		// no code has been generate during outer access => no enclosing instance is available
+		throw new AbortMethod(scope.referenceCompilationUnit().compilationResult, null);
 	}
 }
 public ExceptionMarker[] getExceptionMarkers() {

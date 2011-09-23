@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2010 IBM Corporation and others.
+ * Copyright (c) 2004, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -217,9 +217,13 @@ public class ASTParser {
 	 * declared on <code>AST</code>
 	 */
 	ASTParser(int level) {
-		if ((level != AST.JLS2_INTERNAL)
-			&& (level != AST.JLS3)) {
-			throw new IllegalArgumentException();
+		switch(level) {
+			case AST.JLS2_INTERNAL:
+			case AST.JLS3:
+			case AST.JLS4:
+				break;
+			default:
+				throw new IllegalArgumentException();
 		}
 		this.apiLevel = level;
 		initializeDefaults();
@@ -331,7 +335,9 @@ public class ASTParser {
 				throw new IllegalArgumentException(); 
 			}
 		}
-		this.bits |= CompilationUnitResolver.INCLUDE_RUNNING_VM_BOOTCLASSPATH;
+		if (includeRunningVMBootclasspath) {
+			this.bits |= CompilationUnitResolver.INCLUDE_RUNNING_VM_BOOTCLASSPATH;
+		}
 	}
 	/**
 	 * Sets the compiler options to be used when parsing.

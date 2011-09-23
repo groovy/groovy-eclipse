@@ -391,6 +391,81 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"----------\n");
     }
     
+    public void testJava7() {
+    	complianceLevel = ClassFileConstants.JDK1_7;
+    	this.runConformTest(new String[]{
+    			"A.java",
+    			"import java.util.*;\n"+
+    			"public class A {\n"+
+    			"public static void main(String[]argv) {\n"+
+    			"  List<String> ls = new ArrayList<>();"+
+    			"  int i = 1_000_000;\n"+
+    			"  int b = 0b110101;\n"+
+    			"  try {\n"+
+    			"    foo();\n"+
+    			"  } catch (java.io.IOException | IllegalStateException re) {\n"+
+    			"  }\n"+
+    			"}\n"+
+    			"  public static void foo() throws java.io.IOException {}\n"+
+    			"}",
+    			"B.groovy",
+    			"print 'a'\n"},"");
+    }
+    
+    public void testJava7_2() {
+    	// should fail if compliance level < 1.7
+    	// complianceLevel = ClassFileConstants.JDK1_7;
+    	this.runNegativeTest(new String[]{
+    			"A.java",
+    			"import java.util.*;\n"+
+    			"public class A {\n"+
+    			"public static void main(String[]argv) {\n"+
+    			"  List<String> ls = new ArrayList<>();"+
+    			"  int i = 1_000_000;\n"+
+    			"  int b = 0b110101;\n"+
+    			"}\n"+
+    			"  public static void foo() throws java.io.IOException {}\n"+
+    			"}",
+    			"B.groovy",
+    			"print 'a'\n"},
+    					"----------\n" + 
+    					"1. ERROR in A.java (at line 4)\n" + 
+    					"	List<String> ls = new ArrayList<>();  int i = 1_000_000;\n" + 
+    					"	                      ^^^^^^^^^\n" + 
+    					"\'<>\' operator is not allowed for source level below 1.7\n" + 
+    					"----------\n" + 
+    					"2. ERROR in A.java (at line 4)\n" + 
+    					"	List<String> ls = new ArrayList<>();  int i = 1_000_000;\n" + 
+    					"	                                              ^^^^^^^^^\n" + 
+    					"Underscores can only be used with source level 1.7 or greater\n" + 
+    					"----------\n");
+    	
+    }
+    public void testJava7_3() {
+    	// should fail if compliance level < 1.7
+    	// complianceLevel = ClassFileConstants.JDK1_7;
+    	this.runNegativeTest(new String[]{
+    			"A.java",
+    			"import java.util.*;\n"+
+    			"public class A {\n"+
+    			"public static void main(String[]argv) {\n"+
+    			"  try {\n"+
+    			"    foo();\n"+
+    			"  } catch (java.io.IOException | IllegalStateException re) {\n"+
+    			"  }\n"+
+    			"}\n"+
+    			"  public static void foo() throws java.io.IOException {}\n"+
+    			"}",
+    			"B.groovy",
+    			"print 'a'\n"},
+    					"----------\n" + 
+    					"1. ERROR in A.java (at line 6)\n" + 
+    					"	} catch (java.io.IOException | IllegalStateException re) {\n" + 
+    					"	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+    					"Multi-catch parameters are not allowed for source level below 1.7\n" + 
+    					"----------\n");
+    }
+    
     // temporary removal (19th May 2011) - I think the 'shield' interface we have is hopefully sufficient.  Only problem may be recompiled references
     // in types we don't patch (basically outside of the generated parser).  Lets see what the build machine makes of it.
 //    public void testTokens() {

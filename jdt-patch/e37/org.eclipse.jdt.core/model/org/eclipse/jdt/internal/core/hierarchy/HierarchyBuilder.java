@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.core.hierarchy;
+package org.eclipse.jdt.internal.core.hierarchy; // GROOVY PATCHED
 
 import java.util.HashMap;
 import java.util.Map;
@@ -89,9 +89,9 @@ public abstract class HierarchyBuilder {
 				new HierarchyResolver(
 					searchableEnvironment,
 					// GROOVY start
-					// old code
-//					project.getOptions(true),
-					// new code
+					/* old {
+					project.getOptions(true),
+					} new */
 					optionMap,
 					// GROOVY end
 					this,

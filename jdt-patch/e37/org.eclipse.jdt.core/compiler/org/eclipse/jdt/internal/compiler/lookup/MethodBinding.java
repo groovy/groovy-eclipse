@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -752,10 +752,12 @@ public final boolean isUsed() {
 
 /* Answer true if the receiver method has varargs
 */
-public final boolean isVarargs() {
+public boolean isVarargs() {
 	return (this.modifiers & ClassFileConstants.AccVarargs) != 0;
 }
-
+public boolean isPolymorphic() {
+	return false;
+}
 /* Answer true if the receiver's declaring type is deprecated (or any of its enclosing types)
 */
 public final boolean isViewedAsDeprecated() {
@@ -769,7 +771,7 @@ public final int kind() {
 */
 
 /**
- * Returns the original method (as opposed to parameterized instances)
+ * Returns the original method (as opposed to parameterized/polymorphic instances)
  */
 public MethodBinding original() {
 	return this;

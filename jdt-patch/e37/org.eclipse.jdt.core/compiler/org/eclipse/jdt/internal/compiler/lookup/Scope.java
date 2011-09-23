@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.compiler.lookup;
+package org.eclipse.jdt.internal.compiler.lookup; // GROOVY PATCHED
 
 import java.util.*;
 
@@ -21,6 +21,7 @@ import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 import org.eclipse.jdt.internal.compiler.util.ObjectVector;
+import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 
 public abstract class Scope {
@@ -309,7 +310,7 @@ public abstract class Scope {
 			}
 		}
 		if (removed == 0) return result;
-		if (length == removed) return null;
+		if (length == removed) return null; // how is this possible ???
 		TypeBinding[] trimmedResult = new TypeBinding[length - removed];
 		for (int i = 0, index = 0; i < length; i++) {
 			TypeBinding iType = result[i];
@@ -402,6 +403,24 @@ public abstract class Scope {
 			        TypeBinding[] originalOtherBounds = wildcard.otherBounds;
 			        TypeBinding[] substitutedOtherBounds = substitute(substitution, originalOtherBounds);
 			        if (substitutedBound != originalBound || originalOtherBounds != substitutedOtherBounds) {
+			        	if (originalOtherBounds != null) {
+			        		/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=347145: the constituent intersecting types have changed
+			        		   in the last round of substitution. Reevaluate the composite intersection type, as there is a possibility
+			        		   of the intersection collapsing into one of the constituents, the other being fully subsumed.
+			        		*/
+			    			TypeBinding [] bounds = new TypeBinding[1 + substitutedOtherBounds.length];
+			    			bounds[0] = substitutedBound;
+			    			System.arraycopy(substitutedOtherBounds, 0, bounds, 1, substitutedOtherBounds.length);
+			    			TypeBinding[] glb = Scope.greaterLowerBound(bounds); // re-evaluate
+			    			if (glb != null && glb != bounds) {
+			    				substitutedBound = glb[0];
+		    					if (glb.length == 1) {
+			    					substitutedOtherBounds = null;
+			    				} else {
+			    					System.arraycopy(glb, 1, substitutedOtherBounds = new TypeBinding[glb.length - 1], 0, glb.length - 1);
+			    				}
+			    			}
+			        	}
 		        		return wildcard.environment.createWildcard(wildcard.genericType, wildcard.rank, substitutedBound, substitutedOtherBounds, wildcard.boundKind);
 			        }
 		        }
@@ -552,8 +571,13 @@ public abstract class Scope {
 			}
 		}
 
-		if (parameterCompatibilityLevel(method, arguments) > NOT_COMPATIBLE)
+		if (parameterCompatibilityLevel(method, arguments) > NOT_COMPATIBLE) {
+			if ((method.tagBits & TagBits.AnnotationPolymorphicSignature) != 0) {
+				// generate polymorphic method
+				return this.environment().createPolymorphicMethod(method, arguments);
+			}
 			return method;
+		}
 		if (genericTypeArguments != null)
 			return new ProblemMethodBinding(method, method.selector, arguments, ProblemReasons.ParameterizedMethodTypeMismatch);
 		return null; // incompatible
@@ -1247,7 +1271,7 @@ public abstract class Scope {
 	}
 
 	// GROOVY start
-	// GROOVY (M3:ast_transform_methods) put thought into this approach
+	// put thought into this approach
 	public MethodBinding oneLastLook(ReferenceBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite) {
 		MethodBinding[] extraMethods = receiverType.getAnyExtraMethods(selector);
 		if (extraMethods!=null) {
@@ -2319,7 +2343,7 @@ public abstract class Scope {
 
 			methodBinding = findMethod(currentType, selector, argumentTypes, invocationSite);
 			// GROOVY start: give it one more chance as the ast transform may have introduced it
-			// FIXASC (M3) is this the right approach?  Requires ast transforms running before this is done
+			// is this the right approach?  Requires ast transforms running before this is done
 			if (methodBinding == null) {
 				methodBinding = oneLastLook(currentType, selector, argumentTypes, invocationSite);
 			}
@@ -2662,9 +2686,9 @@ public abstract class Scope {
 					ImportBinding importBinding = imports[i];
 					if (!importBinding.onDemand) {
 						// GROOVY start
-						// old code:
-						// if (CharOperation.equals(importBinding.compoundName[importBinding.compoundName.length - 1], name)) {
-						// new code:						
+						/* old {
+						if (CharOperation.equals(importBinding.compoundName[importBinding.compoundName.length - 1], name)) {
+						} new */						
 						if (CharOperation.equals(getSimpleName(importBinding), name)) {
 						// GROOVY end
 							Binding resolvedImport = unitScope.resolveSingleImport(importBinding, Binding.TYPE);
@@ -4067,5 +4091,143 @@ public abstract class Scope {
 	// start position in this scope - for ordering scopes vs. variables
 	int startIndex() {
 		return 0;
+	}
+	/* Given an allocation type and arguments at the allocation site, answer a synthetic generic static factory method
+	   that could instead be invoked with identical results. Return null if no compatible, visible, most specific method
+	   could be found. This method is modeled after Scope.getConstructor and Scope.getMethod.
+	 */
+	public MethodBinding getStaticFactory (ReferenceBinding allocationType, ReferenceBinding originalEnclosingType, TypeBinding[] argumentTypes, final InvocationSite allocationSite) {
+		TypeVariableBinding[] classTypeVariables = allocationType.typeVariables();
+		int classTypeVariablesArity = classTypeVariables.length;
+		MethodBinding[] methods = allocationType.getMethods(TypeConstants.INIT, argumentTypes.length);
+		MethodBinding [] staticFactories = new MethodBinding[methods.length];
+		int sfi = 0;
+		for (int i = 0, length = methods.length; i < length; i++) {
+			MethodBinding method = methods[i];
+			int paramLength = method.parameters.length;
+			boolean isVarArgs = method.isVarargs();
+			if (argumentTypes.length != paramLength)
+				if (!isVarArgs || argumentTypes.length < paramLength - 1)
+					continue; // incompatible
+			TypeVariableBinding[] methodTypeVariables = method.typeVariables();
+			int methodTypeVariablesArity = methodTypeVariables.length;
+	        
+			MethodBinding staticFactory = new MethodBinding(method.modifiers | ClassFileConstants.AccStatic, TypeConstants.SYNTHETIC_STATIC_FACTORY,
+																		null, null, null, method.declaringClass);
+			staticFactory.typeVariables = new TypeVariableBinding[classTypeVariablesArity + methodTypeVariablesArity];
+			final SimpleLookupTable map = new SimpleLookupTable(classTypeVariablesArity + methodTypeVariablesArity);
+			// Rename each type variable T of the type to T'
+			final LookupEnvironment environment = environment();
+			for (int j = 0; j < classTypeVariablesArity; j++) {
+				map.put(classTypeVariables[j], staticFactory.typeVariables[j] = new TypeVariableBinding(CharOperation.concat(classTypeVariables[j].sourceName, "'".toCharArray()), //$NON-NLS-1$
+																			staticFactory, j, environment));
+			}
+			// Rename each type variable U of method U to U''.
+			for (int j = classTypeVariablesArity, max = classTypeVariablesArity + methodTypeVariablesArity; j < max; j++) {
+				map.put(methodTypeVariables[j - classTypeVariablesArity], 
+						(staticFactory.typeVariables[j] = new TypeVariableBinding(CharOperation.concat(methodTypeVariables[j - classTypeVariablesArity].sourceName, "''".toCharArray()), //$NON-NLS-1$
+																			staticFactory, j, environment)));
+			}
+			ReferenceBinding enclosingType = originalEnclosingType;
+			while (enclosingType != null) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=345968
+				if (enclosingType.kind() == Binding.PARAMETERIZED_TYPE) {
+					final ParameterizedTypeBinding parameterizedType = (ParameterizedTypeBinding) enclosingType;
+					final ReferenceBinding genericType = parameterizedType.genericType();
+					TypeVariableBinding[] enclosingClassTypeVariables = genericType.typeVariables();
+					int enclosingClassTypeVariablesArity = enclosingClassTypeVariables.length;
+					for (int j = 0; j < enclosingClassTypeVariablesArity; j++) {
+						map.put(enclosingClassTypeVariables[j], parameterizedType.arguments[j]);
+					}
+				}
+				enclosingType = enclosingType.enclosingType();
+			}
+			final Scope scope = this;
+			Substitution substitution = new Substitution() {
+					public LookupEnvironment environment() {
+						return scope.environment();
+					}
+					public boolean isRawSubstitution() {
+						return false;
+					}
+					public TypeBinding substitute(TypeVariableBinding typeVariable) {
+						TypeBinding retVal = (TypeBinding) map.get(typeVariable);
+						return retVal != null ? retVal : typeVariable;
+					}
+				};
+
+			// initialize new variable bounds
+			for (int j = 0, max = classTypeVariablesArity + methodTypeVariablesArity; j < max; j++) {
+				TypeVariableBinding originalVariable = j < classTypeVariablesArity ? classTypeVariables[j] : methodTypeVariables[j - classTypeVariablesArity];
+				TypeBinding substitutedType = (TypeBinding) map.get(originalVariable);
+				if (substitutedType instanceof TypeVariableBinding) {
+					TypeVariableBinding substitutedVariable = (TypeVariableBinding) substitutedType;
+					TypeBinding substitutedSuperclass = Scope.substitute(substitution, originalVariable.superclass);
+					ReferenceBinding[] substitutedInterfaces = Scope.substitute(substitution, originalVariable.superInterfaces);
+					if (originalVariable.firstBound != null) {
+						substitutedVariable.firstBound = originalVariable.firstBound == originalVariable.superclass
+								? substitutedSuperclass // could be array type or interface
+										: substitutedInterfaces[0];
+					}
+					switch (substitutedSuperclass.kind()) {
+						case Binding.ARRAY_TYPE :
+							substitutedVariable.superclass = environment.getResolvedType(TypeConstants.JAVA_LANG_OBJECT, null);
+							substitutedVariable.superInterfaces = substitutedInterfaces;
+							break;
+						default:
+							if (substitutedSuperclass.isInterface()) {
+								substitutedVariable.superclass = environment.getResolvedType(TypeConstants.JAVA_LANG_OBJECT, null);
+								int interfaceCount = substitutedInterfaces.length;
+								System.arraycopy(substitutedInterfaces, 0, substitutedInterfaces = new ReferenceBinding[interfaceCount+1], 1, interfaceCount);
+								substitutedInterfaces[0] = (ReferenceBinding) substitutedSuperclass;
+								substitutedVariable.superInterfaces = substitutedInterfaces;
+							} else {
+								substitutedVariable.superclass = (ReferenceBinding) substitutedSuperclass; // typeVar was extending other typeVar which got substituted with interface
+								substitutedVariable.superInterfaces = substitutedInterfaces;
+							}
+					}
+				}
+			}
+		    TypeVariableBinding[] returnTypeParameters = new TypeVariableBinding[classTypeVariablesArity];
+			for (int j = 0; j < classTypeVariablesArity; j++) {
+				returnTypeParameters[j] = (TypeVariableBinding) map.get(classTypeVariables[j]);
+			}
+			staticFactory.returnType = environment.createParameterizedType(allocationType, returnTypeParameters, allocationType.enclosingType());
+			staticFactory.parameters = Scope.substitute(substitution, method.parameters);
+			staticFactory.thrownExceptions = Scope.substitute(substitution, method.thrownExceptions);
+			if (staticFactory.thrownExceptions == null) { 
+				staticFactory.thrownExceptions = Binding.NO_EXCEPTIONS;
+			}
+			staticFactories[sfi++] = new ParameterizedMethodBinding((ParameterizedTypeBinding) environment.convertToParameterizedType(staticFactory.declaringClass),
+																												staticFactory);
+		}
+		if (sfi == 0)
+			return null;
+		if (sfi != methods.length) {
+			System.arraycopy(staticFactories, 0, staticFactories = new MethodBinding[sfi], 0, sfi);
+		}
+		MethodBinding[] compatible = new MethodBinding[sfi];
+		int compatibleIndex = 0;
+		for (int i = 0; i < sfi; i++) {
+			MethodBinding compatibleMethod = computeCompatibleMethod(staticFactories[i], argumentTypes, allocationSite);
+			if (compatibleMethod != null) {
+				if (compatibleMethod.isValidBinding())
+					compatible[compatibleIndex++] = compatibleMethod;
+			}
+		}
+
+		if (compatibleIndex == 0) {
+			return null;
+		}
+		MethodBinding[] visible = new MethodBinding[compatibleIndex];
+		int visibleIndex = 0;
+		for (int i = 0; i < compatibleIndex; i++) {
+			MethodBinding method = compatible[i];
+			if (method.canBeSeenBy(allocationSite, this))
+				visible[visibleIndex++] = method;
+		}
+		if (visibleIndex == 0) {
+			return null;
+		}
+		return visibleIndex == 1 ? visible[0] : mostSpecificMethodBinding(visible, visibleIndex, argumentTypes, allocationSite, allocationType);
 	}
 }

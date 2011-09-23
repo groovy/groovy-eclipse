@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.core.search.matching;
+package org.eclipse.jdt.internal.core.search.matching; // GROOVY PATCHED
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
@@ -30,12 +30,12 @@ public class MatchLocatorParser extends Parser {
 
 public static MatchLocatorParser createParser(ProblemReporter problemReporter, MatchLocator locator) {
 	// GROOVY Start
-	// old
-	//	if ((locator.matchContainer & PatternLocator.COMPILATION_UNIT_CONTAINER) != 0) {
-	//		return new ImportMatchLocatorParser(problemReporter, locator);
-	//	}
-	//	return new MatchLocatorParser(problemReporter, locator);
-	// new
+	/* old {
+	if ((locator.matchContainer & PatternLocator.COMPILATION_UNIT_CONTAINER) != 0) {
+		return new ImportMatchLocatorParser(problemReporter, locator);
+	}
+	return new MatchLocatorParser(problemReporter, locator);
+	} new */
 	// use multiplexing parsers instead
 	if ((locator.matchContainer & PatternLocator.COMPILATION_UNIT_CONTAINER) != 0) {
 		return LanguageSupportFactory.getImportMatchLocatorParser(problemReporter, locator);
@@ -260,6 +260,10 @@ protected void consumeCastExpressionWithQualifiedGenericsArray() {
 		this.patternLocator.match(castExpression.type, this.nodeSet);
 	}
 }
+protected void consumeCatchFormalParameter() {
+	super.consumeCatchFormalParameter();
+	this.patternLocator.match((LocalDeclaration) this.astStack[this.astPtr], this.nodeSet);
+}
 
 protected void consumeClassHeaderExtends() {
 	this.patternLocator.setFlavors(PatternLocator.SUPERTYPE_REF_FLAVOR);
@@ -333,11 +337,6 @@ protected void consumeFieldAccess(boolean isSuperAccess) {
 
 protected void consumeFormalParameter(boolean isVarArgs) {
 	super.consumeFormalParameter(isVarArgs);
-	this.patternLocator.match((LocalDeclaration) this.astStack[this.astPtr], this.nodeSet);
-}
-
-protected void consumeCatchFormalParameter(boolean isVarArgs) {
-	super.consumeCatchFormalParameter(isVarArgs);
 	this.patternLocator.match((LocalDeclaration) this.astStack[this.astPtr], this.nodeSet);
 }
 
@@ -535,8 +534,15 @@ protected void consumeStatementCatch() {
 	if ((this.patternFineGrain & IJavaSearchConstants.CATCH_TYPE_REFERENCE) != 0) {
 		// when no fine grain flag is set, type reference match is evaluated in getTypeReference(int) method
 		LocalDeclaration localDeclaration = (LocalDeclaration) this.astStack[this.astPtr-1];
+		if (localDeclaration.type instanceof UnionTypeReference) {
+			TypeReference[] refs = ((UnionTypeReference)localDeclaration.type).typeReferences;
+			for (int i = 0, len  = refs.length; i < len; i++) {
+				this.patternLocator.match(refs[i], this.nodeSet);
+			}
+		} else {
 		this.patternLocator.match(localDeclaration.type, this.nodeSet);
 	}
+}
 }
 
 protected void consumeTypeArgumentList1() {

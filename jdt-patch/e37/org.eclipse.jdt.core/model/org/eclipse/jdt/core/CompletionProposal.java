@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2010 IBM Corporation and others.
+ * Copyright (c) 2004, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1792,5 +1792,22 @@ public class CompletionProposal {
 	 */
 	public void setReceiverRange(int startIndex, int endIndex) {
 		// default overridden by concrete implementation
+	}
+
+	/** 
+	 * Returns whether it is safe to use the '<>' (diamond) operator in place of explicitly specifying
+	 * type arguments for this proposal.
+	 * 
+	 * <p>
+	 * This is only relevant for source level 1.7 or greater.
+	 * </p>
+	 * 
+	 * @param coreContext the completion context associated with the proposal
+	 * @since 3.7.1
+	 * @return <code>true</code> if it is safe to use the diamond operator for the constructor invocation, 
+	 * <code>false</code> otherwise. Also returns <code>false</code> for source levels below 1.7
+	 */
+	public boolean canUseDiamond(CompletionContext coreContext) {
+		return false; // default overridden by concrete implementation
 	}
 }

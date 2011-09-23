@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.core.builder;
+package org.eclipse.jdt.internal.core.builder; // GROOVY PATCHED
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;

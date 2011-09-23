@@ -265,6 +265,9 @@ class DefaultASTVisitor extends ASTVisitor {
 	public void endVisit(TypeParameter node) {
 		endVisitNode(node);
 	}
+	public void endVisit(UnionType node) {
+		endVisitNode(node);
+	}
 	public void endVisit(VariableDeclarationExpression node) {
 		endVisitNode(node);
 	}
@@ -541,6 +544,10 @@ class DefaultASTVisitor extends ASTVisitor {
 		return visitNode(node);
 	}
 
+	public boolean visit(UnionType node) {
+		return visitNode(node);
+	}
+	
 	public boolean visit(VariableDeclarationExpression node) {
 		return visitNode(node);
 	}

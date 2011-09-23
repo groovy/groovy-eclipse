@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2009 IBM Corporation and others.
+ * Copyright (c) 2004, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,7 +11,7 @@
 package org.eclipse.jdt.internal.compiler.util;
 
 /**
- * Internal utility for declaing with hexadecimal double and float literals.
+ * Internal utility for declaring with hexadecimal double and float literals.
  *
  * @since 3.1
  */
@@ -50,7 +50,7 @@ public class FloatUtil {
 	/**
 	 * Returns the float value corresponding to the given
 	 * hexadecimal floating-point single precision literal.
-	 * The literal must be syntactially correct, and must be
+	 * The literal must be syntactically correct, and must be
 	 * a float literal (end in a 'f' or 'F'). It must not
 	 * include either leading or trailing whitespace or
 	 * a sign.
@@ -105,7 +105,7 @@ public class FloatUtil {
 	 * Returns the given hexadecimal floating-point literal as
 	 * the bits for a single-precision  (float) or a
 	 * double-precision (double) IEEE floating point number.
-	 * The literal must be syntactially correct.  It must not
+	 * The literal must be syntactically correct.  It must not
 	 * include either leading or trailing whitespace or a sign.
 	 *
 	 * @param source source string containing hexadecimal floating-point literal

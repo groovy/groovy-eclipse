@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2009 IBM Corporation and others.
+ * Copyright (c) 2005, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -231,6 +231,35 @@ public final class BindingKey {
 		return genericTypeKey + '{' + rank + '}' + wildCardKey;
 	}
 
+	/**
+	 * Returns the binding key of the declaring type of the element represented by this binding key. If the binding key
+	 * does not represent a member or if the member doesn't have a declaring type, returns <code>null</code>.
+	 * 
+	 * <p>
+	 * Note that only binding keys for references to methods and fields
+	 * are fully supported. The binding keys for declarations will not have type parameters.
+	 * 
+	 * @return the type binding key or <code>null</code>
+	 * @since 3.7.1
+	 */
+	public BindingKey getDeclaringType() {
+		int end = this.key.lastIndexOf(Signature.C_DOT);
+		if (end == -1) {
+			end = this.key.lastIndexOf(Signature.C_DOLLAR); // for inner types
+			if (end == -1) return null;
+		}
+		KeyKind kind = new KeyKind(this.key);
+		kind.parse();
+		if ((kind.flags & KeyKind.F_LOCAL_VAR) != 0) {
+			// declaring type for locals doesn't make sense, hence return null.
+			return null;
+		}
+		String typeKey = this.key.substring(0, end);
+		if (typeKey.charAt(typeKey.length()-1) != Signature.C_SEMICOLON)  {
+			typeKey += Signature.C_SEMICOLON;
+		}
+		return new BindingKey(typeKey);
+	}
 	/**
 	 * Returns the thrown exception signatures of the element represented by this binding key.
 	 * If this binding key does not  represent a method or does not throw any exception,

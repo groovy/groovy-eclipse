@@ -243,6 +243,7 @@ public final boolean checkCastTypesCompatibility(Scope scope, TypeBinding castTy
 	// identity conversion cannot be performed upfront, due to side-effects
 	// like constant propagation
 	boolean use15specifics = scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_5;
+	boolean use17specifics = scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_7;
 	if (castType.isBaseType()) {
 		if (expressionType.isBaseType()) {
 			if (expressionType == castType) {
@@ -265,6 +266,9 @@ public final boolean checkCastTypesCompatibility(Scope scope, TypeBinding castTy
 				return true;
 
 			}
+		} else if (use17specifics && expressionType.id == TypeIds.T_JavaLangObject){
+			// cast from Object to base type allowed from 1.7, see JLS $5.5
+			return true;
 		} else if (use15specifics
 							&& scope.environment().computeBoxingType(expressionType).isCompatibleWith(castType)) { // unboxing - only widening match is allowed
 			tagAsUnnecessaryCast(scope, castType);
@@ -434,9 +438,9 @@ public final boolean checkCastTypesCompatibility(Scope scope, TypeBinding castTy
 								checkUnsafeCast(scope, castType, expressionType, null /*no match*/, true);
 								// ensure there is no collision between both interfaces: i.e. I1 extends List<String>, I2 extends List<Object>
 								if (scope.compilerOptions().complianceLevel < ClassFileConstants.JDK1_7) {
-								if (((ReferenceBinding)castType).hasIncompatibleSuperType((ReferenceBinding) expressionType)) {
-									return false;
-								}
+									if (((ReferenceBinding)castType).hasIncompatibleSuperType((ReferenceBinding) expressionType)) {
+										return false;
+									}
 								} else if (!castType.isRawType() && ((ReferenceBinding)castType).hasIncompatibleSuperType((ReferenceBinding) expressionType)) {
 									return false;
 								}
@@ -596,7 +600,11 @@ public void computeConversion(Scope scope, TypeBinding runtimeType, TypeBinding 
 		case T_byte :
 		case T_short :
 		case T_char :
-			this.implicitConversion |= (TypeIds.T_int << 4) + compileTimeTypeID;
+			if (compileTimeTypeID == TypeIds.T_JavaLangObject) {
+				this.implicitConversion |= (runtimeTypeID << 4) + compileTimeTypeID;
+			} else {
+				this.implicitConversion |= (TypeIds.T_int << 4) + compileTimeTypeID;
+			}
 			break;
 		case T_JavaLangString :
 		case T_float :
@@ -858,11 +866,11 @@ public void markAsNonNull() {
 	this.bits |= ASTNode.IsNonNull;
 }
 
-	public int nullStatus(FlowInfo flowInfo) {
+public int nullStatus(FlowInfo flowInfo) {
 
-		if (/* (this.bits & IsNonNull) != 0 || */
-			this.constant != null && this.constant != Constant.NotAConstant)
-		return FlowInfo.NON_NULL; // constant expression cannot be null
+	if (/* (this.bits & IsNonNull) != 0 || */
+		this.constant != null && this.constant != Constant.NotAConstant)
+	return FlowInfo.NON_NULL; // constant expression cannot be null
 
 	LocalVariableBinding local = localVariableBinding();
 	if (local != null)
@@ -1002,7 +1010,7 @@ public boolean forcedToBeRaw(ReferenceContext referenceContext) {
 					TypeDeclaration type = (TypeDeclaration) referenceContext;
 					if (field.declaringClass != type.binding) { // inherited raw field, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=337962
 						return true;
-		}
+					}
 				}
 			}
 		}

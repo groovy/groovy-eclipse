@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.core.builder;
+package org.eclipse.jdt.internal.core.builder; // GROOVY PATCHED
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -73,9 +73,10 @@ protected State newState;
 // local copies
 protected NameEnvironment nameEnvironment;
 protected ClasspathMultiDirectory[] sourceLocations;
-// FIXASC (groovychange)
-//protected 
-// FIXASC (groovychange) made public so groovy can see it through the BatchImageBuilder
+// GROOVY  made public so groovy can see it through the BatchImageBuilder
+/* old {
+protected 
+} new */
 public BuildNotifier notifier;
 
 protected Compiler compiler;
@@ -256,10 +257,10 @@ protected void addAllSourceFiles(final ArrayList sourceFiles) throws CoreExcepti
 				public boolean visit(IResourceProxy proxy) throws CoreException {
 					switch(proxy.getType()) {
 						case IResource.FILE :
-						    /* GROOVY start
-						    // original
+						    // GROOVY start
+						    /* old {
 						    if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName())) {
-						    // new */
+						    } new */
 							// GRECLIPSE-404 must call 'isJavaLikeFile' directly in order to make the Scala-Eclipse plugin's weaving happy
 						    String resourceName = proxy.getName();
 							if ((!isInterestingProject && org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(resourceName) && !LanguageSupportFactory.isInterestingSourceFile(resourceName)) ||

@@ -3,3 +3,4 @@
 16-Feb-2011: ported to org.eclipse.jdt.core v_A76
 10-Mar-2011: ported to org.eclipse.jdt.core v_B35 (37m5)
 15-Jun-2011: ported to org.eclipse.jdt.core v_B61 (37rc4)
+22-Sep-2011: ported to org.eclipse.jdt.core v_B76_R37x (371rc3)

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -294,6 +294,7 @@ private char[][][] getQualifiedNames(ObjectVector types) {
 	final int size = types.size;
 	char[][][] focusQualifiedNames = null;
 	IJavaElement javaElement = this.pattern.focus;
+	int index = 0;
 	while (javaElement != null && !(javaElement instanceof ITypeRoot)) {
 		javaElement = javaElement.getParent();
 	}
@@ -301,12 +302,15 @@ private char[][][] getQualifiedNames(ObjectVector types) {
 		IType primaryType = ((ITypeRoot) javaElement).findPrimaryType();
 		if (primaryType != null) {
 			focusQualifiedNames = new char[size+1][][];
-			focusQualifiedNames[0] = CharOperation.splitOn('.', primaryType.getFullyQualifiedName().toCharArray());
-		}
+			focusQualifiedNames[index++] = CharOperation.splitOn('.', primaryType.getFullyQualifiedName().toCharArray());
+		} 
+	}
+	if (focusQualifiedNames == null) {
+		focusQualifiedNames = new char[size][][];
 	}
 	for (int i = 0; i < size; i++) {
-		focusQualifiedNames[i+1] = CharOperation.splitOn('.', ((IType)(types.elementAt(i))).getFullyQualifiedName().toCharArray());
+		focusQualifiedNames[index++] = CharOperation.splitOn('.', ((IType)(types.elementAt(i))).getFullyQualifiedName().toCharArray());
 	}
-	return focusQualifiedNames == null ? null : ReferenceCollection.internQualifiedNames(focusQualifiedNames, true);
+	return focusQualifiedNames.length == 0 ? null : ReferenceCollection.internQualifiedNames(focusQualifiedNames, true);
 }
 }

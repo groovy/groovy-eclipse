@@ -11,7 +11,7 @@
  *                                                           before its contents
  *                                                           (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=102422)
  *******************************************************************************/
-package org.eclipse.jdt.internal.core;
+package org.eclipse.jdt.internal.core; // GROOVY PATCHED
 
 import java.io.*;
 import java.net.URI;
@@ -2599,9 +2599,9 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				for (int i = 0; i < primaryLength; i++) {
 					ICompilationUnit primaryWorkingCopy = primaryWCs[i];
 				    // GROOVY start
-			        // old
-			        // ICompilationUnit workingCopy = new CompilationUnit((PackageFragment) primaryWorkingCopy.getParent(), primaryWorkingCopy.getElementName(), owner);
-			        // new
+			        /* old {
+			        ICompilationUnit workingCopy = new CompilationUnit((PackageFragment) primaryWorkingCopy.getParent(), primaryWorkingCopy.getElementName(), owner);
+			        } new */
 					ICompilationUnit workingCopy = LanguageSupportFactory.newCompilationUnit((PackageFragment) primaryWorkingCopy.getParent(), primaryWorkingCopy.getElementName(), owner);
 			        // GROOVY end
 			        
@@ -4563,7 +4563,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 					IType type = unit.getType(typeName);
 					types.put(typeName, type); // replace stored path with type itself
 				} else {
-					types.remove(typeName);
+					names.remove();
 				}
 			}
 		}

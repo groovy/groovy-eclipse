@@ -41,6 +41,7 @@ import org.eclipse.jdt.core.util.IMethodInfo;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.AnnotationMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
+import org.eclipse.jdt.internal.compiler.ast.UnionTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
@@ -2674,9 +2675,24 @@ public class Util {
 	 * e.g. "QString;", "[int", "[[Qjava.util.Vector;"
 	 */
 	public static String typeSignature(TypeReference type) {
+		String signature = null;
+		if ((type.bits & org.eclipse.jdt.internal.compiler.ast.ASTNode.IsUnionType) != 0) {
+			// special treatment for union type reference
+			UnionTypeReference unionTypeReference = (UnionTypeReference) type;
+			TypeReference[] typeReferences = unionTypeReference.typeReferences;
+			int length = typeReferences.length;
+			String[] typeSignatures = new String[length];
+			for(int i = 0; i < length; i++) {
+				char[][] compoundName = typeReferences[i].getParameterizedTypeName();
+				char[] typeName = CharOperation.concatWith(compoundName, '.');
+				typeSignatures[i] = Signature.createTypeSignature(typeName, false/*don't resolve*/);
+			}
+			signature = Signature.createIntersectionTypeSignature(typeSignatures);
+		} else {
 		char[][] compoundName = type.getParameterizedTypeName();
 		char[] typeName =CharOperation.concatWith(compoundName, '.');
-		String signature = Signature.createTypeSignature(typeName, false/*don't resolve*/);
+			signature = Signature.createTypeSignature(typeName, false/*don't resolve*/);
+		}
 		return signature;
 	}
 

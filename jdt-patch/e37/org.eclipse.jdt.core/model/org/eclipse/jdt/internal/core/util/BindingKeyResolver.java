@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2010 IBM Corporation and others.
+ * Copyright (c) 2005, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,7 @@ package org.eclipse.jdt.internal.core.util;
 
 import java.util.ArrayList;
 
+import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.Compiler;
@@ -38,9 +39,11 @@ import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.PolymorphicMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.RawTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
@@ -299,11 +302,75 @@ public class BindingKeyResolver extends BindingKeyParser {
 					this.methodBinding = method;
 					this.compilerBinding = this.methodBinding;
 					return;
+				} else if ((method.tagBits & TagBits.AnnotationPolymorphicSignature) != 0) {
+					this.typeBinding = null;
+					char[][] typeParameters = Signature.getParameterTypes(signature);
+					int length = typeParameters.length;
+					TypeBinding[] parameterTypes = new TypeBinding[length];
+					for (int j = 0; j < length; j++) {
+						parameterTypes[j] = getType(typeParameters[j]);
+					}
+					PolymorphicMethodBinding polymorphicMethod = this.environment.createPolymorphicMethod(method, parameterTypes);
+					this.methodBinding = polymorphicMethod;
+					this.methodBinding = this.environment.updatePolymorphicMethodReturnType(
+							polymorphicMethod,
+							getType(Signature.getReturnType(signature)));
+					this.compilerBinding = this.methodBinding;
+					return;
 				}
 			}
 		}
 	}
 
+	private TypeBinding getType(char[] type) {
+		TypeBinding binding = null;
+		int length = type.length;
+		switch(length) {
+			case 1 :
+				switch (type[0]) {
+					case 'I' :
+						binding = TypeBinding.INT;
+						break;
+					case 'Z' :
+						binding = TypeBinding.BOOLEAN;
+						break;
+					case 'V' :
+						binding = TypeBinding.VOID;
+						break;
+					case 'C' :
+						binding = TypeBinding.CHAR;
+						break;
+					case 'D' :
+						binding = TypeBinding.DOUBLE;
+						break;
+					case 'B' :
+						binding = TypeBinding.BYTE;
+						break;
+					case 'F' :
+						binding = TypeBinding.FLOAT;
+						break;
+					case 'J' :
+						binding = TypeBinding.LONG;
+						break;
+					case 'S' :
+						binding = TypeBinding.SHORT;
+						break;
+				}
+				break;
+			default:
+				int dimensions = 0;
+				int start = 0;
+				while (type[start] == '[') {
+					start++;
+					dimensions++;
+				}
+				binding = this.environment.getType(CharOperation.splitOn('/', type, start + 1, length - 1));
+				if (dimensions != 0) {
+					binding = this.environment.createArrayType(binding, dimensions);
+				}
+		}
+		return binding;
+	}
 	public void consumeMemberType(char[] simpleTypeName) {
 		this.typeBinding = getTypeBinding(simpleTypeName);
 	}

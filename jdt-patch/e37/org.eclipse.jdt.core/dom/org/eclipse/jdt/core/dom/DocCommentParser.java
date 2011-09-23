@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2009 IBM Corporation and others.
+ * Copyright (c) 2004, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -35,7 +35,17 @@ class DocCommentParser extends AbstractCommentParser {
 		super(null);
 		this.ast = ast;
 		this.scanner = scanner;
-		this.sourceLevel = this.ast.apiLevel() >= AST.JLS3 ? ClassFileConstants.JDK1_5 : ClassFileConstants.JDK1_3;
+		switch(this.ast.apiLevel()) {
+			case AST.JLS2_INTERNAL :
+				this.sourceLevel = ClassFileConstants.JDK1_3;
+				break;
+			case AST.JLS3:
+				this.sourceLevel = ClassFileConstants.JDK1_5;
+				break;
+			default:
+				// AST.JLS4 for now
+				this.sourceLevel = ClassFileConstants.JDK1_7;
+		}
 		this.checkDocComment = check;
 		this.kind = DOM_PARSER | TEXT_PARSE;
 	}

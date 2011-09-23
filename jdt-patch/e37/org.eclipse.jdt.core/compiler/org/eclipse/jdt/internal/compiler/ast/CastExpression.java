@@ -27,6 +27,7 @@ import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedGenericMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.PolymorphicMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
@@ -476,46 +477,54 @@ public TypeBinding resolveType(BlockScope scope) {
 	this.constant = Constant.NotAConstant;
 	this.implicitConversion = TypeIds.T_undefined;
 
-		boolean exprContainCast = false;
+	boolean exprContainCast = false;
 
-		TypeBinding castType = this.resolvedType = this.type.resolveType(scope);
-		//expression.setExpectedType(this.resolvedType); // needed in case of generic method invocation
-		if (this.expression instanceof CastExpression) {
-			this.expression.bits |= ASTNode.DisableUnnecessaryCastCheck;
-			exprContainCast = true;
+	TypeBinding castType = this.resolvedType = this.type.resolveType(scope);
+	//expression.setExpectedType(this.resolvedType); // needed in case of generic method invocation
+	if (this.expression instanceof CastExpression) {
+		this.expression.bits |= ASTNode.DisableUnnecessaryCastCheck;
+		exprContainCast = true;
+	}
+	TypeBinding expressionType = this.expression.resolveType(scope);
+	if (this.expression instanceof MessageSend) {
+		MessageSend messageSend = (MessageSend) this.expression;
+		MethodBinding methodBinding = messageSend.binding;
+		if (methodBinding != null && methodBinding.isPolymorphic()) {
+			messageSend.binding = scope.environment().updatePolymorphicMethodReturnType((PolymorphicMethodBinding) methodBinding, castType);
+			expressionType = castType;
 		}
-		TypeBinding expressionType = this.expression.resolveType(scope);
-		if (castType != null) {
-			if (expressionType != null) {
-				boolean isLegal = checkCastTypesCompatibility(scope, castType, expressionType, this.expression);
-				if (isLegal) {
-					this.expression.computeConversion(scope, castType, expressionType);
-					if ((this.bits & ASTNode.UnsafeCast) != 0) { // unsafe cast
-						if (scope.compilerOptions().reportUnavoidableGenericTypeProblems || !this.expression.forcedToBeRaw(scope.referenceContext())) {
-							scope.problemReporter().unsafeCast(this, scope);
-						}
-					} else {
-						if (castType.isRawType() && scope.compilerOptions().getSeverity(CompilerOptions.RawTypeReference) != ProblemSeverities.Ignore){
-							scope.problemReporter().rawTypeReference(this.type, castType);
-						}
-						if ((this.bits & (ASTNode.UnnecessaryCast|ASTNode.DisableUnnecessaryCastCheck)) == ASTNode.UnnecessaryCast) { // unnecessary cast
-							if (!isIndirectlyUsed()) // used for generic type inference or boxing ?
-								scope.problemReporter().unnecessaryCast(this);
-						}
+	}
+	if (castType != null) {
+		if (expressionType != null) {
+			boolean isLegal = checkCastTypesCompatibility(scope, castType, expressionType, this.expression);
+			if (isLegal) {
+				this.expression.computeConversion(scope, castType, expressionType);
+				if ((this.bits & ASTNode.UnsafeCast) != 0) { // unsafe cast
+					if (scope.compilerOptions().reportUnavoidableGenericTypeProblems || !this.expression.forcedToBeRaw(scope.referenceContext())) {
+						scope.problemReporter().unsafeCast(this, scope);
 					}
-				} else { // illegal cast
-					if ((castType.tagBits & TagBits.HasMissingType) == 0) { // no complaint if secondary error
-						scope.problemReporter().typeCastError(this, castType, expressionType);
+				} else {
+					if (castType.isRawType() && scope.compilerOptions().getSeverity(CompilerOptions.RawTypeReference) != ProblemSeverities.Ignore){
+						scope.problemReporter().rawTypeReference(this.type, castType);
 					}
-					this.bits |= ASTNode.DisableUnnecessaryCastCheck; // disable further secondary diagnosis
+					if ((this.bits & (ASTNode.UnnecessaryCast|ASTNode.DisableUnnecessaryCastCheck)) == ASTNode.UnnecessaryCast) { // unnecessary cast
+						if (!isIndirectlyUsed()) // used for generic type inference or boxing ?
+							scope.problemReporter().unnecessaryCast(this);
+					}
 				}
-			}
-			this.resolvedType = castType.capture(scope, this.sourceEnd);
-			if (exprContainCast) {
-				checkNeedForCastCast(scope, this);
+			} else { // illegal cast
+				if ((castType.tagBits & TagBits.HasMissingType) == 0) { // no complaint if secondary error
+					scope.problemReporter().typeCastError(this, castType, expressionType);
+				}
+				this.bits |= ASTNode.DisableUnnecessaryCastCheck; // disable further secondary diagnosis
 			}
 		}
-		return this.resolvedType;
+		this.resolvedType = castType.capture(scope, this.sourceEnd);
+		if (exprContainCast) {
+			checkNeedForCastCast(scope, this);
+		}
+	}
+	return this.resolvedType;
 }
 
 /**

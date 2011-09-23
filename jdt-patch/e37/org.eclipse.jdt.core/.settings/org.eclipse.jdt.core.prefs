@@ -1,4 +1,4 @@
-#Thu Jun 30 10:32:13 PDT 2011
+#Wed Feb 02 11:25:08 EST 2011
 eclipse.preferences.version=1
 org.eclipse.jdt.core.builder.cleanOutputFolder=clean
 org.eclipse.jdt.core.builder.duplicateResourceTask=warning
@@ -35,7 +35,6 @@ org.eclipse.jdt.core.compiler.problem.finalParameterBound=warning
 org.eclipse.jdt.core.compiler.problem.finallyBlockNotCompletingNormally=warning
 org.eclipse.jdt.core.compiler.problem.forbiddenReference=error
 org.eclipse.jdt.core.compiler.problem.hiddenCatchBlock=warning
-org.eclipse.jdt.core.compiler.problem.includeNullInfoFromAsserts=disabled
 org.eclipse.jdt.core.compiler.problem.incompatibleNonInheritedInterfaceMethod=warning
 org.eclipse.jdt.core.compiler.problem.incompleteEnumSwitch=ignore
 org.eclipse.jdt.core.compiler.problem.indirectStaticAccess=warning
@@ -69,15 +68,11 @@ org.eclipse.jdt.core.compiler.problem.potentialNullReference=ignore
 org.eclipse.jdt.core.compiler.problem.rawTypeReference=warning
 org.eclipse.jdt.core.compiler.problem.redundantNullCheck=warning
 org.eclipse.jdt.core.compiler.problem.redundantSuperinterface=warning
-org.eclipse.jdt.core.compiler.problem.reportMethodCanBePotentiallyStatic=ignore
-org.eclipse.jdt.core.compiler.problem.reportMethodCanBeStatic=ignore
 org.eclipse.jdt.core.compiler.problem.specialParameterHidingField=disabled
 org.eclipse.jdt.core.compiler.problem.staticAccessReceiver=warning
-org.eclipse.jdt.core.compiler.problem.suppressOptionalErrors=disabled
 org.eclipse.jdt.core.compiler.problem.suppressWarnings=enabled
 org.eclipse.jdt.core.compiler.problem.syntheticAccessEmulation=warning
 org.eclipse.jdt.core.compiler.problem.typeParameterHiding=warning
-org.eclipse.jdt.core.compiler.problem.unavoidableGenericTypeProblems=enabled
 org.eclipse.jdt.core.compiler.problem.uncheckedTypeOperation=warning
 org.eclipse.jdt.core.compiler.problem.undocumentedEmptyBlock=warning
 org.eclipse.jdt.core.compiler.problem.unhandledWarningToken=warning
@@ -92,7 +87,6 @@ org.eclipse.jdt.core.compiler.problem.unusedDeclaredThrownExceptionWhenOverridin
 org.eclipse.jdt.core.compiler.problem.unusedImport=error
 org.eclipse.jdt.core.compiler.problem.unusedLabel=warning
 org.eclipse.jdt.core.compiler.problem.unusedLocal=warning
-org.eclipse.jdt.core.compiler.problem.unusedObjectAllocation=ignore
 org.eclipse.jdt.core.compiler.problem.unusedParameter=ignore
 org.eclipse.jdt.core.compiler.problem.unusedParameterIncludeDocCommentReference=enabled
 org.eclipse.jdt.core.compiler.problem.unusedParameterWhenImplementingAbstract=disabled

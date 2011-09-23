@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -130,6 +130,18 @@ private boolean checkStandardAnnotations(long annotationTagBits, TypeReferencePa
 	}
 	if ((annotationTagBits & TagBits.AnnotationSuppressWarnings) != 0) {
 		char[][] compoundName = TypeConstants.JAVA_LANG_SUPPRESSWARNINGS;
+		if (checkAnnotationTypeReference(CharOperation.concatWith(compoundName, '.'), pattern)) {
+			return true;
+		}
+	}
+	if ((annotationTagBits & TagBits.AnnotationSafeVarargs) != 0) {
+		char[][] compoundName = TypeConstants.JAVA_LANG_SAFEVARARGS;
+		if (checkAnnotationTypeReference(CharOperation.concatWith(compoundName, '.'), pattern)) {
+			return true;
+		}
+	}
+	if ((annotationTagBits & TagBits.AnnotationPolymorphicSignature) != 0) {
+		char[][] compoundName = TypeConstants.JAVA_LANG_INVOKE_METHODHANDLE_$_POLYMORPHICSIGNATURE;
 		if (checkAnnotationTypeReference(CharOperation.concatWith(compoundName, '.'), pattern)) {
 			return true;
 		}

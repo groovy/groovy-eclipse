@@ -755,6 +755,35 @@ public static final int compareTo(char[] array1, char[] array2) {
 	return length1 - length2;
 }
 /**
+ * Compares the two char arrays lexicographically between the given start and end positions.
+ *
+ * Returns a negative integer if array1 lexicographically precedes the array2,
+ * a positive integer if this array1 lexicographically follows the array2, or
+ * zero if both arrays are equal.
+ * <p>The comparison is done between start and end positions.</p>
+ *
+ * @param array1 the first given array
+ * @param array2 the second given array
+ * @param start the starting position to compare (inclusive)
+ * @param end the ending position to compare (exclusive)
+ * 
+ * @return the returned value of the comparison between array1 and array2
+ * @throws NullPointerException if one of the arrays is null
+ * @since 3.7.1
+ */
+public static final int compareTo(char[] array1, char[] array2, int start, int end) {
+	int length1 = array1.length;
+	int length2 = array2.length;
+	int min = Math.min(length1, length2);
+	min = Math.min(min, end);
+	for (int i = start; i < min; i++) {
+		if (array1[i] != array2[i]) {
+			return array1[i] - array2[i];
+		}
+	}
+	return length1 - length2;
+}
+/**
  * Compares the contents of the two arrays array and prefix. Returns
  * <ul>
  * <li>zero if the array starts with the prefix contents</li>

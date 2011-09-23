@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package org.eclipse.jdt.internal.core.builder;
+package org.eclipse.jdt.internal.core.builder; // GROOVY PATCHED
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.*;
@@ -201,11 +201,11 @@ protected void copyExtraResourcesBack(ClasspathMultiDirectory sourceLocation, fi
 				IResource resource = null;
 				switch(proxy.getType()) {
 					case IResource.FILE :
-						/* GROOVY start
-						// original 
+						// GROOVY start
+						/* old {
 						if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName()) ||
 							org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(proxy.getName())) return false;
-						// new */
+						} new */
 						// copy groovy files if not in a groovy project
 						// Also, must keep the call to 'isJavaLikeFileName' to keep Scala plugin happy: GRECLIPSE-404
 						// here it is the same test as above, except 

@@ -9,10 +9,9 @@
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for bug 215139 and bug 295894
  *******************************************************************************/
-package org.eclipse.jdt.core.search;
+package org.eclipse.jdt.core.search; // GROOVY PATCHED
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
-
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
 

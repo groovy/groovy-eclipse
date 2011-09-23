@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2010 IBM Corporation and others.
+ * Copyright (c) 2003, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -219,7 +219,11 @@ public class ParameterizedType extends Type {
 	/**
 	 * Returns the live ordered list of type arguments of this parameterized
 	 * type. For the parameterized type to be plausible, the list should contain
-	 * at least one element and not contain primitive types.
+	 * at least one element and not contain primitive or union types.
+	 * <p>
+	 * Since {@link AST#JLS4}, the list can also be empty if this is the type of a
+	 * {@link ClassInstanceCreation} (a so-called "diamond").
+	 * </p>
 	 *
 	 * @return the live list of type arguments
 	 *    (element type: {@link Type})

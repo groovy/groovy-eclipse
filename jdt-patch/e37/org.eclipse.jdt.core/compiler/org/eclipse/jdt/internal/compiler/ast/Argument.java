@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -12,6 +12,7 @@ package org.eclipse.jdt.internal.compiler.ast;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
@@ -26,8 +27,6 @@ public class Argument extends LocalDeclaration {
 		this.declarationSourceEnd = (int) posNom;
 		this.modifiers = modifiers;
 		this.type = tr;
-		// always an argument by default. The bit IsArgument will be clear when this is used as
-		// catch formal parameter
 		this.bits |= (IsLocalDeclarationReachable | IsArgument);
 	}
 
@@ -126,13 +125,6 @@ public class Argument extends LocalDeclaration {
 					hasError = true;
 					// fall thru to create the variable - avoids additional errors because the variable is missing
 					break;
-				case Binding.ARRAY_TYPE :
-					if (((ArrayBinding) exceptionType).leafComponentType == TypeBinding.VOID) {
-						scope.problemReporter().variableTypeCannotBeVoidArray(this);
-						hasError = true;
-						// fall thru to create the variable - avoids additional errors because the variable is missing
-					}
-					break;
 			}
 			if (exceptionType.findSuperTypeOriginatingFrom(TypeIds.T_JavaLangThrowable, true) == null && exceptionType.isValidBinding()) {
 				scope.problemReporter().cannotThrowType(this.type, exceptionType);
@@ -148,8 +140,13 @@ public class Argument extends LocalDeclaration {
 				scope.problemReporter().localVariableHiding(this, existingVariable, false);
 			}
 		}
-
-		this.binding = new LocalVariableBinding(this, exceptionType, this.modifiers, false); // argument decl, but local var  (where isArgument = false)
+		
+		if ((this.type.bits & ASTNode.IsUnionType) != 0) {
+			this.binding = new CatchParameterBinding(this, exceptionType, this.modifiers | ClassFileConstants.AccFinal, false); // argument decl, but local var  (where isArgument = false)
+			this.binding.tagBits |= TagBits.MultiCatchParameter;
+		} else {
+			this.binding = new CatchParameterBinding(this, exceptionType, this.modifiers, false); // argument decl, but local var  (where isArgument = false)
+		}
 		resolveAnnotations(scope, this.annotations, this.binding);
 
 		scope.addLocalVariable(this.binding);

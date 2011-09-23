@@ -1658,6 +1658,20 @@ public final class JavaCore extends Plugin {
 	 */
 	public static final String COMPILER_PB_UNUSED_OBJECT_ALLOCATION = PLUGIN_ID + ".compiler.problem.unusedObjectAllocation";  //$NON-NLS-1$
 	/**
+	 * Compiler option ID: Reporting redundant specification of type arguments in class instance creation expressions.
+	 * <p>When enabled, the compiler will issue an error or a warning if type arguments are used in a class instance creation,
+	 * when the '<>' operator can be used instead.
+	 * <p>This option only has an effect if the compiler compliance is 1.7 or greater.</p>
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.redundantSpecificationOfTypeArguments"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "error", "warning", "ignore" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"ignore"</code></dd>
+	 * </dl>
+	 * @since 3.7.1
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_REDUNDANT_TYPE_ARGUMENTS = PLUGIN_ID + ".compiler.problem.redundantSpecificationOfTypeArguments";  //$NON-NLS-1$
+	/**
 	 * Core option ID: Computing Project Build Order.
 	 * <p>Indicate whether JavaCore should enforce the project build order to be based on
 	 *    the classpath prerequisite chain. When requesting to compute, this takes over
@@ -2215,8 +2229,7 @@ public final class JavaCore extends Plugin {
 	 */
 	public static final String VERSION_1_6 = "1.6"; //$NON-NLS-1$
 	/**
-	 * Configurable option value: {@value}.<br>
-	 * <i>Note: The compiler currently does not support 1.7 compliance level</i>
+	 * Configurable option value: {@value}.
 	 * @since 3.3
 	 * @category OptionValue
 	 */
