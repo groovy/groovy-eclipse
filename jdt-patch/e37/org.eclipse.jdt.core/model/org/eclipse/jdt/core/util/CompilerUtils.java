@@ -36,6 +36,11 @@ public class CompilerUtils {
 	 * Configure a real compiler options object based on the project.  If anything goes wrong it will configure the options to just build java.
 	 */
 	public static void configureOptionsBasedOnNature(CompilerOptions compilerOptions, IJavaProject javaProject) {
+		if (javaProject==null) {
+			compilerOptions.buildGroovyFiles=1;
+			compilerOptions.groovyFlags = 0;
+			return;
+		}
 		IProject project = javaProject.getProject();
 		try {
 			if (isGroovyNaturedProject(project)) {
