@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.maven.testing
 
+import groovy.util.GroovyTestCase
+
 /**
  * Tests for the {@link Example} class.
  */
