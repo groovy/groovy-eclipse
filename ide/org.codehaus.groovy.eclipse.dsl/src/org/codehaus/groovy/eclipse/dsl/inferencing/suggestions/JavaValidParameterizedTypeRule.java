@@ -36,7 +36,6 @@ import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.internal.corext.dom.ASTNodes;
-import org.eclipse.jdt.internal.corext.util.JavaModelUtil;
 
 /**
  * Handles primitive types as well.
@@ -150,17 +149,7 @@ public class JavaValidParameterizedTypeRule extends AbstractJavaTypeVerifiedRule
         parser.setSource(sourceBuffer.toString().toCharArray());
 
         Map<String, String> options = new HashMap<String, String>();
-        // this method was removed in 3.7.1
-//        JavaModelUtil.set50ComplianceOptions(options);
-        
-        // instead, set explicitly
-        options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-        options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
-        options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
-        options.put(JavaCore.COMPILER_PB_ASSERT_IDENTIFIER, JavaCore.ERROR);
-        options.put(JavaCore.COMPILER_PB_ENUM_IDENTIFIER, JavaCore.ERROR);
-        options.put(JavaCore.COMPILER_CODEGEN_INLINE_JSR_BYTECODE, JavaCore.ENABLED);
-        
+        JavaCore.setComplianceOptions(JavaCore.VERSION_1_5, options);
         parser.setCompilerOptions(options);
 
         CompilationUnit cu = (CompilationUnit) parser.createAST(null);
