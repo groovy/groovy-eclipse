@@ -1,0 +1,3 @@
+interface Helloable {
+	void sayHello()
+}
