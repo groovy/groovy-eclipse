@@ -56,7 +56,7 @@ import org.eclipse.jdt.internal.compiler.batch.Main;
  * Allows the use of the Groovy-Eclipse compiler through maven.
  * 
  * @plexus.component role="org.codehaus.plexus.compiler.Compiler"
- *                   role-hint="groovy-eclipse"
+ *                   role-hint="groovy-eclipse-compiler"
  * 
  * 
  * @author <a href="mailto:andrew@eisenberg.as">Andrew Eisenberg</a>
@@ -81,11 +81,15 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      */
     private class Progress extends CompilationProgress {
 
-        int numCompiled = 0;
-
+        private int count = 0;
+        
         public void begin(int remainingWork) {}
 
-        public void done() {}
+        public void done() {
+            if (verbose) {
+                getLogger().info("Compilation complete.  Compiled " + count + " files.");
+            }
+        }
 
         public boolean isCanceled() {
             return false;
@@ -97,10 +101,9 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             if (verbose) {
                 String file = remainingWork == 1 ? "file" : "files";
                 getLogger().info(remainingWork + " " + file + " left.");
+                count++;
             }
-            numCompiled++;
         }
-
     }
 
     boolean verbose;
@@ -244,11 +247,6 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return messages;
     }
 
-    /**
-     * @param config
-     * @return
-     * @throws CompilerException
-     */
     private File[] recalculateStaleFiles(CompilerConfiguration config)
             throws CompilerException {
         config.setSourceFiles(null);
@@ -299,7 +297,25 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         if (!destinationDir.exists()) {
             destinationDir.mkdirs();
         }
-
+        
+        
+        // adds src/main/groovy and src/test/groovy if exksts not already added
+        File workingDirectory = config.getWorkingDirectory();
+        // assume dest dir for main is in target/classes and for test is in target/test-classes
+        // There must be a more robust way of doing this.
+        if (destinationDir.getName().equals("classes")) {
+            File srcMainGroovy = new File(workingDirectory, "src/main/groovy");
+            if (srcMainGroovy.exists() && !config.getSourceLocations().contains(srcMainGroovy.getAbsolutePath())) {
+                config.addSourceLocation(srcMainGroovy.getAbsolutePath());
+            }
+        }
+        
+        if (destinationDir.getName().equals("test-classes")) {
+            File srcTestGroovy = new File(workingDirectory, "src/test/groovy");
+            if (srcTestGroovy.exists() && !config.getSourceLocations().contains(srcTestGroovy.getAbsolutePath())) {
+                config.addSourceLocation(srcTestGroovy.getAbsolutePath());
+            }
+        }
         // recalculate stale files since they were not properly calculated in
         // super
         File[] sourceFiles = recalculateStaleFiles(config);
@@ -308,8 +324,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             return new String[0];
         }
 
-        getLogger()
-                .info("Using Groovy-Eclipse compiler to compile both Java and Groovy files");
+        getLogger().info("Using Groovy-Eclipse compiler to compile both Java and Groovy files");
         getLogger().info(
                 "Compiling " + sourceFiles.length + " " + "source file"
                         + (sourceFiles.length == 1 ? "" : "s") + " to "
@@ -352,7 +367,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             args.add(config.getGeneratedSourcesDirectory().getAbsolutePath());
         }
 
-        // change default to 1.5...why? because I say so.
+        // change default to 1.5
         String source = config.getSourceVersion();
         args.add("-source");
         if (source != null && source.length() > 0) {
@@ -411,7 +426,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 args.add((String) key);
             } else if (key != null) {
                 /*
-                 * Not sure what the possible range of usage looks like but i
+                 * Not sure what the possible range of usage looks like but I
                  * don't think this should allow for null keys? "-null" probably
                  * isn't going to play nicely with any compiler?
                  */
@@ -441,8 +456,12 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 compilerConfiguration.getOutputLocation());
         Set<File> staleSources = new HashSet<File>();
 
+        
         for (String sourceRoot : (List<String>) compilerConfiguration
                 .getSourceLocations()) {
+            if (verbose) {
+                getLogger().info("Looking for sources in source root: " + sourceRoot);
+            }
             File rootFile = new File(sourceRoot);
 
             if (!rootFile.isDirectory()) {
