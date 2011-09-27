@@ -1,6 +1,8 @@
 package org.codehaus.groovy.eclipse.dsl.checker;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
 
 import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
 import org.eclipse.core.resources.IFile;
@@ -68,11 +70,11 @@ public class StaticCheckerApplication implements IApplication {
             job.run(new NullProgressMonitor());
             
             System.out.println("Performing static type checking on project " + projectName);
-            IStaticCheckerHandler handler = new SysoutStaticCheckerHandler();
-            ResourceTypeChecker checker = new ResourceTypeChecker(handler, projectName, inclusionFilters, exclusionFilters, assertionsOnly);
             try {
+                IStaticCheckerHandler handler = new SysoutStaticCheckerHandler(resultFile == null ? System.out : createOutStream(resultFile));
+                ResourceTypeChecker checker = new ResourceTypeChecker(handler, projectName, inclusionFilters, exclusionFilters, assertionsOnly);
                 checker.doCheck(null);
-            } catch (CoreException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             } finally {
                 removeExtraDslds();
@@ -82,6 +84,9 @@ public class StaticCheckerApplication implements IApplication {
                     Workbench.getInstance().close();
                 }
             });
+            
+            // FIXADE Is this OK to do?
+            System.exit(0);
             return Status.OK_STATUS;
         }
         
@@ -103,6 +108,11 @@ public class StaticCheckerApplication implements IApplication {
             CheckerJob checkerJob = new CheckerJob();
             checkerJob.schedule();
          }
+        
+        @Override
+        public void postShutdown() {
+            super.postShutdown();
+        }
     }
 
     private String projectName;
@@ -113,6 +123,7 @@ public class StaticCheckerApplication implements IApplication {
     private IFile[] extraDsldFiles;
     private String projectFolderPath;
     Display display;
+    private String resultFile;
     
     public Object start(IApplicationContext context) throws Exception {
         processCommandLine((String[]) context.getArguments().get(IApplicationContext.APPLICATION_ARGS));
@@ -124,6 +135,10 @@ public class StaticCheckerApplication implements IApplication {
         }
         WorkbenchAdvisor advisor = new CheckerWorkbenchAdvisor();
         return PlatformUI.createAndRunWorkbench(display, advisor);
+    }
+
+    public PrintStream createOutStream(String fileName) throws FileNotFoundException {
+        return new PrintStream(new File(fileName));
     }
 
     public void stop() {
@@ -198,15 +213,40 @@ public class StaticCheckerApplication implements IApplication {
             } else if (arg.equals("--assertions_only")) {
                 assertionsOnly = true;
             } else if (arg.equals("--excludes")) {
+                if (i == args.length-1) {
+                    System.err.println("Missing --excludes argument");
+                    doHelp = true;
+                    break;
+                }
                 excludes = args[++i];
             } else if (arg.equals("--includes")) {
+                if (i == args.length-1) {
+                    System.err.println("Missing --includes argument");
+                    doHelp = true;
+                    break;
+                }
                 includes = args[++i];
-            } else if (arg.equals("--assertions_only")) {
-                assertionsOnly = true;
             } else if (arg.equals("--extra_dslds")) {
+                if (i == args.length-1) {
+                    System.err.println("Missing --extraDslds argument");
+                    doHelp = true;
+                    break;
+                }
                 extraDslds = args[++i].split("\\|");
             } else if (arg.equals("--project_path")) {
+                if (i == args.length-1) {
+                    System.err.println("Missing --project_path argument");
+                    doHelp = true;
+                    break;
+                }
                 projectFolderPath = args[++i];
+            } else if (arg.equals("--result_file")) {
+                if (i == args.length-1) {
+                    System.err.println("Missing --result_file argument");
+                    doHelp = true;
+                    break;
+                }
+                resultFile = args[++i];
             }
         }
         
@@ -249,6 +289,7 @@ public class StaticCheckerApplication implements IApplication {
         System.out.println("\t--excludes  Project-relative exclusion filters.");
         System.out.println("\t--includes  Project-relative inclusion filters.");
         System.out.println("\t--project_path  File system path to the project to check (only required if project is not already in workspace).");
+        System.out.println("\t--result_file  File to send static checking results to.  If not specified, then results sent to sysout.");
         System.out.println("\t<PROJECT_NAME>  Name of a project to type check.  If not already in workspace, then must also use '--project_path'.");
         System.out.println();
         System.out.println("Ant style filters are allowed.  Eg, src/org/codehaus/groovy/**/*.groovy means all files with groovy extensions in the org.codehaus.groovy package or below will be ex/included   Filters can be concentenated using '|'.");

@@ -15,14 +15,17 @@
  */
 package org.codehaus.groovy.eclipse.dsl.checker;
 
+import java.io.PrintStream;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.Position;
+import org.eclipse.swt.widgets.Shell;
 
 /**
- * Prints the results of static checking to sysout
+ * Prints the results of static checking to sysout or some other specified print stream
  * @author andrew
  * @created Aug 31, 2011
  */
@@ -30,18 +33,24 @@ public class SysoutStaticCheckerHandler implements IStaticCheckerHandler {
 
     private int numProblems = 0;
     
+    private final PrintStream out;
+    
+    public SysoutStaticCheckerHandler(PrintStream out) {
+        this.out = out;
+    }
+    
     public void handleUnknownReference(ASTNode node, Position position, int line) {
-        System.out.println(createUnknownMessage(node, line));
+        out.println(createUnknownMessage(node, line));
         numProblems++;
     }
 
     public void handleTypeAssertionFailed(ASTNode node, String expectedType, String actualType, Position position, int line) {
-        System.out.println(createInvalidTypeMessage(node, expectedType, actualType, line));
+        out.println(createInvalidTypeMessage(node, expectedType, actualType, line));
         numProblems++;
     }
 
     public void setResource(IFile resource) {
-        System.out.println("\nChecking: " + resource.getFullPath());
+        out.println("\nChecking: " + resource.getFullPath());
     }
     
     private String createUnknownMessage(ASTNode node, int line) {
@@ -58,5 +67,24 @@ public class SysoutStaticCheckerHandler implements IStaticCheckerHandler {
 
     public void handleResourceStart(IResource resource) throws CoreException {
         // do nothing
+    }
+    
+    public void finish(Shell shell) {
+        String message = createMessage();
+        out.println(message);
+        if (out != System.out) {
+            out.close();
+            System.out.println(message);
+        }
+    }
+    
+    private String createMessage() {
+        if (numProblems == 0) {
+            return "SUCCESS";
+        } else if (numProblems == 1) {
+            return "FAILURE found 1 type checking problem";
+        } else {
+            return "FAILURE found " + numProblems + " type checking problems";
+        }
     }
 }
