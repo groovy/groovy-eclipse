@@ -41,9 +41,8 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
     public void configure(ProjectConfigurationRequest request,
             IProgressMonitor monitor) throws CoreException {
         super.configure(request, monitor);
-        MavenProject mavenProject = request.getMavenProject();
         IProject project = request.getProject();
-        if (getSourceType(mavenProject) != null) {
+        if (getSourceType(request.getMavenProjectFacade()) != null) {
             if (!project.hasNature(GroovyNature.GROOVY_NATURE)) {
                 if (!project.hasNature(JavaCore.NATURE_ID)) {
                     addJavaNature(project);
@@ -64,7 +63,7 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
     public void configureClasspath(IMavenProjectFacade facade,
             IClasspathDescriptor classpath, IProgressMonitor monitor)
             throws CoreException {
-    	SourceType sourceType = getSourceType(facade.getMavenProject());
+    	SourceType sourceType = getSourceType(facade);
         if (sourceType != null) {
             // add source folders
             IJavaProject javaProject = JavaCore.create(facade.getProject());
@@ -118,20 +117,27 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
      * @param mavenProject
      * @return
      */
-    private SourceType getSourceType(MavenProject mavenProject) {
+    private SourceType getSourceType(IMavenProjectFacade facade) {
+        MavenProject mavenProject = facade.getMavenProject();
         Plugin plugin = getGMavenPlugin(mavenProject);
-        SourceType result = null;
-        if (plugin == null) {
-            // look to see if there is the maven-compiler-plugin
-            // with a compilerId of the groovy eclipse compiler
-            if (compilerPluginUsesGroovyEclipseAdapter(mavenProject)) {
-                return SourceType.NONE;
-            }
+        if (plugin != null) {
+            return getSourceTypeInGMavenProject(plugin);
         }
         
+        // look to see if there is the maven-compiler-plugin
+        // with a compilerId of the groovy eclipse compiler
+        if (compilerPluginUsesGroovyEclipseAdapter(mavenProject)) {
+            return getSourceTypeInGECProject(facade);
+        }
+        
+        // not a groovy project
+        return null;
+    }
+
+    private SourceType getSourceTypeInGMavenProject(Plugin plugin) {
+        SourceType result = SourceType.NONE;
         if (plugin != null && plugin.getExecutions() != null
                 && !plugin.getExecutions().isEmpty()) {
-        	result = SourceType.NONE;
         	for (PluginExecution execution : plugin.getExecutions()) {
             	if (execution.getGoals().contains(COMPILE)) {
             		switch (result) {
@@ -157,6 +163,27 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
         }
         
         return result;
+    }
+
+    /**
+     * in this case, look to see if the folders exist.
+     * if so, they are automatically added
+     */
+    private SourceType getSourceTypeInGECProject(IMavenProjectFacade facade) {
+        IProject project = facade.getProject();
+        boolean srcMainGroovy = project.getFolder("src/main/groovy").exists();
+        boolean srcTestGroovy = project.getFolder("src/test/groovy").exists();
+        if (srcMainGroovy) {
+            if (srcTestGroovy) {
+                return SourceType.BOTH;
+            } else {
+                return SourceType.MAIN;
+            }
+        } else if (srcTestGroovy) {
+            return SourceType.TEST;
+        } else {
+            return SourceType.NONE;
+        }
     }
 
     private Plugin getGMavenPlugin(MavenProject mavenProject) {
