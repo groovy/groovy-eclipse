@@ -20,6 +20,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.Position;
+import org.eclipse.swt.widgets.Shell;
 
 /**
  * 
@@ -32,4 +33,10 @@ public interface IStaticCheckerHandler {
     void setResource(IFile resource);
     int numProblemsFound();
     void handleResourceStart(IResource resource) throws CoreException;
+    
+    /**
+     * Finish the type checking and display any messages to user
+     * @param shell Useful for openning a message dialog.  May be null if running headless
+     */
+    void finish(Shell shell);
 }

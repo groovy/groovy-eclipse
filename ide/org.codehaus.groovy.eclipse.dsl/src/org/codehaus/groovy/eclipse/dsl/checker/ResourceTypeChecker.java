@@ -161,5 +161,6 @@ public class ResourceTypeChecker {
             resource.accept(visitor);
             monitor.worked(1);
         }
+        handler.finish(null);
     }
 }

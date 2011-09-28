@@ -72,15 +72,6 @@ public class StaticTypeCheckAction extends AbstractCheckerAction implements IObj
         } catch (CoreException e) {
             GroovyCore.logException("Exception when performing static type checking", e);
         }
-        if (shell != null) {
-            if (handler.numProblemsFound() == 0) {
-                MessageDialog.openInformation(shell, "Static type checking complete", "Static type checking complete. Found no problems.");
-            } else if (handler.numProblemsFound() == 1) {
-                MessageDialog.openInformation(shell, "Static type checking complete", "Static type checking complete. Found one problem.  See Problems view.");
-            } else {
-                MessageDialog.openInformation(shell, "Static type checking complete", "Static type checking complete. Found " + handler.numProblemsFound() + " problems.  See Problems view.");
-            }
-        }
     }
 
     

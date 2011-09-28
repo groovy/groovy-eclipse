@@ -72,6 +72,7 @@ public class SysoutStaticCheckerHandler implements IStaticCheckerHandler {
     public void finish(Shell shell) {
         String message = createMessage();
         out.println(message);
+//        out.flush();
         if (out != System.out) {
             out.close();
             System.out.println(message);

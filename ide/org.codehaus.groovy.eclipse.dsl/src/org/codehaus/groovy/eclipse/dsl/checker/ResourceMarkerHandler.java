@@ -22,7 +22,9 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.Position;
+import org.eclipse.swt.widgets.Shell;
 
 /**
  * Adds resource markers for all unknown and type assertion failures
@@ -76,6 +78,18 @@ public class ResourceMarkerHandler implements IStaticCheckerHandler {
     }
     public void handleResourceStart(IResource resource) throws CoreException {
         resource.deleteMarkers(GroovyDSLCoreActivator.MARKER_ID, true, IResource.DEPTH_ZERO);
+    }
+    
+    public void finish(Shell shell) {
+        if (shell != null) {
+            if (numProblemsFound() == 0) {
+                MessageDialog.openInformation(shell, "Static type checking complete", "Static type checking complete. Found no problems.");
+            } else if (numProblemsFound() == 1) {
+                MessageDialog.openInformation(shell, "Static type checking complete", "Static type checking complete. Found one problem.  See Problems view.");
+            } else {
+                MessageDialog.openInformation(shell, "Static type checking complete", "Static type checking complete. Found " + numProblemsFound() + " problems.  See Problems view.");
+            }
+        }
     }
 
 }
