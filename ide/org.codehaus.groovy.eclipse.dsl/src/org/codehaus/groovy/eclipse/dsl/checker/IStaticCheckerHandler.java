@@ -37,6 +37,7 @@ public interface IStaticCheckerHandler {
     /**
      * Finish the type checking and display any messages to user
      * @param shell Useful for openning a message dialog.  May be null if running headless
+     * @return true if no problems found, false otherwise
      */
-    void finish(Shell shell);
+    boolean finish(Shell shell);
 }

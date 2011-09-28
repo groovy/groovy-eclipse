@@ -148,7 +148,13 @@ public class ResourceTypeChecker {
         return Collections.<IResource>singletonList(project);
     }
 
-    public void doCheck(IProgressMonitor monitor) throws CoreException {
+    /**
+     * Performs the tpe checking on the selected resources.
+     * @param monitor progress monitor, can be null
+     * @return true iff no type problems were found
+     * @throws CoreException
+     */
+    public boolean doCheck(IProgressMonitor monitor) throws CoreException {
         if (monitor == null) {
             monitor = new NullProgressMonitor();
         }
@@ -161,6 +167,6 @@ public class ResourceTypeChecker {
             resource.accept(visitor);
             monitor.worked(1);
         }
-        handler.finish(null);
+        return handler.finish(null);
     }
 }

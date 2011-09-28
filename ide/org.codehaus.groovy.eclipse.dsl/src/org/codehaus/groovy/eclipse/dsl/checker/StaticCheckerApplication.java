@@ -70,10 +70,11 @@ public class StaticCheckerApplication implements IApplication {
             job.run(new NullProgressMonitor());
             
             System.out.println("Performing static type checking on project " + projectName);
+            boolean success = false;
             try {
                 IStaticCheckerHandler handler = new SysoutStaticCheckerHandler(resultFile == null ? System.out : createOutStream(resultFile));
                 ResourceTypeChecker checker = new ResourceTypeChecker(handler, projectName, inclusionFilters, exclusionFilters, assertionsOnly);
-                checker.doCheck(null);
+                success = checker.doCheck(null);
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
@@ -86,7 +87,9 @@ public class StaticCheckerApplication implements IApplication {
             });
             
             // FIXADE Is this OK to do?
-            System.exit(0);
+            System.exit(success ? 0 : -1);
+            
+            // won't get here
             return Status.OK_STATUS;
         }
         

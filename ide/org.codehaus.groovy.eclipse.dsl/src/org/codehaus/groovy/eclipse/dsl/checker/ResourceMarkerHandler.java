@@ -80,7 +80,7 @@ public class ResourceMarkerHandler implements IStaticCheckerHandler {
         resource.deleteMarkers(GroovyDSLCoreActivator.MARKER_ID, true, IResource.DEPTH_ZERO);
     }
     
-    public void finish(Shell shell) {
+    public boolean finish(Shell shell) {
         if (shell != null) {
             if (numProblemsFound() == 0) {
                 MessageDialog.openInformation(shell, "Static type checking complete", "Static type checking complete. Found no problems.");
@@ -90,6 +90,7 @@ public class ResourceMarkerHandler implements IStaticCheckerHandler {
                 MessageDialog.openInformation(shell, "Static type checking complete", "Static type checking complete. Found " + numProblemsFound() + " problems.  See Problems view.");
             }
         }
+        return numFound == 0;
     }
 
 }

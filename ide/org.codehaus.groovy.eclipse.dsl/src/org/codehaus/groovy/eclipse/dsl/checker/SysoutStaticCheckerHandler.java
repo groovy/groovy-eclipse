@@ -69,7 +69,7 @@ public class SysoutStaticCheckerHandler implements IStaticCheckerHandler {
         // do nothing
     }
     
-    public void finish(Shell shell) {
+    public boolean finish(Shell shell) {
         String message = createMessage();
         out.println(message);
 //        out.flush();
@@ -77,6 +77,7 @@ public class SysoutStaticCheckerHandler implements IStaticCheckerHandler {
             out.close();
             System.out.println(message);
         }
+        return numProblems == 0;
     }
     
     private String createMessage() {
