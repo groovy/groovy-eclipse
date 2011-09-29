@@ -19,12 +19,6 @@
 						<groupId>org.codehaus.groovy</groupId>
 						<artifactId>groovy-eclipse-compiler</artifactId>
 						<version>2.5.2-SNAPSHOT</version>
-						<exclusions>
-							<exclusion>
-								<groupId>org.codehaus.groovy</groupId>
-								<artifactId>groovy-eclipse-batch</artifactId>
-							</exclusion>
-						</exclusions>
 					</dependency>
 				</dependencies>
 			</plugin>
@@ -35,7 +29,7 @@
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-all</artifactId>
-			<version>1.8.0</version>
+			<version>1.8.2</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
