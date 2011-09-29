@@ -12,10 +12,16 @@ package org.eclipse.jdt.groovy.search;
 
 import groovy.lang.Tuple;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -79,9 +85,15 @@ public class VariableScope {
 	public static final ClassNode ITERATOR_CLASS = ClassHelper.make(Iterator.class);
 	public static final ClassNode ENUMERATION_CLASS = ClassHelper.make(Enumeration.class);
 	public static final ClassNode INPUT_STREAM_CLASS = ClassHelper.make(InputStream.class);
+	public static final ClassNode OUTPUT_STREAM_CLASS = ClassHelper.make(OutputStream.class);
 	public static final ClassNode DATA_INPUT_STREAM_CLASS = ClassHelper.make(DataInputStream.class);
+	public static final ClassNode DATA_OUTPUT_STREAM_CLASS = ClassHelper.make(DataOutputStream.class);
 	public static final ClassNode OBJECT_OUTPUT_STREAM = ClassHelper.make(ObjectOutputStream.class);
 	public static final ClassNode OBJECT_INPUT_STREAM = ClassHelper.make(ObjectInputStream.class);
+	public static final ClassNode FILE_CLASS_NODE = ClassHelper.make(File.class);
+	public static final ClassNode BUFFERED_READER_CLASS_NODE = ClassHelper.make(BufferedReader.class);
+	public static final ClassNode BUFFERED_WRITER_CLASS_NODE = ClassHelper.make(BufferedWriter.class);
+	public static final ClassNode PRINT_WRITER_CLASS_NODE = ClassHelper.make(PrintWriter.class);
 
 	// standard category classes
 	public static final ClassNode DGM_CLASS_NODE = ClassHelper.make(DefaultGroovyMethods.class);

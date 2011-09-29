@@ -1100,6 +1100,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 			if (dgmClosureMethods.contains(methodName)) {
 				inferredType = VariableScope.extractElementType(call.declaringType);
+			} else if (dgmClosureIdentityMethods.contains(methodName)) {
+				inferredType = VariableScope.clone(call.declaringType);
 			} else {
 				// inferredType might be null
 				inferredType = dgmClosureMethodsMap.get(methodName);
@@ -1113,8 +1115,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 				// if declaring type is a map and
 				if (call.declaringType.getName().equals(VariableScope.MAP_CLASS_NODE.getName())) {
-					if (((methodName.equals("each") || methodName.equals("collect")) && numParams == 2 || methodName
-							.equals("collectEntries") && numParams == 2)
+					if ((dgmClosureMaybeMap.contains(methodName) && numParams == 2)
 							|| (methodName.equals("eachWithIndex") && numParams == 3)) {
 						GenericsType[] typeParams = inferredType.getGenericsTypes();
 						if (typeParams != null && typeParams.length == 2) {
@@ -1144,13 +1145,17 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		dgmClosureMethods.add("every");
 		dgmClosureMethods.add("collect");
 		dgmClosureMethods.add("collectEntries");
+		dgmClosureMethods.add("collectNested");
+		dgmClosureMethods.add("collectMany");
 		dgmClosureMethods.add("findAll");
 		dgmClosureMethods.add("groupBy");
+		dgmClosureMethods.add("groupEntriesBy");
 
 		dgmClosureMethods.add("inject");
 		dgmClosureMethods.add("count");
 		dgmClosureMethods.add("countBy");
 		dgmClosureMethods.add("findResult");
+		dgmClosureMethods.add("findResults");
 		dgmClosureMethods.add("grep");
 		dgmClosureMethods.add("split");
 		dgmClosureMethods.add("sum");
@@ -1164,8 +1169,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		dgmClosureMethods.add("max");
 		dgmClosureMethods.add("eachPermutation");
 		dgmClosureMethods.add("sort");
+		dgmClosureMethods.add("withDefault");
 
-		// these don't take collections, but can be handled inthe same way
+		// these don't take collections, but can be handled in the same way
 		dgmClosureMethods.add("identity");
 		dgmClosureMethods.add("times");
 		dgmClosureMethods.add("upto");
@@ -1178,6 +1184,32 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		dgmClosureMethods.add("traverse");
 	}
 
+	// These methods have a type for the closure argument that is the same as the declaring type
+	private static final Set<String> dgmClosureIdentityMethods = new HashSet<String>();
+	static {
+		dgmClosureIdentityMethods.add("with");
+		dgmClosureIdentityMethods.add("addShutdownHook");
+	}
+
+	// these methods can be called with a collection or a map.
+	// When called with a map and there are 2 closure arguments, then
+	// the types are the key/value of the map entry
+	private static final Set<String> dgmClosureMaybeMap = new HashSet<String>();
+	static {
+		dgmClosureMaybeMap.add("any");
+		dgmClosureMaybeMap.add("every");
+		dgmClosureMaybeMap.add("each");
+		dgmClosureMaybeMap.add("collect");
+		dgmClosureMaybeMap.add("collectEntries");
+		dgmClosureMaybeMap.add("findResult");
+		dgmClosureMaybeMap.add("findResults");
+		dgmClosureMaybeMap.add("findAll");
+		dgmClosureMaybeMap.add("groupBy");
+		dgmClosureMaybeMap.add("groupEntriesBy");
+		dgmClosureMaybeMap.add("inject");
+		dgmClosureMaybeMap.add("withDefault");
+	}
+
 	// These methods have a fixed type for the closure argument
 	private static final Map<String, ClassNode> dgmClosureMethodsMap = new HashMap<String, ClassNode>();
 	static {
@@ -1185,6 +1217,22 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		dgmClosureMethodsMap.put("splitEachLine", VariableScope.STRING_CLASS_NODE);
 		dgmClosureMethodsMap.put("withObjectOutputStream", VariableScope.OBJECT_OUTPUT_STREAM);
 		dgmClosureMethodsMap.put("withObjectInputStream", VariableScope.OBJECT_INPUT_STREAM);
+		dgmClosureMethodsMap.put("withDataOutputStream", VariableScope.DATA_OUTPUT_STREAM_CLASS);
+		dgmClosureMethodsMap.put("withDataInputStream", VariableScope.DATA_INPUT_STREAM_CLASS);
+		dgmClosureMethodsMap.put("withOutputStream", VariableScope.OUTPUT_STREAM_CLASS);
+		dgmClosureMethodsMap.put("withInputStream", VariableScope.INPUT_STREAM_CLASS);
+		dgmClosureMethodsMap.put("withStream", VariableScope.OUTPUT_STREAM_CLASS);
+		dgmClosureMethodsMap.put("metaClass", ClassHelper.METACLASS_TYPE);
+		dgmClosureMethodsMap.put("eachFileMatch", VariableScope.FILE_CLASS_NODE);
+		dgmClosureMethodsMap.put("eachDirMatch", VariableScope.FILE_CLASS_NODE);
+		dgmClosureMethodsMap.put("withReader", VariableScope.BUFFERED_READER_CLASS_NODE);
+		dgmClosureMethodsMap.put("withWriter", VariableScope.BUFFERED_WRITER_CLASS_NODE);
+		dgmClosureMethodsMap.put("withWriterAppend", VariableScope.BUFFERED_WRITER_CLASS_NODE);
+		dgmClosureMethodsMap.put("withPrintWriter", VariableScope.PRINT_WRITER_CLASS_NODE);
+		dgmClosureMethodsMap.put("transformChar", VariableScope.STRING_CLASS_NODE);
+		dgmClosureMethodsMap.put("transformLine", VariableScope.STRING_CLASS_NODE);
+		dgmClosureMethodsMap.put("filterLine", VariableScope.STRING_CLASS_NODE);
+		dgmClosureMethodsMap.put("eachMatch", VariableScope.STRING_CLASS_NODE);
 	}
 
 	@Override

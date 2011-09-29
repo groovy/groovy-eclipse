@@ -34,6 +34,7 @@ public class AllSearchTests {
         suite.addTestSuite(InferencingTests.class);
         suite.addTestSuite(StaticInferencingTests.class);
         suite.addTestSuite(GenericInferencingTests.class);
+        suite.addTestSuite(DGMInferencingTests.class);
         suite.addTestSuite(LocalVariableReferenceSearchTests.class);
         suite.addTestSuite(JDTPropertyNodeInferencingTests.class);
         suite.addTestSuite(DeclarationInferencingTests.class);
