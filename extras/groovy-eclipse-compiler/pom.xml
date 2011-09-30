@@ -41,9 +41,9 @@
 		<url>http://jira.codehaus.org/browse/GRECLIPSE</url>
 	</issueManagement>
 	<scm>
-		<connection>scm:svn:http://svn.codehaus.org/groovy/eclipse/tags/groovy-eclipse-compiler-2.5.2-01</connection>
-		<developerConnection>scm:svn:https://svn.codehaus.org/groovy/eclipse/tags/groovy-eclipse-compiler-2.5.2-01</developerConnection>
-		<url>http://svn.codehaus.org/groovy/eclipse/tags/groovy-eclipse-compiler-2.5.2-01</url>
+		<connection>scm:svn:http://svn.codehaus.org/groovy/eclipse/trunk/extras/groovy-eclipse-compiler</connection>
+		<developerConnection>scm:svn:https://svn.codehaus.org/groovy/eclipse/trunk/extras/groovy-eclipse-compiler</developerConnection>
+		<url>http://svn.codehaus.org/groovy/eclipse/trunk/extras/groovy-eclipse-compiler</url>
 	</scm>
 	<organization>
 		<name>The Codehuas</name>
