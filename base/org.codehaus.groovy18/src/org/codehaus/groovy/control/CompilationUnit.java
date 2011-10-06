@@ -188,12 +188,7 @@ public class CompilationUnit extends ProcessingUnit {
         // GRECLIPSE: start: skip output phase
 	  // addPhaseOperation(output);
         
-        // GRECLIPSE: start
-        if (transformLoader!=null) {
-        // end        	
-        	ASTTransformationVisitor.addPhaseOperations(this);
-        }
-        // end
+        ASTTransformationVisitor.addPhaseOperations(this);
 		addPhaseOperation(new PrimaryClassNodeOperation() {
             @Override
             public void call(SourceUnit source, GeneratorContext context,
@@ -1186,13 +1181,16 @@ public class CompilationUnit extends ProcessingUnit {
 		return "CompilationUnit: null";
 	}
 
+	public boolean allowTransforms = true;
+	public boolean isReconcile = false;
+	
 	/**
 	 * Slightly modifies the behaviour of the phases based on what the caller really needs.  Some invocations of the compilation
 	 * infrastructure don't need the bytecode, so we can skip creating it, they would rather have a more 'source like' AST.
 	 * 
 	 * @param isReconcile is this a reconciling compile?
 	 */
-	public void tweak(boolean isReconcile) {
+	public void tweak(boolean isReconcile, boolean allowTransforms) {
 		// Cant do this for field initializers. They need to be in the constructor in order for them to
 		// be correctly visited by the verifier and have certain optimizations performed (creating returns)
 		if (isReconcile) {
@@ -1202,6 +1200,8 @@ public class CompilationUnit extends ProcessingUnit {
         	verifier.inlineStaticFieldInitializersIntoClinit=true;			
 //        	verifier.inlineFieldInitializersIntoInit=true;
 		}
+		this.isReconcile = isReconcile;
+		this.allowTransforms = allowTransforms;
 	}
 	// end
     

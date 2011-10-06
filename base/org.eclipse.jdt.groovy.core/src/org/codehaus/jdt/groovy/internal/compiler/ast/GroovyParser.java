@@ -258,12 +258,9 @@ public class GroovyParser {
 		// Currently it is not cached but created each time - we'll have to decide if there is a need to cache
 		GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader();
 		this.groovyCompilationUnit = makeCompilationUnit(grabbyLoader, allowTransforms ? gcl : null);
-		this.groovyCompilationUnit.tweak(isReconcile);
+		this.groovyCompilationUnit.tweak(isReconcile, allowTransforms);
 		if (grabbyLoader != null) {
 			grabbyLoader.setCompilationUnit(groovyCompilationUnit);
-		}
-		if (gcl == null && allowTransforms) {
-			this.groovyCompilationUnit.ensureASTTransformVisitorAdded();
 		}
 		this.groovyCompilationUnit.removeOutputPhaseOperation();
 		if ((options.groovyFlags & 0x01) != 0) {
@@ -524,12 +521,12 @@ public class GroovyParser {
 	public void reset() {
 		GroovyClassLoader gcl = getLoaderFor(gclClasspath);
 		GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader();
+		boolean allowTransforms = this.groovyCompilationUnit.allowTransforms;
+		boolean isReconcile = this.groovyCompilationUnit.isReconcile;
 		this.groovyCompilationUnit = makeCompilationUnit(grabbyLoader, gcl);
+		this.groovyCompilationUnit.tweak(isReconcile, allowTransforms);
 		this.scriptFolderSelector = null;
 		grabbyLoader.setCompilationUnit(this.groovyCompilationUnit);
-		if (gcl == null) {
-			this.groovyCompilationUnit.ensureASTTransformVisitorAdded();
-		}
 		this.resolver = new JDTResolver(groovyCompilationUnit);
 		this.groovyCompilationUnit.setResolveVisitor(resolver);
 	}

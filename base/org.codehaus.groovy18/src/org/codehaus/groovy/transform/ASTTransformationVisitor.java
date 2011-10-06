@@ -34,6 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.codehaus.groovy.GroovyException;
 import org.codehaus.groovy.ast.ASTNode;
@@ -201,6 +202,12 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
 
     public static void addPhaseOperations(final CompilationUnit compilationUnit) {
         addGlobalTransforms(compilationUnit);
+        // GRECLIPSE
+        // want a subset to run during a reconcile...
+        if (!compilationUnit.allowTransforms) {
+        	return;
+        }
+        // GRECLIPSE
 
         compilationUnit.addPhaseOperation(new CompilationUnit.PrimaryClassNodeOperation() {
             public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
@@ -298,7 +305,14 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                             }
 
                         } else {
-                            transformNames.put(className, service);
+                        	// GRECLIPSE: start
+                        	/*old{
+                        		transformNames.put(className, service);
+                        	}new*/
+                        	if (compilationUnit.allowTransforms || globalTransformsAllowedInReconcile.contains(className)) {
+                        		transformNames.put(className, service);
+                        	}
+                        	// GRECLIPSE: end
                         }
                     }
                     try {
@@ -357,6 +371,23 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             addPhaseOperationsForGlobalTransforms(compilationUnit, transformNames, isFirstScan);
         }
     }
+    
+    // GRECLIPSE: start
+    private static List<String> globalTransformsAllowedInReconcile = new ArrayList<String>();
+    {
+    	try {
+    		String s = System.getProperty("greclipse.globalTransformsInReconcile","");
+    		StringTokenizer st = new StringTokenizer(s,",");
+    		while (st.hasMoreElements()) {
+    			String classname = st.nextToken();
+    			globalTransformNames.add(classname);
+    		}
+    	} catch (Exception e) {
+    		// presumed security exception
+    	}
+    	globalTransformNames.add("groovy.grape.GrabAnnotationTransformation");
+    }
+    // GRECLIPSE: end
     
     private static void addPhaseOperationsForGlobalTransforms(CompilationUnit compilationUnit, 
             Map<String, URL> transformNames, boolean isFirstScan) {
