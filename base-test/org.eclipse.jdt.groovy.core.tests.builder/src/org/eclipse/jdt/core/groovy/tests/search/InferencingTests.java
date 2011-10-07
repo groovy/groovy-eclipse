@@ -530,11 +530,60 @@ public class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Bar");
     }
     public void testInClosure3() throws Exception {
-        String contents = "class Baz { }\nclass Bar {\ndef meth(x) { } }\n new Bar().meth(6) {\n new Baz() }";
+        String contents = "class Baz { }\n" +
+        		"class Bar {\n" +
+        		"  def meth(x) { }\n" +
+        		"}\n" +
+        		"new Bar().meth(6) {\n" +
+        		"  new Baz()" +
+        		"}";
         int start = contents.lastIndexOf("Baz");
         int end = start + "Baz".length();
         assertType(contents, start, end, "Baz");
     }
+    
+    public void testClosure4() throws Exception {
+        String contents = 
+            "class Baz {\n" +
+            "  URL other\n" +
+            "  def method() {\n" +
+            "    sumthin { other }\n" +
+            "  }\n" +
+            "}";
+        int start = contents.lastIndexOf("other");
+        int end = start + "other".length();
+        assertType(contents, start, end, "java.net.URL");
+    }
+    
+
+    public void testClosure5() throws Exception {
+        String contents = 
+                "class Baz {\n" +
+                        "  URL other\n" +
+                        "  def method() {\n" +
+                        "    sumthin {\n" +
+                        "      delegate\n" +
+                        "      owner\n" +
+                        "      getDelegate()\n" +
+                        "      getOwner()\n" +
+                        "    }\n" +
+                        "  }\n" +
+                        "}";
+        int start = contents.lastIndexOf("delegate");
+        int end = start + "delegate".length();
+        assertType(contents, start, end, "Baz");
+        start = contents.lastIndexOf("owner");
+        end = start + "owner".length();
+        assertType(contents, start, end, "Baz");
+        start = contents.lastIndexOf("getDelegate");
+        end = start + "getDelegate".length();
+        assertType(contents, start, end, "Baz");
+        start = contents.lastIndexOf("getOwner");
+        end = start + "getOwner".length();
+        assertType(contents, start, end, "Baz");
+    }
+    
+    
     // the declaring type of things inside of a closure should be the declaring 
     // type of the method that calls the closure
     public void testInClosureDeclaringType1() throws Exception {
@@ -593,6 +642,8 @@ public class InferencingTests extends AbstractInferencingTest {
         int end = start + "other".length();
         assertDeclaringType(contents, start, end, "Baz", false, true);
     }
+    
+    
     // Unknown references should have the declaring type of the enclosing closure
     public void testInScriptDeclaringType() throws Exception {
         String contents = 

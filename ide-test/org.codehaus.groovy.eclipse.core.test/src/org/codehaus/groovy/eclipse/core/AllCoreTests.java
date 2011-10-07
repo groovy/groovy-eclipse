@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,8 @@ package org.codehaus.groovy.eclipse.core;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.codehaus.groovy.eclipse.core.search.SyntheticMemberSearchTests;
+
 public class AllCoreTests {
     public static Test suite() {
         final TestSuite suite = new TestSuite(AllCoreTests.class.getPackage().getName());
@@ -26,6 +28,7 @@ public class AllCoreTests {
         suite.addTest(org.codehaus.groovy.eclipse.core.compiler.AllTests.suite());
         suite.addTest(org.codehaus.groovy.eclipse.core.impl.AllTests.suite());
         suite.addTest(org.codehaus.groovy.eclipse.core.util.AllTests.suite());
+        suite.addTestSuite(SyntheticMemberSearchTests.class);
         return suite;
     }
 }

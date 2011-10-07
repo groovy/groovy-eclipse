@@ -249,6 +249,29 @@ public class FieldCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "xxx()", 1);
     }
     
+    // GRECLIPSE-1114
+    public void testClosure4() throws Exception {
+        String contents = "def xxx = { def bot\n b }";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "b"), GroovyCompletionProposalComputer.class);
+        // from the delegate
+        proposalExists(proposals, "binding", 1);
+        // from inside closure
+        proposalExists(proposals, "bot", 1);
+    }
+    
+    // GRECLIPSE-1114
+    public void testClosure5() throws Exception {
+        String contents = "def xxx() { }\n" + 
+        		"(0..10).each {\n" + 
+        		"    xx\n" + 
+        		"}";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "xx"), GroovyCompletionProposalComputer.class);
+        // from the delegate
+        proposalExists(proposals, "xxx", 1);
+    }
+    
     // GRECLIPSE-1175
     public void testInitializer1() throws Exception {
         String contents = 

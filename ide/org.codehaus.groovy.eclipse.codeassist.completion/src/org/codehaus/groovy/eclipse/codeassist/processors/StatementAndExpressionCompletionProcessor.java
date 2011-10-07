@@ -241,7 +241,7 @@ public class StatementAndExpressionCompletionProcessor extends
         }
 
         private boolean isAssignmentOfLhs(BinaryExpression node) {
-            if (node != null) {
+            if (node != null && lhsNode != null) {
                 Expression expression = node.getLeftExpression();
                 return expression.getClass() == lhsNode.getClass() && expression.getStart() == lhsNode.getStart()
                         && expression.getEnd() == lhsNode.getEnd();
@@ -353,15 +353,12 @@ public class StatementAndExpressionCompletionProcessor extends
             isStatic = isStatic() || requestor.isStatic;
             IProposalCreator[] creators = getAllProposalCreators();
             completionType = getCompletionType(requestor);
-            for (IProposalCreator creator : creators) {
-                if (creator instanceof AbstractProposalCreator) {
-                    ((AbstractProposalCreator) creator)
-                            .setLhsType(requestor.lhsType);
-                    ((AbstractProposalCreator) creator)
-                            .setCurrentScope(requestor.currentScope);
-                }
-                groovyProposals.addAll(creator.findAllProposals(completionType, requestor.categories,
-                        context.getPerceivedCompletionExpression(), isStatic));
+            proposalCreatorLoop(context, requestor, completionType, isStatic, groovyProposals, creators);
+            VariableInfo info = requestor.currentScope.lookupName("delegate");
+            if (info != null && !info.type.equals(completionType)) {
+                // inside of a closure
+                // must also add content assist for the delegate
+                proposalCreatorLoop(context, requestor, info.type, isStatic, groovyProposals, creators);
             }
         } else {
             // we are at the statement location of a script
@@ -451,6 +448,20 @@ public class StatementAndExpressionCompletionProcessor extends
         }
 
         return javaProposals;
+    }
+
+    private void proposalCreatorLoop(ContentAssistContext context, ExpressionCompletionRequestor requestor,
+            ClassNode completionType, boolean isStatic, List<IGroovyProposal> groovyProposals, IProposalCreator[] creators) {
+        for (IProposalCreator creator : creators) {
+            if (creator instanceof AbstractProposalCreator) {
+                ((AbstractProposalCreator) creator)
+                        .setLhsType(requestor.lhsType);
+                ((AbstractProposalCreator) creator)
+                        .setCurrentScope(requestor.currentScope);
+            }
+            groovyProposals.addAll(creator.findAllProposals(completionType, requestor.categories,
+                    context.getPerceivedCompletionExpression(), isStatic));
+        }
     }
 
     /**

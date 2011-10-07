@@ -161,9 +161,10 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
 
     /**
      * returns all fields, even those that are converted into properties
+     * 
      * @param thisType
      * @return
-     * @see http://docs.codehaus.org/display/GROOVY/Groovy+Beans
+     * @see http://docs.codehaus.org/display/G ROOVY/Groovy+Beans
      */
     private Collection<FieldNode> getAllFields(ClassNode thisType) {
         // use a LinkedHashSet to preserve order

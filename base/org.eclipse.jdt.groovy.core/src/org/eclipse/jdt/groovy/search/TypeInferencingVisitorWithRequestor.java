@@ -1069,6 +1069,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			if (implicitParamType[0] != VariableScope.OBJECT_CLASS_NODE && !scope.containsInThisScope("it")) {
 				scope.addVariable("it", implicitParamType[0], VariableScope.OBJECT_CLASS_NODE);
 			}
+
+			// owner and delegate is the 'this' type of outside the closure
+			ClassNode thisType = scope.lookupName("this").type;
+			scope.addVariable("owner", thisType, VariableScope.CLOSURE_CLASS);
+			scope.addVariable("delegate", thisType, VariableScope.CLOSURE_CLASS);
+			scope.addVariable("getOwner", thisType, VariableScope.CLOSURE_CLASS);
+			scope.addVariable("getDelegate", thisType, VariableScope.CLOSURE_CLASS);
+
 			CallAndType cat = scope.getEnclosingMethodCallExpression();
 			if (cat != null) {
 				scope.addVariable("this", cat.declaringType, cat.declaringType);

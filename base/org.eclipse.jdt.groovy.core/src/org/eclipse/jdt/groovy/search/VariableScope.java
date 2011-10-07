@@ -94,6 +94,7 @@ public class VariableScope {
 	public static final ClassNode BUFFERED_READER_CLASS_NODE = ClassHelper.make(BufferedReader.class);
 	public static final ClassNode BUFFERED_WRITER_CLASS_NODE = ClassHelper.make(BufferedWriter.class);
 	public static final ClassNode PRINT_WRITER_CLASS_NODE = ClassHelper.make(PrintWriter.class);
+	public static final ClassNode CLOSURE_CLASS = ClassHelper.CLOSURE_TYPE;
 
 	// standard category classes
 	public static final ClassNode DGM_CLASS_NODE = ClassHelper.make(DefaultGroovyMethods.class);
@@ -172,6 +173,10 @@ public class VariableScope {
 		 * the enclosing method call is the one where there are the current node is part of an argument list
 		 */
 		final Stack<CallAndType> enclosingCallStack = new Stack<VariableScope.CallAndType>();
+		/**
+		 * Node currently being evaluated, or null if none
+		 */
+		final Stack<ASTNode> nodeStack = new Stack<ASTNode>();
 	}
 
 	public static ClassNode NO_CATEGORY = null;
@@ -203,13 +208,6 @@ public class VariableScope {
 	private ClassNode categoryBeingDeclared;
 
 	/**
-	 * Node currently being evaluated, or null if none
-	 * 
-	 * FIXADE consider moving this to the shared state
-	 */
-	private Stack<ASTNode> nodeStack;
-
-	/**
 	 * If visiting the identifier of a method call expression, this field will be equal to the number of arguments to the method
 	 * call.
 	 */
@@ -218,8 +216,12 @@ public class VariableScope {
 	public VariableScope(VariableScope parent, ASTNode enclosingNode, boolean isStatic) {
 		this.parent = parent;
 		this.scopeNode = enclosingNode;
+		if (parent != null) {
+			this.shared = parent.shared;
+		} else {
+			this.shared = new SharedState();
+		}
 
-		this.nodeStack = new Stack<ASTNode>();
 		// this scope is considered static if in a static method, or
 		// it's parent is static
 		this.isStaticScope = isStatic || (parent != null && parent.isStaticScope);
@@ -227,12 +229,6 @@ public class VariableScope {
 			this.enclosingClosure = (ClosureExpression) enclosingNode;
 		} else {
 			this.enclosingClosure = null;
-		}
-
-		if (parent != null) {
-			this.shared = parent.shared;
-		} else {
-			this.shared = new SharedState();
 		}
 	}
 
@@ -250,10 +246,10 @@ public class VariableScope {
 	}
 
 	public ASTNode getEnclosingNode() {
-		if (nodeStack.size() > 1) {
-			ASTNode current = nodeStack.pop();
-			ASTNode enclosing = nodeStack.peek();
-			nodeStack.push(current);
+		if (shared.nodeStack.size() > 1) {
+			ASTNode current = shared.nodeStack.pop();
+			ASTNode enclosing = shared.nodeStack.peek();
+			shared.nodeStack.push(current);
 			return enclosing;
 		} else {
 			return null;
@@ -261,18 +257,18 @@ public class VariableScope {
 	}
 
 	public void setCurrentNode(ASTNode currentNode) {
-		nodeStack.push(currentNode);
+		shared.nodeStack.push(currentNode);
 	}
 
 	public void forgetCurrentNode() {
-		if (!nodeStack.isEmpty()) {
-			nodeStack.pop();
+		if (!shared.nodeStack.isEmpty()) {
+			shared.nodeStack.pop();
 		}
 	}
 
 	public ASTNode getCurrentNode() {
-		if (!nodeStack.isEmpty()) {
-			return nodeStack.peek();
+		if (!shared.nodeStack.isEmpty()) {
+			return shared.nodeStack.peek();
 		} else {
 			return null;
 		}
