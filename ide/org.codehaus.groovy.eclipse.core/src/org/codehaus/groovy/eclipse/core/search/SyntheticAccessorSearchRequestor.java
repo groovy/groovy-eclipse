@@ -199,7 +199,7 @@ public class SyntheticAccessorSearchRequestor {
         }
 
         public ISourceRange getNameRange() throws JavaModelException {
-            return ((ISourceReference) delegate.getParent()).getNameRange();
+            return ((IMethod) delegate.getParent()).getNameRange();
         }
 
         public void copy(IJavaElement container, IJavaElement sibling, String rename, boolean replace, IProgressMonitor monitor)
