@@ -58,6 +58,11 @@ public class NamePointcut extends FilteringPointcut<Object> {
         } else {
             toCompare = String.valueOf(result.toString());
         }
+        
+        if (firstArgAsString == null) {
+            // always match
+            return toCompare;
+        }
         return toCompare.equals(firstArgAsString) ? toCompare : null;
     }
 

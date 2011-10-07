@@ -48,6 +48,17 @@ public class EnclosingCallDeclaringTypePointcut extends AbstractPointcut {
         }
         
         Object firstArgument = getFirstArgument();
+        if (firstArgument == null) {
+            List<CallAndType> allEnclosingMethodCallExpressions = pattern.getCurrentScope().getAllEnclosingMethodCallExpressions();
+            if (allEnclosingMethodCallExpressions != null && allEnclosingMethodCallExpressions.size() > 0) {
+                List<ClassNode> enclosingCallTypes = new ArrayList<ClassNode>(allEnclosingMethodCallExpressions.size());
+                for (CallAndType callAndType : allEnclosingMethodCallExpressions) {
+                    enclosingCallTypes.add(callAndType.declaringType);
+                }
+                return enclosingCallTypes;
+            }
+            return null;
+        }
         if (firstArgument instanceof Class<?>) {
             firstArgument = ((Class<?>) firstArgument).getName();
         }
@@ -86,9 +97,13 @@ public class EnclosingCallDeclaringTypePointcut extends AbstractPointcut {
      */
     @Override
     public void verify() throws PointcutVerificationException {
-        String oneStringOrOnePointcutArg = oneStringOrOnePointcutOrOneClassArg();
-        if (oneStringOrOnePointcutArg != null) {
-            throw new PointcutVerificationException(oneStringOrOnePointcutArg, this);
+        String result = hasNoArgs();
+        if (result == null) {
+            return;
+        }
+        result = oneStringOrOnePointcutOrOneClassArg();
+        if (result != null) {
+            throw new PointcutVerificationException(result, this);
         }
         super.verify();
     }

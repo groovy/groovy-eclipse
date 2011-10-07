@@ -53,6 +53,6 @@ public class DeclaringTypePointcut extends FilteringPointcut<ClassNode>  {
      */
     @Override
     protected ClassNode filterObject(ClassNode result, GroovyDSLDContext context, String firstArgAsString) {
-        return result.getName().equals(firstArgAsString) ? result : null;
+        return result != null && result.getName().equals(firstArgAsString) ? result : null;
     }
 }
