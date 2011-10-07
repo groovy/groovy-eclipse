@@ -27,9 +27,8 @@ import org.codehaus.groovy.ast.expr.Expression;
  */
 public class EmptyASTFragment implements IASTFragment {
 
-    EmptyASTFragment() {
-    // TODO Auto-generated constructor stub
-    }
+    // all empty expressions are really the same
+    private static final EmptyExpression emptyExpression = new EmptyExpression();
 
     public void accept(FragmentVisitor visitor) {
         visitor.previsit(this);
@@ -41,12 +40,11 @@ public class EmptyASTFragment implements IASTFragment {
     }
 
     public Expression getAssociatedExpression() {
-        // maybe null???
-        return new EmptyExpression();
+        return emptyExpression;
     }
 
     public ASTNode getAssociatedNode() {
-        return new EmptyExpression();
+        return emptyExpression;
     }
 
     public int getEnd() {
