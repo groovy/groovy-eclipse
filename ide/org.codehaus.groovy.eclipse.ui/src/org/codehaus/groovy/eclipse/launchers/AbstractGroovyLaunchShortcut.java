@@ -53,6 +53,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.debug.ui.launchConfigurations.JavaLaunchShortcut;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -86,6 +87,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
      */
     public static final String GROOVY_FILE_NOT_RUNNABLE_MESSAGE = "Groovy {0} not found in current selection";
 
+    public static final String GROOVY_TYPE_TO_RUN = "org.codehaus.groovy.eclipse.launch.runType";
 
     private final String title;
     private final String text;
@@ -229,7 +231,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
         }
         launchConfigProperties.put(
                 IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME,
- "org.codehaus.groovy.tools.GroovyStarter");
+                "org.codehaus.groovy.tools.GroovyStarter");
         launchConfigProperties.put(
                 IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME,
                 javaProject.getElementName());
@@ -237,7 +239,11 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
                 IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS,
                 "-Dgroovy.starter.conf="+getGroovyConf() +
                 " -Dgroovy.home="+getGroovyHome()
-);
+                );
+        launchConfigProperties.put(
+                GROOVY_TYPE_TO_RUN,
+                runType == null ? "" : runType.getFullyQualifiedName()
+                );
         launchConfigProperties.put(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, "--classpath "
                 + generateClasspath(javaProject) + " --main " + classToRun() + pathToClass);
         launchConfigProperties.put(
@@ -440,12 +446,13 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
      * @throws CoreException
      */
     public ILaunchConfigurationWorkingCopy findOrCreateLaunchConfig(
-            Map<String, String> configProperties, String classUnderTest)
-            throws CoreException {
+            Map<String, String> configProperties, String simpleMainTypeName)
+                    throws CoreException {
         ILaunchConfigurationWorkingCopy returnConfig;
-        ILaunchConfiguration config = findConfiguration(configProperties);
+        ILaunchConfiguration config = findConfiguration(configProperties.get(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME),
+                configProperties.get(GROOVY_TYPE_TO_RUN));
         if (config == null) {
-            returnConfig = createLaunchConfig(configProperties, classUnderTest);
+            returnConfig = createLaunchConfig(configProperties, simpleMainTypeName);
         } else {
             returnConfig = config.getWorkingCopy();
         }
@@ -479,36 +486,30 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
 
     /**
      * This class finds any launch configrations that match the defined
-     * properties.  If more that one match is found the user is prompted
+     * properties. If more that one match is found the user is prompted
      * to select one.
      *
+     * Semantics now matches {@link JavaLaunchShortcut}. If the main type name
+     * and the
+     * project name match, then this is considered a match.
+     *
      * @param configProperties A <String, String> Map of properties to check
-     * when searching for a matching launch configuration.
+     *            when searching for a matching launch configuration.
      * @return Returns a launch configuration that matches the given properties
-     * if a match is found, otherwise returns null.
+     *         if a match is found, otherwise returns null.
      * @throws CoreException
      */
-    public ILaunchConfiguration findConfiguration(
-            Map<String, String> configProperties) throws CoreException {
+    private ILaunchConfiguration findConfiguration(String projectName, String mainTypeName) throws CoreException {
         ILaunchConfiguration returnValue = null;
         ILaunchConfigurationType configType = getGroovyLaunchConfigType();
         List<ILaunchConfiguration> candidateConfigs = ListUtil.newEmptyList();
 
-        ILaunchConfiguration[] configs = getLaunchManager()
-.getLaunchConfigurations(configType);
+        ILaunchConfiguration[] configs = getLaunchManager().getLaunchConfigurations(configType);
         for (int i = 0; i < configs.length; i++) {
             ILaunchConfiguration config = configs[i];
 
-            boolean matches = true;
-            for (Iterator<String> it = configProperties.keySet().iterator(); it
-.hasNext() && matches;) {
-                String key = it.next();
-                String value = configProperties.get(key);
-                if (!config.getAttribute(key, "").equals(value)) {
-                    matches = false;
-                }
-            }
-            if (matches) {
+            if (config.getAttribute(GROOVY_TYPE_TO_RUN, "").equals(mainTypeName) &&
+                    config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, "").equals(projectName)) {
                 candidateConfigs.add(config);
             }
         }
