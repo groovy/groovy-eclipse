@@ -391,7 +391,6 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         // must ensure that it is in the correct code block. uggh
         // insert at position before statement
 
-
         // find the longest matching parent prefix
         List<IASTFragment>[] parentsStack = new List[matchingExpressions.size()];
         int i = 0;
@@ -466,6 +465,8 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         int length = -1;
         if (parentsStack.length == 0) {
             return new IASTFragment[0];
+//        } else if (parentsStack.length == 1) {
+//            return (IASTFragment[]) parentsStack[0].toArray(new IASTFragment[0]);
         }
         int minArrayLength = parentsStack[0].size();
         for (int i = 1; i < parentsStack.length; i++) {
@@ -478,7 +479,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
             }
             length++;
         }
-        if (length == -1) {
+        if (length <= -1) {
             return new IASTFragment[0];
         }
         return getStackPrefix(parentsStack[0], length);
