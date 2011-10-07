@@ -146,11 +146,10 @@ public class CompilerUtils {
                 // base directory of the plugins
                 enu = groovyBundle.findEntries("", "*.jar", false);
             }
-            List<URL> urls = new ArrayList<URL>(4);
+            List<URL> urls = new ArrayList<URL>(9);
             while (enu.hasMoreElements()) {
                 URL jar = enu.nextElement();
-                if (jar.getFile().indexOf("jline") >= 0 || jar.getFile().indexOf("servlet-api") >= 0
-                        || jar.getFile().indexOf("ivy") >= 0 || jar.getFile().indexOf("commons") >= 0) {
+                if (!jar.getFile().contains("groovy")) {
                     // remove the "reference:/" protocol
                     jar = resolve(jar);
                     urls.add(jar);
