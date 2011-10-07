@@ -26,14 +26,17 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
  * @author Andrew Eisenberg
  * @created May 8, 2009
  *
- * common functionality for accessing private fields and methods
- * 
- * 
+ *          common functionality for accessing private fields and methods
+ *
+ * @deprecated use {@link org.eclipse.jdt.groovy.core.util.ReflectionUtils}
+ *             instead
  */
+@Deprecated
 public class ReflectionUtils {
-    
+
     private static Map<String, Field> fieldMap = new HashMap<String, Field>();
-    
+
+    @Deprecated
     public static <T> Object getPrivateField(Class<T> clazz, String fieldName, Object target) {
         String key = clazz.getCanonicalName() + fieldName;
         Field field = fieldMap.get(key);
@@ -50,6 +53,7 @@ public class ReflectionUtils {
         return null;
     }
 
+    @Deprecated
     public static <T> void setPrivateField(Class<T> clazz, String fieldName, Object target, Object newValue) {
         String key = clazz.getCanonicalName() + fieldName;
         Field field = fieldMap.get(key);
@@ -64,7 +68,8 @@ public class ReflectionUtils {
             GroovyCore.logException("Error during reflective call.", e);
         }
     }
-    
+
+    @Deprecated
     public static <T> Object executePrivateMethod(Class<T> clazz, String methodName, Class<?>[] types, Object target, Object[] args) {
         // forget caching for now...
         try {
@@ -76,5 +81,5 @@ public class ReflectionUtils {
         }
         return null;
     }
-    
+
 }
