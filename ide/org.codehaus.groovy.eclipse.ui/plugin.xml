@@ -988,5 +988,14 @@
           </context>
        </target>
     </extension>
+    <extension
+          point="org.eclipse.jdt.ui.queryParticipants">
+       <queryParticipant
+             class="org.codehaus.groovy.eclipse.search.SyntheticAccessorQueryParticipant"
+             id="org.codehaus.groovy.eclipse.ui.syntheticAccessorQueryParticipant"
+             name="Groovy synthetic getter and setter references"
+             nature="org.eclipse.jdt.groovy.core.groovyNature">
+       </queryParticipant>
+    </extension>
  
 </plugin>

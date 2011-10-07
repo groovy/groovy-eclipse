@@ -208,8 +208,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			// assume it is a method/property/field in the object expression type's hierarchy
 
 			if (node instanceof ConstantExpression) {
-				return findTypeForNameWithKnownObjectExpression(((ConstantExpression) node).getText(), nodeType,
-						objectExpressionType, scope, confidence, isStaticObjectExpression);
+				return findTypeForNameWithKnownObjectExpression(node.getText(), nodeType, objectExpressionType, scope, confidence,
+						isStaticObjectExpression);
 
 			} else if (node instanceof BinaryExpression && ((BinaryExpression) node).getOperation().getType() == Types.EQUALS) {
 				// this is an assignment expression, return the object expression, which is the right hand side
@@ -672,23 +672,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		if (maybe != null) {
 			return maybe;
 		}
-		// if (declaringType.isInterface()) {
-		// Set<ClassNode> allInterfaces = new LinkedHashSet<ClassNode>();
-		// VariableScope.findAllInterfaces(declaringType, allInterfaces);
-		//
-		// // super interface methods on an interface are not returned by getMethods(), so must explicitly look for them
-		// // this is now handled in findMethodDeclaration
-		// // MethodNode interfaceMethod = findMethodInInterface(name, allInterfaces);
-		// // if (interfaceMethod != null) {
-		// // return interfaceMethod;
-		// // }
-		//
-		// // do the same for properties
-		// PropertyNode interfaceProperty = findPropertyInInterface(name, allInterfaces);
-		// if (interfaceProperty != null) {
-		// return interfaceProperty;
-		// }
-		// }
 
 		// look for constants declared in super class
 		FieldNode constantFromSuper = findConstantInClass(name, allClasses);

@@ -19,9 +19,6 @@ import junit.framework.TestCase;
 
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.jdt.groovy.model.GroovyNature;
-import org.eclipse.core.resources.IMarker;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;

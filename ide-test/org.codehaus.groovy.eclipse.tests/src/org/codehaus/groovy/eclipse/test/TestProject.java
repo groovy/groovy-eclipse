@@ -186,6 +186,7 @@ public class TestProject {
         return createFile(folder, cuName, stream);
     }
 
+    
     public void removeNature(String natureId) throws CoreException {
         final IProjectDescription description = project.getDescription();
         final String[] ids = description.getNatureIds();

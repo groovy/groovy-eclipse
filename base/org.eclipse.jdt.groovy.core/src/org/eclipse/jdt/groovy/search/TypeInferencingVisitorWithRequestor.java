@@ -746,6 +746,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		boolean isStatic;
 		VariableScope scope = scopes.peek();
 		if (isProperty(node)) {
+			// debugging help: objectExpressionType.push(objectExprType)
 			objectExprType = objectExpressionType.pop();
 			isStatic = hasStaticObjectExpression(node);
 			scope.methodCallNumberOfArguments = getMethodCallArgs();
