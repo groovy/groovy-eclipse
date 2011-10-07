@@ -193,5 +193,34 @@ if (fooBar) {
 	fooBar
 }
 """
+    static String test9In = """
+class Simple {
+     def test() {
+          def map
+          def foo = {
+               println map.one
+               println map.one
+               println map.one
+               println map.one
+          }
+     }
+}
+"""
+    static String test9Out = """
+class Simple {
+     def test() {
+          def map
+          def foo = {
+               def mapOne = map.one
+
+               println mapOne
+               println mapOne
+               println mapOne
+               println mapOne
+          }
+     }
+}
+"""    
+
 }
 

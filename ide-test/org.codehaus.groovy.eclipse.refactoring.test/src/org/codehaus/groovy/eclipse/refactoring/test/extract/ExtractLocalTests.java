@@ -107,6 +107,13 @@ public class ExtractLocalTests extends RefactoringTest {
 				"foo+  bar".length(), true);
 	}
 
+	public void test9() throws Exception {
+	    helper(ExtractLocalTestsData.getTest9In(),
+	            ExtractLocalTestsData.getTest9Out(),
+	            ExtractLocalTestsData.findLocation("map.one", "test9"),
+	            "map.one".length(), true);
+	}
+	
 	private void helper(String before, String expected, int offset, int length, boolean replaceAllOccurrences) throws Exception {
 		GroovyCompilationUnit cu = (GroovyCompilationUnit) createCU(getPackageP(), "A.groovy", before);
 		try {
