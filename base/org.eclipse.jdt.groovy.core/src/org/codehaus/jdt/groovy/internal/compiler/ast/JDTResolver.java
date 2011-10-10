@@ -311,6 +311,9 @@ public class JDTResolver extends ResolveVisitor {
 	// by 'funky' I mean that the type was constructed just to try something (org.foo.bar.java$lang$Wibble doesn't want recording!)
 	private void recordDependency(String typename) {
 		GroovyCompilationUnitScope gcuScope = getScope();
+		if (gcuScope == null) {
+			return;
+		}
 		// System.err.println("Recording reference from " + toShortString(gcuScope) + " to " + typename);
 		if (typename.indexOf(".") != -1) {
 			gcuScope.recordQualifiedReference(CharOperation.splitOn('.', typename.toCharArray()));
