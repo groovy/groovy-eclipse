@@ -29,6 +29,7 @@ import org.eclipse.jdt.internal.ui.fix.MultiFixMessages;
 import org.eclipse.jdt.internal.ui.viewsupport.BasicElementLabels;
 import org.eclipse.jdt.ui.cleanup.CleanUpContext;
 import org.eclipse.jdt.ui.cleanup.ICleanUpFix;
+import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
 
@@ -55,6 +56,9 @@ public class GroovyImportsCleanUp extends AbstractGroovyCleanUp {
 
         OrganizeGroovyImports op = new OrganizeGroovyImports((GroovyCompilationUnit) unit, query);
         final TextEdit edit = op.calculateMissingImports();
+        if (status == null) {
+            status = new RefactoringStatus();
+        }
         if (hasAmbiguity[0]) {
             status.addInfo(Messages.format(ActionMessages.OrganizeImportsAction_multi_error_unresolvable, getLocationString(unit)));
         } else if (edit == null) {
