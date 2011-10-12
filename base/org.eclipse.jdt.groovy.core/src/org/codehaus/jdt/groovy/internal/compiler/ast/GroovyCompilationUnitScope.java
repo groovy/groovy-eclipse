@@ -255,7 +255,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 	}
 
 	@Override
-	protected void reportPackageIsNotExpectedPackage(CompilationUnitDeclaration compUnitDecl) {
+	protected boolean reportPackageIsNotExpectedPackage(CompilationUnitDeclaration compUnitDecl) {
 		// Code that could be used to police package declarations.
 		// Rule: if there is a package declaration it must match the location on disk. If
 		// there is no package declaration, let them get away with it
@@ -270,8 +270,10 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 					.toString(compUnitDecl.currentPackage.tokens);
 			if (actuallyIs.length() > 0 && !shouldBe.equals(actuallyIs)) {
 				problemReporter().packageIsNotExpectedPackage(compUnitDecl);
+				return true;
 			}
 		}
+		return false;
 	}
 
 	@Override
@@ -335,8 +337,8 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 	 * imports have found a type. One might be a groovy.util style input (i.e. a 'built in' import), and one a 'normal' import that
 	 * was actually expressed in the source code. Whether the newly found type was discovered via an import expressed in the import
 	 * is determined by the 'isDeclaredImport' flag. If that is true we just have to check whether the originally found type uses
-	 * one of the special names.  If the original type doesn't use a 'special name' then we
-	 * allow it to override the newly found value and return it.<br>
+	 * one of the special names. If the original type doesn't use a 'special name' then we allow it to override the newly found
+	 * value and return it.<br>
 	 * This code does not yet allow for the originallyFound import to be also found via a declared import (e.g. if the user is daft
 	 * enough to 'import groovy.util.*' - making a change to pass that information through would be more disruptive.
 	 * 

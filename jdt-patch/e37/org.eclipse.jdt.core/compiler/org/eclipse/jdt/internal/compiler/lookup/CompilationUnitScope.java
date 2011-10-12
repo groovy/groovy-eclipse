@@ -73,8 +73,13 @@ void buildFieldsAndMethods() {
 		this.topLevelTypes[i].scope.buildFieldsAndMethods();
 }
 // GROOVY start: new method, can be overridden
-protected void reportPackageIsNotExpectedPackage(CompilationUnitDeclaration referenceContext) {
+/**
+ * @param referenceContext
+ * @return true if error gets reported
+ */
+protected boolean reportPackageIsNotExpectedPackage(CompilationUnitDeclaration referenceContext) {
 	problemReporter().packageIsNotExpectedPackage(referenceContext);	
+	return true;
 }
 // GROOVY end
 
@@ -85,7 +90,9 @@ void buildTypeBindings(AccessRestriction accessRestriction) {
 		char[][] expectedPackageName = this.referenceContext.compilationResult.compilationUnit.getPackageName();
 		if (expectedPackageName != null
 				&& !CharOperation.equals(this.currentPackageName, expectedPackageName)) {
-
+			// GROOVY start
+			boolean errorReported = true;
+			// GROOVY end
 			// only report if the unit isn't structurally empty
 			if (this.referenceContext.currentPackage != null
 					|| this.referenceContext.types != null
@@ -94,10 +101,16 @@ void buildTypeBindings(AccessRestriction accessRestriction) {
 				/* old {
 				problemReporter().packageIsNotExpectedPackage(this.referenceContext);
 				} new */
-				reportPackageIsNotExpectedPackage(this.referenceContext);
+				errorReported = reportPackageIsNotExpectedPackage(this.referenceContext);
 				// GROOVY end
 			}
+			// GROOVY start
+			if (errorReported) {
+			// GROOVY end
 			this.currentPackageName = expectedPackageName.length == 0 ? CharOperation.NO_CHAR_CHAR : expectedPackageName;
+			// GROOVY start
+			}
+			// GROOVY end
 		}
 	}
 	if (this.currentPackageName == CharOperation.NO_CHAR_CHAR) {

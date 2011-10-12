@@ -22,9 +22,6 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.FieldExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -34,6 +31,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.CompilerUtils;
@@ -271,23 +269,38 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
-		env.addGroovyClass(root, "p", "Foo",
-				""
-			);
+		env.addGroovyClass(root, "p", "Foo", "package p;\n" + "class Foo{}\n");
 
 		IPath root2 = env.addPackageFragmentRoot(projectPath, "src2"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
 		IPath pathToSecond = env.addGroovyClass(root2, "p", "Foo",
-			"package p;\n"+
-			"class Foo {}\n"
-			);
+				"package p;\n" + "class Foo {}\n");
 
 		incrementalBuild(projectPath);
-		expectingOnlySpecificProblemFor(pathToSecond, new Problem("/Project/src2/p/Foo.groovy", "The type Foo is already defined", pathToSecond, 17,20, 40, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		Problem[] probs = env.getProblemsFor(pathToSecond);
+		boolean p1found = false;
+		boolean p2found = false;
+		for (int i = 0; i < probs.length; i++) {
+			if (probs[i].getMessage().equals("The type Foo is already defined")) {
+				p1found = true;
+			}
+			if (probs[i].getMessage().startsWith(
+					"Groovy:Invalid duplicate class definition of class p.Foo")) {
+				p2found = true;
+			}
+		}
+		if (!p1found) {
+			printProblemsFor(pathToSecond);
+			fail("Didn't get expected message 'The type Foo is already defined'\n");
+		}
+		if (!p2found) {
+			printProblemsFor(pathToSecond);
+			fail("Didn't get expected message 'Groovy:Invalid duplicate class definition of class p.Foo'\n");
+		}
 	}
 
-	public void testVarargs_GRE925() throws Exception {
+	public void testTypeDuplication_GRE796_2() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
@@ -299,20 +312,63 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
-		env.addGroovyClass(root, "", "SubTest",
-				"class SubTest extends Test {\n"+
-				" void method(String[] x) { super.method(x); }\n"+
-				"}");
+		env.addGroovyClass(root, "p", "Foo", "package p;\n" + "class Foo {}\n");
 
-		env.addClass(root, "", "Test",
-				"class Test {\n"+
-				"  void method(String[] x) {}\n"+
-				"  public static void main(String []argv) {}\n"+
-				"}");
+		IPath root2 = env.addPackageFragmentRoot(projectPath, "src2"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath pathToSecond = env.addGroovyClass(root2, "p", "Foo",
+				"package p;\n" + "class Foo {}\n");
 
 		incrementalBuild(projectPath);
-		expectingCompiledClassesV("Test", "SubTest");
-		expectingNoProblems();
+		Problem[] probs = env.getProblemsFor(pathToSecond);
+		boolean p1found = false;
+		boolean p2found = false;
+		for (int i = 0; i < probs.length; i++) {
+			if (probs[i].getMessage().equals("The type Foo is already defined")) {
+				p1found = true;
+			}
+			if (probs[i].getMessage().startsWith(
+					"Groovy:Invalid duplicate class definition of class p.Foo")) {
+				p2found = true;
+			}
+		}
+		if (!p1found) {
+			printProblemsFor(pathToSecond);
+			fail("Didn't get expected message 'The type Foo is already defined'\n");
+		}
+		if (!p2found) {
+			printProblemsFor(pathToSecond);
+			fail("Didn't get expected message 'Groovy:Invalid duplicate class definition of class p.Foo'\n");
+		}
+	}
+
+	// script has no package statement
+	public void testClashingPackageAndType_1214() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		env.addJar(projectPath, "lib/spock-core-0.4-groovy-1.7-SNAPSHOT.jar"); //$NON-NLS-1$
+		env.addJar(projectPath, "lib/junit4_4.5.0.jar"); //$NON-NLS-1$
+		fullBuild(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath cuPath = env.addClass(root, "com.acme", "Foo",
+				"package com.acme;\n" + "public class Foo {}\n");
+
+		env.addGroovyClass(root, "com.acme.Foo", "xyz", "print 'abc'");
+
+		incrementalBuild(projectPath);
+		expectingSpecificProblemFor(cuPath, new Problem("",
+				"The type Foo collides with a package", cuPath, 31, 34,
+				CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_WARNING));
+		expectingCompiledClassesV("com.acme.Foo", "xyz");
+		executeClass(projectPath, "xyz", "abc", null);
 	}
 
 	public void testSlowAnotherAttempt_GRE870() throws Exception {
@@ -1022,34 +1078,6 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		// lots of errors on the missing static imports
 		expectingCompiledClassesV("");
 
-	}
-
-	public void testTypeDuplication_GRE796_2() throws Exception {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
-		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-		env.addGroovyJars(projectPath);
-		fullBuild(projectPath);
-
-		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-
-		env.addGroovyClass(root, "p", "Foo",
-			"package p;\n"+
-			"class Foo {}\n"
-			);
-
-		IPath root2 = env.addPackageFragmentRoot(projectPath, "src2"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-
-		IPath pathToSecond = env.addGroovyClass(root2, "p", "Foo",
-				""
-			);
-
-		incrementalBuild(projectPath);
-		expectingOnlySpecificProblemFor(pathToSecond, new Problem("/Project/src2/p/Foo.groovy", "The type Foo is already defined", pathToSecond, 0, 0, 40, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	public void testClosureBasics() throws Exception {
