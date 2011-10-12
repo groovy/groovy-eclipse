@@ -37,6 +37,7 @@ public class IntLiteral extends NumberLiteral {
 	public static IntLiteral buildIntLiteral(char[] token, int s, int e) {
 		// remove '_' and prefix '0' first
 		char[] intReducedToken = removePrefixZerosAndUnderscores(token, false);
+		// GRECLIPSE - formatting issue GRECLIPSE-1216 - need proper fix from Eclipse 3.7.2: start
 //		switch(intReducedToken.length) {
 //			case 10 :
 //				// 0x80000000
@@ -51,6 +52,7 @@ public class IntLiteral extends NumberLiteral {
 //				}
 //				break;
 //		}
+		// GRECLIPSE: end
 		return new IntLiteral(token, intReducedToken != token ? intReducedToken : null, s, e);
 	}
 IntLiteral(char[] token, char[] reducedForm, int start, int end) {
