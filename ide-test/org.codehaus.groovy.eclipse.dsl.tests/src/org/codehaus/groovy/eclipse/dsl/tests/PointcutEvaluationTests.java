@@ -197,42 +197,42 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
     
     public void testAnnotation1() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo {}");
-        doTestOfLastMatch("Foo", "currentType(annotatedBy(\"java.lang.Deprecated\"))", "p.Foo");
+        doTestOfLastMatch("package p\nFoo", "currentType(annotatedBy(\"java.lang.Deprecated\"))", "p.Foo");
     }
 
     public void testAnnotation2() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo {\n@Deprecated def t }");
-        doTestOfLastMatch("Foo", "currentType(fields(annotatedBy(\"java.lang.Deprecated\")))", "p.Foo");
+        doTestOfLastMatch("package p\nFoo", "currentType(fields(annotatedBy(\"java.lang.Deprecated\")))", "p.Foo");
     }
     
     public void testAnnotation3() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo {\n@Deprecated def t() { } }");
-        doTestOfLastMatch("Foo", "currentType(methods(annotatedBy(\"java.lang.Deprecated\")))", "p.Foo");
+        doTestOfLastMatch("package p\nFoo", "currentType(methods(annotatedBy(\"java.lang.Deprecated\")))", "p.Foo");
     }
     
     public void testAnnotation4() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastMatch("Foo", "currentType(annotatedBy(\"java.lang.Deprecated\") & fields(\"f\") )", "p.Foo");
+        doTestOfLastMatch("package p\nFoo", "currentType(annotatedBy(\"java.lang.Deprecated\") & fields(\"f\") )", "p.Foo");
     }
 
     public void testAnnotation5() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastMatch("Foo", "currentType(annotatedBy(\"java.lang.Deprecated\") | fields(\"g\") )", "p.Foo");
+        doTestOfLastMatch("package p\nFoo", "currentType(annotatedBy(\"java.lang.Deprecated\") | fields(\"g\") )", "p.Foo");
     }
     
     public void testAnnotation6() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastMatch("Foo", "currentType( fields(\"g\") | annotatedBy(\"java.lang.Deprecated\") )", "p.Foo");
+        doTestOfLastMatch("package p\nFoo", "currentType( fields(\"g\") | annotatedBy(\"java.lang.Deprecated\") )", "p.Foo");
     }
     
     public void testAnnotation7Fail() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastMatch("Foo", "currentType( fields(\"g\") & annotatedBy(\"java.lang.Deprecated\") )", null);
+        doTestOfLastMatch("package p\nFoo", "currentType( fields(\"g\") & annotatedBy(\"java.lang.Deprecated\") )", null);
     }
     
     public void testAnnotation8() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo { \n @Deprecated def f\n @Deprecated def g() { } }");
-        doTestOfLastMatch("Foo", "currentType( fields( annotatedBy(\"java.lang.Deprecated\") ) & methods( annotatedBy(\"java.lang.Deprecated\") ) )", 
+        doTestOfLastMatch("package p\nFoo", "currentType( fields( annotatedBy(\"java.lang.Deprecated\") ) & methods( annotatedBy(\"java.lang.Deprecated\") ) )", 
                 "p.Foo");
     }
     
@@ -440,53 +440,53 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
     
     public void testAnnotationBinding1() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo {}");
-        doTestOfLastBindingSet("Foo", "currentType(bind( b : annotatedBy(\"java.lang.Deprecated\")))",
+        doTestOfLastBindingSet("package p\nFoo", "currentType(bind( b : annotatedBy(\"java.lang.Deprecated\")))",
                 new BindingResult("b", "@java.lang.Deprecated"));
     }
 
     public void testAnnotationBinding2() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo {\n@Deprecated def t }");
-        doTestOfLastBindingSet("Foo", "currentType(bind(b : fields(annotatedBy(\"java.lang.Deprecated\"))))",
+        doTestOfLastBindingSet("package p\nFoo", "currentType(bind(b : fields(annotatedBy(\"java.lang.Deprecated\"))))",
                 new BindingResult("b", "p.Foo.t"));
     }
     
     public void testAnnotationBinding3() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo {\n@Deprecated def t() { } }");
-        doTestOfLastBindingSet("Foo", "currentType(bind( b : methods(annotatedBy(\"java.lang.Deprecated\"))))",
+        doTestOfLastBindingSet("package p\nFoo", "currentType(bind( b : methods(annotatedBy(\"java.lang.Deprecated\"))))",
                 new BindingResult("b", "p.Foo.t"));
     }
     
     public void testAnnotationBinding4() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastBindingSet("Foo", "currentType(bind ( b : annotatedBy(\"java.lang.Deprecated\") & fields(\"f\") ) )",
+        doTestOfLastBindingSet("package p\nFoo", "currentType(bind ( b : annotatedBy(\"java.lang.Deprecated\") & fields(\"f\") ) )",
                 new BindingResult("b", "@java.lang.Deprecated, p.Foo.f"));
     }
 
     public void testAnnotationBinding5() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastBindingSet("Foo", "currentType(bind ( b : annotatedBy(\"java.lang.Deprecated\") | fields(\"f\") ) )",
+        doTestOfLastBindingSet("package p\nFoo", "currentType(bind ( b : annotatedBy(\"java.lang.Deprecated\") | fields(\"f\") ) )",
                 new BindingResult("b", "@java.lang.Deprecated, p.Foo.f"));
     }
     
     public void testAnnotationBinding6() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastBindingSet("Foo", "currentType( bind( b : fields(\"g\")) | annotatedBy(\"java.lang.Deprecated\") )");
+        doTestOfLastBindingSet("package p\nFoo", "currentType( bind( b : fields(\"g\")) | annotatedBy(\"java.lang.Deprecated\") )");
     }
     
     public void testAnnotationBinding7Fail() throws Exception {
         createUnit("p", "Foo", "package p\n@Deprecated\nclass Foo { \n def f }");
-        doTestOfLastBindingSet("Foo", "currentType( fields(\"g\") & bind( b : annotatedBy(\"java.lang.Deprecated\") ) )");
+        doTestOfLastBindingSet("package p\nFoo", "currentType( fields(\"g\") & bind( b : annotatedBy(\"java.lang.Deprecated\") ) )");
     }
     
     public void testAnnotationBinding8() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo { \n @Deprecated def f\n @Deprecated def g() { } }");
-        doTestOfLastBindingSet("Foo", "currentType( bind( b : fields( annotatedBy(\"java.lang.Deprecated\") ) & methods( annotatedBy(\"java.lang.Deprecated\") ) ) )", 
+        doTestOfLastBindingSet("package p\nFoo", "currentType( bind( b : fields( annotatedBy(\"java.lang.Deprecated\") ) & methods( annotatedBy(\"java.lang.Deprecated\") ) ) )", 
                 new BindingResult("b", "p.Foo.f, p.Foo.g"));
     }
     
     public void testAnnotationBinding9() throws Exception {
         createUnit("p", "Foo", "package p\nclass Foo { \n @Deprecated def f\n @Deprecated def g() { } }");
-        doTestOfLastBindingSet("Foo", "currentType( fields( bind ( b : annotatedBy(\"java.lang.Deprecated\") ) ) & methods( bind ( b : annotatedBy(\"java.lang.Deprecated\") ) ) )", 
+        doTestOfLastBindingSet("package p\nFoo", "currentType( fields( bind ( b : annotatedBy(\"java.lang.Deprecated\") ) ) & methods( bind ( b : annotatedBy(\"java.lang.Deprecated\") ) ) )", 
                 new BindingResult("b", "@java.lang.Deprecated, @java.lang.Deprecated"));
     }
     
