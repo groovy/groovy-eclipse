@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.ast;
 
-import groovy.lang.GroovyObject;
-
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -527,7 +525,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         // add in unimplemented abstract methods from the interfaces
         for (ClassNode iface : getInterfaces()) {
             Map<String, MethodNode> ifaceMethodsMap = iface.getDeclaredMethodsMap();
-            // GRECLIPSE: fix should iterate using Map.Entry perhaps
             for (String methSig : ifaceMethodsMap.keySet()) {
                 if (!result.containsKey(methSig)) {
                     MethodNode methNode = ifaceMethodsMap.get(methSig);
@@ -1501,15 +1498,45 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     public void setUsingGenerics(boolean b) {
         usesGenerics = b;
     }
+    
+	// original:
+//    public ClassNode getPlainNodeReference() {
+//        if (ClassHelper.isPrimitiveType(this)) return this;
+//        ClassNode n = new ClassNode(getName(),getModifiers(),getSuperClass(),null,null);
+//        n.isPrimaryNode = false;
+//        n.setRedirect(redirect());
+//        n.componentType = redirect().getComponentType();
+//        return n;
+//    }
 
     public ClassNode getPlainNodeReference() {
         if (ClassHelper.isPrimitiveType(this)) return this;
-        ClassNode n = new ClassNode(getName(),getModifiers(),getSuperClass(),getInterfaces(),null);
+		ClassNode n = new ClassNode(getName(), getModifiers(), getSuperClass(),
+				getPlainNodeReferencesFor(getInterfaces()), null);
         n.isPrimaryNode = false;
-        n.setRedirect(this.redirect);
+		n.setRedirect(redirect());// this.redirect);
         n.componentType = redirect().getComponentType();
         return n;
     }
+
+	public ClassNode[] getPlainNodeReferencesFor(ClassNode[] classNodes) {
+		if (classNodes == null) {
+			return null;
+		}
+		if (classNodes.length == 0) {
+			return ClassNode.EMPTY_ARRAY;
+		}
+		ClassNode[] result = new ClassNode[classNodes.length];
+		for (int count = 0; count < classNodes.length; count++) {
+			ClassNode cn = classNodes[count];
+			if (cn.usesGenerics) {
+				result[count] = cn.getPlainNodeReference();
+			} else {
+				result[count] = cn;
+			}
+		}
+		return result;
+	}
 
     public boolean isAnnotationDefinition() {
         return redirect().isPrimaryNode &&
@@ -1579,6 +1606,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             }
         }
         return transformInstances;
+    }
+    
+    public boolean isRedirectNode() {
+        return redirect!=null;
     }
      
      // GRECLIPSE start

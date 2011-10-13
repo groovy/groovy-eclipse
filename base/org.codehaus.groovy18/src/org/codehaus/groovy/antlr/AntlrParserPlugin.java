@@ -265,8 +265,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             // end
 
             convertGroovy(ast);
-            
-        	// GRECLIPSE: start
+            // GRECLIPSE: start
+            /*old {
+            if (output.getStatementBlock().isEmpty() && output.getMethods().isEmpty() && output.getClasses().isEmpty()) {
+			} new */
             // does it look broken? (ie. have we built a script for it containing rubbish)
             boolean hasNoMethods = output.getMethods().isEmpty();
             if (hasNoMethods && sourceUnit.getErrorCollector().hasErrors() && looksBroken(output)) {
@@ -446,7 +448,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
         // GRECLIPSE: end
 
-        if (node.getNumberOfChildren()==0) {
+        if (node.getNumberOfChildren() == 0) {
             String name = identifier(node);
             // import is like  "import Foo"
             ClassNode type = ClassHelper.make(name);
@@ -873,7 +875,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // we have to handle an enum that defines a class for a constant
                 // for example the constant having overwriting a method. we need 
                 // to configure the inner class 
-                innerClass.setSuperClass(classNode);
+                innerClass.setSuperClass(classNode.getPlainNodeReference());
                 innerClass.setModifiers(classNode.getModifiers() | Opcodes.ACC_FINAL);
                 // we use a ClassExpression for transportation o EnumVisitor
                 init = new ClassExpression(innerClass);
@@ -889,6 +891,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
 
         // GRECLIPSE: start
+        /*old{
+		EnumHelper.addEnumConstant(classNode, identifier, init);
+        }new */
         GroovySourceAST groovySourceAST = (GroovySourceAST) node;
         int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
         int nameEnd = nameStart + identifier.length()-1;
@@ -2522,10 +2527,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // loop, ensure that the sloc is the start of the 
         // expression and the end of the type
         
-        // original
-        // return CastExpression.asExpression(type, leftExpression);
-        
-        // new
+        /* old {
+        return CastExpression.asExpression(type, leftExpression);
+        } new */
         CastExpression asExpr = CastExpression.asExpression(type, leftExpression);
         asExpr.setStart(leftExpression.getStart());
         asExpr.setLineNumber(leftExpression.getLineNumber());

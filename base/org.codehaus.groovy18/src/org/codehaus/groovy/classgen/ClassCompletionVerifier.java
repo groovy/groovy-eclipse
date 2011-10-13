@@ -11,10 +11,28 @@
  ******************************************************************************/
 package org.codehaus.groovy.classgen;
 
-import java.util.Iterator;
+import static java.lang.reflect.Modifier.isAbstract;
+import static java.lang.reflect.Modifier.isFinal;
+import static java.lang.reflect.Modifier.isNative;
+import static java.lang.reflect.Modifier.isStatic;
+import static java.lang.reflect.Modifier.isStrict;
+import static java.lang.reflect.Modifier.isSynchronized;
+import static java.lang.reflect.Modifier.isTransient;
+import static java.lang.reflect.Modifier.isVolatile;
+
 import java.util.List;
 
-import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.InnerClassNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
@@ -27,11 +45,9 @@ import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.control.SourceUnit;
-import org.objectweb.asm.Opcodes;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
-
-import static java.lang.reflect.Modifier.*;
+import org.objectweb.asm.Opcodes;
 
 /**
  * ClassCompletionVerifier
@@ -63,6 +79,8 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
             checkMethodsForWeakerAccess(node);
             checkMethodsForOverridingFinal(node);
             checkNoAbstractMethodsNonabstractClass(node);
+            checkGenericsUsage(node, node.getUnresolvedInterfaces());
+            checkGenericsUsage(node, node.getUnresolvedSuperClass());
         }
         super.visitClass(node);
         currentClass = oldClass;
@@ -273,6 +291,8 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
         checkRepetitiveMethod(node);
         checkOverloadingPrivateAndPublic(node);
         checkMethodModifiers(node);
+        checkGenericsUsage(node, node.getParameters());
+        checkGenericsUsage(node, node.getReturnType());
         super.visitMethod(node);
     }
 
@@ -347,11 +367,13 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
             addError("The " + getDescription(node) + " is declared multiple times.", node);
         }
         checkInterfaceFieldModifiers(node);
+        checkGenericsUsage(node, node.getType());
         super.visitField(node);
     }
 
     public void visitProperty(PropertyNode node) {
     	checkDuplicateProperties(node);
+        checkGenericsUsage(node, node.getType());
     	super.visitProperty(node);
     }
     
@@ -447,6 +469,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
     public void visitConstructor(ConstructorNode node) {
     	inConstructor = true;
     	inStaticConstructor = node.isStaticConstructor();
+        checkGenericsUsage(node, node.getParameters());
         super.visitConstructor(node);
     }
 
@@ -519,4 +542,52 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
         }
     }
     
+    private void checkGenericsUsage(ASTNode ref, ClassNode[] nodes) {
+        for (ClassNode node : nodes) {
+            checkGenericsUsage(ref, node);
+        }
+    }
+    
+    private void checkGenericsUsage(ASTNode ref, Parameter[] params) {
+        for (Parameter p : params) {
+            checkGenericsUsage(ref, p.getType());
+        }
+    }
+    
+    private void checkGenericsUsage(ASTNode ref, ClassNode node) {
+        if (node.isArray()) {
+            checkGenericsUsage(ref, node.getComponentType());
+        } else if (!node.isRedirectNode() && node.isUsingGenerics()) {
+            addError(   
+                    "A transform used a generics containing ClassNode "+ node + " " +
+                    "for "+getRefDescriptor(ref) + 
+ "directly. You are not supposed to do this. "
+							+
+                    "Please create a new ClassNode refering to the old ClassNode " +
+                    "and use the new ClassNode instead of the old one. Otherwise " +
+                    "the compiler will create wrong descriptors and a potential " +
+                    "NullPointerException in TypeResolver in the OpenJDK. If this is " +
+                    "not your own doing, please report this bug to the writer of the " +
+                    "transform.",
+                    ref);
+        }
+    }
+
+    private String getRefDescriptor(ASTNode ref) {
+        if (ref instanceof FieldNode) {
+            FieldNode f = (FieldNode) ref;
+            return "the field "+f.getName()+" ";
+        } else if (ref instanceof PropertyNode) {
+            PropertyNode p = (PropertyNode) ref;
+            return "the property "+p.getName()+" ";
+        } else if (ref instanceof ConstructorNode) {
+            return "the constructor "+ref.getText()+" ";
+        } else if (ref instanceof MethodNode) {
+            return "the method "+ref.getText()+" ";
+        } else if (ref instanceof ClassNode) {
+            return "the super class "+ref+" ";
+        }
+        return "<unknown with class "+ref.getClass()+"> ";
+    }
+
 }

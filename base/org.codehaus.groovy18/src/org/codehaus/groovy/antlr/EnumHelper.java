@@ -63,7 +63,7 @@ public class EnumHelper {
             init = list;
         }
        
-        FieldNode fn = new FieldNode(name,modifiers,enumClassType,enumClassOwner,init);
+        FieldNode fn = new FieldNode(name,modifiers,enumClassType.getPlainNodeReference(),enumClassOwner,init);
         enumClassOwner.addField(fn);
         return fn;
     }

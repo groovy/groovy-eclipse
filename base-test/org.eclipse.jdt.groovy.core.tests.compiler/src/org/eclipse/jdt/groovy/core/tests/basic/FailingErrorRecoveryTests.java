@@ -17,17 +17,11 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import junit.framework.Test;
 
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.core.runtime.FileLocator;
@@ -80,7 +74,8 @@ public class FailingErrorRecoveryTests extends AbstractRegressionTest {
         String[] newcps = new String[cps.length+3];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-            URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.2.jar");
+			URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry(
+					"lib/groovy-1.8.3.jar");
             if (groovyJar==null) {
                 groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.10.jar");
                 if (groovyJar==null) {

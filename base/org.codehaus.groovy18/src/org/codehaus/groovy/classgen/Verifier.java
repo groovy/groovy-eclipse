@@ -185,9 +185,8 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     }
 
     private FieldNode checkFieldDoesNotExist(ClassNode node, String fieldName) {
-        for (ClassNode current = node; current!=null; current=current.getSuperClass()) {
-            FieldNode ret = current.getDeclaredField(fieldName);
-            if (ret == null) continue;
+        FieldNode ret = node.getDeclaredField(fieldName);
+        if (ret != null) {
             if (    Modifier.isPublic(ret.getModifiers()) &&
                     ret.getType().redirect()==ClassHelper.boolean_TYPE) {
                 return ret;
@@ -665,6 +664,10 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 }
 
                 MethodNode newMethod = new MethodNode(method.getName(), method.getModifiers(), method.getReturnType(), newParams, method.getExceptions(), code);
+                List<AnnotationNode> annotations = method.getAnnotations();
+                if(annotations != null) {
+                    newMethod.addAnnotations(annotations);
+                }
                 MethodNode oldMethod = node.getDeclaredMethod(method.getName(), newParams);
                 if (oldMethod!=null) {
                     throw new RuntimeParserException(

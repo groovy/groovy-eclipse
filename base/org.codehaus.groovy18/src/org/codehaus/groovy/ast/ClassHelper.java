@@ -47,9 +47,9 @@ public class ClassHelper {
         Closure.class, GString.class, List.class, Map.class, Range.class,
         Pattern.class, Script.class, String.class,  Boolean.class, 
         Character.class, Byte.class, Short.class, Integer.class, Long.class,
-        Double.class, Float.class, BigDecimal.class, BigInteger.class, Void.class,
-        Reference.class, Class.class, MetaClass.class, Iterator.class,    
-        GeneratedClosure.class, GroovyObjectSupport.class
+        Double.class, Float.class, BigDecimal.class, BigInteger.class, 
+        Number.class, Void.class, Reference.class, Class.class, MetaClass.class, 
+        Iterator.class, GeneratedClosure.class, GroovyObjectSupport.class
     };
 
     private static final String[] primitiveClassNames = new String[] {
@@ -75,6 +75,8 @@ public class ClassHelper {
         Double_TYPE = makeCached(Double.class),       Boolean_TYPE = makeCached(Boolean.class),
         BigInteger_TYPE =  makeCached(java.math.BigInteger.class),
         BigDecimal_TYPE = makeCached(java.math.BigDecimal.class),
+        Number_TYPE = makeCached(Number.class),
+        
         void_WRAPPER_TYPE = makeCached(Void.class),   METACLASS_TYPE = makeCached(MetaClass.class),
         Iterator_TYPE = makeCached(Iterator.class),
         
@@ -105,6 +107,7 @@ public class ClassHelper {
         SCRIPT_TYPE, STRING_TYPE, Boolean_TYPE, Character_TYPE,
         Byte_TYPE, Short_TYPE, Integer_TYPE, Long_TYPE,
         Double_TYPE, Float_TYPE, BigDecimal_TYPE, BigInteger_TYPE, 
+        Number_TYPE,
         void_WRAPPER_TYPE, REFERENCE_TYPE, CLASS_Type, METACLASS_TYPE,
         Iterator_TYPE, GENERATED_CLOSURE_Type, GROOVY_OBJECT_SUPPORT_TYPE, 
         GROOVY_OBJECT_TYPE, GROOVY_INTERCEPTABLE_TYPE, Enum_Type, Annotation_TYPE
@@ -349,7 +352,7 @@ public class ClassHelper {
     }
 
     public static ClassNode makeReference() {
-        return make(Reference.class);
+        return REFERENCE_TYPE.getPlainNodeReference();
     }
 
     public static boolean isCachedType(ClassNode type) {
