@@ -140,6 +140,7 @@ public class CompilerOptions {
 	public static final String OPTIONG_GroovyFlags = "org.eclipse.jdt.core.compiler.groovy.projectFlags"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyClassLoaderPath = "org.eclipse.jdt.core.compiler.groovy.groovyClassLoaderPath"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyProjectName = "org.eclipse.jdt.core.compiler.groovy.groovyProjectName"; //$NON-NLS-1$
+	public static final String OPTIONG_GroovyExtraImports = "org.eclipse.jdt.core.compiler.groovy.groovyExtraImports"; //$NON-NLS-1$
 	// GROOVY end
 	
 	// Backward compatibility
@@ -357,6 +358,7 @@ public class CompilerOptions {
 	public int groovyFlags = 0; // 0x01 == IsGrails
 	
 	public String groovyClassLoaderPath = null;
+	public String groovyExtraImports = null;
 	public String groovyProjectName = null;
 	// GROOVY end
 
@@ -1453,13 +1455,30 @@ public class CompilerOptions {
 			}
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyClassLoaderPath)) != null) {
-			groovyClassLoaderPath = (String)optionValue;
+			this.groovyClassLoaderPath = (String)optionValue;
+		}
+		if ((optionValue = optionsMap.get(OPTIONG_GroovyExtraImports)) != null) {
+			this.groovyExtraImports = (String)optionValue;
+		} else {
+			if (sysPropConfiguredExtraImports!=null) {
+				this.groovyExtraImports = sysPropConfiguredExtraImports;
+			}
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyProjectName)) != null) {
 			groovyProjectName = (String)optionValue;
 		}
 		// GROOVY end
 	}
+	
+	static String sysPropConfiguredExtraImports = null;
+	static {
+		try {
+			sysPropConfiguredExtraImports = System.getProperty("greclipse.extraimports");
+		} catch (Exception e) {
+			sysPropConfiguredExtraImports= null;
+		}
+	}
+	
 	public String toString() {
 		StringBuffer buf = new StringBuffer("CompilerOptions:"); //$NON-NLS-1$
 		buf.append("\n\t- local variables debug attributes: ").append((this.produceDebugAttributes & ClassFileConstants.ATTR_VARS) != 0 ? "ON" : " OFF"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
