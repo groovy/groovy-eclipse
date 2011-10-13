@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.StringTokenizer;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -181,6 +182,72 @@ public class JDTResolver extends ResolveVisitor {
 	@Override
 	protected boolean resolveFromDefaultImports(ClassNode type, boolean testDefaultImports) {
 		boolean foundit = super.resolveFromDefaultImports(type, testDefaultImports);
+		if (activeScope != null) {
+			// TODO need to refactor (duplicated in GroovyCompilationUnitScope)
+			boolean b = testDefaultImports & !type.hasPackageName();
+			// we do not resolve a vanilla name starting with a lower case letter
+			// try to resolve against adefault import, because we know that the
+			// default packages do not contain classes like these
+			b &= !(type instanceof LowerCaseClass);
+			if (b) {
+				String extraImports = activeScope.compilerOptions().groovyExtraImports;
+				if (extraImports != null) {
+					try {
+						String filename = new String(activeScope.referenceContext.getFileName());
+						// may be something to do
+						StringTokenizer st = new StringTokenizer(extraImports, ";");
+						// Form would be 'com.foo.*,com.bar.MyType;.gradle=com.this.*,com.foo.Type"
+						// If there is no qualifying suffix it applies to all types
+
+						while (st.hasMoreTokens()) {
+							String onesuffix = st.nextToken();
+							int equals = onesuffix.indexOf('=');
+							boolean shouldApply = false;
+							String imports = null;
+							if (equals == -1) {
+								// definetly applies
+								shouldApply = true;
+								imports = onesuffix;
+							} else {
+								// need to check the suffix
+								String suffix = onesuffix.substring(0, equals);
+								shouldApply = filename.endsWith(suffix);
+								imports = onesuffix.substring(equals + 1);
+							}
+							StringTokenizer st2 = new StringTokenizer(imports, ",");
+							while (st2.hasMoreTokens()) {
+								String nextElement = st2.nextToken();
+								// One of two forms: a.b.c.* or a.b.c.Type
+								if (nextElement.endsWith(".*")) {
+									String withoutStar = nextElement.substring(0, nextElement.length() - 1);
+									ConstructedClassWithPackage tmp = new ConstructedClassWithPackage(withoutStar, type.getName());
+									if (resolve(tmp, false, false, false)) {
+										type.setRedirect(tmp.redirect());
+										return true;
+									}
+								} else {
+									String importedTypeName = nextElement;
+									if (importedTypeName.endsWith(type.getName())) {
+										int lastdot = importedTypeName.lastIndexOf('.');
+										String importTypeNameChopped = importedTypeName.substring(0, lastdot + 1);
+										ConstructedClassWithPackage tmp = new ConstructedClassWithPackage(importTypeNameChopped,
+												type.getName());
+										if (resolve(tmp, false, false, false)) {
+											type.setRedirect(tmp.redirect());
+											return true;
+										}
+									}
+								}
+							}
+
+						}
+					} catch (Exception e) {
+						new RuntimeException("Problem processing extraImports: " + extraImports, e).printStackTrace();
+					}
+				}
+			}
+		}
+
 		recordDependency(type.getName());
 		if (debug) {
 			log("resolveFromDefaultImports", type, foundit);

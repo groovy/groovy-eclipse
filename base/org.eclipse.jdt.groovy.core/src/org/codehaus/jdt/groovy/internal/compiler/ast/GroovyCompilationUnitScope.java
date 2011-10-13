@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -22,6 +23,7 @@ import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
@@ -113,6 +115,58 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
 		Binding jmBigInteger = environment.getType(javaMathBigInteger);
 		importBindings.add(new ImportBinding(javaMathBigInteger, false, jmBigInteger, null));
+
+		CompilerOptions co = compilerOptions();
+		String extraImports = co.groovyExtraImports;
+		// TODO support static imports
+		// TODO need to refactor (code is copied in JDTResolver)
+		if (extraImports != null) {
+			try {
+				String filename = new String(this.referenceContext.getFileName());
+				// may be something to do
+				StringTokenizer st = new StringTokenizer(extraImports, ";");
+				// Form would be 'com.foo.*,com.bar.MyType;.gradle=com.this.*,com.foo.Type"
+				// If there is no qualifying suffix it applies to all types
+
+				while (st.hasMoreTokens()) {
+					String onesuffix = st.nextToken();
+					int equals = onesuffix.indexOf('=');
+					boolean shouldApply = false;
+					String imports = null;
+					if (equals == -1) {
+						// definetly applies
+						shouldApply = true;
+						imports = onesuffix;
+					} else {
+						// need to check the suffix
+						String suffix = onesuffix.substring(0, equals);
+						shouldApply = filename.endsWith(suffix);
+						imports = onesuffix.substring(equals + 1);
+					}
+					StringTokenizer st2 = new StringTokenizer(imports, ",");
+					while (st2.hasMoreTokens()) {
+						String nextElement = st2.nextToken();
+						// One of two forms: a.b.c.* or a.b.c.Type
+						if (nextElement.endsWith(".*")) {
+							char[] withoutDotStar = nextElement.substring(0, nextElement.length() - 2).toCharArray();
+							char[][] cs = CharOperation.splitOn('.', withoutDotStar);
+							importBinding = environment.createPackage(cs);
+							// TODO verify binding exists!
+							importBindings.add(new ImportBinding(cs, true, importBinding, null));
+						} else {
+							char[] type = nextElement.toCharArray();
+							char[][] cs = CharOperation.splitOn('.', type);
+							Binding typeBinding = environment.getType(cs);
+							importBindings.add(new ImportBinding(cs, false, typeBinding, null));
+						}
+					}
+
+				}
+			} catch (Exception e) {
+				new RuntimeException("Problem processing extraImports: " + extraImports, e).printStackTrace();
+			}
+		}
+
 		return importBindings.toArray(new ImportBinding[importBindings.size()]);
 	}
 
