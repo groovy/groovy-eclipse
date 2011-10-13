@@ -258,6 +258,7 @@ public class JUnit4TestFinderTests extends JUnitTestCase {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");
         IPath unitPath = env.addGroovyClass(root, "p2", "Tester",
+                "package p2\n" +
                 "import org.junit.Test\n" +
                 "public class Tester {\n"+
                 "  @Test(expected = RuntimeException)" +
