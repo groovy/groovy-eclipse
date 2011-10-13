@@ -114,12 +114,7 @@ public class InferencingTests extends AbstractInferencingTest {
     
     
     public void testInferClosure1() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL >= 18) {
-            assertType("x.&y", "groovy.lang.Closure<java.lang.Object<V>>");
-        } else {
-            // closure is not parameterized in groovy 1.7 and earlier
-            assertType("x.&y", "groovy.lang.Closure");
-        }
+        assertType("x.&y", "groovy.lang.Closure");
     }
     
     public void testSpread1() throws Exception {
