@@ -81,7 +81,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
      * part. There is also the case of a imported class, so this logic
      * can't be done in these cases...
      */
-    private static class ConstructedClassWithPackage extends ClassNode {
+    public static class ConstructedClassWithPackage extends ClassNode {
         String prefix;
         String className;
         public ConstructedClassWithPackage(String pkg, String name) {
@@ -117,7 +117,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
      * name foo and bar for being classes. Instead we will ask the module
      * for an alias for this name which is much faster.
      */
-    private static class LowerCaseClass extends ClassNode {
+    public static class LowerCaseClass extends ClassNode {
         String className;
         public LowerCaseClass(String name) {
             super(name, Opcodes.ACC_PUBLIC,ClassHelper.OBJECT_TYPE);
