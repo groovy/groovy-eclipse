@@ -27,11 +27,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
-import org.eclipse.jdt.core.search.SearchParticipant;
-import org.eclipse.jdt.internal.core.search.JavaSearchParticipant;
 
 /**
  * All of these tests here should produce {@link ModuleNode}s with
@@ -218,8 +214,7 @@ public class SyntheticMemberSearchTests extends EclipseTestCase {
         IJavaElement toSearch = findSearchTarget(searchName);
         SyntheticAccessorSearchRequestor synthRequestor = new SyntheticAccessorSearchRequestor();
         TestSearchRequestor requestor = new TestSearchRequestor();
-        synthRequestor.findSyntheticMatches(toSearch, IJavaSearchConstants.REFERENCES,
-                new SearchParticipant[] { new JavaSearchParticipant() }, SearchEngine.createWorkspaceScope(), requestor, null);
+        synthRequestor.findSyntheticMatches(toSearch, requestor, null);
         return requestor.matches;
     }
 

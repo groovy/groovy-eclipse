@@ -49,7 +49,6 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
     public FindAllReferencesRequestor(AnnotatedNode declaration) {
         this.declaration = declaration;
         this.references = new TreeMap<ASTNode, Integer>(new Comparator<ASTNode>() {
-
             public int compare(ASTNode o1, ASTNode o2) {
                 return o1.getStart() - o2.getStart();
             }

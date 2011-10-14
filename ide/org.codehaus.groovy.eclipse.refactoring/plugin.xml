@@ -135,26 +135,6 @@
       </key>
       -->
    </extension>
-   <!--
-      <extension
-         point="org.eclipse.ltk.core.refactoring.renameParticipants">
-         <renameParticipant
-               class="org.codehaus.groovy.eclipse.refactoring.core.rename.ForcePreviewParticipant"
-               id="org.codehaus.groovy.eclipse.refactoring.forcepreview"
-               name="Force Preview Particpant">
-            <enablement>
-              <with variable="affectedNatures">
-                <iterate operator="or">
-                  <equals value="org.eclipse.jdt.groovy.core.groovyNature"/>
-                </iterate>
-              </with>
-              <with variable="element">
-	             <instanceof value="org.eclipse.jdt.core.IJavaElement"/>
-              </with>
-            </enablement>
-         </renameParticipant>
-		</extension>
-		-->
       <extension
             point="org.eclipse.ltk.core.refactoring.refactoringContributions">
          <contribution
@@ -173,5 +153,23 @@
                class="org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyMethodRefactoringContribution"
                id="org.codehaus.groovy.eclipse.refactoring.extractMethod">
          </contribution>
+      </extension>
+      <extension
+            point="org.eclipse.ltk.core.refactoring.renameParticipants">
+         <renameParticipant
+               class="org.codehaus.groovy.eclipse.refactoring.core.rename.SyntheticAccessorsRenameParticipant"
+               id="org.codehaus.groovy.eclipse.refactoring.syntheticAccessorsRenameParticipant"
+               name="Groovy Synthetic Accessors participant">
+                        <enablement>
+           <with variable="affectedNatures">
+             <iterate operator="or">
+               <equals value="org.eclipse.jdt.groovy.core.groovyNature"/>
+             </iterate>
+           </with>
+           <with variable="element">
+   	         <instanceof value="org.eclipse.jdt.core.IMember"/>
+           </with>
+         </enablement>
+         </renameParticipant>
       </extension>
 </plugin>

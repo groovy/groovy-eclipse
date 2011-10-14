@@ -50,6 +50,7 @@ import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.internal.core.search.JavaSearchParticipant;
 
 /**
  * Search requestor that finds synthetic accessors
@@ -333,18 +334,16 @@ public class SyntheticAccessorSearchRequestor {
         }
     }
 
-    /**
-     * Searches for
-     *
-     * @param element
-     * @param limitTo
-     * @param participants
-     * @param scope
-     * @param uiRequestor
-     * @param monitor
-     * @return
-     * @throws CoreException
-     */
+    public void findSyntheticMatches(IJavaElement element, ISearchRequestor uiRequestor, IProgressMonitor monitor)
+            throws CoreException {
+        // findSyntheticMatches(element, IJavaSearchConstants.REFERENCES, new
+        // SearchParticipant[] { new JavaSearchParticipant() },
+        // SearchEngine.createJavaSearchScope(new IJavaElement[] { element }),
+        // uiRequestor, monitor);
+        findSyntheticMatches(element, IJavaSearchConstants.REFERENCES, new SearchParticipant[] { new JavaSearchParticipant() },
+                SearchEngine.createWorkspaceScope(), uiRequestor, monitor);
+    }
+
     public void findSyntheticMatches(IJavaElement element, int limitTo, SearchParticipant[] participants,
             IJavaSearchScope scope, ISearchRequestor uiRequestor, IProgressMonitor monitor) throws CoreException {
         if (!isInteresting(element)) {

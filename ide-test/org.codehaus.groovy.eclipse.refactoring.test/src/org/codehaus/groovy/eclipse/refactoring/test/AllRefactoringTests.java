@@ -33,6 +33,7 @@ import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameFieldTests;
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameLocalTests;
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameMethodTests;
 import org.codehaus.groovy.eclipse.refactoring.test.rename.RenameTypeTests;
+import org.codehaus.groovy.eclipse.refactoring.test.rename.SyntheticAccessorRenamingTests;
 
 /**
  * @author Andrew Eisenberg
@@ -49,6 +50,7 @@ public class AllRefactoringTests {
         suite.addTest(RenameFieldTests.suite());
         suite.addTest(RenameLocalTests.suite());
         suite.addTest(new TestSuite(MoveCURefactoringTests.class));
+        suite.addTest(new TestSuite(SyntheticAccessorRenamingTests.class));
 
         // extract various
         suite.addTest(new TestSuite(StaticExpressionCheckerTests.class));

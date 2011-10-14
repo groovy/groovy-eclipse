@@ -11,6 +11,7 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.refactoring.test;
 
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IWorkspace;
@@ -47,6 +48,7 @@ public abstract class AbstractRefactoringTest extends EclipseTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        GroovyRuntime.addGroovyRuntime(testProject.getProject());
         testProject.addNature(GroovyNature.GROOVY_NATURE);
         testProject.createPackage("p");
     }

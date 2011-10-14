@@ -81,7 +81,6 @@ public class RenameFieldTests extends RefactoringTest {
             RenameFieldProcessor processor = (RenameFieldProcessor) refactoring
                     .getProcessor();
 
-            int numbers = 1;
             List<IAnnotatable> elements = new ArrayList<IAnnotatable>();
             elements.add(field);
             List<RenameArguments> args = new ArrayList<RenameArguments>();
@@ -90,13 +89,11 @@ public class RenameFieldTests extends RefactoringTest {
                 elements.add(processor.getGetter());
                 args.add(new RenameArguments(processor.getNewGetterName(),
                         updateReferences));
-                numbers++;
             }
             if (renameSetter) {
                 elements.add(processor.getSetter());
                 args.add(new RenameArguments(processor.getNewSetterName(),
                         updateReferences));
-                numbers++;
             }
             String[] renameHandles = ParticipantTesting.createHandles(elements
                     .toArray());
