@@ -12,14 +12,12 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.resources,
  org.codehaus.groovy.eclipse.codebrowsing;bundle-version="2.6.0",
  org.eclipse.ui,
- org.eclipse.jdt.ui,
  org.codehaus.groovy.eclipse.codeassist.completion;bundle-version="2.6.0",
  org.codehaus.groovy.eclipse.ui;bundle-version="2.6.0",
  org.eclipse.jface.text,
  org.eclipse.ui.ide,
  org.eclipse.core.resources,
- org.eclipse.core.filesystem,
- org.eclipse.ui.editors
+ org.eclipse.core.filesystem
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Export-Package: org.codehaus.groovy.eclipse.dsl,
  org.codehaus.groovy.eclipse.dsl.classpath,
