@@ -228,6 +228,40 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
 	}
 
+	public void testInners_983() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "", "Outer",
+		    	"class Outer {\n"+
+		    	"  static class Inner {}\n"+
+		    	"}\n"
+			);
+		
+		env.addClass(root, "", "Client",
+		    	"public class Client {\n"+
+		    	"  { new Outer.Inner(); }\n"+
+		        "}\n"
+				);
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("Client", "Outer", "Outer$Inner");
+		expectingNoProblems();
+		env.addClass(root, "", "Client", "public class Client {\n"
+				+ "  { new Outer.Inner(); }\n" + "}\n");
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+		expectingCompiledClassesV("Client");
+
+	}
+
 	// Activate when identified script recognition does not damage performance
 	// public void testScriptSupport() throws Exception {
 	//		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$

@@ -70,7 +70,8 @@ public class InnerClassVisitor extends InnerClassVisitorHelper implements Opcode
             if (innerClass.getVariableScope() == null &&
                     innerClass.getDeclaredConstructors().isEmpty()) {
                 // add dummy constructor
-                innerClass.addConstructor(PUBLIC_SYNTHETIC, new Parameter[0], null, null);
+            	// GRECLIPSE: fix for 983
+                innerClass.addConstructor(ACC_PUBLIC, new Parameter[0], null, null);
             }
         }
 
