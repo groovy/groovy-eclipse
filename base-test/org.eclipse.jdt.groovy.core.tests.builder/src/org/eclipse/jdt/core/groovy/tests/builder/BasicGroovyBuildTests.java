@@ -261,6 +261,57 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		expectingCompiledClassesV("Client");
 
 	}
+	
+	public void test1167() throws Exception {
+		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "brooklyn.event.adapter", "HttpSensorAdapter",
+		    	"package brooklyn.event.adapter\n"+
+		"\n"+
+		    			"public class HttpSensorAdapter {}\n"+
+		"\n"+
+		    			"public class Foo implements ValueProvider<String> {\n"+
+		"public String compute() {\n" +
+		"  return null\n"+
+		"}\n"+
+		"}"
+			);
+		
+		env.addGroovyClass(root, "brooklyn.event.adapter", "ValueProvider",
+		    	"package brooklyn.event.adapter\n"+
+		"\n"+
+		    	"public interface ValueProvider<T> {\n"+
+		    	"  public T compute();\n"+
+		        "}\n"
+				);
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("brooklyn.event.adapter.Foo", "brooklyn.event.adapter.HttpSensorAdapter", "brooklyn.event.adapter.ValueProvider");
+		expectingNoProblems();
+		env.addGroovyClass(root, "brooklyn.event.adapter", "HttpSensorAdapter",
+		    	"package brooklyn.event.adapter\n"+
+		"\n"+
+		    			"public class HttpSensorAdapter {}\n"+
+		"\n"+
+		    			"public class Foo implements ValueProvider<String> {\n"+
+		"public String compute() {\n" +
+		"  return null\n"+
+		"}\n"+
+		"}"
+			);
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+		expectingCompiledClassesV("brooklyn.event.adapter.Foo", "brooklyn.event.adapter.HttpSensorAdapter");
+
+	}
 
 	// Activate when identified script recognition does not damage performance
 	// public void testScriptSupport() throws Exception {

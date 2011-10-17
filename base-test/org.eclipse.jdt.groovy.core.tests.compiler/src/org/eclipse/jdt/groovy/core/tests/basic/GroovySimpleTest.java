@@ -8267,12 +8267,13 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},"");
 		String expectedContents = 
 			"// Compiled from Foo.groovy (version 1.5 : 49.0, no super bit)\n" + 
-			"public abstract @interface A extends java.lang.annotation.Annotation {\n" + 
+			"public abstract @interface A extends java.lang.annotation.Annotation {\n"  
 //			(GroovyUtils.GROOVY_LEVEL<18?"":
-				"\n"+
-				"  Inner classes:\n" + 
-				"    [inner class info: #9 A$1, outer class info: #2 A\n" + 
-				"     inner name: #10 1, accessflags: 4128 default]\n" +"}";
+//				"\n"+
+//				"  Inner classes:\n" + 
+//				"    [inner class info: #9 A$1, outer class info: #2 A\n" + 
+//				"     inner name: #10 1, accessflags: 4128 default]\n" +"}"
+;
 		checkDisassemblyFor("A.class",expectedContents);
 	
 	}
@@ -8480,6 +8481,36 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 
 				"com/foo/Type.groovy",
 				"package com.foo\n" + "class Type {\n"
+						+ "  public static void m() {}\n" + "}\n",
+		// @formatter:on
+				}, "done", null, true, null, options, null);
+	}
+
+	public void testExtraImports_withSuffixExactType2() throws IOException {
+		Map options = getCompilerOptions();
+		options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
+				".groovy=com.foo.Type;.groovy=com.foo.TypeB");
+		options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
+		// From:
+		// http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
+		runConformTest(new String[] {
+				// @formatter:off
+				"com/bar/Runner.groovy",
+				"package com.bar\n"
+						+
+						// "import com.foo.*\n" + // this is what needs
+						// 'simulating'
+						"class Runner {\n"
+						+ "  public static void main(String[]argv) {\n"
+						+ "		Type.m();\n" + "		TypeB.m();\n"
+						+ "       print 'done'\n" + "	}\n" + "}\n",
+
+				"com/foo/Type.groovy",
+				"package com.foo\n" + "class Type {\n"
+						+ "  public static void m() {}\n" + "}\n",
+
+				"com/foo/TypeB.groovy",
+				"package com.foo\n" + "class TypeB {\n"
 						+ "  public static void m() {}\n" + "}\n",
 		// @formatter:on
 				}, "done", null, true, null, options, null);
@@ -8847,6 +8878,24 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n",
 		},"012012012");		
 	}
+	
+/*	public void testInners_1185() {
+		this.runConformTest(new String[] {
+			"WithInnerClass.groovy",
+			"class WithInnerClass {\n"+
+			"\n"+ 
+			"  interface InnerInterface {\n"+
+			"	 void foo()\n"+
+			"  }\n"+
+			"\n"+
+			"  private final InnerInterface foo = new InnerInterface() {\n"+
+			"	  void foo() {\n" +
+			"\n" + 
+			"	  }\n" + 
+			"  }\n"+
+			"}"
+				}, "");
+	}*/
 
 	
 	public void testInvokingVarargs02_GtoJ() {
