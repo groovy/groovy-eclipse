@@ -1548,6 +1548,12 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return (innerClasses == null ? Collections.<InnerClassNode>emptyList() : innerClasses).iterator();
     }
     
+    public void forgetInnerClass(InnerClassNode icn) {
+        if (innerClasses!=null) {
+        innerClasses.remove(icn);
+        }
+    }
+    
     private Map<CompilePhase, Map<Class<? extends ASTTransformation>, Set<ASTNode>>> getTransformInstances() {
         if(transformInstances == null){
             transformInstances = new EnumMap<CompilePhase, Map<Class <? extends ASTTransformation>, Set<ASTNode>>>(CompilePhase.class);

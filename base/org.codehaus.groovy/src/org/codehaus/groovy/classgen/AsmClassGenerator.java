@@ -3057,7 +3057,11 @@ public class AsmClassGenerator extends ClassGenerator {
     }
 
     protected void createInterfaceSyntheticStaticFields() {
-        if (referencedClasses.isEmpty()) return;
+        if (referencedClasses.isEmpty()) {
+        	//GRECLIPSE-1167
+        	 classNode.forgetInnerClass((InterfaceHelperClassNode)interfaceClassLoadingClass); // my new line
+        	 return;
+        }
 
         addInnerClass(interfaceClassLoadingClass);
 
