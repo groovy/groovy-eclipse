@@ -118,7 +118,7 @@ public class CompilationUnit extends ProcessingUnit {
      * security stuff and a class loader for loading classes.
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, GroovyClassLoader loader) {
-        this(configuration, security, loader, null);
+        this(configuration, security, loader, null,true);
     }
     
     /**
@@ -135,8 +135,9 @@ public class CompilationUnit extends ProcessingUnit {
      * @param configuration - compilation configuration
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, 
-                           GroovyClassLoader loader, GroovyClassLoader transformLoader) {
+                           GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean allowTransforms) {
         super(configuration, loader, null);
+        this.allowTransforms = allowTransforms;
         this.transformLoader = transformLoader;
         this.names = new ArrayList<String>();
         this.queuedSources = new LinkedList<SourceUnit>();
@@ -1190,7 +1191,7 @@ public class CompilationUnit extends ProcessingUnit {
 	 * 
 	 * @param isReconcile is this a reconciling compile?
 	 */
-	public void tweak(boolean isReconcile, boolean allowTransforms) {
+	public void tweak(boolean isReconcile) {
 		// Cant do this for field initializers. They need to be in the constructor in order for them to
 		// be correctly visited by the verifier and have certain optimizations performed (creating returns)
 		if (isReconcile) {
@@ -1201,7 +1202,6 @@ public class CompilationUnit extends ProcessingUnit {
 //        	verifier.inlineFieldInitializersIntoInit=true;
 		}
 		this.isReconcile = isReconcile;
-		this.allowTransforms = allowTransforms;
 	}
 	// end
     

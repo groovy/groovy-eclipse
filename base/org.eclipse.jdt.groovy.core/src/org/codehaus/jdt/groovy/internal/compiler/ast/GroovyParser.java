@@ -249,16 +249,24 @@ public class GroovyParser {
 		this.compilerOptions = options;
 		this.projectName = options.groovyProjectName;
 		GroovyClassLoader gcl = getLoaderFor(path);
-		// Grab needs them on, even for reconciling to behave *sigh*, so might as well turn them on for everything
-		// allowTransforms = true;
+
+		// ---
+		// Status of transforms and reconciling: Oct-18-2011
+		// Prior to 2.6.0 all transforms were turned OFF for reconciling, and by turned off that meant no phase
+		// processing for them was done at all. With 2.6.0 this phase processing is now active during reconciling
+		// but it is currently limited to only allowing the Grab (global) transform to run. (Not sure why Grab
+		// is a global transform... isn't is always annotation driven). Non global transforms are all off.
+		// This means the transformLoader is setup for the compilation unit but the cu is also told the
+		// allowTransforms setting so it can decide what should be allowed through.
+		// ---
 
 		// Basic grab support: the design here is that a special classloader is created that will be augmented
 		// with URLs when grab processing is running. This classloader is used as a last resort when resolving
 		// types and is *only* called if a grab has occurred somewhere during compilation.
 		// Currently it is not cached but created each time - we'll have to decide if there is a need to cache
 		GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader();
-		this.groovyCompilationUnit = makeCompilationUnit(grabbyLoader, allowTransforms ? gcl : null);
-		this.groovyCompilationUnit.tweak(isReconcile, allowTransforms);
+		this.groovyCompilationUnit = makeCompilationUnit(grabbyLoader, gcl, isReconcile, allowTransforms);
+		this.groovyCompilationUnit.tweak(isReconcile);
 		if (grabbyLoader != null) {
 			grabbyLoader.setCompilationUnit(groovyCompilationUnit);
 		}
@@ -523,19 +531,19 @@ public class GroovyParser {
 		GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader();
 		boolean allowTransforms = this.groovyCompilationUnit.allowTransforms;
 		boolean isReconcile = this.groovyCompilationUnit.isReconcile;
-		this.groovyCompilationUnit = makeCompilationUnit(grabbyLoader, gcl);
-		this.groovyCompilationUnit.tweak(isReconcile, allowTransforms);
+		this.groovyCompilationUnit = makeCompilationUnit(grabbyLoader, gcl, isReconcile, allowTransforms);
 		this.scriptFolderSelector = null;
 		grabbyLoader.setCompilationUnit(this.groovyCompilationUnit);
 		this.resolver = new JDTResolver(groovyCompilationUnit);
 		this.groovyCompilationUnit.setResolveVisitor(resolver);
 	}
 
-	private CompilationUnit makeCompilationUnit(GroovyClassLoader loader, GroovyClassLoader transformLoader) {
-		CompilationUnit it = new CompilationUnit(null, null, loader, transformLoader);
+	private CompilationUnit makeCompilationUnit(GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean isReconcile,
+			boolean allowTransforms) {
+		CompilationUnit it = new CompilationUnit(null, null, loader, transformLoader, allowTransforms);
 		// Grails: start
 		// This code makes Grails 1.4.M1 AST transforms work.
-		if (transformLoader != null && compilerOptions != null && ((compilerOptions.groovyFlags & 0x01) != 0)) {
+		if (allowTransforms && transformLoader != null && compilerOptions != null && ((compilerOptions.groovyFlags & 0x01) != 0)) {
 			try {
 				Class<?> klass = Class.forName("org.codehaus.groovy.grails.compiler.injection.GrailsAwareInjectionOperation", true,
 						transformLoader);
@@ -554,6 +562,7 @@ public class GroovyParser {
 			}
 		}
 		// Grails: end
+		it.tweak(isReconcile);
 		return it;
 	}
 

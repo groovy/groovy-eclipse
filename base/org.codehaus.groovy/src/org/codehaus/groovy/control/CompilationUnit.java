@@ -130,7 +130,7 @@ public class CompilationUnit extends ProcessingUnit {
      * security stuff and a class loader for loading classes.
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, GroovyClassLoader loader) {
-        this(configuration, security, loader, null);
+        this(configuration, security, loader, null,true);
     }
     
     /**
@@ -148,10 +148,11 @@ public class CompilationUnit extends ProcessingUnit {
      * 
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, 
-                           GroovyClassLoader loader, GroovyClassLoader transformLoader) 
+                           GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean allowTransforms) 
     {
     	
         super(configuration, loader, null);
+        this.allowTransforms= allowTransforms;
         this.transformLoader = transformLoader;
         this.names = new ArrayList<String>();
         this.queuedSources = new LinkedList<SourceUnit>();
@@ -1231,14 +1232,13 @@ public class CompilationUnit extends ProcessingUnit {
 	 * 
 	 * @param isReconcile is this a reconciling compile?
 	 */
-	public void tweak(boolean isReconcile, boolean allowTransforms) {
+	public void tweak(boolean isReconcile) {
 		if (isReconcile) {
         	verifier.inlineStaticFieldInitializersIntoClinit=false;
 		} else {
         	verifier.inlineStaticFieldInitializersIntoClinit=true;			
 		}
 		this.isReconcile = isReconcile;
-		this.allowTransforms = allowTransforms;
 	}
     // end
     
