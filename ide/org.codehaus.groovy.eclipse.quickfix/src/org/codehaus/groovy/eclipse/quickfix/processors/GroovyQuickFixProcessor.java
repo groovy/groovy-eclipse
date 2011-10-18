@@ -18,12 +18,10 @@ package org.codehaus.groovy.eclipse.quickfix.processors;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.quickfix.proposals.AbstractGroovyQuickFixProposal;
-import org.codehaus.groovy.eclipse.quickfix.proposals.GroovyProblemFactory;
 import org.codehaus.groovy.eclipse.quickfix.proposals.GroovyQuickFixResolverRegistry;
-import org.codehaus.groovy.eclipse.quickfix.proposals.IProblemDescriptor;
-import org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixProblemContext;
 import org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver;
+import org.codehaus.groovy.eclipse.quickfix.proposals.ProblemDescriptor;
+import org.codehaus.groovy.eclipse.quickfix.proposals.ProblemType;
 import org.codehaus.groovy.eclipse.quickfix.proposals.QuickFixProblemContext;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
@@ -34,11 +32,6 @@ import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
 import org.eclipse.jdt.ui.text.java.IQuickFixProcessor;
-import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.contentassist.ICompletionProposal;
-import org.eclipse.jface.text.contentassist.IContextInformation;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
 
 /**
  * Integrates Groovy proposals into JDT quick fix framework.
@@ -49,7 +42,7 @@ import org.eclipse.swt.graphics.Point;
 public class GroovyQuickFixProcessor implements IQuickFixProcessor {
 
 	public boolean hasCorrections(ICompilationUnit unit, int problemId) {
-		return isProblemInGroovyProject(unit);
+		return isProblemInGroovyProject(unit) && ProblemType.isRecognizedProblemId(problemId);
 	}
 
 	/*
@@ -67,7 +60,7 @@ public class GroovyQuickFixProcessor implements IQuickFixProcessor {
 		// as the proposals should not appear if the problem is in any other
 		// type of project
 		if (isProblemInGroovyProject(context, locations)) {
-			IQuickFixProblemContext problemContext = getQuickFixProblemContext(
+		    QuickFixProblemContext problemContext = getQuickFixProblemContext(
 					context, locations);
 
 			if (problemContext != null) {
@@ -77,13 +70,10 @@ public class GroovyQuickFixProcessor implements IQuickFixProcessor {
 					List<IJavaCompletionProposal> proposals = new ArrayList<IJavaCompletionProposal>();
 					for (IQuickFixResolver resolver : resolvers) {
 
-						List<ICompletionProposal> foundProposals = resolver
+						List<IJavaCompletionProposal> foundProposals = resolver
 								.getQuickFixProposals();
 						if (foundProposals != null) {
-							for (ICompletionProposal proposal : foundProposals) {
-								proposals
-										.add(convertToJavaCompletionProposal(proposal));
-							}
+						    proposals.addAll(foundProposals);
 						}
 					}
 
@@ -107,7 +97,7 @@ public class GroovyQuickFixProcessor implements IQuickFixProcessor {
 	 *            where the problem occurs
 	 * @return model representing the Java problem context
 	 */
-	protected IQuickFixProblemContext getQuickFixProblemContext(
+	protected QuickFixProblemContext getQuickFixProblemContext(
 			IInvocationContext context, IProblemLocation[] locations) {
 
 		if (context == null || locations == null || locations.length == 0) {
@@ -117,21 +107,27 @@ public class GroovyQuickFixProcessor implements IQuickFixProcessor {
 		// return multiple locations if necessary
 		IProblemLocation location = locations[0];
 
-		IProblemDescriptor descriptor = new GroovyProblemFactory()
-				.getProblemDescriptor(location.getProblemId(),
+		ProblemDescriptor descriptor = getProblemDescriptor(location.getProblemId(),
 						location.getMarkerType(),
 						location.getProblemArguments());
 
 		if (descriptor != null) {
-			return new QuickFixProblemContext(descriptor,
-					context.getCompilationUnit(), context.getCoveredNode(),
-					context.getCoveringNode(), context.getASTRoot(),
-					location.isError(), location.getLength(),
-					location.getOffset());
+			return new QuickFixProblemContext(descriptor, context, location);
 		}
 
 		return null;
 	}
+
+	/** not API.  Public for testing purposes */
+	public ProblemDescriptor getProblemDescriptor(int problemID,
+            String markerDescription, String[] messages) {
+        ProblemType type = ProblemType.getProblemType(problemID, markerDescription,
+                messages);
+        if (type != null) {
+            return new ProblemDescriptor(type, messages);
+        }
+        return null;
+    }
 
 	/**
 	 * True if the problem is contained in an accessible (open and existing)
@@ -175,53 +171,4 @@ public class GroovyQuickFixProcessor implements IQuickFixProcessor {
 		}
 		return false;
 	}
-
-	/**
-	 * 
-	 * @param proposal
-	 *            Eclipse quick fix proposal
-	 * @return JDT quick fix representation
-	 */
-	protected IJavaCompletionProposal convertToJavaCompletionProposal(
-			ICompletionProposal proposal) {
-		if (proposal == null) {
-			return null;
-		}
-
-		final ICompletionProposal proposalToConvert = proposal;
-		final int relevance = proposalToConvert instanceof AbstractGroovyQuickFixProposal ? ((AbstractGroovyQuickFixProposal) proposalToConvert)
-				.getRelevance() : 0;
-
-		return new IJavaCompletionProposal() {
-
-			public Point getSelection(IDocument document) {
-				return proposalToConvert.getSelection(document);
-			}
-
-			public Image getImage() {
-				return proposalToConvert.getImage();
-			}
-
-			public String getDisplayString() {
-				return proposalToConvert.getDisplayString();
-			}
-
-			public IContextInformation getContextInformation() {
-				return proposalToConvert.getContextInformation();
-			}
-
-			public String getAdditionalProposalInfo() {
-				return proposalToConvert.getAdditionalProposalInfo();
-			}
-
-			public void apply(IDocument document) {
-				proposalToConvert.apply(document);
-			}
-
-			public int getRelevance() {
-				return relevance;
-			}
-		};
-	}
-
 }

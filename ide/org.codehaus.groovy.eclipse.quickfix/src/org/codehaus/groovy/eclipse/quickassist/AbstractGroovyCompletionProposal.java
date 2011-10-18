@@ -17,14 +17,9 @@ package org.codehaus.groovy.eclipse.quickassist;
 
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
-import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.contentassist.ICompletionProposal;
-import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
 
-public abstract class AbstractGroovyCompletionProposal implements
-		IGroovyCompletionProposal {
+public abstract class AbstractGroovyCompletionProposal implements IJavaCompletionProposal {
 
 	public Image getImage() {
 		String imageLocation = getImageBundleLocation();
@@ -35,48 +30,4 @@ public abstract class AbstractGroovyCompletionProposal implements
 	}
 
 	abstract protected String getImageBundleLocation();
-	
-	/**
-	 * 
-	 * @param proposal
-	 *            Eclipse quick fix proposal
-	 * @return JDT quick fix representation
-	 */
-	public IJavaCompletionProposal convertToJavaCompletionProposal() {
-
-		final ICompletionProposal proposalToConvert = this;
-		final int relevance = getRelevance();
-
-		return new IJavaCompletionProposal() {
-
-			public Point getSelection(IDocument document) {
-				return proposalToConvert.getSelection(document);
-			}
-
-			public Image getImage() {
-				return proposalToConvert.getImage();
-			}
-
-			public String getDisplayString() {
-				return proposalToConvert.getDisplayString();
-			}
-
-			public IContextInformation getContextInformation() {
-				return proposalToConvert.getContextInformation();
-			}
-
-			public String getAdditionalProposalInfo() {
-				return proposalToConvert.getAdditionalProposalInfo();
-			}
-
-			public void apply(IDocument document) {
-				proposalToConvert.apply(document);
-			}
-
-			public int getRelevance() {
-				return relevance;
-			}
-		};
-	}
-
 }

@@ -16,8 +16,8 @@
 package org.codehaus.groovy.eclipse.quickfix.proposals;
 
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
+import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -29,17 +29,16 @@ import org.eclipse.swt.graphics.Point;
  * @author Nieraj Singh
  * 
  */
-public abstract class AbstractGroovyQuickFixProposal implements
-		ICompletionProposal {
+public abstract class AbstractGroovyQuickFixProposal implements IJavaCompletionProposal {
 
-	private IQuickFixProblemContext problemContext;
+	private QuickFixProblemContext problemContext;
 	private int relevance;
 
-	public AbstractGroovyQuickFixProposal(IQuickFixProblemContext problem) {
+	public AbstractGroovyQuickFixProposal(QuickFixProblemContext problem) {
 		this.problemContext = problem;
 	}
 	
-	public AbstractGroovyQuickFixProposal(IQuickFixProblemContext problem, int relevance) {
+	public AbstractGroovyQuickFixProposal(QuickFixProblemContext problem, int relevance) {
 		this.problemContext = problem;
 		this.relevance = relevance;
 	}
@@ -53,16 +52,16 @@ public abstract class AbstractGroovyQuickFixProposal implements
 	 * 
 	 * @return the invocation context and problem this proposal should fix.
 	 */
-	protected IQuickFixProblemContext getQuickFixProblemContext() {
+	protected QuickFixProblemContext getQuickFixProblemContext() {
 		return problemContext;
 	}
 
 	public Point getSelection(IDocument document) {
-		return null;
+		return problemContext != null ? new Point(problemContext.getOffset(), problemContext.getLength()) : null;
 	}
 
 	public String getAdditionalProposalInfo() {
-		return null;
+		return "Ha ha!!!";
 	}
 
 	public Image getImage() {

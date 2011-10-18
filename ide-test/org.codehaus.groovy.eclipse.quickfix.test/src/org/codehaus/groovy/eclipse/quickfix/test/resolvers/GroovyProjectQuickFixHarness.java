@@ -21,20 +21,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.codehaus.groovy.eclipse.quickfix.processors.GroovyQuickFixProcessor;
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddMissingGroovyImportsResolver;
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddMissingGroovyImportsResolver.AddMissingImportProposal;
-import org.codehaus.groovy.eclipse.quickfix.proposals.GroovyProblemFactory;
 import org.codehaus.groovy.eclipse.quickfix.proposals.GroovyQuickFixResolverRegistry;
-import org.codehaus.groovy.eclipse.quickfix.proposals.IProblemDescriptor;
-import org.codehaus.groovy.eclipse.quickfix.proposals.IProblemType;
-import org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixProblemContext;
 import org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver;
+import org.codehaus.groovy.eclipse.quickfix.proposals.ProblemDescriptor;
+import org.codehaus.groovy.eclipse.quickfix.proposals.ProblemType;
 import org.codehaus.groovy.eclipse.quickfix.proposals.QuickFixProblemContext;
 import org.codehaus.groovy.eclipse.quickfix.test.GroovyProjectTestCase;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jface.text.contentassist.ICompletionProposal;
+import org.eclipse.jdt.internal.ui.text.correction.AssistContext;
+import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 
 /**
  * Harness class containing helper methods for Groovy Quick Fix testing.
@@ -43,10 +43,6 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  * 
  */
 public class GroovyProjectQuickFixHarness extends GroovyProjectTestCase {
-
-	private IProblemType[] GROOVY_PROBLEM_TYPES = new IProblemType[] {
-			GroovyProblemFactory.MISSING_IMPORTS_TYPE,
-			GroovyProblemFactory.MISSING_SEMI_COLON_TYPE };
 
 	/**
 	 * Tests the selection of a type to import with only one proposal.
@@ -138,9 +134,9 @@ public class GroovyProjectQuickFixHarness extends GroovyProjectTestCase {
 
 		assertNotNull("Expected a resolver for " + typeToImportSimple, resolver);
 
-		List<ICompletionProposal> proposals = resolver.getQuickFixProposals();
-		Map<String, ICompletionProposal> proposalsMap = new HashMap<String, ICompletionProposal>();
-		for (ICompletionProposal proposal : proposals) {
+		List<IJavaCompletionProposal> proposals = resolver.getQuickFixProposals();
+		Map<String, IJavaCompletionProposal> proposalsMap = new HashMap<String, IJavaCompletionProposal>();
+		for (IJavaCompletionProposal proposal : proposals) {
 			proposalsMap.put(proposal.getDisplayString(), proposal);
 		}
 
@@ -154,7 +150,7 @@ public class GroovyProjectQuickFixHarness extends GroovyProjectTestCase {
 			String expectedDisplay = entry.getKey();
 			String expectedFullyQualifiedName = entry.getValue();
 
-			ICompletionProposal actualProposal = proposalsMap
+			IJavaCompletionProposal actualProposal = proposalsMap
 					.get(expectedDisplay);
 			assertNotNull("Expected a proposal for "
 					+ expectedFullyQualifiedName, actualProposal);
@@ -195,7 +191,7 @@ public class GroovyProjectQuickFixHarness extends GroovyProjectTestCase {
 	 * @throws Exception
 	 */
 	protected List<IQuickFixResolver> getAllQuickFixResolversForType(
-			IMarker[] markers, IProblemType type, ICompilationUnit unit)
+			IMarker[] markers, ProblemType type, ICompilationUnit unit)
 			throws Exception {
 		if (markers == null) {
 			return null;
@@ -204,7 +200,7 @@ public class GroovyProjectQuickFixHarness extends GroovyProjectTestCase {
 		List<IQuickFixResolver> totalResolvers = new ArrayList<IQuickFixResolver>();
 		for (IMarker marker : markers) {
 
-			IQuickFixProblemContext context = getSimpleProblemContext(marker,
+			QuickFixProblemContext context = getSimpleProblemContext(marker,
 					unit, type);
 			if (context != null) {
 
@@ -222,14 +218,14 @@ public class GroovyProjectQuickFixHarness extends GroovyProjectTestCase {
 		return !totalResolvers.isEmpty() ? totalResolvers : null;
 	}
 
-	protected ICompletionProposal getCompletionProposal(String quickFixDisplay,
+	protected IJavaCompletionProposal getCompletionProposal(String quickFixDisplay,
 			IQuickFixResolver resolver) {
-		List<ICompletionProposal> proposals = resolver.getQuickFixProposals();
+		List<IJavaCompletionProposal> proposals = resolver.getQuickFixProposals();
 		if (proposals == null) {
 			return null;
 		}
 
-		for (ICompletionProposal proposal : proposals) {
+		for (IJavaCompletionProposal proposal : proposals) {
 			if (proposal.getDisplayString().equals(quickFixDisplay)) {
 				return proposal;
 			}
@@ -240,7 +236,7 @@ public class GroovyProjectQuickFixHarness extends GroovyProjectTestCase {
 
 	protected AddMissingImportProposal getAddMissingImportsProposal(
 			String quickFixDisplay, IQuickFixResolver resolver) {
-		ICompletionProposal proposal = getCompletionProposal(quickFixDisplay,
+		IJavaCompletionProposal proposal = getCompletionProposal(quickFixDisplay,
 				resolver);
 		if (proposal instanceof AddMissingImportProposal) {
 			return (AddMissingImportProposal) proposal;
@@ -268,8 +264,8 @@ public class GroovyProjectQuickFixHarness extends GroovyProjectTestCase {
 	 * @return
 	 * @throws Exception
 	 */
-	protected IQuickFixProblemContext getSimpleProblemContext(IMarker marker,
-			ICompilationUnit unit, IProblemType problemType) throws Exception {
+	protected QuickFixProblemContext getSimpleProblemContext(IMarker marker,
+			ICompilationUnit unit, ProblemType problemType) throws Exception {
 		// make sure the marker's associated resource matches the compilation
 		// unit that needs to be fixed, as
 		// to not solve a similar marker from another compilation unit, in case
@@ -280,17 +276,16 @@ public class GroovyProjectQuickFixHarness extends GroovyProjectTestCase {
 		}
 		if (((Integer) marker.getAttribute(IMarker.SEVERITY)).intValue() == IMarker.SEVERITY_ERROR) {
 			String[] markerMessages = getMarkerMessages(marker);
-			GroovyProblemFactory factory = new GroovyProblemFactory();
 
 			// NOTE this is not the same as the marker ID
 			int problemID = ((Integer) marker.getAttribute("id")).intValue();
-			IProblemDescriptor descriptor = factory.getProblemDescriptor(
+			ProblemDescriptor descriptor = new GroovyQuickFixProcessor().getProblemDescriptor(
 					problemID, marker.getType(), markerMessages);
 			if (descriptor != null && descriptor.getType() == problemType) {
 				int offset = ((Integer) marker.getAttribute(IMarker.CHAR_START));
 				int length = ((Integer) marker.getAttribute(IMarker.CHAR_END));
-				return new QuickFixProblemContext(descriptor, unit, null, null,
-						null, true, length, offset);
+				return new QuickFixProblemContext(descriptor, new AssistContext(unit, offset, length), 
+				        null);
 			}
 		}
 		return null;
@@ -311,7 +306,7 @@ public class GroovyProjectQuickFixHarness extends GroovyProjectTestCase {
 			throws Exception {
 		IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit);
 		List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(
-				markers, GroovyProblemFactory.MISSING_IMPORTS_TYPE, unit);
+				markers, ProblemType.MISSING_IMPORTS_TYPE, unit);
 
 		if (resolvers == null) {
 			return null;
@@ -320,10 +315,10 @@ public class GroovyProjectQuickFixHarness extends GroovyProjectTestCase {
 		for (IQuickFixResolver resolver : resolvers) {
 			if (resolver instanceof AddMissingGroovyImportsResolver) {
 				AddMissingGroovyImportsResolver importResolver = (AddMissingGroovyImportsResolver) resolver;
-				List<ICompletionProposal> proposals = importResolver
+				List<IJavaCompletionProposal> proposals = importResolver
 						.getQuickFixProposals();
 				if (proposals != null) {
-					for (ICompletionProposal proposal : proposals) {
+					for (IJavaCompletionProposal proposal : proposals) {
 						if (proposal instanceof AddMissingImportProposal) {
 							AddMissingImportProposal importProposal = (AddMissingImportProposal) proposal;
 							if (importProposal.getSuggestedJavaType()
@@ -345,7 +340,7 @@ public class GroovyProjectQuickFixHarness extends GroovyProjectTestCase {
 	 * 
 	 * @return
 	 */
-	protected IProblemType[] getGroovyProblemTypes() {
-		return GROOVY_PROBLEM_TYPES;
+	protected ProblemType[] getGroovyProblemTypes() {
+		return ProblemType.values();
 	}
 }

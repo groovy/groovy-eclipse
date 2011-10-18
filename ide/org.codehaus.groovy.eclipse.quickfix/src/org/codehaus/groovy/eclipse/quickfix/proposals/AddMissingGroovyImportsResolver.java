@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.eclipse.codeassist.relevance.RelevanceRules;
-import org.codehaus.groovy.eclipse.codeassist.relevance.RelevanceRules.RelevanceRuleType;
 import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports;
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports.UnresolvedTypeData;
@@ -32,8 +31,8 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.search.TypeNameMatch;
+import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.text.edits.TextEdit;
 
 /**
@@ -49,7 +48,7 @@ import org.eclipse.text.edits.TextEdit;
  */
 public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
 
-	public AddMissingGroovyImportsResolver(IQuickFixProblemContext problem) {
+	public AddMissingGroovyImportsResolver(QuickFixProblemContext problem) {
 		super(problem);
 	}
 
@@ -61,7 +60,7 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
 		private GroovyCompilationUnit unit;
 
 		public AddMissingImportProposal(IType resolvedSuggestedType,
-				GroovyCompilationUnit unit, IQuickFixProblemContext problem,
+				GroovyCompilationUnit unit, QuickFixProblemContext problem,
 				int relevance) {
 			super(problem, relevance);
 			this.resolvedSuggestedType = resolvedSuggestedType;
@@ -121,8 +120,8 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
 		}
 	}
 
-	protected IProblemType[] getTypes() {
-		return new IProblemType[] { GroovyProblemFactory.MISSING_IMPORTS_TYPE };
+	protected ProblemType[] getTypes() {
+		return new ProblemType[] { ProblemType.MISSING_IMPORTS_TYPE };
 	}
 
 	/**
@@ -187,13 +186,13 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
 
 		StringBuffer errorMessage = new StringBuffer(messages[0]);
 		int prefixIndex = errorMessage
-				.indexOf(GroovyProblemFactory.GROOVY_UNRESOLVED_TYPE_MESSAGE);
+				.indexOf(ProblemType.MISSING_IMPORTS_TYPE.groovyProblemSnippet);
 		if (prefixIndex >= 0) {
-			errorMessage
-					.delete(prefixIndex,
-							prefixIndex
-									+ GroovyProblemFactory.GROOVY_UNRESOLVED_TYPE_MESSAGE
-											.length());
+            errorMessage
+                    .delete(prefixIndex,
+                            prefixIndex
+                                    + ProblemType.MISSING_IMPORTS_TYPE.groovyProblemSnippet
+                                            .length());
 
 			// Strip starting whitespace
 			for (; errorMessage.length() > 0;) {
@@ -246,10 +245,10 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
 	 * @see org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver#
 	 * getQuickFixProposals()
 	 */
-	public List<ICompletionProposal> getQuickFixProposals() {
+	public List<IJavaCompletionProposal> getQuickFixProposals() {
 		List<IType> suggestions = getImportTypeSuggestions();
 		if (suggestions != null) {
-			List<ICompletionProposal> fixes = new ArrayList<ICompletionProposal>();
+			List<IJavaCompletionProposal> fixes = new ArrayList<IJavaCompletionProposal>();
 			for (IType type : suggestions) {
 				int revelance = getRelevance(type);
 				fixes.add(new AddMissingImportProposal(type,

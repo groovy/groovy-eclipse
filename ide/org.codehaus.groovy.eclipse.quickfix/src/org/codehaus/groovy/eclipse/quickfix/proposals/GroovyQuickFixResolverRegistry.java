@@ -32,8 +32,8 @@ import java.util.Map;
  */
 public class GroovyQuickFixResolverRegistry {
 
-	private IQuickFixProblemContext problem;
-	private Map<IProblemType, List<IQuickFixResolver>> registry;
+	private QuickFixProblemContext problem;
+	private Map<ProblemType, List<IQuickFixResolver>> registry;
 
 	/**
 	 * 
@@ -41,7 +41,7 @@ public class GroovyQuickFixResolverRegistry {
 	 *            the quick fix problem that should be used to look up possible
 	 *            resolvers that can generated a solution. Must not be null
 	 */
-	public GroovyQuickFixResolverRegistry(IQuickFixProblemContext problem) {
+	public GroovyQuickFixResolverRegistry(QuickFixProblemContext problem) {
 		this.problem = problem;
 	}
 
@@ -50,7 +50,7 @@ public class GroovyQuickFixResolverRegistry {
 	 * @return the quick fix problem used to look up potential resolvers that
 	 *         can provide a quick fix for that problem
 	 */
-	protected IQuickFixProblemContext getQuickFixProblem() {
+	protected QuickFixProblemContext getQuickFixProblem() {
 		return problem;
 	}
 
@@ -61,7 +61,7 @@ public class GroovyQuickFixResolverRegistry {
 	 */
 	public List<IQuickFixResolver> getQuickFixResolvers() {
 
-		IProblemDescriptor descriptor = getQuickFixProblem()
+	    ProblemDescriptor descriptor = getQuickFixProblem()
 				.getProblemDescriptor();
 
 		return descriptor != null ? getRegistry().get(descriptor.getType()) : null;
@@ -74,15 +74,15 @@ public class GroovyQuickFixResolverRegistry {
 	 * 
 	 * @return non-null registry of quick fix resolvers. May be empty.
 	 */
-	protected Map<IProblemType, List<IQuickFixResolver>> getRegistry() {
+	protected Map<ProblemType, List<IQuickFixResolver>> getRegistry() {
 		if (registry == null) {
-			registry = new HashMap<IProblemType, List<IQuickFixResolver>>();
+			registry = new HashMap<ProblemType, List<IQuickFixResolver>>();
 
 			IQuickFixResolver[] registeredResolvers = getRegisteredResolvers(getQuickFixProblem());
 
 			for (IQuickFixResolver resolver : registeredResolvers) {
-				List<IProblemType> types = resolver.getProblemTypes();
-				for (IProblemType type : types) {
+				List<ProblemType> types = resolver.getProblemTypes();
+				for (ProblemType type : types) {
 					List<IQuickFixResolver> resolvers = registry.get(type);
 					if (resolvers == null) {
 						resolvers = new ArrayList<IQuickFixResolver>();
@@ -105,13 +105,20 @@ public class GroovyQuickFixResolverRegistry {
 	 *         nothing is found
 	 */
 	protected static IQuickFixResolver[] getRegisteredResolvers(
-			IQuickFixProblemContext problem) {
+	        QuickFixProblemContext problem) {
 		return new IQuickFixResolver[] {
 				// Convert to groovy
 				new ConvertToGroovyFileResolver(problem),
 
 				// Add missing Groovy imports
-				new AddMissingGroovyImportsResolver(problem) };
+				new AddMissingGroovyImportsResolver(problem),
+				
+				// Add Groovy runtime
+				new AddGroovyRuntimeResolver(problem),
+				
+				// Add unimplemented abstract methods
+				new AddUnimplementedResolver(problem),
+		};
 	}
 
 }

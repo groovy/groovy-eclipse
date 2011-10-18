@@ -21,8 +21,8 @@ import java.util.List;
 import org.codehaus.groovy.eclipse.ui.utils.GroovyResourceUtil;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
+import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
  * Converts a Java resource to a Groovy resource if certain problems are
@@ -35,13 +35,13 @@ public class ConvertToGroovyFileResolver extends AbstractQuickFixResolver {
 
 	public static final String DESCRIPTION = "Convert to Groovy file and open in Groovy editor";
 
-	public ConvertToGroovyFileResolver(IQuickFixProblemContext problem) {
+	public ConvertToGroovyFileResolver(QuickFixProblemContext problem) {
 		super(problem);
 	}
 
 	public static class ConvertToGroovyQuickFix extends
 			AbstractGroovyQuickFixProposal {
-		public ConvertToGroovyQuickFix(IQuickFixProblemContext problem) {
+		public ConvertToGroovyQuickFix(QuickFixProblemContext problem) {
 			super(problem);
 		}
 
@@ -68,8 +68,8 @@ public class ConvertToGroovyFileResolver extends AbstractQuickFixResolver {
 	 * org.codehaus.groovy.eclipse.quickfix.proposals.AbstractQuickFixResolver
 	 * #getDescriptors()
 	 */
-	protected IProblemType[] getTypes() {
-		return new IProblemType[] { GroovyProblemFactory.MISSING_SEMI_COLON_TYPE };
+	protected ProblemType[] getTypes() {
+		return new ProblemType[] { ProblemType.MISSING_SEMI_COLON_TYPE, ProblemType.MISSING_SEMI_COLON_TYPE_VARIANT };
 	}
 
 	/*
@@ -78,8 +78,8 @@ public class ConvertToGroovyFileResolver extends AbstractQuickFixResolver {
 	 * @see org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver#
 	 * getQuickFixProposals()
 	 */
-	public List<ICompletionProposal> getQuickFixProposals() {
-		List<ICompletionProposal> fixes = new ArrayList<ICompletionProposal>();
+	public List<IJavaCompletionProposal> getQuickFixProposals() {
+		List<IJavaCompletionProposal> fixes = new ArrayList<IJavaCompletionProposal>();
 		fixes.add(new ConvertToGroovyQuickFix(getQuickFixProblem()));
 		return fixes;
 	}

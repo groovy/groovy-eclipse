@@ -17,7 +17,7 @@ package org.codehaus.groovy.eclipse.quickfix.proposals;
 
 import java.util.List;
 
-import org.eclipse.jface.text.contentassist.ICompletionProposal;
+import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 
 /**
  * Groovy problems are handled by implementing a Quick Fix resolver, which is
@@ -43,13 +43,13 @@ public interface IQuickFixResolver {
 	 * 
 	 * @return non null list of problem type that this resolver can handle
 	 */
-	public List<IProblemType> getProblemTypes();
+	public List<ProblemType> getProblemTypes();
 
 	/**
 	 * 
 	 * @return non null list of Java completion proposals that can handle each
 	 *         of the problem descriptors associated with this resolver
 	 */
-	public List<ICompletionProposal> getQuickFixProposals();
+	public List<IJavaCompletionProposal> getQuickFixProposals();
 
 }

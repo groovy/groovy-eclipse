@@ -19,8 +19,8 @@ import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddMissingGroovyImportsResolver;
-import org.codehaus.groovy.eclipse.quickfix.proposals.IProblemType;
 import org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver;
+import org.codehaus.groovy.eclipse.quickfix.proposals.ProblemType;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -85,12 +85,12 @@ public class NonGroovyProjectQuickFixTest extends GroovyProjectQuickFixHarness {
 				+ ".groovy", typeToAddImportContent);
 		IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit);
 
-		IProblemType[] knownProblemTypes = getGroovyProblemTypes();
+		ProblemType[] knownProblemTypes = getGroovyProblemTypes();
 
 		assertTrue("No Groovy problem types to test", knownProblemTypes != null
 				&& knownProblemTypes.length > 0);
 
-		for (IProblemType type : getGroovyProblemTypes()) {
+		for (ProblemType type : getGroovyProblemTypes()) {
 			List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(
 					markers, type, unit);
 			assertTrue(

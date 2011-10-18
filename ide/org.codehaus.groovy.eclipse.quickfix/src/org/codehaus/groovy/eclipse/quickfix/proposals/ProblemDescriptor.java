@@ -23,17 +23,17 @@ import java.util.Arrays;
  * @author Nieraj Singh
  * 
  */
-public class ProblemDescriptor implements IProblemDescriptor {
+public class ProblemDescriptor {
 
 	private String[] messages;
-	private IProblemType type;
+	private ProblemType type;
 
-	public ProblemDescriptor(IProblemType type, String[] messages) {
+	public ProblemDescriptor(ProblemType type, String[] messages) {
 		this.type = type;
 		this.messages = messages;
 	}
 
-	public IProblemType getType() {
+	public ProblemType getType() {
 		return type;
 	}
 

@@ -20,10 +20,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
+import org.codehaus.groovy.eclipse.quickfix.proposals.AddGroovyRuntimeResolver;
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddMissingGroovyImportsResolver;
-import org.codehaus.groovy.eclipse.quickfix.proposals.IProblemType;
 import org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver;
+import org.codehaus.groovy.eclipse.quickfix.proposals.ProblemType;
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IPackageFragment;
 
@@ -38,6 +41,7 @@ public class GroovyProjectGroovyQuickFixTest extends
 
 	private static final String SUBTEST = "com.test.subtest";
 	private static final String SUBSUBTEST = "com.test.subtest.subtest";
+    private ICompilationUnit topLevelUnit;
 
 	protected void setUp() throws Exception {
 		super.setUp();
@@ -59,7 +63,7 @@ public class GroovyProjectGroovyQuickFixTest extends
 		subtestPackFrag = testProject.createPackage(SUBSUBTEST);
 		assertNotNull(subtestPackFrag);
 
-		createGroovyType(subtestPackFrag, "TopLevelType.groovy",
+		topLevelUnit = createGroovyType(subtestPackFrag, "TopLevelType.groovy",
 				topLeveLContent);
 	}
 
@@ -333,8 +337,22 @@ public class GroovyProjectGroovyQuickFixTest extends
 
 		assertNull("Expected no resolver for nonexistant type: "
 				+ nonExistantType, resolver);
-
 	}
+	
+	public void testAddGroovyRuntime() throws Exception {
+        GroovyRuntime.removeGroovyClasspathContainer(testProject.getJavaProject());
+        testProject.getProject().build(IncrementalProjectBuilder.FULL_BUILD, null);
+        assertNotNull("Should have found problems in this project", testProject.getProblems());
+        IMarker[] markers = getCompilationUnitJDTFailureMarkers(topLevelUnit);
+
+        List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(
+                markers, ProblemType.MISSING_CLASSPATH_CONTAINER_TYPE, topLevelUnit);
+        assertEquals("Should have found exactly one resolver", 1, resolvers.size());
+        assertEquals("Wrong type of resolver", AddGroovyRuntimeResolver.class, resolvers.get(0).getClass());
+        resolvers.get(0).getQuickFixProposals().get(0).apply(null);
+        testProject.getProject().build(IncrementalProjectBuilder.FULL_BUILD, null);
+        assertNull("Should not have found problems in this project", testProject.getProblems());
+    }
 
 	/**
 	 * Tests that no Groovy quick fix resolvers are encountered for unrecognised
@@ -352,12 +370,12 @@ public class GroovyProjectGroovyQuickFixTest extends
 
 		IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit);
 
-		IProblemType[] knownProblemTypes = getGroovyProblemTypes();
+		ProblemType[] knownProblemTypes = getGroovyProblemTypes();
 
 		assertTrue("No Groovy problem types to test", knownProblemTypes != null
 				&& knownProblemTypes.length > 0);
 
-		for (IProblemType type : getGroovyProblemTypes()) {
+		for (ProblemType type : getGroovyProblemTypes()) {
 			List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(
 					markers, type, unit);
 			assertTrue(

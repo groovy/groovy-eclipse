@@ -19,6 +19,8 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.ui.text.java.IInvocationContext;
+import org.eclipse.jdt.ui.text.java.IProblemLocation;
 
 /**
  * Base implementation of a quick fix problem.
@@ -26,49 +28,34 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
  * @author Nieraj Singh
  * 
  */
-public class QuickFixProblemContext implements IQuickFixProblemContext {
+public class QuickFixProblemContext {
 
-	private ICompilationUnit unit;
-	private ASTNode coveredNode;
-	private ASTNode coveringNode;
-	private CompilationUnit root;
-	private IProblemDescriptor problemDescriptor;
-	private boolean isError;
-	private int length;
-	private int offset;
+	
+	private final ProblemDescriptor problemDescriptor;
+    private final IInvocationContext context;
+    private final IProblemLocation location;
 
-	public QuickFixProblemContext(IProblemDescriptor problemDescriptor,
-			ICompilationUnit unit, ASTNode coveredNode, ASTNode coveringNode,
-			CompilationUnit root, boolean isError, int length, int offset) {
-		this.unit = unit;
-		this.coveredNode = coveredNode;
-		this.coveringNode = coveringNode;
-		this.root = root;
-		this.problemDescriptor = problemDescriptor;
-		this.isError = isError;
-		this.length = length;
-		this.offset = offset;
-	}
+	public QuickFixProblemContext(ProblemDescriptor problemDescriptor, IInvocationContext context,
+            IProblemLocation location) {
+                this.problemDescriptor = problemDescriptor;
+                this.context = context;
+                this.location = location;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixProblemContext
-	 * #getCompilationUnit()
-	 */
+    /**
+     * 
+     * @return compilation unit containing the problem. Never null.
+     */
 	public ICompilationUnit getCompilationUnit() {
-		return unit;
+		return context.getCompilationUnit();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixProblemContext
-	 * #getProblemDescriptor()
-	 */
-	public IProblemDescriptor getProblemDescriptor() {
+    /**
+     * 
+     * @return non-null problem descriptor for the problem that requires a quick
+     *         fix
+     */
+	public ProblemDescriptor getProblemDescriptor() {
 		return problemDescriptor;
 	}
 
@@ -80,74 +67,54 @@ public class QuickFixProblemContext implements IQuickFixProblemContext {
 	 * #isError()
 	 */
 	public boolean isError() {
-		return isError;
+		return location != null ? location.isError() : true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixProblemContext
-	 * #getOffset()
-	 */
+    /**
+     * Returns the start offset of the problem.
+     * 
+     * @return the start offset of the problem
+     */
 	public int getOffset() {
-		return offset;
+		return location != null ? location.getOffset() : context.getSelectionOffset();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixProblemContext
-	 * #getLength()
-	 */
+    /**
+     * Returns the length of the problem.
+     * 
+     * @return the length of the problem
+     */
 	public int getLength() {
-		return length;
+        return location != null ? location.getLength() : context.getSelectionLength();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixProblemContext
-	 * #getCoveringNode(org.eclipse.jdt.core.dom.CompilationUnit)
-	 */
 	public ASTNode getCoveringNode(CompilationUnit astRoot) {
-		return coveringNode;
+		return context.getCoveringNode();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixProblemContext
-	 * #getCoveredNode(org.eclipse.jdt.core.dom.CompilationUnit)
-	 */
 	public ASTNode getCoveredNode(CompilationUnit astRoot) {
-		return coveredNode;
+		return context.getCoveredNode();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixProblemContext
-	 * #getASTRoot()
-	 */
 	public CompilationUnit getASTRoot() {
-		return root;
+		return context.getASTRoot();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixProblemContext
-	 * #getResource()
-	 */
+    /**
+     * 
+     * @return the resource containing the problem.
+     */
 	public IResource getResource() {
 		return getCompilationUnit() != null ? getCompilationUnit()
 				.getResource() : null;
 	}
 
+	
+	public IInvocationContext getContext() {
+        return context;
+    }
+	
+	public IProblemLocation getLocation() {
+        return location;
+    }
 }

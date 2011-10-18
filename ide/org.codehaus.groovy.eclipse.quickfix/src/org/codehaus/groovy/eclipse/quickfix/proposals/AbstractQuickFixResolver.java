@@ -35,8 +35,8 @@ import org.eclipse.jdt.core.JavaModelException;
  * 
  */
 public abstract class AbstractQuickFixResolver implements IQuickFixResolver {
-	private List<IProblemType> problemTypes;
-	private IQuickFixProblemContext problem;
+	private List<ProblemType> problemTypes;
+	private QuickFixProblemContext problem;
 
 	/**
 	 * 
@@ -44,7 +44,7 @@ public abstract class AbstractQuickFixResolver implements IQuickFixResolver {
 	 *            the actual quick fix problem that this resolver should
 	 *            resolve.
 	 */
-	protected AbstractQuickFixResolver(IQuickFixProblemContext problem) {
+	protected AbstractQuickFixResolver(QuickFixProblemContext problem) {
 		this.problem = problem;
 	}
 
@@ -53,7 +53,7 @@ public abstract class AbstractQuickFixResolver implements IQuickFixResolver {
 	 * @return non-null quick fix problem representing the actual Groovy or Java
 	 *         problem that has been encountered in the resource
 	 */
-	protected IQuickFixProblemContext getQuickFixProblem() {
+	protected QuickFixProblemContext getQuickFixProblem() {
 		return problem;
 	}
 
@@ -63,12 +63,12 @@ public abstract class AbstractQuickFixResolver implements IQuickFixResolver {
 	 * @see org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver#
 	 * getProblemTypes()
 	 */
-	public List<IProblemType> getProblemTypes() {
+	public List<ProblemType> getProblemTypes() {
 		if (problemTypes == null) {
-			problemTypes = new ArrayList<IProblemType>();
-			IProblemType[] types = getTypes();
+			problemTypes = new ArrayList<ProblemType>();
+			ProblemType[] types = getTypes();
 			if (types != null) {
-				for (IProblemType type : types) {
+				for (ProblemType type : types) {
 					if (type != null && !problemTypes.contains(type)) {
 						problemTypes.add(type);
 					}
@@ -79,7 +79,7 @@ public abstract class AbstractQuickFixResolver implements IQuickFixResolver {
 	}
 
 	protected IType[] getContextTypes() {
-		IQuickFixProblemContext context = getQuickFixProblem();
+		QuickFixProblemContext context = getQuickFixProblem();
 		if (context != null) {
 			ICompilationUnit unit = context.getCompilationUnit();
 			if (unit != null) {
@@ -95,9 +95,9 @@ public abstract class AbstractQuickFixResolver implements IQuickFixResolver {
 
 	/**
 	 * 
-	 * @return non null, non empty list of problem types that this resolver can
+	 * @return non null, non empty array of problem types that this resolver can
 	 *         handle
 	 */
-	protected abstract IProblemType[] getTypes();
+	protected abstract ProblemType[] getTypes();
 
 }

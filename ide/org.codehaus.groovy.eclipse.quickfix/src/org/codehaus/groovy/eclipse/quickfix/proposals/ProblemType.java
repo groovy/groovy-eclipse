@@ -1,88 +1,114 @@
 /*
  * Copyright 2010 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 package org.codehaus.groovy.eclipse.quickfix.proposals;
 
+import org.eclipse.core.resources.IMarker;
+import org.eclipse.jdt.core.IJavaModelMarker;
+import org.eclipse.jdt.core.compiler.IProblem;
+
 /**
- * Concrete implementation of a problem type.
+ * A descriptor that represents a Java or Eclipse resource problem (compilation problem, etc..)
+ * which the Groovy quick fix framework can understand.
  * 
  * @author Nieraj Singh
- * 
+ * @author Andrew Eisenberg
  */
-public class ProblemType implements IProblemType {
+public enum ProblemType {
+    // missing semi-colons will have different IProblem values in different places
+    MISSING_SEMI_COLON_TYPE(IProblem.ParsingErrorInsertToComplete, null),
+    MISSING_SEMI_COLON_TYPE_VARIANT(IProblem.ParsingErrorInsertTokenAfter, null),
+    
+    MISSING_IMPORTS_TYPE("Groovy:unable to resolve class"), 
+    UNIMPLEMENTED_METHODS_TYPE("Groovy:Can't have an abstract method in a non-abstract class."), 
+    MISSING_CLASSPATH_CONTAINER_TYPE(IProblem.IsClassPathCorrect, "groovy.lang.GroovyObject");
 
-	private String markerType;
-	private int problemID;
+    /**
+     * The {@link IMarker} type of the problem.
+     */
+    public final String markerType;
 
-	public ProblemType(String markerType, int problemID) {
-		this.markerType = markerType;
-		this.problemID = problemID;
-	}
+    /**
+     * {@link IProblem} id of problem. Note that problem ids are defined per problem marker type. See
+     * {@link org.eclipse.jdt.core.compiler.IProblem} for id definitions for problems of type
+     * <code>org.eclipse.jdt.core.problem</code> and <code>org.eclipse.jdt.core.task</code>.
+     */
+    public final int problemId;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.codehaus.groovy.eclipse.quickfix.proposals.IProblemType#getMarkerType
-	 * ()
-	 */
-	public String getMarkerType() {
-		return markerType;
-	}
+    /**
+     * A bit of text that uniquely describes the groovy compiler problem
+     * Only necessary because groovy problems do not have a unique id.
+     */
+    public final String groovyProblemSnippet;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.codehaus.groovy.eclipse.quickfix.proposals.IProblemType#getProblemID
-	 * ()
-	 */
-	public int getProblemID() {
-		return problemID;
-	}
+    public static final int GROOVY_PROBLEM_ID = 0;
+    
+    /** Constructor for groovy problems. Can only be distinguished by */
+    private ProblemType(String groovyProblemSnippet) {
+        this(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER,
+                GROOVY_PROBLEM_ID, groovyProblemSnippet);
+    }
 
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result
-				+ ((markerType == null) ? 0 : markerType.hashCode());
-		result = prime * result + problemID;
-		return result;
-	}
+    private ProblemType(int problemID, String groovyProblemSnippet) {
+        this(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, problemID,
+                groovyProblemSnippet);
+    }
 
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		ProblemType other = (ProblemType) obj;
-		if (markerType == null) {
-			if (other.markerType != null)
-				return false;
-		} else if (!markerType.equals(other.markerType)) {
-			return false;
-		}
-		if (problemID != other.problemID) {
-			return false;
-		}
-		return true;
-	}
+    private ProblemType(String markerType, int problemID,
+            String groovyProblemSnippet) {
+        this.markerType = markerType;
+        this.problemId = problemID;
+        this.groovyProblemSnippet = groovyProblemSnippet;
+    }
+
+    private boolean matches(int problemID, String markerType, String[] messages) {
+        if (this.problemId == problemID && this.markerType.equals(markerType)) {
+            if (groovyProblemSnippet == null) {
+                // we don't care about the snippet. let all problems match
+                return true;
+            }
+            for (String message : messages) {
+                if (message != null && message.contains(groovyProblemSnippet)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static ProblemType getProblemType(int problemID,
+            String markerType, String[] messages) {
+        for (ProblemType problemType : ProblemType.values()) {
+            if (problemType.matches(problemID, markerType, messages)) {
+                return problemType;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param problemId2
+     * @return true iff the problemId is recognized by at least one of the problem types
+     * This not entirely useful since all Groovy problems have the same problemId regardless of
+     * whether or not they can be handled by a QuickFix handler
+     */
+    public static boolean isRecognizedProblemId(int problemId) {
+        for (ProblemType problemType : values()) {
+            if (problemType.problemId == problemId) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }
