@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
+ * Copyright (c) 2009, 2011 SpringSource and others.
  * All rights reserved. This program and the accompanying materials 
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,18 +31,18 @@ import org.eclipse.jdt.internal.core.util.Util;
  * 
  *          This class stores module nodes for groovy compilation units This class is not meant to be accessed externally.
  * 
- *          One module node is stored per working copy of
+ *          One module node is stored per working copy of a unit
  */
 public class ModuleNodeMapper {
 
-	private class ModuleNodeInfo {
+	public class ModuleNodeInfo {
 		public ModuleNodeInfo(ModuleNode module, JDTResolver resolver) {
 			this.module = module;
 			this.resolver = resolver;
 		}
 
-		final ModuleNode module;
-		final JDTResolver resolver;
+		public final ModuleNode module;
+		public final JDTResolver resolver;
 	}
 
 	private static final ModuleNodeMapper INSTANCE = new ModuleNodeMapper();
@@ -73,18 +73,18 @@ public class ModuleNodeMapper {
 		return DSL_BUNDLE_INSTALLED;
 	}
 
-	synchronized ModuleNode get(PerWorkingCopyInfo info) {
-		sweepAndPurgeModuleNodes();
-		ModuleNodeInfo moduleNodeInfo = infoToModuleMap.get(info);
+	synchronized ModuleNode getModule(PerWorkingCopyInfo info) {
+		ModuleNodeInfo moduleNodeInfo = get(info);
 		return moduleNodeInfo != null ? moduleNodeInfo.module : null;
 	}
 
-	synchronized JDTResolver getResolver(PerWorkingCopyInfo info) {
-		if (info == null) {
-			return null;
-		}
+	synchronized ModuleNodeInfo get(PerWorkingCopyInfo info) {
 		sweepAndPurgeModuleNodes();
-		ModuleNodeInfo moduleNodeInfo = infoToModuleMap.get(info);
+		return infoToModuleMap.get(info);
+	}
+
+	synchronized JDTResolver getResolver(PerWorkingCopyInfo info) {
+		ModuleNodeInfo moduleNodeInfo = get(info);
 		return moduleNodeInfo != null ? moduleNodeInfo.resolver : null;
 	}
 

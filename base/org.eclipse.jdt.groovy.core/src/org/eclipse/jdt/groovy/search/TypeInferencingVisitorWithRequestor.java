@@ -81,7 +81,9 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.syntax.Types;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
@@ -152,13 +154,17 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 */
 	private Stack<ClassNode> propertyExpressionDeclaringType;
 
+	private final JDTResolver resolver;
+
 	/**
 	 * Use factory to instantiate
 	 */
 	TypeInferencingVisitorWithRequestor(GroovyCompilationUnit unit, ITypeLookup[] lookups) {
 		super();
 		this.unit = unit;
-		enclosingDeclarationNode = createModuleNode(unit);
+		ModuleNodeInfo info = createModuleNode(unit);
+		this.enclosingDeclarationNode = info != null ? info.module : null;
+		this.resolver = info != null ? info.resolver : null;
 		this.lookups = lookups;
 		scopes = new Stack<VariableScope>();
 		propertyExpression = new Stack<ASTNode>();
@@ -179,6 +185,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		scopes.push(topLevelScope);
 
 		for (ITypeLookup lookup : lookups) {
+			if (lookup instanceof ITypeResolver) {
+				((ITypeResolver) lookup).setResolverInformation((ModuleNode) enclosingDeclarationNode, resolver);
+			}
 			lookup.initialize(unit, topLevelScope);
 		}
 
@@ -409,8 +418,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 */
 	@SuppressWarnings("cast")
 	private void visitClassInternal(ClassNode node) {
-		if (unit.getResolver() != null) {
-			unit.getResolver().currentClass = node;
+		if (resolver != null) {
+			resolver.currentClass = node;
 		}
 		VariableScope scope = scopes.peek();
 		scope.addVariable("this", node, node);
@@ -1803,12 +1812,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * Get the module node. Potentially forces creation of a new module node if the working copy owner is non-default. This is
 	 * necessary because a non-default working copy owner implies that this may be a search related to refactoring and therefore,
 	 * the ModuleNode must be based on the most recent working copies.
+	 * 
 	 */
-	private ModuleNode createModuleNode(GroovyCompilationUnit unit) {
+	private ModuleNodeInfo createModuleNode(GroovyCompilationUnit unit) {
 		if (unit.getOwner() == null || unit.owner == DefaultWorkingCopyOwner.PRIMARY) {
-			return unit.getModuleNode();
+			return unit.getModuleInfo(true);
 		} else {
-			return unit.getNewModuleNode();
+			return unit.getNewModuleInfo();
 		}
 	}
 

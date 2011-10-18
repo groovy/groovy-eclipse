@@ -95,7 +95,7 @@ public class DSLContributionGroup extends ContributionGroup {
             try {
                 this.contributions = new ArrayList<IContributionElement>();
                 this.scope = pattern.getCurrentScope();
-                this.resolver = pattern.resolver; 
+                this.resolver = pattern.getResolverCache(); 
                 this.bindings = matches.getBindings();
                 this.currentType = pattern.getCurrentType();
                 this.wormhole = scope.getWormhole();

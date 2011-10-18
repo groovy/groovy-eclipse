@@ -14,15 +14,18 @@ import java.util.List;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionElement;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup;
 import org.eclipse.jdt.groovy.search.ITypeLookup;
+import org.eclipse.jdt.groovy.search.ITypeResolver;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
@@ -32,17 +35,24 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  * @author andrew
  * @created Nov 17, 2010
  */
-public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITypeLookup {
+public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITypeLookup, ITypeResolver {
 
     private DSLDStore store;
     private GroovyDSLDContext pattern;
     private Set<String> disabledScriptsAsSet;
+    private ModuleNode module;
+    private JDTResolver resolver;
     
+    public void setResolverInformation(ModuleNode module, JDTResolver resolver) {
+        this.module = module;
+        this.resolver = resolver;
+    }
+
     public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
 
         disabledScriptsAsSet = DSLPreferences.getDisabledScriptsAsSet();
         try {
-            pattern = new GroovyDSLDContext(unit);
+            pattern = new GroovyDSLDContext(unit, module, resolver);
         } catch (CoreException e) {
             GroovyDSLCoreActivator.logException(e);
         }
@@ -57,7 +67,7 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
         pattern.setTargetType(declaringType);
         List<IContributionElement> elts = store.findContributions(pattern, disabledScriptsAsSet);
         for (IContributionElement elt : elts) {
-            TypeAndDeclaration td = elt.lookupType(name, declaringType, pattern.resolver);
+            TypeAndDeclaration td = elt.lookupType(name, declaringType, pattern.getResolverCache());
             if (td != null) {
                 return td;
             }

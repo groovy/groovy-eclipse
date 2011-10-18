@@ -25,6 +25,7 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
@@ -2736,7 +2737,8 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 	}
 
 	// two on one line
-	public void testTaskMarkerSharedDescription() throws Exception {
+	@SuppressWarnings("rawtypes")
+    public void testTaskMarkerSharedDescription() throws Exception {
 		Hashtable options = JavaCore.getOptions();
 		Hashtable newOptions = JavaCore.getOptions();
 		newOptions.put(JavaCore.COMPILER_TASK_TAGS, "TODO,FIXME,XXX"); //$NON-NLS-1$
@@ -2901,15 +2903,16 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
         // remove old package fragment root so that names don't collide
         env.removePackageFragmentRoot(projectPath, "");
 
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        IPath output = env.setOutputFolder(projectPath, "bin");
+        env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
 
-        IPath unitPath = env.addGroovyClass(projectPath.append("src"), "p", "Groov", "package p\n");
+        env.addGroovyClass(projectPath.append("src"), "p", "Groov", "package p\n");
         GroovyCompilationUnit unit = (GroovyCompilationUnit) env.getJavaProject("Project").findType("p.Groov").getCompilationUnit();
         unit.becomeWorkingCopy(null);
-        JDTResolver resolver = unit.getResolver();
+        ModuleNodeInfo moduleInfo = unit.getModuleInfo(true);
+        JDTResolver resolver = moduleInfo.resolver;
         assertNotNull(resolver);
-        resolver.currentClass = unit.getModuleNode().getScriptClassDummy();
+        resolver.currentClass = moduleInfo.module.getScriptClassDummy();
         ClassNode url = resolver.resolve("java.net.URL");
         assertNotNull("Should have found the java.net.URL ClassNode", url);
         assertEquals("Wrong classnode found", "java.net.URL", url.getName());

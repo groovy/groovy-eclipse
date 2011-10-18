@@ -27,6 +27,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.groovy.tests.search.AbstractGroovySearchTest;
@@ -60,7 +61,8 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
         }
 
         private GroovyDSLDContext createContext(GroovyCompilationUnit unit) throws CoreException {
-            GroovyDSLDContext context = new GroovyDSLDContext(unit);
+            ModuleNodeInfo info = unit.getModuleInfo(true);
+            GroovyDSLDContext context = new GroovyDSLDContext(unit, info.module, info.resolver);
             context.resetBinding();
             return context;
         }

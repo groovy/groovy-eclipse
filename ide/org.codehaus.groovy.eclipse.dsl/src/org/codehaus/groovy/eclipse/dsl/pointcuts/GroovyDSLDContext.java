@@ -15,7 +15,9 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -30,9 +32,6 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  */
 public class GroovyDSLDContext {
 
-
-    /** will be null if this object created from deprecated API */
-    public ResolverCache resolver;
 
     public final String[] projectNatures;
 
@@ -58,6 +57,9 @@ public class GroovyDSLDContext {
      */
     public final String packageFolderPath;
     
+    /** will be null if this object created from deprecated API */
+    private ResolverCache resolverCache;
+
     private BindingSet currentBinding;
 
     private VariableScope currentScope;
@@ -68,11 +70,11 @@ public class GroovyDSLDContext {
      */
     private ClassNode targetType;
 
-    public GroovyDSLDContext(GroovyCompilationUnit unit) throws CoreException {
+    public GroovyDSLDContext(GroovyCompilationUnit unit, ModuleNode module, JDTResolver jdtResolver) throws CoreException {
         this(getProjectNatures(unit), 
                 getFullPathToFile(unit),
                 getPathToPackage(unit));
-        resolver = new ResolverCache(unit.getResolver(), unit.getModuleNode());
+        resolverCache = new ResolverCache(jdtResolver, module);
     }
 
 
@@ -247,5 +249,10 @@ public class GroovyDSLDContext {
         builder.append(currentScope);
         builder.append("]");
         return builder.toString();
+    }
+
+
+    public ResolverCache getResolverCache() {
+        return resolverCache;
     }
 }

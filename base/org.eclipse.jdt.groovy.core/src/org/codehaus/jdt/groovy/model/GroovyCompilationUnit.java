@@ -20,7 +20,7 @@ import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.jdt.groovy.integration.internal.MultiplexingSourceElementRequestorParser;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
-import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
+import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.Assert;
@@ -99,13 +99,26 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	 * 
 	 */
 	public ModuleNode getModuleNode() {
+		ModuleNodeInfo moduleInfo = getModuleInfo(true);
+		return moduleInfo != null ? moduleInfo.module : null;
+	}
+
+	/**
+	 * Gets the module info for this compilation unit
+	 * 
+	 * @param force if true, then a module info is created even if not a working copy. This occurs by temporarily turning the
+	 *        compilation unit into a working copy and then discarding it.
+	 * @return the {@link ModuleNodeInfo} for this compilation unit. Will be null if force is set to false and this unit is not a
+	 *         working copy. Also will be null if a problem occurs
+	 */
+	public ModuleNodeInfo getModuleInfo(boolean force) {
 		synchronized (ModuleNodeMapper.getInstance()) {
 			try {
 				// discard the working copy after finishing
 				// if there was no working copy to begin with
 				boolean becameWorkingCopy = false;
 				try {
-					if (becameWorkingCopy = !isWorkingCopy()) {
+					if (becameWorkingCopy = (force && !isWorkingCopy())) {
 						becomeWorkingCopy(null);
 					}
 					if (!isConsistent()) {
@@ -134,13 +147,13 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	 * 
 	 * @return
 	 */
-	public ModuleNode getNewModuleNode() {
+	public ModuleNodeInfo getNewModuleInfo() {
 		try {
 			openWhenClosed(createElementInfo(), new NullProgressMonitor());
 		} catch (JavaModelException e) {
 			Util.log(e, "Exception thrown when trying to get Groovy module node for " + this.getElementName()); //$NON-NLS-1$
 		}
-		return getModuleNode();
+		return getModuleInfo(true);
 	}
 
 	@Override
@@ -460,19 +473,6 @@ public class GroovyCompilationUnit extends CompilationUnit {
 		}
 	}
 
-	/**
-	 * Only returns a resolver if this is a working copy and the DSL bundle is available (that is the only bundle that requires this
-	 * method)
-	 * 
-	 * @return a {@link JDTResolver} for this unit
-	 */
-	public JDTResolver getResolver() {
-		PerWorkingCopyInfo info = getPerWorkingCopyInfo();
-		synchronized (ModuleNodeMapper.getInstance()) {
-			return ModuleNodeMapper.getInstance().getResolver(info);
-		}
-	}
-
 	public GroovyCompilationUnit cloneCachingContents(char[] newContents) {
 		return new CompilationUnitClone(newContents);
 	}
@@ -589,12 +589,12 @@ public class GroovyCompilationUnit extends CompilationUnit {
 		}
 	}
 
-//	@Override
-//	public IJavaProject getJavaProject() {
-//		IJavaProject javaProject = super.getJavaProject();
-//		if (!isOnBuildPath()) {
-//			javaProject = new WrappedJavaProject(javaProject);
-//		}
-//		return javaProject;
-//	}
+	// @Override
+	// public IJavaProject getJavaProject() {
+	// IJavaProject javaProject = super.getJavaProject();
+	// if (!isOnBuildPath()) {
+	// javaProject = new WrappedJavaProject(javaProject);
+	// }
+	// return javaProject;
+	// }
 }

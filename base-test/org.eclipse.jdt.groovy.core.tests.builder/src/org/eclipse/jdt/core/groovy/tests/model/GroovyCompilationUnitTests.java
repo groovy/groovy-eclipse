@@ -206,7 +206,7 @@ public class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTests {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);
         ModuleNode module1 = unit1.getModuleNode();
-        ModuleNode module2 = unit1.getNewModuleNode();
+        ModuleNode module2 = unit1.getNewModuleInfo().module;
         assertTrue("getNewModuleNode() should have forced creation of a new module node", module1 != module2);
     }
     

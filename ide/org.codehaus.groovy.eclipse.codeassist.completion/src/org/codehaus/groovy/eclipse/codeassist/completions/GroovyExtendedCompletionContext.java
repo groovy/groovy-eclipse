@@ -149,7 +149,12 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
         if (typeSignature.length() == 1 + dims) {
             resolved = ClassHelper.getWrapper(ClassHelper.make(qualifiedName));
         } else {
-            resolved = context.unit.getResolver().resolve(qualifiedName);
+            try {
+                resolved = context.unit.getModuleInfo(false).resolver.resolve(qualifiedName);
+            } catch (NullPointerException e) {
+                // ignore.  Likely DSL support not available
+                resolved = VariableScope.OBJECT_CLASS_NODE;
+            }
         }
         for (int i = 0; i < dims; i++) {
             resolved = resolved.makeArray();
