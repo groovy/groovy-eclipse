@@ -82,6 +82,9 @@ public class SuggestionCompilationUnitHelper {
      * @return
      */
     protected ASTNode findValidASTNode() {
+    	if (unit == null) {
+    		return null;
+    	}
         Region region = new Region(offset, length);
         ASTNodeFinder finder = new ASTNodeFinder(region);
         ASTNode node = finder.doVisit(unit.getModuleNode());

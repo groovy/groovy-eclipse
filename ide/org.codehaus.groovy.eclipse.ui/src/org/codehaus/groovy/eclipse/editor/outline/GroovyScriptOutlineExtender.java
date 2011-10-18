@@ -64,7 +64,7 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
      */
     public boolean appliesTo(GroovyCompilationUnit unit) {
         ModuleNode moduleNode = unit.getModuleNode();
-        return moduleNode != null && moduleNode.getClasses().get(0) != null && moduleNode.getClasses().get(0).isScript();
+        return moduleNode != null && moduleNode.getClasses().size() > 0 && moduleNode.getClasses().get(0) != null && moduleNode.getClasses().get(0).isScript();
     }
 
 }
