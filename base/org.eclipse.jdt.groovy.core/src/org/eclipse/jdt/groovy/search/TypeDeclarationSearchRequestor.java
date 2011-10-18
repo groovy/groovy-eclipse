@@ -53,7 +53,7 @@ public class TypeDeclarationSearchRequestor implements ITypeRequestor, IIndexCon
 		if (node instanceof ClassNode) {
 			ClassNode orig = (ClassNode) node;
 			ClassNode redirect = orig.redirect();
-			if (orig == redirect) {
+			if (redirect.getNameEnd() > 0 && orig == redirect) {
 				if (orig.getNameWithoutPackage().equalsIgnoreCase(simpleName)) {
 					boolean matchFound;
 					switch (typeSuffix) {
