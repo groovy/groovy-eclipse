@@ -89,7 +89,9 @@ public class CompilerHook implements HookConfigurator, AdaptorHook {
         State state = ((StateManager) adapter.getPlatformAdmin()).getSystemState();
         BundleDescription[] disabledBundles = state.getDisabledBundles();
         List<Bundle> bundlesToRefresh = new ArrayList<Bundle>();
+        boolean atLeastOneBundleFound = false;
         for (BundleDescription bundle : disabledBundles) {
+            atLeastOneBundleFound = true;
             if (bundle.getSymbolicName().equals(GROOVY_PLUGIN_ID)) {
                 handleBundle(bundle, state, context);
                 bundlesToRefresh.add(getBundle(bundle, context));
@@ -98,18 +100,22 @@ public class CompilerHook implements HookConfigurator, AdaptorHook {
         
         BundleDescription[] bundles = state.getBundles(GROOVY_PLUGIN_ID);
         for (BundleDescription bundle : bundles) {
+            atLeastOneBundleFound = true;
             handleBundle(bundle, state, context);
             bundlesToRefresh.add(getBundle(bundle, context));
         }
         
-        checkVersionFound(bundlesToRefresh);
-        
-        Bundle[] allBundles = bundlesToRefresh.toArray(new Bundle[0]);
-
-        state.resolve(bundles);
-        state.resolve(disabledBundles);
-        
-        packageAdmin.refreshPackages(allBundles);
+        if (atLeastOneBundleFound) {
+            // only do this if we have found at least one groovy bundle
+            // allow installations with invalid state to start w/o having a check for a valid version
+            checkVersionFound(bundlesToRefresh);
+            Bundle[] allBundles = bundlesToRefresh.toArray(new Bundle[0]);
+            
+            state.resolve(bundles);
+            state.resolve(disabledBundles);
+            
+            packageAdmin.refreshPackages(allBundles);
+        }
     }
 
     private Bundle getBundle(BundleDescription bundle, BundleContext context) {
