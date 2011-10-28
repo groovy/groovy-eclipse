@@ -19,6 +19,8 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.core.ElementChangedEvent;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -33,7 +35,9 @@ public class GroovyDSLCoreActivator extends AbstractUIPlugin {
     
     private final DSLDStoreManager contextStoreManager;
 
-    private DSLDResourceListener dsldListener;
+    private DSLDResourceListener dsldResourceListener;
+    private DSLDElementListener dsldElementListener;
+    
     
     private AutoAddContainerSupport containerListener;
 
@@ -59,9 +63,11 @@ public class GroovyDSLCoreActivator extends AbstractUIPlugin {
 	public void start(BundleContext bundleContext) throws Exception {
         super.start(bundleContext);
 		GroovyDSLCoreActivator.context = bundleContext;
-		dsldListener = new DSLDResourceListener();
-		ResourcesPlugin.getWorkspace().addResourceChangeListener(dsldListener);
-
+		dsldResourceListener = new DSLDResourceListener();
+		dsldElementListener = new DSLDElementListener();
+		ResourcesPlugin.getWorkspace().addResourceChangeListener(dsldResourceListener);
+		JavaCore.addElementChangedListener(dsldElementListener, ElementChangedEvent.POST_CHANGE);
+		
 		containerListener = new AutoAddContainerSupport();
 		containerListener.addContainerToAll();
         ResourcesPlugin.getWorkspace().addResourceChangeListener(containerListener, IResourceChangeEvent.POST_CHANGE);
@@ -71,8 +77,11 @@ public class GroovyDSLCoreActivator extends AbstractUIPlugin {
 	public void stop(BundleContext bundleContext) throws Exception {
         super.stop(bundleContext);
 		GroovyDSLCoreActivator.context = null;
-        ResourcesPlugin.getWorkspace().removeResourceChangeListener(dsldListener);
-        dsldListener = null;
+        ResourcesPlugin.getWorkspace().removeResourceChangeListener(dsldResourceListener);
+        dsldResourceListener = null;
+
+        JavaCore.removeElementChangedListener(dsldElementListener);
+        dsldElementListener = null;
         
         ResourcesPlugin.getWorkspace().removeResourceChangeListener(containerListener);
         containerListener.dispose();
