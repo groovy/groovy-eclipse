@@ -28,6 +28,7 @@ public class AllQuickFixTests {
         suite.addTestSuite(GroovyProjectGroovyQuickFixTest.class);
         suite.addTestSuite(GroovyProjectJavaQuickFixTest.class);
         suite.addTestSuite(NonGroovyProjectQuickFixTest.class);
+        suite.addTestSuite(QuickAssistTests.class);
 		return suite;
 	}
 }

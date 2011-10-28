@@ -28,22 +28,19 @@ import org.eclipse.swt.graphics.Point;
 public class AddSuggestionsQuickAssistProposal extends
 		AbstractGroovyCompletionProposal {
 
-	private GroovyCompilationUnit unit;
-	private int length;
-	private int offset;
+	private final GroovyCompilationUnit unit;
+	private final int length;
+	private final int offset;
 
 	static final String LABEL = "Add inferencing suggestion";
 
-	/**
-	 * @param unit
-	 * @param node
-	 */
 	public AddSuggestionsQuickAssistProposal(IInvocationContext context) {
-		super();
+	    super(context);
 		ICompilationUnit compUnit = context.getCompilationUnit();
 		if (compUnit instanceof GroovyCompilationUnit) {
 			this.unit = (GroovyCompilationUnit) compUnit;
-
+		} else {
+		    this.unit = null;
 		}
 		length = context.getSelectionLength();
 		offset = context.getSelectionOffset();

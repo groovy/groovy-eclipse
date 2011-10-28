@@ -33,28 +33,38 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
 	public boolean hasAssists(IInvocationContext context) throws CoreException {
 		if (context != null
 				&& isContentInGroovyProject(context.getCompilationUnit())) {
-			return new AddSuggestionsQuickAssistProposal(context)
-					.hasProposals();
+			return new AddSuggestionsQuickAssistProposal(context).hasProposals() || 
+			        new ConvertToClosureCompletionProposal(context).hasProposals() ||
+			        new ConvertToMethodCompletionProposal(context).hasProposals();
 		}
 		return false;
 	}
 
 	public IJavaCompletionProposal[] getAssists(IInvocationContext context,
 			IProblemLocation[] locations) throws CoreException {
-		if (!hasAssists(context)) {
-			return null;
-		}
 		List<IJavaCompletionProposal> proposalList = new ArrayList<IJavaCompletionProposal>();
+		
 
-		IJavaCompletionProposal javaProposal = new AddSuggestionsQuickAssistProposal(
+		AddSuggestionsQuickAssistProposal javaProposal = new AddSuggestionsQuickAssistProposal(
 				context);
-		proposalList.add(javaProposal);
-		return proposalList.toArray(new IJavaCompletionProposal[] {});
+		if (javaProposal.hasProposals()) {
+		    proposalList.add(javaProposal);
+		}
+		
+		ConvertToClosureCompletionProposal convertToClosure = new ConvertToClosureCompletionProposal(context);
+		if (convertToClosure.hasProposals()) {
+            proposalList.add(convertToClosure);
+        }
+        
+		ConvertToMethodCompletionProposal convertToMethod = new ConvertToMethodCompletionProposal(context);
+		if (convertToMethod.hasProposals()) {
+		    proposalList.add(convertToMethod);
+		}
+		
+		return proposalList.toArray(new IJavaCompletionProposal[0]);
 	}
 	
-	
-	
-	   /**
+	/**
      * True if the problem is contained in an accessible (open and existing)
      * Groovy project in the workspace. False otherwise.
      * 

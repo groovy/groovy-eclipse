@@ -16,11 +16,29 @@
 package org.codehaus.groovy.eclipse.quickassist;
 
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
+import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.swt.graphics.Image;
 
+/**
+ * All {@link AbstractGroovyCompletionProposal}s must have a constructor that takes
+ * an {@link IInvocationContext} and nothing else.
+ * 
+ * @author Andrew Eisenberg
+ * @created Oct 28, 2011
+ */
 public abstract class AbstractGroovyCompletionProposal implements IJavaCompletionProposal {
+    
+    private final IInvocationContext context;
 
+    public AbstractGroovyCompletionProposal(IInvocationContext context) {
+        this.context = context;
+    }
+
+    protected IInvocationContext getContext() {
+        return context;
+    }
+    
 	public Image getImage() {
 		String imageLocation = getImageBundleLocation();
 		if (imageLocation != null) {
@@ -30,4 +48,9 @@ public abstract class AbstractGroovyCompletionProposal implements IJavaCompletio
 	}
 
 	abstract protected String getImageBundleLocation();
+	
+	/**
+	 * @return true iff this completion proposal is valid in the current context
+	 */
+	abstract public boolean hasProposals();
 }
