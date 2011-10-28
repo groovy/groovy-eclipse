@@ -77,26 +77,6 @@ public class AddSuggestionsQuickAssistProposal extends
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.eclipse.jface.text.contentassist.ICompletionProposal#getSelection
-	 * (org.eclipse.jface.text.IDocument)
-	 */
-	public Point getSelection(IDocument document) {
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jface.text.contentassist.ICompletionProposal#
-	 * getAdditionalProposalInfo()
-	 */
-	public String getAdditionalProposalInfo() {
-		return null;
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -107,27 +87,6 @@ public class AddSuggestionsQuickAssistProposal extends
 	 */
 	public String getDisplayString() {
 		return LABEL;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jface.text.contentassist.ICompletionProposal#
-	 * getContextInformation()
-	 */
-	public IContextInformation getContextInformation() {
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.codehaus.groovy.eclipse.quickfix.proposals.IGroovyCompletionProposal
-	 * #getRelevance()
-	 */
-	public int getRelevance() {
-		return 0;
 	}
 
 	/*

@@ -18,7 +18,10 @@ package org.codehaus.groovy.eclipse.quickassist;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
+import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 
 /**
  * All {@link AbstractGroovyCompletionProposal}s must have a constructor that takes
@@ -53,4 +56,46 @@ public abstract class AbstractGroovyCompletionProposal implements IJavaCompletio
 	 * @return true iff this completion proposal is valid in the current context
 	 */
 	abstract public boolean hasProposals();
+	
+	   /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.eclipse.jface.text.contentassist.ICompletionProposal#getSelection
+     * (org.eclipse.jface.text.IDocument)
+     */
+    public Point getSelection(IDocument document) {
+        return new Point(context.getSelectionOffset(), context.getSelectionLength());
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.eclipse.jface.text.contentassist.ICompletionProposal#
+     * getAdditionalProposalInfo()
+     */
+    public String getAdditionalProposalInfo() {
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.eclipse.jface.text.contentassist.ICompletionProposal#
+     * getContextInformation()
+     */
+    public IContextInformation getContextInformation() {
+        return null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.codehaus.groovy.eclipse.quickfix.proposals.IGroovyCompletionProposal
+     * #getRelevance()
+     */
+    public int getRelevance() {
+        return 0;
+    }
 }
