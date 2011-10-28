@@ -16,9 +16,6 @@
 
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
-
 import junit.framework.Test;
 
 /**

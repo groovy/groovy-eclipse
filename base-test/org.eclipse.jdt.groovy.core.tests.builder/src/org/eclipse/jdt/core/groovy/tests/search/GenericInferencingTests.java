@@ -15,8 +15,6 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import org.eclipse.jdt.core.tests.util.GroovyUtils;
-
 import junit.framework.Test;
 
 /**

@@ -16,10 +16,10 @@
 
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import junit.framework.Test;
+
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
-
-import junit.framework.Test;
 
 /**
  * @author Andrew Eisenberg

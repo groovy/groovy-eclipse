@@ -22,8 +22,6 @@ import static org.eclipse.jdt.core.search.SearchEngine.createJavaSearchScope;
 import static org.eclipse.jdt.core.search.SearchPattern.R_CASE_SENSITIVE;
 import static org.eclipse.jdt.core.search.SearchPattern.R_EXACT_MATCH;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -54,12 +52,9 @@ import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
-import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
-import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.JavaModelManager;
-import org.eclipse.jdt.internal.core.LocalVariable;
 
 /**
  * @author Andrew Eisenberg

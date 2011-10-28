@@ -16,9 +16,9 @@
 
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import org.eclipse.jdt.core.JavaModelException;
-
 import junit.framework.Test;
+
+import org.eclipse.jdt.core.JavaModelException;
 
 /**
  * @author Andrew Eisenberg
