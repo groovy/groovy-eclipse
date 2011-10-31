@@ -177,6 +177,78 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     	}
     }
     
+    public void testParsingRecovery_GRE1107_1() {
+		this.runNegativeTest(new String[] {
+			"MyDomainClass.groovy",
+			"package foo\n"+
+			"\n"+
+			"class Greclipse1107 {\n"+
+			"  public void foo() {\n"+
+			"    Blah blah = this\n"+
+			"    do {\n"+
+            "    } while (blah != null)\n"+
+            "\n"+
+            "    return null\n"+
+            "  }\n"+
+            "}\n"},
+            		"----------\n" + 
+            		"1. ERROR in MyDomainClass.groovy (at line 6)\n" + 
+            		"	do {\n" + 
+            		"	^\n" + 
+            		"Groovy:unexpected token: do @ line 6, column 5.\n" + 
+            		"----------\n" + 
+            		"2. ERROR in MyDomainClass.groovy (at line 7)\n" + 
+            		"	} while (blah != null)\n" + 
+            		"	  ^\n" + 
+            		"Groovy:expecting EOF, found \'while\' @ line 7, column 7.\n" + 
+            		"----------\n");
+		checkGCUDeclaration("MyDomainClass.groovy",
+				"package foo;\n"+
+				"public class Greclipse1107 {\n"+
+				"  private java.lang.Object public;\n"+ 
+				"  public Greclipse1107() {\n"+
+				"  }\n"+
+				"}\n"
+				);
+	}	
+    
+    public void testParsingRecovery_GRE1107_2() {
+		this.runNegativeTest(new String[] {
+			"MyDomainClass.groovy",
+			"package foo\n"+
+			"import java.io.Serializable;\n"+
+			"\n"+
+			"class Greclipse1107 {\n"+
+			"  public void foo() {\n"+
+			"    Blah blah = this\n"+
+			"    do {\n"+
+            "    } while (blah != null)\n"+
+            "\n"+
+            "    return null\n"+
+            "  }\n"+
+            "}\n"},
+            "----------\n" + 
+            		"1. ERROR in MyDomainClass.groovy (at line 7)\n" + 
+            		"	do {\n" + 
+            		"	^\n" + 
+            		"Groovy:unexpected token: do @ line 7, column 5.\n" + 
+            		"----------\n" + 
+            		"2. ERROR in MyDomainClass.groovy (at line 8)\n" + 
+            		"	} while (blah != null)\n" + 
+            		"	  ^\n" + 
+            		"Groovy:expecting EOF, found \'while\' @ line 8, column 7.\n" + 
+            		"----------\n");
+		checkGCUDeclaration("MyDomainClass.groovy",
+				"package foo;\n"+
+				"import java.io.Serializable;\n"+
+				"public class Greclipse1107 {\n"+
+				"  private java.lang.Object public;\n"+ 
+				"  public Greclipse1107() {\n"+
+				"  }\n"+
+				"}\n"
+				);
+	}	
+    
     public void testDuplicateClassesUnnecessaryExceptions() {
     	this.runNegativeTest(new String[]{
     			"A.groovy",
@@ -1572,6 +1644,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"}\n");
 	}	
 	
+	
+	
 	/*
 	public void testParsingMissingCurlyRecovery1_GRE468() {
 		if (isGroovy16()) return; // not valid on 1.6 - doesn't have a fixed parser
@@ -2003,7 +2077,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"Groovy:unexpected token: Nuthin @ line 3, column 9.\n" + 
 		"----------\n");
 		ModuleNode mn = getModuleNode("Bar.groovy");
-		assertTrue(mn.encounteredUnrecoverableError());
+		
+		assertFalse(mn.encounteredUnrecoverableError());
 	}
 		
 	// variations: 'import' 'import static' 'import ' 'import static ' 'import com.' 'import static com.'

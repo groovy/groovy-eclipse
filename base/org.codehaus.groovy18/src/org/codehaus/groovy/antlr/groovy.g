@@ -603,7 +603,13 @@ compilationUnit
         // Semicolons and/or significant newlines serve as separators.
         ( sep! (statement[sepToken])? )*
         EOF!
-    ;
+		exception
+        catch [RecognitionException e] {  
+            // report the error but don't throw away what we've successfully parsed
+        	reportError(e);
+			compilationUnit_AST = (AST)currentAST.root;
+        }
+        ;
 
 /** A Groovy script or simple expression.  Can be anything legal inside {...}. */
 snippetUnit

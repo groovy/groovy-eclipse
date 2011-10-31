@@ -448,8 +448,8 @@ public class GroovyRecognizer extends antlr.LLkParser       implements GroovyTok
         Map row = new HashMap();
         row.put("error", e.getMessage());
         row.put("filename", getFilename());
-        row.put("line",new Integer(lt.getLine()));
-        row.put("column", new Integer(lt.getColumn()));
+        row.put("line",     Integer.valueOf(lt.getLine()));
+        row.put("column",   Integer.valueOf(lt.getColumn()));
         errorList.add(row);
     }
 
@@ -598,116 +598,19 @@ public GroovyRecognizer(ParserSharedInputState state) {
 		ASTPair currentAST = new ASTPair();
 		AST compilationUnit_AST = null;
 		
-		{
-		switch ( LA(1)) {
-		case SH_COMMENT:
-		{
-			match(SH_COMMENT);
-			break;
-		}
-		case EOF:
-		case FINAL:
-		case ABSTRACT:
-		case STRICTFP:
-		case LITERAL_package:
-		case LITERAL_import:
-		case LITERAL_static:
-		case LITERAL_def:
-		case LBRACK:
-		case IDENT:
-		case STRING_LITERAL:
-		case LPAREN:
-		case LITERAL_class:
-		case LITERAL_interface:
-		case LITERAL_enum:
-		case AT:
-		case LITERAL_super:
-		case LITERAL_void:
-		case LITERAL_boolean:
-		case LITERAL_byte:
-		case LITERAL_char:
-		case LITERAL_short:
-		case LITERAL_int:
-		case LITERAL_float:
-		case LITERAL_long:
-		case LITERAL_double:
-		case LITERAL_private:
-		case LITERAL_public:
-		case LITERAL_protected:
-		case LITERAL_transient:
-		case LITERAL_native:
-		case LITERAL_threadsafe:
-		case LITERAL_synchronized:
-		case LITERAL_volatile:
-		case LCURLY:
-		case SEMI:
-		case LITERAL_this:
-		case LITERAL_if:
-		case LITERAL_while:
-		case LITERAL_switch:
-		case LITERAL_for:
-		case LITERAL_return:
-		case LITERAL_break:
-		case LITERAL_continue:
-		case LITERAL_throw:
-		case LITERAL_assert:
-		case PLUS:
-		case MINUS:
-		case LITERAL_try:
-		case LITERAL_false:
-		case LITERAL_new:
-		case LITERAL_null:
-		case LITERAL_true:
-		case INC:
-		case DEC:
-		case BNOT:
-		case LNOT:
-		case STRING_CTOR_START:
-		case NUM_INT:
-		case NUM_FLOAT:
-		case NUM_LONG:
-		case NUM_DOUBLE:
-		case NUM_BIG_INT:
-		case NUM_BIG_DECIMAL:
-		case NLS:
-		{
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		nls();
-		{
-		boolean synPredMatched5 = false;
-		if (((LA(1)==LITERAL_package||LA(1)==AT) && (_tokenSet_0.member(LA(2))))) {
-			int _m5 = mark();
-			synPredMatched5 = true;
-			inputState.guessing++;
-			try {
-				{
-				annotationsOpt();
-				match(LITERAL_package);
-				}
-			}
-			catch (RecognitionException pe) {
-				synPredMatched5 = false;
-			}
-			rewind(_m5);
-inputState.guessing--;
-		}
-		if ( synPredMatched5 ) {
-			packageDefinition();
-			astFactory.addASTChild(currentAST, returnAST);
-		}
-		else if ((_tokenSet_1.member(LA(1))) && (_tokenSet_2.member(LA(2)))) {
+		try {      // for error handling
 			{
 			switch ( LA(1)) {
+			case SH_COMMENT:
+			{
+				match(SH_COMMENT);
+				break;
+			}
+			case EOF:
 			case FINAL:
 			case ABSTRACT:
 			case STRICTFP:
+			case LITERAL_package:
 			case LITERAL_import:
 			case LITERAL_static:
 			case LITERAL_def:
@@ -738,6 +641,7 @@ inputState.guessing--;
 			case LITERAL_synchronized:
 			case LITERAL_volatile:
 			case LCURLY:
+			case SEMI:
 			case LITERAL_this:
 			case LITERAL_if:
 			case LITERAL_while:
@@ -766,13 +670,6 @@ inputState.guessing--;
 			case NUM_DOUBLE:
 			case NUM_BIG_INT:
 			case NUM_BIG_DECIMAL:
-			{
-				statement(EOF);
-				astFactory.addASTChild(currentAST, returnAST);
-				break;
-			}
-			case EOF:
-			case SEMI:
 			case NLS:
 			{
 				break;
@@ -783,17 +680,30 @@ inputState.guessing--;
 			}
 			}
 			}
-		}
-		else {
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		
-		}
-		{
-		_loop9:
-		do {
-			if ((LA(1)==SEMI||LA(1)==NLS)) {
-				sep();
+			nls();
+			{
+			boolean synPredMatched5 = false;
+			if (((LA(1)==LITERAL_package||LA(1)==AT) && (_tokenSet_0.member(LA(2))))) {
+				int _m5 = mark();
+				synPredMatched5 = true;
+				inputState.guessing++;
+				try {
+					{
+					annotationsOpt();
+					match(LITERAL_package);
+					}
+				}
+				catch (RecognitionException pe) {
+					synPredMatched5 = false;
+				}
+				rewind(_m5);
+inputState.guessing--;
+			}
+			if ( synPredMatched5 ) {
+				packageDefinition();
+				astFactory.addASTChild(currentAST, returnAST);
+			}
+			else if ((_tokenSet_1.member(LA(1))) && (_tokenSet_2.member(LA(2)))) {
 				{
 				switch ( LA(1)) {
 				case FINAL:
@@ -858,7 +768,7 @@ inputState.guessing--;
 				case NUM_BIG_INT:
 				case NUM_BIG_DECIMAL:
 				{
-					statement(sepToken);
+					statement(EOF);
 					astFactory.addASTChild(currentAST, returnAST);
 					break;
 				}
@@ -876,13 +786,116 @@ inputState.guessing--;
 				}
 			}
 			else {
-				break _loop9;
+				throw new NoViableAltException(LT(1), getFilename());
 			}
 			
-		} while (true);
+			}
+			{
+			_loop9:
+			do {
+				if ((LA(1)==SEMI||LA(1)==NLS)) {
+					sep();
+					{
+					switch ( LA(1)) {
+					case FINAL:
+					case ABSTRACT:
+					case STRICTFP:
+					case LITERAL_import:
+					case LITERAL_static:
+					case LITERAL_def:
+					case LBRACK:
+					case IDENT:
+					case STRING_LITERAL:
+					case LPAREN:
+					case LITERAL_class:
+					case LITERAL_interface:
+					case LITERAL_enum:
+					case AT:
+					case LITERAL_super:
+					case LITERAL_void:
+					case LITERAL_boolean:
+					case LITERAL_byte:
+					case LITERAL_char:
+					case LITERAL_short:
+					case LITERAL_int:
+					case LITERAL_float:
+					case LITERAL_long:
+					case LITERAL_double:
+					case LITERAL_private:
+					case LITERAL_public:
+					case LITERAL_protected:
+					case LITERAL_transient:
+					case LITERAL_native:
+					case LITERAL_threadsafe:
+					case LITERAL_synchronized:
+					case LITERAL_volatile:
+					case LCURLY:
+					case LITERAL_this:
+					case LITERAL_if:
+					case LITERAL_while:
+					case LITERAL_switch:
+					case LITERAL_for:
+					case LITERAL_return:
+					case LITERAL_break:
+					case LITERAL_continue:
+					case LITERAL_throw:
+					case LITERAL_assert:
+					case PLUS:
+					case MINUS:
+					case LITERAL_try:
+					case LITERAL_false:
+					case LITERAL_new:
+					case LITERAL_null:
+					case LITERAL_true:
+					case INC:
+					case DEC:
+					case BNOT:
+					case LNOT:
+					case STRING_CTOR_START:
+					case NUM_INT:
+					case NUM_FLOAT:
+					case NUM_LONG:
+					case NUM_DOUBLE:
+					case NUM_BIG_INT:
+					case NUM_BIG_DECIMAL:
+					{
+						statement(sepToken);
+						astFactory.addASTChild(currentAST, returnAST);
+						break;
+					}
+					case EOF:
+					case SEMI:
+					case NLS:
+					{
+						break;
+					}
+					default:
+					{
+						throw new NoViableAltException(LT(1), getFilename());
+					}
+					}
+					}
+				}
+				else {
+					break _loop9;
+				}
+				
+			} while (true);
+			}
+			match(Token.EOF_TYPE);
+			compilationUnit_AST = (AST)currentAST.root;
 		}
-		match(Token.EOF_TYPE);
-		compilationUnit_AST = (AST)currentAST.root;
+		catch (RecognitionException e) {
+			if (inputState.guessing==0) {
+				
+				// report the error but don't throw away what we've successfully parsed
+					reportError(e);
+							compilationUnit_AST = (AST)currentAST.root;
+				
+			} else {
+				throw e;
+			}
+		}
 		returnAST = compilationUnit_AST;
 	}
 	
