@@ -11051,36 +11051,50 @@ inputState.guessing--;
 		Token first = LT(1);
 		
 		
-		commandArgument();
-		astFactory.addASTChild(currentAST, returnAST);
-		{
-		_loop368:
-		do {
-			if ((LA(1)==COMMA) && (_tokenSet_93.member(LA(2)))) {
-				match(COMMA);
-				nls();
-				commandArgument();
-				astFactory.addASTChild(currentAST, returnAST);
+		try {      // for error handling
+			commandArgument();
+			astFactory.addASTChild(currentAST, returnAST);
+			{
+			_loop368:
+			do {
+				if ((LA(1)==COMMA) && (_tokenSet_93.member(LA(2)))) {
+					match(COMMA);
+					nls();
+					commandArgument();
+					astFactory.addASTChild(currentAST, returnAST);
+				}
+				else {
+					break _loop368;
+				}
+				
+			} while (true);
 			}
-			else {
-				break _loop368;
+			if ( inputState.guessing==0 ) {
+				commandArguments_AST = (AST)currentAST.root;
+				
+				AST elist = (AST)astFactory.make( (new ASTArray(2)).add(create(ELIST,"ELIST",first,LT(1))).add(commandArguments_AST));
+				AST headid = (AST)astFactory.make( (new ASTArray(3)).add(create(METHOD_CALL,"<command>",first,LT(1))).add(head).add(elist));
+				commandArguments_AST = headid;
+				
+				currentAST.root = commandArguments_AST;
+				currentAST.child = commandArguments_AST!=null &&commandArguments_AST.getFirstChild()!=null ?
+					commandArguments_AST.getFirstChild() : commandArguments_AST;
+				currentAST.advanceChildToEnd();
 			}
-			
-		} while (true);
-		}
-		if ( inputState.guessing==0 ) {
 			commandArguments_AST = (AST)currentAST.root;
-			
-			AST elist = (AST)astFactory.make( (new ASTArray(2)).add(create(ELIST,"ELIST",first,LT(1))).add(commandArguments_AST));
-			AST headid = (AST)astFactory.make( (new ASTArray(3)).add(create(METHOD_CALL,"<command>",first,LT(1))).add(head).add(elist));
-			commandArguments_AST = headid;
-			
-			currentAST.root = commandArguments_AST;
-			currentAST.child = commandArguments_AST!=null &&commandArguments_AST.getFirstChild()!=null ?
-				commandArguments_AST.getFirstChild() : commandArguments_AST;
-			currentAST.advanceChildToEnd();
 		}
-		commandArguments_AST = (AST)currentAST.root;
+		catch (RecognitionException e) {
+			if (inputState.guessing==0) {
+				
+				// GRECLIPSE1192
+				// Do we need better recognition of the specific problem here? 
+				// (if so, see the label recovery for GRECLIPSE1048)
+				reportError(e);
+				
+			} else {
+				throw e;
+			}
+		}
 		returnAST = commandArguments_AST;
 	}
 	

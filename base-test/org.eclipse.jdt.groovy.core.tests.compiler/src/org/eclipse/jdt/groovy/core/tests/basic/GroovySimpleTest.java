@@ -268,6 +268,37 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				);
 	}	
     
+
+    public void testParsingRecovery_GRE1192_1() {
+    	if (GroovyUtils.GROOVY_LEVEL < 18) {
+    		return;
+    	}
+		this.runNegativeTest(new String[] {
+			"MyDomainClass.groovy",
+			"class Script {\n"+
+			"	def m() {\n"+
+			"	}\n"+
+			"	def x = {\n"+
+			"	     nuthin s,\n"+ 
+			"	}\n"+
+			"}\n"},
+					"----------\n" + 
+					"1. ERROR in MyDomainClass.groovy (at line 6)\n" + 
+					"	}\n" + 
+					"	^\n" + 
+					"Groovy:unexpected token: } @ line 6, column 2.\n" + 
+					"----------\n");
+		checkGCUDeclaration("MyDomainClass.groovy",
+				"public class Script {\n"+
+				"  private java.lang.Object x;\n"+ 
+				"  public Script() {\n"+
+				"  }\n"+
+				"  public java.lang.Object m() {\n"+
+				"  }\n"+
+				"}\n"
+				);
+	}	
+    
     public void testParsingRecovery_GRE1107_1() {
     	if (GroovyUtils.GROOVY_LEVEL < 18) {
     		return;

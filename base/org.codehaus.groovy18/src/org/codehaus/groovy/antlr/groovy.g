@@ -2446,6 +2446,13 @@ commandArguments[AST head]
             AST headid = #(create(METHOD_CALL,"<command>",first,LT(1)), head, elist);
             #commandArguments = headid;
         }
+        exception
+catch [RecognitionException e] {
+// GRECLIPSE1192
+// Do we need better recognition of the specific problem here? 
+// (if so, see the label recovery for GRECLIPSE1048)
+reportError(e);
+}    
     ;
 
 commandArgumentsGreedy[AST head]
