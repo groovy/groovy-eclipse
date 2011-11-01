@@ -177,7 +177,101 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     	}
     }
     
+    public void testParsingRecovery_GRE1085_1() {
+    	if (GroovyUtils.GROOVY_LEVEL < 18) {
+    		return;
+    	}
+		this.runNegativeTest(new String[] {
+			"MyDomainClass.groovy",
+			"package foo\n"+
+			"\n"+
+			"class Greclipse1085 {\n"+
+			"  public void foo() {\n"+
+			"    foo:\n"+			
+            "  }\n"+
+            "}\n"},
+    		"----------\n" + 
+    		"1. ERROR in MyDomainClass.groovy (at line 6)\n" + 
+    		"	}\n" + 
+    		"	^\n" + 
+    		"Groovy:unexpected token: } @ line 6, column 3.\n" + 
+    		"----------\n");
+		checkGCUDeclaration("MyDomainClass.groovy",
+				"package foo;\n"+
+				"public class Greclipse1085 {\n"+
+				"  public Greclipse1085() {\n"+ 
+				"  }\n"+
+				"  public void foo() {\n"+
+				"  }\n"+
+				"}\n"
+				);
+	}	
+    
+    public void testParsingRecovery_GRE1085_2() {
+    	if (GroovyUtils.GROOVY_LEVEL < 18) {
+    		return;
+    	}
+		this.runNegativeTest(new String[] {
+			"MyDomainClass.groovy",
+			"package foo\n"+
+			"\n"+
+			"class Greclipse1085 {\n"+
+			"  public void foo() {\n"+
+			"    foo:\"abc\",\n"+			
+            "  }\n"+
+            "}\n"},
+           			"----------\n" + 
+            		"1. ERROR in MyDomainClass.groovy (at line 5)\n" + 
+            		"	foo:\"abc\",\n" + 
+            		"	    ^\n" + 
+            		"Groovy:unexpected token: abc @ line 5, column 9.\n" + 
+            		"----------\n" 
+            		);
+		checkGCUDeclaration("MyDomainClass.groovy",
+				"package foo;\n"+
+				"public class Greclipse1085 {\n"+
+				"  public Greclipse1085() {\n"+ 
+				"  }\n"+
+				"  public void foo() {\n"+
+				"  }\n"+
+				"}\n"
+				);
+    }
+    
+    public void testParsingRecovery_GRE1085_3() {
+    	if (GroovyUtils.GROOVY_LEVEL < 18) {
+    		return;
+    	}
+		this.runNegativeTest(new String[] {
+			"MyDomainClass.groovy",
+			"package foo\n"+
+			"\n"+
+			"class Greclipse1085 {\n"+
+			"  public void foo() {\n"+
+			"    foo:,\n"+			
+            "  }\n"+
+            "}\n"},
+            "----------\n" + 
+    		"1. ERROR in MyDomainClass.groovy (at line 5)\n" + 
+    		"	foo:,\n" + 
+    		"	    ^\n" + 
+    		"Groovy:unexpected token: , @ line 5, column 9.\n" + 
+    		"----------\n");
+		checkGCUDeclaration("MyDomainClass.groovy",
+				"package foo;\n"+
+				"public class Greclipse1085 {\n"+
+				"  public Greclipse1085() {\n"+ 
+				"  }\n"+
+				"  public void foo() {\n"+
+				"  }\n"+
+				"}\n"
+				);
+	}	
+    
     public void testParsingRecovery_GRE1107_1() {
+    	if (GroovyUtils.GROOVY_LEVEL < 18) {
+    		return;
+    	}
 		this.runNegativeTest(new String[] {
 			"MyDomainClass.groovy",
 			"package foo\n"+
@@ -213,6 +307,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}	
     
     public void testParsingRecovery_GRE1107_2() {
+    	if (GroovyUtils.GROOVY_LEVEL < 18) {
+    		return;
+    	}
 		this.runNegativeTest(new String[] {
 			"MyDomainClass.groovy",
 			"package foo\n"+

@@ -2099,14 +2099,24 @@ statement[int prevToken]
     *OBS*/
 
     |   branchStatement
-//	exception
-//        catch [RecognitionException e] {
-////					if (statement_AST==null) {
-////								throw e;
-////							}
-//			reportError(e);
-////					consumeUntil(NLS);
-//        }    
+	exception
+catch [RecognitionException e] {
+// GRECLIPSE1048
+// If the pfx_AST is not null (i.e. a label was encountered) then attempt recovery if something has gone
+// wrong.  Recovery means reporting the error and then proceeding as best we can.  Basically if the 
+// NoViableAltException hit a problem and the token it encountered was on the same line as the prefix,
+// skip to the end of the line, otherwise assume we can continue from where we are.
+if (pfx_AST==null) {
+	throw e;
+}
+reportError(e);
+if (e instanceof NoViableAltException) {
+	NoViableAltException nvae = (NoViableAltException)e;
+	if (pfx_AST.getLine()==nvae.token.getLine()) {
+		consumeUntil(NLS);										
+	}
+}
+}    
     ;
 
 forStatement {Token first = LT(1);}
