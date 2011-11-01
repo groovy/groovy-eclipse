@@ -20,12 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.codehaus.groovy.activator.GroovyActivator;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.IGroovyLogger;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
-import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLDStoreManager;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
@@ -33,17 +31,16 @@ import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
-import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IStorage;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 
 /**
  * 

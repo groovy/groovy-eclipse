@@ -63,10 +63,11 @@ public class GroovyDSLCoreActivator extends AbstractUIPlugin {
 	public void start(BundleContext bundleContext) throws Exception {
         super.start(bundleContext);
 		GroovyDSLCoreActivator.context = bundleContext;
-		dsldResourceListener = new DSLDResourceListener();
 		dsldElementListener = new DSLDElementListener();
-		ResourcesPlugin.getWorkspace().addResourceChangeListener(dsldResourceListener);
 		JavaCore.addElementChangedListener(dsldElementListener, ElementChangedEvent.POST_CHANGE);
+
+		dsldResourceListener = new DSLDResourceListener();
+		ResourcesPlugin.getWorkspace().addResourceChangeListener(dsldResourceListener);
 		
 		containerListener = new AutoAddContainerSupport();
 		containerListener.addContainerToAll();

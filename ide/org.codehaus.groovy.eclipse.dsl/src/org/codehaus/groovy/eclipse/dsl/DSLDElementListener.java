@@ -41,17 +41,25 @@ public class DSLDElementListener implements IElementChangedListener {
             for (IJavaElementDelta delta : event.getDelta().getChangedChildren()) {
                 // Look for resolved classpath changes for Groovy projects
                 if (delta.getElement() instanceof IJavaProject && 
-                        (delta.getFlags() & IJavaElementDelta.F_RESOLVED_CLASSPATH_CHANGED) != 0 && 
+                        isResolvedClasspathChangeNotRawClasspath(delta) && 
                         GroovyNature.hasGroovyNature(((IJavaProject) delta.getElement()).getProject())) {
                     projectsToRefresh.add(((IJavaProject) delta.getElement()).getProject());
                 }
             }
             if (!projectsToRefresh.isEmpty()) {
+//                System.out.println("==================  calling refresh dsld from classpath change:\ndelta: " + event.getDelta() + "\n\nsource: " + event.getSource());
                 Job refreshJob = new RefreshDSLDJob(projectsToRefresh);
                 refreshJob.setPriority(Job.LONG);
                 refreshJob.schedule();
             }
         }
+    }
+
+    // returns true if there is a change to a classpath container, or something else that does not
+    // show up in the .classpath file.
+    private boolean isResolvedClasspathChangeNotRawClasspath(IJavaElementDelta delta) {
+        return (delta.getFlags() & IJavaElementDelta.F_RESOLVED_CLASSPATH_CHANGED) != 0 && 
+                (delta.getFlags() & IJavaElementDelta.F_CLASSPATH_CHANGED) == 0;
     }
 
 }
