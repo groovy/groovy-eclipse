@@ -52,32 +52,134 @@ public class TypeCompletionTests2 extends CompletionTestCase {
     
     public void testBrokenScript2() throws Exception {
         String contents = "package f\n\ndef x(HTML";
-        String expected = "package f\n\nimport javax.swing.text.html.HTML;\n\ndef x(HTML";
+        String expected = "package f\n\nimport javax.swing.text.html.HTML;\n\n\ndef x(HTML";
         checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
                 HTML_PROPOSAL);
     }
     
     public void testBrokenScript3() throws Exception {
         String contents = "/**some stuff*/\npackage f\n\ndef x(HTML";
-        String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML;\n\ndef x(HTML";
+        String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML;\n\n\ndef x(HTML";
         checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
                 HTML_PROPOSAL);
     }
     
+    // Bug !!! See GRECLIPSE-1231  import statements placed on same line because ';' is not recognized as part of the import statement
     public void testBrokenScript4() throws Exception {
         String contents = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI;\n\ndef x(HTML";
-        String expected = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI;\nimport javax.swing.text.html.HTML;\n\ndef x(HTML";
+        String expected = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI;import javax.swing.text.html.HTML;\n\n\ndef x(HTML";
         checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
                 HTML_PROPOSAL);
     }
     
+    // Bug !!! See GRECLIPSE-1231  import statements placed on same line because ';' is not recognized as part of the import statement
     public void testBrokenScript5() throws Exception {
         String contents = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI;\n\ndef x(HTML";
-        String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI;\nimport javax.swing.text.html.HTML;\n\ndef x(HTML";
+        String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI;import javax.swing.text.html.HTML;\n\n\ndef x(HTML";
         checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
                 HTML_PROPOSAL);
     }
     
+
+    public void testBrokenScript6() throws Exception {
+        String contents = 
+                "/**some stuff*/\n" + 
+        		"package f\n" + 
+        		"HTML";
+        String expected = 
+                "/**some stuff*/\n" + 
+        		"package f\n" +
+        		"\n" +
+        		"import javax.swing.text.html.HTML;\n" +
+        		"\n" +
+        		"HTML";
+        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
+                HTML_PROPOSAL);
+    }
+    public void testBrokenScript7() throws Exception {
+        String contents = 
+                "/**some stuff*/\n" + 
+                "package f\n" + 
+                "\n" + 
+                "import javax.swing.plaf.ButtonUI;\n" + 
+                "\n" + 
+                "def x(HTML\n" + 
+                "";
+        String expected = 
+                "/**some stuff*/\n" + 
+                "package f\n" + 
+                "\n" + 
+                "import javax.swing.plaf.ButtonUI;import javax.swing.text.html.HTML;\n" + 
+                "\n" + 
+                "\n" + 
+                "def x(HTML\n" + 
+                "";
+        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
+                HTML_PROPOSAL);
+    }
+    public void testBrokenScript8() throws Exception {
+        String contents = 
+                "/**some stuff*/\n" + 
+                "package f\n" + 
+                "\n" + 
+                "import javax.swing.plaf.ButtonUI\n" + 
+                "\n" + 
+                "def x(HTML";
+        String expected = 
+                "/**some stuff*/\n" + 
+                "package f\n" + 
+                "\n" + 
+                "import javax.swing.plaf.ButtonUI\n" + 
+                "import javax.swing.text.html.HTML;\n" + 
+                "\n" + 
+                "def x(HTML";
+        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
+                HTML_PROPOSAL);
+    }
+
+    
+    public void testBrokenScript9() throws Exception {
+        String contents = 
+                "/**some stuff*/\n" + 
+                "package f\n" + 
+                "\n" + 
+                "import javax.swing.plaf.ColorChooserUI;\n" + 
+                "import javax.swing.plaf.ButtonUI as foo\n" + 
+                "\n" + 
+                "def x(HTML";
+        String expected = 
+                "/**some stuff*/\n" + 
+                "package f\n" + 
+                "\n" + 
+                "import javax.swing.plaf.ColorChooserUI;\n" + 
+                "import javax.swing.plaf.ButtonUI as foo\n" + 
+                "import javax.swing.text.html.HTML;\n" + 
+                "\n" + 
+                "def x(HTML";
+        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
+                HTML_PROPOSAL);
+    }
+
+    public void testBrokenScript10() throws Exception {
+        String contents = 
+                "/**some stuff*/\n" + 
+                "\n" + 
+                "import javax.swing.plaf.ColorChooserUI;\n" + 
+                "import javax.swing.plaf.ButtonUI as foo\n" + 
+                "\n" + 
+                "def x(HTML";
+        String expected = 
+                "/**some stuff*/\n" + 
+                "\n" + 
+                "import javax.swing.plaf.ColorChooserUI;\n" + 
+                "import javax.swing.plaf.ButtonUI as foo\n" + 
+                "import javax.swing.text.html.HTML;\n" + 
+                "\n" + 
+                "def x(HTML";
+        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
+                HTML_PROPOSAL);
+    }
+
     public void testBrokenClass1() throws Exception {
         String contents = "/**some stuff*/\npackage f\n\nclass Y {\ndef x(HTML";
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML;\n\nclass Y {\ndef x(HTML";

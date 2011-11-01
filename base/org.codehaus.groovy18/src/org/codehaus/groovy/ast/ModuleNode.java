@@ -152,6 +152,8 @@ public class ModuleNode extends ASTNode implements Opcodes {
     public void addImport(String alias, ClassNode type, List<AnnotationNode> annotations) {
         ImportNode importNode = new ImportNode(type, alias);
         // GRECLIPSE: start: configure sloc...approximate from the type's sloc
+        // note that sloc configuration is done more precisely in AntlrParserPlugin.importDef()
+        // but we need to handle calls to this method from outside of importDef()
         if (type != null) {
             importNode.setSourcePosition(type);
             importNode.setColumnNumber(1);  // assume beginning of line

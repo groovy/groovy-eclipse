@@ -509,6 +509,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 configureAST(type, nameNode);
                 // end
                 addImport(type, name, alias, annotations);
+                // GRECLIPSE: start: be more precise about the sloc for the import node
+                ImportNode imp = output.getImport(alias == null ? name : alias);
+                configureAST(imp, importNode);
+                // end
             }
         }
     }
@@ -3567,6 +3571,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     private ASTNode getFirst(BlockStatement statements, List<MethodNode> methods) {
         Statement firstStatement = hasScriptStatements(statements) ? statements.getStatements().get(0) : null;
         MethodNode firstMethod = hasScriptMethods(methods) ? methods.get(0) : null;
+        if (firstMethod == null && (firstStatement == null || (firstStatement.getStart() == 0 && firstStatement.getLength() == 0))) {
+            // An empty script with no methods or statements.
+            // instead make a synthetic statement from the end of the package declaration/import statements
+            firstStatement = createSyntheticAfterImports();
+        }
         int statementStart = firstStatement != null ? firstStatement.getStart() : Integer.MAX_VALUE;
         int methodStart = firstMethod != null ? firstMethod.getStart() : Integer.MAX_VALUE;
         return statementStart <= methodStart ? firstStatement : firstMethod;
@@ -3576,11 +3585,37 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     private ASTNode getLast(BlockStatement statements, List<MethodNode> methods) {
         Statement lastStatement = hasScriptStatements(statements) ? statements.getStatements().get(statements.getStatements().size()-1) : null;
         MethodNode lastMethod = hasScriptMethods(methods) ? methods.get(methods.size()-1) : null;
+        if (lastMethod == null && (lastStatement == null || (lastStatement.getStart() == 0 && lastStatement.getLength() == 0))) {
+            // An empty script with no methods or statements.
+            // instead make a synthetic statement from the end of the package declaration/import statements
+            lastStatement = createSyntheticAfterImports();
+        }
         int statementStart = lastStatement != null ? lastStatement.getEnd() : Integer.MIN_VALUE;
         int methodStart = lastMethod != null ? lastMethod.getStart() : Integer.MIN_VALUE;
         return statementStart >= methodStart ? lastStatement : lastMethod;
     }
     
+    // creates a synthetic, empty statement that starts after the last import or package statement
+    private Statement createSyntheticAfterImports() {
+        ASTNode target = null;
+        Statement synthetic = ReturnStatement.RETURN_NULL_OR_VOID;
+        if (output.getImports() != null && output.getImports().size() > 0) {
+            target = output.getImports().get(output.getImports().size() -1);
+        } else if (output.hasPackage()) {
+            target = output.getPackage();
+        }
+        if (target != null) {
+            synthetic = new ReturnStatement(ConstantExpression.NULL);
+            synthetic.setStart(target.getEnd()+1);
+            synthetic.setEnd(target.getEnd()+1);
+            synthetic.setLineNumber(target.getLastLineNumber());
+            synthetic.setLastLineNumber(target.getLineNumber());
+            synthetic.setColumnNumber(target.getLastColumnNumber()+1);
+            synthetic.setLastColumnNumber(target.getColumnNumber()+1);
+        }
+        return synthetic;
+    }
+
     private boolean hasScriptMethodsOrStatements(BlockStatement statements, List<MethodNode> methods) {
         return hasScriptStatements(statements) ||
                hasScriptMethods(methods);

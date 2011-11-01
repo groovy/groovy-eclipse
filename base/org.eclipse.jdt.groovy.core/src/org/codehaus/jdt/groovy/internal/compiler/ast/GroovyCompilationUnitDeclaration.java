@@ -1807,6 +1807,20 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		// start and end of the entire declaration including Javadoc and ending at the last close bracket
 		int line = classNode.getLineNumber();
 		Javadoc doc = findJavadoc(line);
+		if (doc != null) {
+			if (imports != null && imports.length > 0) {
+				if (doc.sourceStart < imports[imports.length - 1].sourceStart) {
+					// ignore the doc if it should be associated with and import statement
+					doc = null;
+				}
+			} else if (currentPackage != null) {
+				if (doc.sourceStart < currentPackage.sourceStart) {
+					// ignore the doc if it should be associated with the package statement
+					doc = null;
+				}
+			}
+		}
+
 		typeDeclaration.javadoc = doc;
 		typeDeclaration.declarationSourceStart = doc == null ? classNode.getStart() : doc.sourceStart;
 		// Without the -1 we can hit AIOOBE in org.eclipse.jdt.internal.core.Member.getJavadocRange where it calls getText()
