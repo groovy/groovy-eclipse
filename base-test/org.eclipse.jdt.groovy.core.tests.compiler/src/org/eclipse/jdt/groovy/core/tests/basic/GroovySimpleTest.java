@@ -342,6 +342,54 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 					"----------\n");
 	}
     
+    public void testParsingRecovery_GRE1213_1() {
+    	if (GroovyUtils.GROOVY_LEVEL < 18) {
+    		return;
+    	}
+    	// missing close paren
+		this.runNegativeTest(new String[] {
+			"MyDomainClass.groovy",
+			"import java.awt.BorderLayout;\n"+
+			"panel.add (textField, BorderLayout.\n"},
+					"----------\n" + 
+					"1. ERROR in MyDomainClass.groovy (at line 2)\n" + 
+					"	panel.add (textField, BorderLayout.\n" + 
+					"\n" + 
+					"	                                   ^\n" + 
+					"Groovy:Expecting an identifier, found a trailing \'.\' instead. @ line 2, column 36.\n" + 
+					"----------\n" + 
+					"2. ERROR in MyDomainClass.groovy (at line 2)\n" + 
+					"	panel.add (textField, BorderLayout.\n" + 
+					"\n" + 
+					"	                                   ^\n" + 
+					"Groovy:expecting \')\', found \'\' @ line 2, column 36.\n" + 
+					"----------\n");
+	}
+    
+    public void testParsingRecovery_GRE1213_2() {
+    	if (GroovyUtils.GROOVY_LEVEL < 18) {
+    		return;
+    	}
+    	// missing close paren
+		this.runNegativeTest(new String[] {
+			"MyDomainClass.groovy",
+			"import java.awt.BorderLayout;\n"+
+			"String s = ('foo' + BorderLayout.\n"},
+					"----------\n" + 
+					"1. ERROR in MyDomainClass.groovy (at line 2)\n" + 
+					"	String s = (\'foo\' + BorderLayout.\n" + 
+					"\n" + 
+					"	                                 ^\n" + 
+					"Groovy:Expecting an identifier, found a trailing \'.\' instead. @ line 2, column 34.\n" + 
+					"----------\n" + 
+					"2. ERROR in MyDomainClass.groovy (at line 2)\n" + 
+					"	String s = (\'foo\' + BorderLayout.\n" + 
+					"\n" + 
+					"	                                 ^\n" + 
+					"Groovy:expecting \')\', found \'\' @ line 2, column 34.\n" + 
+					"----------\n");
+	}
+    
     public void testParsingRecovery_GRE1107_1() {
     	if (GroovyUtils.GROOVY_LEVEL < 18) {
     		return;

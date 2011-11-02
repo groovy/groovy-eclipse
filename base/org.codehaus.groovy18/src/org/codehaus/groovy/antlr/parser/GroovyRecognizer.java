@@ -12177,26 +12177,49 @@ inputState.guessing--;
 		AST methodCallArgs_AST = null;
 		AST al_AST = null;
 		
-		match(LPAREN);
-		argList();
-		al_AST = (AST)returnAST;
-		match(RPAREN);
-		if ( inputState.guessing==0 ) {
-			methodCallArgs_AST = (AST)currentAST.root;
-			if (callee != null && callee.getFirstChild() != null) {
-			//method call like obj.method()
-			methodCallArgs_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(METHOD_CALL,"(",callee.getFirstChild(),LT(1))).add(callee).add(al_AST));
-			} else {
-			//method call like method() or new Expr(), in the latter case "callee" is null
-			methodCallArgs_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(METHOD_CALL,"(",callee,LT(1))).add(callee).add(al_AST));
+		try {      // for error handling
+			match(LPAREN);
+			argList();
+			al_AST = (AST)returnAST;
+			match(RPAREN);
+			if ( inputState.guessing==0 ) {
+				methodCallArgs_AST = (AST)currentAST.root;
+				if (callee != null && callee.getFirstChild() != null) {
+				//method call like obj.method()
+				methodCallArgs_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(METHOD_CALL,"(",callee.getFirstChild(),LT(1))).add(callee).add(al_AST));
+				} else {
+				//method call like method() or new Expr(), in the latter case "callee" is null
+				methodCallArgs_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(METHOD_CALL,"(",callee,LT(1))).add(callee).add(al_AST));
+				}
+				
+				currentAST.root = methodCallArgs_AST;
+				currentAST.child = methodCallArgs_AST!=null &&methodCallArgs_AST.getFirstChild()!=null ?
+					methodCallArgs_AST.getFirstChild() : methodCallArgs_AST;
+				currentAST.advanceChildToEnd();
 			}
-			
-			currentAST.root = methodCallArgs_AST;
-			currentAST.child = methodCallArgs_AST!=null &&methodCallArgs_AST.getFirstChild()!=null ?
-				methodCallArgs_AST.getFirstChild() : methodCallArgs_AST;
-			currentAST.advanceChildToEnd();
+			methodCallArgs_AST = (AST)currentAST.root;
 		}
-		methodCallArgs_AST = (AST)currentAST.root;
+		catch (RecognitionException e) {
+			if (inputState.guessing==0) {
+				
+				if (al_AST!=null) {
+					reportError(e);
+					// copy of the block above - lets build it (assuming that all that was missing was the RPAREN)
+					if (callee != null && callee.getFirstChild() != null) {
+						//method call like obj.method()
+						methodCallArgs_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(METHOD_CALL,"(",callee.getFirstChild(),LT(1))).add(callee).add(al_AST));
+					} else {
+						//method call like method() or new Expr(), in the latter case "callee" is null
+						methodCallArgs_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(METHOD_CALL,"(",callee,LT(1))).add(callee).add(al_AST));
+					}
+				} else {
+					throw e;
+				}
+				
+			} else {
+				throw e;
+			}
+		}
 		returnAST = methodCallArgs_AST;
 	}
 	
@@ -12306,120 +12329,133 @@ inputState.guessing--;
 		boolean sce=false;
 		
 		
-		match(LPAREN);
-		if ( inputState.guessing==0 ) {
-			declaration=LT(1);
-		}
-		firstContainsDeclaration=strictContextExpression(true);
-		astFactory.addASTChild(currentAST, returnAST);
-		{
-		_loop511:
-		do {
-			if ((LA(1)==SEMI)) {
-				match(SEMI);
-				if ( inputState.guessing==0 ) {
-					hasClosureList=true;
-				}
-				{
-				switch ( LA(1)) {
-				case FINAL:
-				case ABSTRACT:
-				case STRICTFP:
-				case LITERAL_static:
-				case LITERAL_def:
-				case LBRACK:
-				case IDENT:
-				case STRING_LITERAL:
-				case LPAREN:
-				case AT:
-				case LITERAL_super:
-				case LITERAL_void:
-				case LITERAL_boolean:
-				case LITERAL_byte:
-				case LITERAL_char:
-				case LITERAL_short:
-				case LITERAL_int:
-				case LITERAL_float:
-				case LITERAL_long:
-				case LITERAL_double:
-				case LITERAL_private:
-				case LITERAL_public:
-				case LITERAL_protected:
-				case LITERAL_transient:
-				case LITERAL_native:
-				case LITERAL_threadsafe:
-				case LITERAL_synchronized:
-				case LITERAL_volatile:
-				case LCURLY:
-				case LITERAL_this:
-				case LITERAL_return:
-				case LITERAL_break:
-				case LITERAL_continue:
-				case LITERAL_throw:
-				case LITERAL_assert:
-				case PLUS:
-				case MINUS:
-				case LITERAL_false:
-				case LITERAL_new:
-				case LITERAL_null:
-				case LITERAL_true:
-				case INC:
-				case DEC:
-				case BNOT:
-				case LNOT:
-				case STRING_CTOR_START:
-				case NUM_INT:
-				case NUM_FLOAT:
-				case NUM_LONG:
-				case NUM_DOUBLE:
-				case NUM_BIG_INT:
-				case NUM_BIG_DECIMAL:
-				{
-					sce=strictContextExpression(true);
-					astFactory.addASTChild(currentAST, returnAST);
-					break;
-				}
-				case RPAREN:
-				case SEMI:
-				{
+		try {      // for error handling
+			match(LPAREN);
+			if ( inputState.guessing==0 ) {
+				declaration=LT(1);
+			}
+			firstContainsDeclaration=strictContextExpression(true);
+			astFactory.addASTChild(currentAST, returnAST);
+			{
+			_loop511:
+			do {
+				if ((LA(1)==SEMI)) {
+					match(SEMI);
 					if ( inputState.guessing==0 ) {
-						astFactory.addASTChild(currentAST,astFactory.create(EMPTY_STAT, "EMPTY_STAT"));
+						hasClosureList=true;
 					}
-					break;
+					{
+					switch ( LA(1)) {
+					case FINAL:
+					case ABSTRACT:
+					case STRICTFP:
+					case LITERAL_static:
+					case LITERAL_def:
+					case LBRACK:
+					case IDENT:
+					case STRING_LITERAL:
+					case LPAREN:
+					case AT:
+					case LITERAL_super:
+					case LITERAL_void:
+					case LITERAL_boolean:
+					case LITERAL_byte:
+					case LITERAL_char:
+					case LITERAL_short:
+					case LITERAL_int:
+					case LITERAL_float:
+					case LITERAL_long:
+					case LITERAL_double:
+					case LITERAL_private:
+					case LITERAL_public:
+					case LITERAL_protected:
+					case LITERAL_transient:
+					case LITERAL_native:
+					case LITERAL_threadsafe:
+					case LITERAL_synchronized:
+					case LITERAL_volatile:
+					case LCURLY:
+					case LITERAL_this:
+					case LITERAL_return:
+					case LITERAL_break:
+					case LITERAL_continue:
+					case LITERAL_throw:
+					case LITERAL_assert:
+					case PLUS:
+					case MINUS:
+					case LITERAL_false:
+					case LITERAL_new:
+					case LITERAL_null:
+					case LITERAL_true:
+					case INC:
+					case DEC:
+					case BNOT:
+					case LNOT:
+					case STRING_CTOR_START:
+					case NUM_INT:
+					case NUM_FLOAT:
+					case NUM_LONG:
+					case NUM_DOUBLE:
+					case NUM_BIG_INT:
+					case NUM_BIG_DECIMAL:
+					{
+						sce=strictContextExpression(true);
+						astFactory.addASTChild(currentAST, returnAST);
+						break;
+					}
+					case RPAREN:
+					case SEMI:
+					{
+						if ( inputState.guessing==0 ) {
+							astFactory.addASTChild(currentAST,astFactory.create(EMPTY_STAT, "EMPTY_STAT"));
+						}
+						break;
+					}
+					default:
+					{
+						throw new NoViableAltException(LT(1), getFilename());
+					}
+					}
+					}
 				}
-				default:
-				{
-					throw new NoViableAltException(LT(1), getFilename());
+				else {
+					break _loop511;
 				}
-				}
-				}
+				
+			} while (true);
 			}
-			else {
-				break _loop511;
+			if ( inputState.guessing==0 ) {
+				
+				if (firstContainsDeclaration && !hasClosureList)
+				throw new NoViableAltException(declaration, getFilename());
+				
 			}
-			
-		} while (true);
-		}
-		if ( inputState.guessing==0 ) {
-			
-			if (firstContainsDeclaration && !hasClosureList)
-			throw new NoViableAltException(declaration, getFilename());
-			
-		}
-		match(RPAREN);
-		if ( inputState.guessing==0 ) {
+			match(RPAREN);
+			if ( inputState.guessing==0 ) {
+				parenthesizedExpression_AST = (AST)currentAST.root;
+				
+				if (hasClosureList) {
+				parenthesizedExpression_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(CLOSURE_LIST,"CLOSURE_LIST",first,LT(1))).add(parenthesizedExpression_AST));
+				}
+				
+				currentAST.root = parenthesizedExpression_AST;
+				currentAST.child = parenthesizedExpression_AST!=null &&parenthesizedExpression_AST.getFirstChild()!=null ?
+					parenthesizedExpression_AST.getFirstChild() : parenthesizedExpression_AST;
+				currentAST.advanceChildToEnd();
+			}
 			parenthesizedExpression_AST = (AST)currentAST.root;
-			
-			if (hasClosureList) {
-			parenthesizedExpression_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(CLOSURE_LIST,"CLOSURE_LIST",first,LT(1))).add(parenthesizedExpression_AST));
-			}
-			
-			currentAST.root = parenthesizedExpression_AST;
-			currentAST.child = parenthesizedExpression_AST!=null &&parenthesizedExpression_AST.getFirstChild()!=null ?
-				parenthesizedExpression_AST.getFirstChild() : parenthesizedExpression_AST;
-			currentAST.advanceChildToEnd();
 		}
-		parenthesizedExpression_AST = (AST)currentAST.root;
+		catch (RecognitionException e) {
+			if (inputState.guessing==0) {
+				
+				// GRECLIPSE1213 - missing closing paren
+					reportError(e); 
+					parenthesizedExpression_AST = (AST)currentAST.root;
+				
+			} else {
+				throw e;
+			}
+		}
 		returnAST = parenthesizedExpression_AST;
 	}
 	

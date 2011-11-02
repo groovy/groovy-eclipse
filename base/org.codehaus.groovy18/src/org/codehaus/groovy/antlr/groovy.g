@@ -2876,6 +2876,22 @@ methodCallArgs[AST callee]
               #methodCallArgs = #(create(METHOD_CALL, "(",callee, LT(1)), callee, al);
           }
         }
+exception
+catch [RecognitionException e] {
+if (#al!=null) {
+	reportError(e);
+	// copy of the block above - lets build it (assuming that all that was missing was the RPAREN)
+	if (callee != null && callee.getFirstChild() != null) {
+		//method call like obj.method()
+		#methodCallArgs = #(create(METHOD_CALL, "(",callee.getFirstChild(),LT(1)), callee, al);
+	} else {
+		//method call like method() or new Expr(), in the latter case "callee" is null
+		#methodCallArgs = #(create(METHOD_CALL, "(",callee, LT(1)), callee, al);
+	}
+} else {
+	throw e;
+}
+}        
     ;
 
 /** An appended block follows any expression.
@@ -3179,6 +3195,13 @@ parenthesizedExpression
                 #parenthesizedExpression = #(create(CLOSURE_LIST,"CLOSURE_LIST",first,LT(1)),#parenthesizedExpression);
             }
         }
+        
+exception
+catch [RecognitionException e] {
+	// GRECLIPSE1213 - missing closing paren
+	reportError(e); 
+	#parenthesizedExpression = (AST)currentAST.root;
+}
     ;
 
 /** Things that can show up as expressions, but only in strict
