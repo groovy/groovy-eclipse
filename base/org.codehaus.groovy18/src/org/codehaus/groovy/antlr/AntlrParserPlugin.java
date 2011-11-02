@@ -31,6 +31,7 @@ import org.codehaus.groovy.ast.stmt.*;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.ParserPlugin;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.*;
 import org.objectweb.asm.Opcodes;
 
@@ -999,10 +1000,26 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Statement code = null;
         if ((modifiers & Opcodes.ACC_ABSTRACT) == 0) {
             if (node==null) {
-                throw new ASTRuntimeException(methodDef, "You defined a method without body. Try adding a body, or declare it abstract.");
+            	// GRECLIPSE>>>
+            	/*old {
+            	if (node==null) {
+                	throw new ASTRuntimeException(methodDef, "You defined a method without body. Try adding a body, or declare it abstract.");            
+            	}
+            	assertNodeType(SLIST, node);
+                code = statementList(node);
+            	} new */
+            	// TODO could improve the position here (PreciseSyntaxException - will need to dig into the methodDef)
+            	SyntaxException se = new SyntaxException(
+            			"You defined a method without body. Try adding a body, or declare it abstract.",
+            			methodDef.getLine(),methodDef.getColumn());            	
+            	getController().addError(se);
+            	// Create a fake node that can pretend to be the body
+                code = statementListNoChild(null,methodDef);
+            } else {
+            	assertNodeType(SLIST, node);
+                code = statementList(node);
             }
-            assertNodeType(SLIST, node);
-            code = statementList(node);
+        	// GRECLIPSE<<<
         }  else if (node!=null && classNode.isAnnotationDefinition()) {
             code = statement(node);
             hasAnnotationDefault = true;

@@ -322,6 +322,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 					"----------\n");
 	}
     
+
+    
     public void testParsingRecovery_GRE1046_2() {
     	if (GroovyUtils.GROOVY_LEVEL < 18) {
     		return;
@@ -418,6 +420,38 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				);
 	}	
     
+    public void testParsingRecovery_GRE468_1() {
+    	if (GroovyUtils.GROOVY_LEVEL < 18) {
+    		return;
+    	}
+		this.runNegativeTest(new String[] {
+			"MyDomainClass.groovy",
+			"class T {\n"+
+			"\n"+
+			" int y()\n"+
+			" def m() {\n"+
+			" }\n"+
+            "}\n"},
+            "----------\n" + 
+    		"1. ERROR in MyDomainClass.groovy (at line 3)\n" + 
+    		"	int y()\n" + 
+    		"	^\n" + 
+    		"Groovy:You defined a method without body. Try adding a body, or declare it abstract. @ line 3, column 2.\n" + 
+    		"----------\n");
+		checkGCUDeclaration("MyDomainClass.groovy",
+				"public class T {\n"+
+				"  public T() {\n"+
+				"  }\n"+
+				"  public int y() {\n"+ 
+				"  }\n"+
+				"  public java.lang.Object m() {\n"+
+				"  }\n"+
+				"}\n"
+				);
+	}	
+    
+    
+
     public void testDuplicateClassesUnnecessaryExceptions() {
     	this.runNegativeTest(new String[]{
     			"A.groovy",
