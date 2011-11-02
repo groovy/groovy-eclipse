@@ -1684,9 +1684,10 @@ public class JavaProject
 										projectOptions.put(compatibleOption, value);
 								}
 							}
+						}
 					}
 				}
-				}
+				
 				// cache project options
 				perProjectInfo.options = projectOptions;
 			}
