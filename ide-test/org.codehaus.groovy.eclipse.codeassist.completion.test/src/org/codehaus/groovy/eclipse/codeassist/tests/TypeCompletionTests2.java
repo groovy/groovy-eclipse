@@ -207,6 +207,10 @@ public class TypeCompletionTests2 extends CompletionTestCase {
     
     // GRECLIPSE-926
     public void testBrokenScript11() throws Exception {
+        // disabled on 17 and earlier since parser recovery not implemented
+        if (GroovyUtils.GROOVY_LEVEL < 18) {
+            return;
+        }
         String contents = 
                 "package f\n" + 
                 "\n" + 
