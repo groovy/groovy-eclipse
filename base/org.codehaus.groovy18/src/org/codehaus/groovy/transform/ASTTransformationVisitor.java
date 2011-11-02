@@ -49,6 +49,7 @@ import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SimpleMessage;
+import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.control.messages.WarningMessage;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
@@ -415,7 +416,8 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                     continue;
                 }
                 if (ASTTransformation.class.isAssignableFrom(gTransClass)) {
-                    final ASTTransformation instance = (ASTTransformation)gTransClass.newInstance();
+                	try {
+                	final ASTTransformation instance = (ASTTransformation)gTransClass.newInstance();
                     CompilationUnit.SourceUnitOperation suOp = new CompilationUnit.SourceUnitOperation() {
                 		// GRECLIPSE: start
                     	private boolean isBuggered = false;
@@ -467,6 +469,13 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                     } else {
                         compilationUnit.addNewPhaseOperation(suOp, transformAnnotation.phase().getPhaseNumber());
                     }
+                	} catch (Throwable t) {
+                		// unexpected problem with the transformation. Could be:
+                		// - problem instantiating the transformation class
+                		compilationUnit.getErrorCollector().addError(new SimpleMessage(
+                				"Unexpected problem with AST transform: "+t.getMessage(),null));
+                		t.printStackTrace(); // temporary...
+                	}
                 } else {
                     compilationUnit.getErrorCollector().addError(new SimpleMessage(
                         "Transform Class " + entry.getKey() + " specified at "

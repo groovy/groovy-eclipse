@@ -408,6 +408,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                     continue;
                 }
                 if (ASTTransformation.class.isAssignableFrom(gTransClass)) {
+                	try {
                     final ASTTransformation instance = (ASTTransformation)gTransClass.newInstance();
                     CompilationUnit.SourceUnitOperation suOp = new CompilationUnit.SourceUnitOperation() {
                 		// GRECLIPSE: start
@@ -460,6 +461,14 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                     } else {
                         compilationUnit.addNewPhaseOperation(suOp, transformAnnotation.phase().getPhaseNumber());
                     }
+	            	} catch (Throwable t) {
+	            		// unexpected problem with the transformation. Could be:
+	            		// - problem instantiating the transformation class
+	            		compilationUnit.getErrorCollector().addError(new SimpleMessage(
+	            				"Unexpected problem with AST transform: "+t.getMessage(),null));
+	            		t.printStackTrace(); // temporary...
+	            	}
+
                 } else {
                     compilationUnit.getErrorCollector().addError(new SimpleMessage(
                         "Transform Class " + entry.getKey() + " specified at "
