@@ -1480,15 +1480,30 @@ inputState.guessing--;
 								// wrong.  Recovery means reporting the error and then proceeding as best we can.  Basically if the 
 								// NoViableAltException hit a problem and the token it encountered was on the same line as the prefix,
 								// skip to the end of the line, otherwise assume we can continue from where we are.
-								if (pfx_AST==null) {
-									throw e;
-								}
-								reportError(e);
-								if (e instanceof NoViableAltException) {
-									NoViableAltException nvae = (NoViableAltException)e;
-									if (pfx_AST.getLine()==nvae.token.getLine()) {
-										consumeUntil(NLS);										
+								// GRECLIPSE1046
+								// two situations to support: 'if (f.) ' where the 'then' condition is missing.  THis is now handled
+								// by a recovery rule in then then clause parsing.  And 'if (f.' where even the trailing paren is
+								// missing, that is dealt with here by noticing the condition exists but there is no then clause value.
+								// we build a basic if clause and soldier on.
+								boolean bang = true;
+								
+								if (pfx_AST!=null) {
+									bang=false;	
+									reportError(e);
+									if (e instanceof NoViableAltException) {
+										NoViableAltException nvae = (NoViableAltException)e;
+										if (pfx_AST.getLine()==nvae.token.getLine()) {
+											consumeUntil(NLS);										
+										}
 									}
+								}
+								if (ale_AST!=null && ifCbs_AST==null) {	
+									// likely missing close paren
+									statement_AST = (AST)astFactory.make( (new ASTArray(4)).add(create(LITERAL_if,"if",first,LT(1))).add(ale_AST).add(ifCbs_AST).add(elseCbs_AST));
+									bang=false;
+								}
+								if (bang) {
+									throw e;
 								}
 								
 							} else {
@@ -9125,36 +9140,48 @@ inputState.guessing--;
 		ASTPair currentAST = new ASTPair();
 		AST compatibleBodyStatement_AST = null;
 		
-		boolean synPredMatched321 = false;
-		if (((LA(1)==LCURLY) && (_tokenSet_31.member(LA(2))))) {
-			int _m321 = mark();
-			synPredMatched321 = true;
-			inputState.guessing++;
-			try {
-				{
-				match(LCURLY);
+		try {      // for error handling
+			boolean synPredMatched321 = false;
+			if (((LA(1)==LCURLY) && (_tokenSet_31.member(LA(2))))) {
+				int _m321 = mark();
+				synPredMatched321 = true;
+				inputState.guessing++;
+				try {
+					{
+					match(LCURLY);
+					}
 				}
-			}
-			catch (RecognitionException pe) {
-				synPredMatched321 = false;
-			}
-			rewind(_m321);
+				catch (RecognitionException pe) {
+					synPredMatched321 = false;
+				}
+				rewind(_m321);
 inputState.guessing--;
+			}
+			if ( synPredMatched321 ) {
+				compoundStatement();
+				astFactory.addASTChild(currentAST, returnAST);
+				compatibleBodyStatement_AST = (AST)currentAST.root;
+			}
+			else if ((_tokenSet_19.member(LA(1))) && (_tokenSet_2.member(LA(2)))) {
+				statement(EOF);
+				astFactory.addASTChild(currentAST, returnAST);
+				compatibleBodyStatement_AST = (AST)currentAST.root;
+			}
+			else {
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			
 		}
-		if ( synPredMatched321 ) {
-			compoundStatement();
-			astFactory.addASTChild(currentAST, returnAST);
-			compatibleBodyStatement_AST = (AST)currentAST.root;
+		catch (RecognitionException e) {
+			if (inputState.guessing==0) {
+				
+				// GRECLIPSE1046
+				reportError(e);
+				
+			} else {
+				throw e;
+			}
 		}
-		else if ((_tokenSet_19.member(LA(1))) && (_tokenSet_2.member(LA(2)))) {
-			statement(EOF);
-			astFactory.addASTChild(currentAST, returnAST);
-			compatibleBodyStatement_AST = (AST)currentAST.root;
-		}
-		else {
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		
 		returnAST = compatibleBodyStatement_AST;
 	}
 	

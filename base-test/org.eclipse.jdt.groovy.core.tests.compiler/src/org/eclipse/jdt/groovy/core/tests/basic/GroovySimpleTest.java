@@ -299,6 +299,47 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				);
 	}	
     
+    public void testParsingRecovery_GRE1046_1() {
+    	if (GroovyUtils.GROOVY_LEVEL < 18) {
+    		return;
+    	}
+    	// this file is missing the 'then' block.  We should cope and still offer assists
+		this.runNegativeTest(new String[] {
+			"MyDomainClass.groovy",
+			"File f = new File();\n"+
+			"if (f.)\n"},
+			"----------\n" + 
+					"1. ERROR in MyDomainClass.groovy (at line 2)\n" + 
+					"	if (f.)\n" + 
+					"	      ^\n" + 
+					"Groovy:unexpected token: ) @ line 2, column 7.\n" + 
+					"----------\n" + 
+					"2. ERROR in MyDomainClass.groovy (at line 2)\n" + 
+					"	if (f.)\n" + 
+					"\n" + 
+					"	       ^\n" + 
+					"Groovy:unexpected token:  @ line 2, column 8.\n" + 
+					"----------\n");
+	}
+    
+    public void testParsingRecovery_GRE1046_2() {
+    	if (GroovyUtils.GROOVY_LEVEL < 18) {
+    		return;
+    	}
+    	// trickier than above, this is also missing the closing paren
+		this.runNegativeTest(new String[] {
+			"MyDomainClass.groovy",
+			"File f = new File();\n"+
+			"if (f.\n"},
+					"----------\n" + 
+					"1. ERROR in MyDomainClass.groovy (at line 2)\n" + 
+					"	if (f.\n" + 
+					"\n" + 
+					"	      ^\n" + 
+					"Groovy:Expecting an identifier, found a trailing \'.\' instead. @ line 2, column 7.\n" + 
+					"----------\n");
+	}
+    
     public void testParsingRecovery_GRE1107_1() {
     	if (GroovyUtils.GROOVY_LEVEL < 18) {
     		return;
