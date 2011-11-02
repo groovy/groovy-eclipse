@@ -1652,10 +1652,21 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Statement ifBlock = statement(node);
 
         Statement elseBlock = EmptyStatement.INSTANCE;
+        // GRECLIPSE>>
+        // coping with a missing 'then' block (can happen due to recovery)
+        /*old{
         node = node.getNextSibling();
         if (node != null) {
             elseBlock = statement(node);
         }
+        } new */
+        if (node!=null) {
+            node = node.getNextSibling();
+            if (node != null) {
+                elseBlock = statement(node);
+            }        	
+        }
+        // GRECLIPSE<<
         IfStatement ifStatement = new IfStatement(booleanExpression, ifBlock, elseBlock);
         configureAST(ifStatement, ifNode);
         return ifStatement;

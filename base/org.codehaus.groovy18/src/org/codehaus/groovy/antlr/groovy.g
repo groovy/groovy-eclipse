@@ -2106,15 +2106,30 @@ catch [RecognitionException e] {
 // wrong.  Recovery means reporting the error and then proceeding as best we can.  Basically if the 
 // NoViableAltException hit a problem and the token it encountered was on the same line as the prefix,
 // skip to the end of the line, otherwise assume we can continue from where we are.
-if (pfx_AST==null) {
-	throw e;
-}
-reportError(e);
-if (e instanceof NoViableAltException) {
-	NoViableAltException nvae = (NoViableAltException)e;
-	if (pfx_AST.getLine()==nvae.token.getLine()) {
-		consumeUntil(NLS);										
+// GRECLIPSE1046
+// two situations to support: 'if (f.) ' where the 'then' condition is missing.  THis is now handled
+// by a recovery rule in then then clause parsing.  And 'if (f.' where even the trailing paren is
+// missing, that is dealt with here by noticing the condition exists but there is no then clause value.
+// we build a basic if clause and soldier on.
+boolean bang = true;
+
+if (pfx_AST!=null) {
+	bang=false;	
+	reportError(e);
+	if (e instanceof NoViableAltException) {
+		NoViableAltException nvae = (NoViableAltException)e;
+		if (pfx_AST.getLine()==nvae.token.getLine()) {
+			consumeUntil(NLS);										
+		}
 	}
+}
+if (ale_AST!=null && ifCbs_AST==null) {	
+	// likely missing close paren
+	#statement = #(create(LITERAL_if,"if",first,LT(1)),ale,ifCbs,elseCbs);
+	bang=false;
+}
+if (bang) {
+	throw e;
 }
 }    
     ;
@@ -2203,6 +2218,11 @@ compatibleBodyStatement
         compoundStatement
     |
         statement[EOF]
+         exception
+catch [RecognitionException e] {
+// GRECLIPSE1046
+reportError(e);
+}    
     ;
 
 /** In Groovy, return, break, continue, throw, and assert can be used in a parenthesized expression context.
