@@ -11,6 +11,8 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
+
 
 
 /**
@@ -24,7 +26,10 @@ public class TypeCompletionTests2 extends CompletionTestCase {
 
 
     private static final String HTML = "HTML";
+    private static final String HTMLT = "HTMLT";
     private static final String HTML_PROPOSAL = "HTML - javax.swing.text.html";
+    private static final String HTMLTableCaptionElement_PROPOSAL = "HTMLTableCaptionElement - org.w3c.dom.html";
+    
     public TypeCompletionTests2(String name) {
         super(name);
     }
@@ -51,6 +56,10 @@ public class TypeCompletionTests2 extends CompletionTestCase {
     }
     
     public void testBrokenScript2() throws Exception {
+        // disabled on 17 and earlier since parser recovery not implemented
+        if (GroovyUtils.GROOVY_LEVEL < 18) {
+            return;
+        }
         String contents = "package f\n\ndef x(HTML";
         String expected = "package f\n\nimport javax.swing.text.html.HTML;\n\n\ndef x(HTML";
         checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
@@ -58,6 +67,10 @@ public class TypeCompletionTests2 extends CompletionTestCase {
     }
     
     public void testBrokenScript3() throws Exception {
+        // disabled on 17 and earlier since parser recovery not implemented
+        if (GroovyUtils.GROOVY_LEVEL < 18) {
+            return;
+        }
         String contents = "/**some stuff*/\npackage f\n\ndef x(HTML";
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML;\n\n\ndef x(HTML";
         checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
@@ -66,6 +79,10 @@ public class TypeCompletionTests2 extends CompletionTestCase {
     
     // Bug !!! See GRECLIPSE-1231  import statements placed on same line because ';' is not recognized as part of the import statement
     public void testBrokenScript4() throws Exception {
+        // disabled on 17 and earlier since parser recovery not implemented
+        if (GroovyUtils.GROOVY_LEVEL < 18) {
+            return;
+        }
         String contents = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI;\n\ndef x(HTML";
         String expected = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI;import javax.swing.text.html.HTML;\n\n\ndef x(HTML";
         checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
@@ -74,6 +91,10 @@ public class TypeCompletionTests2 extends CompletionTestCase {
     
     // Bug !!! See GRECLIPSE-1231  import statements placed on same line because ';' is not recognized as part of the import statement
     public void testBrokenScript5() throws Exception {
+        // disabled on 17 and earlier since parser recovery not implemented
+        if (GroovyUtils.GROOVY_LEVEL < 18) {
+            return;
+        }
         String contents = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI;\n\ndef x(HTML";
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI;import javax.swing.text.html.HTML;\n\n\ndef x(HTML";
         checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
@@ -97,6 +118,10 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 HTML_PROPOSAL);
     }
     public void testBrokenScript7() throws Exception {
+        // disabled on 17 and earlier since parser recovery not implemented
+        if (GroovyUtils.GROOVY_LEVEL < 18) {
+            return;
+        }
         String contents = 
                 "/**some stuff*/\n" + 
                 "package f\n" + 
@@ -178,6 +203,36 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "def x(HTML";
         checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
                 HTML_PROPOSAL);
+    }
+    
+    // GRECLIPSE-926
+    public void testBrokenScript11() throws Exception {
+        String contents = 
+                "package f\n" + 
+                "\n" + 
+                "import javax.swing.text.html.HTML\n" + 
+                "\n" + 
+                "\n" + 
+                "   void nuthin() {\n" + 
+                "         if (! (this instanceof HTMLT/*_*/) {\n" + 
+                "            HTML\n" + 
+                "         }\n" + 
+                "    }";
+        String expected = 
+                "package f\n" + 
+                "\n" + 
+                "import javax.swing.text.html.HTML\n" + 
+                "\n" + 
+                "import org.w3c.dom.html.HTMLTableCaptionElement;\n" + 
+                "\n" + 
+                "\n" + 
+                "   void nuthin() {\n" + 
+                "         if (! (this instanceof HTMLTableCaptionElement/*_*/) {\n" + 
+                "            HTML\n" + 
+                "         }\n" + 
+                "    }";
+        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTMLT),
+                HTMLTableCaptionElement_PROPOSAL);
     }
 
     public void testBrokenClass1() throws Exception {
