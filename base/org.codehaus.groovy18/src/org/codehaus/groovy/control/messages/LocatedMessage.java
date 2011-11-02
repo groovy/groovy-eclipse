@@ -49,6 +49,10 @@ public class LocatedMessage extends SimpleMessage
         this.context = context;
     }
     
+    public CSTNode getContext() {
+    	return context;
+    }
+    
     
     public void write( PrintWriter writer, Janitor janitor )
     {
