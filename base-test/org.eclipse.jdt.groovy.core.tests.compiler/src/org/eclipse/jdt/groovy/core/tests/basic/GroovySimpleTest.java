@@ -2316,8 +2316,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 	public void testUnrecoverableErrors_GRE755_3() {
-	    // parser recovery not implemented on 17 and earlier
-	    if (GroovyUtils.GROOVY_LEVEL < 18) { return; }
 		this.runNegativeTest(new String[] {
 			"Bar.groovy",
 			"package a\n"+
@@ -2331,7 +2329,12 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n");
 		ModuleNode mn = getModuleNode("Bar.groovy");
 		
-		assertFalse(mn.encounteredUnrecoverableError());
+
+		if (GroovyUtils.GROOVY_LEVEL<18) {			
+			assertTrue(mn.encounteredUnrecoverableError());
+		} else {
+			assertFalse(mn.encounteredUnrecoverableError());
+		}
 	}
 		
 	// variations: 'import' 'import static' 'import ' 'import static ' 'import com.' 'import static com.'
