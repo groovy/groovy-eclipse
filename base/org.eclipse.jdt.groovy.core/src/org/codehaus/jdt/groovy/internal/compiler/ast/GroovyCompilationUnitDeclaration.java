@@ -48,12 +48,15 @@ import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.ExceptionMessage;
+import org.codehaus.groovy.control.messages.LocatedMessage;
 import org.codehaus.groovy.control.messages.Message;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
+import org.codehaus.groovy.syntax.CSTNode;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.syntax.RuntimeParserException;
 import org.codehaus.groovy.syntax.SyntaxException;
+import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.tools.GroovyClass;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -1670,6 +1673,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			int sev = 0;
 			int scol = 0;
 			int ecol = 0;
+			// LocatedMessage instances are produced sometimes, e.g. by grails ast transforms, use the context for position
+			if (message instanceof LocatedMessage) {
+				CSTNode context = ((LocatedMessage) message).getContext();
+				if (context instanceof Token) {
+					line = context.getStartLine();
+					scol = context.getStartColumn();
+					String text = ((Token) context).getText();
+					ecol = scol + (text == null ? 1 : (text.length() - 1));
+				}
+			}
 			if (message instanceof SimpleMessage) {
 				SimpleMessage simpleMessage = (SimpleMessage) message;
 				sev |= ProblemSeverities.Error;

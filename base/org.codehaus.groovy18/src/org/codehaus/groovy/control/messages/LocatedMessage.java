@@ -49,9 +49,12 @@ public class LocatedMessage extends SimpleMessage
         this.context = context;
     }
     
+    // GRECLIPSE>>>
+    // made context accessible
     public CSTNode getContext() {
     	return context;
     }
+    // <<<GRECLIPSE
     
     
     public void write( PrintWriter writer, Janitor janitor )

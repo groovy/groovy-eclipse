@@ -41,7 +41,13 @@ public class LocatedMessage extends SimpleMessage
         super( message, source );
         this.context = context;
     }
-    
+
+    // GRECLIPSE>>>
+    // made context accessible
+    public CSTNode getContext() {
+    	return context;
+    }
+    // <<<GRECLIPSE
     
     public LocatedMessage( String message, Object data, CSTNode context, SourceUnit source ) 
     {
