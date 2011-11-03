@@ -168,7 +168,7 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "/**some stuff*/\n" + 
                 "package f\n" + 
                 "\n" + 
-                "import javax.swing.plaf.ColorChooserUI;\n" + 
+                "import javax.swing.plaf.ColorChooserUI\n" + 
                 "import javax.swing.plaf.ButtonUI as foo\n" + 
                 "\n" + 
                 "def x(HTML";
@@ -176,7 +176,7 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "/**some stuff*/\n" + 
                 "package f\n" + 
                 "\n" + 
-                "import javax.swing.plaf.ColorChooserUI;\n" + 
+                "import javax.swing.plaf.ColorChooserUI\n" + 
                 "import javax.swing.plaf.ButtonUI as foo\n" + 
                 "import javax.swing.text.html.HTML;\n" + 
                 "\n" + 
@@ -189,14 +189,14 @@ public class TypeCompletionTests2 extends CompletionTestCase {
         String contents = 
                 "/**some stuff*/\n" + 
                 "\n" + 
-                "import javax.swing.plaf.ColorChooserUI;\n" + 
+                "import javax.swing.plaf.ColorChooserUI\n" + 
                 "import javax.swing.plaf.ButtonUI as foo\n" + 
                 "\n" + 
                 "def x(HTML";
         String expected = 
                 "/**some stuff*/\n" + 
                 "\n" + 
-                "import javax.swing.plaf.ColorChooserUI;\n" + 
+                "import javax.swing.plaf.ColorChooserUI\n" + 
                 "import javax.swing.plaf.ButtonUI as foo\n" + 
                 "import javax.swing.text.html.HTML;\n" + 
                 "\n" + 
