@@ -58,13 +58,14 @@ public class ResourceTypeChecker {
             if (resource.isDerived()) {
                 return false;
             }
-            if (Util.isExcluded(resource, includes, excludes)) {
-                return false;
-            }
             
             handler.handleResourceStart(resource);
             
             if (resource.getType() == IResource.FILE && ContentTypeUtils.isGroovyLikeFileName(resource.getName())) {
+                if (Util.isExcluded(resource, includes, excludes)) {
+                    return false;
+                }
+                
                 GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.create((IFile) resource);
                 if (unit != null && unit.isOnBuildPath()) {
                     if (monitor.isCanceled()) {
@@ -107,7 +108,9 @@ public class ResourceTypeChecker {
                 if (stok.hasMoreTokens() && (candidate = stok.nextToken()).startsWith("TYPE:")) {
                     // may or may not have a space after the colon
                     if (candidate.equals("TYPE:")) {
-                        type = stok.nextToken();
+                        if (stok.hasMoreTokens()) {
+                            type = stok.nextToken();
+                        }
                     } else {
                         String[] split = candidate.split("\\:");
                         type = split[1];
