@@ -169,7 +169,7 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "package f\n" + 
                 "\n" + 
                 "import javax.swing.plaf.ColorChooserUI\n" + 
-                "import javax.swing.plaf.ButtonUI as foo\n" + 
+                "import java.awt.dnd.DropTarget as Foo\n" + 
                 "\n" + 
                 "def x(HTML";
         String expected = 
@@ -177,8 +177,9 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "package f\n" + 
                 "\n" + 
                 "import javax.swing.plaf.ColorChooserUI\n" + 
-                "import javax.swing.plaf.ButtonUI as foo\n" + 
                 "import javax.swing.text.html.HTML;\n" + 
+                "\n" + 
+                "import java.awt.dnd.DropTarget as Foo\n" + 
                 "\n" + 
                 "def x(HTML";
         checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
@@ -190,15 +191,16 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "/**some stuff*/\n" + 
                 "\n" + 
                 "import javax.swing.plaf.ColorChooserUI\n" + 
-                "import javax.swing.plaf.ButtonUI as foo\n" + 
+                "import java.awt.dnd.DropTarget as Foo\n" + 
                 "\n" + 
                 "def x(HTML";
         String expected = 
                 "/**some stuff*/\n" + 
                 "\n" + 
                 "import javax.swing.plaf.ColorChooserUI\n" + 
-                "import javax.swing.plaf.ButtonUI as foo\n" + 
                 "import javax.swing.text.html.HTML;\n" + 
+                "\n" + 
+                "import java.awt.dnd.DropTarget as Foo\n" + 
                 "\n" + 
                 "def x(HTML";
         checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
