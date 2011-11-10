@@ -42,6 +42,7 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookup {
 			this.declaration = declaration;
 			this.declaringType = null;
 			this.extraDoc = null;
+			this.confidence = null;
 		}
 
 		public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType) {
@@ -49,6 +50,7 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookup {
 			this.declaration = declaration;
 			this.declaringType = declaringType;
 			this.extraDoc = null;
+			this.confidence = null;
 		}
 
 		public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType, String extraDoc) {
@@ -56,12 +58,23 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookup {
 			this.declaration = declaration;
 			this.declaringType = declaringType;
 			this.extraDoc = extraDoc;
+			this.confidence = null;
+		}
+
+		public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType, String extraDoc,
+				TypeConfidence confidence) {
+			this.type = type;
+			this.declaration = declaration;
+			this.declaringType = declaringType;
+			this.extraDoc = extraDoc;
+			this.confidence = confidence;
 		}
 
 		protected final ClassNode type;
 		protected final ClassNode declaringType;
 		protected final ASTNode declaration;
 		protected final String extraDoc;
+		protected final TypeConfidence confidence;
 	}
 
 	public final TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
