@@ -98,7 +98,7 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookup {
 
 		if (tAndD != null) {
 			return new TypeLookupResult(tAndD.type, tAndD.declaringType == null ? declaringType : tAndD.declaringType,
-					tAndD.declaration, confidence(), scope, tAndD.extraDoc);
+					tAndD.declaration, tAndD.confidence == null ? confidence() : tAndD.confidence, scope, tAndD.extraDoc);
 		}
 		return null;
 	}
