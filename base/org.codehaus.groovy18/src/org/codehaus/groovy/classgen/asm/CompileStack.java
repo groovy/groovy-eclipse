@@ -354,7 +354,9 @@ public class CompileStack implements Opcodes {
            
             for (Iterator iterator = usedVariables.iterator(); iterator.hasNext();) {
                 BytecodeVariable v = (BytecodeVariable) iterator.next();
-                String type = BytecodeHelper.getTypeDescription(v.getType());
+                ClassNode t = v.getType();
+                if (v.isHolder()) t = ClassHelper.REFERENCE_TYPE;
+                String type = BytecodeHelper.getTypeDescription(t);
                 Label start = v.getStartLabel();
                 Label end = v.getEndLabel();
                 
@@ -615,11 +617,14 @@ public class CompileStack implements Opcodes {
      *                      will be used.
      */
     public BytecodeVariable defineVariable(Variable v, boolean initFromStack) {
+        return defineVariable(v, v.getOriginType(), initFromStack);
+    }
+    public BytecodeVariable defineVariable(Variable v, ClassNode variableType, boolean initFromStack) {
         //TODO: any usage of this method should have different operand stack hanlding
         //      then the remove(1) here and there in this one can be removed and others
         //      can be changed
         String name = v.getName();
-        BytecodeVariable answer = defineVar(name, v.getOriginType(), v.isClosureSharedVariable(), v.isClosureSharedVariable()); 
+        BytecodeVariable answer = defineVar(name, variableType, v.isClosureSharedVariable(), v.isClosureSharedVariable());
         stackVariables.put(name, answer);
         
         MethodVisitor mv = controller.getMethodVisitor();

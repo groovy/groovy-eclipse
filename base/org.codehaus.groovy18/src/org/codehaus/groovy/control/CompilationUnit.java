@@ -118,9 +118,11 @@ public class CompilationUnit extends ProcessingUnit {
      * security stuff and a class loader for loading classes.
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, GroovyClassLoader loader) {
+		// GRECLIPSE extra param
         this(configuration, security, loader, null,true);
     }
     
+    // GRECLIPSE extraparam
     /**
      * Initializes the CompilationUnit with a CodeSource for controlling
      * security stuff, a class loader for loading classes, and a class
@@ -204,6 +206,13 @@ public class CompilationUnit extends ProcessingUnit {
                              ClassNode classNode) throws CompilationFailedException {
                 InnerClassCompletionVisitor iv = new InnerClassCompletionVisitor();
                 iv.visitClass(classNode);
+            }
+        }, Phases.CANONICALIZATION);
+        addPhaseOperation(new PrimaryClassNodeOperation() {
+            public void call(SourceUnit source, GeneratorContext context,
+                             ClassNode classNode) throws CompilationFailedException {
+                EnumCompletionVisitor ecv = new EnumCompletionVisitor(CompilationUnit.this, source);
+                ecv.visitClass(classNode);
             }
         }, Phases.CANONICALIZATION);
 
