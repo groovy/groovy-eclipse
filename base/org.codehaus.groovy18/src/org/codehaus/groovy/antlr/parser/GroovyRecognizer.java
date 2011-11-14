@@ -8666,7 +8666,7 @@ inputState.guessing--;
 		AST expressionStatementNoCheck_AST = null;
 		AST head_AST = null;
 		AST cmd_AST = null;
-		boolean isPathExpr = false;
+		boolean isPathExpr = true;
 		
 		expression(LC_STMT);
 		head_AST = (AST)returnAST;
@@ -10416,12 +10416,9 @@ inputState.guessing--;
 		AST pc_AST = null;
 		AST ca_AST = null;
 		
-			AST prev = null; 
+			AST prev = head;
 		
 		
-		if ( inputState.guessing==0 ) {
-			prev = head;
-		}
 		{
 		boolean synPredMatched372 = false;
 		if (((_tokenSet_86.member(LA(1))) && (_tokenSet_38.member(LA(2))))) {
@@ -10430,8 +10427,8 @@ inputState.guessing--;
 			inputState.guessing++;
 			try {
 				{
-				if (!(prev.getType()!=METHOD_CALL))
-				  throw new SemanticException("prev.getType()!=METHOD_CALL");
+				if (!(prev==null || prev.getType()!=METHOD_CALL))
+				  throw new SemanticException("prev==null || prev.getType()!=METHOD_CALL");
 				commandArgument();
 				}
 			}
@@ -12448,7 +12445,7 @@ inputState.guessing--;
 		catch (RecognitionException e) {
 			if (inputState.guessing==0) {
 				
-				// GRECLIPSE1213 - missing closing paren
+					// GRECLIPSE1213 - missing closing paren
 					reportError(e); 
 					parenthesizedExpression_AST = (AST)currentAST.root;
 				

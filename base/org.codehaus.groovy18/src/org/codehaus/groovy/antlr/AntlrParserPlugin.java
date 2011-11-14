@@ -99,7 +99,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     protected AST ast;
     private ClassNode classNode;
-    // GRECLIPSE private>protected
+    // GRECLIPSE private to protected
     protected String[] tokenNames;
     private int innerClassCounter = 1;
     private boolean enumConstantBeingDef = false;
@@ -151,7 +151,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         catch (TokenStreamException e) {
             sourceUnit.addException(e);
         }
-        // GRECLIPSE: new method call
+        // GRECLIPSE: extra line
         configureLocationSupport(sourceBuffer);
 
         ast = parser.getAST();
@@ -182,11 +182,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     // GRECLIPSE: from private to protected
     protected void outputASTInVariousFormsIfNeeded(SourceUnit sourceUnit, SourceBuffer sourceBuffer) {
         // straight xstream output of AST
-        // GRECLIPSE: start: temporary
-//        if ("xml".equals(System.getProperty("antlr.ast"))) {
-//            saveAsXML(sourceUnit.getName(), ast);
-//        }
-        // end
+        // GRECLIPSE: removed for now...
+        /*
+        if ("xml".equals(System.getProperty("antlr.ast"))) {
+            saveAsXML(sourceUnit.getName(), ast);
+        }
+        *///GRECLIPSE
 
          // 'pretty printer' output of AST
         if ("groovy".equals(System.getProperty("antlr.ast"))) {
@@ -2376,7 +2377,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     protected Expression literalExpression(AST node, Object value) {
-        ConstantExpression constantExpression = new ConstantExpression(value);
+        ConstantExpression constantExpression = new ConstantExpression(value, value instanceof Boolean);
         configureAST(constantExpression, node);
         return constantExpression;
     }

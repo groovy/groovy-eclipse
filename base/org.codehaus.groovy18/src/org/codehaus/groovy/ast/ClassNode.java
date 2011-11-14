@@ -253,9 +253,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      */
     public ClassNode(ClassNode componentType) {
     	// GRECLIPSE: start
-    	///*{
-        // this(componentType.getName()+"[]", ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
-        //}*/ 
+    	/*{
+        this(componentType.getName()+"[]", ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
+        }*/ 
         // newcode:
         this(computeArrayName(componentType), ACC_PUBLIC, ClassHelper.OBJECT_TYPE);  
         // end
