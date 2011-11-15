@@ -662,6 +662,13 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                             "\" that is already defined.",
                             method);
                 }
+                // GRECLIPSE start:
+                // make sure that we know this is a variant of another method
+                newMethod.setSourcePosition(method);
+                newMethod.setNameStart(method.getNameStart());
+                newMethod.setNameEnd(method.getNameEnd());
+                newMethod.setOriginal(method);
+                // GRECLIPSE end:
                 addPropertyMethod(newMethod);
                 newMethod.setGenericsTypes(method.getGenericsTypes());
             }

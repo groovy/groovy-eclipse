@@ -609,19 +609,28 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         }
 
         Expression arguments = call.getArguments();
-        checkForAfterClosingParen(call.getType(), arguments);
+        ClassNode constructorType = call.getType();
+        checkForAfterClosingParen(constructorType, arguments);
 
-        if (doTest(call.getType())) {
-            createContext(call.getType(), blockStack.peek(),
+        if (doTest(constructorType)) {
+            createContext(constructorType, blockStack.peek(),
                     ContentAssistLocation.CONSTRUCTOR);
         }
 
         // see comments in visitMethodCallExpression
         internalVisitCallArguments(arguments);
 
-        fullCompletionExpression = "new " + call.getType().getName();
+        // GRECLIPSE-1235
+        // determine if we are completing on the fully qualified name
+        // assume that this is not a partially qualified name
+        String constructorName = constructorType.getNameWithoutPackage();
+        if (constructorName.length() < constructorType.getLength()) {
+            // assume fully qualified name
+            constructorName = constructorType.getName();
+        }
+        fullCompletionExpression = "new " + constructorName;
 
-        createContextForCallContext(call, call.getType(), call.getType().getName());
+        createContextForCallContext(call, constructorType, constructorName);
     }
 
     private void checkForAfterClosingParen(AnnotatedNode contextTarget, Expression arguments) {

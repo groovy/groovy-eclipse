@@ -91,7 +91,6 @@ public class CodeSelectRequestor implements ITypeRequestor {
             if (node == null) {
                 return VisitStatus.CONTINUE;
             }
-                
         }
         
         if (doTest(node)) {
@@ -208,7 +207,26 @@ public class CodeSelectRequestor implements ITypeRequestor {
             maybeRequested = type;
         } else if (type.getTypeRoot() != null) {
             if (result.declaration.getEnd() > 0) {
-                maybeRequested = type.getTypeRoot().getElementAt(result.declaration.getStart());
+                // GRECLIPSE-1233 can't use getEltAt because of default parameters.
+                // instead, just iterate through children.  Method variants 
+                // are always after the original method
+                IJavaElement[] children = type.getChildren();
+                int start = result.declaration.getStart();
+                int end = result.declaration.getEnd();
+                for (IJavaElement child : children) {
+                    ISourceRange range = ((ISourceReference) child).getSourceRange();
+                    if (range.getOffset() == start && range.getOffset() + range.getLength() == end) {
+                        maybeRequested = child;
+                        break;
+                    } else if (range.getOffset() > 0 && range.getOffset() + range.getLength() < start) {
+                        // since children are listed incrementally no need to go further
+                        break;
+                    }
+                }
+                // FIXADE hmmmm...should I do this?
+                if (maybeRequested == null) {
+                    maybeRequested = type;
+                }
             }
             if (maybeRequested == null) {
                 // try something else because source location not set right
@@ -447,7 +465,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
      * May return null
      * @param type
      * @param text
-     * @param preferredParamNumber TODO
+     * @param preferredParamNumber
      * @return
      * @throws JavaModelException 
      */

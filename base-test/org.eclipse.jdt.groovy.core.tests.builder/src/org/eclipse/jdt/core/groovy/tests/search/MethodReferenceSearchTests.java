@@ -205,6 +205,51 @@ public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
                 "}", false, 0, "xxx" );
     }
     
+    public void testMethodWithDefaultParameters1() throws Exception {
+        doTestForTwoMethodReferences(
+                "class First {\n" +
+                "    void xxx(a, b = 9) { }\n" +
+                "    void xxx(a, b, c) { }\n" +
+                "}",
+                "class Second {\n" + 
+                "    void other0() {\n" +
+                "        First f\n" +
+                "        f.xxx(a)\n" +
+                "    }\n" +
+                "    void other1() {\n" +
+                "        First f\n" +
+                "        f.xxx(a,b,c)\n" +
+                "    }\n" +
+                "    void other2() {\n" +
+                "        First f\n" +
+                "        f.xxx(a,b)\n" +
+                "    }\n" +
+                "}", 
+                false, 0, "xxx" );
+    }
+    
+    public void testMethodWithDefaultParameters2() throws Exception {
+        doTestForTwoMethodReferences(
+                "class First {\n" +
+                "    void xxx(a, b = 9) { }\n" +
+                "    void xxx(a, b, c) { }\n" +
+                "}",
+                "class Second {\n" + 
+                "    void other0() {\n" +
+                "        First f\n" +
+                "        f.xxx(a)\n" +
+                "    }\n" +
+                "    void other1() {\n" +
+                "        First f\n" +
+                "        f.xxx(a,b,c)\n" +
+                "    }\n" +
+                "    void other2() {\n" +
+                "        First f\n" +
+                "        f.xxx\n" +
+                "    }\n" +
+                "}", false, 0, "xxx" );
+    }
+    
     private void doTestForTwoMethodReferencesInScript(String secondContents) throws JavaModelException {
         doTestForTwoMethodReferences(FIRST_CONTENTS_CLASS_FOR_METHODS, secondContents, true, 3, "xxx");
     }

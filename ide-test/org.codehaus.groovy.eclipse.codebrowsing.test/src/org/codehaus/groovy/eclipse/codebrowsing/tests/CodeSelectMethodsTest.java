@@ -32,6 +32,38 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         super.setUp();
     }
 
+    public void testCodeSelectDefaultParams1() throws Exception {
+        String structureContents = "class Structure {\n" + "  def meth(int a, int b = 9, int c=8) {}\n" + "}";
+        String javaContents = "class Java { { new Structure().meth(0, 0, 0); } }";
+        String groovyContents = "new Structure().meth";
+        String toFind = "meth";
+        assertGroovyCodeSelect(structureContents, javaContents, groovyContents, toFind);
+    }
+
+    public void testCodeSelectDefaultParams2() throws Exception {
+        String structureContents = "class Structure {\n" + "  def meth(int a, int b = 9, int c=8) {}\n" + "}";
+        String javaContents = "class Java { { new Structure().meth(0, 0, 0); } }";
+        String groovyContents = "new Structure().meth(0)";
+        String toFind = "meth";
+        assertGroovyCodeSelect(structureContents, javaContents, groovyContents, toFind);
+    }
+
+    public void testCodeSelectDefaultParams3() throws Exception {
+        String structureContents = "class Structure {\n" + "  def meth(int a, int b = 9, int c=8) {}\n" + "}";
+        String javaContents = "class Java { { new Structure().meth(0, 0, 0); } }";
+        String groovyContents = "new Structure().meth(0, 0)";
+        String toFind = "meth";
+        assertGroovyCodeSelect(structureContents, javaContents, groovyContents, toFind);
+    }
+
+    public void testCodeSelectDefaultParams4() throws Exception {
+        String structureContents = "class Structure {\n" + "  def meth(int a, int b = 9, int c=8) {}\n" + "}";
+        String javaContents = "class Java { { new Structure().meth(0, 0, 0); } }";
+        String groovyContents = "new Structure().meth(0, 0, 0)";
+        String toFind = "meth";
+        assertGroovyCodeSelect(structureContents, javaContents, groovyContents, toFind);
+    }
+
     public void testCodeSelectClosure() throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");

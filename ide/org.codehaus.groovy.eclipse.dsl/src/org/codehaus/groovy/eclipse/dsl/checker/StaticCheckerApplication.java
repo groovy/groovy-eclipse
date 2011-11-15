@@ -262,10 +262,6 @@ public class StaticCheckerApplication implements IApplication {
         }
     }
     
-    /**
-     * @param includes
-     * @return
-     */
     private char[][] convertToCharChar(String str) {
         if (str == null) {
             return null;

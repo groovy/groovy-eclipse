@@ -45,30 +45,30 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
     public void testFindLocalOccurrences1() throws Exception {
         String contents = "def x\nx";
         doTest(contents, contents.lastIndexOf('x'), 1, contents.indexOf('x'), 1, contents.lastIndexOf('x'), 1);
-    }        
+    }
 
     public void testFindLocalOccurrences2() throws Exception {
         String contents = "def x(x) {\nx}";
         doTest(contents, contents.lastIndexOf('x'), 1, contents.indexOf("(x")+1, 1, contents.lastIndexOf('x'), 1);
-    }        
+    }
     
     public void testFindLocalOccurrences3() throws Exception {
         String contents = "nuthin\ndef x(int x) {\nx}";
         int afterParen = contents.indexOf('(');
         doTest(contents, contents.lastIndexOf('x'), 1, contents.indexOf("x", afterParen), 1, contents.lastIndexOf('x'), 1);
-    }        
+    }
     
     // looking for the method declaration, not the parameter
     public void testFindLocalOccurrences4() throws Exception {
         String contents = "nuthin\ndef x(int x) {\nx}";
         doTest(contents, contents.indexOf('x'), 1, contents.indexOf('x'), 1);
-    }        
+    }
     
     public void testFindForLoopOccurrences() throws Exception {
         String contents = "for (x in []) {\n" +
         		"x }";
         doTest(contents, contents.indexOf('x'), 1, contents.indexOf('x'), 1, contents.lastIndexOf('x'), 1);
-    }        
+    }
     
     /**
      * Not working now.  See GROOVY-4620 and GRECLIPSE-951
@@ -398,6 +398,86 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int start1 = start;
         int start2 = contents.lastIndexOf("meth");
         doTest(contents, start, len, start1, len, start2, len);
+    }
+    
+    
+    public void testDefaultParameters1() throws Exception {
+        String contents = "class Default {\n" +
+        		"  def meth(int a, b = 1, c = 2) { }\n" +
+//        		"  def meth(String a) { }\n" +
+        		"}\n" +
+        		"new Default().meth(1)\n" +
+        		"new Default().meth(1, 2)\n" +
+        		"new Default().meth(1, 2, 3)\n" +
+        		"new Default().meth(1, 2, 3, 4)\n" +
+                "new Default().meth";
+        // test the first method declaration
+        // should match on all
+        int start = contents.indexOf("meth");
+        int len = "meth".length();
+        
+//        int dontCare = contents.indexOf("meth", start + 1);
+        int dontCare = contents.indexOf("meth", start);
+        int start1 = dontCare;
+        int start2 = contents.indexOf("meth", start1 + 1);
+        int start3 = contents.indexOf("meth", start2 + 1);
+        int start4 = contents.indexOf("meth", start3 + 1);
+        int start5 = contents.indexOf("meth", start4 + 1);
+        int start6 = contents.indexOf("meth", start5 + 1);
+        doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len, start6, len);
+    }
+    
+    // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments
+    public void _testDefaultParameters1a() throws Exception {
+        String contents = 
+                "class Default {\n" +
+                "  def meth(int a, b = 1, c = 2) { }\n" +
+                "  def meth(String a) { }\n" +
+                "}\n" +
+                "new Default().meth(1)\n" +
+                "new Default().meth(1, 2)\n" +
+                "new Default().meth(1, 2, 3)\n" +
+                "new Default().meth(1, 2, 3, 4)\n" +
+                "new Default().meth";
+        // test the first method declaration
+        // should match on all
+        int start = contents.indexOf("meth");
+        int len = "meth".length();
+        
+        int dontCare = contents.indexOf("meth", start + 1);
+        int start1 = dontCare;
+        int start2 = contents.indexOf("meth", start1 + 1);
+        int start3 = contents.indexOf("meth", start2 + 1);
+        int start4 = contents.indexOf("meth", start3 + 1);
+        int start5 = contents.indexOf("meth", start4 + 1);
+        int start6 = contents.indexOf("meth", start5 + 1);
+        doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len, start6, len);
+    }
+    
+    // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments
+    public void _testDefaultParameters2() throws Exception {
+        String contents = "class Default {\n" +
+                "  def meth(int a, b = 1, c = 2) { }\n" +
+                "  def meth(String a) { }\n" +
+                "}\n" +
+                "new Default().meth(1)\n" +
+                "new Default().meth(1, 2)\n" +
+                "new Default().meth(1, 2, 3)\n" +
+                "new Default().meth(1, 2, 3, 4)\n" +
+                "new Default().meth";
+        // test the second method declaration
+        // should match on 
+        int start = contents.indexOf("meth");
+        start = contents.indexOf("meth", start + 1);
+        int len = "meth".length();
+        
+        int start1 = start;
+        int start2 = contents.indexOf("meth", start1 + 1);
+        int start3 = contents.indexOf("meth", start2 + 1);
+        int start4 = contents.indexOf("meth", start3 + 1);
+        int start5 = contents.indexOf("meth", start4 + 1);
+        int start6 = contents.indexOf("meth", start5 + 1);
+        doTest(contents, start, len, start1, len, start2, len, start5, len, start6, len);
     }
     
     private void doTest(String contents, int start, int length, int ... expected) throws JavaModelException {

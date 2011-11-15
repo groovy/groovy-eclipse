@@ -277,4 +277,25 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
         String parms = AstToTextHelper.getParametersText(parameters);
         return AstToTextHelper.getModifiersText(modifiers) + " " + retType + " " + name + "(" + parms + ") " + exceptionTypes + " { ... }";
     }
+    
+    // GRECLIPSE: start
+    /**
+     * When default parameters are involved, this field will be
+     * the original method without any default parameters applied
+     */
+    private MethodNode original = this;
+    
+    /**
+     * @return When default parameters are involved, this method returns the {@link MethodNode} 
+     * where no default parameters have been applied.  Otherwise returns <code>this</code>.  Never
+     * returns null.
+     */
+    public MethodNode getOriginal() {
+        return original;
+    }
+    
+    public void setOriginal(MethodNode original) {
+        this.original = original;
+    }
+    // GRECLIPSE: end
 }

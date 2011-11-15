@@ -107,7 +107,7 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
     protected boolean looselyMatchesGetterName(String prefix, String methodName) {
         // first try 'is'
         boolean isGetterName = false;
-        if (methodName.length() >= 2 && methodName.startsWith("is") && Character.isUpperCase(methodName.charAt(2))) {
+        if (methodName.length() > 2 && methodName.startsWith("is") && Character.isUpperCase(methodName.charAt(2))) {
             isGetterName = true;
         }
 

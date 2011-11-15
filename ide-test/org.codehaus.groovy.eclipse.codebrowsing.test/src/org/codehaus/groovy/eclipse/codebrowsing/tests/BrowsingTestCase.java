@@ -154,13 +154,31 @@ public abstract class BrowsingTestCase extends BuilderTests {
     protected void assertCodeSelect(String structureContents,
             String javaContents, String groovyContents, String toFind,
             String elementName) throws Exception, JavaModelException {
+        assertCodeSelect(structureContents, javaContents, groovyContents, toFind, elementName, false);
+    }
+
+    protected void assertGroovyCodeSelect(String structureContents, String javaContents, String groovyContents, String toFind)
+            throws Exception, JavaModelException {
+        assertCodeSelect(structureContents, javaContents, groovyContents, toFind, toFind, true);
+    }
+
+    protected void assertCodeSelect(String structureContents, String javaContents, String groovyContents, String toFind,
+            String elementName, boolean isGroovy) throws Exception, JavaModelException {
 
         if (structureContents != null) {
             if (javaContents != null) {
-                createJavaUnit("Structure", structureContents);
+                if (isGroovy) {
+                    createUnit("Structure", structureContents);
+                } else {
+                    createJavaUnit("Structure", structureContents);
+                }
             } else {
                 // this is an array test, use a different file name
-                createJavaUnit("XX", structureContents);
+                if (isGroovy) {
+                    createJavaUnit("XX", structureContents);
+                } else {
+                    createJavaUnit("XX", structureContents);
+                }
             }
         }
         GroovyCompilationUnit groovyUnit = createUnit(groovyContents);

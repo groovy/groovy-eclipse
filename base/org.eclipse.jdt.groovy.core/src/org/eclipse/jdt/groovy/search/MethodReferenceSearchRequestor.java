@@ -29,6 +29,8 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyTypeDeclaration;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -39,6 +41,9 @@ import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
+import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.core.search.matching.MethodPattern;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jface.text.Position;
@@ -104,42 +109,42 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 		if (node instanceof ConstantExpression) {
 			String cName = ((ConstantExpression) node).getText();
 			if (cName != null && CharOperation.equals(name, cName.toCharArray())) {
-				doCheck = true;
 				start = node.getStart();
 				end = node.getEnd();
+				doCheck = end > 0; // avoid synthetic references
 			}
 		} else if (node instanceof FieldExpression) {
 			if (CharOperation.equals(name, ((FieldExpression) node).getFieldName().toCharArray())) {
-				doCheck = true;
 				start = node.getStart();
 				end = node.getEnd();
+				doCheck = end > 0; // avoid synthetic references
 			}
 		} else if (node instanceof MethodNode) {
 			MethodNode mnode = (MethodNode) node;
 			if (CharOperation.equals(name, mnode.getName().toCharArray())) {
-				doCheck = true;
 				isDeclaration = true;
 				start = mnode.getNameStart();
 				end = mnode.getNameEnd() + 1; // arrrgh...why +1?
+				doCheck = true;
 			}
 		} else if (node instanceof VariableExpression) {
 			VariableExpression vnode = (VariableExpression) node;
 			if (CharOperation.equals(name, vnode.getName().toCharArray())) {
-				doCheck = true;
 				start = vnode.getStart();
 				end = start + vnode.getName().length();
+				doCheck = true;
 			}
 		} else if (node instanceof StaticMethodCallExpression) {
 			StaticMethodCallExpression smnode = (StaticMethodCallExpression) node;
 			if (CharOperation.equals(name, smnode.getMethod().toCharArray())) {
-				doCheck = true;
 				start = smnode.getStart();
 				end = start + name.length;
+				doCheck = true;
 			}
 		}
 
 		// at this point, if doCheck is true, then we know that the method name matches
-		if (doCheck) {
+		if (doCheck && end > 0) {
 			// don't want to double accept nodes. This could happen with field and object initializers can get pushed into multiple
 			// constructors
 			Position position = new Position(start, end - start);
@@ -236,11 +241,17 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 	 * When matching method references and declarations, we can't actually match on parameter types. Instead, we match on the number
 	 * of parameterrs and assume that it is slightly more preceise than just matching on name.
 	 * 
-	 * The heuristic that is used in this method is this: 1. The search pattern expects 'n' parameters 2. the current node has 'm'
-	 * arguments. 3. if the m == n, then there is a precise match. 4. if not, look at all methods in current type with same name. 5.
-	 * if there is a method in the current type with the same number of arguments, then assume the current node matches that other
-	 * method, and there is no match. 6. If there are no existing methods with same number of parameters, then assume that current
-	 * method call is an alternative way of calling the method and return a match
+	 * The heuristic that is used in this method is this:
+	 * <ol>
+	 * <li>The search pattern expects 'n' parameters
+	 * <li>the current node has 'm' arguments.
+	 * <li>if the m == n, then there is a precise match.
+	 * <li>if not, look at all methods in current type with same name.
+	 * <li>if there is a method in the current type with the same number of arguments, then assume the current node matches that
+	 * other method, and there is no match.
+	 * <li>If there are no existing methods with same number of parameters, then assume that current method call is an alternative
+	 * way of calling the method and return a match
+	 * </ol>
 	 * 
 	 * @param declaringType
 	 * @param currentCallCount
@@ -276,8 +287,12 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 		if (declaringType == null) {
 			return;
 		}
+		declaringType = findWrappedNode(declaringType.redirect());
 		List<MethodNode> methods = declaringType.getMethods(String.valueOf(name));
 		for (MethodNode method : methods) {
+			// GRECLIPSE-1233
+			// ensure default parameters are ignored
+			method = method.getOriginal();
 			foundParameterNumbers[Math.min(method.getParameters().length, MAX_PARAMS)] = true;
 		}
 
@@ -285,6 +300,30 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 		for (ClassNode iface : declaringType.getInterfaces()) {
 			gatherParameters(iface, foundParameterNumbers);
 		}
+	}
+
+	/**
+	 * Attempt to convert from a {@link JDTClassNode} to a {@link ClassNode} in order to check default parameters
+	 * 
+	 * @param declaringType
+	 * @return
+	 */
+	private ClassNode findWrappedNode(ClassNode declaringType) {
+		ClassNode wrappedNode = null;
+		if (declaringType instanceof JDTClassNode) {
+			ReferenceBinding binding = ((JDTClassNode) declaringType).getJdtBinding();
+			if (binding instanceof SourceTypeBinding) {
+				SourceTypeBinding sourceTypeBinding = (SourceTypeBinding) binding;
+				if (sourceTypeBinding.scope != null) {
+					TypeDeclaration typeDeclaration = sourceTypeBinding.scope.referenceContext;
+					if (typeDeclaration instanceof GroovyTypeDeclaration) {
+						GroovyTypeDeclaration groovyTypeDeclaration = (GroovyTypeDeclaration) typeDeclaration;
+						wrappedNode = groovyTypeDeclaration.getClassNode();
+					}
+				}
+			}
+		}
+		return wrappedNode == null ? declaringType : wrappedNode;
 	}
 
 	private int getAccuracy(TypeConfidence confidence, boolean isCompleteMatch) {

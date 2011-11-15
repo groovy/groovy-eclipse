@@ -725,7 +725,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 				for (MethodNode maybeMethod : maybeMethods) {
 					Parameter[] parameters = maybeMethod.getParameters();
 					if ((parameters != null && parameters.length == numOfArgs) || (parameters == null && numOfArgs == 0)) {
-						return maybeMethod;
+						return maybeMethod.getOriginal();
 					}
 				}
 			}
