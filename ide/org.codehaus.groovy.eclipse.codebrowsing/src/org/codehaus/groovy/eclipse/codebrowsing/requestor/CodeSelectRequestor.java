@@ -203,43 +203,50 @@ public class CodeSelectRequestor implements ITypeRequestor {
     private IJavaElement findRequestedElement(TypeLookupResult result, IType type)
             throws JavaModelException {
         IJavaElement maybeRequested = null;
-        if (result.declaration instanceof ClassNode) {
+        ASTNode declaration = result.declaration;
+        if (declaration instanceof ClassNode) {
             maybeRequested = type;
         } else if (type.getTypeRoot() != null) {
-            if (result.declaration.getEnd() > 0) {
+            if (declaration.getEnd() > 0) {
                 // GRECLIPSE-1233 can't use getEltAt because of default parameters.
                 // instead, just iterate through children.  Method variants 
                 // are always after the original method
                 IJavaElement[] children = type.getChildren();
-                int start = result.declaration.getStart();
-                int end = result.declaration.getEnd();
+                int start = declaration.getStart();
+                int end = declaration.getEnd();
+                String name; 
+                if (declaration instanceof MethodNode) {
+                    name = ((MethodNode) declaration).getName();
+                } else if (declaration instanceof FieldNode) {
+                    name = ((FieldNode) declaration).getName();
+                } else if (declaration instanceof PropertyNode) {
+                    name = ((PropertyNode) declaration).getName();
+                } else {
+                    name = declaration.getText();
+                }
                 for (IJavaElement child : children) {
                     ISourceRange range = ((ISourceReference) child).getSourceRange();
-                    if (range.getOffset() == start && range.getOffset() + range.getLength() == end) {
+                    if (range.getOffset() <= start && range.getOffset() + range.getLength() >= end && child.getElementName().equals(name)) {
                         maybeRequested = child;
                         break;
-                    } else if (range.getOffset() > 0 && range.getOffset() + range.getLength() < start) {
+                    } else if (start + end < range.getOffset()) {
                         // since children are listed incrementally no need to go further
                         break;
                     }
-                }
-                // FIXADE hmmmm...should I do this?
-                if (maybeRequested == null) {
-                    maybeRequested = type;
                 }
             }
             if (maybeRequested == null) {
                 // try something else because source location not set right
                 String name = null;
                 int preferredParamNumber = -1;
-                if (result.declaration instanceof MethodNode) {
-                    name = ((MethodNode) result.declaration).getName();
-                    Parameter[] parameters = ((MethodNode) result.declaration).getParameters();
+                if (declaration instanceof MethodNode) {
+                    name = ((MethodNode) declaration).getName();
+                    Parameter[] parameters = ((MethodNode) declaration).getParameters();
                     preferredParamNumber = parameters == null ? 0 : parameters.length;
-                } else if (result.declaration instanceof PropertyNode) {
-                    name = ((PropertyNode) result.declaration).getName();
-                } else if (result.declaration instanceof FieldNode) {
-                    name = ((FieldNode) result.declaration).getName();
+                } else if (declaration instanceof PropertyNode) {
+                    name = ((PropertyNode) declaration).getName();
+                } else if (declaration instanceof FieldNode) {
+                    name = ((FieldNode) declaration).getName();
                 }
                 if (name != null) {
                     maybeRequested = findElement(type, name, preferredParamNumber);
