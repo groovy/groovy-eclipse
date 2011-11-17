@@ -493,6 +493,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
         for (IMethod method : type.getMethods()) {
             if (method.getElementName().equals(text)) {
                 // prefer methods with the appropriate number of parameters
+                // GRECLIPSE-1233 this is not quite right since we really should be
+                // trying to find the original methods when default parameters are used
                 if (method.getParameterTypes().length == preferredParamNumber) {
                     return method;
                 } else {

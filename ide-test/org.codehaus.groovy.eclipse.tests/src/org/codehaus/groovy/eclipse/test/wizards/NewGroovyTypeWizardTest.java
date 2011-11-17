@@ -223,7 +223,7 @@ public class NewGroovyTypeWizardTest extends AbstractNewGroovyWizardTest {
 		buf.append(" */\n");
 		buf.append("package test1\n");
 		buf.append("\n");
-		buf.append("import java.util.ArrayList;\n"); //FIXKDV: semicolon removal
+		buf.append("import java.util.ArrayList\n");
 		buf.append("\n");
 		buf.append("/**\n");
 		buf.append(" * Type\n");
