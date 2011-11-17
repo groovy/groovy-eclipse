@@ -29,6 +29,7 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.EqualityVisitor;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
@@ -120,6 +121,14 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
                 FieldNode field = (FieldNode) declaration;
                 return maybeField.getName().equals(field.getName())
                         && maybeField.getDeclaringClass().equals(field.getDeclaringClass());
+            } else if (maybeDeclaration instanceof JDTMethodNode) {
+                // GRECLIPSE-1255 Catches the case where the node comes from
+                // JDT, we do not check for parameter count since JDT is
+                // ignorant of possible default parameters
+                MethodNode maybeMethod = (MethodNode) maybeDeclaration;
+                MethodNode method = (MethodNode) declaration;
+                return maybeMethod.getName().equals(method.getName())
+                        && maybeMethod.getDeclaringClass().equals(method.getDeclaringClass());
             } else if (maybeDeclaration instanceof MethodNode) {
                 MethodNode maybeMethod = (MethodNode) maybeDeclaration;
                 MethodNode method = (MethodNode) declaration;
