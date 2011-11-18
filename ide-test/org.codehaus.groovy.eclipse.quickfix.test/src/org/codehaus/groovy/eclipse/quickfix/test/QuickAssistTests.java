@@ -22,6 +22,8 @@ import java.lang.reflect.InvocationTargetException;
 import org.codehaus.groovy.eclipse.quickassist.AbstractGroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.quickassist.ConvertToClosureCompletionProposal;
 import org.codehaus.groovy.eclipse.quickassist.ConvertToMethodCompletionProposal;
+import org.codehaus.groovy.eclipse.quickassist.ConvertToMultiLineStringCompletionProposal;
+import org.codehaus.groovy.eclipse.quickassist.ConvertToSingleLineStringCompletionProposal;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.internal.core.CompilationUnit;
@@ -83,11 +85,6 @@ public class QuickAssistTests extends EclipseTestCase {
         assertConversion("def \"xx  xx\"(int a, int b)  {\n  fdsafds }", "def \"xx  xx\" = { int a, int b ->\n  fdsafds }", "x", ConvertToClosureCompletionProposal.class);
     }
     
-    
-    
-    
-    
-    
     // convert to method must be wrapped inside of a class declaration
     public void testConvertToMethod1() throws Exception {
         assertConversion("class X { \ndef x = { } }", "class X { \ndef x() { } }", "x", ConvertToMethodCompletionProposal.class);
@@ -128,6 +125,26 @@ public class QuickAssistTests extends EclipseTestCase {
     
     public void testConvertToMethod11() throws Exception {
         assertConversion("class X { \ndef xxxx = {int a, int b ->\n  fdsafds } }", "class X { \ndef xxxx(int a, int b) {\n  fdsafds } }", "x", ConvertToMethodCompletionProposal.class);
+    }
+    
+    public void testConvertToMultiLine1() throws Exception {
+        assertConversion("\"fadfsad\\n\\t' \\\"\\nggggg\"", 
+        		"\"\"\"fadfsad\n\t' \"\nggggg\"\"\"", "f", ConvertToMultiLineStringCompletionProposal.class);
+    }
+    
+    public void testConvertToMultiLine2() throws Exception {
+        assertConversion("'fadfsad\\n\\t\\' \"\\nggggg'", 
+                "'''fadfsad\n\t' \"\nggggg'''", "f", ConvertToMultiLineStringCompletionProposal.class);
+    }
+    
+    public void testConvertToSingleLine1() throws Exception {
+        assertConversion("\"\"\"fadfsad\n\t' \"\nggggg\"\"\"",
+                "\"fadfsad\\n\\t' \\\"\\nggggg\"", "f", ConvertToSingleLineStringCompletionProposal.class);
+    }
+    
+    public void testConvertToSingleLine2() throws Exception {
+        assertConversion("'''fadfsad\n\t' \"\nggggg'''", 
+                "'fadfsad\\n\\t\\' \"\\nggggg'", "f", ConvertToSingleLineStringCompletionProposal.class);
     }
     
     private void assertConversion(String original, String expected, String searchFor, Class<? extends AbstractGroovyCompletionProposal> proposalClass) throws Exception, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {

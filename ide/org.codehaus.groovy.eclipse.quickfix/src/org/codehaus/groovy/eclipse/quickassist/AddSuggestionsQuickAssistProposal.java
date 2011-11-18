@@ -22,8 +22,6 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.contentassist.IContextInformation;
-import org.eclipse.swt.graphics.Point;
 
 public class AddSuggestionsQuickAssistProposal extends
 		AbstractGroovyCompletionProposal {

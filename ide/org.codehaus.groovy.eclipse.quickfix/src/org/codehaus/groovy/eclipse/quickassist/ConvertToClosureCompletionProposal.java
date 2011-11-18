@@ -102,18 +102,40 @@ public class ConvertToClosureCompletionProposal extends
 
     @Override
     public boolean hasProposals() {
-        try {
+        try { 
             IJavaElement maybeMethod = unit.getElementAt(offset);
-            boolean result = maybeMethod instanceof IMethod && ((IMethod) maybeMethod).getNameRange().getOffset() > 0;
+            // must be a method.  Also check that the name range length is equal to the length of the element name.
+            // if not, this indicates a synthetic method (eg- the run() method).
+            boolean result = isApplicableMethod(maybeMethod);
             if (result) {
                 targetMethod = (IMethod) maybeMethod;
             }
             return result;
         } catch (JavaModelException e) {
-            GroovyCore.logException("Oops", e);
+            GroovyCore.logException("Problem checking for quick assist", e);
         }
         return false;
     }
+
+    public boolean isApplicableMethod(IJavaElement maybeMethod)
+            throws JavaModelException {
+        if (! (maybeMethod instanceof IMethod )) {
+            return false;
+        }
+        
+        ISourceRange nameRange = ((IMethod) maybeMethod).getNameRange();
+        if (nameRange.getLength() == maybeMethod.getElementName().length()) {
+            return true;
+        }
+        
+        // For quoted method names, the name range will include the quotes, but the name itself will not include them
+        // check the text to see if the name start is at a quote
+        char[] contents = unit.getContents(); 
+        if (contents.length >= nameRange.getOffset() && contents[nameRange.getOffset()] == '"') {
+            return true;
+        }
+        return false;
+     }
     
     
     private TextEdit findReplacement(IDocument doc) {

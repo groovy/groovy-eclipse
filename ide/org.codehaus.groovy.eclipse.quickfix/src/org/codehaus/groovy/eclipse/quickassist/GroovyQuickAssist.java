@@ -35,7 +35,9 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
 				&& isContentInGroovyProject(context.getCompilationUnit())) {
 			return new AddSuggestionsQuickAssistProposal(context).hasProposals() || 
 			        new ConvertToClosureCompletionProposal(context).hasProposals() ||
-			        new ConvertToMethodCompletionProposal(context).hasProposals();
+			        new ConvertToMethodCompletionProposal(context).hasProposals() ||
+                    new ConvertToMultiLineStringCompletionProposal(context).hasProposals() ||
+                    new ConvertToSingleLineStringCompletionProposal(context).hasProposals();
 		}
 		return false;
 	}
@@ -59,6 +61,16 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
 		ConvertToMethodCompletionProposal convertToMethod = new ConvertToMethodCompletionProposal(context);
 		if (convertToMethod.hasProposals()) {
 		    proposalList.add(convertToMethod);
+		}
+		
+		ConvertToMultiLineStringCompletionProposal convertToMultiLineString = new ConvertToMultiLineStringCompletionProposal(context);
+		if (convertToMultiLineString.hasProposals()) {
+		    proposalList.add(convertToMultiLineString);
+		}
+		
+		ConvertToSingleLineStringCompletionProposal convertToSingleLineString = new ConvertToSingleLineStringCompletionProposal(context);
+		if (convertToSingleLineString.hasProposals()) {
+		    proposalList.add(convertToSingleLineString);
 		}
 		
 		return proposalList.toArray(new IJavaCompletionProposal[0]);
