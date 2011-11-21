@@ -246,6 +246,35 @@ public class InferencingTests extends AbstractInferencingTest {
         String expr = "x";
         assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
     }
+    // GRECLISPE-1244
+    public void testStaticMethodCall5() throws Exception {
+        String contents = 
+                "class Parent {\n" + 
+        		"    static p() {}\n" + 
+        		"}\n" + 
+        		"class Child extends Parent {\n" + 
+        		"    def c() {\n" + 
+        		"        p()\n" + 
+        		"    }\n" + 
+        		"}";
+        String expr = "p()";
+        assertDeclaringType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Parent");
+    }
+    // GRECLISPE-1244
+    public void testStaticMethodCall6() throws Exception {
+        createUnit("Parent",                 
+                "class Parent {\n" + 
+                "    static p() {}\n" + 
+                "}");
+        String contents = 
+                "class Child extends Parent {\n" + 
+                "    def c() {\n" + 
+                "        p()\n" + 
+                "    }\n" + 
+                "}";
+        String expr = "p()";
+        assertDeclaringType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Parent");
+    }
     public void testSuperFieldReference() throws Exception {
         String contents = "class B extends A {\n def other() { \n myOther } } \n class A { String myOther } ";
         String expr = "myOther"; 

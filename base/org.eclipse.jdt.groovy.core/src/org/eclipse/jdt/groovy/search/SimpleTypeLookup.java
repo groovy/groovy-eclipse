@@ -315,7 +315,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			List<MethodNode> methods = expr.getOwnerType().getMethods(expr.getMethod());
 			if (methods.size() > 0) {
 				MethodNode method = methods.get(0);
-				return new TypeLookupResult(method.getReturnType(), declaringType, method, confidence, scope);
+				return new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method, confidence, scope);
 			}
 		}
 

@@ -323,6 +323,38 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
                 elt[0].getElementName());
     }
 
+    public void testCodeSelectStaticMethod1() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "class Parent {\n" + "    static p() {}\n" + "}\n" + "class Child extends Parent {\n" + "    def c() {\n"
+                + "        p()\n" + "    }\n" + "}";
+        env.addGroovyClass(root, "", "Child", contents);
+        incrementalBuild();
+        expectingNoProblems();
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Child.groovy");
+        unit.becomeWorkingCopy(null);
+        IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf("p"), "sql".length());
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found type 'Parent'", "Parent", elt[0].getParent().getElementName());
+    }
+
+    public void testCodeSelectStaticMethod2() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        env.addGroovyClass(root, "", "Parent", "class Parent {\n" + "    static p() {}\n" + "}\n");
+
+        String contents = "class Child extends Parent {\n" + "    def c() {\n"
+                + "        p()\n" + "    }\n" + "}";
+        env.addGroovyClass(root, "", "Child", contents);
+        incrementalBuild();
+        expectingNoProblems();
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Child.groovy");
+        unit.becomeWorkingCopy(null);
+        IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf("p"), "sql".length());
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found type 'Parent'", "Parent", elt[0].getParent().getElementName());
+    }
+
     public void testCodeSelectStaticProperty1() throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");
