@@ -142,7 +142,7 @@ public class MethodCompletionTests extends CompletionTestCase {
         env.setAutoBuilding(false);
         String contents = "class MyClass { def m(int x) { }\ndef m(String x, int y) { }}";
         create(contents);
-        GroovyCompilationUnit unit = (GroovyCompilationUnit) create("new MyClass()", "Other");
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) create("Other", "new MyClass()");
         env.fullBuild();
         expectingNoProblems();
         List<MethodNode> methods = null;
@@ -159,9 +159,9 @@ public class MethodCompletionTests extends CompletionTestCase {
     public void testParameterNames4() throws Exception {
         // failing inermitewntly on build server, so run in a loop
         env.setAutoBuilding(false);
-        ICompilationUnit unit = create("new MyJavaClass()", "Other");
+        ICompilationUnit unit = create("Other", "new MyJavaClass()");
         String contents = "public class MyJavaClass { void m(int x) { }\nvoid m(String x, int y) { }}";
-        createJava(contents, "MyJavaClass");
+        createJava("MyJavaClass", contents);
         env.fullBuild();
         List<MethodNode> methods = null;
         for (int i = 0; i < 5; i++) {

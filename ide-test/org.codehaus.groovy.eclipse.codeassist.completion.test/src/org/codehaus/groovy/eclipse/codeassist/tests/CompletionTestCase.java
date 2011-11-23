@@ -17,6 +17,7 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext;
+import org.codehaus.groovy.eclipse.codeassist.proposals.NamedParameterProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
@@ -304,9 +305,9 @@ public abstract class CompletionTestCase extends BuilderTests {
         ICompletionProposal[] proposals;
         do {
             // intermitent failures on the build server
+            performDummySearch(unit.getJavaProject());
             SynchronizationUtils.joinBackgroudActivities();
             SynchronizationUtils.waitForIndexingToComplete();
-            
             
             System.out.println("Content assist for " + unit.getElementName());
             proposals = performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer.class);
@@ -341,23 +342,29 @@ public abstract class CompletionTestCase extends BuilderTests {
     
     
     protected ICompilationUnit create(String contents) throws Exception {
-        return create(contents, "GroovyClass");
+        return create("GroovyClass", contents);
     }
-    protected ICompilationUnit create(String contents, String cuName) throws Exception {
+    protected ICompilationUnit create(String cuName, String contents) throws Exception {
+        return create(null, cuName, contents);
+    }
+    protected ICompilationUnit create(String pkg, String cuName, String contents) throws Exception {
         IPath projectPath;
         if (genericProjectExists()) {
             projectPath = env.getProject("Project").getFullPath();
         } else {
             projectPath = createGenericProject();
         }
-        IPath src = projectPath.append("src");
-        IPath pathToJavaClass = env.addGroovyClassExtension(src, cuName, contents, defaultFileExtension);
+        IPath pkgPath = projectPath.append("src");
+        if (pkg != null) {
+            pkgPath = env.addPackage(pkgPath, pkg);
+        }
+        IPath pathToJavaClass = env.addGroovyClassExtension(pkgPath, cuName, contents, defaultFileExtension);
         incrementalBuild();
         ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
         return unit;
     }
     
-    protected void createJava(String contents, String cuName) throws Exception {
+    protected void createJava(String cuName, String contents) throws Exception {
         IPath projectPath;
         if (genericProjectExists()) {
             projectPath = env.getProject("Project").getFullPath();
@@ -480,6 +487,19 @@ public abstract class CompletionTestCase extends BuilderTests {
         }
     }
 
+    protected void checkProposalChoices(String contents, String toFind, String lookFor, String replacementString,
+            String[] expectedChoices) throws Exception {
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, toFind));
+        checkReplacementString(proposals, replacementString, 1);
+        ICompletionProposal proposal = findFirstProposal(proposals, lookFor, false);
+        NamedParameterProposal guessingProposal = (NamedParameterProposal) proposal;
+        ICompletionProposal[] choices = guessingProposal.getChoices();
+        assertEquals(expectedChoices.length, choices.length);
+        for (int i = 0; i < expectedChoices.length; i++) {
+            assertEquals("unexpected choice", expectedChoices[i], choices[i].getDisplayString());
+        }
+    }
+    
     public void performDummySearch(IJavaElement element) throws Exception{
         JavaModelManager.getIndexManager().indexAll(element.getJavaProject().getProject());
         new SearchEngine().searchAllTypeNames(

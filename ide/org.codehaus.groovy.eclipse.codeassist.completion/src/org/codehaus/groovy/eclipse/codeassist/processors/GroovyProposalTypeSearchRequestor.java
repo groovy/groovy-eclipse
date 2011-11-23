@@ -22,10 +22,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaMethodCompletionProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyNamedArgumentProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.relevance.RelevanceRules;
@@ -33,6 +38,7 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -223,10 +229,13 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
     // instead of inserting text, show context information only for constructors
     private boolean contextOnly;
 
+    private final ContentAssistContext context;
+
     public GroovyProposalTypeSearchRequestor(ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext, int exprStart,
             int replaceLength, NameLookup nameLookup, IProgressMonitor monitor) {
 
+        this.context = context;
         this.offset = exprStart;
         this.javaContext = javaContext;
         this.module = context.unit.getModuleNode();
@@ -639,7 +648,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         return proposals;
     }
 
-    List<ICompletionProposal> processAcceptedConstructors() {
+    List<ICompletionProposal> processAcceptedConstructors(Set<String> usedParams, JDTResolver resolver) {
         this.checkCancel();
         if (this.acceptedConstructors == null)
             return Collections.emptyList();
@@ -703,6 +712,30 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
                             fullyQualifiedName, false, extraFlags);
                     if (constructorProposal != null) {
                         proposals.add(constructorProposal);
+
+                        if (contextOnly) {
+                            // also add all of the constructor arguments for
+                            // constructors with no
+                            // args and when it is the only constructor in the
+                            // classs
+                            ClassNode resolved = resolver.resolve(String.valueOf(fullyQualifiedName));
+                            if (resolved != null) {
+                                List<ConstructorNode> constructors = resolved.getDeclaredConstructors();
+                                if (constructors != null && constructors.size() == 1) {
+                                    ConstructorNode constructor = constructors.get(0);
+                                    Parameter[] parameters = constructor.getParameters();
+                                    if (constructor.getStart() <= 0 && (parameters == null || parameters.length == 0)) {
+                                        for (PropertyNode prop : resolved.getProperties()) {
+                                            if (!usedParams.contains(prop.getName())) {
+                                                GroovyNamedArgumentProposal namedProp = new GroovyNamedArgumentProposal(prop.getName(),
+                                                        prop.getType(), null, null);
+                                                proposals.add(namedProp.createJavaProposal(context, javaContext));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -731,7 +764,9 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         // only show context information and only for methods
         // that exactly match the name. This happens when we are at the
         // start of an argument or an open paren
-        if (contextOnly && !completionExpression.equals(String.valueOf(fullyQualifiedName))) {
+        String simpleTypeNameStr = String.valueOf(simpleTypeName);
+        String fullyQualifiedNameStr = String.valueOf(fullyQualifiedName);
+        if (contextOnly && !completionExpression.equals(simpleTypeNameStr) && !completionExpression.equals(fullyQualifiedNameStr)) {
             return null;
         }
 
@@ -755,8 +790,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         if (Flags.isDeprecated(typeModifiers)) {
             augmentedModifiers |= Flags.AccDeprecated;
         }
-
-
 
         if (parameterCount == -1) {
             // default constructor

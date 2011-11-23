@@ -17,7 +17,6 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests;
 
-import org.codehaus.groovy.eclipse.codeassist.proposals.NamedParameterProposal;
 import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestCase;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
@@ -227,24 +226,9 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
     
     private void createDSL(String dsldContents) throws Exception {
         defaultFileExtension = "dsld";
-        create(dsldContents, "MyDsld");
+        create("MyDsld", dsldContents);
         defaultFileExtension = "groovy";
         env.fullBuild();
         expectingNoProblems();
     }
-    
-    private void checkProposalChoices(String contents, String toFind, String lookFor, String replacementString,
-            String[] expectedChoices) throws Exception {
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, toFind));
-        checkReplacementString(proposals, replacementString, 1);
-        ICompletionProposal proposal = findFirstProposal(proposals, lookFor, false);
-        NamedParameterProposal guessingProposal = (NamedParameterProposal) proposal;
-        ICompletionProposal[] choices = guessingProposal.getChoices();
-        assertEquals(expectedChoices.length, choices.length);
-        for (int i = 0; i < expectedChoices.length; i++) {
-            assertEquals("unexpected choice", expectedChoices[i], choices[i].getDisplayString());
-        }
-    }
-
-
 }

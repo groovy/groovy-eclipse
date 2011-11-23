@@ -39,12 +39,12 @@ public class ContextInformationTests extends CompletionTestCase {
     }
     
     public void testMethodContext1() throws Exception {
-        create("class Other {\n" +
-                "  //def meth() { }\n" +  // methods with 0 args do not have context info
-        		"  def meth(a) { }\n" +
-        		"  def meth(int a, int b) { }\n" +
-        		"  def method(int a, int b) { }\n" +
-        		"}", "Other");
+        create("Other", "class Other {\n" +
+                        "  //def meth() { }\n" +  // methods with 0 args do not have context info
+                		"  def meth(a) { }\n" +
+                		"  def meth(int a, int b) { }\n" +
+                		"  def method(int a, int b) { }\n" +
+                		"}");
         
         String contents = "new Other().meth()";
         ICompilationUnit unit = create(contents);
@@ -53,15 +53,15 @@ public class ContextInformationTests extends CompletionTestCase {
     }
 
     public void testMethodContext2() throws Exception {
-        create("class Other extends Super {\n" +
-                "  //def meth() { }\n" +  // methods with 0 args do not have context info
-                "  def meth(a) { }\n" +
-                "  def meth(int a, int b) { }\n" +
-                "}\n" +
-                "class Super {\n" +
-                "  def meth(String d) { }\n" +
-                "  def method(String d) { }\n" +
-                "}", "Other");
+        create("Other", "class Other extends Super {\n" +
+                        "  //def meth() { }\n" +  // methods with 0 args do not have context info
+                        "  def meth(a) { }\n" +
+                        "  def meth(int a, int b) { }\n" +
+                        "}\n" +
+                        "class Super {\n" +
+                        "  def meth(String d) { }\n" +
+                        "  def method(String d) { }\n" +
+                        "}");
         
         String contents = "new Other().meth()";
         ICompilationUnit unit = create(contents);
@@ -70,15 +70,15 @@ public class ContextInformationTests extends CompletionTestCase {
     }
     
     public void testMethodContext3() throws Exception {
-        create("class Other extends Super {\n" +
-                "  //def meth() { }\n" +  // methods with 0 args do not have context info
-                "  def meth(a) { }\n" +
-                "  def meth(int a, int b) { }\n" +
-                "}\n" +
-                "class Super {\n" +
-                "  def meth(String d) { }\n" +
-                "  def method(String d) { }\n" +
-                "}", "Other");
+        create("Other", "class Other extends Super {\n" +
+                        "  //def meth() { }\n" +  // methods with 0 args do not have context info
+                        "  def meth(a) { }\n" +
+                        "  def meth(int a, int b) { }\n" +
+                        "}\n" +
+                        "class Super {\n" +
+                        "  def meth(String d) { }\n" +
+                        "  def method(String d) { }\n" +
+                        "}");
         
         String contents = "new Other().meth(a)";
         ICompilationUnit unit = create(contents);
@@ -87,15 +87,15 @@ public class ContextInformationTests extends CompletionTestCase {
     }
     
     public void testMethodContext4() throws Exception {
-        create("class Other extends Super {\n" +
-                "  //def meth() { }\n" +  // methods with 0 args do not have context info
-                "  def meth(a) { }\n" +
-                "  def meth(int a, int b) { }\n" +
-                "}\n" +
-                "class Super {\n" +
-                "  def meth(String d) { }\n" +
-                "  def method(String d) { }\n" +
-                "}", "Other");
+        create("Other", "class Other extends Super {\n" +
+                        "  //def meth() { }\n" +  // methods with 0 args do not have context info
+                        "  def meth(a) { }\n" +
+                        "  def meth(int a, int b) { }\n" +
+                        "}\n" +
+                        "class Super {\n" +
+                        "  def meth(String d) { }\n" +
+                        "  def method(String d) { }\n" +
+                        "}");
         
         String contents = "new Other().meth(a,b)";
         ICompilationUnit unit = create(contents);
@@ -105,10 +105,10 @@ public class ContextInformationTests extends CompletionTestCase {
     }
     
     public void testConstructorContext1() throws Exception {
-        ICompilationUnit unit = create("class Other {\n" +
-                "  Other(a) { }\n" +
-                "  Other(int a, int b) { }\n" +
-                "}", "Other");
+        ICompilationUnit unit = create("Other", "class Other {\n" +
+                        "  Other(a) { }\n" +
+                        "  Other(int a, int b) { }\n" +
+                        "}");
         
         // forces indexes to be ready
         performDummySearch(unit);
@@ -119,15 +119,47 @@ public class ContextInformationTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "Other("), GroovyCompletionProposalComputer.class);
         assertContextInformation("Other", 2, proposals, contents);
     }
-
-    public void testConstructorContext2() throws Exception {
-        create("class Other {\n" +
+    public void testConstructorContext1a() throws Exception {
+        ICompilationUnit unit = create("p", "Other", "package p\nclass Other {\n" +
                 "  Other(a) { }\n" +
                 "  Other(int a, int b) { }\n" +
-                "}", "Other");
+                "}");
+        
+        // forces indexes to be ready
+        performDummySearch(unit);
+        String contents = "new p.Other()";
+        unit = create(contents); 
+        performDummySearch(unit);
+        unit.becomeWorkingCopy(null);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "Other("), GroovyCompletionProposalComputer.class);
+        assertContextInformation("Other", 2, proposals, contents);
+    }
+
+    public void testConstructorContext1b() throws Exception {
+        ICompilationUnit unit = create("p", "Other", "package p\nclass Other {\n" +
+                "  Other(a) { }\n" +
+                "  Other(int a, int b) { }\n" +
+                "}");
+        
+        // forces indexes to be ready
+        performDummySearch(unit);
+        String contents = "import p.Other\nnew Other()";
+        unit = create(contents); 
+        performDummySearch(unit);
+        unit.becomeWorkingCopy(null);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "Other("), GroovyCompletionProposalComputer.class);
+        assertContextInformation("Other", 2, proposals, contents);
+    }
+    
+    public void testConstructorContext2() throws Exception {
+        create("Other", "class Other {\n" +
+                        "  Other(a) { }\n" +
+                        "  Other(int a, int b) { }\n" +
+                        "}");
         
         String contents = "new Other(a)";
         ICompilationUnit unit = create(contents);
+        // FIXADE ... failing on build server intermittently unless I do this
         performDummySearch(unit);
         performDummySearch(unit);
         performDummySearch(unit);
@@ -141,10 +173,10 @@ public class ContextInformationTests extends CompletionTestCase {
     }
     
     public void testConstructorContext3() throws Exception {
-        create("class Other {\n" +
-                "  Other(a) { }\n" +
-                "  Other(int a, int b) { }\n" +
-                "}", "Other");
+        create("Other", "class Other {\n" +
+                        "  Other(a) { }\n" +
+                        "  Other(int a, int b) { }\n" +
+                        "}");
         
         String contents = "new Other(a,b)";
         ICompilationUnit unit = create(contents);
@@ -161,14 +193,14 @@ public class ContextInformationTests extends CompletionTestCase {
     }
     
     public void testConstructorContext4() throws Exception {
-        create("class Other {\n" +
-                "  Other(a) { }\n" +
-                "  Other(int a, int b) { }\n" +
-                "}\n" +
-                "class Super {\n" +
-                "  Super(String d) { }\n" +
-                "  Super(String d, String e) { }\n" +
-                "}", "Other");
+        create("Other", "class Other {\n" +
+                        "  Other(a) { }\n" +
+                        "  Other(int a, int b) { }\n" +
+                        "}\n" +
+                        "class Super {\n" +
+                        "  Super(String d) { }\n" +
+                        "  Super(String d, String e) { }\n" +
+                        "}");
         
         String contents = "new Super()";
         ICompilationUnit unit = create(contents);

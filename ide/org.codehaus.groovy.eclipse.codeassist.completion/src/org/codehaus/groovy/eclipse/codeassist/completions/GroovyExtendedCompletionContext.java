@@ -120,7 +120,7 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
         if (enclosingType != null) {
             try {
                 ITypeHierarchy typeHierarchy = enclosingType.newSupertypeHierarchy(null);
-                IType[] allTypes = typeHierarchy.getAllTypes();
+                IType[] allTypes = typeHierarchy.getAllSupertypes(enclosingType);
                 for (IType type : allTypes) {
                     IField[] fields = type.getFields();
                     for (IField field : fields) {
@@ -147,6 +147,7 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
         String qualifiedName = getQualifiedName(noArray);
         ClassNode resolved;
         if (typeSignature.length() == 1 + dims) {
+            // a primitive type
             resolved = ClassHelper.getWrapper(ClassHelper.make(qualifiedName));
         } else {
             try {

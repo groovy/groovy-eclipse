@@ -634,13 +634,19 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     }
 
     private void checkForAfterClosingParen(AnnotatedNode contextTarget, Expression arguments) {
-        int lastArgEnd = findLastArgumentEnd(arguments);
+;        int lastArgEnd = findLastArgumentEnd(arguments);
         int start = arguments.getStart();
         if (start == 0 && arguments instanceof TupleExpression && ((TupleExpression) arguments).getExpressions().size() > 0) {
             // Tuple expressions as argument lists do not always have slocs
             // available
             start = ((TupleExpression) arguments).getExpression(0).getStart();
         }
+
+        if (start == 0 && lastArgEnd == 0) {
+            // possibly a malformed constructor call with no parens
+            return;
+        }
+
         boolean shouldLookAtArguments = !(lastArgEnd == start && completionOffset == start);
         if (shouldLookAtArguments) {
             if (after(lastArgEnd)) {
@@ -651,7 +657,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         } else {
             // completion inside of empty argument list:
             // foo()
-            // should show context
+            // should show context, so do nothing here
         }
     }
 

@@ -113,12 +113,22 @@ public class MethodContributionElement implements IContributionElement {
     
     public List<IGroovyProposal> extraProposals(ClassNode declaringType, ResolverCache resolver, Expression expression) {
         // first find the arguments that are possible
-        Map<String, ClassNode> availableParams = findAvailableParamNames(resolver);
+        Map<String, ClassNode> availableParams = findAvailableParameters(resolver);
 
         if (availableParams.isEmpty()) {
             return ProposalUtils.NO_PROPOSALS;
         }
         
+        removeUsedParameters(expression, availableParams);
+        
+        List<IGroovyProposal> extraProposals = new ArrayList<IGroovyProposal>(availableParams.size());
+        for (Entry<String, ClassNode> available : availableParams.entrySet()) {
+            extraProposals.add(new GroovyNamedArgumentProposal(available.getKey(), available.getValue(), toMethod(declaringType.redirect(), resolver), provider));
+        }
+        return extraProposals;
+    }
+
+    private void removeUsedParameters(Expression expression, Map<String, ClassNode> availableParams) {
         if (expression instanceof MethodCallExpression) {
             // next find out if there are any existing named args
             MethodCallExpression call = (MethodCallExpression) expression;
@@ -142,19 +152,13 @@ public class MethodContributionElement implements IContributionElement {
                 }
             }
         }
-        
-        List<IGroovyProposal> extraProposals = new ArrayList<IGroovyProposal>(availableParams.size());
-        for (Entry<String, ClassNode> available : availableParams.entrySet()) {
-            extraProposals.add(new GroovyNamedArgumentProposal(available.getKey(), available.getValue(), toMethod(declaringType.redirect(), resolver), provider));
-        }
-        return extraProposals;
     }
     
     /**
      * @param resolver 
      * @return
      */
-    private Map<String, ClassNode> findAvailableParamNames(ResolverCache resolver) {
+    private Map<String, ClassNode> findAvailableParameters(ResolverCache resolver) {
         Map<String, ClassNode> available = new HashMap<String, ClassNode>(params.length);
         if (useNamedArgs) {
             for (ParameterContribution param : params) {

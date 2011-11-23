@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.codeassist.DocumentSourceBuffer;
@@ -26,9 +25,11 @@ import org.codehaus.groovy.eclipse.core.ISourceBuffer;
 import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;
 import org.codehaus.groovy.eclipse.core.util.ParseException;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.groovy.search.ITypeResolver;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext;
@@ -130,8 +131,8 @@ public class GroovyCompletionProposalComputer implements
 
         GroovyCompilationUnit gunit = (GroovyCompilationUnit) unit;
 
-        ModuleNode module = gunit.getModuleNode();
-        if (module == null) {
+        ModuleNodeInfo moduleInfo = gunit.getModuleInfo(false);
+        if (moduleInfo == null) {
             if (GroovyLogManager.manager.hasLoggers()) {
                 GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST,
                         "Null module node for " + gunit.getElementName());
@@ -153,6 +154,9 @@ public class GroovyCompletionProposalComputer implements
                                 .createProcessor(assistContext, javaContext,
                                         nameEnvironment);
                         if (processor != null) {
+                            if (processor instanceof ITypeResolver) {
+                                ((ITypeResolver) processor).setResolverInformation(moduleInfo.module, moduleInfo.resolver);
+                            }
                             proposals.addAll(processor.generateProposals(monitor));
                         }
                     }

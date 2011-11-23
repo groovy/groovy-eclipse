@@ -17,9 +17,6 @@ package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import java.lang.reflect.Method;
 
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.jdt.core.CompletionContext;
 import org.eclipse.jdt.core.IJavaElement;
@@ -63,13 +60,16 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
  */
 public class NamedParameterProposal extends JavaCompletionProposal {
 
+    /**
+     * 
+     */
+    private static final ICompletionProposal[] NO_COMPLETIONS = new ICompletionProposal[0];
+
     private IRegion selectedRegion;
 
     private final CompletionContext coreContext;
 
     private final boolean tryParamGuessing;
-
-    private final ClassNode paramType;
 
     private ICompletionProposal[] choices;
 
@@ -77,11 +77,11 @@ public class NamedParameterProposal extends JavaCompletionProposal {
 
     private IPositionUpdater updater;
 
-    private String parameterSignature;
+    private String paramSignature;
 
     private final String paramName;
 
-    public NamedParameterProposal(String paramName, ClassNode paramType, int replacementOffset, int replacementLength,
+    public NamedParameterProposal(String paramName, String paramSignature, int replacementOffset, int replacementLength,
             Image image,
             StyledString displayString, int relevance, boolean inJavadoc, JavaContentAssistInvocationContext invocationContext,
             boolean tryParamGuessing) {
@@ -90,8 +90,8 @@ public class NamedParameterProposal extends JavaCompletionProposal {
                 invocationContext);
         this.tryParamGuessing = tryParamGuessing;
         coreContext = invocationContext.getCoreContext();
-        this.paramType = paramType;
         this.paramName = paramName;
+        this.paramSignature = paramSignature;
     }
 
     private String computeReplacementChoices(String name) {
@@ -133,8 +133,10 @@ public class NamedParameterProposal extends JavaCompletionProposal {
     }
 
     private ICompletionProposal[] guessParameters(char[] parameterName) throws JavaModelException {
-        String signature = getParameterSignature();
-        String type = Signature.toString(signature);
+        if (paramSignature == null) {
+            return NO_COMPLETIONS;
+        }
+        String type = Signature.toString(paramSignature);
         ParameterGuesser guesser = new ParameterGuesser(getEnclosingElement());
         IJavaElement[] assignableElements = getAssignableElements();
         Position position = new Position(selectedRegion.getOffset(), selectedRegion.getLength());
@@ -167,7 +169,7 @@ public class NamedParameterProposal extends JavaCompletionProposal {
             }
         } catch (Exception e) {
             GroovyCore.logException("Exception trying to reflectively invoke 'parameterProposals' method.", e);
-            return new ICompletionProposal[0];
+            return NO_COMPLETIONS;
         }
 
     }
@@ -197,53 +199,12 @@ public class NamedParameterProposal extends JavaCompletionProposal {
         return parameterProposalsMethod;
     }
 
-    private String getParameterSignature() {
-        if (parameterSignature == null) {
-            parameterSignature = ProposalUtils.createTypeSignatureStr(unbox(paramType));
-        }
-        return parameterSignature;
-    }
-
-    /**
-     * Can't use ClassHelper.getUnwrapper here since relies on == and this will
-     * often be a JDTClassNode
-     *
-     * @param paramType2
-     * @return
-     */
-    private ClassNode unbox(ClassNode maybeBoxed) {
-        if (ClassHelper.isPrimitiveType(maybeBoxed)) {
-            return maybeBoxed;
-        }
-        String name = maybeBoxed.getName();
-        if (ClassHelper.Boolean_TYPE.getName().equals(name)) {
-            return ClassHelper.boolean_TYPE;
-        } else if (ClassHelper.Byte_TYPE.getName().equals(name)) {
-            return ClassHelper.byte_TYPE;
-        } else if (ClassHelper.Character_TYPE.getName().equals(name)) {
-            return ClassHelper.char_TYPE;
-        } else if (ClassHelper.Short_TYPE.getName().equals(name)) {
-            return ClassHelper.short_TYPE;
-        } else if (ClassHelper.Integer_TYPE.getName().equals(name)) {
-            return ClassHelper.int_TYPE;
-        } else if (ClassHelper.Long_TYPE.getName().equals(name)) {
-            return ClassHelper.long_TYPE;
-        } else if (ClassHelper.Float_TYPE.getName().equals(name)) {
-            return ClassHelper.float_TYPE;
-        } else if (ClassHelper.Double_TYPE.getName().equals(name)) {
-            return ClassHelper.double_TYPE;
-        } else {
-            return maybeBoxed;
-        }
-
-    }
-
     private IJavaElement getEnclosingElement() {
         return coreContext.getEnclosingElement();
     }
 
     private IJavaElement[] getAssignableElements() {
-        return coreContext.getVisibleElements(getParameterSignature());
+        return coreContext.getVisibleElements(paramSignature);
     }
 
     @Override

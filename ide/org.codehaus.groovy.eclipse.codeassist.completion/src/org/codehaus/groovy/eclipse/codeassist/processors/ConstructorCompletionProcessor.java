@@ -17,14 +17,25 @@
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MapEntryExpression;
+import org.codehaus.groovy.ast.expr.MapExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.search.ITypeResolver;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -33,7 +44,9 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  * @author Andrew Eisenberg
  * @created Dec 10, 2009
  */
-public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProcessor {
+public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProcessor implements ITypeResolver {
+
+    private JDTResolver resolver;
 
     public ConstructorCompletionProcessor(ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
@@ -60,10 +73,43 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
                 getNameEnvironment().nameLookup, monitor);
         getNameEnvironment().findConstructorDeclarations(
                 constructorCompletionText, true, requestor, monitor);
-        List<ICompletionProposal> constructoryProposals = requestor
-                .processAcceptedConstructors();
 
-        return constructoryProposals;
+        List<ICompletionProposal> constructorProposals = requestor.processAcceptedConstructors(findUsedParameters(context),
+                resolver);
+
+        return constructorProposals;
+    }
+
+    private Set<String> findUsedParameters(ContentAssistContext context) {
+        if (context.location != ContentAssistLocation.METHOD_CONTEXT) {
+            return Collections.emptySet();
+        }
+        Set<String> usedParams = new HashSet<String>();
+        ASTNode completionNode = context.completionNode;
+        if (completionNode instanceof ConstructorCallExpression) {
+            // next find out if there are any existing named args
+            ConstructorCallExpression call = (ConstructorCallExpression) completionNode;
+            Expression arguments = call.getArguments();
+            if (arguments instanceof TupleExpression) {
+                for (Expression maybeArg : ((TupleExpression) arguments).getExpressions()) {
+                    if (maybeArg instanceof MapExpression) {
+                        arguments = maybeArg;
+                        break;
+                    }
+                }
+            }
+
+            // now remove the arguments that are already written
+            if (arguments instanceof MapExpression) {
+                // Do extra filtering to determine what parameters are still
+                // available
+                MapExpression enclosingCallArgs = (MapExpression) arguments;
+                for (MapEntryExpression entry : enclosingCallArgs.getMapEntryExpressions()) {
+                    usedParams.add(entry.getKeyExpression().getText());
+                }
+            }
+        }
+        return usedParams;
     }
 
     /**
@@ -101,5 +147,9 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
             i++;
         }
         return res;
+    }
+
+    public void setResolverInformation(ModuleNode module, JDTResolver resolver) {
+        this.resolver = resolver;
     }
 }

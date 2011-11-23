@@ -54,10 +54,11 @@ public class DSLDProposalProvider implements IProposalProvider {
             pattern.setTargetType(completionType);
             contributions = store.findContributions(pattern, DSLPreferences.getDisabledScriptsAsSet());
         
+            boolean isMethodContext = context instanceof MethodInfoContentAssistContext;
             for (IContributionElement element : contributions) {
                 if (element.contributionName().startsWith(context.getPerceivedCompletionExpression())) {
                     proposals.add(element.toProposal(completionType, pattern.getResolverCache()));
-                    if (context instanceof MethodInfoContentAssistContext) { 
+                    if (isMethodContext) { 
                         // also add any related proposals, like those for method paraetersfuin
                         proposals.addAll(element.extraProposals(completionType, pattern.getResolverCache(), (Expression) ((MethodInfoContentAssistContext) context).completionNode));
                     }

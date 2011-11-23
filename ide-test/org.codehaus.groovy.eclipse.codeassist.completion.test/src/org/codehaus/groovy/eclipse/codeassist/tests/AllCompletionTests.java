@@ -36,8 +36,7 @@ public class AllCompletionTests {
         suite.addTestSuite(FindImportsRegionTests.class);
         suite.addTestSuite(RelevanceTests.class);
         suite.addTestSuite(ProposalProviderAndFilterTests.class);
-        // FIXADE Failing on build server not being run
-//        suite.addTestSuite(ConstructorCompletionTests.class);
+        suite.addTestSuite(ConstructorCompletionTests.class);
         suite.addTestSuite(StaticImportsCompletionTests.class);
         suite.addTestSuite(GenericCompletionTests.class);
         suite.addTestSuite(ExtendedCompletionContextTests.class);
