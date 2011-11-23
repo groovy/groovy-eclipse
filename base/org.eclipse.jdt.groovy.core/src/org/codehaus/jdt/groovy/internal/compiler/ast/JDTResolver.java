@@ -14,6 +14,7 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 import groovy.lang.GroovyClassLoader;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -112,7 +113,7 @@ public class JDTResolver extends ResolveVisitor {
 	private List<ClassNode> haveBeenResolved = new ArrayList<ClassNode>();
 
 	// Cache from bindings to JDTClassNodes to avoid unnecessary JDTClassNode creation
-	private Map<Binding, JDTClassNode> nodeCache = new HashMap<Binding, JDTClassNode>();
+	private Map<Binding, JDTClassNode> nodeCache = Collections.synchronizedMap(new HashMap<Binding, JDTClassNode>());
 
 	public JDTResolver(CompilationUnit groovyCompilationUnit) {
 		super(groovyCompilationUnit);
