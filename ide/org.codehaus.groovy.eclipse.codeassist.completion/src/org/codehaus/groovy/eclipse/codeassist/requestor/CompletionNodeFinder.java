@@ -573,8 +573,9 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             return;
         }
 
-        // here, we check to see if we are after the closing paren or before
-        // not quite as easy as I would have hoped since the AST
+        // here, we check to see if we are after the closing paren or before it.
+        // not quite as easy as I would have hoped since the AST doesn't track
+        // this information
         Expression arguments = call.getArguments();
         checkForAfterClosingParen(call.getMethod(), arguments);
 
@@ -610,7 +611,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
 
         Expression arguments = call.getArguments();
         ClassNode constructorType = call.getType();
-        checkForAfterClosingParen(constructorType, arguments);
+        checkForAfterClosingParen(call, arguments);
 
         if (doTest(constructorType)) {
             createContext(constructorType, blockStack.peek(),

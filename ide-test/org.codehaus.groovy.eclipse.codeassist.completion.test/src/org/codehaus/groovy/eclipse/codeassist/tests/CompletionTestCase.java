@@ -32,6 +32,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchPattern;
@@ -305,9 +306,13 @@ public abstract class CompletionTestCase extends BuilderTests {
         ICompletionProposal[] proposals;
         do {
             // intermitent failures on the build server
-            performDummySearch(unit.getJavaProject());
-            SynchronizationUtils.joinBackgroudActivities();
-            SynchronizationUtils.waitForIndexingToComplete();
+            if (count > 0) {
+                performDummySearch(unit.getJavaProject());
+                unit.reconcile(AST.JLS3, true, null, null);
+                env.fullBuild();
+                SynchronizationUtils.joinBackgroudActivities();
+                SynchronizationUtils.waitForIndexingToComplete();
+            }
             
             System.out.println("Content assist for " + unit.getElementName());
             proposals = performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer.class);

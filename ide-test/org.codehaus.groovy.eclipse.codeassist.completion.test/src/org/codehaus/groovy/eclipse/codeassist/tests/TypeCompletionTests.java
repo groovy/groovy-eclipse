@@ -203,6 +203,7 @@ public class TypeCompletionTests extends CompletionTestCase {
     public void testGRECLIPSE673() throws Exception {
         String contents = "throw new MPE";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "MPE"));
-        proposalExists(proposals, "MissingPropertyExceptionNoStack", 1, true);
+        // found twice:  once as a type proposal and once as a constructor proposal
+        proposalExists(proposals, "MissingPropertyExceptionNoStack", 2, true);
     }
 }

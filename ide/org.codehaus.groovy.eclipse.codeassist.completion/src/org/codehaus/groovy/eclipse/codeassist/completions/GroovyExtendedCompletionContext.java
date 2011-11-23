@@ -93,8 +93,8 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
     }
 
     private IJavaElement[] computeVisibleElements(String typeSignature) {
-        ClassNode superType = toClassNode(typeSignature);
-        boolean isInterface = superType.isInterface();
+        ClassNode targetType = toClassNode(typeSignature);
+        boolean isInterface = targetType.isInterface();
 
         // look at all local variables in scope
         Map<String, IJavaElement> nameElementMap = new LinkedHashMap<String, IJavaElement>();
@@ -106,7 +106,7 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
             String varName = entry.getKey();
             if (!varName.equals("super") && !nameElementMap.containsKey(varName)) {
                 ClassNode type = entry.getValue().type;
-                if (isAssignableTo(type, superType, isInterface)) {
+                if (isAssignableTo(type, targetType, isInterface)) {
                     // note that parent, start location, and typeSignature are
                     // not important here
                     nameElementMap.put(varName,
@@ -119,22 +119,29 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
         IType enclosingType = (IType) enclosingElement.getAncestor(IJavaElement.TYPE);
         if (enclosingType != null) {
             try {
+                addFields(targetType, isInterface, nameElementMap, enclosingType);
                 ITypeHierarchy typeHierarchy = enclosingType.newSupertypeHierarchy(null);
                 IType[] allTypes = typeHierarchy.getAllSupertypes(enclosingType);
-                for (IType type : allTypes) {
-                    IField[] fields = type.getFields();
-                    for (IField field : fields) {
-                        ClassNode fieldTypeClassNode = toClassNode(field.getTypeSignature());
-                        if (isAssignableTo(fieldTypeClassNode, superType, isInterface)) {
-                            nameElementMap.put(field.getElementName(), field);
-                        }
-                    }
+                for (IType superType : allTypes) {
+                    addFields(targetType, isInterface, nameElementMap, superType);
                 }
             } catch (JavaModelException e) {
                 GroovyCore.logException("", e);
             }
         }
         return nameElementMap.values().toArray(NO_ELEMENTS);
+    }
+
+    public void addFields(ClassNode targetType, boolean isInterface, Map<String, IJavaElement> nameElementMap, IType type)
+            throws JavaModelException {
+        IField[] fields = type.getFields();
+        for (IField field : fields) {
+            ClassNode fieldTypeClassNode = toClassNode(field.getTypeSignature());
+            if (isAssignableTo(fieldTypeClassNode, targetType, isInterface)) {
+                nameElementMap.put(field.getElementName(), field);
+            }
+        }
+        // also add methods
     }
 
     /**
