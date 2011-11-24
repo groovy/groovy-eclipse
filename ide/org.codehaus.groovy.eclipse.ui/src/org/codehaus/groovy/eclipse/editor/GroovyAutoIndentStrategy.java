@@ -16,10 +16,10 @@
 package org.codehaus.groovy.eclipse.editor;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyIndentationService;
 import org.codehaus.groovy.eclipse.refactoring.formatter.IFormatterPreferences;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.text.java.JavaAutoIndentStrategy;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
@@ -170,10 +170,12 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
      * to insert an automatic closing brace for on the next line.
      */
     private boolean shouldInsertBrace(IDocument d, int enterPos) {
-        if (!indentor.isAfterOpeningBrace(d, enterPos))
+        if (!indentor.moreOpenThanCloseBefore(d, enterPos)) {
             return false;
-        if (!indentor.isEndOfLine(d, enterPos))
+        }
+        if (!indentor.isEndOfLine(d, enterPos)) {
             return false;
+        }
         try {
             int lineNum = d.getLineOfOffset(enterPos);
             int indentLevel = indentor.getLineIndentLevel(d, lineNum);
@@ -193,5 +195,4 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
             return false;
         }
     }
-
 }

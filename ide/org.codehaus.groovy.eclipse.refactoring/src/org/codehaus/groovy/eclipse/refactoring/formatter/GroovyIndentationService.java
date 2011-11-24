@@ -517,6 +517,15 @@ public class GroovyIndentationService {
      * line.
      */
     private int simpleComputeNextLineIndentLevel(int indentLevel, List<Token> tokens) {
+        int adjust = getOpenVersusCloseBalance(tokens);
+        if (adjust > 0)
+            indentLevel += getPrefs().getIndentationSize();
+        else if (adjust < 0)
+            indentLevel = indentLevel - getPrefs().getIndentationSize();
+        return indentLevel;
+    }
+
+    public int getOpenVersusCloseBalance(List<Token> tokens) {
         int adjust = 0;
         for (Token tok : tokens) {
             if (jumpIn.contains(tok.getType()))
@@ -524,11 +533,7 @@ public class GroovyIndentationService {
             if (jumpOut.contains(tok.getType()))
                 adjust--;
         }
-        if (adjust > 0)
-            indentLevel += getPrefs().getIndentationSize();
-        else if (adjust < 0)
-            indentLevel = indentLevel - getPrefs().getIndentationSize();
-        return indentLevel;
+        return adjust;
     }
 
     public static String createIndentation(IFormatterPreferences pref, int spaces) {
@@ -552,6 +557,15 @@ public class GroovyIndentationService {
             }
         }
     	return gap.toString();
+    }
+
+    /**
+     * @param d
+     * @param enterPos
+     * @return
+     */
+    public boolean moreOpenThanCloseBefore(IDocument d, int offset) {
+        return getOpenVersusCloseBalance(getLineTokensUpto(d, offset)) > 0;
     }
 
 }

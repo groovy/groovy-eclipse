@@ -18,7 +18,6 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.text.edits.TextEdit;

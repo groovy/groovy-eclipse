@@ -693,5 +693,40 @@ public class Blah {
 	}
 }
 '''
+}
+    
+    
+    // GRECLIPSE-1262
+    void testAutoCloseAfterClosureArgs1() {
+        def initText =
+"""
+def x = { yyy -><***>
+"""
+       makeEditor(initText)
+       send('\n')
+       assertEditorContents """
+def x = { yyy ->
+    <***>
+}
+"""
+    }
+	
+	// GRECLIPSE-1262
+	void testAutoCloseAfterClosureArgs2() {
+		def initText =
+"""
+def xxx() {
+    def x = { yyy -><***>
+}
+"""
+       makeEditor(initText)
+	   send('\n')
+	   assertEditorContents """
+def xxx() {
+    def x = { yyy ->
+        <***>
+    }
+}
+"""
 	}
 }
