@@ -445,6 +445,63 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         assertType(contents, start, end, "Flart", true);
     }
     
+    // GRECLIPSE-1261
+    public void testStaticContext1() throws Exception {
+        createDsls("contribute(currentType('Flart')) { method name: \"testme\", type: boolean }");
+        String contents = "class Flart { }\n" +
+                "static ahem() {\n" +
+                "  new Flart().testme" +
+                "}";
+        int start = contents.lastIndexOf("testme");
+        int end = start + "testme".length();
+        assertType(contents, start, end, "java.lang.Boolean", true);
+    }
+    
+    // GRECLIPSE-1261
+    public void testStaticContext2() throws Exception {
+        createDsls("contribute(currentType('Flart')) { method name: \"testme\", type: boolean }");
+        String contents = "class Flart { }\n" +
+                "static ahem() {\n" +
+                "  Foo.testme" +
+                "}";
+        int start = contents.lastIndexOf("testme");
+        int end = start + "testme".length();
+        assertUnknownConfidence(contents, start, end, "Flart", true);
+    }
+    // GRECLIPSE-1261
+    public void testStaticContext3() throws Exception {
+        createDsls("contribute(currentType('Flart')) { method name: \"testme\", type: boolean, isStatic:true }");
+        String contents = "class Flart {\n" +
+                "static ahem() {\n" +
+                "  testme" +
+                "} }";
+        int start = contents.lastIndexOf("testme");
+        int end = start + "testme".length();
+        assertType(contents, start, end, "java.lang.Boolean", true);
+    }
+    // GRECLIPSE-1261
+    public void testStaticContext4() throws Exception {
+        createDsls("contribute(currentType('Flart')) { method name: \"testme\", type: boolean }");
+        String contents = "class Flart { \n" +
+                "static ahem() {\n" +
+                "  Flart.testme" +
+                "} }";
+        int start = contents.lastIndexOf("testme");
+        int end = start + "testme".length();
+        assertUnknownConfidence(contents, start, end, "Flart", true);
+    }
+    
+    // GRECLIPSE-1261
+    public void testStaticContext5() throws Exception {
+        createDsls("contribute(currentType('Flart')) { method name: \"testme\", type: boolean, isStatic:true }");
+        String contents = "class Flart { \n" +
+                "static ahem() {\n" +
+                "  new Flart().testme" +
+                "} }";
+        int start = contents.lastIndexOf("testme");
+        int end = start + "testme".length();
+        assertType(contents, start, end, "java.lang.Boolean", true);
+    }
     private void createDSL() throws IOException {
         defaultFileExtension = "dsld";
         createUnit("SomeInterestingExamples", GroovyDSLDTestsActivator.getDefault().getTestResourceContents("SomeInterestingExamples.dsld"));

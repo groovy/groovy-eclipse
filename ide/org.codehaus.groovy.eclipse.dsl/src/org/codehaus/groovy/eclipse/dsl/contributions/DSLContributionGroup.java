@@ -76,6 +76,8 @@ public class DSLContributionGroup extends ContributionGroup {
     
     private Map<String, Object> wormhole;
 
+    private boolean staticScope;
+
     public DSLContributionGroup(@SuppressWarnings("rawtypes") Closure contributionClosure) {
         this.contributionClosure = contributionClosure;
         
@@ -99,6 +101,7 @@ public class DSLContributionGroup extends ContributionGroup {
                 this.bindings = matches.getBindings();
                 this.currentType = pattern.getCurrentType();
                 this.wormhole = scope.getWormhole();
+                this.staticScope = pattern.isStatic();
                 contributionClosure.call();
             } catch (Exception e) {
                 GroovyLogManager.manager.logException(TraceCategory.DSL, e);
@@ -158,7 +161,7 @@ public class DSLContributionGroup extends ContributionGroup {
 
         boolean isStatic = isStatic(args);
         boolean isDeprecated = isDeprecated(args);
-        if (!scope.isStatic() || (scope.isStatic() && isStatic)) {
+        if (!staticScope || (staticScope && isStatic)) {
             contributions.add(new MethodContributionElement(name == null ? NO_NAME : name, params, namedParams, optionalParams, returnType == null ? NO_TYPE
                     : returnType, declaringType, isStatic, provider == null ? this.provider : provider, doc, useNamedArgs, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         }

@@ -34,7 +34,7 @@ import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
  * @created Nov 20, 2009 A simplified type lookup that targets the general case where a provider wants to add initialization to a
  *          class and add new methods/fields to certain types of objects
  */
-public abstract class AbstractSimplifiedTypeLookup implements ITypeLookup {
+public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtension {
 
 	public static class TypeAndDeclaration {
 		public TypeAndDeclaration(ClassNode type, ASTNode declaration) {
@@ -77,7 +77,22 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookup {
 		protected final TypeConfidence confidence;
 	}
 
+	private boolean isStatic;
+
+	/**
+	 * @return true iff the current lookup is in a static scope
+	 */
+	protected boolean isStatic() {
+		return isStatic;
+	}
+
+	// not called, but must be implemented
 	public final TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
+		return lookupType(node, scope, objectExpressionType, false);
+	}
+
+	public final TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType,
+			boolean isStaticObjectExpression) {
 		ClassNode declaringType;
 		if (objectExpressionType != null) {
 			declaringType = objectExpressionType;
@@ -89,6 +104,9 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookup {
 				declaringType = scope.getEnclosingTypeDeclaration();
 			}
 		}
+		// I would have likd to pass this valye into lookupTypeAndDeclaration, but
+		// I can't break api here
+		isStatic = isStaticObjectExpression;
 		TypeAndDeclaration tAndD = null;
 		if (node instanceof ConstantExpression && node.getText().length() == node.getLength()) {
 			// avoid constant expressions that are in strings

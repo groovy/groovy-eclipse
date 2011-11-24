@@ -65,6 +65,7 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
     protected TypeAndDeclaration lookupTypeAndDeclaration(ClassNode declaringType, String name, VariableScope scope) {
         pattern.setCurrentScope(scope);
         pattern.setTargetType(declaringType);
+        pattern.setStatic(isStatic());
         List<IContributionElement> elts = store.findContributions(pattern, disabledScriptsAsSet);
         for (IContributionElement elt : elts) {
             TypeAndDeclaration td = elt.lookupType(name, declaringType, pattern.getResolverCache());

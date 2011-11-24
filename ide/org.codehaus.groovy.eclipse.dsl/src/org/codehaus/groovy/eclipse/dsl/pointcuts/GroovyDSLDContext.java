@@ -127,6 +127,8 @@ public class GroovyDSLDContext {
 
     /** cached type hierarchy for checking type matches (consider caching more) */
     private Set<ClassNode> cachedHierarchy;
+
+    private boolean isStatic;
     
     /**
      * called by the type lookup, not by the pointcuts
@@ -254,5 +256,13 @@ public class GroovyDSLDContext {
 
     public ResolverCache getResolverCache() {
         return resolverCache;
+    }
+
+
+    public void setStatic(boolean s) {
+        isStatic = s;
+    }
+    public boolean isStatic() {
+        return isStatic;
     }
 }
