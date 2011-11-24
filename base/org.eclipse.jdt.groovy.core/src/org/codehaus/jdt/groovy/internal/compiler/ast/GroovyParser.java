@@ -13,6 +13,7 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import groovy.lang.GroovyClassLoader;
+import groovy.lang.GroovySystem;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -28,6 +29,8 @@ import java.util.jar.JarFile;
 
 import org.apache.xbean.classloader.NonLockingJarFileClassLoader;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.classgen.GeneratorContext;
+import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilationUnit.PrimaryClassNodeOperation;
 import org.codehaus.groovy.control.CompilationUnit.ProgressListener;
@@ -35,6 +38,8 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.customizers.ASTTransformationCustomizer;
+import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
@@ -275,6 +280,7 @@ public class GroovyParser {
 			// its probably grails!
 			// nothing up my sleeve, abracadabra!
 			this.groovyCompilationUnit.addPhaseOperation(new GrailsInjector(gcl), Phases.CANONICALIZATION);
+			addGrailsTestCompilerCustomizers(this.groovyCompilationUnit, gcl);
 			if (allowTransforms && gcl != null) {
 				this.groovyCompilationUnit.addPhaseOperation(new GrailsGlobalPluginAwareEntityInjector(gcl),
 						Phases.CANONICALIZATION);
@@ -285,6 +291,76 @@ public class GroovyParser {
 		this.resolver = new JDTResolver(groovyCompilationUnit);
 		// groovyCompilationUnit.setClassLoader(gcl);
 		groovyCompilationUnit.setResolveVisitor(resolver);
+	}
+
+	/**
+	 * Grails 2.0 adds automatic imports to classes in test/unit folder. See
+	 * org.codehaus.groovy.grails.test.compiler.GrailsTestCompiler and the _TestApp.groovy script.
+	 * 
+	 * @param groovyCompilationUnit2
+	 */
+	private void addGrailsTestCompilerCustomizers(CompilationUnit groovyCompilationUnit, GroovyClassLoader gcl) {
+		if (GroovySystem.getVersion().startsWith("1.8")) {
+			ImportCustomizer importCustomizer = new ImportCustomizer() {
+				@Override
+				public void call(SourceUnit source, GeneratorContext context, ClassNode classNode)
+						throws CompilationFailedException {
+					if (isGrailsUnitTest(source)) {
+						super.call(source, context, classNode);
+					}
+				}
+			};
+			importCustomizer.addStarImports("grails.test.mixin");
+			importCustomizer.addStarImports("org.junit");
+			importCustomizer.addStaticStars("org.junit.Assert");
+			groovyCompilationUnit.addPhaseOperation(importCustomizer, importCustomizer.getPhase().getPhaseNumber());
+
+// Grails 2.0 does the stuff below as well, but it doesn't really work for us because:
+//  - bug in ASTTransformationCustomizer: http://jira.codehaus.org/browse/GROOVY-5140
+//  - even if above bug is patched locally TestForTransformation won't actually do anything
+//       - the case where the annotation is present exlicitly already works
+//       - the case where it is not present never executes any code because the code
+//         relies on BuildSettings to find corresponding domain class, but BuildSettings isn't
+//         intialized properly in STS context.
+//  => The code below is presently deactivate since it really doesn't do anything unless both
+//     issues are somehow addressed first.
+			
+//			@SuppressWarnings("rawtypes")
+//			Class testForClass = null;
+//			try {
+//				testForClass = Class.forName("grails.test.mixin.TestFor", false, gcl);
+//				if (testForClass != null) {
+//					ASTTransformationCustomizer astTransformationCustomizer = new ASTTransformationCustomizer(testForClass) {
+//						@Override
+//						public void call(SourceUnit source, GeneratorContext context, ClassNode classNode)
+//								throws CompilationFailedException {
+//							if (isGrailsUnitTest(source)) {
+//								super.call(source, context, classNode);
+//							}
+//						}
+//					};
+//					groovyCompilationUnit.addPhaseOperation(astTransformationCustomizer, astTransformationCustomizer.getPhase()
+//							.getPhaseNumber());
+//				}
+//			} catch (ClassNotFoundException e) {
+//				//Somewhat expected... if there's some issue with the project's classpath or its not really a Grails 2.0 project
+//				//so silently ignore.
+//			} catch (Exception e) {
+//				e.printStackTrace(System.err);
+//			}
+		}
+	}
+
+	private static boolean isGrailsUnitTest(SourceUnit source) {
+		if (source instanceof EclipseSourceUnit) {
+			EclipseSourceUnit eclipseSource = (EclipseSourceUnit) source;
+			IFile file = eclipseSource.getEclipseFile();
+			if (file != null) {
+				IPath path = file.getProjectRelativePath();
+				return new Path("test/unit").isPrefixOf(path);
+			}
+		}
+		return false;
 	}
 
 	static class GrapeAwareGroovyClassLoader extends GroovyClassLoader {
