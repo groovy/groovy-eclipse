@@ -278,8 +278,25 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private void resolveOrFail(ClassNode type, String msg, ASTNode node) {
         if (resolve(type)) return;
         if (resolveToInner(type)) return;
-        addError("unable to resolve class " + type.getName() + " " + msg, node);
+        // GRECLIPSE:start
+        // was
+//        addError("unable to resolve class " + type.getName() + " " + msg, node);
+        //now
+        addError("unable to resolve class " + toNiceName(type) + " " + msg, node);
+        // GRECLIPSE:end
     }
+    
+    // GRECLIPSE:start
+    private String toNiceName(ClassNode node) {
+        if (node.isArray()) {
+        	StringBuilder sb = new StringBuilder();
+        	sb.append(toNiceName(node.getComponentType()));
+        	sb.append("[]");
+        	return sb.toString();
+        }
+    	return node.getName();
+    }
+    // GRECLIPSE:end
 
     private void resolveOrFail(ClassNode type, ASTNode node, boolean prefereImports) {
         resolveGenericsTypes(type.getGenericsTypes());
