@@ -311,6 +311,40 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				);
 	}	
     
+    public void testGreclipse719() {
+    	if (GroovyUtils.GROOVY_LEVEL < 18) {
+    		return;
+    	}
+		this.runNegativeTest(new String[] {
+			"MyDomainClass.groovy",
+			"int anInt = 10;\n"+
+			"def Method[] methodArray = anInt.class.methods;\n"+
+			"println methodArray.name;"},
+					"----------\n" + 
+					"1. ERROR in MyDomainClass.groovy (at line 2)\n" + 
+					"	def Method[] methodArray = anInt.class.methods;\n" + 
+					"	             ^\n" + 
+					"Groovy:unable to resolve class Method[] \n" + 
+					"----------\n");
+	}	
+    
+    public void testGreclipse719_2() {
+    	if (GroovyUtils.GROOVY_LEVEL < 18) {
+    		return;
+    	}
+		this.runNegativeTest(new String[] {
+			"MyDomainClass.groovy",
+			"int anInt = 10;\n"+
+			"def Method[][] methodMethodArray = anInt.class.methods;\n"+
+			"println methodArray.name;"},
+			"----------\n" + 
+					"1. ERROR in MyDomainClass.groovy (at line 2)\n" + 
+					"	def Method[][] methodMethodArray = anInt.class.methods;\n" + 
+					"	               ^\n" + 
+					"Groovy:unable to resolve class Method[][] \n" + 
+					"----------\n");
+	}	
+    
     public void testParsingRecovery_GRE1046_1() {
     	if (GroovyUtils.GROOVY_LEVEL < 18) {
     		return;
