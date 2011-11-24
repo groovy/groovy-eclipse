@@ -90,8 +90,9 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookup {
 			}
 		}
 		TypeAndDeclaration tAndD = null;
-		if (node instanceof ConstantExpression) {
-			tAndD = lookupTypeAndDeclaration(declaringType, ((ConstantExpression) node).getText(), scope);
+		if (node instanceof ConstantExpression && node.getText().length() == node.getLength()) {
+			// avoid constant expressions that are in strings
+			tAndD = lookupTypeAndDeclaration(declaringType, node.getText(), scope);
 		} else if (node instanceof VariableExpression) {
 			tAndD = lookupTypeAndDeclaration(declaringType, ((VariableExpression) node).getName(), scope);
 		}
