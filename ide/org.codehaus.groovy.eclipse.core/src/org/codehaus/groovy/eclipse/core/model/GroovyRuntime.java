@@ -249,8 +249,8 @@ public class GroovyRuntime {
     }
 
     /**
-     * Adds a classpath entry to a project
-     *
+     * Adds a classpath entry to the end of a project's the classpath
+     * 
      * @param project
      *            The project to add the entry to.
      * @param newEntry
@@ -261,6 +261,20 @@ public class GroovyRuntime {
             IClasspathEntry newEntry) throws JavaModelException {
         IClasspathEntry[] newEntries = (IClasspathEntry[]) ArrayUtils.add(
                 project.getRawClasspath(), newEntry);
+        project.setRawClasspath(newEntries, null);
+    }
+
+    /**
+     * Adds a classpath entry to the front of a project's the classpath
+     * 
+     * @param project
+     *            The project to add the entry to.
+     * @param newEntry
+     *            The entry to add.
+     * @throws JavaModelException
+     */
+    public static void addClassPathEntryToFront(IJavaProject project, IClasspathEntry newEntry) throws JavaModelException {
+        IClasspathEntry[] newEntries = (IClasspathEntry[]) ArrayUtils.add(project.getRawClasspath(), 0, newEntry);
         project.setRawClasspath(newEntries, null);
     }
 

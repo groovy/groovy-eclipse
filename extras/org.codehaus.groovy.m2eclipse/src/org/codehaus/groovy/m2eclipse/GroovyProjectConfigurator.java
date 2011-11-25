@@ -73,7 +73,7 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
             	IPath sourcePath = projectPath.append("src/main/groovy"); //$NON-NLS-1$
             	IPath sourceOutPath = projectPath.append("target/classes"); //$NON-NLS-1$
             	if (!hasEntry(javaProject, sourcePath)) {
-            		GroovyRuntime.addClassPathEntry(javaProject, JavaCore.newSourceEntry(sourcePath, new Path[0], sourceOutPath));
+            		GroovyRuntime.addClassPathEntryToFront(javaProject, JavaCore.newSourceEntry(sourcePath, new Path[0], sourceOutPath));
             	}
             }
 
@@ -81,7 +81,7 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
 	            IPath testPath = projectPath.append("src/test/groovy"); //$NON-NLS-1$
 	            IPath testOutPath = projectPath.append("target/test-classes"); //$NON-NLS-1$
 	            if (!hasEntry(javaProject, testPath)) {
-	                GroovyRuntime.addClassPathEntry(javaProject, JavaCore.newSourceEntry(testPath, new Path[0], testOutPath));
+	                GroovyRuntime.addClassPathEntryToFront(javaProject, JavaCore.newSourceEntry(testPath, new Path[0], testOutPath));
 	            }
             }
             
