@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.codeassist.completions;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
 
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -153,8 +152,7 @@ public class ParameterGuesserDelegate {
                 ICompletionProposal[] newProps = new ICompletionProposal[origLen + 1];
                 System.arraycopy(parameterProposals, 0, newProps, 0, origLen);
                 parameterProposals = newProps;
-                parameterProposals = Arrays.copyOf(parameterProposals, origLen + 1);
-                parameterProposals[origLen - 1] = proposal;
+                parameterProposals[origLen] = proposal;
             }
         }
         return parameterProposals;
