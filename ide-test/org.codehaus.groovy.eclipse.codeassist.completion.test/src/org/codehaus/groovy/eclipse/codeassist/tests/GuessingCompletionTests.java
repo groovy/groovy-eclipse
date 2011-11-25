@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
+ * Copyright (c) 2011 SpringSource and others.
  * All rights reserved. This program and the accompanying materials 
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,12 +11,10 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
-import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaGuessingCompletionProposal;
-import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
  * @author Andrew Eisenberg
- * @created Jul 23, 2009
+ * @created Sep 9, 2011
  *
  */
 public class GuessingCompletionTests extends CompletionTestCase {
@@ -30,7 +28,7 @@ public class GuessingCompletionTests extends CompletionTestCase {
         String contents = "String yyy\n" +
         		"def xxx(String x) { }\n" +
         		"xxx";
-        String[][] expectedChoices = new String[][] { new String[] { "yyy", "null" } };
+        String[][] expectedChoices = new String[][] { new String[] { "yyy", "\"\"" } };
         checkProposalChoices(contents, "xxx", "xxx(yyy)", expectedChoices);
     }
 
@@ -40,35 +38,28 @@ public class GuessingCompletionTests extends CompletionTestCase {
                 "int zzz\n" +
                 "def xxx(String x, int z) { }\n" +
                 "xxx";
-        String[][] expectedChoices = new String[][] { new String[] { "yyy", "null" }, new String[] { "zzz", "0" } };
+        String[][] expectedChoices = new String[][] { new String[] { "yyy", "\"\"" }, new String[] { "zzz", "0" } };
         checkProposalChoices(contents, "xxx", "xxx(yyy, zzz)", expectedChoices);
     }
     
     public void testParamGuessing3() throws Exception {
         String contents = 
                 "String yyy\n" +
-                        "Integer zzz\n" +
-                        "boolean aaa\n" +
-                        "def xxx(String x, int z, boolean a) { }\n" +
-                        "xxx";
-        String[][] expectedChoices = new String[][] { new String[] { "yyy", "null" }, new String[] { "zzz", "0" }, new String[] { "aaa", "false", "true" } };
+                "Integer zzz\n" +
+                "boolean aaa\n" +
+                "def xxx(String x, int z, boolean a) { }\n" +
+                "xxx";
+        String[][] expectedChoices = new String[][] { new String[] { "yyy", "\"\"" }, new String[] { "zzz", "0" }, new String[] { "aaa", "false", "true" } };
         checkProposalChoices(contents, "xxx", "xxx(yyy, zzz, aaa)", expectedChoices);
     }
-    
-    private void checkProposalChoices(String contents, String lookFor, String replacementString,
-            String[][] expectedChoices) throws Exception {
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, lookFor));
-        checkReplacementString(proposals, replacementString, 1);
-        ICompletionProposal proposal = findFirstProposal(proposals, lookFor, false);
-        GroovyJavaGuessingCompletionProposal guessingProposal = (GroovyJavaGuessingCompletionProposal) proposal;
-        guessingProposal.getReplacementString();  // instantiate the guesses.
-        ICompletionProposal[][] choices = guessingProposal.getChoices();
-        assertEquals(expectedChoices.length, choices.length);
-        for (int i = 0; i < expectedChoices.length; i++) {
-            assertEquals(expectedChoices[i].length, choices[i].length);
-            for (int j = 0; j < expectedChoices[i].length; j++) {
-                assertEquals("unexpected choice", expectedChoices[i][j], choices[i][j].getDisplayString());
-            }
-        }
+
+    public void testParamGuessing4() throws Exception {
+        String contents = 
+                "Closure yyy\n" +
+                "def zzz = { }\n" +
+                "def xxx(Closure c) { }\n" +
+                "xxx";
+        String[][] expectedChoices = new String[][] { new String[] { "yyy", "zzz", "{" } };
+        checkProposalChoices(contents, "xxx", "xxx yyy", expectedChoices);
     }
 }

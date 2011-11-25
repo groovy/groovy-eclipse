@@ -12,11 +12,8 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.codeassist.completions;
 
-import java.lang.reflect.Method;
-
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.CompletionContext;
 import org.eclipse.jdt.core.CompletionProposal;
@@ -30,7 +27,6 @@ import org.eclipse.jdt.internal.ui.javaeditor.EditorHighlightingSynchronizer;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal;
-import org.eclipse.jdt.internal.ui.text.java.ParameterGuesser;
 import org.eclipse.jdt.internal.ui.text.java.ParameterGuessingProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -62,8 +58,6 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
  * @created May 4, 2011
  */
 public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionProposal {
-
-    private static final String CLOSURE_TEXT = "{  }";
 
     /**
      * Creates a {@link ParameterGuessingProposal} or <code>null</code> if the
@@ -340,16 +334,19 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
                 nextTypeName = namedParameterNames[i - argCount];
             }
 
+            // handle the argument name
             if (proposalOptions.useNamedArguments || i >= argCount) {
                 buffer.append(nextName).append(":");
             }
 
-            // handle the argument name
+            // handle the value
             if (proposalOptions.useBracketsForClosures && Signature.getSimpleName(nextTypeName).equals("Closure")) {
                 // closure
                 Position position = fPositions[i];
-                position.setOffset(replacementOffset + buffer.length() + 2);
-                buffer.append(CLOSURE_TEXT);
+//                position.setOffset(CLOSURE_TEXT.length() - 2 + buffer.length());
+//                buffer.append(CLOSURE_TEXT);
+                position.setOffset(1 + buffer.length());
+                buffer.append("{");
                 position.setLength(0);
 
             } else {
@@ -388,12 +385,12 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         return buffer.toString();
     }
 
-    private boolean lastArgIsClosure(char[][] regularparameterTypes, char[][] namedParameterTypes) {
+    private boolean lastArgIsClosure(char[][] regularParameterTypes, char[][] namedParameterTypes) {
         char[] lastArgType;
         if (namedParameterTypes != null && namedParameterTypes.length > 0) {
             lastArgType = namedParameterTypes[namedParameterTypes.length - 1];
-        } else if (regularparameterTypes != null && regularparameterTypes.length > 0) {
-            lastArgType = regularparameterTypes[regularparameterTypes.length - 1];
+        } else if (regularParameterTypes != null && regularParameterTypes.length > 0) {
+            lastArgType = regularParameterTypes[regularParameterTypes.length - 1];
         } else {
             // no args
             return false;
@@ -446,15 +443,16 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
 
         String[] parameterTypes = getParameterTypes();
 
-        ParameterGuesser guesser = new ParameterGuesser(getEnclosingElement());
         IJavaElement[][] assignableElements = getAssignableElements();
 
         for (int i = count - 1; i >= 0; i--) {
             String paramName = new String(parameterNames[i]);
             Position position = new Position(0, 0);
 
-            ICompletionProposal[] argumentProposals = parameterProposals(guesser, parameterTypes[i], paramName, position,
-                    assignableElements[i]);
+            ICompletionProposal[] argumentProposals = new ParameterGuesserDelegate(getEnclosingElement()).parameterProposals(
+                    parameterTypes[i],
+                    paramName, position, assignableElements[i], fFillBestGuess);
+
             if (argumentProposals.length == 0)
                 argumentProposals = new ICompletionProposal[] { new JavaCompletionProposal(paramName, 0, paramName.length(), null,
                         paramName, 0) };
@@ -465,84 +463,6 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
 
         return fChoices;
     }
-
-    // unfortunately, the parameterProposals method has a different signature in
-    // 3.6 and 3.7.
-    // so must call using reflection
-    private ICompletionProposal[] parameterProposals(ParameterGuesser guesser, String parameterType, String paramName,
-            Position position, IJavaElement[] assignable) {
-        parameterType = convertToPrimitive(parameterType);
-
-        Method method = findParameterProposalsMethod();
-        try {
-            if (method.getParameterTypes().length == 5) {
-                // 3.6
-                return (ICompletionProposal[]) method.invoke(guesser, parameterType, paramName, position, assignable,
-                        fFillBestGuess);
-            } else {
-                // 3.7
-                return (ICompletionProposal[]) method.invoke(guesser, parameterType, paramName, position, assignable,
-                        fFillBestGuess, false);
-            }
-        } catch (Exception e) {
-            GroovyCore.logException("Exception trying to reflectively invoke 'parameterProposals' method.", e);
-            return new ICompletionProposal[0];
-        }
-
-    }
-
-    private String convertToPrimitive(String parameterType) {
-        if ("java.lang.Short".equals(parameterType)) { //$NON-NLS-1$
-            return "short";
-        }
-        if ("java.lang.Integer".equals(parameterType)) { //$NON-NLS-1$
-            return "int";
-        }
-        if ("java.lang.Long".equals(parameterType)) { //$NON-NLS-1$
-            return "long";
-        }
-        if ("java.lang.Float".equals(parameterType)) { //$NON-NLS-1$
-            return "float";
-        }
-        if ("java.lang.Double".equals(parameterType)) { //$NON-NLS-1$
-            return "double";
-        }
-        if ("java.lang.Character".equals(parameterType)) { //$NON-NLS-1$
-            return "char";
-        }
-        if ("java.lang.Byte".equals(parameterType)) { //$NON-NLS-1$
-            return "byte";
-        }
-        if ("java.lang.Boolean".equals(parameterType)) { //$NON-NLS-1$
-            return "boolean";
-        }
-        return parameterType;
-    }
-
-    private static Method parameterProposalsMethod;
-    private static Method findParameterProposalsMethod() {
-        if (parameterProposalsMethod == null) {
-            try {
-                // 3.6
-                parameterProposalsMethod = ParameterGuesser.class.getMethod("parameterProposals", String.class, String.class,
-                        Position.class, IJavaElement[].class, boolean.class);
-            } catch (SecurityException e) {
-                GroovyCore.logException("Exception trying to reflectively find 'parameterProposals' method.", e);
-            } catch (NoSuchMethodException e) {
-                // 3.7 RC4 or later
-                try {
-                    parameterProposalsMethod = ParameterGuesser.class.getMethod("parameterProposals", String.class, String.class,
-                            Position.class, IJavaElement[].class, boolean.class, boolean.class);
-                } catch (SecurityException e1) {
-                    GroovyCore.logException("Exception trying to reflectively find 'parameterProposals' method.", e1);
-                } catch (NoSuchMethodException e1) {
-                    GroovyCore.logException("Exception trying to reflectively find 'parameterProposals' method.", e1);
-                }
-            }
-        }
-        return parameterProposalsMethod;
-    }
-
 
     /*
      * @see ICompletionProposal#getSelection(IDocument)

@@ -17,7 +17,8 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext;
-import org.codehaus.groovy.eclipse.codeassist.proposals.NamedParameterProposal;
+import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaGuessingCompletionProposal;
+import org.codehaus.groovy.eclipse.codeassist.completions.NamedParameterProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
@@ -502,6 +503,23 @@ public abstract class CompletionTestCase extends BuilderTests {
         assertEquals(expectedChoices.length, choices.length);
         for (int i = 0; i < expectedChoices.length; i++) {
             assertEquals("unexpected choice", expectedChoices[i], choices[i].getDisplayString());
+        }
+    }
+    
+    protected void checkProposalChoices(String contents, String lookFor, String replacementString,
+            String[][] expectedChoices) throws Exception {
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, lookFor));
+        checkReplacementString(proposals, replacementString, 1);
+        ICompletionProposal proposal = findFirstProposal(proposals, lookFor, false);
+        GroovyJavaGuessingCompletionProposal guessingProposal = (GroovyJavaGuessingCompletionProposal) proposal;
+        guessingProposal.getReplacementString();  // instantiate the guesses.
+        ICompletionProposal[][] choices = guessingProposal.getChoices();
+        assertEquals(expectedChoices.length, choices.length);
+        for (int i = 0; i < expectedChoices.length; i++) {
+            assertEquals(expectedChoices[i].length, choices[i].length);
+            for (int j = 0; j < expectedChoices[i].length; j++) {
+                assertEquals("unexpected choice", expectedChoices[i][j], choices[i][j].getDisplayString());
+            }
         }
     }
     

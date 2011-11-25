@@ -24,8 +24,8 @@ import java.util.List;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.eclipse.codeassist.completions.NamedArgsMethodNode;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
-import org.codehaus.groovy.eclipse.codeassist.proposals.NamedArgsMethodNode;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
@@ -42,6 +42,7 @@ import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.internal.ui.viewsupport.ImageDescriptorRegistry;
 import org.eclipse.jdt.ui.text.java.CompletionProposalLabelProvider;
+import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.swt.graphics.Image;
 
@@ -54,8 +55,11 @@ public class ProposalUtils {
 
     public static final List<IGroovyProposal> NO_PROPOSALS = Collections.emptyList();
 
+    public static final ICompletionProposal[] NO_COMPLETIONS = new ICompletionProposal[0];
+
     private static final ImageDescriptorRegistry registry= JavaPlugin.getImageDescriptorRegistry();
     private static final CompletionProposalLabelProvider labelProvider = new CompletionProposalLabelProvider();
+
 
     public static char[] createTypeSignature(ClassNode node) {
         return createTypeSignatureStr(node).toCharArray();
@@ -274,5 +278,25 @@ public class ProposalUtils {
         }
         Collections.reverse(parts);
         return parts.toArray(new String[parts.size()]);
+    }
+    /**
+     * Create a name for a field if this is a getter or a setter method name
+     * @param methodName
+     * @return
+     */
+    public static String createMockFieldName(String methodName) {
+        int prefix = methodName.startsWith("is") ? 2 : 3;
+
+        return methodName.length() > prefix ? Character.toLowerCase(methodName.charAt(prefix)) + methodName.substring(prefix + 1)
+                : "$$$$$";
+    }
+    /**
+     * Create a name for a field if this is a getter or a setter method name The resulting name is
+     * capitalized
+     * @param methodName
+     * @return
+     */
+    public static String createCapitalMockFieldName(String methodName) {
+        return methodName.length() > 3 ? methodName.substring(3) : "$$$$$";
     }
 }

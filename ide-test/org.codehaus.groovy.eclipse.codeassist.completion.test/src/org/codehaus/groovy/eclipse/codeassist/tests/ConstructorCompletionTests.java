@@ -48,21 +48,21 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         }
     }
     
-    // Disabled...failing on build server
+    // FIXADE Disabled...failing on build server
     public void _testConstructorCompletion1() throws Exception {
         String contents = "package f\n\nclass YY { YY() { } }\nnew Y\nkkk";
         String expected = "package f\n\nclass YY { YY() { } }\nnew YY()\nkkk";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new Y"), "YY");
     }
     
-    // Disabled...failing on build server
+    // FIXADE Disabled...failing on build server
     public void _testConstructorCompletion2() throws Exception {
         String contents = "package f\n\nclass YY { YY(x) { } }\nnew Y\nkkk";
         String expected = "package f\n\nclass YY { YY(x) { } }\nnew YY(x)\nkkk";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new Y"), "YY");
     }
     
-    // Disabled...failing on build server
+    // FIXADE Disabled...failing on build server
     public void _testConstructorCompletion3() throws Exception {
         String contents = "package f\n\nclass YY { YY(x, y) { } }\nnew Y\nkkk";
         String expected = "package f\n\nclass YY { YY(x, y) { } }\nnew YY(x, y)\nkkk";
@@ -317,8 +317,6 @@ public class ConstructorCompletionTests extends CompletionTestCase {
                 "Integer yyy\n" +
                 "boolean zzz\n" +
                 "new Flar()";
-        // FIXADE should have better parameter guessing support
-//        String[] expectedChoices = new String[] { "yyy", "0", "null" };
         String[] expectedChoices = new String[] { "yyy", "0" };
         checkProposalChoices(contents, "Flar(", "bbb", "bbb: __, ", expectedChoices);
     }
@@ -336,10 +334,43 @@ public class ConstructorCompletionTests extends CompletionTestCase {
                 "int yyy\n" +
                 "boolean zzz\n" +
                 "new Flar()";
-        // FIXADE should have better parameter guessing support
-//      String[] expectedChoices = new String[] { "yyy", "0", "null" };
       String[] expectedChoices = new String[] { "yyy", "0" };
         checkProposalChoices(contents, "Flar(", "bbb", "bbb: __, ", expectedChoices);
     }
 
+    public void testParamGuessing6() throws Exception {
+        create("p", "Flar",
+                "package p\n" +
+                "class Flar {\n" +
+                "  String aaa\n" +
+                "  Integer bbb\n" +
+                "  Date ccc\n" +
+                "}\n");
+        String contents = 
+                "import p.Flar\n" +
+                "String xxx\n" +
+                "int yyy\n" +
+                "boolean zzz\n" +
+                "new Flar()";
+        String[] expectedChoices = new String[] { "xxx", "\"\"" };
+        checkProposalChoices(contents, "Flar(", "aaa", "aaa: __, ", expectedChoices);
+    }
+    
+    public void testParamGuessing7() throws Exception {
+        create("p", "Flar",
+                "package p\n" +
+                "class Flar {\n" +
+                "  Closure aaa\n" +
+                "  Integer bbb\n" +
+                "  Date ccc\n" +
+                "}\n");
+        String contents = 
+                "import p.Flar\n" +
+                "Closure xxx\n" +
+                "int yyy\n" +
+                "boolean zzz\n" +
+                "new Flar()";
+        String[] expectedChoices = new String[] { "xxx", "{" };
+        checkProposalChoices(contents, "Flar(", "aaa", "aaa: __, ", expectedChoices);
+    }
 }

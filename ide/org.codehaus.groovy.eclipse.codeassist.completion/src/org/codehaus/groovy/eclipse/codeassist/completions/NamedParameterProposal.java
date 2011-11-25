@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.codeassist.proposals;
+package org.codehaus.groovy.eclipse.codeassist.completions;
 
-import java.lang.reflect.Method;
-
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.jdt.core.CompletionContext;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
@@ -26,7 +23,6 @@ import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorHighlightingSynchronizer;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
-import org.eclipse.jdt.internal.ui.text.java.ParameterGuesser;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.BadLocationException;
@@ -60,9 +56,6 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
  */
 public class NamedParameterProposal extends JavaCompletionProposal {
 
-    /**
-     * 
-     */
     private static final ICompletionProposal[] NO_COMPLETIONS = new ICompletionProposal[0];
 
     private IRegion selectedRegion;
@@ -137,11 +130,10 @@ public class NamedParameterProposal extends JavaCompletionProposal {
             return NO_COMPLETIONS;
         }
         String type = Signature.toString(paramSignature);
-        ParameterGuesser guesser = new ParameterGuesser(getEnclosingElement());
         IJavaElement[] assignableElements = getAssignableElements();
         Position position = new Position(selectedRegion.getOffset(), selectedRegion.getLength());
-        ICompletionProposal[] argumentProposals = parameterProposals(guesser, type, paramName, position,
-                assignableElements);
+        ICompletionProposal[] argumentProposals = new ParameterGuesserDelegate(getEnclosingElement()).parameterProposals(type,
+                paramName, position, assignableElements, tryParamGuessing);
         if (argumentProposals.length == 0) {
             argumentProposals = new ICompletionProposal[] { new JavaCompletionProposal(paramName, 0, paramName.length(), null,
                     paramName, 0) };
@@ -150,54 +142,6 @@ public class NamedParameterProposal extends JavaCompletionProposal {
         return choices = argumentProposals;
     }
 
-    // unfortunately, the parameterProposals method has a different
-    // signature in
-    // 3.6 and 3.7.
-    // so must call using reflection
-    private ICompletionProposal[] parameterProposals(ParameterGuesser guesser, String parameterType, String paramName,
-            Position position, IJavaElement[] assignable) {
-
-        Method method = findParameterProposalsMethod();
-        try {
-            if (method.getParameterTypes().length == 5) {
-                // 3.6
-                return (ICompletionProposal[]) method.invoke(guesser, parameterType, paramName, position, assignable, true);
-            } else {
-                // 3.7
-                return (ICompletionProposal[]) method.invoke(guesser, parameterType, paramName, position, assignable, true,
-                        false);
-            }
-        } catch (Exception e) {
-            GroovyCore.logException("Exception trying to reflectively invoke 'parameterProposals' method.", e);
-            return NO_COMPLETIONS;
-        }
-
-    }
-
-    private static Method parameterProposalsMethod;
-
-    private static Method findParameterProposalsMethod() {
-        if (parameterProposalsMethod == null) {
-            try {
-                // 3.6
-                parameterProposalsMethod = ParameterGuesser.class.getMethod("parameterProposals", String.class, String.class,
-                        Position.class, IJavaElement[].class, boolean.class);
-            } catch (SecurityException e) {
-                GroovyCore.logException("Exception trying to reflectively find 'parameterProposals' method.", e);
-            } catch (NoSuchMethodException e) {
-                // 3.7 RC4 or later
-                try {
-                    parameterProposalsMethod = ParameterGuesser.class.getMethod("parameterProposals", String.class,
-                            String.class, Position.class, IJavaElement[].class, boolean.class, boolean.class);
-                } catch (SecurityException e1) {
-                    GroovyCore.logException("Exception trying to reflectively find 'parameterProposals' method.", e1);
-                } catch (NoSuchMethodException e1) {
-                    GroovyCore.logException("Exception trying to reflectively find 'parameterProposals' method.", e1);
-                }
-            }
-        }
-        return parameterProposalsMethod;
-    }
 
     private IJavaElement getEnclosingElement() {
         return coreContext.getEnclosingElement();

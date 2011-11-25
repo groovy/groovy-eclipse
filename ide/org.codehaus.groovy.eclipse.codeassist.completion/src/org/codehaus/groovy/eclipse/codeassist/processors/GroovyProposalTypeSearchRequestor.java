@@ -726,7 +726,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
                                     Parameter[] parameters = constructor.getParameters();
                                     if (constructor.getStart() <= 0 && (parameters == null || parameters.length == 0)) {
                                         for (PropertyNode prop : resolved.getProperties()) {
-                                            if (!usedParams.contains(prop.getName())) {
+                                            if (!prop.getName().equals("metaClass") && !usedParams.contains(prop.getName())) {
                                                 GroovyNamedArgumentProposal namedProp = new GroovyNamedArgumentProposal(prop.getName(),
                                                         prop.getType(), null, null);
                                                 proposals.add(namedProp.createJavaProposal(context, javaContext));

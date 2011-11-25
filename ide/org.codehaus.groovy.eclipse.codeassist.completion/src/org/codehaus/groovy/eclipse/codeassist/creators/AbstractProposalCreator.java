@@ -90,13 +90,13 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
      * @param methodName method to check for
      */
     protected boolean hasNoField(ClassNode declaringClass, String methodName) {
-        return declaringClass.getField(createMockFieldName(methodName)) == null
+        return declaringClass.getField(ProposalUtils.createMockFieldName(methodName)) == null
                 && declaringClass
-                        .getField(createCapitalMockFieldName(methodName)) == null;
+                        .getField(ProposalUtils.createCapitalMockFieldName(methodName)) == null;
     }
 
     protected FieldNode createMockField(MethodNode method) {
-        FieldNode field = new FieldNode(createMockFieldName(method.getName()),
+        FieldNode field = new FieldNode(ProposalUtils.createMockFieldName(method.getName()),
                 method.getModifiers(), method.getReturnType(),
                 method.getDeclaringClass(), null);
         field.setDeclaringClass(method.getDeclaringClass());
@@ -118,32 +118,10 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
             }
         }
         if (isGetterName) {
-            String newName = createMockFieldName(methodName);
+            String newName = ProposalUtils.createMockFieldName(methodName);
             return ProposalUtils.looselyMatches(prefix, newName);
         } else {
             return false;
         }
-    }
-
-    /**
-     * Create a name for a field if this is a getter or a setter method name
-     * @param methodName
-     * @return
-     */
-    protected String createMockFieldName(String methodName) {
-        int prefix = methodName.startsWith("is") ? 2 : 3;
-
-        return methodName.length() > prefix ? Character.toLowerCase(methodName.charAt(prefix)) + methodName.substring(prefix + 1)
-                : "$$$$$";
-    }
-
-    /**
-     * Create a name for a field if this is a getter or a setter method name The resulting name is
-     * capitalized
-     * @param methodName
-     * @return
-     */
-    protected String createCapitalMockFieldName(String methodName) {
-        return methodName.length() > 3 ? methodName.substring(3) : "$$$$$";
     }
 }

@@ -23,10 +23,12 @@ import java.util.Map.Entry;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaModelException;
@@ -35,6 +37,8 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.codeassist.InternalExtendedCompletionContext;
+import org.eclipse.jdt.internal.core.JavaElement;
+import org.eclipse.jdt.internal.core.SourceField;
 
 /**
  *
@@ -42,6 +46,39 @@ import org.eclipse.jdt.internal.codeassist.InternalExtendedCompletionContext;
  * @created May 3, 2011
  */
 public class GroovyExtendedCompletionContext extends InternalExtendedCompletionContext {
+
+    /**
+     *
+     * @author andrew
+     * @created Nov 23, 2011
+     */
+    class PropertyVariant extends SourceField implements IField {
+        private final IMethod baseMethod;
+
+        PropertyVariant(IMethod method) {
+            super((JavaElement) method.getParent(), toFieldName(method));
+            baseMethod = method;
+        }
+
+        @Override
+        public boolean exists() {
+            return true;
+        }
+
+        @Override
+        public String getTypeSignature() throws JavaModelException {
+            return baseMethod.getReturnType();
+        }
+
+        @Override
+        public int getFlags() throws JavaModelException {
+            return baseMethod.getFlags();
+        }
+    }
+
+    private static String toFieldName(IMethod method) {
+        return ProposalUtils.createMockFieldName(method.getElementName());
+    }
 
     private static final IJavaElement[] NO_ELEMENTS = new IJavaElement[0];
 
@@ -104,19 +141,22 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
             // don't put elements in a second time since we are moving from
             // inner scope to outer scope
             String varName = entry.getKey();
-            if (!varName.equals("super") && !nameElementMap.containsKey(varName)) {
+            // ignore synthetic getters and setters that are put in the scope.
+            // looking at prefix is a good approximation
+            if (!varName.startsWith("get") && !varName.startsWith("set") && !varName.equals("super")
+                    && !nameElementMap.containsKey(varName)) {
                 ClassNode type = entry.getValue().type;
                 if (isAssignableTo(type, targetType, isInterface)) {
                     // note that parent, start location, and typeSignature are
                     // not important here
                     nameElementMap.put(varName,
-                            ReflectionUtils.createLocalVariable(enclosingElement, varName, 0, typeSignature));
+                            ReflectionUtils.createLocalVariable(getEnclosingElement(), varName, 0, typeSignature));
                 }
             }
         }
 
         // now check fields
-        IType enclosingType = (IType) enclosingElement.getAncestor(IJavaElement.TYPE);
+        IType enclosingType = (IType) getEnclosingElement().getAncestor(IJavaElement.TYPE);
         if (enclosingType != null) {
             try {
                 addFields(targetType, isInterface, nameElementMap, enclosingType);
@@ -142,6 +182,18 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
             }
         }
         // also add methods
+        IMethod[] methods = type.getMethods();
+        for (IMethod method : methods) {
+            ClassNode methodReturnTypeClassNode = toClassNode(method.getReturnType());
+            if (isAssignableTo(methodReturnTypeClassNode, targetType, isInterface)) {
+                if ((method.getParameterTypes() == null || method.getParameterTypes().length == 0)
+                        && (method.getElementName().startsWith("get") || method.getElementName().startsWith("is"))) {
+                    nameElementMap.put(method.getElementName(), method);
+                    IField field = new PropertyVariant(method);
+                    nameElementMap.put(field.getElementName(), field);
+                }
+            }
+        }
     }
 
     /**
