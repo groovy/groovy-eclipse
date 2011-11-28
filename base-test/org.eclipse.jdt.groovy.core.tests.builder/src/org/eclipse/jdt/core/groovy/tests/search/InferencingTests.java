@@ -904,4 +904,66 @@ public class InferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf("x");
         assertType(contents, start, start+"x".length(), "java.lang.Integer");
     }
+    
+    // GRECLIPSE-1264
+    public void testImplicitVar1() throws Exception {
+        String contents = "class SettingUndeclaredProperty {\n" + 
+        		"    public void mymethod() {\n" + 
+        		"        doesNotExist = \"abc\"\n" + 
+        		"    }\n" + 
+        		"}";
+        int start = contents.lastIndexOf("doesNotExist");
+        assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "SettingUndeclaredProperty", false);
+    }
+    // GRECLIPSE-1264
+    public void testImplicitVar2() throws Exception {
+        String contents = "class SettingUndeclaredProperty {\n" + 
+                "     def r = {\n" + 
+                "        doesNotExist = 0\n" + 
+                "    }\n" + 
+                "}";
+        int start = contents.lastIndexOf("doesNotExist");
+        assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "SettingUndeclaredProperty", false);
+    }
+    // GRECLIPSE-1264
+    public void testImplicitVar3() throws Exception {
+        String contents = 
+                "doesNotExist";
+        int start = contents.lastIndexOf("doesNotExist");
+        assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "Search", false);
+    }
+    // GRECLIPSE-1264
+    public void testImplicitVar4() throws Exception {
+        String contents = 
+                "doesNotExist = 9";
+        int start = contents.lastIndexOf("doesNotExist");
+        assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
+    }
+    // GRECLIPSE-1264
+    public void testImplicitVar5() throws Exception {
+        String contents = 
+                "doesNotExist = 9\n" +
+                "def x = {doesNotExist }";
+        int start = contents.lastIndexOf("doesNotExist");
+        assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
+    }
+    // GRECLIPSE-1264
+    public void testImplicitVar6() throws Exception {
+        String contents = 
+                "" +
+                "def x = {\n" +
+                "doesNotExist = 9\n" +
+                "doesNotExist }";
+        int start = contents.lastIndexOf("doesNotExist");
+        assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
+    }
+    // GRECLIPSE-1264
+    public void testImplicitVar7() throws Exception {
+        String contents = 
+                "def z() {\n" + 
+                "    doesNotExist = 9\n" + 
+                "}\n";
+        int start = contents.lastIndexOf("doesNotExist");
+        assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "Search", false);
+    }
 }

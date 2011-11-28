@@ -177,6 +177,11 @@ public class VariableScope {
 		 * Node currently being evaluated, or null if none
 		 */
 		final Stack<ASTNode> nodeStack = new Stack<ASTNode>();
+
+		/**
+		 * true iff current scope is implicit run method of script
+		 */
+		boolean isRunMethod;
 	}
 
 	public static ClassNode NO_CATEGORY = null;
@@ -220,6 +225,14 @@ public class VariableScope {
 			this.shared = parent.shared;
 		} else {
 			this.shared = new SharedState();
+		}
+
+		// keep track of whether or not in a script body
+		// also, try not to recalculate each time.
+		if (enclosingNode instanceof MethodNode) {
+			this.shared.isRunMethod = ((MethodNode) enclosingNode).isScriptBody();
+		} else if (enclosingNode instanceof FieldNode || enclosingNode instanceof ClassNode) {
+			this.shared.isRunMethod = false;
 		}
 
 		// this scope is considered static if in a static method, or
@@ -448,6 +461,18 @@ public class VariableScope {
 		if (!internalUpdateVariable(name, type, declaringType)) {
 			addVariable(name, type, declaringType);
 		}
+	}
+
+	/**
+	 * Updates the identifier if it exists in this scope or a parent scope. Otherwise does nothing
+	 * 
+	 * @param name identifier to update
+	 * @param type type of identifier
+	 * @param declaringType declaring type of identifier
+	 * @return true iff the variable exists in scope and was updated
+	 */
+	public boolean updateVariable(String name, ClassNode type, ClassNode declaringType) {
+		return internalUpdateVariable(name, type, declaringType);
 	}
 
 	/**
@@ -903,5 +928,12 @@ public class VariableScope {
 
 		// else assume collection of size 1 (itself)
 		return collectionType;
+	}
+
+	/**
+	 * @return true iff the current scope is the implicit run method of a script
+	 */
+	public boolean inScriptRunMethod() {
+		return shared.isRunMethod;
 	}
 }

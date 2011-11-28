@@ -99,7 +99,15 @@ public class InferenceByAssignmentStatement implements ITypeLookup {
 					VariableExpression var = (VariableExpression) assign.getLeftExpression();
 					ClassNode declaringType = findDeclaringType(var);
 
-					scope.updateOrAddVariable(var.getName(), objectExpressionType, declaringType);
+					// two situations here: inside of scripts, we can set variables that are not explicitly
+					// declared, so in this case, we updateOrAdd, but in a regular type, if the
+					// variable is not already there, we only update (and underline otherwise)
+					if (scope.inScriptRunMethod()) {
+						scope.updateOrAddVariable(var.getName(), objectExpressionType, declaringType);
+					} else {
+						scope.updateVariable(var.getName(), objectExpressionType, declaringType);
+					}
+
 					return new TypeLookupResult(objectExpressionType, declaringType, assign.getLeftExpression(),
 							TypeConfidence.INFERRED, scope);
 				} else if (assign.getLeftExpression() instanceof TupleExpression) {
