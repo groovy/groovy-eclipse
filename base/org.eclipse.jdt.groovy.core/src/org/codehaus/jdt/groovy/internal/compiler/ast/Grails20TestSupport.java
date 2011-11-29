@@ -58,7 +58,7 @@ public class Grails20TestSupport {
 	 */
 	public void addGrailsTestCompilerCustomizers(CompilationUnit groovyCompilationUnit) {
 		if (GroovySystem.getVersion().startsWith("1.8")) {
-			//The assumption is that only Grails 2.0 projects will be affected, because 1.3.7 projects require 1.7 compiler.
+			// The assumption is that only Grails 2.0 projects will be affected, because 1.3.7 projects require 1.7 compiler.
 			ImportCustomizer importCustomizer = new ImportCustomizer() {
 				@Override
 				public void call(SourceUnit source, GeneratorContext context, ClassNode classNode)
@@ -91,6 +91,10 @@ public class Grails20TestSupport {
 							.getPhaseNumber());
 					ensureGrailsBuildSettings();
 				}
+			} catch (LinkageError e) {
+				// Somewhat expected... if there's some issue with the project's classpath or its not really a Grails 2.0 project
+				// so silently ignore.
+				// e.printStackTrace();
 			} catch (ClassNotFoundException e) {
 				// Somewhat expected... if there's some issue with the project's classpath or its not really a Grails 2.0 project
 				// so silently ignore.
@@ -110,7 +114,6 @@ public class Grails20TestSupport {
 			String projectName = options.groovyProjectName;
 			if (projectName != null) {
 				Class buildSettingsHolder = gcl.loadClass(GRAILS_UTIL_BUILD_SETTINGS_HOLDER);
-				System.out.println("BuildSettingHolder classloader = " + buildSettingsHolder.getClassLoader());
 				Object buildSettings = getBuildSettings(buildSettingsHolder);
 				if (buildSettings == null) {
 					buildSettings = createBuildSettings();
