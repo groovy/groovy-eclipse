@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.groovy.search;
 
+import groovy.lang.GroovyObjectSupport;
 import groovy.lang.Tuple;
 
 import java.io.BufferedReader;
@@ -95,6 +96,7 @@ public class VariableScope {
 	public static final ClassNode BUFFERED_WRITER_CLASS_NODE = ClassHelper.make(BufferedWriter.class);
 	public static final ClassNode PRINT_WRITER_CLASS_NODE = ClassHelper.make(PrintWriter.class);
 	public static final ClassNode CLOSURE_CLASS = ClassHelper.CLOSURE_TYPE;
+	public static final ClassNode GROOVY_OBJECT_SUPPORT = ClassHelper.make(GroovyObjectSupport.class);
 
 	// standard category classes
 	public static final ClassNode DGM_CLASS_NODE = ClassHelper.make(DefaultGroovyMethods.class);
