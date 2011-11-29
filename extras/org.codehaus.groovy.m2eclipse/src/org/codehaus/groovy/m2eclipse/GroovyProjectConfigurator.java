@@ -69,6 +69,14 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
             IJavaProject javaProject = JavaCore.create(facade.getProject());
             IPath projectPath = facade.getFullPath();
 
+            if (sourceType == SourceType.TEST || sourceType == SourceType.BOTH) {
+                IPath testPath = projectPath.append("src/test/groovy"); //$NON-NLS-1$
+                IPath testOutPath = projectPath.append("target/test-classes"); //$NON-NLS-1$
+                if (!hasEntry(javaProject, testPath)) {
+                    GroovyRuntime.addClassPathEntryToFront(javaProject, JavaCore.newSourceEntry(testPath, new Path[0], testOutPath));
+                }
+            }
+            
             if (sourceType == SourceType.MAIN || sourceType == SourceType.BOTH) {
             	IPath sourcePath = projectPath.append("src/main/groovy"); //$NON-NLS-1$
             	IPath sourceOutPath = projectPath.append("target/classes"); //$NON-NLS-1$
@@ -77,14 +85,6 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
             	}
             }
 
-            if (sourceType == SourceType.TEST || sourceType == SourceType.BOTH) {
-	            IPath testPath = projectPath.append("src/test/groovy"); //$NON-NLS-1$
-	            IPath testOutPath = projectPath.append("target/test-classes"); //$NON-NLS-1$
-	            if (!hasEntry(javaProject, testPath)) {
-	                GroovyRuntime.addClassPathEntryToFront(javaProject, JavaCore.newSourceEntry(testPath, new Path[0], testOutPath));
-	            }
-            }
-            
             // now remove the generated sources from the classpath if it exists
             IClasspathEntry[] allEntries = javaProject.getRawClasspath();
             for (IClasspathEntry entry : allEntries) {
