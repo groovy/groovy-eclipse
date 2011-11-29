@@ -16,12 +16,27 @@
 
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import junit.framework.Test;
 
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.IJavaSearchScope;
+import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
+import org.eclipse.jdt.core.search.SearchParticipant;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.SearchRequestor;
 
 /**
  * @author Andrew Eisenberg
@@ -31,7 +46,6 @@ import org.eclipse.jdt.core.search.SearchMatch;
  */
 public class TypeReferenceSearchTests extends AbstractGroovySearchTest {
     
-	
     public TypeReferenceSearchTests(String name) {
         super(name);
     }
@@ -135,6 +149,75 @@ public class TypeReferenceSearchTests extends AbstractGroovySearchTest {
         assertEquals("Invalid location", "First", secondContents.substring(start, end));
     }
     
+    /**
+     * Tests whether queries looking for some type declaration with a name pattern like '*Tests' works
+     * correctly.
+     * 
+     * @throws Exception
+     */
+    public void testFindClassDeclarationWithPattern() throws Exception {
+    	//Code in here directly inspired and mostly copied from 
+    	//com.springsource.sts.grails.core.junit.Grails20AwareTestFinder
+    	//Specifically exercises the exact kind of searching behavior needed to find
+    	//Grails 2.0 tests that do *not* have @TestFor annotations.
+    	
+		int matchRule= SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE;
+		SearchPattern testPattern= SearchPattern.createPattern("*Tests", IJavaSearchConstants.TYPE, IJavaSearchConstants.DECLARATIONS, matchRule);
+        GroovyCompilationUnit songTests = createUnit("gtunes", "SongTests", 
+        		"package gtunes\n" +
+        		"\n" +
+        		"class SongTests {" +
+        		"    def testSomething() {\n" +
+        		"       println 'testing'\n" +
+        		"    }\n" +
+        		"}");
+        GroovyCompilationUnit weirdTests = createUnit("gtunes", "Songtests", 
+        		"package gtunes\n" +
+        		"\n" +
+        		"class Songtests {" +
+        		"    SongTests theOtherTests\n"+ //Shouldn't find
+        		"    def testSomethingElse() {\n" +
+        		"       println 'testing'\n" +
+        		"    }\n" +
+        		"}");
+        GroovyCompilationUnit artistTests = createUnit("gtunes", "ArtistTests", 
+        		"package gtunes\n" +
+        		"\n" +
+        		"class ArtistTests {" +
+        		"    def testSomething() {\n" +
+        		"       println 'testing'\n" +
+        		"    }\n" +
+        		"}");
+        IJavaProject javaProject = JavaCore.create(project);
+        IType songTestsType = javaProject.findType("gtunes.SongTests");
+        assertNotNull(songTestsType);
+        IType artistTestsType = javaProject.findType("gtunes.ArtistTests");
+        assertNotNull(artistTestsType);
+        
+		SearchParticipant[] searchParticipants = new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() };
+		
+		final ArrayList<Object> result = new ArrayList<Object>();
+		IJavaSearchScope scope= SearchEngine.createJavaSearchScope(
+				new IJavaElement[] { songTests, weirdTests, artistTests}, 
+				IJavaSearchScope.SOURCES);
+		
+		SearchRequestor requestor= new SearchRequestor() {
+			@Override
+			public void acceptSearchMatch(SearchMatch match) throws CoreException {
+				Object element= match.getElement();
+				result.add(element);
+			}
+		};
+		new SearchEngine().search(testPattern, searchParticipants, scope, requestor, new NullProgressMonitor());
+
+		assertEquals("Number of results found", 2, result.size());
+		
+		assertElements(new HashSet<Object>(result),
+				//Expecteds:
+				songTestsType, 
+				artistTestsType);
+    }
+        
     /**
      * GRECLIPSE-628
      */

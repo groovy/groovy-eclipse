@@ -12,8 +12,10 @@ package org.eclipse.jdt.core.tests.builder;
 
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 
 import org.eclipse.core.resources.IMarker;
@@ -566,6 +568,24 @@ public class BuilderTests extends TestCase {
 			Arrays.sort(allProblems);
 		}
 		return allProblems;
+	}
+
+	public static void assertElements(Set<Object> actualSet, Object... expecteds) {
+		HashSet<Object> expectedSet = new HashSet<Object>(Arrays.asList(expecteds));
+		StringBuilder msg = new StringBuilder();
+		for (Object expected : expectedSet) {
+			if (!actualSet.contains(expected)) {
+				msg.append("Expected but not found: "+expected+"\n");
+			}
+		}
+		for (Object actual : actualSet) {
+			if (!expectedSet.contains(actual)) {
+				msg.append("Found but not expected: "+actual+"\n");
+			}
+		}
+		if (!"".equals(msg.toString())) {
+			fail(msg.toString());
+		}
 	}
 
 }

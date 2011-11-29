@@ -35,16 +35,18 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class TypeDeclarationSearchRequestor implements ITypeRequestor, IIndexConstants {
 
-	private final String simpleName;
+	private final char[] simpleNamePattern;
 	private final char typeSuffix;
 
 	private final SearchRequestor requestor;
 	private final SearchParticipant participant;
+	private TypeDeclarationPattern pattern;
 
 	// no need to search pattern because by the time we get here, the pattern has been checked.
 	public TypeDeclarationSearchRequestor(TypeDeclarationPattern pattern, SearchRequestor requestor, SearchParticipant participant) {
-		simpleName = new String(pattern.simpleName);
-		typeSuffix = pattern.typeSuffix;
+		this.pattern = pattern;
+		this.simpleNamePattern = pattern.simpleName;
+		this.typeSuffix = pattern.typeSuffix;
 		this.requestor = requestor;
 		this.participant = participant;
 	}
@@ -53,8 +55,10 @@ public class TypeDeclarationSearchRequestor implements ITypeRequestor, IIndexCon
 		if (node instanceof ClassNode) {
 			ClassNode orig = (ClassNode) node;
 			ClassNode redirect = orig.redirect();
+			// 1) We don't want to find references to Scripts, (their name will be empty)
+			// 2) if orig==redirect means that this ClassNode is a declaration (otherwise its a reference).
 			if (redirect.getNameEnd() > 0 && orig == redirect) {
-				if (orig.getNameWithoutPackage().equalsIgnoreCase(simpleName)) {
+				if (pattern.matchesName(simpleNamePattern, orig.getNameWithoutPackage().toCharArray())) {
 					boolean matchFound;
 					switch (typeSuffix) {
 						case CLASS_SUFFIX:
