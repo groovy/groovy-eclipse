@@ -247,4 +247,24 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
         this.original = original;
     }
     // GRECLIPSE: end
+    
+    // GRECLIPSE: start
+    // backported from 1.8 branch
+    /**
+     * @return true if this method is the run method from a script
+     */
+    public boolean isScriptBody() {
+        return getDeclaringClass() != null &&
+                getDeclaringClass().isScript() &&
+                getName().equals("run") &&
+                // GRECLIPSE: start
+                /*was{
+                getColumnNumber() == -1;
+                }*/
+                // now:
+                (parameters==null || parameters.length==0) &&
+                (returnType!=null && returnType.getName().equals("java.lang.Object"));
+                // GRECLIPSE: end
+    }
+    // GRECLIPSE: end
 }
