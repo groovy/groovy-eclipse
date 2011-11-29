@@ -75,6 +75,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             sb.append("Found: " + printTypeName(requestor.result.type) + "\n");
             sb.append("Declaring type: " + printTypeName(requestor.result.declaringType) + "\n");
             sb.append("ASTNode: " + requestor.node + "\n");
+            sb.append("Confidence: " + requestor.result.confidence + "\n");
             fail(sb.toString());
         }
         
@@ -84,6 +85,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             sb.append("Expected doc should contain: " + extraDocSnippet + "\n");
             sb.append("Found: " + requestor.result.extraDoc + "\n");
             sb.append("ASTNode: " + requestor.node + "\n");
+            sb.append("Confidence: " + requestor.result.confidence + "\n");
             fail(sb.toString());
         }
         

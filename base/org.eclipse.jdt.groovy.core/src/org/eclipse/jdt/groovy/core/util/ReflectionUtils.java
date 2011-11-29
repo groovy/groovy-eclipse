@@ -103,13 +103,6 @@ public class ReflectionUtils {
 	/**
 	 * The signature for the {@link LocalVariable} constructor has changed between 3.6 and 3.7. Use this method to generate a
 	 * {@link LocalVariable} regardless of which Eclipse version being used.
-	 * 
-	 * @param offsetInParent
-	 * @param start
-	 * @param className
-	 * @param varName
-	 * @param unit
-	 * @return
 	 */
 	public static LocalVariable createLocalVariable(IJavaElement parent, String varName, int start, String returnTypeSignature) {
 		// 3.7 version - two extra trailing parameters:

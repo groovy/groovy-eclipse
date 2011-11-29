@@ -462,7 +462,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         createDsls("contribute(currentType('Flart')) { method name: \"testme\", type: boolean }");
         String contents = "class Flart { }\n" +
                 "static ahem() {\n" +
-                "  Foo.testme" +
+                "  Flart.testme" +
                 "}";
         int start = contents.lastIndexOf("testme");
         int end = start + "testme".length();
