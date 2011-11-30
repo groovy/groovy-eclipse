@@ -159,7 +159,7 @@ public class Grails20TestSupport {
 	}
 
 	@SuppressWarnings("rawtypes")
-	private static void setBuildSettings(Class buildSettingsHolder, Object buildSettings) throws SecurityException,
+	private static synchronized void setBuildSettings(Class buildSettingsHolder, Object buildSettings) throws SecurityException,
 			NoSuchMethodException, ClassNotFoundException, IllegalArgumentException, IllegalAccessException,
 			InvocationTargetException {
 		Method m = buildSettingsHolder.getMethod("setSettings",
