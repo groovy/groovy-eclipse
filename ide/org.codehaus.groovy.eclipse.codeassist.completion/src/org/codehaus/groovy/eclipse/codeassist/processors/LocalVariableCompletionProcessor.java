@@ -17,6 +17,7 @@
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -25,6 +26,7 @@ import java.util.Map.Entry;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
@@ -32,14 +34,18 @@ import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
+import org.objectweb.asm.Opcodes;
 
 /**
  * @author Andrew Eisenberg
@@ -61,7 +67,48 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         Map<String,ClassNode> localNames = findLocalNames(extractVariableNameStart());
         List<ICompletionProposal> proposals = createProposals(localNames);
+        // now add closure proposals if necessary
+        proposals.addAll(createClosureProposals());
         return proposals;
+    }
+
+    private List<ICompletionProposal> createClosureProposals() {
+        if (getContext().currentScope.getEnclosingClosure() != null) {
+            List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>(1);
+            VariableInfo ownerInfo = getContext().currentScope.lookupName("owner");
+            if (ProposalUtils.looselyMatches(getContext().completionExpression, "owner")) {
+                proposals.add(createFieldProposal("owner", ownerInfo.declaringType, ownerInfo.type).createJavaProposal(
+                        getContext(), getJavaContext()));
+            }
+            if (ProposalUtils.looselyMatches(getContext().completionExpression, "getOwner")) {
+                proposals.add(createMethodProposal("getOwner", ownerInfo.declaringType, ownerInfo.type).createJavaProposal(
+                        getContext(), getJavaContext()));
+            }
+            VariableInfo delegateInfo = getContext().currentScope.lookupName("delegate");
+            if (ProposalUtils.looselyMatches(getContext().completionExpression, "delegate")) {
+                proposals.add(createFieldProposal("delegate", delegateInfo.declaringType, delegateInfo.type).createJavaProposal(
+                        getContext(), getJavaContext()));
+            }
+            if (ProposalUtils.looselyMatches(getContext().completionExpression, "getDelegate")) {
+                proposals.add(createMethodProposal("getDelegate", delegateInfo.declaringType, delegateInfo.type)
+                        .createJavaProposal(getContext(), getJavaContext()));
+            }
+            return proposals;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    private GroovyFieldProposal createFieldProposal(String name, ClassNode declaring, ClassNode type) {
+        FieldNode field = new FieldNode(name, Opcodes.ACC_PUBLIC, type, declaring, null);
+        field.setDeclaringClass(declaring);
+        return new GroovyFieldProposal(field);
+    }
+
+    private GroovyMethodProposal createMethodProposal(String name, ClassNode declaring, ClassNode returnType) {
+        MethodNode method = new MethodNode(name, Opcodes.ACC_PUBLIC, returnType, new Parameter[0], new ClassNode[0], null);
+        method.setDeclaringClass(declaring);
+        return new GroovyMethodProposal(method);
     }
 
     // removes any leading whitespace or non-java identifier chars

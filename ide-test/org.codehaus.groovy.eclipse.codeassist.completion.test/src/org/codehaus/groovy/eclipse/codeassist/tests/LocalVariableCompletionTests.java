@@ -12,6 +12,7 @@
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -98,6 +99,47 @@ public class LocalVariableCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "abs", 1);
     }
     
+    // GRECLIPSE=1267
+    public void testClsoureVar1() throws Exception {
+        String contents = "def x = { o }";
+        String expected = "def x = { owner }";
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "{ o"), "owner");
+    }
+    
+    // GRECLIPSE=1267
+    public void testClsoureVar2() throws Exception {
+        String contents = "def x = { d }";
+        String expected = "def x = { delegate }";
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "{ d"), "delegate");
+    }
+    
+    // GRECLIPSE=1267
+    public void testClsoureVar3() throws Exception {
+        String contents = "def x = { getO }";
+        String expected = "def x = { getOwner() }";
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "{ getO"), "getOwner");
+    }
+    
+    // GRECLIPSE=1267
+    public void testClsoureVar4() throws Exception {
+        String contents = "def x = { getD }";
+        String expected = "def x = { getDelegate() }";
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "{ getD"), "getDelegate");
+    }
+    // GRECLIPSE=1267
+    public void testClsoureVar5() throws Exception {
+        String contents = "o\nd\nge";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "o"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "owner", 0);
+        proposals = performContentAssist(unit, getIndexOf(contents, "d"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "delegate", 0);
+        proposals = performContentAssist(unit, getIndexOf(contents, "ge"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "getDelegate", 0);
+        proposalExists(proposals, "getOwner", 0);
+    }
+    
+    
     private ICompilationUnit createJava() throws Exception {
         IPath projectPath = createGenericProject();
         IPath src = projectPath.append("src");
@@ -139,6 +181,4 @@ public class LocalVariableCompletionTests extends CompletionTestCase {
         ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
         return unit;
     }
-
-
 }

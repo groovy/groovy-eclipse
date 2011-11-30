@@ -84,7 +84,6 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
                     groovyProposals.add(new GroovyMethodProposal(convertToMethodProposal(field)));
                 }
             }
-
         }
 
         if (isStatic && "class".startsWith(prefix)) {
