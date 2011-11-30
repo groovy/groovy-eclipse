@@ -43,6 +43,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -271,7 +272,7 @@ public class GroovyParser {
 			grabbyLoader.setCompilationUnit(groovyCompilationUnit);
 		}
 		this.groovyCompilationUnit.removeOutputPhaseOperation();
-		if ((options.groovyFlags & 0x01) != 0) {
+		if ((options.groovyFlags & CompilerUtils.IsGrails) != 0) {
 			// its probably grails!
 			// nothing up my sleeve, abracadabra!
 			this.groovyCompilationUnit.addPhaseOperation(new GrailsInjector(gcl), Phases.CANONICALIZATION);
