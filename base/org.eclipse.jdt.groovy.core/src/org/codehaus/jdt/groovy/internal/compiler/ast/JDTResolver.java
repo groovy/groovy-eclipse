@@ -63,6 +63,11 @@ import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
 @SuppressWarnings("restriction")
 public class JDTResolver extends ResolveVisitor {
 
+	/**
+	 * length of the boolean type. any type name that is equal to or shorter than this is likely to be a primitive type.
+	 */
+	private static final int BOOLEAN_LENGTH = "boolean".length();
+
 	// For resolver debugging
 	private static final boolean debug = false;
 
@@ -77,6 +82,24 @@ public class JDTResolver extends ResolveVisitor {
 		commonTypes.put("java.lang.Object", ClassHelper.OBJECT_TYPE);
 		commonTypes.put("java.lang.String", ClassHelper.STRING_TYPE);
 		commonTypes.put("java.lang.Class", ClassHelper.CLASS_Type);
+
+		commonTypes.put("java.lang.Boolean", ClassHelper.Boolean_TYPE);
+		commonTypes.put("java.lang.Byte", ClassHelper.Byte_TYPE);
+		commonTypes.put("java.lang.Character", ClassHelper.Character_TYPE);
+		commonTypes.put("java.lang.Double", ClassHelper.Double_TYPE);
+		commonTypes.put("java.lang.Float", ClassHelper.Float_TYPE);
+		commonTypes.put("java.lang.Integer", ClassHelper.Integer_TYPE);
+		commonTypes.put("java.lang.Long", ClassHelper.Long_TYPE);
+		commonTypes.put("java.lang.Short", ClassHelper.Short_TYPE);
+
+		commonTypes.put("boolean", ClassHelper.boolean_TYPE);
+		commonTypes.put("byte", ClassHelper.byte_TYPE);
+		commonTypes.put("char", ClassHelper.char_TYPE);
+		commonTypes.put("double", ClassHelper.double_TYPE);
+		commonTypes.put("float", ClassHelper.float_TYPE);
+		commonTypes.put("int", ClassHelper.int_TYPE);
+		commonTypes.put("long", ClassHelper.long_TYPE);
+		commonTypes.put("short", ClassHelper.short_TYPE);
 	}
 
 	private Stack<GenericsType[]> memberGenericsCurrentlyActive = new Stack<GenericsType[]>();
@@ -346,7 +369,8 @@ public class JDTResolver extends ResolveVisitor {
 	@Override
 	protected boolean resolve(ClassNode type, boolean testModuleImports, boolean testDefaultImports, boolean testStaticInnerClasses) {
 		String name = type.getName();
-		if (name.charAt(0) == 'j') {
+		// save time by being selective about whether to consult the commonRedirectMap
+		if (name.charAt(0) == 'j' || name.length() <= BOOLEAN_LENGTH) {
 			ClassNode commonRedirect = commonTypes.get(type.getName());
 			if (commonRedirect != null) {
 				type.setRedirect(commonRedirect);
