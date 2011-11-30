@@ -15,21 +15,19 @@ import java.util.Hashtable;
 import junit.extensions.TestSetup;
 import junit.framework.Test;
 
-import org.eclipse.jdt.testplugin.TestOptions;
-
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
-
 import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility;
 import org.eclipse.jdt.internal.corext.template.java.CodeTemplateContextType;
-
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.util.CoreUtility;
+import org.eclipse.jdt.testplugin.TestOptions;
 
 
 public class AbstractRefactoringTestSetup extends TestSetup {
 
 	private boolean fWasAutobuild;
+	private Hashtable fWasOptions;
 
 	public AbstractRefactoringTestSetup(Test test) {
 		super(test);
@@ -37,6 +35,7 @@ public class AbstractRefactoringTestSetup extends TestSetup {
 
 	protected void setUp() throws Exception {
 		super.setUp();
+		fWasOptions = JavaCore.getOptions();
 		fWasAutobuild= CoreUtility.setAutoBuilding(false);
 //		if (JavaPlugin.getActivePage() != null)
 //			JavaPlugin.getActivePage().close();
@@ -59,6 +58,10 @@ public class AbstractRefactoringTestSetup extends TestSetup {
 	}
 
 	protected void tearDown() throws Exception {
+		if (fWasOptions!=null) {
+			//Must restore options or it messes up other test running after us.
+			JavaCore.setOptions(fWasOptions);
+		}
 		CoreUtility.setAutoBuilding(fWasAutobuild);
 		/*
 		 * ensure the workbench state gets saved when running with the Automated Testing Framework
