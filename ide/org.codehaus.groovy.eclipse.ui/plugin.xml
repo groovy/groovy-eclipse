@@ -996,6 +996,5 @@
              name="Groovy synthetic getter and setter references"
              nature="org.eclipse.jdt.groovy.core.groovyNature">
        </queryParticipant>
-    </extension>
- 
+    </extension> 
 </plugin>
