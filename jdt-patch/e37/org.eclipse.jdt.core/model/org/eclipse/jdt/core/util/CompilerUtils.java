@@ -50,7 +50,7 @@ public class CompilerUtils {
 				if (isProbablyGrailsProject(project)) {
 					compilerOptions.groovyFlags = IsGrails;
 				} else {
-					compilerOptions.groovyFlags = 0;					
+					compilerOptions.groovyFlags = 0;
 				}
 			} else {
 				compilerOptions.buildGroovyFiles=1;
