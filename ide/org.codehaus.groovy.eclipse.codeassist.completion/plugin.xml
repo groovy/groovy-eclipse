@@ -24,7 +24,6 @@
       <proposalCategory
             icon="icons/groovy_file.gif"></proposalCategory>
    </extension>
-   
 
 	  <extension
    			 name="Groovy Code Completions"
@@ -41,5 +40,33 @@
                type="__java_string">
          </partition>
       </javaCompletionProposalComputer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="org.codehaus.groovy.eclipse.preferences"
+            class="org.codehaus.groovy.eclipse.codeassist.preferences.ContentAssistPreferencesPage"
+            id="org.codehaus.groovy.eclipse.codeassist.completion.preferences"
+            name="Content Assist">
+         <keywordReference
+               id="org.codehaus.groovy.eclipse.codeassist.completion.keywords">
+         </keywordReference>
+      </page>
+   </extension>
+   <extension
+         id="org.codehaus.groovy.eclipse.codeassist.completion.keywords"
+         point="org.eclipse.ui.keywords">
+      <keyword
+            id="org.codehaus.groovy.eclipse.codeassist.completion.completion"
+            label="completion">
+      </keyword>
+      <keyword
+            id="org.codehaus.groovy.eclipse.codeassist.completion.assist"
+            label="assist">
+      </keyword>
+      <keyword
+            id="org.codehaus.groovy.eclipse.codeassist.completion.editor"
+            label="editor">
+      </keyword>
    </extension>
 </plugin>

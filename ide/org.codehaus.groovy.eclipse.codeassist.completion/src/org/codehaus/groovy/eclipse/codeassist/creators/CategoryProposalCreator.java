@@ -25,6 +25,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.codehaus.groovy.eclipse.codeassist.preferences.DGMProposalFilter;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyCategoryMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
@@ -48,12 +49,17 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
 
     private List<IGroovyProposal> findAllProposals(Set<String> set, Set<ClassNode> categories, String prefix,
             ClassNode declaringClass) {
+        DGMProposalFilter filter = new DGMProposalFilter();
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         Set<String> existingFieldProposals = new HashSet<String>();
         for (ClassNode category : categories) {
             List<MethodNode> allMethods = category.getAllDeclaredMethods();
+            boolean isDGMCategory = isDGMCategory(category);
             for (MethodNode method : allMethods) {
-
+                // Check for DGMs filtered from preferences
+                if (isDGMCategory && filter.isFiltered(method)) {
+                    continue;
+                }
                 // need to check if the method is being accessed directly
                 // or as a property (eg- getText() --> text)
                 String methodName = method.getName();
@@ -79,5 +85,19 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
             }
         }
         return groovyProposals;
+    }
+
+    /**
+     * @param category
+     * @return
+     */
+    private boolean isDGMCategory(ClassNode category) {
+        String className = category.getName();
+        for (ClassNode dgClass : VariableScope.ALL_DEFAULT_CATEGORIES) {
+            if (dgClass.getName().equals(className)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

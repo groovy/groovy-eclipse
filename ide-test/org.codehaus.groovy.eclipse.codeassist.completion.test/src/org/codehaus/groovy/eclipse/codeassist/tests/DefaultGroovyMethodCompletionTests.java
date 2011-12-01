@@ -11,6 +11,10 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import java.util.Arrays;
+import java.util.HashSet;
+
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssistActivator;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -172,6 +176,42 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
         }
     }
     
+    
+    // GRECLIPSE-1182
+    public void testDGMFilter1() throws Exception {
+        try {
+            setDGMFilter("inspect");
+            String contents = "this.insp";
+            ICompilationUnit unit = createGroovyWithContents("Script", contents);
+            ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "insp"), GroovyCompletionProposalComputer.class);
+            proposalExists(proposals, "inspect", 0);
+            setDGMFilter();
+            proposals = performContentAssist(unit, getIndexOf(contents, "insp"), GroovyCompletionProposalComputer.class);
+            proposalExists(proposals, "inspect", 1);
+        } finally {
+            setDGMFilter();
+        }
+    }
+    
+    // GRECLIPSE-1182
+    public void testDGMFilter2() throws Exception {
+        try {
+            setDGMFilter("inspect","each","fsafd fdafsd fafds");
+            String contents = "this.insp";
+            ICompilationUnit unit = createGroovyWithContents("Script", contents);
+            ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "insp"), GroovyCompletionProposalComputer.class);
+            proposalExists(proposals, "inspect", 0);
+            setDGMFilter();
+            proposals = performContentAssist(unit, getIndexOf(contents, "insp"), GroovyCompletionProposalComputer.class);
+            proposalExists(proposals, "inspect", 1);
+        } finally {
+            setDGMFilter();
+        }
+    }
+    
+    private void setDGMFilter(String... filter) {
+        GroovyContentAssistActivator.getDefault().setFilteredDGMs(new HashSet<String>(Arrays.asList(filter)));
+    }
     
     private ICompilationUnit createJava() throws Exception {
         IPath projectPath = createGenericProject();
