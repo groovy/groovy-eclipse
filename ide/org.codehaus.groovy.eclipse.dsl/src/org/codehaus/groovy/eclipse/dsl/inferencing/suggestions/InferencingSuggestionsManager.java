@@ -20,7 +20,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.groovy.eclipse.codeassist.Activator;
+import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.writer.SuggestionsFile;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.writer.SuggestionsTransform;
 import org.codehaus.jdt.groovy.model.GroovyNature;
@@ -137,7 +137,7 @@ public class InferencingSuggestionsManager {
                 // For now replace all the contents
                 file.setContents(new ByteArrayInputStream(value.getBytes()), true, true, new NullProgressMonitor());
             } catch (CoreException e) {
-                Activator.logError(e);
+                GroovyDSLCoreActivator.logException(e);
             }
         }
     }

@@ -17,7 +17,7 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.writer;
 
 import java.lang.reflect.InvocationTargetException;
 
-import org.codehaus.groovy.eclipse.codeassist.Activator;
+import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
@@ -120,7 +120,7 @@ public class SuggestionsFile {
                 try {
                     op.execute(monitor, null);
                 } catch (final ExecutionException e) {
-                    Activator.logError(e);
+                    GroovyDSLCoreActivator.logException(e);
                 }
             }
         };
@@ -130,13 +130,13 @@ public class SuggestionsFile {
             newFile.refreshLocal(0, new NullProgressMonitor());
 
         } catch (InterruptedException e) {
-            Activator.logError(e);
+            GroovyDSLCoreActivator.logException(e);
             return null;
         } catch (InvocationTargetException e) {
-            Activator.logError(e);
+            GroovyDSLCoreActivator.logException(e);
             return null;
         } catch (CoreException e) {
-            Activator.logError(e);
+            GroovyDSLCoreActivator.logException(e);
             return null;
         }
 

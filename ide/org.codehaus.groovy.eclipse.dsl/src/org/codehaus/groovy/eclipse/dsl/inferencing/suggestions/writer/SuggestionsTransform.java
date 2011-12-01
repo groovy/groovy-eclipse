@@ -29,7 +29,7 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.codehaus.groovy.eclipse.codeassist.Activator;
+import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovySuggestionDeclaringType;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager.ProjectSuggestions;
 import org.codehaus.groovy.runtime.StringBufferWriter;
@@ -89,15 +89,15 @@ public class SuggestionsTransform {
             return buffer.toString();
 
         } catch (TransformerConfigurationException e) {
-            Activator.logError(e);
+            GroovyDSLCoreActivator.logException(e);
         } catch (IllegalArgumentException e) {
-            Activator.logError(e);
+            GroovyDSLCoreActivator.logException(e);
         } catch (ParserConfigurationException e) {
-            Activator.logError(e);
+            GroovyDSLCoreActivator.logException(e);
         } catch (TransformerFactoryConfigurationError e) {
-            Activator.logError(e);
+            GroovyDSLCoreActivator.logException(e);
         } catch (TransformerException e) {
-            Activator.logError(e);
+            GroovyDSLCoreActivator.logException(e);
         }
 
         return null;

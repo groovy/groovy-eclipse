@@ -15,26 +15,27 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.codeassist;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 /**
  * The activator class controls the plug-in life cycle
  */
-public class Activator extends Plugin {
+public class GroovyContentAssistActivator extends AbstractUIPlugin {
 
-	// The plug-in ID
+
 	public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.codeassist.completion";
 
-	// The shared instance
-	private static Activator plugin;
-	
-	/**
-	 * The constructor
-	 */
-	public Activator() {
+    public static final String FILTERED_DGMS = PLUGIN_ID + ".filtereddgms";
+
+    private static GroovyContentAssistActivator plugin;
+
+    public GroovyContentAssistActivator() {
 		plugin = this;
 	}
 
@@ -57,20 +58,40 @@ public class Activator extends Plugin {
 		super.stop(context);
 	}
 
-	/**
-	 * Returns the shared instance
-	 *
-	 * @return the shared instance
-	 */
-	public static Activator getDefault() {
+    public static GroovyContentAssistActivator getDefault() {
 		return plugin;
 	}
 
 	public static void logError(Throwable e) {
 		getDefault().getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, IStatus.OK, e.getLocalizedMessage(), e));
 	}
-	
+
 	public static void logError(String message, Throwable e) {
 		getDefault().getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, IStatus.OK, message, e));
+	}
+
+	public Set<String> getFilteredDGMs() {
+	    String filtered = getPreferenceStore().getString(FILTERED_DGMS);
+	    String[] filteredArr = filtered.split(",");
+	    Set<String> filteredSet = new HashSet<String>(filteredArr.length);
+	    for (String s : filteredArr) {
+	        s = s.trim();
+	        if (s.length() > 0) {
+	            filteredSet.add(s);
+	        }
+        }
+	    return filteredSet;
+	}
+
+	public void setFilteredDGMs(Set<String> filteredSet) {
+	    StringBuilder sb = new StringBuilder();
+	    for (String s : filteredSet) {
+	        if (s == null) continue;
+	        s = s.trim();
+            if (s.length() > 0) {
+                sb.append(s + ",");
+	        }
+        }
+        getPreferenceStore().setValue(FILTERED_DGMS, sb.toString());
 	}
 }

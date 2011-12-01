@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
-import org.codehaus.groovy.eclipse.codeassist.Activator;
+import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
@@ -50,7 +50,7 @@ public class JavaValidTypeRule extends AbstractJavaTypeVerifiedRule {
                         return ValueStatus.getErrorStatus(value, THE_SPECIFIED_JAVA_TYPES_DO_NOT_EXIST + name);
                     }
                 } catch (JavaModelException e) {
-                    Activator.logError(e);
+                    GroovyDSLCoreActivator.logException(e);
                 }
             } else {
                 return ValueStatus.getErrorStatus(value, INVALID_JAVA);

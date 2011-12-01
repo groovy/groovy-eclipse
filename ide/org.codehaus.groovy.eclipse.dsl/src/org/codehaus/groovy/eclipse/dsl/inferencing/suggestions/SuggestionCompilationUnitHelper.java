@@ -16,9 +16,9 @@
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.eclipse.codeassist.Activator;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.ASTNodeFinder;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
+import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
@@ -101,7 +101,7 @@ public class SuggestionCompilationUnitHelper {
             suggestion = new OperationManager().addGroovySuggestion(project, descriptor, shell);
             InferencingSuggestionsManager.getInstance().commitChanges(project);
         } else {
-            Activator.logError("Unable to open Inferencing Suggestions dialogue. No shell found.", null);
+            GroovyDSLCoreActivator.logException("Unable to open Inferencing Suggestions dialogue. No shell found.", new Exception());
         }
         return suggestion;
     }

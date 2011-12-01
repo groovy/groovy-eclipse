@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.groovy.eclipse.codeassist.Activator;
+import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
@@ -79,7 +79,7 @@ public class JavaValidParameterizedTypeRule extends AbstractJavaTypeVerifiedRule
                 }
 
             } catch (JavaModelException e) {
-                Activator.logError(e);
+                GroovyDSLCoreActivator.logException(e);
                 return ValueStatus.getErrorStatus(value, e.getLocalizedMessage());
             }
 

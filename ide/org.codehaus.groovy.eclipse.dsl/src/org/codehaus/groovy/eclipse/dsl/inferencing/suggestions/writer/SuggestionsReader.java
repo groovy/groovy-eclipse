@@ -26,7 +26,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.codehaus.groovy.eclipse.codeassist.Activator;
+import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager.ProjectSuggestions;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.MethodParameter;
@@ -93,11 +93,11 @@ public class SuggestionsReader {
             }
             return projectSuggestions;
         } catch (ParserConfigurationException e) {
-            Activator.logError(e);
+            GroovyDSLCoreActivator.logException(e);
         } catch (IOException e) {
-            Activator.logError(e);
+            GroovyDSLCoreActivator.logException(e);
         } catch (SAXException e) {
-            Activator.logError(e);
+            GroovyDSLCoreActivator.logException(e);
         }
         return null;
     }
