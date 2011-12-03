@@ -14,14 +14,14 @@
    </extension>
    <extension
          point="org.codehaus.groovy.eclipse.ui.outlineExtension">
-      <highlightingExtender
+      <outlineExtender
             extender="org.codehaus.groovy.eclipse.test.ui.OutlineExtender1"
             natureID="org.codehaus.groovy.eclipse.tests.testNature1">
-      </highlightingExtender>
-      <highlightingExtender
+      </outlineExtender>
+      <outlineExtender
             extender="org.codehaus.groovy.eclipse.test.ui.OutlineExtender2"
             natureID="org.codehaus.groovy.eclipse.tests.testNature2">
-      </highlightingExtender>
+      </outlineExtender>
    </extension>
    <extension
          id="testNature1"

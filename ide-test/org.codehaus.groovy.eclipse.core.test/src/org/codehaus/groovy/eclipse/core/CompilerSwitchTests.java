@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,13 +26,12 @@ import org.codehaus.groovy.eclipse.test.EclipseTestCase;
  *
  */
 public class CompilerSwitchTests extends EclipseTestCase {
-    public void testClassPathContainerContents() throws Exception {
+    public void testname() throws Exception {
+        System.out.println("This test suite is disabled");
+    }
+    public void _testClassPathContainerContents() throws Exception {
         // we no longer have any ui for compiler switching,
         // so this test is useless
-        System.out.println("This test is disabled.");
-        if (true) {
-            return;
-        }
 
         String current = CompilerUtils.getGroovyVersion();
         assertTrue("Compiler version should default to 1.7, but is instead" + current,

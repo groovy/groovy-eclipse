@@ -179,7 +179,7 @@ class GroovyClassFile extends ClassFile {
 	public void completeMethodInfo(int methodAttributeOffset, int attributeNumber) {
 		throw new ImmutableException();
 	}
-	
+
 	// For 3.7
 	public void completeMethodInfo(MethodBinding methodBinding, int methodAttributeOffset, int attributeNumber) {
 		throw new ImmutableException();
@@ -203,7 +203,7 @@ class GroovyClassFile extends ClassFile {
 	public int generateMethodInfoAttribute(MethodBinding methodBinding) {
 		throw new ImmutableException();
 	}
-	
+
 	// these two for 3.7
 	public int generateMethodInfoAttributes(MethodBinding methodBinding, AnnotationMethodDeclaration declaration) {
 		throw new ImmutableException();
@@ -275,10 +275,9 @@ class GroovyClassFile extends ClassFile {
 		throw new UnsupportedOperationException();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void traverse(MethodBinding methodBinding, int maxLocals, byte[] bytecodes, int codeOffset, int codeLength,
-			ArrayList frames, boolean isClinit) {
+			@SuppressWarnings("rawtypes") ArrayList frames, boolean isClinit) {
 		throw new UnsupportedOperationException();
 	}
 

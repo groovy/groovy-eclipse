@@ -226,6 +226,7 @@ public class GroovyAutoIndenterTests extends GroovyEditorTest {
     }
 
     protected void setJavaPreference(String name, String value) {
+        @SuppressWarnings("rawtypes")
         Hashtable options = JavaCore.getOptions();
         options.put(name, value);
         JavaCore.setOptions(options);

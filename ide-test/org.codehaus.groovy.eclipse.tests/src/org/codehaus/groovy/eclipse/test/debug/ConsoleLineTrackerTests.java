@@ -19,7 +19,6 @@ import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker;
 import org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker.AmbiguousFileLink;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
@@ -31,6 +30,7 @@ import org.eclipse.debug.core.model.IStreamsProxy;
 import org.eclipse.debug.ui.console.FileLink;
 import org.eclipse.debug.ui.console.IConsole;
 import org.eclipse.debug.ui.console.IConsoleHyperlink;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -45,6 +45,7 @@ import org.eclipse.ui.console.IPatternMatchListener;
  * Tests that breakpoint locations are as expected
  *
  */
+@SuppressWarnings("deprecation")
 public class ConsoleLineTrackerTests extends EclipseTestCase {
     MockConsole console;
     GroovyConsoleLineTracker lineTracker;
@@ -111,7 +112,7 @@ class MockConsole implements IConsole {
         this.doc = doc;
     }
     
-    public void addLink(IConsoleHyperlink link, int offset, int length) {
+    public void addLink(@SuppressWarnings("deprecation") IConsoleHyperlink link, int offset, int length) {
     }
 
     public void connect(IStreamsProxy streamsProxy) {
@@ -128,7 +129,7 @@ class MockConsole implements IConsole {
         return null;
     }
 
-    public IRegion getRegion(IConsoleHyperlink link) {
+    public IRegion getRegion(@SuppressWarnings("deprecation") IConsoleHyperlink link) {
         return null;
     }
 

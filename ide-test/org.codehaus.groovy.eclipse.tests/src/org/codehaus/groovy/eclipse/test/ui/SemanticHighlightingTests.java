@@ -29,7 +29,6 @@ import java.util.Comparator;
 
 import org.codehaus.groovy.eclipse.editor.highlighting.GatherSemanticReferences;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition;
-import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;

@@ -9,7 +9,6 @@ import org.eclipse.core.resources.IProjectNature;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.rules.IRule;
 import org.eclipse.jface.text.rules.IWordDetector;
-import org.eclipse.jface.text.rules.NumberRule;
 import org.eclipse.jface.text.rules.WordRule;
 
 public class Extender2 implements IHighlightingExtender, IProjectNature {

@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.test.ui;
 import junit.framework.TestCase;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.editor.GroovyTagScanner;
 import org.codehaus.groovy.eclipse.editor.GroovyTextTools;
 import org.codehaus.groovy.eclipse.preferences.PreferenceInitializer;
@@ -45,6 +44,7 @@ public class GroovyTagScannerTests extends TestCase {
     GroovyTagScanner scanner;
     
     
+    @SuppressWarnings("deprecation")
     @Override
     protected void setUp() throws Exception {
         System.out.println("------------------------------");

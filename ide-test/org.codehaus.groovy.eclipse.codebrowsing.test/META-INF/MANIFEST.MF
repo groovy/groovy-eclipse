@@ -19,3 +19,4 @@ Export-Package: org.codehaus.groovy.eclipse.codebrowsing.tests
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: bin/,
  .
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
