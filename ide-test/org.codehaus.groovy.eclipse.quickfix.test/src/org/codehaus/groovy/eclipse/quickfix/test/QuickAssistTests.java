@@ -24,6 +24,7 @@ import org.codehaus.groovy.eclipse.quickassist.ConvertToClosureCompletionProposa
 import org.codehaus.groovy.eclipse.quickassist.ConvertToMethodCompletionProposal;
 import org.codehaus.groovy.eclipse.quickassist.ConvertToMultiLineStringCompletionProposal;
 import org.codehaus.groovy.eclipse.quickassist.ConvertToSingleLineStringCompletionProposal;
+import org.codehaus.groovy.eclipse.quickassist.RemoveUnnecessarySemicolonsCompletionProposal;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.internal.core.CompilationUnit;
@@ -147,6 +148,17 @@ public class QuickAssistTests extends EclipseTestCase {
                 "'fadfsad\\n\\t\\' \"\\nggggg'", "f", ConvertToSingleLineStringCompletionProposal.class);
     }
     
+    public void testRemoveUnnecessarySemicolons1() throws Exception {
+    	 String original = "def a = 1;";
+		assertConversion(original, "def a = 1", original, RemoveUnnecessarySemicolonsCompletionProposal.class);
+    }
+    
+    public void testRemoveUnnecessarySemicolons2() throws Exception {
+        String original = "def z = 1;def a = 1;";
+        String expected = "def z = 1;def a = 1";
+       assertConversion(original, expected, "def a = 1", RemoveUnnecessarySemicolonsCompletionProposal.class);
+   }
+   
     private void assertConversion(String original, String expected, String searchFor, Class<? extends AbstractGroovyCompletionProposal> proposalClass) throws Exception, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         assertConversion(original, expected, original.indexOf(searchFor), searchFor.length(), proposalClass);
     }
