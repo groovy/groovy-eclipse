@@ -156,11 +156,13 @@ public class QuickAssistTests extends EclipseTestCase {
     public void testRemoveUnnecessarySemicolons2() throws Exception {
         String original = "def z = 1;def a = 1;";
         String expected = "def z = 1;def a = 1";
-       assertConversion(original, expected, "def a = 1", RemoveUnnecessarySemicolonsCompletionProposal.class);
+       assertConversion(original, expected, null, RemoveUnnecessarySemicolonsCompletionProposal.class);
    }
    
     private void assertConversion(String original, String expected, String searchFor, Class<? extends AbstractGroovyCompletionProposal> proposalClass) throws Exception, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-        assertConversion(original, expected, original.indexOf(searchFor), searchFor.length(), proposalClass);
+        int start = searchFor == null ? 0 : original.indexOf(searchFor);
+        int length = searchFor == null ? 0 : searchFor.length();
+        assertConversion(original, expected, start, length, proposalClass);
     }
     private void assertConversion(String original, String expected, int offset, int length, Class<? extends AbstractGroovyCompletionProposal> proposalClass) throws Exception, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         ICompilationUnit unit = testProject.createUnit("", "QuickFix.groovy", original);

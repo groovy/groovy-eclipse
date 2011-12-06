@@ -20,6 +20,8 @@ package org.codehaus.groovy.eclipse.quickassist;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.ASTNodeFinder;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -44,12 +46,12 @@ import org.eclipse.text.edits.TextEdit;
  */
 public class ConvertToMultiLineStringCompletionProposal extends
         AbstractGroovyCompletionProposal {
-    
-    private final GroovyCompilationUnit unit;
+	
+	private final GroovyCompilationUnit unit;
     private final int length;
     private final int offset;
     
-    private ConstantExpression literal;
+    private Expression literal;
     public ConvertToMultiLineStringCompletionProposal(IInvocationContext context) {
         super(context);
         ICompilationUnit compUnit = context.getCompilationUnit();
@@ -105,25 +107,23 @@ public class ConvertToMultiLineStringCompletionProposal extends
         boolean result = false;
 
         Region region = new Region(offset, length);
-        ASTNodeFinder finder = new ASTNodeFinder(region);
+        ASTNodeFinder finder = new StringConstantFinder(region);
         ModuleNode moduleNode = unit.getModuleNode();
         
         ASTNode node = finder.doVisit(moduleNode);
         
-        if (node instanceof ConstantExpression) {
-        	ConstantExpression expr = (ConstantExpression)node;
-        	if (expr.getValue() instanceof String) {
-        		char[] contents = unit.getContents();
-        		int start = expr.getStart();
-        		int end = expr.getEnd();
-                char[] nodeText = new char[end - start];
-        		System.arraycopy(contents, start, nodeText, 0, end - start);
-        		
-        		if (!isMultiLineString(String.valueOf(nodeText))) {
-        			literal = expr;
-        			result = true;
-        		}
-        	}
+        if ((node instanceof ConstantExpression && ((ConstantExpression) node).getValue() instanceof String) || node instanceof GStringExpression) {
+        	Expression expr = (Expression)node;
+    		char[] contents = unit.getContents();
+    		int start = expr.getStart();
+    		int end = expr.getEnd();
+            char[] nodeText = new char[end - start];
+    		System.arraycopy(contents, start, nodeText, 0, end - start);
+    		
+    		if (!isMultiLineString(String.valueOf(nodeText))) {
+    			literal = expr;
+    			result = true;
+    		}
         }
         
         return result;
@@ -133,6 +133,9 @@ public class ConvertToMultiLineStringCompletionProposal extends
         try {
         	int startQuote = literal.getStart();
         	int endQuote = literal.getEnd()-1;
+        	if (startQuote >= endQuote) {
+        	    return null;
+        	}
             return createEdit(doc, startQuote, endQuote);
         } catch (Exception e) {
             GroovyCore.logException("Exception during convert to multiline string.", e);
@@ -151,7 +154,6 @@ public class ConvertToMultiLineStringCompletionProposal extends
             return null;
         }
         char quoteChar = doc.getChar(startQuote);
-//        char skipChar = quoteChar == '\'' ? '\'' : '"';
         char skipChar = '\0';
         String replaceQuotes = new String(new char[] {quoteChar, quoteChar, quoteChar});
         TextEdit edit = new MultiTextEdit();

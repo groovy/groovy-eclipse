@@ -186,12 +186,12 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
 
 		StringBuffer errorMessage = new StringBuffer(messages[0]);
 		int prefixIndex = errorMessage
-				.indexOf(ProblemType.MISSING_IMPORTS_TYPE.groovyProblemSnippet);
+				.indexOf(ProblemType.MISSING_IMPORTS_TYPE.groovyProblemSnippets[0]);
 		if (prefixIndex >= 0) {
             errorMessage
                     .delete(prefixIndex,
                             prefixIndex
-                                    + ProblemType.MISSING_IMPORTS_TYPE.groovyProblemSnippet
+                                    + ProblemType.MISSING_IMPORTS_TYPE.groovyProblemSnippets[0]
                                             .length());
 
 			// Strip starting whitespace

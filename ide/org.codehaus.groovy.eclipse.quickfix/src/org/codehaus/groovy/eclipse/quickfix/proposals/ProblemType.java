@@ -26,12 +26,12 @@ import org.eclipse.jdt.core.compiler.IProblem;
  */
 public enum ProblemType {
     // missing semi-colons will have different IProblem values in different places
-    MISSING_SEMI_COLON_TYPE(IProblem.ParsingErrorInsertToComplete, null),
-    MISSING_SEMI_COLON_TYPE_VARIANT(IProblem.ParsingErrorInsertTokenAfter, null),
+    MISSING_SEMI_COLON_TYPE(IProblem.ParsingErrorInsertToComplete, (String) null),
+    MISSING_SEMI_COLON_TYPE_VARIANT(IProblem.ParsingErrorInsertTokenAfter, (String) null),
     
     MISSING_IMPORTS_TYPE("Groovy:unable to resolve class"), 
     UNIMPLEMENTED_METHODS_TYPE("Groovy:Can't have an abstract method in a non-abstract class."), 
-    MISSING_CLASSPATH_CONTAINER_TYPE(IProblem.IsClassPathCorrect, "groovy.lang.GroovyObject");
+    MISSING_CLASSPATH_CONTAINER_TYPE(IProblem.IsClassPathCorrect, "groovy.lang.GroovyObject", "groovy.lang.MetaClass");
 
     /**
      * The {@link IMarker} type of the problem.
@@ -49,37 +49,39 @@ public enum ProblemType {
      * A bit of text that uniquely describes the groovy compiler problem
      * Only necessary because groovy problems do not have a unique id.
      */
-    public final String groovyProblemSnippet;
+    public final String groovyProblemSnippets[];
 
     public static final int GROOVY_PROBLEM_ID = 0;
     
     /** Constructor for groovy problems. Can only be distinguished by */
-    private ProblemType(String groovyProblemSnippet) {
+    private ProblemType(String ... groovyProblemSnippets) {
         this(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER,
-                GROOVY_PROBLEM_ID, groovyProblemSnippet);
+                GROOVY_PROBLEM_ID, groovyProblemSnippets);
     }
 
-    private ProblemType(int problemID, String groovyProblemSnippet) {
+    private ProblemType(int problemID, String ... groovyProblemSnippets) {
         this(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, problemID,
-                groovyProblemSnippet);
+                groovyProblemSnippets);
     }
 
     private ProblemType(String markerType, int problemID,
-            String groovyProblemSnippet) {
+            String ... groovyProblemSnippets) {
         this.markerType = markerType;
         this.problemId = problemID;
-        this.groovyProblemSnippet = groovyProblemSnippet;
+        this.groovyProblemSnippets = groovyProblemSnippets;
     }
 
     private boolean matches(int problemID, String markerType, String[] messages) {
         if (this.problemId == problemID && this.markerType.equals(markerType)) {
-            if (groovyProblemSnippet == null) {
+            if (groovyProblemSnippets == null) {
                 // we don't care about the snippet. let all problems match
                 return true;
             }
             for (String message : messages) {
-                if (message != null && message.contains(groovyProblemSnippet)) {
-                    return true;
+                for (String groovyProblemSnippet : groovyProblemSnippets) {
+                    if (message != null && message.contains(groovyProblemSnippet)) {
+                        return true;
+                    }
                 }
             }
         }

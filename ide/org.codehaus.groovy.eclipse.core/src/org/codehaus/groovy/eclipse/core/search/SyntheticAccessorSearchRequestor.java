@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IClassFile;
@@ -409,7 +410,7 @@ public class SyntheticAccessorSearchRequestor {
         return method.reallyExists() ? null : method;
     }
 
-    private IField findSyntheticProperty(IJavaElement element) {
+    private IField findSyntheticProperty(IJavaElement element) throws JavaModelException {
         if (element.getElementType() != IJavaElement.METHOD) {
             return null;
         }
@@ -432,7 +433,7 @@ public class SyntheticAccessorSearchRequestor {
         IField field = parent.getField(fieldName);
         // only return if field doesn't exist since otherwise, this method would
         // not be synthetic
-        return field.exists() ? null : field;
+        return field.exists() && Flags.isProtected(field.getFlags()) ? null : field;
     }
 
     private String convertName(String prefix, String elementName) {

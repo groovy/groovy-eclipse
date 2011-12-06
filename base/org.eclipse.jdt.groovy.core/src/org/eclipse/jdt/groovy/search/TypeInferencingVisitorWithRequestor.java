@@ -532,11 +532,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					visitClassReference(fieldType);
 				}
 				visitAnnotations(node);
-				// FIXADE should we be visiting the initializer here? It may already have been visited in the <clinit>. See also
-				// GRECLIPSE-1008
 				Expression init = node.getInitialExpression();
-				if (init != null)
+				if (init != null) {
 					init.visit(this);
+				}
 			case CANCEL_BRANCH:
 				return;
 			case CANCEL_MEMBER:
@@ -677,7 +676,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		for (ImportNode imp : new ImportNodeCompatibilityWrapper(node).getAllImportNodes()) {
 			TypeLookupResult result = null;
 			IJavaElement oldEnclosingElement = enclosingElement;
-			// FIXADE this will not work for static or * imports
+			// this will not work for static or * imports, but that's OK because
+			// as of now, there is no reason to do that.
 			ClassNode type = imp.getType();
 
 			if (type != null) {

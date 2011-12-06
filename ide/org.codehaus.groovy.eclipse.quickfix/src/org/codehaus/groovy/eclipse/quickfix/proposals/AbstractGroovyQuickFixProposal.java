@@ -61,7 +61,7 @@ public abstract class AbstractGroovyQuickFixProposal implements IJavaCompletionP
 	}
 
 	public String getAdditionalProposalInfo() {
-		return "Ha ha!!!";
+		return null;
 	}
 
 	public Image getImage() {
