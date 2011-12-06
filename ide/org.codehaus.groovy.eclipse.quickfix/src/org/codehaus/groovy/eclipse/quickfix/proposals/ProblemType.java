@@ -26,8 +26,8 @@ import org.eclipse.jdt.core.compiler.IProblem;
  */
 public enum ProblemType {
     // missing semi-colons will have different IProblem values in different places
-    MISSING_SEMI_COLON_TYPE(IProblem.ParsingErrorInsertToComplete, (String) null),
-    MISSING_SEMI_COLON_TYPE_VARIANT(IProblem.ParsingErrorInsertTokenAfter, (String) null),
+    MISSING_SEMI_COLON_TYPE(IProblem.ParsingErrorInsertToComplete, (String[]) null),
+    MISSING_SEMI_COLON_TYPE_VARIANT(IProblem.ParsingErrorInsertTokenAfter, (String[]) null),
     
     MISSING_IMPORTS_TYPE("Groovy:unable to resolve class"), 
     UNIMPLEMENTED_METHODS_TYPE("Groovy:Can't have an abstract method in a non-abstract class."), 
