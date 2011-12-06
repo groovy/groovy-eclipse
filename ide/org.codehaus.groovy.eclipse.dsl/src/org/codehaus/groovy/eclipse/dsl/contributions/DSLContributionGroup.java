@@ -328,6 +328,9 @@ public class DSLContributionGroup extends ContributionGroup {
     }
 
     private void internalDelegatesTo(AnnotatedNode expr, boolean useNamedArgs, boolean isStatic, boolean asCategory, boolean isDeprecated, List<String> exceptions) {
+        if (staticScope && !isStatic && !currentType.getName().equals(VariableScope.CLASS_CLASS_NODE)) {
+            return;
+        }
         ClassNode type;
         if (expr instanceof ClassNode) {
             type = (ClassNode) expr;

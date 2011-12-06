@@ -27,7 +27,6 @@ import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionElement;
-import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.CoreException;
@@ -52,6 +51,7 @@ public class DSLDProposalProvider implements IProposalProvider {
             GroovyDSLDContext pattern = new GroovyDSLDContext(context.unit, info.module, info.resolver);
             pattern.setCurrentScope(context.currentScope);
             pattern.setTargetType(completionType);
+            pattern.setStatic(isStatic);
             contributions = store.findContributions(pattern, DSLPreferences.getDisabledScriptsAsSet());
         
             boolean isMethodContext = context instanceof MethodInfoContentAssistContext;
