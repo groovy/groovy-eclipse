@@ -22,6 +22,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
@@ -164,6 +165,18 @@ public abstract class BrowsingTestCase extends BuilderTests {
 
     protected void assertCodeSelect(String structureContents, String javaContents, String groovyContents, String toFind,
             String elementName, boolean isGroovy) throws Exception, JavaModelException {
+        assertCodeSelect(structureContents, javaContents, groovyContents, toFind,
+                new SourceRange(groovyContents.lastIndexOf(toFind),
+                toFind.length()), elementName, isGroovy);
+    }
+
+    protected void assertCodeSelect(String groovyContents, SourceRange selectRange, String elementName) throws Exception,
+            JavaModelException {
+        assertCodeSelect(null, null, groovyContents, null, selectRange, elementName, true);
+    }
+
+    protected void assertCodeSelect(String structureContents, String javaContents, String groovyContents, String toFind,
+            SourceRange selectRegion, String elementName, boolean isGroovy) throws Exception, JavaModelException {
 
         if (structureContents != null) {
             if (javaContents != null) {
@@ -190,8 +203,7 @@ public abstract class BrowsingTestCase extends BuilderTests {
         expectingNoProblems();
 
         // check the groovy code select
-        IJavaElement[] eltFromGroovy = groovyUnit.codeSelect(
-                groovyContents.lastIndexOf(toFind), toFind.length());
+        IJavaElement[] eltFromGroovy = groovyUnit.codeSelect(selectRegion.getOffset(), selectRegion.getLength());
         assertEquals("Should have found a selection", 1, eltFromGroovy.length);
         assertEquals("Should have found reference to: " + elementName,
                 elementName,
@@ -199,12 +211,9 @@ public abstract class BrowsingTestCase extends BuilderTests {
 
         // check the java code select
         if (javaUnit != null) {
-            IJavaElement[] eltFromJava = javaUnit.codeSelect(
-                    javaContents.lastIndexOf(toFind), toFind.length());
+            IJavaElement[] eltFromJava = javaUnit.codeSelect(javaContents.lastIndexOf(toFind), toFind.length());
             assertEquals("Should have found a selection", 1, eltFromJava.length);
-            assertEquals("Should have found reference to: " + elementName,
-                    elementName,
-                    eltFromJava[0].getElementName());
+            assertEquals("Should have found reference to: " + elementName, elementName, eltFromJava[0].getElementName());
 
             // now check that the unique keys of each of them are the same
             String groovyUniqueKey = getUniqueKey(eltFromGroovy[0]);

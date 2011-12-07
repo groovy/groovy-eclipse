@@ -11,6 +11,7 @@
 
 package org.codehaus.groovy.eclipse.codebrowsing.tests;
 
+import org.eclipse.jdt.core.SourceRange;
 
 /**
  * @author Andrew Eisenberg
@@ -255,6 +256,110 @@ public class CodeSelectGenericsTest extends BrowsingTestCase {
         String toFind = "getYy";
         String elementName = "yy";
         assertCodeSelect(XX, null, groovyContents, toFind, elementName);
+    }
+
+    private static final String GENERICS_CLASS = "interface SomeInterface<T> { }\n" + "interface SomeInterface2<T,U> { }\n"
+            + "class SomeClass { }\n"
+            + "class Bart implements /*0*/SomeInterface</*1*/SomeInterface2</*2*/SomeClass,/*3*/SomeInterface<? extends /*4*/SomeClass>>> {\n"
+            + "    /*12*/SomeInterface</*5*/SomeClass> ff\n"
+            + "    /*6*/SomeInterface</*7*/SomeClass> yy(/*8*/SomeInterface</*9*/SomeClass> yyy) { }\n"
+            + "  def c = { /*10*/SomeInterface2</*11*/SomeClass> a -> }\n" + "}";
+
+    private int find(int toFind) {
+        String lookFor = "/*" + toFind + "*/";
+        int index = GENERICS_CLASS.indexOf(lookFor);
+        return index < 0 ? index : index + lookFor.length();
+    }
+
+    // See GRECLIPSE-1238
+    public void testCodeSelectTypeParam0() throws Exception {
+        String name = "SomeInterface";
+        int len = name.length();
+        assertCodeSelect(GENERICS_CLASS, new SourceRange(find(0), len), name);
+    }
+
+    // See GRECLIPSE-1238
+    public void testCodeSelectTypeParam1() throws Exception {
+        String name = "SomeInterface2";
+        int len = name.length();
+        assertCodeSelect(GENERICS_CLASS, new SourceRange(find(1), len), name);
+    }
+
+    // See GRECLIPSE-1238
+    public void testCodeSelectTypeParam2() throws Exception {
+        String name = "SomeClass";
+        int len = name.length();
+        assertCodeSelect(GENERICS_CLASS, new SourceRange(find(2), len), name);
+    }
+
+    // See GRECLIPSE-1238
+    public void testCodeSelectTypeParam3() throws Exception {
+        String name = "SomeInterface";
+        int len = name.length();
+        assertCodeSelect(GENERICS_CLASS, new SourceRange(find(3), len), name);
+    }
+
+    // See GRECLIPSE-1238
+    public void testCodeSelectTypeParam4() throws Exception {
+        String name = "SomeClass";
+        int len = name.length();
+        assertCodeSelect(GENERICS_CLASS, new SourceRange(find(4), len), name);
+    }
+
+    // See GRECLIPSE-1238
+    public void testCodeSelectTypeParam5() throws Exception {
+        String name = "SomeClass";
+        int len = name.length();
+        assertCodeSelect(GENERICS_CLASS, new SourceRange(find(5), len), name);
+    }
+
+    // See GRECLIPSE-1238
+    public void testCodeSelectTypeParam6() throws Exception {
+        String name = "SomeInterface";
+        int len = name.length();
+        assertCodeSelect(GENERICS_CLASS, new SourceRange(find(6), len), name);
+    }
+
+    // See GRECLIPSE-1238
+    public void testCodeSelectTypeParam7() throws Exception {
+        String name = "SomeClass";
+        int len = name.length();
+        assertCodeSelect(GENERICS_CLASS, new SourceRange(find(7), len), name);
+    }
+
+    // See GRECLIPSE-1238
+    public void testCodeSelectTypeParam8() throws Exception {
+        String name = "SomeInterface";
+        int len = name.length();
+        assertCodeSelect(GENERICS_CLASS, new SourceRange(find(8), len), name);
+    }
+
+    // See GRECLIPSE-1238
+    public void testCodeSelectTypeParam9() throws Exception {
+        String name = "SomeClass";
+        int len = name.length();
+        assertCodeSelect(GENERICS_CLASS, new SourceRange(find(9), len), name);
+    }
+
+    // See GRECLIPSE-1238
+    public void testCodeSelectTypeParam10() throws Exception {
+        String name = "SomeInterface2";
+        int len = name.length();
+        assertCodeSelect(GENERICS_CLASS, new SourceRange(find(10), len), name);
+    }
+
+    // See GRECLIPSE-1238
+    public void testCodeSelectTypeParam11() throws Exception {
+        String name = "SomeClass";
+        int len = name.length();
+        assertCodeSelect(GENERICS_CLASS, new SourceRange(find(11), len), name);
+    }
+
+    // See GRECLIPSE-1238
+    public void testCodeSelectTypeParam12() throws Exception {
+        String name = "SomeInterface";
+        int len = name.length();
+        assertCodeSelect(GENERICS_CLASS, new SourceRange(find(12), len), name);
     }
 
 }

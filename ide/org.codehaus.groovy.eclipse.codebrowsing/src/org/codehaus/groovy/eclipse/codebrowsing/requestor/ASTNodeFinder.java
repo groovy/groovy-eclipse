@@ -122,11 +122,11 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         if (node.getEnd() > 0) {
             ClassNode expression = node.getReturnType();
             if (expression != null) {
-                check(expression);
+                visitClassReference(expression);
             }
             if (node.getExceptions() != null) {
                 for (ClassNode e : node.getExceptions()) {
-                    check(e);
+                    visitClassReference(e);
                 }
             }
             checkParameters(node.getParameters());
@@ -170,7 +170,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             // synthetic field, probably 'this$0' for an inner class reference to the outer class
             return;
         }
-        check(node.getType());
+        visitClassReference(node.getType());
         super.visitField(node);
         // maybe selecting the field name itself
         if (node.getNameEnd() > 0) {
@@ -265,13 +265,13 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
         ClassNode unresolvedSuperClass = node.getUnresolvedSuperClass();
         if (unresolvedSuperClass != null && unresolvedSuperClass.getEnd() > 0) {
-            check(unresolvedSuperClass); // use unresolved to maintain source
+            visitClassReference(unresolvedSuperClass); // use unresolved to maintain source
                                          // locations
         }
         if (node.getInterfaces() != null) {
             for (ClassNode inter : node.getInterfaces()) {
                 if (inter.getEnd() > 0) {
-                    check(inter);
+                    visitClassReference(inter);
                 }
             }
         }
@@ -329,6 +329,32 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         if (candidate != null) {
             throw candidate;
         }
+    }
+    
+    /**
+     * Visits a class node with potential type parameters
+     * @param node
+     */
+    private void visitClassReference(ClassNode node) {
+        if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
+            for (GenericsType gen : node.getGenericsTypes()) {
+                if (gen.getLowerBound() != null) {
+                    visitClassReference(gen.getLowerBound());
+                }
+                if (gen.getUpperBounds() != null) {
+                    for (ClassNode upper : gen.getUpperBounds()) {
+                        // handle enums where the upper bound is the same as the type
+                        if (!upper.getName().equals(node.getName())) {
+                            visitClassReference(upper);
+                        }
+                    }
+                }
+                if (gen.getType() != null && gen.getName().charAt(0) != '?') {
+                    visitClassReference(gen.getType());
+                }
+            }
+        }
+        check(node);
     }
 
     /**
