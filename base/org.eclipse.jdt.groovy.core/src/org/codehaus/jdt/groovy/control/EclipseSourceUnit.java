@@ -34,6 +34,9 @@ public class EclipseSourceUnit extends SourceUnit {
 		this.file = resource;
 	}
 
+	/**
+	 * Will be null if workspace is closed (ie- batch compilation mode)
+	 */
 	public IFile getEclipseFile() {
 		return file;
 	}

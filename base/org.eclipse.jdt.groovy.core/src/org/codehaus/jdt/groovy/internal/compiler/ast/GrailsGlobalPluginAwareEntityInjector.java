@@ -124,6 +124,9 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
 	}
 
 	public static PluginInfo getInfo(IFile file) {
+		if (file == null) {
+			return null;
+		}
 		IPath path = file.getFullPath();
 		// The path is expected to have this form
 		// Example:

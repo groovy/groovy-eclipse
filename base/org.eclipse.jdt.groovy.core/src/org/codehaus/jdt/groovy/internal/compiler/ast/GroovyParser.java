@@ -423,7 +423,9 @@ public class GroovyParser {
 		// Try to turn this into a 'real' absolute file system reference (this is because Grails 1.5 expects it).
 		Path path = new Path(filepath);
 		IFile eclipseFile = null;
-		if (path.segmentCount() >= 2) { // Needs 2 segments: a project and file name or eclipse throws assertion failed here.
+		// GRECLIPSE-1269 ensure get plugin is not null to ensure the workspace is open (ie- not in batch mode)
+		if (ResourcesPlugin.getPlugin() != null && path.segmentCount() >= 2) { // Needs 2 segments: a project and file name or
+																				// eclipse throws assertion failed here.
 			eclipseFile = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(filepath));
 			final IPath location = eclipseFile.getLocation();
 			if (location != null) {
