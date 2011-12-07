@@ -60,7 +60,7 @@ public class AddSuggestionsQuickAssistProposal extends
 	}
 
 	public boolean hasProposals() {
-		return new SuggestionCompilationUnitHelper(length, offset, unit,
+		return unit != null && new SuggestionCompilationUnitHelper(length, offset, unit,
 				getProject()).canAddSuggestion();
 	}
 
