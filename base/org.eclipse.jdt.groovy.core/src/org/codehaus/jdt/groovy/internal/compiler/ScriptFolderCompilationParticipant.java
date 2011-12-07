@@ -15,7 +15,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -28,11 +30,15 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.BuildContext;
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CompilationParticipant;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector.FileKind;
+import org.eclipse.jdt.internal.compiler.problem.DefaultProblem;
+import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -80,17 +86,69 @@ public class ScriptFolderCompilationParticipant extends CompilationParticipant {
 
 	private BuildContext[] compiledFiles;
 
+	private IJavaProject project;
+
 	/**
 	 * We care only about Groovy projects
 	 */
 	@Override
 	public boolean isActive(IJavaProject project) {
-		return GroovyNature.hasGroovyNature(project.getProject());
+		boolean hasGroovyNature = GroovyNature.hasGroovyNature(project.getProject());
+		if (!hasGroovyNature) {
+			return false;
+		}
+		this.project = project;
+		return true;
 	}
 
 	@Override
 	public void buildStarting(BuildContext[] files, boolean isBatch) {
+		sanityCheckBuilder(files);
 		compiledFiles = files;
+	}
+
+	/**
+	 * Some simple checks that we can do to ensure that the builder is set up properly
+	 * 
+	 * @param files
+	 */
+	private void sanityCheckBuilder(BuildContext[] files) {
+		// GRECLIPSE-1230 also do a check to ensure the proper compiler is being used
+		if (!LanguageSupportFactory.isGroovyLanguageSupportInstalled()) {
+			for (BuildContext buildContext : files) {
+				buildContext.recordNewProblems(createProblem(buildContext));
+			}
+		}
+		// also check if this project has the JavaBuilder.
+		// note that other builders (like the ajbuilder) may implement the CompilationParticipant API
+		try {
+			ICommand[] buildSpec = project.getProject().getDescription().getBuildSpec();
+			boolean found = false;
+			for (ICommand command : buildSpec) {
+				if (command.getBuilderName().equals(JavaCore.BUILDER_ID)) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				for (BuildContext buildContext : files) {
+					buildContext.recordNewProblems(createProblem(buildContext));
+				}
+			}
+		} catch (CoreException e) {
+			Util.log(e);
+		}
+	}
+
+	/**
+	 * @param buildContext
+	 * @return
+	 */
+	private CategorizedProblem[] createProblem(BuildContext buildContext) {
+		DefaultProblem problem = new DefaultProblem(buildContext.getFile().getFullPath().toOSString().toCharArray(),
+				"Error compiling Groovy project.  Either the Groovy-JDT patch is not installed or JavaBuilder is not being used.",
+				0, new String[0], ProblemSeverities.Error, 0, 0, 1, 0);
+		return new CategorizedProblem[] { problem };
 	}
 
 	@Override

@@ -31,7 +31,18 @@
             createsProblems="false"
             id="org.eclipse.jdt.groovy.core.compilationParticipant1"
             modifiesEnvironment="false">
+         <managedMarker
+               markerType="org.eclipse.jdt.groovy.core.">
+         </managedMarker>
       </compilationParticipant>
+   </extension>
+   <extension
+         id="invalidBuilder"
+         name="Invalid Builder Marker"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="org.eclipse.jdt.core.buildpath_problem">
+      </super>
    </extension>
    
 </plugin>

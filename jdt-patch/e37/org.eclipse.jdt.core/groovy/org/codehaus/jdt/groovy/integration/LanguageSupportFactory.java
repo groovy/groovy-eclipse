@@ -170,4 +170,8 @@ public class LanguageSupportFactory {
 	public static IJavaSearchScope expandSearchScope(IJavaSearchScope scope, SearchPattern pattern, SearchRequestor requestor) {
 		return getLanguageSupport().expandSearchScope(scope, pattern, requestor);
 	}
+	
+	public static boolean isGroovyLanguageSupportInstalled() {
+		return getLanguageSupport().getClass().getName().endsWith("GroovyLanguageSupport"); //$NON-NLS-1$
+	}
 }

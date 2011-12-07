@@ -757,5 +757,4 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Integer");
     }
-    
 }
