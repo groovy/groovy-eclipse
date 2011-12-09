@@ -210,7 +210,17 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         super(CompilerOutputStyle.ONE_OUTPUT_FILE_PER_INPUT_FILE, "", ".class",
                 null);
     }
-
+    
+//    /**
+//     * Injected by plexus container manager
+//     */
+//    private org.apache.maven.project.MavenProject projectHelper;
+//    
+//    public void setProjectHelper(
+//            org.apache.maven.project.MavenProject projectHelper) {
+//        this.projectHelper = projectHelper;
+//    }
+    
     @SuppressWarnings("rawtypes")
     public List compile(CompilerConfiguration config) throws CompilerException {
 
@@ -220,7 +230,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             return Collections.emptyList();
         }
 
-        List<CompilerError> messages;        
+        List<CompilerError> messages;
         if (config.isFork()) {
             String executable = config.getExecutable();
 
