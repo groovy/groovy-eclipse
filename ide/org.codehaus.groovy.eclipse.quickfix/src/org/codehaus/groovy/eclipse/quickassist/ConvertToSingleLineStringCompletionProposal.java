@@ -104,6 +104,9 @@ public class ConvertToSingleLineStringCompletionProposal extends
 
     @Override
     public boolean hasProposals() {
+        if (unit == null) {
+            return false;
+        }
         boolean result = false;
 
         Region region = new Region(offset, length);

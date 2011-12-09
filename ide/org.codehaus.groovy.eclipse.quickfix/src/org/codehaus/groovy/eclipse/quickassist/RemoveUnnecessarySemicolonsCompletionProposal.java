@@ -12,6 +12,7 @@ package org.codehaus.groovy.eclipse.quickassist;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyFormatter;
 import org.codehaus.groovy.eclipse.refactoring.formatter.SemicolonRemover;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jface.text.IDocument;
@@ -83,7 +84,7 @@ public class RemoveUnnecessarySemicolonsCompletionProposal extends
 
     @Override
     public boolean hasProposals() {
-        return true;
+        return getContext().getCompilationUnit() instanceof GroovyCompilationUnit;
     }
 
 }

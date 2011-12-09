@@ -102,6 +102,9 @@ public class ConvertToClosureCompletionProposal extends
 
     @Override
     public boolean hasProposals() {
+        if (unit == null) {
+            return false;
+        }
         try { 
             IJavaElement maybeMethod = unit.getElementAt(offset);
             // must be a method.  Also check that the name range length is equal to the length of the element name.

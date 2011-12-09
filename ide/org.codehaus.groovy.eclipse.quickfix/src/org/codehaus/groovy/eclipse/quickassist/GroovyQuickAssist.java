@@ -16,8 +16,10 @@
 package org.codehaus.groovy.eclipse.quickassist;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -45,9 +47,11 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
 
 	public IJavaCompletionProposal[] getAssists(IInvocationContext context,
 			IProblemLocation[] locations) throws CoreException {
+	    if (!(context.getCompilationUnit() instanceof GroovyCompilationUnit)) {
+	        return new IJavaCompletionProposal[0];
+	    }
 		List<IJavaCompletionProposal> proposalList = new ArrayList<IJavaCompletionProposal>();
 		
-
 		AddSuggestionsQuickAssistProposal javaProposal = new AddSuggestionsQuickAssistProposal(
 				context);
 		if (javaProposal.hasProposals()) {

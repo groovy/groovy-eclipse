@@ -103,6 +103,9 @@ public class ConvertToMethodCompletionProposal extends
 
     @Override
     public boolean hasProposals() {
+        if (unit == null) {
+            return false;
+        }
         try {
             IJavaElement maybeField = unit.getElementAt(offset);
             boolean result = maybeField instanceof IField && ((IField) maybeField).getNameRange().getOffset() > 0;
