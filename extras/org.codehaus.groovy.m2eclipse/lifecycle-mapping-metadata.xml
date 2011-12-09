@@ -20,5 +20,18 @@
 				</configurator>
 			</action>
 		</pluginExecution>
+		<pluginExecution>
+			<pluginExecutionFilter>
+        <groupId>org.codehaus.groovy</groupId>
+        <artifactId>groovy-eclipse-compiler</artifactId>
+        <versionRange>[2.6.0,)</versionRange>
+        <goals>
+          <goal>add-groovy-build-paths</goal>
+        </goals>
+      </pluginExecutionFilter>
+			<action>
+				<execute />
+			</action>
+		</pluginExecution>
 	</pluginExecutions>
 </lifecycleMappingMetadata>
