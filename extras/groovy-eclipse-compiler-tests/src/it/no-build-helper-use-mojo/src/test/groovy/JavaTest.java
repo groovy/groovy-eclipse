@@ -8,9 +8,4 @@ public class JavaTest {
 		JavaMain.main(new String[] {});
 		Assert.assertTrue(true);
 	}
-	@Test
-	public void testMethod2() {
-	}
-	
-	
 }
