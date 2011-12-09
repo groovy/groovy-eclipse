@@ -57,7 +57,6 @@ $Date: 2010-05-29 06:47:51 +0200 (Sat, 29 May 2010) $
 			<artifact:deploy file="${jar.dest}/@{prefix}-@{version}.jar" settingsFile="@{settings}">
 				<pom refid="groovy_pom" />
 				<remoteRepository id="codehaus.org" url="dav:https://dav.codehaus.org/repository/groovy/" />
-<!--				<remoteRepository id="codehaus-nexus-snapshots" url="dav:https://nexus.codehaus.org/content/repositories/snapshots/" />  -->
 			</artifact:deploy>
 		</sequential>
 	</macrodef>

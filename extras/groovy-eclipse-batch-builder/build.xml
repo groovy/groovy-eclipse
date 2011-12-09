@@ -10,6 +10,20 @@
         Andrew Eisenberg - initial API and implementation
  -->
 
+<!--
+	To use this scrupt:
+	  1) Make sure that you have an eclipse 3.7 installation available.
+	  2) Check out Groovy-Eclipse from SVN and start up a workspace with all of these projects
+	  3) Update build.properties to point to the appropriate locations
+	  4) Comment/uncomment do-17-build or do-18-build (exactly one of these must be uncommented at once)
+	  5) Update version1.7 or version1.8 to the correct, new version number
+	  6) run `ant extract-create-install` to build the groovy-eclipse-batch artifact and install it locally
+	  7) OR run `ant extract-create-publish` to publish to codehaus and mirror it on maven central
+	  
+	  When running extract-create-publish, you must supply the following two properties:
+	  		groovy.deploy.username : your codehaus username
+	  		groovy.deploy.password : your codehaus password
+-->
 <project name="Build the groovy-eclipse-batch jar" basedir="." default="extract-create-publish">
 
 	<import file="maven/build-maven.xml"/> 
@@ -24,23 +38,32 @@
 
 	<!-- ================================= 
           target: extract-create
-          Do all work except deployment to repo
+          Do all work except install and deployment to repo
        ================================= -->
 	<target name="extract-create" depends="-init,-extract,-create.jar,-copy-pom"/>
 
 	
-	<!-- - - - - - - - - - - - - - - - - - 
+	<!--  ================================= 
           target: publish
-          publish to the codehaus repository                      
-         - - - - - - - - - - - - - - - - - -->
-	<target name="publish" depends="-init,-installDefault,-deployDefault"
+          publish to the codehaus repository as well as install locally
+         =================================  -->
+	<target name="publish" depends="-init,extract-create-install,-forceUploadSettings,-deployDefault"
       description="Deploy jars to maven repository on codehaus.org.">
 	</target>
 
 
+	
+	<!--  ================================= 
+          target: extract-create-install
+         installs into the local repo                     
+         =================================  -->
+	<target name="extract-create-install" depends="extract-create">
+		<mavenInstall version="${version}" prefix="${jar.prefix}"/>
+	</target>
+
 	<!-- - - - - - - - - - - - - - - - - - 
           target: -extract 
-          extract the contents of all jars and copy them to the extract location                      
+          extract the contents of all jars and copy them to the extract location
          - - - - - - - - - - - - - - - - - -->
 	<target name="-extract" depends="-init">
 		<mkdir dir="${jar.dest}"/>
@@ -114,6 +137,7 @@
 			<include name="org.eclipse.core.jobs_*.jar" />
 			<include name="org.eclipse.text_*.jar" />
 			<include name="org.eclipse.jdt.core_*.jar" />
+			<include name="org.eclipse.jdt.compiler.apt_*.jar" />
 		</fileset>
 
 		<fileset dir="${workspace.loc}" id="orig.groovy.jars">
@@ -149,7 +173,7 @@
 	</target>
 
 	<!-- - - - - - - - - - - - - - - - - - 
-          target: -init17                      
+          target: -init17
          - - - - - - - - - - - - - - - - - -->
     <target name="-init17" if="do-17-build">
        <property name="version" value="${version1.7}"/>
@@ -157,7 +181,7 @@
     </target>
 
 	<!-- - - - - - - - - - - - - - - - - - 
-          target: -init18                      
+          target: -init18
          - - - - - - - - - - - - - - - - - -->
     <target name="-init18" if="do-18-build">
        <property name="version" value="${version1.8}"/>
@@ -197,12 +221,6 @@
 	<!-- does the deploy and updates the username and pass -->
 	<target name="-deployDefault" depends="-forceUploadSettings,-init,-mavenDeployInit">
 		<mavenDeploy version="${version}" prefix="${jar.prefix}" settings="${jar.dest}/settings.xml"/>
-	</target>
-
-
-	<!-- installs into the local repo -->
-	<target name="-installDefault" depends="-forceUploadSettings,-init">
-		<mavenInstall version="${version}" prefix="${jar.prefix}"/>
 	</target>
 
 	<!-- updates username and pass to the specified properties -->
