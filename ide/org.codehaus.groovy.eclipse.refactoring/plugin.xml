@@ -96,26 +96,6 @@
             commandId="org.codehaus.groovy.eclipse.refactoring.command.rename"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
 
-
-
-      <key
-            commandId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
-            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M2+M3+M"/>
-      <!--Undefine and redefine for carbon so as not to compete with special characters -->
-      <key
-            platform="carbon"
-            sequence="M2+M3+M"
-            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
-            commandId=""
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
-      <key
-            platform="carbon"
-            sequence="COMMAND+ALT+M"
-            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
-            commandId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"/>
       <!-- 
       		We don't need the formatting and indentation commands since they are provided by the GroovyEditor
       		and use the commandId for the Java Editor variants of the command
