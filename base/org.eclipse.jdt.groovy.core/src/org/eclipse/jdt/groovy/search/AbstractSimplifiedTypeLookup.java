@@ -25,6 +25,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
@@ -108,8 +109,10 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 		// I can't break api here
 		isStatic = isStaticObjectExpression;
 		TypeAndDeclaration tAndD = null;
-		if (node instanceof ConstantExpression && node.getText().length() == node.getLength()) {
+		if (node instanceof ConstantExpression /* && node.getText().length() == node.getLength() */) {
 			// avoid constant expressions that are in strings
+			tAndD = lookupTypeAndDeclaration(declaringType, node.getText(), scope);
+		} else if (node instanceof GStringExpression) {
 			tAndD = lookupTypeAndDeclaration(declaringType, node.getText(), scope);
 		} else if (node instanceof VariableExpression) {
 			tAndD = lookupTypeAndDeclaration(declaringType, ((VariableExpression) node).getName(), scope);
