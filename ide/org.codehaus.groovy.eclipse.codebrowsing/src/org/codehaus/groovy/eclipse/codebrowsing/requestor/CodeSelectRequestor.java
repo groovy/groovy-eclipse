@@ -350,17 +350,15 @@ public class CodeSelectRequestor implements ITypeRequestor {
         GenericsType[] genericsTypes = node.getGenericsTypes();
         if (genericsTypes != null && genericsTypes.length > 0) {
             sb.append('<');
-            // the commented out code is attempting to treat type parameters correctly
-            // currently, they are being treated as regular type references
-//            StringBuilder sbTypeParameter = new StringBuilder();
             for (GenericsType gt : genericsTypes) {
                 ClassNode genericsType = gt.getType();
-//                if (genericsType == null || genericsType.isGenericsPlaceHolder()) {
-//                    sb.append("T" + gt.getName() + ";");
-//                    sb.insert(0, "<" + gt.getName() + ":>");
-//                } else {
+                // determine whether we should use the name of the type parameter
+                // or the name of the resolved type
+                if (genericsType == null || !genericsType.getName().equals(gt.getName())) {
+                    sb.append(useSimple? genericsType.getNameWithoutPackage() : genericsType.getName());
+                } else {
                     sb.append(createGenericsAwareName(genericsType, useSimple));
-//                }
+                }
                 sb.append(',');
             }
             sb.replace(sb.length()-1, sb.length(), ">");

@@ -114,6 +114,41 @@ public class ExtractLocalTests extends RefactoringTest {
 	            "map.one".length(), true);
 	}
 	
+	public void test10() throws Exception {
+	    helper(ExtractLocalTestsData.getTest10In(),
+	            ExtractLocalTestsData.getTest10Out(),
+	            ExtractLocalTestsData.findLocation("model.farInstance()", "test10"),
+	            "model.farInstance()".length(), true);
+	}
+	
+	public void test10a() throws Exception {
+	    helper(ExtractLocalTestsData.getTest10In(),
+	            ExtractLocalTestsData.getTest10Out(),
+	            ExtractLocalTestsData.findLocation("model.farInstance() ", "test10"),
+	            "model.farInstance() ".length(), true);
+	}
+	
+	public void test10b() throws Exception {
+	    helper(ExtractLocalTestsData.getTest10In(),
+	            ExtractLocalTestsData.getTest10Out(),
+	            ExtractLocalTestsData.findLocation("model.farInstance()  ", "test10"),
+	            "model.farInstance()  ".length(), true);
+	}
+	
+	public void test11() throws Exception {
+	    helper(ExtractLocalTestsData.getTest11In(),
+	            ExtractLocalTestsData.getTest11Out(),
+	            ExtractLocalTestsData.findLocation("println \"here\"", "test11"),
+	            "println \"here\"".length(), true);
+	}
+	
+	public void test12() throws Exception {
+	    helper(ExtractLocalTestsData.getTest12In(),
+	            ExtractLocalTestsData.getTest12Out(),
+	            ExtractLocalTestsData.findLocation("println \"here\"", "test12"),
+	            "println \"here\"".length(), true);
+	}
+	
 	private void helper(String before, String expected, int offset, int length, boolean replaceAllOccurrences) throws Exception {
 		GroovyCompilationUnit cu = (GroovyCompilationUnit) createCU(getPackageP(), "A.groovy", before);
 		try {

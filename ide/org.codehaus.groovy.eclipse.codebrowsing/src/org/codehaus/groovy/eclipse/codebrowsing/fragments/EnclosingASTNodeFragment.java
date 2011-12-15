@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.fragments;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.Assert;
 
 /**
@@ -66,6 +67,20 @@ public class EnclosingASTNodeFragment implements IASTFragment {
 
     public int getLength() {
         return getEnd() - getStart();
+    }
+
+    public int getTrimmedEnd(GroovyCompilationUnit unit) {
+        char[] contents = unit.getContents();
+        int end = getEnd();
+        int start = node.getStart();
+        while (end > start && Character.isWhitespace(contents[end])) {
+            end--;
+        }
+        return end;
+    }
+
+    public int getTrimmedLength(GroovyCompilationUnit unit) {
+        return getTrimmedEnd(unit) - getStart();
     }
 
     public ASTFragmentKind kind() {

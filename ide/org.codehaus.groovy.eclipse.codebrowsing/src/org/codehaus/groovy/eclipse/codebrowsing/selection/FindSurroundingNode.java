@@ -408,6 +408,7 @@ public class FindSurroundingNode extends ASTNodeFinder {
             nodeStack.push(factory.createFragment(node, getRegion().getOffset(), getRegion().getEnd()));
         }
         super.visitMethodCallExpression(node);
+        check(node);
         nodeStack.pop();
     }
 

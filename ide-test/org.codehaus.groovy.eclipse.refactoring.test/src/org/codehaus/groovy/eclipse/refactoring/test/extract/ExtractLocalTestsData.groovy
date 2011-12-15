@@ -53,7 +53,6 @@ package p
 def foo
 def bar
 def fooBar = foo + bar
-
 foo(fooBar)
 
 fooBar + foo(fooBar, fooBar + baz) + fooBar   
@@ -76,7 +75,6 @@ foo.bar.foo.bar(foo.bar.foo.bar)
 package p
 
 def fooBar = foo.bar
-
 fooBar.foo.bar(fooBar.foo.bar)
 """
     
@@ -89,7 +87,6 @@ baz.foo.&bar
 package p
 
 def bazFooBar = baz.foo.&bar
-
 bazFooBar
 """ 
     static String test4In = """
@@ -102,7 +99,6 @@ first+1
 package p
 
 def first1 = first + 1
-
 first1
 first+1
 """ 
@@ -118,7 +114,6 @@ foo + // fdsafhds
 package p
 
 def fooBar = foo + bar
-
 fooBar
 fooBar
 """ 
@@ -138,7 +133,6 @@ package p
 class Outer {
 	def x() {
 		def fooBar = foo + bar
-
 		fooBar
 	}
 }
@@ -162,7 +156,6 @@ class Outer {
 	class Inner {
 		def x() {
 			def fooBar = foo + bar
-
 			fooBar
 		}
 	}
@@ -184,7 +177,6 @@ if (foo+bar) {
 package p
 
 def fooBar = foo+  bar
-
 fooBar
 if (fooBar) {
 	while (fooBar) {
@@ -212,7 +204,6 @@ class Simple {
           def map
           def foo = {
                def mapOne = map.one
-
                println mapOne
                println mapOne
                println mapOne
@@ -222,5 +213,51 @@ class Simple {
 }
 """    
 
+static String test10In = """
+class Simple {
+     def test() {
+          model.farInstance()  
+     }
 }
+"""
+static String test10Out = """
+class Simple {
+     def test() {
+          def modelFarInstance = model.farInstance()
+          modelFarInstance
+     }
+}
+"""
 
+static String test11In = """
+class Simple {
+     def test() {
+          println "here"
+     }
+}
+"""
+static String test11Out = """
+class Simple {
+     def test() {
+          def println = println "here"
+          println
+     }
+}
+"""
+
+static String test12In = """
+class Simple {
+     def test() {
+          println "here"  
+     }
+}
+"""
+static String test12Out = """
+class Simple {
+     def test() {
+          def println = println "here"
+          println
+     }
+}
+"""
+}

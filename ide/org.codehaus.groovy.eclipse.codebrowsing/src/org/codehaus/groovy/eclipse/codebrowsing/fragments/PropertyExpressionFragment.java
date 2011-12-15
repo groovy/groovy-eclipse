@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.fragments;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.IsSameExpression;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.Assert;
 
 /**
@@ -57,6 +58,14 @@ public class PropertyExpressionFragment implements IASTFragment {
 
     public int getLength() {
         return getEnd() - getStart();
+    }
+
+    public int getTrimmedEnd(GroovyCompilationUnit unit) {
+        return getNext().getTrimmedEnd(unit);
+    }
+
+    public int getTrimmedLength(GroovyCompilationUnit unit) {
+        return getTrimmedEnd(unit) - getStart();
     }
 
     public IASTFragment getNext() {

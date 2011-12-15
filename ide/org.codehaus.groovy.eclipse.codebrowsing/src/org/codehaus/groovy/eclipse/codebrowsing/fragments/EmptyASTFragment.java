@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.fragments;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.EmptyExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 
 /**
  * FIXADE convert to singleton
@@ -57,6 +58,14 @@ public class EmptyASTFragment implements IASTFragment {
 
     public int getLength() {
         return 0;
+    }
+
+    public int getTrimmedEnd(GroovyCompilationUnit unit) {
+        return 0;
+    }
+
+    public int getTrimmedLength(GroovyCompilationUnit unit) {
+        return getTrimmedEnd(unit) - getStart();
     }
 
     public ASTFragmentKind kind() {

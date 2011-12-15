@@ -150,7 +150,14 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
             pm.beginTask("", 6); //$NON-NLS-1$
 
             IASTFragment expr = getSelectedFragment();
-            if (expr == null || expr.getStart() != start || expr.getLength() != length) {
+            int trimmedLength = expr.getTrimmedLength(unit);
+            int exprLength = expr.getLength();
+            // problem is that some expressions include whitespace in the end of
+            // their sloc.
+            // need to handle this case.
+            // the selected length must be somewhere >= the trimmed (no
+            // whitespace) length and <= the non-trimeed (w/ whitespace) length
+            if (expr == null || expr.getStart() != start || length > exprLength || length < trimmedLength) {
                 return RefactoringStatus.createFatalErrorStatus("Must select a full expression", JavaStatusContext.create(unit,
                         new SourceRange(start, length)));
             }
@@ -560,7 +567,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
             GroovyCore.logException("Exception during extract local variable refactoring", e);
             status.addFatalError(e.getMessage(), createContext());
         }
-        return prefix + doc.get() + "\n";
+        return prefix + doc.get();
     }
 
     private RefactoringStatus checkSelection(IProgressMonitor pm) throws JavaModelException {

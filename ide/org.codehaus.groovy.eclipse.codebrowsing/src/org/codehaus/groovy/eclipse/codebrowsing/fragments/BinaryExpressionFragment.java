@@ -19,6 +19,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.IsSameExpression;
 import org.codehaus.groovy.syntax.Token;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.Assert;
 
 /**
@@ -74,6 +75,14 @@ public class BinaryExpressionFragment implements IASTFragment {
 
     public int getLength() {
         return getEnd() - getStart();
+    }
+
+    public int getTrimmedEnd(GroovyCompilationUnit unit) {
+        return getNext().getTrimmedEnd(unit);
+    }
+
+    public int getTrimmedLength(GroovyCompilationUnit unit) {
+        return getTrimmedEnd(unit) - getStart();
     }
 
     public Token getToken() {

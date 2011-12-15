@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.fragments;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.IsSameExpression;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 
 /**
  * A method call fragment
@@ -65,6 +66,23 @@ public class MethodCallFragment implements IASTFragment {
 
     public int getLength() {
         return getEnd() - getStart();
+    }
+
+    public int getTrimmedEnd(GroovyCompilationUnit unit) {
+        if (hasNext()) {
+            return getNext().getTrimmedEnd(unit);
+        } else {
+            char[] contents = unit.getContents();
+            int end = actualEndPosition;
+            while (end > methodExpression.getStart() && Character.isWhitespace(contents[end])) {
+                end--;
+            }
+            return end;
+        }
+    }
+
+    public int getTrimmedLength(GroovyCompilationUnit unit) {
+        return getTrimmedEnd(unit) - getStart();
     }
 
     public Expression getArguments() {
