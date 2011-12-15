@@ -35,6 +35,7 @@ import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
+import org.codehaus.groovy.ast.stmt.AssertStatement;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
@@ -197,6 +198,11 @@ public class ASTNodeSourceLocationsTests  extends GroovierBuilderTests {
                 "import javax.applet.*",
                 "import javax.applet.Applet");
     }
+	// GRECLIPSE-1270
+	public void testAssertStatement1() throws Exception {
+	    checkBinaryExprSLocs("def meth() {\n  then:\n  assert x == 9\n}", 
+                new AssertStatementSLocTester(), "assert x == 9");
+    }
 	
 	
 	class StartAndEnd {
@@ -303,6 +309,14 @@ public class ASTNodeSourceLocationsTests  extends GroovierBuilderTests {
 			super.visitCastExpression(expression);
 			allCollectedNodes.add(expression);
 		}
+	}
+	
+	class AssertStatementSLocTester extends AbstractSLocTester {
+	    @Override
+	    public void visitAssertStatement(AssertStatement statement) {
+	        super.visitAssertStatement(statement);
+	        allCollectedNodes.add(statement);
+	    }
 	}
 	
 	private void checkBinaryExprSLocs(String contents, AbstractSLocTester tester, String... exprStrings) throws Exception {

@@ -1537,7 +1537,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             default:
                 statement = new ExpressionStatement(expression(node));
         }
+        // GRECLIPSE: start
+        // GRECLIPSE-1270 and GROOVY-5197 sloc problem with labels
+        /*old{
         if (statement != null) {
+        */
+        // new
+        if (statement != null && type != LABELED_STAT) {
+            // end groovychange
             configureAST(statement, node);
         }
         return statement;
