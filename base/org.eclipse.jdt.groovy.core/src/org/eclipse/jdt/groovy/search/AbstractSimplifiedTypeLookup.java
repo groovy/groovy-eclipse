@@ -79,12 +79,28 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 	}
 
 	private boolean isStatic;
+	private Expression currentExpression;
 
 	/**
 	 * @return true iff the current lookup is in a static scope
 	 */
 	protected boolean isStatic() {
 		return isStatic;
+	}
+
+	/**
+	 * @return the expression AST node that is currently being inferred.
+	 */
+	protected Expression getCurrentExpression() {
+		return currentExpression;
+	}
+
+	/**
+	 * @return true iff the current expression being inferred is a quoted string
+	 */
+	protected boolean isQuotedString() {
+		return currentExpression instanceof GStringExpression
+				|| currentExpression.getText().length() != currentExpression.getLength();
 	}
 
 	// not called, but must be implemented
@@ -105,17 +121,14 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 				declaringType = scope.getEnclosingTypeDeclaration();
 			}
 		}
-		// I would have likd to pass this valye into lookupTypeAndDeclaration, but
+		// I would have likd to pass this value into lookupTypeAndDeclaration, but
 		// I can't break api here
 		isStatic = isStaticObjectExpression;
+		currentExpression = node;
+
 		TypeAndDeclaration tAndD = null;
-		if (node instanceof ConstantExpression /* && node.getText().length() == node.getLength() */) {
-			// avoid constant expressions that are in strings
+		if (node instanceof ConstantExpression || node instanceof GStringExpression || node instanceof VariableExpression) {
 			tAndD = lookupTypeAndDeclaration(declaringType, node.getText(), scope);
-		} else if (node instanceof GStringExpression) {
-			tAndD = lookupTypeAndDeclaration(declaringType, node.getText(), scope);
-		} else if (node instanceof VariableExpression) {
-			tAndD = lookupTypeAndDeclaration(declaringType, ((VariableExpression) node).getName(), scope);
 		}
 
 		if (tAndD != null) {
