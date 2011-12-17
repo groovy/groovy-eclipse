@@ -38,6 +38,7 @@ public class AllSearchTests {
         suite.addTestSuite(LocalVariableReferenceSearchTests.class);
         suite.addTestSuite(JDTPropertyNodeInferencingTests.class);
         suite.addTestSuite(DeclarationInferencingTests.class);
+        suite.addTestSuite(OperatorOverloadingInferencingTests.class);
         return suite;
     }
 }

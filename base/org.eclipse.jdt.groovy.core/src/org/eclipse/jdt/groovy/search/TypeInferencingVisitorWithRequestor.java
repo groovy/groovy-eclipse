@@ -750,7 +750,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	}
 
 	private boolean handleExpression(Expression node) {
-		TypeLookupResult result = null;
 		ClassNode objectExprType;
 		boolean isStatic;
 		VariableScope scope = scopes.peek();
@@ -764,6 +763,48 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			isStatic = false;
 		}
 
+		previousResult = lookupExpressionType(node, objectExprType, isStatic, scope);
+		previousResult.enclosingAssignment = enclosingAssignment;
+		VisitStatus status = handleRequestor(node, requestor, previousResult);
+
+		scope.methodCallNumberOfArguments = -1; // forget the number of arguments
+
+		// when there is a category method, we don't want to store it
+		// as the declaring type since this will mess things up inside closures
+		ClassNode rememberedDeclaringType = previousResult.declaringType;
+		if (scope.getCategoryNames().contains(rememberedDeclaringType)) {
+			rememberedDeclaringType = objectExprType;
+		}
+		if (rememberedDeclaringType == null) {
+			rememberedDeclaringType = VariableScope.OBJECT_CLASS_NODE;
+		}
+		switch (status) {
+			case CONTINUE:
+				if (isObjectExpression(node)) {
+					objectExpressionType.push(previousResult.type);
+				} else if (isProperty(node)) {
+					propertyExpressionType.push(previousResult.type);
+					propertyExpressionDeclaringType.push(rememberedDeclaringType);
+				}
+				return true;
+			case CANCEL_BRANCH:
+				if (isObjectExpression(node)) {
+					objectExpressionType.push(previousResult.type);
+				} else if (isProperty(node)) {
+					propertyExpressionType.push(previousResult.type);
+					propertyExpressionDeclaringType.push(rememberedDeclaringType);
+				}
+				return false;
+			case CANCEL_MEMBER:
+			case STOP_VISIT:
+				throw new VisitCompleted(status);
+		}
+		// won't get here
+		return false;
+	}
+
+	private TypeLookupResult lookupExpressionType(Expression node, ClassNode objectExprType, boolean isStatic, VariableScope scope) {
+		TypeLookupResult result = null;
 		for (ITypeLookup lookup : lookups) {
 			TypeLookupResult candidate;
 			if (lookup instanceof ITypeLookupExtension) {
@@ -780,43 +821,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 			}
 		}
-		result.enclosingAssignment = enclosingAssignment;
-		VisitStatus status = handleRequestor(node, requestor, result);
-
-		scope.methodCallNumberOfArguments = -1; // forget the number of arguments
-
-		// when there is a category method, we don't want to store it
-		// as the declaring type since this will mess things up inside closures
-		ClassNode rememberedDeclaringType = result.declaringType;
-		if (scope.getCategoryNames().contains(rememberedDeclaringType)) {
-			rememberedDeclaringType = objectExprType;
-		}
-		if (rememberedDeclaringType == null) {
-			rememberedDeclaringType = VariableScope.OBJECT_CLASS_NODE;
-		}
-		switch (status) {
-			case CONTINUE:
-				if (isObjectExpression(node)) {
-					objectExpressionType.push(result.type);
-				} else if (isProperty(node)) {
-					propertyExpressionType.push(result.type);
-					propertyExpressionDeclaringType.push(rememberedDeclaringType);
-				}
-				return true;
-			case CANCEL_BRANCH:
-				if (isObjectExpression(node)) {
-					objectExpressionType.push(result.type);
-				} else if (isProperty(node)) {
-					propertyExpressionType.push(result.type);
-					propertyExpressionDeclaringType.push(rememberedDeclaringType);
-				}
-				return false;
-			case CANCEL_MEMBER:
-			case STOP_VISIT:
-				throw new VisitCompleted(status);
-		}
-		// won't get here
-		return false;
+		return result;
 	}
 
 	/**
@@ -978,33 +983,141 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		boolean shouldContinue = handleExpression(node);
 
-		// the declaration itself is the property node
-		ClassNode propType = propertyExpressionType.pop();
-		// don't care about the declaring type
-		propertyExpressionDeclaringType.pop();
-
 		if (shouldContinue) {
 			toVisitSecond.visit(this);
 
+			// don't care about the declaring type
+			propertyExpressionDeclaringType.pop();
+			// don't care about property expression either
 			propertyExpression.pop();
+			ClassNode rhs = propertyExpressionType.pop();
 
 			// returns true if this binary expression is the property part of another property expression
 			if (isObjectExpression(node)) {
-				// over here, we should try to find the binary expr's inferred type.
+				ClassNode lhs = objExprType;
+				// over here, we try to find the binary expr's inferred type.
+				// we only care about this inferred type if the binary expression is
+				// part of a larger expression
+
 				// 1. convert operator into a method name
 				// 2. convert that into a constant expression
 				// 3. call handle expression on it
 				// 4. then make sure that the result is pushed onto objectExpressionType
-				objectExpressionType.push(findTypeOfBinaryExpression(node.getOperation().getText(), objExprType, propType));
+				String associatedMethod = findBinaryOperatorName(node.getOperation().getText());
+				if (associatedMethod != null) {
+					TypeLookupResult result = lookupExpressionType(new ConstantExpression(associatedMethod), lhs, false,
+							scopes.peek());
+					ClassNode exprType = result.type;
+					if (associatedMethod.equals("getAt") && result.declaringType.equals(VariableScope.DGM_CLASS_NODE)) {
+						// special case getAt coming from DGM.
+						// problem is that DGM has too many overloaded variants of getAt.
+						// do better by looking at the rhs.
+						if (lhs.getName().equals("java.util.BitSet")) {
+							exprType = VariableScope.BOOLEAN_CLASS_NODE;
+						} else {
+							GenericsType[] lhsGenericsTypes = lhs.getGenericsTypes();
+							ClassNode elementType;
+							if (VariableScope.MAP_CLASS_NODE.equals(lhs) && lhsGenericsTypes != null
+									&& lhsGenericsTypes.length == 2) {
+								// for maps, always use the type of value
+								elementType = lhsGenericsTypes[1].getType();
+							} else {
+								// deref...get component type of lhs
+								elementType = VariableScope.extractElementType(lhs);
+							}
+							// if rhs is a range or list type, then result is a list parameterized by lhs type
+							if (rhs.isArray() || rhs.getName().equals(VariableScope.LIST_CLASS_NODE.getName())
+									|| rhs.implementsInterface(VariableScope.LIST_CLASS_NODE)) {
+								exprType = createParameterizedList(elementType);
+							} else {
+								exprType = elementType;
+							}
+						}
+					}
+					objectExpressionType.push(exprType);
+				} else {
+					objectExpressionType.push(findTypeOfBinaryExpression(node.getOperation().getText(), lhs, rhs));
+				}
 			}
 		} else {
 			propertyExpression.pop();
+			propertyExpressionDeclaringType.pop();
+			propertyExpressionType.pop();
 
 			// not popped earlier because the method field of the expression was not examined
 			objectExpressionType.pop();
 		}
-		// put this in a finally block?
 		enclosingAssignment = oldEnclosingAssignment;
+	}
+
+	/**
+	 * @param text
+	 * @return the method name associated with this binary operator
+	 */
+	private String findBinaryOperatorName(String text) {
+		char op = text.charAt(0);
+		switch (op) {
+			case '+':
+				return "plus";
+			case '-':
+				return "minus";
+			case '*':
+				if (text.length() > 1 && text.equals("**")) {
+					return "power";
+				}
+				return "multiply";
+			case '/':
+				return "divide";
+			case '%':
+				return "mod";
+			case '&':
+				return "and";
+			case '|':
+				return "or";
+			case '^':
+				return "xor";
+			case '>':
+				if (text.length() > 1 && text.equals(">>")) {
+					return "rightShift";
+				}
+				break;
+			case '<':
+				if (text.length() > 1 && text.equals("<<")) {
+					return "leftShift";
+				}
+				break;
+			case '[':
+				return "getAt";
+		}
+		return null;
+	}
+
+	/**
+	 * Not used yet, but could be used for PostFix and PreFix operators
+	 * 
+	 * @param text
+	 * @return the method name associated with this unary operator
+	 */
+	@SuppressWarnings("unused")
+	private String findUnaryOperatorName(String text) {
+		char op = text.charAt(0);
+		switch (op) {
+			case '+':
+				if (text.length() > 1 && text.equals("++")) {
+					return "next";
+				}
+				return "positive";
+			case '-':
+				if (text.length() > 1 && text.equals("--")) {
+					return "previous";
+				}
+				return "negative";
+			case ']':
+				return "putAt";
+			case '~':
+				return "bitwiseNegate";
+		}
+		return null;
 	}
 
 	@Override
@@ -1230,6 +1343,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	// These methods have a fixed type for the closure argument
 	private static final Map<String, ClassNode> dgmClosureMethodsMap = new HashMap<String, ClassNode>();
+
+	private TypeLookupResult previousResult;
+
 	static {
 		dgmClosureMethodsMap.put("eachLine", VariableScope.STRING_CLASS_NODE);
 		dgmClosureMethodsMap.put("splitEachLine", VariableScope.STRING_CLASS_NODE);
@@ -1439,10 +1555,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			// returns true if this method call expression is the property field of another property expression
 			if (isObjectExpression(node)) {
 				if (node.isSpreadSafe()) {
-					ClassNode list = VariableScope.clonedList();
-					list.getGenericsTypes()[0].setType(propType);
-					list.getGenericsTypes()[0].setName(propType.getName());
-					propType = list;
+					propType = createParameterizedList(propType);
 				}
 				objectExpressionType.push(propType);
 			}
@@ -1518,10 +1631,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			ClassNode propType = propertyExpressionType.pop();
 			if (isObjectExpression(node)) {
 				if (node.isSpreadSafe()) {
-					ClassNode list = VariableScope.clonedList();
-					list.getGenericsTypes()[0].setType(propType);
-					list.getGenericsTypes()[0].setName(propType.getName());
-					propType = list;
+					propType = createParameterizedList(propType);
 				}
 				// returns true if this property expression is the property field of another property expression
 				objectExpressionType.push(propType);
@@ -1534,6 +1644,17 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			objectExpressionType.pop();
 		}
 		scopes.peek().forgetCurrentNode();
+	}
+
+	/**
+	 * @param propType
+	 * @return a list parameterized by propType
+	 */
+	private ClassNode createParameterizedList(ClassNode propType) {
+		ClassNode list = VariableScope.clonedList();
+		list.getGenericsTypes()[0].setType(propType);
+		list.getGenericsTypes()[0].setName(propType.getName());
+		return list;
 	}
 
 	@Override
@@ -1847,10 +1968,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				return prop.getObjectExpression() == node;
 			} else if (maybeProperty instanceof BinaryExpression) {
 				BinaryExpression prop = (BinaryExpression) maybeProperty;
-				// for assignments, the right expression is property
-				// for others, the left
-				boolean isAssignment = prop.getOperation().getText().equals("=");
-				if (isAssignment) {
+				// note that visit order is different depending on whether visiting
+				// assignment or not
+				if (prop.getOperation().getType() == Types.EQUALS) {
 					return prop.getRightExpression() == node;
 				} else {
 					return prop.getLeftExpression() == node;
@@ -1883,8 +2003,17 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			} else if (maybeProperty instanceof MethodCallExpression) {
 				MethodCallExpression prop = (MethodCallExpression) maybeProperty;
 				return prop.getMethod() == node;
-			} else if (maybeProperty instanceof BinaryExpression || maybeProperty instanceof TernaryExpression) {
-				// note that here it is the binary expression itself that
+			} else if (maybeProperty instanceof BinaryExpression) {
+				BinaryExpression prop = (BinaryExpression) maybeProperty;
+				// note that visit order is different depending on whether visiting
+				// assignment or not
+				if (prop.getOperation().getType() == Types.EQUALS) {
+					return prop == node;
+				} else {
+					return prop.getRightExpression() == node;
+				}
+			} else if (maybeProperty instanceof TernaryExpression) {
+				// note that here it is the ternary expression itself that
 				// is the property, rather than its LHS
 				// this allows the type to be available during the inferencing stage
 				return maybeProperty == node;
@@ -1931,6 +2060,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	}
 
 	/**
+	 * Only handle operations that are not handled in {@link #findBinaryOperatorName(String)}
+	 * 
 	 * @param operation the operation of this binary expression
 	 * @param lhs the type of the lhs of the binary expression
 	 * @param rhs the type of the rhs of the binary expression
@@ -1939,41 +2070,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	private ClassNode findTypeOfBinaryExpression(String operation, ClassNode lhs, ClassNode rhs) {
 		char op = operation.charAt(0);
 		switch (op) {
-
-			case '[':
-				// GRECLIPSE-742: does the LHS type have a 'getAt' method?
-				List<MethodNode> getAts = lhs.getMethods("getAt");
-				for (MethodNode getAt : getAts) {
-					if (getAt.getParameters() != null && getAt.getParameters().length == 1) {
-						return getAt.getReturnType();
-					}
-				}
-
-				GenericsType[] lhsGenericsTypes = lhs.getGenericsTypes();
-				if (VariableScope.MAP_CLASS_NODE.equals(lhs) && lhsGenericsTypes != null && lhsGenericsTypes.length == 2) {
-					// for maps, always use the type of value
-					return lhsGenericsTypes[1].getType();
-				}
-
-				// deref...get component type of lhs
-				return VariableScope.extractElementType(lhs);
 			case '*':
 				if (operation.equals("*.") || operation.equals("*.@")) {
 					// can we do better and parameterize the list?
 					return VariableScope.clonedList();
 				}
-				// fall through
-			case '-':
-			case '/':
-			case '%':
-				// arithmetic operation
-				// lhs, if number type, else rhs if number type, else number
-				return isNumeric(lhs) ? lhs : (isNumeric(rhs) ? rhs : VariableScope.NUMBER_CLASS_NODE);
-
-			case '+':
-				// lhs
-				return lhs;
-
 			case '~':
 				// regex pattern
 				return VariableScope.STRING_CLASS_NODE;
@@ -1983,24 +2084,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			case '<':
 			case '>':
 				if (operation.length() > 1) {
-					if (operation.equals("<<")) {
-						// list of rhs type
-						ClassNode listType = VariableScope.clone(VariableScope.LIST_CLASS_NODE);
-						listType.getGenericsTypes()[0].setType(rhs);
-						listType.getGenericsTypes()[0].setName(rhs.getName());
-						return listType;
-					} else if (operation.equals("<=>")) {
+					if (operation.equals("<=>")) {
 						return VariableScope.INTEGER_CLASS_NODE;
 					}
 				}
 				// all booleans
 				return VariableScope.BOOLEAN_CLASS_NODE;
-
-			case '&':
-			case '^':
-			case '|':
-				// bitwse operations, return lhs
-				return lhs;
 
 			case 'i':
 				if (operation.equals("is") || operation.equals("in")) {
@@ -2036,28 +2125,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 	}
 
-	private boolean isNumeric(ClassNode c) {
-		if (c == null || c.isInterface() || c == VariableScope.OBJECT_CLASS_NODE) {
-			return false;
-		}
-		if (c.equals(VariableScope.NUMBER_CLASS_NODE)) {
-			return true;
-		} else {
-			return isNumeric(c.getSuperClass());
-		}
-	}
-
-	/**
-	 * @param node
-	 */
 	private void addCategoryToBeDeclared(ClassNode catNode) {
 		scopes.peek().setCategoryBeingDeclared(catNode);
 	}
 
-	/**
-	 * @param node
-	 * @return
-	 */
 	private ClassNode isCategoryDeclaration(MethodCallExpression node) {
 		String methodAsString = node.getMethodAsString();
 		if (methodAsString != null && methodAsString.equals("use")) {

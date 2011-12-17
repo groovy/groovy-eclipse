@@ -145,7 +145,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
                     unit.discardWorkingCopy();
                 }
             }
-        } catch (JavaModelException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
