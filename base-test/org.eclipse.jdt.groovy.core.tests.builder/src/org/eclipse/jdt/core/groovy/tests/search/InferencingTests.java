@@ -107,7 +107,7 @@ public class InferencingTests extends AbstractInferencingTest {
     
     // Should be java.util.List<java.lang.String>
     public void testInferList2() throws Exception {
-        assertType("[] << \"\"", "java.util.List<java.lang.Object>");
+        assertType("[] << \"\"", "java.util.List<java.lang.Object<E>>");
     }
     
     
