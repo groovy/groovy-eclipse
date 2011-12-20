@@ -539,7 +539,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		TypeLookupResult result = null;
 		result = new TypeLookupResult(node, node, node, TypeConfidence.EXACT, scope);
-		VisitStatus status = handleRequestor(node, requestor, result);
+		VisitStatus status = notifyRequestor(node, requestor, result);
 		switch (status) {
 			case CONTINUE:
 				break;
@@ -633,7 +633,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 			}
 		}
-		VisitStatus status = handleRequestor(node, requestor, result);
+		VisitStatus status = notifyRequestor(node, requestor, result);
 		switch (status) {
 			case CONTINUE:
 				ClassNode fieldType = node.getType();
@@ -680,7 +680,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			}
 		}
 
-		VisitStatus status = handleRequestor(node, requestor, result);
+		VisitStatus status = notifyRequestor(node, requestor, result);
 		switch (status) {
 			case CONTINUE:
 				if (!node.isEnum()) {
@@ -734,7 +734,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 			}
 		}
-		VisitStatus status = handleRequestor(node, requestor, result);
+		VisitStatus status = notifyRequestor(node, requestor, result);
 
 		switch (status) {
 			case CONTINUE:
@@ -813,7 +813,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 						}
 					}
 				}
-				VisitStatus status = handleRequestor(imp, requestor, result);
+				VisitStatus status = notifyRequestor(imp, requestor, result);
 
 				switch (status) {
 					case CONTINUE:
@@ -840,172 +840,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 	}
 
-	private boolean handleStatement(Statement node) {
-		// don't check the lookups because statements have no type.
-		// but individual requestors may choose to end the visit here
-		VariableScope currentScope = scopes.peek();
-		VariableInfo info = currentScope.lookupName("this");
-		ClassNode declaring = info == null ? VariableScope.OBJECT_CLASS_NODE : info.declaringType;
-
-		TypeLookupResult noLookup = new TypeLookupResult(declaring, declaring, declaring, TypeConfidence.EXACT, currentScope);
-		VisitStatus status = handleRequestor(node, requestor, noLookup);
-		switch (status) {
-			case CONTINUE:
-				return true;
-			case CANCEL_BRANCH:
-				return false;
-			case CANCEL_MEMBER:
-			case STOP_VISIT:
-			default:
-				throw new VisitCompleted(status);
-		}
-
-	}
-
-	private boolean handleExpression(Expression node) {
-		ClassNode primaryType;
-		boolean isStatic;
-		VariableScope scope = scopes.peek();
-		if (isDependentExpression(node)) {
-			// debugging help: objectExpressionType.push(objectExprType)
-			primaryType = primaryTypeStack.pop();
-			isStatic = hasStaticObjectExpression(node);
-			scope.methodCallNumberOfArguments = getMethodCallArgs();
-		} else {
-			primaryType = null;
-			isStatic = false;
-		}
-
-		TypeLookupResult previousResult = lookupExpressionType(node, primaryType, isStatic, scope);
-		previousResult.enclosingAssignment = enclosingAssignment;
-		VisitStatus status = handleRequestor(node, requestor, previousResult);
-
-		scope.methodCallNumberOfArguments = -1; // forget the number of arguments
-
-		// when there is a category method, we don't want to store it
-		// as the declaring type since this will mess things up inside closures
-		ClassNode rememberedDeclaringType = previousResult.declaringType;
-		if (scope.getCategoryNames().contains(rememberedDeclaringType)) {
-			rememberedDeclaringType = primaryType;
-		}
-		if (rememberedDeclaringType == null) {
-			rememberedDeclaringType = VariableScope.OBJECT_CLASS_NODE;
-		}
-		switch (status) {
-			case CONTINUE:
-				postVisit(node, previousResult.type, rememberedDeclaringType);
-				return true;
-			case CANCEL_BRANCH:
-				postVisit(node, previousResult.type, rememberedDeclaringType);
-				return false;
-			case CANCEL_MEMBER:
-			case STOP_VISIT:
-				throw new VisitCompleted(status);
-		}
-		// won't get here
-		return false;
-	}
-
-	private void postVisit(Expression node, ClassNode type, ClassNode declaringType) {
-		if (isPrimaryExpression(node)) {
-			primaryTypeStack.push(type);
-		} else if (isDependentExpression(node)) {
-			dependentTypeStack.push(type);
-			dependentDeclaringTypeStack.push(declaringType);
-		}
-	}
-
-	private TypeLookupResult lookupExpressionType(Expression node, ClassNode objectExprType, boolean isStatic, VariableScope scope) {
-		TypeLookupResult result = null;
-		for (ITypeLookup lookup : lookups) {
-			TypeLookupResult candidate;
-			if (lookup instanceof ITypeLookupExtension) {
-				candidate = ((ITypeLookupExtension) lookup).lookupType(node, scope, objectExprType, isStatic);
-			} else {
-				candidate = lookup.lookupType(node, scope, objectExprType);
-			}
-			if (candidate != null) {
-				if (result == null || result.confidence.isLessPreciseThan(candidate.confidence)) {
-					result = candidate;
-				}
-				if (TypeConfidence.LOOSELY_INFERRED.isLessPreciseThan(result.confidence)) {
-					break;
-				}
-			}
-		}
-		return result;
-	}
-
-	/**
-	 * Finds the number of arguments of the current method call. Returns -1 if not a method call. Returns 0 if no arguments else
-	 * returns the number of arguments.
-	 * 
-	 * @return
-	 */
-	private int getMethodCallArgs() {
-		ASTNode peek = completeExpressionStack.peek();
-		if (peek instanceof MethodCallExpression) {
-			MethodCallExpression call = (MethodCallExpression) peek;
-			Expression arguments = call.getArguments();
-			if (arguments instanceof ArgumentListExpression) {
-				ArgumentListExpression list = (ArgumentListExpression) arguments;
-				List<Expression> expressions = list.getExpressions();
-				return expressions != null ? expressions.size() : 0;
-			} else {
-				return 0;
-			}
-		}
-		return -1;
-	}
-
-	private boolean handleParameterList(Parameter[] params) {
-		if (params != null) {
-			VariableScope scope = scopes.peek();
-			for (Parameter node : params) {
-				assignmentStorer.storeParameterType(node, scope);
-				TypeLookupResult result = null;
-				for (ITypeLookup lookup : lookups) {
-					// the first lookup is used to store the type of the
-					// parameter in the sope
-					lookup.lookupType(node, scope);
-					result = lookup.lookupType(node.getType(), scope);
-					TypeLookupResult candidate = lookup.lookupType(node.getType(), scope);
-					if (candidate != null) {
-						if (result == null || result.confidence.isLessPreciseThan(candidate.confidence)) {
-							result = candidate;
-						}
-						if (TypeConfidence.LOOSELY_INFERRED.isLessPreciseThan(result.confidence)) {
-							break;
-						}
-					}
-				}
-				// visit the parameter itself
-				TypeLookupResult parameterResult = new TypeLookupResult(result.type, result.declaringType, node,
-						TypeConfidence.EXACT, scope);
-				VisitStatus status = handleRequestor(node, requestor, parameterResult);
-				switch (status) {
-					case CONTINUE:
-						break;
-					case CANCEL_BRANCH:
-						return false;
-					case CANCEL_MEMBER:
-					case STOP_VISIT:
-						throw new VisitCompleted(status);
-				}
-
-				// visit the parameter type
-				visitClassReference(node.getType());
-
-				visitAnnotations(node);
-				Expression init = node.getInitialExpression();
-				if (init != null) {
-					init.visit(this);
-				}
-			}
-		}
-		return true;
-	}
-
 	@Override
 	public void visitVariableExpression(VariableExpression node) {
 		scopes.peek().setCurrentNode(node);
@@ -1020,7 +854,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		if (node.getAccessedVariable() == node) {
 			visitClassReference(node.getType());
 		}
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitVariableExpression(node);
 		}
@@ -1034,7 +868,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitArrayExpression(ArrayExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitArrayExpression(node);
 		}
@@ -1042,7 +876,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitAttributeExpression(AttributeExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			completeExpressionStack.push(node);
 			super.visitAttributeExpression(node);
@@ -1151,7 +985,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				// no overloadable associated method
 				exprType = findTypeOfBinaryExpression(node.getOperation().getText(), primaryExprType, dependentExprType);
 			}
-			postVisit(node, exprType, null);
+			handleCompleteExpression(node, exprType, null);
 		}
 		enclosingAssignment = oldEnclosingAssignment;
 	}
@@ -1253,7 +1087,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitBitwiseNegationExpression(BitwiseNegationExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitBitwiseNegationExpression(node);
 		}
@@ -1261,7 +1095,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitBooleanExpression(BooleanExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitBooleanExpression(node);
 		}
@@ -1270,12 +1104,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	// Groovy 1.8+ only
 	// @Override
 	public void visitEmptyExpression(EmptyExpression node) {
-		handleExpression(node);
+		handleSimpleExpression(node);
 	}
 
 	@Override
 	public void visitBytecodeExpression(BytecodeExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitBytecodeExpression(node);
 		}
@@ -1283,7 +1117,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitCastExpression(CastExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			visitClassReference(node.getType());
 			super.visitCastExpression(node);
@@ -1292,7 +1126,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitClassExpression(ClassExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitClassExpression(node);
 		}
@@ -1302,7 +1136,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	public void visitClosureExpression(ClosureExpression node) {
 		VariableScope scope = new VariableScope(scopes.peek(), node, false);
 		scopes.push(scope);
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			ClassNode[] implicitParamType = findImplicitParamType(scope, node);
 			if (node.getParameters() != null && node.getParameters().length > 0) {
@@ -1459,7 +1293,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitClosureListExpression(ClosureListExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitClosureListExpression(node);
 		}
@@ -1468,7 +1302,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	@Override
 	public void visitConstantExpression(ConstantExpression node) {
 		scopes.peek().setCurrentNode(node);
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitConstantExpression(node);
 		}
@@ -1477,7 +1311,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitConstructorCallExpression(ConstructorCallExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			visitClassReference(node.getType());
 			super.visitConstructorCallExpression(node);
@@ -1492,7 +1326,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitFieldExpression(FieldExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitFieldExpression(node);
 		}
@@ -1501,7 +1335,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	@Override
 	public void visitGStringExpression(GStringExpression node) {
 		scopes.peek().setCurrentNode(node);
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitGStringExpression(node);
 		}
@@ -1520,14 +1354,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			eltType = VariableScope.OBJECT_CLASS_NODE;
 		}
 		completeExpressionStack.pop();
-		postVisit(node, createParameterizedList(eltType), null);
+		ClassNode exprType = createParameterizedList(eltType);
+		handleCompleteExpression(node, exprType, null);
 		scopes.peek().forgetCurrentNode();
 	}
 
 	@Override
 	public void visitMapEntryExpression(MapEntryExpression node) {
 		scopes.peek().setCurrentNode(node);
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitMapEntryExpression(node);
 		}
@@ -1538,7 +1373,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	@Override
 	public void visitMapExpression(MapExpression node) {
 		scopes.peek().setCurrentNode(node);
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitMapExpression(node);
 		}
@@ -1585,13 +1420,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		if (node.isSpreadSafe()) {
 			exprType = createParameterizedList(exprType);
 		}
-		postVisit(node, exprType, exprDeclaringType);
+		handleCompleteExpression(node, exprType, exprDeclaringType);
 		scopes.peek().forgetCurrentNode();
 	}
 
 	@Override
 	public void visitMethodPointerExpression(MethodPointerExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitMethodPointerExpression(node);
 		}
@@ -1599,7 +1434,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitNotExpression(NotExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitNotExpression(node);
 		}
@@ -1607,7 +1442,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitPostfixExpression(PostfixExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitPostfixExpression(node);
 		}
@@ -1615,7 +1450,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitPrefixExpression(PrefixExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitPrefixExpression(node);
 		}
@@ -1646,7 +1481,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		if (node.isSpreadSafe()) {
 			exprType = createParameterizedList(exprType);
 		}
-		postVisit(node, exprType, null);
+		handleCompleteExpression(node, exprType, null);
 		scopes.peek().forgetCurrentNode();
 	}
 
@@ -1657,7 +1492,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		super.visitRangeExpression(node);
 		ClassNode eltType = primaryTypeStack.pop();
 		completeExpressionStack.pop();
-		postVisit(node, createParameterizedRange(eltType), null);
+		ClassNode rangeType = createParameterizedRange(eltType);
+		handleCompleteExpression(node, rangeType, null);
 		scopes.peek().forgetCurrentNode();
 	}
 
@@ -1671,12 +1507,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		ClassNode exprType = primaryTypeStack.pop();
 		completeExpressionStack.pop();
 		node.getFalseExpression().visit(this);
-		postVisit(node, exprType, null);
+		handleCompleteExpression(node, exprType, null);
 	}
 
 	@Override
 	public void visitSpreadExpression(SpreadExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitSpreadExpression(node);
 		}
@@ -1684,7 +1520,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitSpreadMapExpression(SpreadMapExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitSpreadMapExpression(node);
 		}
@@ -1692,7 +1528,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitStaticMethodCallExpression(StaticMethodCallExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue && node.getEnd() > 0) {
 			visitClassReference(node.getOwnerType());
 			super.visitStaticMethodCallExpression(node);
@@ -1719,13 +1555,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		// if the ternary expression is a primary expression
 		// of a larger expression, use the exprType as the
 		// primary of the next expression
-		postVisit(node, exprType, null);
+		handleCompleteExpression(node, exprType, null);
 	}
 
 	// FIXADE should do the same as in list
 	@Override
 	public void visitTupleExpression(TupleExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitTupleExpression(node);
 		}
@@ -1733,7 +1569,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitUnaryMinusExpression(UnaryMinusExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitUnaryMinusExpression(node);
 		}
@@ -1741,7 +1577,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitUnaryPlusExpression(UnaryPlusExpression node) {
-		boolean shouldContinue = handleExpression(node);
+		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			super.visitUnaryPlusExpression(node);
 		}
@@ -1761,7 +1597,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 			}
 		}
-		VisitStatus status = handleRequestor(node, requestor, result);
+		VisitStatus status = notifyRequestor(node, requestor, result);
 
 		switch (status) {
 			case CONTINUE:
@@ -1785,7 +1621,184 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 	}
 
-	private VisitStatus handleRequestor(ASTNode node, ITypeRequestor requestor, TypeLookupResult result) {
+	private boolean handleStatement(Statement node) {
+		// don't check the lookups because statements have no type.
+		// but individual requestors may choose to end the visit here
+		VariableScope currentScope = scopes.peek();
+		VariableInfo info = currentScope.lookupName("this");
+		ClassNode declaring = info == null ? VariableScope.OBJECT_CLASS_NODE : info.declaringType;
+
+		TypeLookupResult noLookup = new TypeLookupResult(declaring, declaring, declaring, TypeConfidence.EXACT, currentScope);
+		VisitStatus status = notifyRequestor(node, requestor, noLookup);
+		switch (status) {
+			case CONTINUE:
+				return true;
+			case CANCEL_BRANCH:
+				return false;
+			case CANCEL_MEMBER:
+			case STOP_VISIT:
+			default:
+				throw new VisitCompleted(status);
+		}
+
+	}
+
+	private boolean handleSimpleExpression(Expression node) {
+		ClassNode primaryType;
+		boolean isStatic;
+		VariableScope scope = scopes.peek();
+		if (isDependentExpression(node)) {
+			// debugging help: objectExpressionType.push(objectExprType)
+			primaryType = primaryTypeStack.pop();
+			isStatic = hasStaticObjectExpression(node);
+			scope.methodCallNumberOfArguments = getMethodCallArgs();
+		} else {
+			primaryType = null;
+			isStatic = false;
+		}
+
+		TypeLookupResult result = lookupExpressionType(node, primaryType, isStatic, scope);
+		return handleRequestor(node, primaryType, result);
+	}
+
+	private void handleCompleteExpression(Expression node, ClassNode exprType, ClassNode exprDeclaringType) {
+		handleRequestor(node, exprDeclaringType, new TypeLookupResult(exprType, exprDeclaringType, node, TypeConfidence.EXACT,
+				scopes.peek()));
+		postVisit(node, exprType, null);
+	}
+
+	private void postVisit(Expression node, ClassNode type, ClassNode declaringType) {
+		if (isPrimaryExpression(node)) {
+			primaryTypeStack.push(type);
+		} else if (isDependentExpression(node)) {
+			dependentTypeStack.push(type);
+			dependentDeclaringTypeStack.push(declaringType);
+		}
+	}
+
+	private TypeLookupResult lookupExpressionType(Expression node, ClassNode objectExprType, boolean isStatic, VariableScope scope) {
+		TypeLookupResult result = null;
+		for (ITypeLookup lookup : lookups) {
+			TypeLookupResult candidate;
+			if (lookup instanceof ITypeLookupExtension) {
+				candidate = ((ITypeLookupExtension) lookup).lookupType(node, scope, objectExprType, isStatic);
+			} else {
+				candidate = lookup.lookupType(node, scope, objectExprType);
+			}
+			if (candidate != null) {
+				if (result == null || result.confidence.isLessPreciseThan(candidate.confidence)) {
+					result = candidate;
+				}
+				if (TypeConfidence.LOOSELY_INFERRED.isLessPreciseThan(result.confidence)) {
+					break;
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Finds the number of arguments of the current method call. Returns -1 if not a method call. Returns 0 if no arguments else
+	 * returns the number of arguments.
+	 * 
+	 * @return
+	 */
+	private int getMethodCallArgs() {
+		ASTNode peek = completeExpressionStack.peek();
+		if (peek instanceof MethodCallExpression) {
+			MethodCallExpression call = (MethodCallExpression) peek;
+			Expression arguments = call.getArguments();
+			if (arguments instanceof ArgumentListExpression) {
+				ArgumentListExpression list = (ArgumentListExpression) arguments;
+				List<Expression> expressions = list.getExpressions();
+				return expressions != null ? expressions.size() : 0;
+			} else {
+				return 0;
+			}
+		}
+		return -1;
+	}
+
+	private boolean handleParameterList(Parameter[] params) {
+		if (params != null) {
+			VariableScope scope = scopes.peek();
+			for (Parameter node : params) {
+				assignmentStorer.storeParameterType(node, scope);
+				TypeLookupResult result = null;
+				for (ITypeLookup lookup : lookups) {
+					// the first lookup is used to store the type of the
+					// parameter in the sope
+					lookup.lookupType(node, scope);
+					result = lookup.lookupType(node.getType(), scope);
+					TypeLookupResult candidate = lookup.lookupType(node.getType(), scope);
+					if (candidate != null) {
+						if (result == null || result.confidence.isLessPreciseThan(candidate.confidence)) {
+							result = candidate;
+						}
+						if (TypeConfidence.LOOSELY_INFERRED.isLessPreciseThan(result.confidence)) {
+							break;
+						}
+					}
+				}
+				// visit the parameter itself
+				TypeLookupResult parameterResult = new TypeLookupResult(result.type, result.declaringType, node,
+						TypeConfidence.EXACT, scope);
+				VisitStatus status = notifyRequestor(node, requestor, parameterResult);
+				switch (status) {
+					case CONTINUE:
+						break;
+					case CANCEL_BRANCH:
+						return false;
+					case CANCEL_MEMBER:
+					case STOP_VISIT:
+						throw new VisitCompleted(status);
+				}
+
+				// visit the parameter type
+				visitClassReference(node.getType());
+
+				visitAnnotations(node);
+				Expression init = node.getInitialExpression();
+				if (init != null) {
+					init.visit(this);
+				}
+			}
+		}
+		return true;
+	}
+
+	private boolean handleRequestor(Expression node, ClassNode primaryType, TypeLookupResult result) {
+		result.enclosingAssignment = enclosingAssignment;
+		VisitStatus status = requestor.acceptASTNode(node, result, enclosingElement);
+		VariableScope scope = scopes.peek();
+		scope.methodCallNumberOfArguments = -1; // forget the number of arguments
+
+		// when there is a category method, we don't want to store it
+		// as the declaring type since this will mess things up inside closures
+		ClassNode rememberedDeclaringType = result.declaringType;
+		if (scope.getCategoryNames().contains(rememberedDeclaringType)) {
+			rememberedDeclaringType = primaryType;
+		}
+		if (rememberedDeclaringType == null) {
+			rememberedDeclaringType = VariableScope.OBJECT_CLASS_NODE;
+		}
+		switch (status) {
+			case CONTINUE:
+				postVisit(node, result.type, rememberedDeclaringType);
+				return true;
+			case CANCEL_BRANCH:
+				postVisit(node, result.type, rememberedDeclaringType);
+				return false;
+			case CANCEL_MEMBER:
+			case STOP_VISIT:
+				throw new VisitCompleted(status);
+		}
+		// won't get here
+		return false;
+
+	}
+
+	private VisitStatus notifyRequestor(ASTNode node, ITypeRequestor requestor, TypeLookupResult result) {
 		// result is never null because SimpleTypeLookup always returns non-null
 		return requestor.acceptASTNode(node, result, enclosingElement);
 	}
