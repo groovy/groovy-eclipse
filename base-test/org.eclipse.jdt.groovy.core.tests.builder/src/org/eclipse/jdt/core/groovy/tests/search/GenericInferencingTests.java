@@ -61,15 +61,24 @@ public class GenericInferencingTests extends AbstractInferencingTest {
     }
     
     public void testList2() throws Exception {
-        assertType("def x = new LinkedList<String>()", "java.util.LinkedList<java.lang.String>");
+        String contents ="def x = new LinkedList<String>()\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.util.LinkedList<java.lang.String>");
     }
     
     public void testList3() throws Exception {
-        assertType("[ \"\" ]", "java.util.List<java.lang.String>");
+        String contents ="def x = [ '' ]\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.util.List<java.lang.String>");
     }
     
     public void testList4() throws Exception {
-        assertType("[ 1 ]", "java.util.List<java.lang.Integer>");
+        String contents ="def x = [ 1 ]\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.util.List<java.lang.Integer>");
     }
     
     public void testList5() throws Exception {
@@ -98,12 +107,20 @@ public class GenericInferencingTests extends AbstractInferencingTest {
     
     // GRECLIPSE-1040
     public void testList8() throws Exception {
-        assertType("def x = new LinkedList()", "java.util.LinkedList");
+        String contents = "def x = new LinkedList()\nx";
+        String toFind = "x";
+        int start = contents.indexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.LinkedList");
     }
 
     // GRECLIPSE-1040
     public void testSet1() throws Exception {
-        assertType("def x = new HashSet()", "java.util.HashSet");
+        String contents = "def x = new HashSet()\nx";
+        String toFind = "x";
+        int start = contents.indexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.HashSet");
     }
     
     

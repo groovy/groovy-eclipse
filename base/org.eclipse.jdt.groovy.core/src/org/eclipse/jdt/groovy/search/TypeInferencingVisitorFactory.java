@@ -68,12 +68,11 @@ public class TypeInferencingVisitorFactory {
 			List<ITypeLookup> lookupsList = TypeLookupRegistry.getRegistry().getLookupsFor(project);
 			lookupsList.add(new CategoryTypeLookup());
 			lookupsList.add(new SimpleTypeLookup());
-			lookupsList.add(0, new InferenceByAssignmentStatement());
 			lookups = lookupsList.toArray(new ITypeLookup[0]);
 
 		} catch (CoreException e) {
 			Util.log(e, "Exception creating type lookups for project " + project.getName() + ".  Using default instead"); //$NON-NLS-1$ //$NON-NLS-2$
-			lookups = new ITypeLookup[] { new InferenceByAssignmentStatement(), new CategoryTypeLookup(), new SimpleTypeLookup() };
+			lookups = new ITypeLookup[] { new CategoryTypeLookup(), new SimpleTypeLookup() };
 		}
 		return lookups;
 	}

@@ -171,10 +171,10 @@ public class TypeReferenceSearchTests extends AbstractGroovySearchTest {
         		"       println 'testing'\n" +
         		"    }\n" +
         		"}");
-        GroovyCompilationUnit weirdTests = createUnit("gtunes", "Songtests", 
+        GroovyCompilationUnit weirdTests = createUnit("gtunes", "Song2tests", 
         		"package gtunes\n" +
         		"\n" +
-        		"class Songtests {" +
+        		"class Song2tests {" +
         		"    SongTests theOtherTests\n"+ //Shouldn't find
         		"    def testSomethingElse() {\n" +
         		"       println 'testing'\n" +

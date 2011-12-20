@@ -33,7 +33,6 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
 import org.codehaus.groovy.ast.expr.BooleanExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
@@ -43,20 +42,14 @@ import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
-import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.NotExpression;
 import org.codehaus.groovy.ast.expr.PostfixExpression;
 import org.codehaus.groovy.ast.expr.PrefixExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.expr.RangeExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
-import org.codehaus.groovy.ast.expr.TernaryExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
@@ -147,9 +140,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		} else if (node instanceof FieldExpression) {
 			return ((FieldExpression) node).getField().getDeclaringClass();
 
-		} else if (node instanceof MethodCallExpression) {
-			return ((MethodCallExpression) node).getObjectExpression().getType();
-
 		} else if (node instanceof StaticMethodCallExpression) {
 			return ((StaticMethodCallExpression) node).getOwnerType();
 
@@ -210,21 +200,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			if (node instanceof ConstantExpression) {
 				return findTypeForNameWithKnownObjectExpression(node.getText(), nodeType, objectExpressionType, scope, confidence,
 						isStaticObjectExpression);
-
-			} else if (node instanceof BinaryExpression && ((BinaryExpression) node).getOperation().getType() == Types.EQUALS) {
-				// this is an assignment expression, return the object expression, which is the right hand side
-				return new TypeLookupResult(objectExpressionType, declaringType, null, confidence, scope);
-			} else if (node instanceof BinaryExpression && ((BinaryExpression) node).getOperation().getType() == Types.FIND_REGEX) {
-				// this is a match expression, return the Matcher class node
-				return new TypeLookupResult(VariableScope.MATCHER_CLASS_NODE, VariableScope.MATCHER_CLASS_NODE, null, confidence,
-						scope);
-			} else if (node instanceof BinaryExpression && ((BinaryExpression) node).getOperation().getType() == Types.MATCH_REGEX) {
-				// this is a regex find expression. Return a boolean
-				return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, VariableScope.BOOLEAN_CLASS_NODE, null, confidence,
-						scope);
-			} else if (node instanceof TernaryExpression) {
-				// return the object expression type
-				return new TypeLookupResult(objectExpressionType, declaringType, null, confidence, scope);
 			}
 		}
 
@@ -264,25 +239,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 					return new TypeLookupResult(nodeType, null, null, UNKNOWN, scope);
 				}
 			}
-
-		} else if (node instanceof TupleExpression || node instanceof ListExpression || node instanceof RangeExpression) {
-			// some variant of List. Try to find the parameterization by peeking at the first element.
-			ClassNode parameterized = parameterizeThisList(node);
-			return new TypeLookupResult(parameterized, null, null, confidence, scope);
-
-		} else if (node instanceof BinaryExpression) {
-			// Certain operators cannot be overridden, so we can hard code the results
-			String opText = ((BinaryExpression) node).getOperation().getText();
-			ClassNode maybeType;
-			if (opText.equals("=~")) {
-				maybeType = VariableScope.MATCHER_CLASS_NODE;
-			} else if (opText.equals("==~")) {
-				maybeType = VariableScope.BOOLEAN_CLASS_NODE;
-			} else {
-				maybeType = objectExpressionType != null ? objectExpressionType : ((BinaryExpression) node).getLeftExpression()
-						.getType();
-			}
-			return new TypeLookupResult(maybeType, null, null, confidence, scope);
 
 		} else if (node instanceof BooleanExpression || node instanceof NotExpression) {
 			return new TypeLookupResult(VariableScope.BOOLEAN_CLASS_NODE, null, null, confidence, scope);
@@ -325,8 +281,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		}
 
 		// if we get here, then we can't infer the type. Set to unknown if required.
-		if (!(node instanceof MethodCallExpression) && !(node instanceof ConstructorCallExpression)
-				&& !(node instanceof MapEntryExpression) && !(node instanceof PropertyExpression)
+		if (!(node instanceof ConstructorCallExpression) && !(node instanceof MapEntryExpression)
 				&& !(node instanceof TupleExpression) && nodeType.equals(VariableScope.OBJECT_CLASS_NODE)) {
 			confidence = UNKNOWN;
 		}
@@ -367,42 +322,32 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 	 * @param node
 	 * @return a parameterized list
 	 */
-	private ClassNode parameterizeThisList(Expression node) {
-		ClassNode list = VariableScope.OBJECT_CLASS_NODE;
-		if (node instanceof TupleExpression) {
-			list = VariableScope.clonedTuple();
-			TupleExpression tuple = (TupleExpression) node;
-			if (tuple.getExpressions().size() > 0) {
-				GenericsType[] unresolvedGenericsForList = unresolvedGenericsForType(list);
-				ClassNode type = ClassHelper.getWrapper(tuple.getExpression(0).getType());
-				unresolvedGenericsForList[0].setType(type);
-				unresolvedGenericsForList[0].setName(type.getName());
-				return list;
-			}
-		} else if (node instanceof ListExpression) {
-			list = VariableScope.clonedList();
-			ListExpression listExpr = (ListExpression) node;
-			if (listExpr.getExpressions().size() > 0) {
-				GenericsType[] unresolvedGenericsForList = unresolvedGenericsForType(list);
-				ClassNode type = ClassHelper.getWrapper(listExpr.getExpression(0).getType());
-				unresolvedGenericsForList[0].setType(type);
-				unresolvedGenericsForList[0].setName(type.getName());
-				return list;
-			}
-		} else if (node instanceof RangeExpression) {
-			list = VariableScope.clonedRange();
-			RangeExpression rangeExpr = (RangeExpression) node;
-			Expression expr = rangeExpr.getFrom() != null ? rangeExpr.getFrom() : rangeExpr.getTo();
-			if (expr != null) {
-				GenericsType[] unresolvedGenericsForList = unresolvedGenericsForType(list);
-				ClassNode type = ClassHelper.getWrapper(expr.getType());
-				unresolvedGenericsForList[0].setType(type);
-				unresolvedGenericsForList[0].setName(type.getName());
-				return list;
-			}
-		}
-		return list;
-	}
+	// private ClassNode parameterizeThisList(Expression node) {
+	// ClassNode list = VariableScope.OBJECT_CLASS_NODE;
+	// if (node instanceof TupleExpression) {
+	// list = VariableScope.clonedTuple();
+	// TupleExpression tuple = (TupleExpression) node;
+	// if (tuple.getExpressions().size() > 0) {
+	// GenericsType[] unresolvedGenericsForList = unresolvedGenericsForType(list);
+	// ClassNode type = ClassHelper.getWrapper(tuple.getExpression(0).getType());
+	// unresolvedGenericsForList[0].setType(type);
+	// unresolvedGenericsForList[0].setName(type.getName());
+	// return list;
+	// }
+	// } else if (node instanceof RangeExpression) {
+	// list = VariableScope.clonedRange();
+	// RangeExpression rangeExpr = (RangeExpression) node;
+	// Expression expr = rangeExpr.getFrom() != null ? rangeExpr.getFrom() : rangeExpr.getTo();
+	// if (expr != null) {
+	// GenericsType[] unresolvedGenericsForList = unresolvedGenericsForType(list);
+	// ClassNode type = ClassHelper.getWrapper(expr.getType());
+	// unresolvedGenericsForList[0].setType(type);
+	// unresolvedGenericsForList[0].setName(type.getName());
+	// return list;
+	// }
+	// }
+	// return list;
+	// }
 
 	/**
 	 * a little crude because will not find if there are spaces between '.' and 'class'
@@ -772,17 +717,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		return lengthField;
 	}
 
-	// FIXADE not used. can probably delete
-	// private MethodNode findMethodInInterface(String name, Set<ClassNode> allInterfaces) {
-	// for (ClassNode interf : allInterfaces) {
-	// List<MethodNode> methods = interf.getDeclaredMethods(name);
-	// if (methods != null && methods.size() > 0) {
-	// return methods.get(0);
-	// }
-	// }
-	// return null;
-	// }
-
 	private PropertyNode findPropertyInClass(String name, Set<ClassNode> allClasses) {
 		for (ClassNode clazz : allClasses) {
 			PropertyNode prop = clazz.getProperty(name);
@@ -798,16 +732,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			FieldNode field = clazz.getField(name);
 			if (field != null && Flags.isFinal(field.getModifiers()) && field.isStatic()) {
 				return field;
-			}
-		}
-		return null;
-	}
-
-	private PropertyNode findPropertyInInterface(String name, Set<ClassNode> allInterfaces) {
-		for (ClassNode interf : allInterfaces) {
-			PropertyNode prop = interf.getProperty(name);
-			if (prop != null) {
-				return prop;
 			}
 		}
 		return null;

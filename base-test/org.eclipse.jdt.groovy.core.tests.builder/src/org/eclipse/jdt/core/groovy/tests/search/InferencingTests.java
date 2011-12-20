@@ -46,7 +46,10 @@ public class InferencingTests extends AbstractInferencingTest {
     }
 
     public void testInferNumber2() throws Exception {
-        assertType("1+2", "java.lang.Integer");
+        String contents ="def x = 1+2\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Integer");
     }
 
     public void testInferNumber3() throws Exception {
@@ -82,12 +85,17 @@ public class InferencingTests extends AbstractInferencingTest {
     }
     
     public void testInferString4() throws Exception {
-        String contents = "false ? '' : ''";
-        assertType(contents, "java.lang.String");
+        String contents = "def x = false ? '' : ''\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.String");
     }
     
     public void testMatcher1() throws Exception {
-        assertType("\"\" =~ /pattern/", "java.util.regex.Matcher");
+        String contents = "def x = \"\" =~ /pattern/\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.util.regex.Matcher");
     }
     
     public void testMatcher2() throws Exception {
@@ -98,16 +106,25 @@ public class InferencingTests extends AbstractInferencingTest {
     }
     
     public void testPattern() throws Exception {
-        assertType("\"\" ==~ /pattern/", "java.lang.Boolean");
+        String contents ="def x = \"\" ==~ /pattern/\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Boolean");
     }
     
     public void testInferList1() throws Exception {
-        assertType("[]", "java.util.List<java.lang.Object>");
+        String contents ="def x = []\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.util.List<java.lang.Object>");
     }
     
     // Should be java.util.List<java.lang.String>
     public void testInferList2() throws Exception {
-        assertType("[] << \"\"", "java.util.List<java.lang.Object<E>>");
+        String contents = "def x = [] << \"\"\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.util.Collection<java.lang.Object<T>>");
     }
     
     
@@ -297,23 +314,31 @@ public class InferencingTests extends AbstractInferencingTest {
     }
     
     public void testTernaryExpression() throws Exception {
-        String contents = "true ? '' : ''";
-        assertType(contents, "java.lang.String");
+        String contents = "def x = true ? 2 : 1\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Integer");
     }
     
-    public void testElvisExpression() throws Exception {
-        String contents = "'' ?: ''";
-        assertType(contents, "java.lang.String");
+    public void testElvisOperator() throws Exception {
+        String contents = "def x = 2 ?: 1\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Integer");
     }
     
     public void testRangeExpression1() throws Exception {
-        String contents = "0 .. 5";
-        assertType(contents, "groovy.lang.Range<java.lang.Integer>");
+        String contents = "def x = 0 .. 5\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "groovy.lang.Range<java.lang.Integer>");
     }
     
     public void testRangeExpression2() throws Exception {
-        String contents = "0 ..< 5";
-        assertType(contents, "groovy.lang.Range<java.lang.Integer>");
+        String contents = "def x = 0 ..< 5\nx";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "groovy.lang.Range<java.lang.Integer>");
     }
     
     public void testRangeExpression3() throws Exception {
@@ -400,19 +425,17 @@ public class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
     
-    private final static String XXX = "xxx";
-
     public void testAssignementInInnerBlock() throws Exception {
         String contents = "def xxx\n if (true) { xxx = \"\" \n xxx} ";
-        int start = contents.lastIndexOf(XXX);
-        int end = start + XXX.length();
+        int start = contents.lastIndexOf("xxx");
+        int end = start + "xxx".length();
         assertType(contents, start, end, "java.lang.String");
     }
 
     public void testAssignementInInnerBlock2() throws Exception {
         String contents = "def xxx\n if (true) { xxx = \"\" \n }\n xxx";
-        int start = contents.lastIndexOf(XXX);
-        int end = start + XXX.length();
+        int start = contents.lastIndexOf("xxx");
+        int end = start + "xxx".length();
         assertType(contents, start, end, "java.lang.String");
     }
     // GRECLIPSE-743
@@ -442,40 +465,40 @@ public class InferencingTests extends AbstractInferencingTest {
     
     public void testGRECLIPSE731a() throws Exception {
         String contents = "def foo() { } \nString xxx = foo()\nxxx";
-        int start = contents.lastIndexOf(XXX);
-        int end = start + XXX.length();
+        int start = contents.lastIndexOf("xxx");
+        int end = start + "xxx".length();
         assertType(contents, start, end, "java.lang.String");
     }
     public void testGRECLIPSE731b() throws Exception {
         String contents = "def foo() { } \ndef xxx = foo()\nxxx";
-        int start = contents.lastIndexOf(XXX);
-        int end = start + XXX.length();
+        int start = contents.lastIndexOf("xxx");
+        int end = start + "xxx".length();
         assertType(contents, start, end, "java.lang.Object");
     }
     public void testGRECLIPSE731c() throws Exception {
         String contents = "String foo() { } \ndef xxx = foo()\nxxx";
-        int start = contents.lastIndexOf(XXX);
-        int end = start + XXX.length();
+        int start = contents.lastIndexOf("xxx");
+        int end = start + "xxx".length();
         assertType(contents, start, end, "java.lang.String");
     }
     public void testGRECLIPSE731d() throws Exception {
         String contents = "int foo() { } \ndef xxx = foo()\nxxx";
-        int start = contents.lastIndexOf(XXX);
-        int end = start + XXX.length();
+        int start = contents.lastIndexOf("xxx");
+        int end = start + "xxx".length();
         assertType(contents, start, end, "java.lang.Integer");
     }
     // ignore assignments to object expressions
     public void testGRECLIPSE731e() throws Exception {
         String contents = "def foo() { } \nString xxx\nxxx = foo()\nxxx";
-        int start = contents.lastIndexOf(XXX);
-        int end = start + XXX.length();
+        int start = contents.lastIndexOf("xxx");
+        int end = start + "xxx".length();
         assertType(contents, start, end, "java.lang.String");
     }
     // ignore assignments to object expressions
     public void testGRECLIPSE731f() throws Exception {
         String contents = "class X { String xxx\ndef foo() { }\ndef meth() { xxx = foo()\nxxx } }";
-        int start = contents.lastIndexOf(XXX);
-        int end = start + XXX.length();
+        int start = contents.lastIndexOf("xxx");
+        int end = start + "xxx".length();
         assertType(contents, start, end, "java.lang.String");
     }
     
@@ -934,8 +957,7 @@ public class InferencingTests extends AbstractInferencingTest {
     }
     // GRECLIPSE-1264
     public void testImplicitVar4() throws Exception {
-        String contents = 
-                "doesNotExist = 9";
+        String contents = "doesNotExist = 9";
         int start = contents.lastIndexOf("doesNotExist");
         assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
     }
