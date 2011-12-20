@@ -267,4 +267,78 @@ public class OperatorOverloadingInferencingTests extends AbstractInferencingTest
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Boolean");
     }
 
+    
+    public void testAttributeExpr1() throws Exception {
+        String contents = 
+                "class Foo {\n boolean str\n }\n" +
+                "def xxx = new Foo().@str\n" +
+                "xxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Boolean");
+    }
+    public void testAttributeExpr2() throws Exception {
+        String contents = 
+                "class Foo {\n String str\n }\n" +
+                "def xxx = new Foo().@str.startsWith('1')\n" +
+                "xxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Boolean");
+    }
+    public void testLongExpr1() throws Exception {
+        String contents = 
+                "class Foo {\n String str\n }\n" +
+                "def xxx = ([ new Foo() ].str.length() + 4 - 9) % 7\n" +
+                "xxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Integer");
+    }
+    
+    public void testLongExpr2() throws Exception {
+        String contents = 
+                "class Foo {\n String str\n }\n" +
+                "def xxx = ([ new Foo() ])[(new Foo().str.length() + 4 - 9) % 7]\n" +
+                "xxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
+    }
+    
+    public void testNumberPlusString1() throws Exception {
+        String contents = 
+                "def xxx = 1 + ''\n" +
+                "xxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.String");
+    }
+    public void testNumberPlusString2() throws Exception {
+        String contents = 
+                "def xxx = 1 + \"${this}\"\n" +
+                        "xxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.String");
+    }
+    
+    public void testCompleteExpr1() throws Exception {
+        assertType("['']", "java.util.List<java.lang.String>");
+    }
+    public void testCompleteExpr2() throws Exception {
+        assertType("this.class.name", "java.lang.String");
+    }
+    public void testCompleteExpr3() throws Exception {
+        assertType("this.getClass().getName()", "java.lang.String");
+    }
+    public void testCompleteExpr4() throws Exception {
+        assertType("this.getClass().getName() + 3", "java.lang.String");
+    }
+    public void testCompleteExpr5() throws Exception {
+        assertType("4 + this.getClass().getName()", "java.lang.String");
+    }
+    public void testCompleteExpr6() throws Exception {
+        assertType("new LinkedList<String>()[0]", "java.lang.String");
+    }
+    public void testCompleteExpr7() throws Exception {
+        assertType("[1:3]", "java.util.Map<java.lang.Integer,java.lang.Integer>");
+    }
+    public void testCompleteExpr8() throws Exception {
+        assertType("1..3", "groovy.lang.Range<java.lang.Integer>");
+    }
 }

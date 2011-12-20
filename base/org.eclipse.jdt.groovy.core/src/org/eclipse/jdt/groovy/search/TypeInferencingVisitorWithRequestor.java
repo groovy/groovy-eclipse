@@ -84,6 +84,7 @@ import org.codehaus.groovy.syntax.Types;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
@@ -117,6 +118,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 
 	}
+
+	/**
+	 * Set to true if debug mode is desired. Any exceptions will be spit to syserr. Also, after a visit, there will be a sanity
+	 * check to ensure that all stacks are empty Only set to true if using a visitor that always visits the entire file
+	 */
+	public boolean DEBUG = false;
 
 	/**
 	 * We hard code the list of methods that take a closure and expect to iterate over that closure
@@ -320,6 +327,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			// can ignore
 		} catch (Exception e) {
 			Util.log(e, "Error in inferencing engine for " + unit.getElementName());
+			if (DEBUG) {
+				System.err.println("Excpetion thrown from inferencing engine");
+				e.printStackTrace();
+			}
+		}
+		if (DEBUG) {
+			postVisitSanityCheck();
 		}
 	}
 
@@ -843,21 +857,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	@Override
 	public void visitVariableExpression(VariableExpression node) {
 		scopes.peek().setCurrentNode(node);
-
-		// VariableExpressions not an AnnotatedNode in groovy 1.6, but they are in 1.7+
-		Object maybeAnnotatedNode = node;
-		if (maybeAnnotatedNode instanceof AnnotatedNode) {
-			visitAnnotations((AnnotatedNode) maybeAnnotatedNode);
-		}
-
-		// this is a declaration
+		visitAnnotations(node);
 		if (node.getAccessedVariable() == node) {
+			// this is a declaration
 			visitClassReference(node.getType());
 		}
-		boolean shouldContinue = handleSimpleExpression(node);
-		if (shouldContinue) {
-			super.visitVariableExpression(node);
-		}
+		handleSimpleExpression(node);
 		scopes.peek().forgetCurrentNode();
 	}
 
@@ -876,16 +881,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitAttributeExpression(AttributeExpression node) {
-		boolean shouldContinue = handleSimpleExpression(node);
-		if (shouldContinue) {
-			completeExpressionStack.push(node);
-			super.visitAttributeExpression(node);
-			completeExpressionStack.pop();
-		}
+		visitPropertyExpression(node);
 	}
 
 	@Override
 	public void visitBinaryExpression(BinaryExpression node) {
+		if (isDependentExpression(node)) {
+			primaryTypeStack.pop();
+		}
 
 		// don't visit binary expressions in a constructor that have no source location.
 		// the reason is that these were copied from the field initializer.
@@ -917,49 +920,46 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		toVisitPrimary.visit(this);
 
-		// must get this now, because this value is popped during handlExpreession.
-		ClassNode primaryExprType = primaryTypeStack.peek();
+		ClassNode primaryExprType;
 
 		if (isAssignment) {
+			// must get this now, because this value is popped during handlExpreession.
+			primaryExprType = primaryTypeStack.pop();
 			assignmentStorer.storeAssignment(node, scopes.peek(), primaryExprType);
+		} else {
+			primaryExprType = primaryTypeStack.peek();
 		}
 
 		toVisitDependent.visit(this);
 
 		completeExpressionStack.pop();
-		ClassNode dependentExprType;
-		if (isAssignment) {
-			dependentExprType = primaryExprType;
-		} else {
+		ClassNode completeExprType = primaryExprType;
+
+		if (!isAssignment) {
 			dependentDeclaringTypeStack.pop();
-			dependentExprType = dependentTypeStack.pop();
-		}
 
-		// if expression is a primary expression of a larger expression, then
-		// we need to push the dependent type onto the primary type stack so
-		// it is usable by next dependent expression
-		if (isPrimaryExpression(node) || isDependentExpression(node)) {
-
+			// type of RHS of binary expression
+			ClassNode dependentExprType = dependentTypeStack.pop();
+			// find the type of the complete expression
 			String associatedMethod = findBinaryOperatorName(node.getOperation().getText());
-			ClassNode exprType;
-			if (isArithmeticOperationOnNumber(node.getOperation().getText(), primaryExprType, dependentExprType)) {
+			if (isArithmeticOperationOnNumberOrString(node.getOperation().getText(), primaryExprType, dependentExprType)) {
 				// another special case.
 				// In 1.8 and later, Groovy will not go through the
 				// MOP for standard arithmetic operations on numbers
-				exprType = dependentExprType.equals(VariableScope.STRING_CLASS_NODE) ? VariableScope.STRING_CLASS_NODE
+				completeExprType = dependentExprType.equals(VariableScope.STRING_CLASS_NODE) ? VariableScope.STRING_CLASS_NODE
 						: primaryExprType;
 			} else if (associatedMethod != null) {
 				// there is an overloadable method associated with this operation
 				// convert to a constant expression and infer type
 				TypeLookupResult result = lookupExpressionType(new ConstantExpression(associatedMethod), primaryExprType, false,
 						scopes.peek());
-				exprType = result.type;
+				completeExprType = result.type;
 				if (associatedMethod.equals("getAt") && result.declaringType.equals(VariableScope.DGM_CLASS_NODE)) {
 					// special case getAt coming from DGM.
 					// problem is that DGM has too many overloaded variants of getAt.
 					// do better by looking at the rhs.
 					if (primaryExprType.getName().equals("java.util.BitSet")) {
-						exprType = VariableScope.BOOLEAN_CLASS_NODE;
+						completeExprType = VariableScope.BOOLEAN_CLASS_NODE;
 					} else {
 						GenericsType[] lhsGenericsTypes = primaryExprType.getGenericsTypes();
 						ClassNode elementType;
@@ -975,18 +975,18 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 						if (dependentExprType.isArray()
 								|| dependentExprType.getName().equals(VariableScope.LIST_CLASS_NODE.getName())
 								|| dependentExprType.implementsInterface(VariableScope.LIST_CLASS_NODE)) {
-							exprType = createParameterizedList(elementType);
+							completeExprType = createParameterizedList(elementType);
 						} else {
-							exprType = elementType;
+							completeExprType = elementType;
 						}
 					}
 				}
 			} else {
 				// no overloadable associated method
-				exprType = findTypeOfBinaryExpression(node.getOperation().getText(), primaryExprType, dependentExprType);
+				completeExprType = findTypeOfBinaryExpression(node.getOperation().getText(), primaryExprType, dependentExprType);
 			}
-			handleCompleteExpression(node, exprType, null);
 		}
+		handleCompleteExpression(node, completeExprType, null);
 		enclosingAssignment = oldEnclosingAssignment;
 	}
 
@@ -999,7 +999,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * @param dependentExprType
 	 * @return
 	 */
-	private boolean isArithmeticOperationOnNumber(String text, ClassNode lhs, ClassNode rhs) {
+	private boolean isArithmeticOperationOnNumberOrString(String text, ClassNode lhs, ClassNode rhs) {
 		if (text.length() != 1) {
 			return false;
 		}
@@ -1009,7 +1009,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			case '-':
 			case '*':
 			case '/':
-				return (lhs.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE) || VariableScope.NUMBER_CLASS_NODE.equals(lhs));
+			case '%':
+				return (VariableScope.STRING_CLASS_NODE.equals(lhs) || lhs.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE) || VariableScope.NUMBER_CLASS_NODE
+						.equals(lhs));
 			default:
 				return false;
 		}
@@ -1344,6 +1346,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitListExpression(ListExpression node) {
+		if (isDependentExpression(node)) {
+			primaryTypeStack.pop();
+		}
 		scopes.peek().setCurrentNode(node);
 		completeExpressionStack.push(node);
 		super.visitListExpression(node);
@@ -1361,28 +1366,55 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitMapEntryExpression(MapEntryExpression node) {
-		scopes.peek().setCurrentNode(node);
-		boolean shouldContinue = handleSimpleExpression(node);
-		if (shouldContinue) {
-			super.visitMapEntryExpression(node);
+		if (isDependentExpression(node)) {
+			primaryTypeStack.pop();
 		}
+		scopes.peek().setCurrentNode(node);
+		completeExpressionStack.push(node);
+		node.getKeyExpression().visit(this);
+
+		// use the types of the key and value expressions
+		ClassNode k = primaryTypeStack.pop();
+		node.getValueExpression().visit(this);
+		ClassNode v = primaryTypeStack.pop();
+		completeExpressionStack.pop();
+		// really, we don't need to do this if not the first entry of a map literal
+		ClassNode exprType;
+		if (isPrimaryExpression(node)) {
+			exprType = createParameterizedMap(k, v);
+		} else {
+			exprType = VariableScope.OBJECT_CLASS_NODE;
+		}
+		handleCompleteExpression(node, exprType, null);
 		scopes.peek().forgetCurrentNode();
 	}
 
-	// FIXADE should do the same as in list
 	@Override
 	public void visitMapExpression(MapExpression node) {
-		scopes.peek().setCurrentNode(node);
-		boolean shouldContinue = handleSimpleExpression(node);
-		if (shouldContinue) {
-			super.visitMapExpression(node);
+		if (isDependentExpression(node)) {
+			primaryTypeStack.pop();
 		}
+		scopes.peek().setCurrentNode(node);
+		completeExpressionStack.push(node);
+		visitListOfExpressions(node.getMapEntryExpressions());
+		completeExpressionStack.pop();
+
+		ClassNode exprType;
+		if (node.getMapEntryExpressions().size() > 0) {
+			exprType = primaryTypeStack.pop();
+		} else {
+			exprType = createParameterizedMap(VariableScope.OBJECT_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE);
+		}
+		handleCompleteExpression(node, exprType, null);
 		scopes.peek().forgetCurrentNode();
 	}
 
 	@Override
 	public void visitMethodCallExpression(MethodCallExpression node) {
 		scopes.peek().setCurrentNode(node);
+		if (isDependentExpression(node)) {
+			primaryTypeStack.pop();
+		}
 		completeExpressionStack.push(node);
 		node.getObjectExpression().visit(this);
 
@@ -1461,10 +1493,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		scopes.peek().setCurrentNode(node);
 		completeExpressionStack.push(node);
 		node.getObjectExpression().visit(this);
+		ClassNode objType;
+		if (isDependentExpression(node)) {
+			primaryTypeStack.pop();
+		}
 		if (node.isSpreadSafe()) {
-			// most find the component type of the object expression type
-			ClassNode objType = primaryTypeStack.pop();
-			primaryTypeStack.push(VariableScope.extractElementType(objType));
+			objType = primaryTypeStack.pop();
+			// must find the component type of the object expression type
+			primaryTypeStack.push(objType = VariableScope.extractElementType(objType));
+		} else {
+			objType = primaryTypeStack.peek();
 		}
 
 		node.getProperty().visit(this);
@@ -1479,6 +1517,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		// if this property expression is the primary of a larger expression,
 		// then remember the inferred type
 		if (node.isSpreadSafe()) {
+			// if we are dealing with a map, then a spread dot will return a list of values,
+			// so use the type of the value.
+			if (objType.equals(VariableScope.MAP_CLASS_NODE) && objType.getGenericsTypes() != null
+					&& objType.getGenericsTypes().length == 2) {
+				exprType = objType.getGenericsTypes()[1].getType();
+			}
 			exprType = createParameterizedList(exprType);
 		}
 		handleCompleteExpression(node, exprType, null);
@@ -1487,6 +1531,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitRangeExpression(RangeExpression node) {
+		if (isDependentExpression(node)) {
+			primaryTypeStack.pop();
+		}
 		scopes.peek().setCurrentNode(node);
 		completeExpressionStack.push(node);
 		super.visitRangeExpression(node);
@@ -1499,6 +1546,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitShortTernaryExpression(ElvisOperatorExpression node) {
+		if (isDependentExpression(node)) {
+			primaryTypeStack.pop();
+		}
 		// arbitrarily, we choose the if clause to be the type of this expression
 		completeExpressionStack.push(node);
 		node.getTrueExpression().visit(this);
@@ -1537,6 +1587,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitTernaryExpression(TernaryExpression node) {
+		if (isDependentExpression(node)) {
+			primaryTypeStack.pop();
+		}
 		completeExpressionStack.push(node);
 
 		node.getBooleanExpression().visit(this);
@@ -1664,7 +1717,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	private void handleCompleteExpression(Expression node, ClassNode exprType, ClassNode exprDeclaringType) {
 		handleRequestor(node, exprDeclaringType, new TypeLookupResult(exprType, exprDeclaringType, node, TypeConfidence.EXACT,
 				scopes.peek()));
-		postVisit(node, exprType, null);
 	}
 
 	private void postVisit(Expression node, ClassNode type, ClassNode declaringType) {
@@ -1906,10 +1958,23 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * @return a list parameterized by propType
 	 */
 	private ClassNode createParameterizedRange(ClassNode propType) {
-		ClassNode list = VariableScope.clonedRange();
-		list.getGenericsTypes()[0].setType(propType);
-		list.getGenericsTypes()[0].setName(propType.getName());
-		return list;
+		ClassNode range = VariableScope.clonedRange();
+		range.getGenericsTypes()[0].setType(propType);
+		range.getGenericsTypes()[0].setName(propType.getName());
+		return range;
+	}
+
+	/**
+	 * @param propType
+	 * @return a list parameterized by propType
+	 */
+	private ClassNode createParameterizedMap(ClassNode k, ClassNode v) {
+		ClassNode map = VariableScope.clonedMap();
+		map.getGenericsTypes()[0].setType(k);
+		map.getGenericsTypes()[0].setName(k.getName());
+		map.getGenericsTypes()[1].setType(v);
+		map.getGenericsTypes()[1].setName(v.getName());
+		return map;
 	}
 
 	/**
@@ -1985,6 +2050,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * <li>true expression (ie- right part) of a ternary expression
 	 * <li>first element of a list expression (the first element is assumed to be representative of all list elements)
 	 * <li>first element of a range expression (the first element is assumed to be representative of the range)
+	 * <li>Either the key OR the value expression of a {@link MapEntryExpression}
+	 * <li>The first {@link MapEntryExpression} of a {@link MapExpression}
 	 * </ul>
 	 * 
 	 * @param node expression node to check
@@ -2024,6 +2091,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 						&& ((ListExpression) maybeProperty).getExpression(0) == node;
 			} else if (maybeProperty instanceof RangeExpression) {
 				return ((RangeExpression) maybeProperty).getFrom() == node;
+			} else if (maybeProperty instanceof MapEntryExpression) {
+				return ((MapEntryExpression) maybeProperty).getKeyExpression() == node
+						|| ((MapEntryExpression) maybeProperty).getValueExpression() == node;
+			} else if (maybeProperty instanceof MapExpression) {
+				return ((MapExpression) maybeProperty).getMapEntryExpressions().size() > 0
+						&& ((MapExpression) maybeProperty).getMapEntryExpressions().get(0) == node;
 			} else {
 				return false;
 			}
@@ -2069,9 +2142,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				} else {
 					return prop.getRightExpression() == node;
 				}
-			} else if (maybeProperty instanceof AttributeExpression) {
-				AttributeExpression prop = (AttributeExpression) maybeProperty;
-				return prop.getProperty() == node;
 			} else {
 				return false;
 			}
@@ -2206,4 +2276,19 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		return null;
 	}
 
+	/**
+	 * For testing only, ensures that after a visit is complete,
+	 */
+	private void postVisitSanityCheck() {
+		Assert.isTrue(completeExpressionStack.isEmpty(),
+				"Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed.");
+		Assert.isTrue(primaryTypeStack.isEmpty(),
+				"Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed.");
+		Assert.isTrue(dependentDeclaringTypeStack.isEmpty(),
+				"Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed.");
+		Assert.isTrue(dependentTypeStack.isEmpty(),
+				"Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed.");
+		Assert.isTrue(scopes.isEmpty(),
+				"Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed.");
+	}
 }

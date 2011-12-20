@@ -33,7 +33,6 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         super(name);
     }
     
-    
     public void testEnum1() throws Exception {
         String contents = 
                 "Blah<Some> farb\n" + 
@@ -368,14 +367,12 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
-    // this will pass for now since we are not doing anything smart to find the type of a map.
-    // the result should be java.lang.Integer
     public void testMapOfList5() throws Exception {
         String contents = "def x = [1: [1]]\nx.entrySet().iterator().next().value.iterator().next()";
         String toFind = "next";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Object<E>");
+        assertType(contents, start, end, "java.lang.Integer");
     }
 
     public void testForLoop1() throws Exception {
@@ -774,4 +771,89 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.lang.Integer");
     }
+    
+    public void testInferringList1() throws Exception {
+        String contents = "def x = 9\ndef xxx = [x]\nxxx";
+        String toFind = "xxx";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.List<java.lang.Integer>");
+    }
+    public void testInferringList2() throws Exception {
+        String contents = "def x = 9\ndef xxx = [x, '']\nxxx";
+        String toFind = "xxx";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.List<java.lang.Integer>");
+    }
+    public void testInferringList3() throws Exception {
+        String contents = "def x = 9\ndef xxx = [x+9*8, '']\nxxx";
+        String toFind = "xxx";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.List<java.lang.Integer>");
+    }
+    public void testInferringRange1() throws Exception {
+        String contents = "def x = 9\ndef xxx = x..x\nxxx";
+        String toFind = "xxx";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "groovy.lang.Range<java.lang.Integer>");
+    }
+    public void testInferringRange2() throws Exception {
+        String contents = "def x = 9\ndef xxx = (x*1)..x\nxxx";
+        String toFind = "xxx";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "groovy.lang.Range<java.lang.Integer>");
+    }
+    public void testInferringMap1() throws Exception {
+        String contents = "def x = 9\ndef y = false\ndef xxx = [(x):y]\nxxx";
+        String toFind = "xxx";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Boolean>");
+    }
+    public void testInferringMap2() throws Exception {
+        String contents = "def x = 9\ndef y = false\ndef xxx = [(x+x):!y]\nxxx";
+        String toFind = "xxx";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Boolean>");
+    }
+    public void testInferringMap3() throws Exception {
+        String contents = "def x = 9\ndef y = false\ndef xxx = [(x+x):!y, a:'a', b:'b']\nxxx";
+        String toFind = "xxx";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Boolean>");
+    }
+    public void testInferringMap4() throws Exception {
+        String contents = "def x = 9\ndef y = false\ndef xxx = [[(x+x):!y, a:'a', b:'b']]\nxxx";
+        String toFind = "xxx";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.List<java.util.Map<java.lang.Integer,java.lang.Boolean>>");
+    }
+    public void testInferringMap5() throws Exception {
+        String contents = "def x = [ ['a':11, 'b':12] : ['a':21, 'b':22] ]\n" + 
+        		"def xxx = x\n" +
+        		"xxx";
+        String toFind = "xxx";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.Map<java.util.Map<java.lang.String,java.lang.Integer>,java.util.Map<java.lang.String,java.lang.Integer>>");
+    }
+    
+    public void testInferringMap6() throws Exception {
+        String contents = "def x = [ ['a':11, 'b':12], ['a':21, 'b':22] ]\n" + 
+                "def xxx = x*.a\n" +
+                "xxx";
+        String toFind = "xxx";
+        int start = contents.lastIndexOf(toFind);
+        int end = start + toFind.length();
+        assertType(contents, start, end, "java.util.List<java.lang.Integer>");
+    }
+    
+    
 }

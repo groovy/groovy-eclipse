@@ -137,6 +137,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             }
             try {
                 TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
+                visitor.DEBUG = true;
                 SearchRequestor requestor = new SearchRequestor(exprStart, exprEnd);
                 visitor.visitCompilationUnit(requestor);
                 return requestor;
@@ -291,7 +292,6 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
                     !(visitorNode instanceof ClassNode && ((ClassNode) visitorNode).isScript() /* ignore the script */ )) {
                 this.result = visitorResult;
                 this.node = visitorNode;
-                return VisitStatus.STOP_VISIT;
             }
             return VisitStatus.CONTINUE;
         }

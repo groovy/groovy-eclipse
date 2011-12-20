@@ -988,4 +988,36 @@ public class InferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf("doesNotExist");
         assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "Search", false);
     }
+    
+    
+    // nested expressions of various forms
+    public void testNested1() throws Exception {
+        String contents = 
+                "(true ? 2 : 7) + 9";
+        assertType(contents, "java.lang.Integer");
+    }
+    
+    // nested expressions of various forms
+    public void testNested2() throws Exception {
+        String contents = 
+                "(true ? 2 : 7) + (true ? 2 : 7)";
+        assertType(contents, "java.lang.Integer");
+    }
+    
+    // nested expressions of various forms
+    public void testNested3() throws Exception {
+        String contents = 
+                "(8 ?: 7) + (8 ?: 7)";
+        assertType(contents, "java.lang.Integer");
+    }
+    
+    // nested expressions of various forms
+    public void testNested4() throws Exception {
+        createUnit("", "Foo", "class Foo { int prop }");
+        String contents = 
+                "(new Foo().@prop) + (8 ?: 7)";
+        assertType(contents, "java.lang.Integer");
+    }
+    
+    
 }
