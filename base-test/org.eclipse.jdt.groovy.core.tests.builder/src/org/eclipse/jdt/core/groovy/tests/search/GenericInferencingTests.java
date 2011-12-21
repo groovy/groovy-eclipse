@@ -855,5 +855,4 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.util.List<java.lang.Integer>");
     }
     
-    
 }

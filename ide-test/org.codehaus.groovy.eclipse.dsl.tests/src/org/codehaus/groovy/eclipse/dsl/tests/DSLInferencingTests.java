@@ -525,6 +525,54 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         int end = start + "xxx".length();
         assertType(contents, start, end, "java.lang.Boolean", true);
     }
+    
+    // GRECLIPSE-1291
+    public void testOperatorOverloading3() throws Exception {
+        createDsls("contribute(currentType('Flart')) { method name: \"getAt\", params: [a:Object], type: boolean }");
+        String contents = 
+                "class Flart { }\n" +
+                "def xxx = new Flart()[nuthin]\n" +
+                "xxx";
+        int start = contents.lastIndexOf("xxx");
+        int end = start + "xxx".length();
+        assertType(contents, start, end, "java.lang.Boolean", true);
+    }
+    
+    // GRECLIPSE-1291
+    public void testOperatorOverloading4() throws Exception {
+        createDsls("contribute(currentType('Flart')) { method name: \"positive\", type: boolean }");
+        String contents = 
+                "class Flart { }\n" +
+                "def xxx = +(new Flart())\n" +
+                "xxx";
+        int start = contents.lastIndexOf("xxx");
+        int end = start + "xxx".length();
+        assertType(contents, start, end, "java.lang.Boolean", true);
+    }
+    // GRECLIPSE-1291
+    public void testOperatorOverloading5() throws Exception {
+        createDsls("contribute(currentType('Flart')) { method name: \"negative\", type: boolean }");
+        String contents = 
+                "class Flart { }\n" +
+                        "def xxx = -(new Flart())\n" +
+                        "xxx";
+        int start = contents.lastIndexOf("xxx");
+        int end = start + "xxx".length();
+        assertType(contents, start, end, "java.lang.Boolean", true);
+    }
+    // GRECLIPSE-1291
+    public void testOperatorOverloading6() throws Exception {
+        createDsls("contribute(currentType('Flart')) { method name: \"bitwiseNegate\", type: boolean }");
+        String contents = 
+                "class Flart { }\n" +
+                        "def xxx = ~(new Flart())\n" +
+                        "xxx";
+        int start = contents.lastIndexOf("xxx");
+        int end = start + "xxx".length();
+        assertType(contents, start, end, "java.lang.Boolean", true);
+    }
+    
+    
     private void createDSL() throws IOException {
         defaultFileExtension = "dsld";
         createUnit("SomeInterestingExamples", GroovyDSLDTestsActivator.getDefault().getTestResourceContents("SomeInterestingExamples.dsld"));

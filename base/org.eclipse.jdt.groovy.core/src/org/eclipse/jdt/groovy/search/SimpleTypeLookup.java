@@ -42,11 +42,7 @@ import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
-import org.codehaus.groovy.ast.expr.MapEntryExpression;
-import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.NotExpression;
-import org.codehaus.groovy.ast.expr.PostfixExpression;
-import org.codehaus.groovy.ast.expr.PrefixExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -247,15 +243,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			// note that we return String type here, not GString so that DGMs will apply
 			return new TypeLookupResult(VariableScope.STRING_CLASS_NODE, null, null, confidence, scope);
 
-		} else if (node instanceof MapExpression) {
-			ClassNode parameterized = parameterizeThisMap((MapExpression) node);
-			return new TypeLookupResult(parameterized, null, null, confidence, scope);
-
-		} else if (node instanceof PostfixExpression || node instanceof PrefixExpression) {
-			// because of operator overloading, we should be looking at the type
-			// of the inner expression, but Integer will be safe for most of the time.
-			return new TypeLookupResult(VariableScope.INTEGER_CLASS_NODE, null, null, confidence, scope);
-
 		} else if (node instanceof BitwiseNegationExpression) {
 			ClassNode type = ((BitwiseNegationExpression) node).getExpression().getType();
 			if (type.getName().equals(VariableScope.STRING_CLASS_NODE.getName())) {
@@ -281,73 +268,14 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		}
 
 		// if we get here, then we can't infer the type. Set to unknown if required.
-		if (!(node instanceof ConstructorCallExpression) && !(node instanceof MapEntryExpression)
-				&& !(node instanceof TupleExpression) && nodeType.equals(VariableScope.OBJECT_CLASS_NODE)) {
+		if (!(node instanceof ConstructorCallExpression) && !(node instanceof TupleExpression)
+				&& nodeType.equals(VariableScope.OBJECT_CLASS_NODE)) {
 			confidence = UNKNOWN;
 		}
 
 		// don't know
 		return new TypeLookupResult(nodeType, declaringType, null, confidence, scope);
 	}
-
-	/**
-	 * A simple approach to parameterizing a map. Look at the first entry and if the types are statically known, use those to
-	 * parameterize the map
-	 * 
-	 * @param node
-	 * @return a parameterized map
-	 */
-	private ClassNode parameterizeThisMap(MapExpression node) {
-		if (node.getMapEntryExpressions().size() > 0) {
-			// must keep the cast for Groovy 1.6.
-			@SuppressWarnings("cast")
-			MapEntryExpression entry = (MapEntryExpression) node.getMapEntryExpressions().get(0);
-			ClassNode map = VariableScope.clonedMap();
-			GenericsType[] unresolvedGenericsForMap = unresolvedGenericsForType(map);
-			ClassNode keyType = ClassHelper.getWrapper(entry.getKeyExpression().getType());
-			unresolvedGenericsForMap[0].setType(keyType);
-			unresolvedGenericsForMap[0].setName(keyType.getName());
-			ClassNode valueType = ClassHelper.getWrapper(entry.getValueExpression().getType());
-			unresolvedGenericsForMap[1].setType(valueType);
-			unresolvedGenericsForMap[1].setName(valueType.getName());
-			return map;
-		}
-		return VariableScope.clonedMap();
-	}
-
-	/**
-	 * A simple approach to parameterizing a list. Look at the first entry and if the type is statically known, use that to
-	 * parameterize the map
-	 * 
-	 * @param node
-	 * @return a parameterized list
-	 */
-	// private ClassNode parameterizeThisList(Expression node) {
-	// ClassNode list = VariableScope.OBJECT_CLASS_NODE;
-	// if (node instanceof TupleExpression) {
-	// list = VariableScope.clonedTuple();
-	// TupleExpression tuple = (TupleExpression) node;
-	// if (tuple.getExpressions().size() > 0) {
-	// GenericsType[] unresolvedGenericsForList = unresolvedGenericsForType(list);
-	// ClassNode type = ClassHelper.getWrapper(tuple.getExpression(0).getType());
-	// unresolvedGenericsForList[0].setType(type);
-	// unresolvedGenericsForList[0].setName(type.getName());
-	// return list;
-	// }
-	// } else if (node instanceof RangeExpression) {
-	// list = VariableScope.clonedRange();
-	// RangeExpression rangeExpr = (RangeExpression) node;
-	// Expression expr = rangeExpr.getFrom() != null ? rangeExpr.getFrom() : rangeExpr.getTo();
-	// if (expr != null) {
-	// GenericsType[] unresolvedGenericsForList = unresolvedGenericsForType(list);
-	// ClassNode type = ClassHelper.getWrapper(expr.getType());
-	// unresolvedGenericsForList[0].setType(type);
-	// unresolvedGenericsForList[0].setName(type.getName());
-	// return list;
-	// }
-	// }
-	// return list;
-	// }
 
 	/**
 	 * a little crude because will not find if there are spaces between '.' and 'class'

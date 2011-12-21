@@ -16,6 +16,9 @@
 
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
@@ -269,6 +272,23 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         return sb.toString();
     }
 
+    public class UnknownTypeRequestor  implements ITypeRequestor {
+        private List<ASTNode> unknownNodes = new ArrayList<ASTNode>();
+        
+        public List<ASTNode> getUnknownNodes() {
+            return unknownNodes;
+        }
+        
+        public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
+                IJavaElement enclosingElement) {
+            if (result.confidence == TypeConfidence.UNKNOWN) {
+                unknownNodes.add(node);
+            }
+            return VisitStatus.CONTINUE;
+        }
+        
+    }
+    
     public class SearchRequestor implements ITypeRequestor {
 
         private final int start;

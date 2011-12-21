@@ -922,27 +922,24 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		ClassNode primaryExprType;
 
+		primaryExprType = primaryTypeStack.pop();
 		if (isAssignment) {
-			// must get this now, because this value is popped during handlExpreession.
-			primaryExprType = primaryTypeStack.pop();
 			assignmentStorer.storeAssignment(node, scopes.peek(), primaryExprType);
-		} else {
-			primaryExprType = primaryTypeStack.peek();
 		}
 
 		toVisitDependent.visit(this);
 
 		completeExpressionStack.pop();
+		// type of the entire expression
 		ClassNode completeExprType = primaryExprType;
 
-		if (!isAssignment) {
-			dependentDeclaringTypeStack.pop();
+		ClassNode dependentExprType = primaryTypeStack.pop();
 
+		if (!isAssignment) {
 			// type of RHS of binary expression
-			ClassNode dependentExprType = dependentTypeStack.pop();
 			// find the type of the complete expression
 			String associatedMethod = findBinaryOperatorName(node.getOperation().getText());
-			if (isArithmeticOperationOnNumberOrString(node.getOperation().getText(), primaryExprType, dependentExprType)) {
+			if (isArithmeticOperationOnNumberOrStringOrList(node.getOperation().getText(), primaryExprType, dependentExprType)) {
 				// another special case.
 				// In 1.8 and later, Groovy will not go through the
 				// MOP for standard arithmetic operations on numbers
@@ -999,7 +996,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * @param dependentExprType
 	 * @return
 	 */
-	private boolean isArithmeticOperationOnNumberOrString(String text, ClassNode lhs, ClassNode rhs) {
+	private boolean isArithmeticOperationOnNumberOrStringOrList(String text, ClassNode lhs, ClassNode rhs) {
 		if (text.length() != 1) {
 			return false;
 		}
@@ -1007,11 +1004,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		switch (text.charAt(0)) {
 			case '+':
 			case '-':
+				// lists, numbers or string
+				return VariableScope.STRING_CLASS_NODE.equals(lhs) || lhs.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)
+						|| VariableScope.NUMBER_CLASS_NODE.equals(lhs) || VariableScope.LIST_CLASS_NODE.equals(lhs)
+						|| lhs.implementsInterface(VariableScope.LIST_CLASS_NODE);
 			case '*':
 			case '/':
 			case '%':
-				return (VariableScope.STRING_CLASS_NODE.equals(lhs) || lhs.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE) || VariableScope.NUMBER_CLASS_NODE
-						.equals(lhs));
+				// numbers or string
+				return VariableScope.STRING_CLASS_NODE.equals(lhs) || lhs.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)
+						|| VariableScope.NUMBER_CLASS_NODE.equals(lhs);
 			default:
 				return false;
 		}
@@ -1065,7 +1067,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * @param text
 	 * @return the method name associated with this unary operator
 	 */
-	@SuppressWarnings("unused")
 	private String findUnaryOperatorName(String text) {
 		char op = text.charAt(0);
 		switch (op) {
@@ -1089,10 +1090,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitBitwiseNegationExpression(BitwiseNegationExpression node) {
-		boolean shouldContinue = handleSimpleExpression(node);
-		if (shouldContinue) {
-			super.visitBitwiseNegationExpression(node);
-		}
+		visitUnaryExpression(node, node.getExpression(), "~");
 	}
 
 	@Override
@@ -1304,10 +1302,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	@Override
 	public void visitConstantExpression(ConstantExpression node) {
 		scopes.peek().setCurrentNode(node);
-		boolean shouldContinue = handleSimpleExpression(node);
-		if (shouldContinue) {
-			super.visitConstantExpression(node);
-		}
+		handleSimpleExpression(node);
 		scopes.peek().forgetCurrentNode();
 	}
 
@@ -1474,18 +1469,38 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitPostfixExpression(PostfixExpression node) {
-		boolean shouldContinue = handleSimpleExpression(node);
-		if (shouldContinue) {
-			super.visitPostfixExpression(node);
-		}
+		visitUnaryExpression(node, node.getExpression(), node.getOperation().getText());
 	}
 
 	@Override
 	public void visitPrefixExpression(PrefixExpression node) {
-		boolean shouldContinue = handleSimpleExpression(node);
-		if (shouldContinue) {
-			super.visitPrefixExpression(node);
+		visitUnaryExpression(node, node.getExpression(), node.getOperation().getText());
+	}
+
+	private void visitUnaryExpression(Expression node, Expression expression, String operation) {
+		scopes.peek().setCurrentNode(node);
+		completeExpressionStack.push(node);
+		if (isDependentExpression(node)) {
+			primaryTypeStack.pop();
 		}
+		expression.visit(this);
+
+		ClassNode primaryType = primaryTypeStack.pop();
+		// now infer the type of the operator. It could have been overloaded
+		String associatedMethod = findUnaryOperatorName(operation);
+		ClassNode completeExprType;
+		if (associatedMethod == null && primaryType.equals(VariableScope.NUMBER_CLASS_NODE)
+				|| primaryType.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
+			completeExprType = primaryType;
+		} else {
+			// there is an overloadable method associated with this operation
+			// convert to a constant expression and infer type
+			TypeLookupResult result = lookupExpressionType(new ConstantExpression(associatedMethod), primaryType, false,
+					scopes.peek());
+			completeExprType = result.type;
+		}
+		completeExpressionStack.pop();
+		handleCompleteExpression(node, completeExprType, null);
 	}
 
 	@Override
@@ -1611,7 +1626,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		handleCompleteExpression(node, exprType, null);
 	}
 
-	// FIXADE should do the same as in list
+	// Do not treat tuple expressions like a list since
+	// they are only created as LHS of a multi assignment statement
 	@Override
 	public void visitTupleExpression(TupleExpression node) {
 		boolean shouldContinue = handleSimpleExpression(node);
@@ -1622,18 +1638,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitUnaryMinusExpression(UnaryMinusExpression node) {
-		boolean shouldContinue = handleSimpleExpression(node);
-		if (shouldContinue) {
-			super.visitUnaryMinusExpression(node);
-		}
+		visitUnaryExpression(node, node.getExpression(), "-");
 	}
 
 	@Override
 	public void visitUnaryPlusExpression(UnaryPlusExpression node) {
-		boolean shouldContinue = handleSimpleExpression(node);
-		if (shouldContinue) {
-			super.visitUnaryPlusExpression(node);
-		}
+		visitUnaryExpression(node, node.getExpression(), "+");
 	}
 
 	private void visitAnnotation(AnnotationNode node) {
@@ -2052,6 +2062,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * <li>first element of a range expression (the first element is assumed to be representative of the range)
 	 * <li>Either the key OR the value expression of a {@link MapEntryExpression}
 	 * <li>The first {@link MapEntryExpression} of a {@link MapExpression}
+	 * <li>The expression of a {@link PrefixExpression}, a {@link PostfixExpression}, a {@link UnaryMinusExpression}, a
+	 * {@link UnaryPlusExpression}, or a {@link BitwiseNegationExpression}
 	 * </ul>
 	 * 
 	 * @param node expression node to check
@@ -2068,13 +2080,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				return prop.getObjectExpression() == node;
 			} else if (maybeProperty instanceof BinaryExpression) {
 				BinaryExpression prop = (BinaryExpression) maybeProperty;
-				// note that visit order is different depending on whether visiting
-				// assignment or not
-				if (prop.getOperation().getType() == Types.EQUALS) {
-					return prop.getRightExpression() == node;
-				} else {
-					return prop.getLeftExpression() == node;
-				}
+				// both sides of the binary expression are primary since we need
+				// access to both of them when inferring binary expression types
+				return prop.getRightExpression() == node || prop.getLeftExpression() == node;
 			} else if (maybeProperty instanceof AttributeExpression) {
 				AttributeExpression prop = (AttributeExpression) maybeProperty;
 				return prop.getObjectExpression() == node;
@@ -2097,6 +2105,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			} else if (maybeProperty instanceof MapExpression) {
 				return ((MapExpression) maybeProperty).getMapEntryExpressions().size() > 0
 						&& ((MapExpression) maybeProperty).getMapEntryExpressions().get(0) == node;
+			} else if (maybeProperty instanceof PrefixExpression) {
+				return ((PrefixExpression) maybeProperty).getExpression() == node;
+			} else if (maybeProperty instanceof PostfixExpression) {
+				return ((PostfixExpression) maybeProperty).getExpression() == node;
+			} else if (maybeProperty instanceof UnaryPlusExpression) {
+				return ((UnaryPlusExpression) maybeProperty).getExpression() == node;
+			} else if (maybeProperty instanceof UnaryMinusExpression) {
+				return ((UnaryMinusExpression) maybeProperty).getExpression() == node;
+			} else if (maybeProperty instanceof BitwiseNegationExpression) {
+				return ((BitwiseNegationExpression) maybeProperty).getExpression() == node;
 			} else {
 				return false;
 			}
@@ -2132,16 +2150,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			} else if (maybeProperty instanceof MethodCallExpression) {
 				MethodCallExpression prop = (MethodCallExpression) maybeProperty;
 				return prop.getMethod() == node;
-			} else if (maybeProperty instanceof BinaryExpression) {
-				BinaryExpression prop = (BinaryExpression) maybeProperty;
-				// note that visit order is different depending on whether visiting
-				// assignment or not
-				if (prop.getOperation().getType() == Types.EQUALS) {
-					return false;
-					// return prop.getLeftExpression() == node;
-				} else {
-					return prop.getRightExpression() == node;
-				}
 			} else {
 				return false;
 			}

@@ -16,6 +16,13 @@
 
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import java.util.List;
+
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest.SearchRequestor;
+import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
+
 import junit.framework.Test;
 
 /**
@@ -1019,5 +1026,22 @@ public class InferencingTests extends AbstractInferencingTest {
         assertType(contents, "java.lang.Integer");
     }
     
-    
+    // GRECLIPSE-1302
+    public void testNothingIsUnknown() throws Exception {
+        String contents = "1 > 4\n" + 
+        		"1 < 1\n" + 
+        		"1 >= 1\n" + 
+        		"1 <= 1\n" + 
+        		"1 <=> 1\n" + 
+        		"1 == 1\n" +
+        		"[1,9][0]";
+        GroovyCompilationUnit unit = createUnit("Search", contents);
+        
+        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
+        visitor.DEBUG = true;
+        UnknownTypeRequestor requestor = new UnknownTypeRequestor();
+        visitor.visitCompilationUnit(requestor);
+        List<ASTNode> unknownNodes = requestor.getUnknownNodes();
+        assertTrue("Should not have found any AST nodes with unknown confidence, but instead found:\n" + unknownNodes, unknownNodes.isEmpty());
+    }
 }

@@ -69,14 +69,20 @@ public class OperatorOverloadingInferencingTests extends AbstractInferencingTest
         String expr = "xxx";
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
+    public void testPlus3() throws Exception {
+        String contents = 
+                "def xxx = [2]+[2]\n" +
+                "xxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<java.lang.Integer>");
+    }
 
-    // FIXADE We are losing the generic information here, but that is because it is encoded in a type parameter on a method
     public void testMinus2() throws Exception {
         String contents = 
                 "def xxx = [2]-[2]\n" +
                 "xxx";
         String expr = "xxx";
-        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<java.lang.Object<T>>");
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.util.List<java.lang.Integer>");
     }
     
     public void testMultiply() throws Exception {
@@ -302,6 +308,15 @@ public class OperatorOverloadingInferencingTests extends AbstractInferencingTest
         assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Foo");
     }
     
+    public void testLongExpr3() throws Exception {
+        String contents = 
+                "class Foo {\n Foo next() { }\n int previous() { }\n }\n" +
+                        "def xxx = ([new Foo()++][0]--) + 8\n" +
+                        "xxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Integer");
+    }
+    
     public void testNumberPlusString1() throws Exception {
         String contents = 
                 "def xxx = 1 + ''\n" +
@@ -341,4 +356,68 @@ public class OperatorOverloadingInferencingTests extends AbstractInferencingTest
     public void testCompleteExpr8() throws Exception {
         assertType("1..3", "groovy.lang.Range<java.lang.Integer>");
     }
+    
+    public void testPrefix1() throws Exception {
+        String contents = "def x = 1\ndef xxx = -x\nxxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Integer");
+    }
+    public void testPrefix2() throws Exception {
+        String contents = 
+                "class Foo { double positive() { } }\n" +
+                "def xxx = +(new Foo())\n" +
+                "xxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
+    }
+    public void testPrefix3() throws Exception {
+        String contents = 
+                "class Foo { double negative() { } }\n" +
+                        "def xxx = -(new Foo())\n" +
+                        "xxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
+    }
+    public void testPrefix4() throws Exception {
+        String contents = 
+                "class Foo { double next() { } }\n" +
+                        "def xxx = ++(new Foo())\n" +
+                        "xxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
+    }
+    public void testPrefix5() throws Exception {
+        String contents = 
+                "class Foo { double previous() { } }\n" +
+                        "def xxx = --(new Foo())\n" +
+                        "xxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
+    }
+    public void testPrefix6() throws Exception {
+        String contents = 
+                "class Foo { double bitwiseNegate() { } }\n" +
+                        "def xxx = ~(new Foo())\n" +
+                        "xxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
+    }
+
+    public void testPostfix1() throws Exception {
+        String contents = 
+                "class Foo { double next() { } }\n" +
+                        "def xxx = (new Foo())++\n" +
+                        "xxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
+    }
+    public void testPostfix2() throws Exception {
+        String contents = 
+                "class Foo { double previous() { } }\n" +
+                        "def xxx = (new Foo())--\n" +
+                        "xxx";
+        String expr = "xxx";
+        assertType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "java.lang.Double");
+    }
+
 }
