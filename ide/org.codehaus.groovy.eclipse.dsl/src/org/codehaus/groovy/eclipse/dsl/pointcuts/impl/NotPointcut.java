@@ -27,15 +27,17 @@ import org.eclipse.core.resources.IStorage;
  */
 public class NotPointcut extends AbstractPointcut {
 
-    /**
-     * 
-     */
     private static final Set<Object> EMPTY_MATCH = Collections.singleton(new Object());
 
     public NotPointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 
+    public boolean fastMatch(GroovyDSLDContext pattern) {
+        return matches(pattern, null) != null;
+    }
+
+    
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         Collection<?> collection;
