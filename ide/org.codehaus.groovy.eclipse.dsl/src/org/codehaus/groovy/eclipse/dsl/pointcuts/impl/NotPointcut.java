@@ -34,7 +34,7 @@ public class NotPointcut extends AbstractPointcut {
     }
 
     public boolean fastMatch(GroovyDSLDContext pattern) {
-        return matches(pattern, null) != null;
+        return matches(pattern, EMPTY_MATCH) != null;
     }
 
     
@@ -52,12 +52,6 @@ public class NotPointcut extends AbstractPointcut {
         } else {
             return EMPTY_MATCH;
         }
-                            
-    }
-    
-    public IPointcut normalize() {
-//        ((IPointcut) getFirstArgument()).normalize();
-        return super.normalize();
     }
     
     @Override
