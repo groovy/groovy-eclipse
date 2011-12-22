@@ -29,7 +29,6 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
@@ -56,18 +55,26 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             String expectedType) {
         assertType(contents, exprStart, exprEnd, expectedType, false);
     }
-    protected void assertType(String contents, String expectedType, boolean forceWorkingCopy) {
+    
+	public static void assertType(GroovyCompilationUnit contents, int start, int end, String expectedType) {
+        assertType(contents, start, end, expectedType, false);
+	}
+    
+	protected void assertType(String contents, String expectedType, boolean forceWorkingCopy) {
         assertType(contents, 0, contents.length(), expectedType, forceWorkingCopy);
     }
 
-    protected void assertType(String contents, int exprStart, int exprEnd,
-            String expectedType, boolean forceWorkingCopy) {
+    protected void assertType(String contents, int exprStart, int exprEnd, String expectedType, boolean forceWorkingCopy) {
         assertType(contents, exprStart, exprEnd, expectedType, null, forceWorkingCopy);
     }
+	public static void assertType(GroovyCompilationUnit contents, int exprStart,
+			int exprEnd, String expectedType, boolean forceWorkingCopy) {
+        assertType(contents, exprStart, exprEnd, expectedType, null, forceWorkingCopy);
+	}
     
-    protected void assertType(String contents, int exprStart, int exprEnd,
-            String expectedType, String extraDocSnippet, boolean forceWorkingCopy) {
-        GroovyCompilationUnit unit = createUnit("Search", contents);
+	public static void assertType(GroovyCompilationUnit unit,
+			int exprStart, int exprEnd, String expectedType, String extraDocSnippet,
+			boolean forceWorkingCopy) {
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, forceWorkingCopy);
         
         assertNotNull("Did not find expected ASTNode", requestor.node);
@@ -95,6 +102,13 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         // this is from https://issuetracker.springsource.com/browse/STS-1854
         // make sure that the Type parameterization of Object has not been messed up
         assertNull("Problem!!! Object type has type parameters now.  See STS-1854", VariableScope.OBJECT_CLASS_NODE.getGenericsTypes());
+	}
+
+
+	protected void assertType(String contents, int exprStart, int exprEnd,
+            String expectedType, String extraDocSnippet, boolean forceWorkingCopy) {
+        GroovyCompilationUnit unit = createUnit("Search", contents);
+        assertType(unit, exprStart, exprEnd, expectedType, extraDocSnippet, forceWorkingCopy);
     }
     
     /**
@@ -133,7 +147,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         return (flags & Opcodes.ACC_DEPRECATED) != 0;
     }
     
-    protected SearchRequestor doVisit(int exprStart, int exprEnd, GroovyCompilationUnit unit, boolean forceWorkingCopy) {
+    public static SearchRequestor doVisit(int exprStart, int exprEnd, GroovyCompilationUnit unit, boolean forceWorkingCopy) {
         try {
             if (forceWorkingCopy) {
                 unit.becomeWorkingCopy(null);
@@ -251,11 +265,11 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             fail(sb.toString());
         }
     }
-    protected String printTypeName(ClassNode type) {
+    public static String printTypeName(ClassNode type) {
         return type != null ? type.getName() + printGenerics(type) : "null";
     }
 
-    private String printGenerics(ClassNode type) {
+    public static String printGenerics(ClassNode type) {
         if (type.getGenericsTypes() == null || type.getGenericsTypes().length == 0) {
             return "";
         }
@@ -289,7 +303,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         
     }
     
-    public class SearchRequestor implements ITypeRequestor {
+    public static class SearchRequestor implements ITypeRequestor {
 
         private final int start;
         private final int end;
@@ -324,4 +338,5 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             return result.type.getName();
         }
     }
+
 }

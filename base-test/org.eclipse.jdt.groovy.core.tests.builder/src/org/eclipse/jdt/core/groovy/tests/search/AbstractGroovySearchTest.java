@@ -80,7 +80,7 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
     
     MockSearchRequestor searchRequestor;
     protected IProject project;
-    protected TypeInferencingVisitorFactory factory = new TypeInferencingVisitorFactory();
+    protected static final TypeInferencingVisitorFactory factory = new TypeInferencingVisitorFactory(); 
 
     /**
      * Controls the file extension of the files that are created by this test class

@@ -53,7 +53,7 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         super(name);
     }
     
-    class TestLogger implements IGroovyLogger {
+    public static class TestLogger implements IGroovyLogger {
 
         public void log(TraceCategory category, String message) {
             System.out.println(category.getPaddedLabel() + ": " + message);
