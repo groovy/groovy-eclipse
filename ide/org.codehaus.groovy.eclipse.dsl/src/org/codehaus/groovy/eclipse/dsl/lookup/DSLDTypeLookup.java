@@ -53,6 +53,7 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
         disabledScriptsAsSet = DSLPreferences.getDisabledScriptsAsSet();
         try {
             pattern = new GroovyDSLDContext(unit, module, resolver);
+            pattern.setCurrentScope(topLevelScope);
         } catch (CoreException e) {
             GroovyDSLCoreActivator.logException(e);
         }
