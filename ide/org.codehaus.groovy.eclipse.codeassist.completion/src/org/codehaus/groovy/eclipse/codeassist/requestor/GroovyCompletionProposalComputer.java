@@ -9,6 +9,7 @@ import java.util.Map;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.codeassist.DocumentSourceBuffer;
+import org.codehaus.groovy.eclipse.codeassist.factories.AnnotationAttributeCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.ConstructorCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.ExpressionCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.IGroovyCompletionProcessorFactory;
@@ -20,12 +21,16 @@ import org.codehaus.groovy.eclipse.codeassist.factories.NewVariableCompletionPro
 import org.codehaus.groovy.eclipse.codeassist.factories.PackageCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.TypeCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.processors.IGroovyCompletionProcessor;
+import org.codehaus.groovy.eclipse.codeassist.processors.IProposalFilter;
+import org.codehaus.groovy.eclipse.codeassist.processors.IProposalFilterExtension;
+import org.codehaus.groovy.eclipse.codeassist.processors.ProposalProviderRegistry;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.ISourceBuffer;
 import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;
 import org.codehaus.groovy.eclipse.core.util.ParseException;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaModelException;
@@ -46,7 +51,11 @@ public class GroovyCompletionProposalComputer implements
     static {
         locationFactoryMap = new HashMap<ContentAssistLocation, List<IGroovyCompletionProcessorFactory>>();
 
-        List<IGroovyCompletionProcessorFactory> factories = new ArrayList<IGroovyCompletionProcessorFactory>(5);
+        List<IGroovyCompletionProcessorFactory> factories = new ArrayList<IGroovyCompletionProcessorFactory>(1);
+        factories.add(new AnnotationAttributeCompletionProcessorFactory());
+        locationFactoryMap.put(ContentAssistLocation.ANNOTATION, factories);
+
+        factories = new ArrayList<IGroovyCompletionProcessorFactory>(5);
         factories.add(new ModifiersCompletionProcessorFactory());
         factories.add(new NewMethodCompletionProcessorFactory());
         factories.add(new NewFieldCompletionProcessorFactory());
@@ -167,6 +176,26 @@ public class GroovyCompletionProposalComputer implements
                 }
             }
         }
+
+        // extra filtering and sorting provided by third parties
+        try {
+            List<IProposalFilter> filters = ProposalProviderRegistry.getRegistry().getFiltersFor(assistContext.unit);
+            for (IProposalFilter filter : filters) {
+                try {
+                    if (filter instanceof IProposalFilterExtension) {
+                        List<ICompletionProposal> newProposals = ((IProposalFilterExtension) filter).filterExtendedProposals(
+                                proposals, assistContext, javaContext);
+                        proposals = newProposals == null ? proposals : newProposals;
+                    }
+                } catch (Exception e) {
+                    GroovyCore.logException("Exception when using third party proposal filter: "
+                            + filter.getClass().getCanonicalName(), e);
+                }
+            }
+        } catch (CoreException e) {
+            GroovyCore.logException("Exception accessing proposal provider registry", e);
+        }
+
 
         if (event != null) {
             GroovyLogManager.manager

@@ -51,7 +51,7 @@ public class ProposalProviderRegistry {
 
     private final static ProposalProviderRegistry DEFAULT = new ProposalProviderRegistry();
 
-    static ProposalProviderRegistry getRegistry() {
+    public static ProposalProviderRegistry getRegistry() {
         return DEFAULT;
     }
 
@@ -109,7 +109,7 @@ public class ProposalProviderRegistry {
         return filters;
     }
 
-    List<IProposalFilter> getFiltersFor(GroovyCompilationUnit unit)
+    public List<IProposalFilter> getFiltersFor(GroovyCompilationUnit unit)
             throws CoreException {
         return getFiltersFor(unit.getResource().getProject());
     }
