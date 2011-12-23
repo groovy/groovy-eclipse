@@ -47,6 +47,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindMethodPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindPropertyPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.HasArgumentsPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.HasAttributesPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.IsThisTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.NamePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.NotPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.OrPointcut;
@@ -116,7 +117,7 @@ public class PointcutFactory {
                         "The singleton set of the current type as a ClassNode."), false);
         registerGlobalPointcut(
                 "isThisType",
-                CurrentTypeIsEnclosingTypePointcut.class,
+                IsThisTypePointcut.class,
                 createDoc(
                         "Matches when the current type being inferred is the same as the enclosing type declaration.  "
                                 + "This happens on references to <code>this</code> or when inferencing is occurring in the new statement position.",
@@ -339,11 +340,12 @@ public class PointcutFactory {
         // deprecated
         registerGlobalPointcut(
                 "currentTypeIsEnclosingType",
-                CurrentTypePointcut.class,
+                CurrentTypeIsEnclosingTypePointcut.class,
                 createDoc(
                         "<b>Deprecated:</b> use <code>isThisType</code> instead.<br/><br/>" +
                         "Matches when the current type being inferred is the same as the enclosing type declaration.  "
-                                + "This happens on references to <code>this</code> or when inferencing is occurring in the new statement position.",
+                                + "Generally, this happens on references to <code>this</code> or when inferencing is occurring in the new statement position." +
+                                "However, when inside of closures, <code>this</code> may have been set to something else, and so the pointcut may not match.",
                         "This pointcut does not take any arguments", 
                         "The singleton set of the current type as a ClassNode."), true);
     }

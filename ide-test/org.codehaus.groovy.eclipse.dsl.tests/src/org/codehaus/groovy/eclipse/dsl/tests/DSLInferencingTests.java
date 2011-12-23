@@ -572,7 +572,66 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         assertType(contents, start, end, "java.lang.Boolean", true);
     }
     
+    // GRECLIPSE-1295
+    public void testIsThisType2() throws Exception {
+        createDsls("contribute(isThisType()) { property name:'hi', type:int }");
+        String contents = 
+                "class Foo {\n" +
+        		"  def meth(Closure c) { }\n" +
+        		"}\n" +
+        		"new Foo().meth { hi }";
+        int start = contents.lastIndexOf("hi");
+        int end = start + "hi".length();
+        assertType(contents, start, end, "java.lang.Integer", true);
+    }
     
+    // GRECLIPSE-1295
+    public void testIsThisType3() throws Exception {
+        createDsls("contribute(currentTypeIsEnclosingType()) { property name:'hi', type:int }");
+        String contents = 
+                "class Foo {\n" +
+                "  def meth(Closure c) { }\n" +
+                "}\n" +
+                "new Foo().meth { hi }";
+        int start = contents.lastIndexOf("hi");
+        int end = start + "hi".length();
+        assertUnknownConfidence(contents, start, end, "Foo", true);
+    }
+    
+    // GRECLIPSE-1301
+    public void testEnclosingCallName1() throws Exception {
+        createDsls(
+                "contribute(~ enclosingCallName(\"foo\")) {\n" + 
+        		"    property name:\"hi\"\n" + 
+        		"}");
+        
+        String contents =
+                "foo {\n" + 
+                "    bar {\n" + 
+                "        hi\n" + 
+                "    }\n" + 
+                "}";
+        int start = contents.lastIndexOf("hi");
+        int end = start + "hi".length();
+        assertUnknownConfidence(contents, start, end, "Search", true);
+    }
+    // GRECLIPSE-1301
+    public void testEnclosingCallName2() throws Exception {
+        createDsls(
+                "contribute(enclosingCall(~name('foo'))) {\n" + 
+                "    property name:'hi', type:int\n" + 
+                "}");
+        
+        String contents =
+                "foo {\n" + 
+                "    bar {\n" + 
+                "        hi\n" + 
+                "    }\n" + 
+                "}";
+        int start = contents.lastIndexOf("hi");
+        int end = start + "hi".length();
+        assertType(contents, start, end, "java.lang.Integer", true);
+    }
     private void createDSL() throws IOException {
         defaultFileExtension = "dsld";
         createUnit("SomeInterestingExamples", GroovyDSLDTestsActivator.getDefault().getTestResourceContents("SomeInterestingExamples.dsld"));

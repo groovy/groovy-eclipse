@@ -25,15 +25,19 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.eclipse.core.resources.IStorage;
 
 /**
- * Matches when the current type is the same as the lexically enclosing type.  Generally, this matches true
- * for references to 'this', or when a new expression is being started.  However, this pointuct
- * may not match on 'this' when inside of a closure.  This pointcut takes no arguments
+ * Matches when the current type is the same as the enclosing type. This matches
+ * true
+ * for references to 'this', or when a new expression is being started. As
+ * opposed to {@link CurrentTypeIsEnclosingTypePointcut}, this pointcut always
+ * matches on this, regardless of whether or not in a closure. This pointcut
+ * takes no arguments
+ * 
  * @author andrew
  * @created Apr 1, 2011
  */
-public class CurrentTypeIsEnclosingTypePointcut extends AbstractPointcut {
+public class IsThisTypePointcut extends AbstractPointcut {
 
-    public CurrentTypeIsEnclosingTypePointcut(IStorage containerIdentifier, String pointcutName) {
+    public IsThisTypePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 
@@ -44,7 +48,7 @@ public class CurrentTypeIsEnclosingTypePointcut extends AbstractPointcut {
      */
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
-        ClassNode enclosing = pattern.getCurrentScope().getEnclosingTypeDeclaration();
+        ClassNode enclosing = pattern.getCurrentScope().lookupName("this").type;
         ClassNode currentType = pattern.getCurrentType();
         if (enclosing != null && currentType != null && enclosing.redirect() == currentType.redirect()) {
             return Collections.singleton(currentType);
