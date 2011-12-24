@@ -9,7 +9,6 @@ import java.util.Map;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.codeassist.DocumentSourceBuffer;
-import org.codehaus.groovy.eclipse.codeassist.factories.AnnotationAttributeCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.ConstructorCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.ExpressionCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.IGroovyCompletionProcessorFactory;
@@ -52,8 +51,6 @@ public class GroovyCompletionProposalComputer implements
         locationFactoryMap = new HashMap<ContentAssistLocation, List<IGroovyCompletionProcessorFactory>>();
 
         List<IGroovyCompletionProcessorFactory> factories = new ArrayList<IGroovyCompletionProcessorFactory>(1);
-        factories.add(new AnnotationAttributeCompletionProcessorFactory());
-        locationFactoryMap.put(ContentAssistLocation.ANNOTATION, factories);
 
         factories = new ArrayList<IGroovyCompletionProcessorFactory>(5);
         factories.add(new ModifiersCompletionProcessorFactory());
