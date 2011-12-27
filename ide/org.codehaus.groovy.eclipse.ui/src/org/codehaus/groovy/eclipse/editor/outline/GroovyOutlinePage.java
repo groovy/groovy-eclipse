@@ -26,6 +26,7 @@ import org.eclipse.jdt.ui.JavaElementComparator;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.PlatformUI;
@@ -70,6 +71,12 @@ public class GroovyOutlinePage extends JavaOutlinePage {
         toolBarManager.removeAll();
         toolBarManager.add(new GroovyLexicalSortingAction());
         toolBarManager.update(true);
+
+        // remove all filters (they are related to above actions)
+        for (ViewerFilter vf : getOutlineViewer().getFilters()) {
+            //            getOutlineViewer().removeFilter(vf);
+        }
+
         isInitialized = true;
     }
 
