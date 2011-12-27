@@ -220,14 +220,14 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			} else {
 				// there is a possibility that this is a constant expression inside a GString.
 				// check for a '$' as a start.
-				if (node.getText().startsWith("$")) { //$NON-NLS-1$
-					String realName = node.getText().substring(1);
-					if (realName.startsWith("{") && realName.endsWith("}")) {
-						realName = realName.substring(1, realName.length() - 1);
-					}
-					return findTypeForNameWithKnownObjectExpression(realName, nodeType, scope.getEnclosingTypeDeclaration(), scope,
-							confidence, isStaticObjectExpression);
-				}
+				//				if (node.getText().startsWith("$")) { //$NON-NLS-1$
+				// String realName = node.getText().substring(1);
+				// if (realName.startsWith("{") && realName.endsWith("}")) {
+				// realName = realName.substring(1, realName.length() - 1);
+				// }
+				// return findTypeForNameWithKnownObjectExpression(realName, nodeType, scope.getEnclosingTypeDeclaration(), scope,
+				// confidence, isStaticObjectExpression);
+				// }
 				if (nodeType.equals(VariableScope.STRING_CLASS_NODE)) {
 					// likely a proper quoted string constant
 					return new TypeLookupResult(nodeType, null, node, confidence, scope);

@@ -18,12 +18,11 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import java.util.List;
 
+import junit.framework.Test;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest.SearchRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
-
-import junit.framework.Test;
 
 /**
  * Lots of tests to see that expressions have the proper type associated with them
@@ -734,21 +733,24 @@ public class InferencingTests extends AbstractInferencingTest {
     }
     
     public void testDGM1() throws Exception {
-        String contents = "'$print'";
-        int start = 0;
-        int end = contents.length();
+        String contents = "\"$print\"";
+        String lookFor = "print";
+        int start = contents.indexOf(lookFor);
+        int end = start + lookFor.length();
         assertDeclaringType(contents, start, end, "groovy.lang.Script");
     }
     public void testDGM2() throws Exception {
-        String contents = "'${print}'";
-        int start = 0;
-        int end = contents.length();
+        String contents = "\"${print}\"";
+        String lookFor = "print";
+        int start = contents.indexOf(lookFor);
+        int end = start + lookFor.length();
         assertDeclaringType(contents, start, end, "groovy.lang.Script");
     }
     public void testDGM3() throws Exception {
-        String contents = "class Foo {\n def m() {\n '${print}'\n } }";
-        int start = contents.indexOf("'${print}'");
-        int end = start + "'${print}'".length();
+        String contents = "class Foo {\n def m() {\n \"${print()}\"\n } }";
+        String lookFor = "print";
+        int start = contents.indexOf(lookFor);
+        int end = start + lookFor.length();
         assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
     
@@ -1028,13 +1030,21 @@ public class InferencingTests extends AbstractInferencingTest {
     
     // GRECLIPSE-1302
     public void testNothingIsUnknown() throws Exception {
-        String contents = "1 > 4\n" + 
-        		"1 < 1\n" + 
-        		"1 >= 1\n" + 
-        		"1 <= 1\n" + 
-        		"1 <=> 1\n" + 
-        		"1 == 1\n" +
-        		"[1,9][0]";
+        assertNoUnknowns("1 > 4\n" + 
+                "1 < 1\n" + 
+                "1 >= 1\n" + 
+                "1 <= 1\n" + 
+                "1 <=> 1\n" + 
+                "1 == 1\n" +
+                "[1,9][0]");
+    }
+
+    // GRECLIPSE-1304
+    public void testNoGString1() throws Exception {
+        assertNoUnknowns("'$'\n'${}\n'${a}'\n'$a'");
+    }
+
+    protected void assertNoUnknowns(String contents) {
         GroovyCompilationUnit unit = createUnit("Search", contents);
         
         TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
@@ -1044,4 +1054,5 @@ public class InferencingTests extends AbstractInferencingTest {
         List<ASTNode> unknownNodes = requestor.getUnknownNodes();
         assertTrue("Should not have found any AST nodes with unknown confidence, but instead found:\n" + unknownNodes, unknownNodes.isEmpty());
     }
+    
 }
