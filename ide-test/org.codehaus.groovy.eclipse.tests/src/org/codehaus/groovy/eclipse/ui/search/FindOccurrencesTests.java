@@ -114,11 +114,15 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
     }
     
     public void testFindDGMOccurrences1() throws Exception {
-        String contents = "print 'print'\n'$print'\n'${print}'";
-        int length = "print".length();
-        int length2 = "'$print'".length();
-        int length3 = "'${print}'".length();
-        doTest(contents, contents.indexOf("print"), 1, contents.indexOf("print"), length, contents.lastIndexOf("'$print'"), length2, contents.lastIndexOf("'${print}'"), length3);
+        String contents = "def xxx\nxxx \"$xxx\"\n\"$xxx\"\n\"${xxx}\"\n" + // first three are matches
+        		"\"xxx\"\n'xxx'\n'$xxx'\n'${xxx}'";  // these aren't matches
+        int length = "xxx".length();
+        int def = contents.indexOf("xxx");
+        int first = contents.indexOf("xxx", def+1);
+        int second = contents.indexOf("xxx", first+1);
+        int third = contents.indexOf("xxx", second+1);
+        int fourth = contents.indexOf("xxx", third+1);
+        doTest(contents, def, 1, def, length, first, length, second, length, third, length, fourth, length);
     }
     
     // GRECLIPSE-1031
