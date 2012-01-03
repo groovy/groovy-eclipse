@@ -256,7 +256,7 @@
    </extension>
    
     <extension point="org.eclipse.ui.popupMenus">
-  		<objectContribution id="org.codehaus.groovy.eclipse.groovyContributions"
+  		<objectContribution id="org.codehaus.groovy.eclipse.groovyProjectContributions"
    			adaptable="true"
    			objectClass="org.eclipse.core.resources.IProject">
 			   <action
@@ -282,7 +282,7 @@
 			   </visibility>
 		</objectContribution>
 		
-		<objectContribution id="org.codehaus.groovy.eclipse.groovyContributions"
+		<objectContribution id="org.codehaus.groovy.eclipse.groovyFileContributions"
  			adaptable="true"
  			objectClass="org.eclipse.core.resources.IFile">
 			   <action
@@ -449,46 +449,28 @@
      <!-- Groovy Refactorings -->
      <viewerContribution
                id="org.codehaus.groovy.viewer.refactorings"
-               targetID="#CompilationUnitEditorContext">
-               <!--
-        <action
-              class="org.codehaus.groovy.eclipse.refactoring.actions.InlineMethodAction"
-              definitionId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
-              id="org.codehaus.groovy.eclipse.refactoring.inlineMethodViewer"
-              label="Inline Method..."
-              menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
-              style="push"
-              tooltip="Inline a groovy method">
-        </action>
-        <action
-              class="org.codehaus.groovy.eclipse.refactoring.actions.ExtractMethodAction"
-              definitionId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
-              id="org.codehaus.groovy.eclipse.refactoring.extractMethodViewer"
-              label="Extract Method..."
-              menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
-              style="push"
-              tooltip="Extract a groovy method from an expression">
-        </action>
-        -->
-        <action
-              class="org.codehaus.groovy.eclipse.refactoring.actions.RenameDispatcherAction"
-              definitionId="org.codehaus.groovy.eclipse.refactoring.command.rename"
-              id="org.codehaus.groovy.eclipse.refactoring.renameMethodViewer"
-              label="Rename..."
-              menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
-              style="push"
-              tooltip="Rename a groovy element">
-        </action>
-        <menu
-              id="org.codehaus.groovy.refactoring.menu"
+               targetID="#GroovyCompilationUnitEditorContext">
+        <menu id="org.codehaus.groovy.refactoring.menu"
               label="Groovy Refac&amp;tor">
-           <separator
-                 name="refactoring">
-           </separator>
-        </menu>
-     </viewerContribution>
-     
-     
+           <separator name="refactoring"/>
+      </menu>
+			<action
+				class="org.codehaus.groovy.eclipse.refactoring.actions.ConvertToMethodAction"
+				id="org.groovy.codehaus.eclipse.ui.actions.convertToMethodContribution"
+				label="Convert closure to method"
+				definitionId="org.codehaus.groovy.eclipse.ui.convertToMethod"
+				menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
+				style="push">
+			</action>
+			<action
+				class="org.codehaus.groovy.eclipse.refactoring.actions.ConvertToClosureAction"
+				id="org.groovy.codehaus.eclipse.ui.actions.convertToClosureContribution"
+				label="Convert method to closure"
+				definitionId="org.codehaus.groovy.eclipse.ui.convertToClosure"
+				menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
+				style="push">
+			</action>
+    </viewerContribution>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -599,14 +581,6 @@
             class="org.codehaus.groovy.eclipse.preferences.GroovyEditorPreferencesPage"
             id="org.codehaus.groovy.eclipse.preferences.editor"
             name="Editor"/>
-            <!--
-      <page
-            category="org.codehaus.groovy.eclipse.preferences"
-            class="org.codehaus.groovy.eclipse.preferences.TemplatesPreferencePage"
-            id="org.codehaus.groovy.eclipse.preferences.template"
-            name="Templates">
-      </page>
-            -->
        <page
              category="org.codehaus.groovy.eclipse.preferences"
              class="org.codehaus.groovy.eclipse.preferences.FormatterPreferencesPage"
@@ -682,6 +656,18 @@
             id="org.codehaus.groovy.eclipse.ui.findOccurrences"
             name="Find occurrences in current file">
       </command>
+      <command
+            categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
+            description="Convert a method declaration to a closure"
+            id="org.codehaus.groovy.eclipse.ui.convertToClosure"
+            name="Convert to closure">
+      </command>
+      <command
+            categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
+            description="Convert a closure declaration to a method"
+            id="org.codehaus.groovy.eclipse.ui.convertToMethod"
+            name="Convert to method">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">
@@ -712,6 +698,16 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M3+J G"/>
             
+      <key
+            commandId="org.codehaus.groovy.eclipse.ui.convertToMethod"
+            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M3+G M"/>
+      <key
+            commandId="org.codehaus.groovy.eclipse.ui.convertToClosure"
+            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M3+G F"/>
       <!-- Now disable all of the M3+G commands for Swiss German since that conflicts with '@' -->      
       <key
             contextId="org.eclipse.ui.contexts.window"
@@ -726,15 +722,7 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+M3+G J"/>
             
-      <!-- Disable the JDT find occurrences quick menu when in groovy files-->      
-      <!--
-      <key
-            commandId="org.eclipse.jdt.ui.edit.text.java.search.occurrences.in.file.quickMenu"
-            contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence=""/>
-      -->  
-      <!-- Use our command instead -->
+      <!-- Use our Find occurrences command instead -->
       <key
             commandId="org.codehaus.groovy.eclipse.ui.findOccurrences"
             contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
@@ -837,46 +825,6 @@
       <editorContribution
             targetID="org.codehaus.groovy.eclipse.editor.GroovyEditor"
             id="org.codehaus.groovy.editor.actions">
-         <!--
-         <menu
-               id="org.codehaus.groovy.eclipse.refactoring.refactoringMenu"
-               label="Groovy Refac&amp;tor"
-               path="edit">
-            <groupMarker
-                  name="content">
-            </groupMarker>
-            <separator
-                  name="additions">
-            </separator>
-         </menu>
-         <action
-               class="org.codehaus.groovy.eclipse.refactoring.actions.RenameDispatcherAction"
-               definitionId="org.codehaus.groovy.eclipse.refactoring.command.rename"
-               id="org.codehaus.groovy.eclipse.refactoring.renameMethodMenu"
-               label="Rename..."
-               menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenu/content"
-               style="push"
-               tooltip="Rename a groovy element">
-         </action>
-         <action
-               class="org.codehaus.groovy.eclipse.refactoring.actions.InlineMethodAction"
-               definitionId="org.codehaus.groovy.eclipse.refactoring.command.inlineMethod"
-               id="org.codehaus.groovy.eclipse.refactoring.inlineMethodMenu"
-               label="Inline Method..."
-               menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenu/content"
-               style="push"
-               tooltip="Inline a groovy method">
-         </action>
-         <action
-               class="org.codehaus.groovy.eclipse.refactoring.actions.ExtractMethodAction"
-               definitionId="org.codehaus.groovy.eclipse.refactoring.command.extractMethod"
-               id="org.codehaus.groovy.eclipse.refactoring.extractMethodMenu"
-               label="Extract Method..."
-               menubarPath="org.codehaus.groovy.eclipse.refactoring.refactoringMenu/content"
-               style="push"
-               tooltip="Extract a groovy method from an expression">
-         </action>
-				 -->
 				 <!-- Ruler actions -->
          <action
                label="Toggle Breakpoint"

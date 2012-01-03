@@ -22,6 +22,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.codehaus.groovy.eclipse.codebrowsing;bundle-version="2.6.1"
 Bundle-ActivationPolicy: lazy
 Export-Package: org.codehaus.groovy.eclipse.refactoring;uses:="org.eclipse.jface.resource,org.eclipse.ui.plugin,org.osgi.framework",
+ org.codehaus.groovy.eclipse.refactoring.core.convert,
  org.codehaus.groovy.eclipse.refactoring.core.extract,
  org.codehaus.groovy.eclipse.refactoring.core.rename,
  org.codehaus.groovy.eclipse.refactoring.core.utils;

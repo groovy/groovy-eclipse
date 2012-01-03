@@ -33,10 +33,10 @@ import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
-import org.eclipse.ui.PlatformUI;
 
 /**
  * @author reto kleeb
+ * @author andrew@eisenberg.as
  */
 public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionDelegate, IEditorActionDelegate {
 
@@ -45,9 +45,9 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
     private GroovyCompilationUnit gcu;
 
     protected boolean initRefactoring() {
-        editor = (GroovyEditor) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
-        selection = (ITextSelection) editor.getSelectionProvider().getSelection();
-        gcu = editor.getGroovyCompilationUnit();
+        if (editor == null || selection == null || gcu == null) {
+            return false;
+        }
         if (gcu != null) {
             if (gcu.getModuleNode() == null) {
                 displayErrorDialog("Cannot find ModuleNode for " + gcu.getElementName());
@@ -89,9 +89,25 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
     }
 
     public void selectionChanged(IAction action, ISelection selection) {
+        if (selection instanceof ITextSelection) {
+            this.selection = (ITextSelection) selection;
+            action.setEnabled(true);
+        } else {
+            this.selection = null;
+            action.setEnabled(false);
+        }
     }
 
     public void setActiveEditor(IAction action, IEditorPart targetEditor) {
+        if (targetEditor instanceof GroovyEditor) {
+            this.editor = (GroovyEditor) targetEditor;
+            this.gcu = editor.getGroovyCompilationUnit();
+            action.setEnabled(true);
+        } else {
+            this.editor = null;
+            this.gcu = null;
+            action.setEnabled(false);
+        }
     }
 
     public static int getUIFlags() {
