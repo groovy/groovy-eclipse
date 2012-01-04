@@ -132,7 +132,7 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
                 ruleFactory.modifyRule(project.getProject()),
                 
                 // and external project modification rule in case the external folders are modified
-                ruleFactory.modifyRule(JavaModelManager.getExternalManager().getExternalFoldersProject())
+                ruleFactory.modifyRule(JavaModelManager.getExternalManager().getExternalFoldersProject()),
             });
     }
 

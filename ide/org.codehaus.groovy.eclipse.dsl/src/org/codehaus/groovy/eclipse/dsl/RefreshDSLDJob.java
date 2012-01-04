@@ -25,22 +25,30 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceRuleFactory;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.resources.IStorage;
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.IWorkspaceRunnable;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.jobs.MultiRule;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ExternalPackageFragmentRoot;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 public class RefreshDSLDJob extends Job {
@@ -96,7 +104,13 @@ public class RefreshDSLDJob extends Job {
 
         protected void findDSLDsInLibraries(IProgressMonitor monitor) throws JavaModelException {
             IJavaProject javaProject = JavaCore.create(project);
-            for (IPackageFragmentRoot root : javaProject.getPackageFragmentRoots()) {
+            IPackageFragmentRoot[] roots = getFragmentRoots(javaProject, monitor);
+            for (IPackageFragmentRoot root : roots) {
+                
+                if (monitor.isCanceled()) {
+                    throw new OperationCanceledException();
+                }
+                
                 if (root.getKind() == IPackageFragmentRoot.K_BINARY) {
                     IPackageFragment frag = root.getPackageFragment("dsld");
                     if (frag.exists() || root.getElementName().equals(GLOBAL_DSLD_SUPPORT) || root.getElementName().equals(PLUGIN_DSLD_SUPPORT)) {
@@ -114,6 +128,9 @@ public class RefreshDSLDJob extends Job {
                                 rootResource.refreshLocal(IResource.DEPTH_INFINITE, monitor);
                                 root.close();
                                 root.open(monitor);
+                                if (monitor.isCanceled()) {
+                                    throw new OperationCanceledException();
+                                }
                                 if (!root.exists() || !frag.exists()) {
                                     // must check a second time for existence because the close and re-opening of the root may 
                                     // have changed things
@@ -164,7 +181,40 @@ public class RefreshDSLDJob extends Job {
                     }
                 }
             }
+        }
+
+        /**
+         * Get all package fragment roots in a safe way so that concurrent modifications aren't thrown
+         * See http://jira.codehaus.org/browse/GRECLIPSE-1284
+         * @param javaProject
+         * @param monitor
+         * @return
+         * @throws JavaModelException
+         */
+        private IPackageFragmentRoot[] getFragmentRoots(final IJavaProject javaProject, IProgressMonitor monitor) throws JavaModelException {
+            final IPackageFragmentRoot[][] roots = new IPackageFragmentRoot[1][];
+            try {
+                ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
+                    public void run(IProgressMonitor monitor) throws CoreException {
+                        roots[0] = javaProject.getPackageFragmentRoots();
+                    }
+                }, getSchedulingRule(), IWorkspace.AVOID_UPDATE, monitor);
+            } catch (CoreException e) {
+                GroovyDSLCoreActivator.logException(e);
+            }
+            return roots[0] != null ? roots[0] : new IPackageFragmentRoot[0];
         }  
+        
+        private ISchedulingRule getSchedulingRule() {
+            IResourceRuleFactory ruleFactory = ResourcesPlugin.getWorkspace().getRuleFactory();
+            return new MultiRule(new ISchedulingRule[] {
+                // use project modification rule as this is needed to create the .classpath file if it doesn't exist yet, or to update project references
+                ruleFactory.modifyRule(this.project.getProject()),
+                
+                // and external project modification rule in case the external folders are modified
+                ruleFactory.modifyRule(JavaModelManager.getExternalManager().getExternalFoldersProject())
+            });
+        }
     }
 
     private final List<IProject> projects;
@@ -204,19 +254,6 @@ public class RefreshDSLDJob extends Job {
             }
             return Status.OK_STATUS;
         }
-
-        // actually, don't cancel since refresh jobs for other
-        // projects may be running
-//        // cancel all existing jobs
-//        Job[] jobs = getJobManager().find(RefreshDSLDJob.class);
-//        if (jobs != null) {
-//            for (Job job : jobs) {
-//                if (job != this) {
-//                    job.cancel();
-//                }
-//            }
-//        }
-
 
         List<IStatus> errorStatuses = new ArrayList<IStatus>();
         if (monitor == null) {

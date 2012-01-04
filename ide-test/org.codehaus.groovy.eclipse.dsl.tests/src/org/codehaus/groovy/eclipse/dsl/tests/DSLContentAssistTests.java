@@ -59,10 +59,6 @@ public class DSLContentAssistTests extends CompletionTestCase {
         assertProposalOrdering(proposals, "getInstance", "aaa");
     }
     
-    public void _testDSLProposalFirstField() throws Exception {
-        // oops...don't have anything that we can do here.
-    }
-    
     public void testDSLProposalFirstMethod() throws Exception {
         String contents = "import groovy.swing.SwingBuilder\n" +
                 "new SwingBuilder().edt {\n" +
