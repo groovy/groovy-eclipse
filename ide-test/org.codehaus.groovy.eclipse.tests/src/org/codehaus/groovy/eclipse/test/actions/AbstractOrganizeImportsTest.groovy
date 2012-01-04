@@ -66,7 +66,7 @@ class AbstractOrganizeImportsTest extends EclipseTestCase {
 
 
     
-    void doAddImportTest(contents, expectedImports = [ ]) {
+    void doAddImportTest(String contents, List<TextEdit> expectedImports = [ ]) {
         def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)
         def unit = JavaCore.createCompilationUnitFrom(file)
         testProject.waitForIndexer()
@@ -92,7 +92,7 @@ class AbstractOrganizeImportsTest extends EclipseTestCase {
             }
          }
         children.each {
-            TextEdit t ->
+            t ->
             if (t instanceof InsertEdit) {
                 def insert = t as InsertEdit
                 if (insert.text.trim().length() > 0 && insert.text != '\n') {

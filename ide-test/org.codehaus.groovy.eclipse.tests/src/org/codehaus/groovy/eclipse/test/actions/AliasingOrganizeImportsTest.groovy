@@ -92,4 +92,29 @@ public class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
             """
             doAddImportTest(contents)
     }
+    // should not be removed
+    void testStaticAliasAnnotation() {
+        String contents =
+            """
+            @Deprecated
+            import static other2.FourthClass.m as j
+            
+            j
+            """
+            doAddImportTest(contents)
+    }
+    // should not be removed
+    void testAliasAnnotation() {
+        String contents =
+            """
+            @Deprecated
+            import static other2.FourthClass as k
+            @Deprecated
+            import static other2.FourthClass.m as j
+            
+            j
+            """
+            doAddImportTest(contents)
+    }
+
 }

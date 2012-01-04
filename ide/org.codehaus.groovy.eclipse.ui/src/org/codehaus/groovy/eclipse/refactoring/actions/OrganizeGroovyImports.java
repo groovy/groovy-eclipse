@@ -345,6 +345,8 @@ public class OrganizeGroovyImports {
         Map<String, String> aliases = new HashMap<String, String>();
 
         try {
+            // configure import rewriter to keep all existing imports.  This is different from how
+            // JDT does organize imports, but this prevents annotations on imports from being removed
             ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, true);
 
             for (ImportNode imp : new ImportNodeCompatibilityWrapper(node).getAllImportNodes()) {
@@ -361,16 +363,24 @@ public class OrganizeGroovyImports {
                         // definitely walk the tree to find if a static is
                         // really being used, but for now, don't
                         String dottedClassName = className.replace('$', '.');
+                        String alias = imp.getAlias();
                         if (!imp.isStaticStar() && !imp.isStatic()) {
                             importsSlatedForRemoval.put(dottedClassName, imp);
                             rewriter.addImport(dottedClassName);
                             if (isAliased(imp)) {
-                                aliases.put("n" + dottedClassName, imp.getAlias());
+                                aliases.put("n" + dottedClassName, alias);
                             }
                         } else {
-                            rewriter.addStaticImport(dottedClassName, fieldName, true);
+                            //                            rewriter.addStaticImport(dottedClassName, fieldName, true);
                             if (isAliased(imp)) {
-                                aliases.put("s" + dottedClassName + "." + fieldName, imp.getAlias());
+                                aliases.put("s" + dottedClassName + "." + fieldName, alias);
+
+                                if (imp.isStatic()) {
+                                    // Static aliased imports have been added as existing imports incorrectly.
+                                    // must go remove them
+                                    rewriter.removeInvalidStaticAlias(dottedClassName + "." + alias);
+                                }
+
                             }
                         }
                     }

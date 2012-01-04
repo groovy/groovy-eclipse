@@ -64,7 +64,7 @@ public class ConvertToClosureRefactoring {
             // the name itself will not include them
             // check the text to see if the name start is at a quote
             char[] contents = unit.getContents();
-            if (contents.length >= nameRange.getOffset() && contents[nameRange.getOffset()] == '"') {
+            if (contents.length > nameRange.getOffset() && contents[nameRange.getOffset()] == '"') {
                 return ((IMethod) maybeMethod);
             }
         } catch (JavaModelException e) {

@@ -176,12 +176,11 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     }
     
     void testRemoveImport1() {
-        // should not remove import because module is empty
         String contents = 
                 """ 
             import other.SecondClass
             """
-        doDeleteImportTest(contents, 0)
+        doDeleteImportTest(contents, 1)
     }
     void testRemoveImport1a() {
         String contents = 
