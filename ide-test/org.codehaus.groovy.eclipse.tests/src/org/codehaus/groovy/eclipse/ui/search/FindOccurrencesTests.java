@@ -320,6 +320,20 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len);
     }
     
+    // GRECLIPSE-1219
+    public void testAnnotationOnImport() throws Exception {
+        String contents = "@Deprecated\n" +
+        		"import javax.swing.text.html.HTML\n" +
+        		"Deprecated";
+        String name = "Deprecated";
+        int len = name.length();
+        
+        int start1 = contents.indexOf(name);
+        int start2 = contents.indexOf(name, start1 + 1);
+        int start = start2;
+        doTest(contents, start, len, start1, len, start2, len);
+    }
+    
     // shuold not find occurrences in string literals
     public void testLiterals1() throws Exception {
         String contents = "'fff'";

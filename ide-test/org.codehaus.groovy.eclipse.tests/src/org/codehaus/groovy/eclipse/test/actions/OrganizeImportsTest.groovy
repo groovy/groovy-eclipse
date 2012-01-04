@@ -538,5 +538,34 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
             """
             doAddImportTest(contents)
     }
+
+    // GRECLIPSE-1219
+    void testAnnotationsOnImports1() {
+        String contents =
+                """
+                @Deprecated
+                import javax.swing.text.html.*
+                """
+                doAddImportTest(contents)
+    }
+    // GRECLIPSE-1219
+    void testAnnotationsOnImports2() {
+        String contents =
+                """
+                @Deprecated
+                import javax.swing.text.html.HTML
+                """
+                doDeleteImportTest(contents, 1)
+    }
+    void testAnnotationsOnImports3() {
+        String contents =
+                """
+                @Deprecated
+                import javax.swing.text.html.*\n
+                HTML
+                """
+                doAddImportTest(contents)
+    }
+
 }
 

@@ -321,6 +321,16 @@ public class CodeSelectTypesTest extends BrowsingTestCase {
                 elt[0].exists());
     }
 
+    // GRECLIPSE-1219
+    public void testAnnotationOnImport() throws Exception {
+        String contents = "@Deprecated" + "\nimport java.util.List\nclass This { }";
+        GroovyCompilationUnit unit = createCompilationUnit(contents);
+        IJavaElement[] elt = unit.codeSelect(contents.indexOf("Deprecated"), 1);
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found type 'Deprecated'", "Deprecated", elt[0].getElementName());
+        assertTrue("Java Element for type 'Deprecated' should exist", elt[0].exists());
+    }
+
     private GroovyCompilationUnit createCompilationUnit(String contents)
             throws Exception {
         IPath projectPath = createGenericProject();

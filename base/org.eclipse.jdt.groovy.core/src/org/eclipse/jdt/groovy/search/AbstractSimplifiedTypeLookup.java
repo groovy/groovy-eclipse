@@ -119,6 +119,10 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 				declaringType = info.declaringType;
 			} else {
 				declaringType = scope.getEnclosingTypeDeclaration();
+				if (declaringType == null) {
+					// part of an import statment
+					declaringType = VariableScope.OBJECT_CLASS_NODE;
+				}
 			}
 		}
 		// I would have likd to pass this value into lookupTypeAndDeclaration, but

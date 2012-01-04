@@ -802,6 +802,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		for (ImportNode imp : new ImportNodeCompatibilityWrapper(node).getAllImportNodes()) {
 			TypeLookupResult result = null;
 			IJavaElement oldEnclosingElement = enclosingElement;
+
+			visitAnnotations(imp);
+
 			// this will not work for static or * imports, but that's OK because
 			// as of now, there is no reason to do that.
 			ClassNode type = imp.getType();

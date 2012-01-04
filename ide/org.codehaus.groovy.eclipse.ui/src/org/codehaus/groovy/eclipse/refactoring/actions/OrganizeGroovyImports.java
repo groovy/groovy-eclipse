@@ -345,8 +345,7 @@ public class OrganizeGroovyImports {
         Map<String, String> aliases = new HashMap<String, String>();
 
         try {
-            ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, false);
-
+            ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, true);
 
             for (ImportNode imp : new ImportNodeCompatibilityWrapper(node).getAllImportNodes()) {
                 String fieldName = imp.getFieldName();
@@ -452,10 +451,10 @@ public class OrganizeGroovyImports {
      * @return
      */
     private boolean isEmpty(ModuleNode node) {
-        if (node == null || node.getClasses() == null || node.getClasses().size() == 0) {
+        if (node == null || node.getClasses() == null || node.getClasses().size() == 0 && node.getImports().size() == 0) {
             return true;
         }
-        if (node.getClasses().size() == 1 && ((ClassNode) node.getClasses().get(0)).isScript()) {
+        if (node.getClasses().size() == 1 && node.getImports().size() == 0 && ((ClassNode) node.getClasses().get(0)).isScript()) {
             if ((node.getStatementBlock() == null || node.getStatementBlock().isEmpty() || isNullReturn(node.getStatementBlock())) &&
                     (node.getMethods() == null || node.getMethods().size() == 0)) {
                 return true;
