@@ -97,6 +97,7 @@ public class ErrorLogTest extends TestCase {
                                 String msg = s.getMessage();
                                 errors.append("    " + msg); //$NON-NLS-1$
                                 errors.append(" (" + s.getPluginId() + ")\n");
+                                errors.append("Stack trace: " + s.getStack() + "\n\n\n");
                                 ignore = false;
                             }
                         }
