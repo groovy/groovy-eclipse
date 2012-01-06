@@ -38,7 +38,6 @@ import org.codehaus.groovy.ast.expr.BooleanExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
-import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
@@ -49,7 +48,6 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
-import org.eclipse.jdt.groovy.search.VariableScope.CallAndType;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.objectweb.asm.Opcodes;
 
@@ -80,7 +78,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		}
 		ClassNode declaringType = objectExpressionType != null ? objectExpressionType : findDeclaringType(node, scope, confidence);
 		TypeLookupResult result = findType(node, objectExpressionType, declaringType, scope, confidence[0],
-				isStaticObjectExpression || (objectExpressionType == null && scope.isStatic()));
+				isStaticObjectExpression || (objectExpressionType == null && scope.isStatic()), objectExpressionType == null);
 
 		return result;
 	}
@@ -139,18 +137,39 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		} else if (node instanceof StaticMethodCallExpression) {
 			return ((StaticMethodCallExpression) node).getOwnerType();
 
+		} else if (node instanceof ConstantExpression) {
+			if (scope.isMethodCall()) {
+				// a method call with an implicit this
+				return scope.getDelegateOrThis();
+			}
 		} else if (node instanceof VariableExpression) {
 			Variable var = ((VariableExpression) node).getAccessedVariable();
 			if (var instanceof DynamicVariable) {
 				// search type hierarchy for declaration
-				ASTNode declaration = findDeclaration(var.getName(), scope.getEnclosingTypeDeclaration(),
-						scope.methodCallNumberOfArguments);
+				// first look in delegate and hierarchy and then go for this
+				ASTNode declaration = null;
+
+				ClassNode delegate = scope.getDelegate();
+				if (delegate != null) {
+					declaration = findDeclaration(var.getName(), delegate, scope.getMethodCallNumberOfArguments());
+				}
+
+				ClassNode thiz = scope.getThis();
+				if (thiz == null) {
+					thiz = VariableScope.OBJECT_CLASS_NODE;
+				}
+				if (declaration == null) {
+					if (thiz != null && (delegate == null || !thiz.equals(delegate))) {
+						// don't go here if this and delegate are the same
+						declaration = findDeclaration(var.getName(), thiz, scope.getMethodCallNumberOfArguments());
+					}
+				}
+
 				ClassNode type;
 				if (declaration == null) {
 					// this is a dynamic variable that doesn't seem to have a declaration
 					// it might be an unknown and a mistake, but it could also be declared by 'this'
-					VariableInfo info = scope.lookupName("this");
-					type = info == null ? VariableScope.OBJECT_CLASS_NODE : info.declaringType;
+					type = thiz;
 				} else {
 					type = declaringTypeFromDeclaration(declaration, var.getType());
 				}
@@ -168,18 +187,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 				// local variable, no declaring type
 				// fall through
 			}
-
-		} else if (node instanceof DeclarationExpression) {
-			// the type declaration of the DeclarationExpression is considered to be the
-			// declaring type. This ensures that type declarations are treated as
-			// to be type references.
-			return ((DeclarationExpression) node).getLeftExpression().getType();
 		}
 		return VariableScope.OBJECT_CLASS_NODE;
 	}
 
+	// FIXADE remvoe objectExpressionType
 	private TypeLookupResult findType(Expression node, ClassNode objectExpressionType, ClassNode declaringType,
-			VariableScope scope, TypeConfidence confidence, boolean isStaticObjectExpression) {
+			VariableScope scope, TypeConfidence confidence, boolean isStaticObjectExpression, boolean isPrimaryExpression) {
 
 		// check first to see if we have this type inferred
 		if (node instanceof VariableExpression) {
@@ -189,13 +203,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		// if the object type is not null, then we base the
 		// type of this node on the object type
 		ClassNode nodeType = node.getType();
-		if (objectExpressionType != null) {
+		if (!isPrimaryExpression || scope.isMethodCall()) {
 			// lookup the type based on the object's expression type
 			// assume it is a method/property/field in the object expression type's hierarchy
 
 			if (node instanceof ConstantExpression) {
-				return findTypeForNameWithKnownObjectExpression(node.getText(), nodeType, objectExpressionType, scope, confidence,
-						isStaticObjectExpression);
+				return findTypeForNameWithKnownObjectExpression(node.getText(), nodeType, declaringType, scope, confidence,
+						isStaticObjectExpression, isPrimaryExpression);
 			}
 		}
 
@@ -217,23 +231,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			} else if (ClassHelper.isNumberType(nodeType) || nodeType == ClassHelper.BigDecimal_TYPE
 					|| nodeType == ClassHelper.BigInteger_TYPE) {
 				return new TypeLookupResult(nodeType, null, null, confidence, scope);
+			} else if (nodeType.equals(VariableScope.STRING_CLASS_NODE)) {
+				// likely a proper quoted string constant
+				return new TypeLookupResult(nodeType, null, node, confidence, scope);
 			} else {
-				// there is a possibility that this is a constant expression inside a GString.
-				// check for a '$' as a start.
-				//				if (node.getText().startsWith("$")) { //$NON-NLS-1$
-				// String realName = node.getText().substring(1);
-				// if (realName.startsWith("{") && realName.endsWith("}")) {
-				// realName = realName.substring(1, realName.length() - 1);
-				// }
-				// return findTypeForNameWithKnownObjectExpression(realName, nodeType, scope.getEnclosingTypeDeclaration(), scope,
-				// confidence, isStaticObjectExpression);
-				// }
-				if (nodeType.equals(VariableScope.STRING_CLASS_NODE)) {
-					// likely a proper quoted string constant
-					return new TypeLookupResult(nodeType, null, node, confidence, scope);
-				} else {
-					return new TypeLookupResult(nodeType, null, null, UNKNOWN, scope);
-				}
+				return new TypeLookupResult(nodeType, null, null, UNKNOWN, scope);
 			}
 
 		} else if (node instanceof BooleanExpression || node instanceof NotExpression) {
@@ -299,37 +301,48 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 	/**
 	 * look for a name within an object expression. It is either in the hierarchy, it is in the variable scope, or it is unknown.
 	 * 
+	 * @param isPrimaryExpression
+	 * 
 	 * @return
 	 */
 	private TypeLookupResult findTypeForNameWithKnownObjectExpression(String name, ClassNode type, ClassNode declaringType,
-			VariableScope scope, TypeConfidence confidence, boolean isStaticObjectExpression) {
+			VariableScope scope, TypeConfidence confidence, boolean isStaticObjectExpression, boolean isPrimaryExpression) {
 		ClassNode realDeclaringType;
 		VariableInfo varInfo;
-		ASTNode declaration = findDeclaration(name, declaringType, scope.methodCallNumberOfArguments);
+		ASTNode declaration = findDeclaration(name, declaringType, scope.getMethodCallNumberOfArguments());
+
+		if (declaration == null && isPrimaryExpression) {
+			ClassNode thiz = scope.getThis();
+			if (thiz != null && !thiz.equals(declaringType)) {
+				// probably in a closure where the delegate has changed
+				declaration = findDeclaration(name, thiz, scope.getMethodCallNumberOfArguments());
+			}
+		}
 
 		// GRECLIPSE-1079
 		if (declaration == null && isStaticObjectExpression) {
 			// we might have a reference to a property/method defined on java.lang.Class
-			declaration = findDeclaration(name, VariableScope.CLASS_CLASS_NODE, scope.methodCallNumberOfArguments);
+			declaration = findDeclaration(name, VariableScope.CLASS_CLASS_NODE, scope.getMethodCallNumberOfArguments());
 		}
 
 		if (declaration != null) {
 			type = typeFromDeclaration(declaration, declaringType);
 			realDeclaringType = declaringTypeFromDeclaration(declaration, declaringType);
-		} else if (checkDeclaringType(declaringType, scope) &&
+		} else if (isPrimaryExpression &&
 		// make everything from the scopes available
 				(varInfo = scope.lookupName(name)) != null) {
 
 			// now try to find the declaration again
 			type = varInfo.type;
 			realDeclaringType = varInfo.declaringType;
-			declaration = findDeclaration(name, realDeclaringType, scope.methodCallNumberOfArguments);
+			declaration = findDeclaration(name, realDeclaringType, scope.getMethodCallNumberOfArguments());
 			if (declaration == null) {
 				declaration = varInfo.declaringType;
 			}
 		} else if (name.equals("call")) {
 			// assume that this is a synthetic call method for calling a closure
-			declaration = realDeclaringType = declaringType;
+			realDeclaringType = VariableScope.CLOSURE_CLASS;
+			declaration = realDeclaringType.getMethods("call").get(0);
 		} else {
 			realDeclaringType = declaringType;
 			confidence = UNKNOWN;
@@ -361,22 +374,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		return new TypeLookupResult(type, realDeclaringType, declaration, confidence, scope);
 	}
 
-	private boolean checkDeclaringType(ClassNode declaringType, VariableScope scope) {
-		if (declaringType.equals(scope.getEnclosingTypeDeclaration())) {
-			// this or implicit this
-			return true;
-		}
-
-		if (scope.getEnclosingClosure() != null) {
-			CallAndType callAndType = scope.getEnclosingMethodCallExpression();
-			if (callAndType != null && declaringType.equals(callAndType.declaringType)) {
-				// 'this' inside of a closure
-				return true;
-			}
-		}
-		return false;
-	}
-
 	private TypeLookupResult findTypeForVariable(VariableExpression var, VariableScope scope, TypeConfidence confidence,
 			ClassNode declaringType) {
 		ASTNode declaration = var;
@@ -392,7 +389,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			// this is likely a reference to a field or method in a type in the hierarchy
 			// find the declaration
 			ASTNode maybeDeclaration = findDeclaration(accessedVar.getName(), getMorePreciseType(declaringType, info),
-					scope.methodCallNumberOfArguments);
+					scope.getMethodCallNumberOfArguments());
 			if (maybeDeclaration != null) {
 				declaration = maybeDeclaration;
 				// declaring type may have changed

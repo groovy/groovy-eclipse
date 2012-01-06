@@ -16,7 +16,6 @@
 
 package org.eclipse.jdt.groovy.search;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,6 +28,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
@@ -45,13 +45,12 @@ public class CategoryTypeLookup implements ITypeLookup {
 	 * Looks up method calls to see if they are declared in any current categories
 	 */
 	public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
-		if (node instanceof ConstantExpression) {
-			ConstantExpression constExpr = (ConstantExpression) node;
+		if (node instanceof ConstantExpression || node instanceof VariableExpression) {
 			Set<ClassNode> categories = scope.getCategoryNames();
-			ClassNode currentType = objectExpressionType != null ? objectExpressionType : scope.getEnclosingTypeDeclaration();
+			ClassNode currentType = objectExpressionType != null ? objectExpressionType : scope.getDelegateOrThis();
 			Set<MethodNode> possibleMethods = new HashSet<MethodNode>();
 			// go through all categories and look for and look for a method with the given name
-			String text = constExpr.getText();
+			String text = node.getText();
 			if (text.startsWith("${") && text.endsWith("}")) {
 				text = text.substring(2, text.length() - 1);
 			} else if (text.startsWith("$")) {
@@ -59,22 +58,20 @@ public class CategoryTypeLookup implements ITypeLookup {
 			}
 			String getterName = createGetterName(text);
 			for (ClassNode category : categories) {
-				List<?> methods = category.getMethods(text); // use List<?> because groovy 1.6.5 does not
-				// have type parameters on this method
+				List<MethodNode> methods = category.getMethods(text);
 
-				possibleMethods.addAll((Collection<? extends MethodNode>) methods);
+				possibleMethods.addAll(methods);
 
 				// also check to see if the getter variant of any name is available
 				if (getterName != null) {
 					methods = category.getMethods(getterName);
-					possibleMethods.addAll((Collection<? extends MethodNode>) methods);
+					possibleMethods.addAll(methods);
 				}
 			}
 			for (MethodNode methodNode : possibleMethods) {
 				Parameter[] params = methodNode.getParameters();
 				if (params != null && params.length > 0
 						&& isAssignableFrom(VariableScope.maybeConvertFromPrimitive(currentType), params[0].getType())) {
-					// found it! There may be more, but this is good enough
 					ClassNode declaringClass = methodNode.getDeclaringClass();
 					return new TypeLookupResult(methodNode.getReturnType(), declaringClass, methodNode,
 							getConfidence(declaringClass), scope);

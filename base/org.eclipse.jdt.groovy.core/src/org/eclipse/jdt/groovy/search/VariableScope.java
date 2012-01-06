@@ -215,10 +215,9 @@ public class VariableScope {
 	private ClassNode categoryBeingDeclared;
 
 	/**
-	 * If visiting the identifier of a method call expression, this field will be equal to the number of arguments to the method
-	 * call.
+	 * number of parameters of current method call or -1 if not a method call
 	 */
-	int methodCallNumberOfArguments = -1;
+	private int methodCallNumberOfArguments = -1;
 
 	public VariableScope(VariableScope parent, ASTNode enclosingNode, boolean isStatic) {
 		this.parent = parent;
@@ -238,7 +237,7 @@ public class VariableScope {
 		}
 
 		// this scope is considered static if in a static method, or
-		// it's parent is static
+		// its parent is static
 		this.isStaticScope = isStatic || (parent != null && parent.isStaticScope);
 		if (enclosingNode instanceof ClosureExpression) {
 			this.enclosingClosure = (ClosureExpression) enclosingNode;
@@ -254,10 +253,6 @@ public class VariableScope {
 	 */
 	public Map<String, Object> getWormhole() {
 		return shared.wormhole;
-	}
-
-	public boolean isMethodCall() {
-		return methodCallNumberOfArguments >= 0;
 	}
 
 	public ASTNode getEnclosingNode() {
@@ -326,9 +321,9 @@ public class VariableScope {
 	 */
 	public VariableInfo lookupName(String name) {
 		if ("super".equals(name)) { //$NON-NLS-1$
-			VariableInfo var = lookupName("this"); //$NON-NLS-1$
-			if (var != null) {
-				ClassNode superType = var.declaringType.getSuperClass();
+			ClassNode type = getDelegateOrThis();
+			if (type != null) {
+				ClassNode superType = type.getSuperClass();
 				return new VariableInfo(superType, superType);
 			}
 		}
@@ -338,6 +333,36 @@ public class VariableScope {
 			var = parent.lookupName(name);
 		}
 		return var;
+	}
+
+	public ClassNode getThis() {
+		VariableInfo thiz = lookupName("this");
+		return thiz != null ? thiz.type : null;
+	}
+
+	public ClassNode getDelegate() {
+		VariableInfo delegate = lookupName("delegate");
+		return delegate != null ? delegate.type : null;
+	}
+
+	/**
+	 * @return the current delegate type if exists, or this type if exists, or Object. Returns null if in top level scope (ie- in
+	 *         import statement)
+	 */
+	public VariableInfo getDelegateOrThisInfo() {
+		VariableInfo info = lookupName("delegate");
+		if (info != null) {
+			return info;
+		}
+		info = lookupName("this");
+
+		// might be null if in imports
+		return info;
+	}
+
+	public ClassNode getDelegateOrThis() {
+		VariableInfo info = getDelegateOrThisInfo();
+		return info != null ? info.type : null;
 	}
 
 	/**
@@ -766,6 +791,22 @@ public class VariableScope {
 	 */
 	public boolean containsInThisScope(String name) {
 		return nameVariableMap.containsKey(name);
+	}
+
+	/**
+	 * If visiting the identifier of a method call expression, this field will be equal to the number of arguments to the method
+	 * call.
+	 */
+	int getMethodCallNumberOfArguments() {
+		return methodCallNumberOfArguments;
+	}
+
+	void setMethodCallNumberOfArguments(int methodCallNumberOfArguments) {
+		this.methodCallNumberOfArguments = methodCallNumberOfArguments;
+	}
+
+	public boolean isMethodCall() {
+		return methodCallNumberOfArguments >= 0;
 	}
 
 	public Iterator<Map.Entry<String, VariableInfo>> variablesIterator() {

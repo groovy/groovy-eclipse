@@ -55,7 +55,6 @@ public class DSLDScriptExecutor {
         
     }
     
-    @SuppressWarnings("rawtypes")
     private final class RegisterClosure extends Closure {
         private static final long serialVersionUID = 1162731585734041055L;
 
@@ -118,8 +117,6 @@ public class DSLDScriptExecutor {
             }
         }
 
-
-        @SuppressWarnings("rawtypes")
         @Override
         public Object getVariable(String name) {
             if ("registerPointcut".equals(name)) {
@@ -180,7 +177,6 @@ public class DSLDScriptExecutor {
                 };
             }
             
-            
             IPointcut pc = factory.createPointcut(name);
             if (pc != null) {
                 return new PointcutClosure(this, pc);
@@ -208,8 +204,6 @@ public class DSLDScriptExecutor {
             }
         }
     }
-
-
     
     private final GroovyClassLoader gcl;
     private final IJavaProject project;
@@ -290,7 +284,6 @@ public class DSLDScriptExecutor {
         return sb.toString();
     }
 
-    @SuppressWarnings("rawtypes")
     protected Object tryRegister(Object args) {
         Object[] nameAndClosure = extractArgsForRegister(args);
         if (nameAndClosure != null) {

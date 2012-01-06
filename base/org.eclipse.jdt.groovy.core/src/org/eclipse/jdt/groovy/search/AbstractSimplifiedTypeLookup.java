@@ -114,7 +114,8 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 		if (objectExpressionType != null) {
 			declaringType = objectExpressionType;
 		} else {
-			VariableInfo info = scope.lookupName("this"); //$NON-NLS-1$
+			// Use delegate type if exists
+			VariableInfo info = scope.getDelegateOrThisInfo();
 			if (info != null) {
 				declaringType = info.declaringType;
 			} else {

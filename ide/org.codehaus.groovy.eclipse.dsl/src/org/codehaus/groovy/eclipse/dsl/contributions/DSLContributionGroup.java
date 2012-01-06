@@ -135,6 +135,27 @@ public class DSLContributionGroup extends ContributionGroup {
         return bindings.get(property);
     }
     
+    void setDelegate(Object arg) {
+        ClassNode delegate = asClassNode(arg);
+        if (delegate != null) {
+            scope.addVariable("delegate", delegate, delegate);
+        }
+    }
+    
+    private ClassNode asClassNode(Object value) {
+        if (value == null) {
+          return null;
+      } else if (value instanceof String) {
+          return resolver.resolve((String) value);
+      } else if (value instanceof ClassNode) {
+          return (ClassNode) value;
+      } else if (value instanceof Class) {
+          return resolver.resolve(((Class<?>) value).getName());
+      } else {
+          return resolver.resolve(value.toString());
+      }
+    }
+
     /**
      * Called by closure to add a method
      * @param args

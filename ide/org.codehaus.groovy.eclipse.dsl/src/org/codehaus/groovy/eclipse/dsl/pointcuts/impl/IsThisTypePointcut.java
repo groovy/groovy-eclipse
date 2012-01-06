@@ -48,7 +48,7 @@ public class IsThisTypePointcut extends AbstractPointcut {
      */
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
-        ClassNode enclosing = pattern.getCurrentScope().lookupName("this").type;
+        ClassNode enclosing = pattern.getCurrentScope().getThis();
         ClassNode currentType = pattern.getCurrentType();
         if (enclosing != null && currentType != null && enclosing.redirect() == currentType.redirect()) {
             return Collections.singleton(currentType);

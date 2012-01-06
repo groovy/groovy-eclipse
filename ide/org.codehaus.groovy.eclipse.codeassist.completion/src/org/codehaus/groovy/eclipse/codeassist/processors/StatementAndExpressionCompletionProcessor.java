@@ -501,13 +501,13 @@ public class StatementAndExpressionCompletionProcessor extends
             // we have something like this:
             // myMethodCall _
             // so, we want to look at the type of 'this' to complete on
-            return completionNode instanceof VariableExpression ? requestor.currentScope.lookupName("this").type
+            return completionNode instanceof VariableExpression ? requestor.currentScope.getDelegateOrThis()
                     : requestor.resultingType;
         } else {
             // use the current 'this' type so that closure types are correct
-            VariableInfo info= requestor.currentScope.lookupName("this");
-            if (info != null) {
-                return info.type;
+            ClassNode type = requestor.currentScope.getDelegateOrThis();
+            if (type != null) {
+                return type;
             } else {
                 // will only happen if in top level scope
                 return requestor.resultingType;

@@ -41,7 +41,93 @@ public class InferencingTests extends AbstractInferencingTest {
     public InferencingTests(String name) {
         super(name);
     }
+    
+    
+    public void testLocalVar1() throws Exception {
+        String contents ="def x\nthis.x";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertUnknownConfidence(contents, start, end, "Search", false);
+    }
 
+    public void testLocalVar2() throws Exception {
+        String contents ="def x\ndef y = { this.x }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertUnknownConfidence(contents, start, end, "Search", false);
+    }
+    
+    public void testLocalVar2a() throws Exception {
+        String contents ="def x\ndef y = { this.x() }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertUnknownConfidence(contents, start, end, "Search", false);
+    }
+    
+    public void testLocalVar3() throws Exception {
+        String contents ="int x\ndef y = { x }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testLocalVar4() throws Exception {
+        String contents ="int x\ndef y = { x() }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testLocalMethod1() throws Exception {
+        String contents ="int x() { }\ndef y = { x() }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testLocalMethod2() throws Exception {
+        String contents ="int x() { }\ndef y = { x }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testLocalMethod3() throws Exception {
+        String contents ="int x() { }\ndef y = { def z = { x } }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testLocalMethod4() throws Exception {
+        String contents ="int x() { }\ndef y = { def z = { x() } }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testLocalMethod5() throws Exception {
+        String contents ="int x() { }\ndef y = { def z = { this.x() } }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testLocalMethod6() throws Exception {
+        String contents ="def x\ndef y = { delegate.x() }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertUnknownConfidence(contents, start, end, "Search", false);
+    }
+
+    public void testLocalMethod7() throws Exception {
+        String contents ="def x\ndef y = { delegate.x }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertUnknownConfidence(contents, start, end, "Search", false);
+    }
+    
+    
     public void testInferNumber1() throws Exception {
         assertType("10", "java.lang.Integer");
     }
@@ -569,16 +655,48 @@ public class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
     public void testInClosure1() throws Exception {
-        String contents = "class Bar {\ndef meth() { } }\n new Bar().meth {\n this }";
-        int start = contents.lastIndexOf("this");
-        int end = start + "this".length();
+        String contents = 
+                "class Bar {\n" +
+        		"  def meth() { } }\n" +
+        		"new Bar().meth {\n delegate }";
+        int start = contents.lastIndexOf("delegate");
+        int end = start + "delegate".length();
         assertType(contents, start, end, "Bar");
     }
     public void testInClosure2() throws Exception {
-        String contents = "class Bar {\ndef meth(x) { } }\n new Bar().meth(6) {\n this }";
+        String contents = 
+                "class Bar {\n" +
+        		"  def meth(x) { } }\n" +
+        		"new Bar().meth(6) {\n this }";
         int start = contents.lastIndexOf("this");
         int end = start + "this".length();
+        assertType(contents, start, end, "Search");
+    }
+    public void testInClosure2a() throws Exception {
+        String contents = 
+                "class Bar {\n" +
+                "  def meth(x) { } }\n" +
+                "new Bar().meth(6) {\n delegate }";
+        int start = contents.lastIndexOf("delegate");
+        int end = start + "delegate".length();
         assertType(contents, start, end, "Bar");
+    }
+    public void testInClosure2b() throws Exception {
+        String contents = 
+                "class Bar {\n" +
+                "  def meth(x) { } }\n" +
+                "new Bar().meth(6) {\n owner }";
+        int start = contents.lastIndexOf("owner");
+        int end = start + "owner".length();
+        assertType(contents, start, end, "Search");
+    }
+    // closure in a closure and owner is outer closure
+    public void testInClosure2c() throws Exception {
+        String contents = 
+                "first {\n second {\n owner } }";
+        int start = contents.lastIndexOf("owner");
+        int end = start + "owner".length();
+        assertType(contents, start, end, "groovy.lang.Closure<java.lang.Object<V>>");
     }
     public void testInClosure3() throws Exception {
         String contents = "class Baz { }\n" +
@@ -592,6 +710,51 @@ public class InferencingTests extends AbstractInferencingTest {
         int end = start + "Baz".length();
         assertType(contents, start, end, "Baz");
     }
+    
+    public void testInClosure4() throws Exception {
+        String contents = 
+                "''.foo {\n" +
+                "  substring" +
+                "}";
+        
+        int start = contents.lastIndexOf("substring");
+        int end = start + "substring".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+    
+    public void testInClosure5() throws Exception {
+        String contents = 
+                "''.foo {\n" +
+                "  delegate.substring()" +
+                "}";
+        
+        int start = contents.lastIndexOf("substring");
+        int end = start + "substring".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+    
+    public void testInClosure6() throws Exception {
+        String contents = 
+                "''.foo {\n" +
+                "  this.substring" +
+                "}";
+        
+        int start = contents.lastIndexOf("substring");
+        int end = start + "substring".length();
+        assertUnknownConfidence(contents, start, end, "Search", false);
+    }
+    
+    public void testInClosure7() throws Exception {
+        String contents = 
+                "''.foo {\n" +
+                "  this\n" +
+                "}";
+        
+        int start = contents.lastIndexOf("this");
+        int end = start + "this".length();
+        assertType(contents, start, end, "Search", false);
+    }
+
     
     public void testClosure4() throws Exception {
         String contents = 
@@ -667,8 +830,55 @@ public class InferencingTests extends AbstractInferencingTest {
                 "}";
         int start = contents.lastIndexOf("other");
         int end = start + "other".length();
-        assertDeclaringType(contents, start, end, "Baz", false, true);
+        assertDeclaringType(contents, start, end, "Search", false, true);
     }
+    
+    // Unknown references should have the delegate type of the closure
+    public void testInClosureDeclaringType3() throws Exception {
+        String contents = 
+                "class Baz {\n" +
+                "  def method() { }\n" +
+                "}\n" +
+                "class Bar extends Baz {\n" +
+                "  def sumthin() {\n" +
+                "    new Bar().method {\n " +
+                "      other\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+        int start = contents.lastIndexOf("other");
+        int end = start + "other".length();
+        assertDeclaringType(contents, start, end, "Bar", false, true);
+    }
+
+    // 'this' is always the enclosing type
+    public void testInClosureDeclaringType4() throws Exception {
+        String contents = 
+                "class Bar {\n" +
+                "  def method() { }\n" +
+                "}\n" +
+                "new Bar().method {\n " +
+                "  this\n" +
+                "}";
+        int start = contents.lastIndexOf("this");
+        int end = start + "this".length();
+        assertDeclaringType(contents, start, end, "Search", false);
+    }
+    
+    // 'delegate' always has declaring type of closure
+    public void testInClosureDeclaringType5() throws Exception {
+        String contents = 
+                "class Bar {\n" +
+                "  def method() { }\n" +
+                "}\n" +
+                "new Bar().method {\n " +
+                "  delegate\n" +
+                "}";
+        int start = contents.lastIndexOf("delegate");
+        int end = start + "delegate".length();
+        assertDeclaringType(contents, start, end, "groovy.lang.Closure<java.lang.Object<V>>", false);
+    }
+    
     // Unknown references should have the declaring type of the enclosing method
     public void testInClassDeclaringType1() throws Exception {
         String contents = 
@@ -694,6 +904,111 @@ public class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "Baz", false, true);
     }
     
+    public void testDoubleClosure1() throws Exception {
+        String contents = 
+                "''.foo {\n" +
+                "  1.foo {\n" +
+                "    intValue\n" +
+                "  }" +
+                "}";
+        
+        int start = contents.lastIndexOf("intValue");
+        int end = start + "intValue".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testDoubleClosure2() throws Exception {
+        String contents = 
+                "''.foo {\n" +
+                "  1.foo {\n" +
+                "    intValue()\n" +
+                "  }" +
+                "}";
+        
+        int start = contents.lastIndexOf("intValue");
+        int end = start + "intValue".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testDoubleClosure2a() throws Exception {
+        String contents = 
+                "''.foo {\n" +
+                "  1.foo {\n" +
+                "    delegate.intValue()\n" +
+                "  }" +
+                "}";
+        
+        int start = contents.lastIndexOf("intValue");
+        int end = start + "intValue".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    // test DGM
+    public void testDoubleClosure3() throws Exception {
+        String contents = 
+                "''.foo {\n" +
+                "  1.foo {\n" +
+                "    abs\n" +
+                "  }" +
+                "}";
+        
+        int start = contents.lastIndexOf("abs");
+        int end = start + "abs".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+    
+    public void testDoubleClosure4() throws Exception {
+        String contents = 
+                "''.foo {\n" +
+                "  1.foo {\n" +
+                "    abs()\n" +
+                "  }" +
+                "}";
+        
+        int start = contents.lastIndexOf("abs");
+        int end = start + "abs".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+
+    public void testDoubleClosure5() throws Exception {
+        String contents = 
+                "''.foo {\n" +
+                "  1.foo {\n" +
+                "    delegate.abs()\n" +
+                "  }" +
+                "}";
+        
+        int start = contents.lastIndexOf("abs");
+        int end = start + "abs".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+
+    public void testDoubleClosure6() throws Exception {
+        String contents = 
+                "''.foo {\n" +
+                "  1.foo {\n" +
+                "    this.abs()\n" +
+                "  }" +
+                "}";
+        
+        int start = contents.lastIndexOf("abs");
+        int end = start + "abs".length();
+        assertUnknownConfidence(contents, start, end, "Search", false);
+    }
+
+    public void testDoubleClosure7() throws Exception {
+        String contents = 
+                "''.foo {\n" +
+                "  1.foo {\n" +
+                "    this\n" +
+                "  }" +
+                "}";
+        
+        int start = contents.lastIndexOf("this");
+        int end = start + "this".length();
+        assertType(contents, start, end, "Search");
+    }
+
     
     // Unknown references should have the declaring type of the enclosing closure
     public void testInScriptDeclaringType() throws Exception {
@@ -1028,6 +1343,17 @@ public class InferencingTests extends AbstractInferencingTest {
         assertType(contents, "java.lang.Integer");
     }
     
+    
+    
+    public void testPostfix() throws Exception {
+        String contents = 
+                "    int i = 0\n" + 
+                "    def list = [0]\n" + 
+                "    list[i]++";
+        int start = contents.lastIndexOf('i');
+        assertType(contents, start, start +1, "java.lang.Integer");
+    }
+
     // GRECLIPSE-1302
     public void testNothingIsUnknown() throws Exception {
         assertNoUnknowns("1 > 4\n" + 
@@ -1038,10 +1364,46 @@ public class InferencingTests extends AbstractInferencingTest {
                 "1 == 1\n" +
                 "[1,9][0]");
     }
+    public void testNothingIsUnknownWithCategories() throws Exception {
+        assertNoUnknowns("class Me {\n" + 
+        		"    def meth() {\n" + 
+        		"        use (MeCat) {\n" + 
+        		"            println getVal()\n" + 
+        		"            println val\n" + 
+        		"        }\n" + 
+        		"    }\n" + 
+        		"} \n" + 
+        		"\n" + 
+        		"class MeCat { \n" + 
+        		"    static String getVal(Me self) {\n" + 
+        		"        \"val\"\n" + 
+        		"    }\n" + 
+        		"}\n" + 
+        		"\n" + 
+        		"use (MeCat) {\n" + 
+        		"    println new Me().getVal()\n" + 
+        		"    println new Me().val\n" + 
+        		"}\n" + 
+        		"new Me().meth()");
+    }
 
     // GRECLIPSE-1304
     public void testNoGString1() throws Exception {
         assertNoUnknowns("'$'\n'${}\n'${a}'\n'$a'");
+    }
+    public void testClosureReferencesSuperClass() throws Exception {
+        assertNoUnknowns("class MySuper {\n" + 
+        		"    public void insuper() {  }\n" + 
+        		"}\n" + 
+        		"\n" + 
+        		"class MySub extends MySuper {\n" + 
+        		"    public void foo() {\n" + 
+        		"        [1].each {\n" + 
+        		// this line is problematic --- references super class
+        		"            insuper(\"3\")\n" + 
+        		"        }\n" + 
+        		"    }\n" + 
+        		"}");
     }
 
     protected void assertNoUnknowns(String contents) {

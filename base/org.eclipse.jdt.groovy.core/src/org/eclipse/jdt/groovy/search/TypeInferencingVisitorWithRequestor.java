@@ -14,7 +14,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -573,20 +572,21 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			visitClassReference(intr);
 		}
 
-		// add all methods to the scope because when they are
-		// referenced without parens, they appear
-		// as VariableExpressions in the code
 		VariableScope currentScope = scope;
-		// don't use Java 5 style for loop here because Groovy 1.6.x does not
-		// have type parameters for its getMethods() method.
-		for (@SuppressWarnings("rawtypes")
-		Iterator methodIter = node.getMethods().iterator(); methodIter.hasNext();) {
-			MethodNode method = (MethodNode) methodIter.next();
-			// ignore all the synthetics
-			if (!method.getName().contains("$")) {
-				currentScope.addVariable(method.getName(), method.getReturnType(), method.getDeclaringClass());
-			}
-		}
+		// don't think I need to do this...
+		// // add all methods to the scope because when they are
+		// // referenced without parens, they appear
+		// // as VariableExpressions in the code
+		// // don't use Java 5 style for loop here because Groovy 1.6.x does not
+		// // have type parameters for its getMethods() method.
+		// for (@SuppressWarnings("rawtypes")
+		// Iterator methodIter = node.getMethods().iterator(); methodIter.hasNext();) {
+		// MethodNode method = (MethodNode) methodIter.next();
+		// // ignore all the synthetics
+		// if (!method.getName().contains("$")) {
+		// currentScope.addVariable(method.getName(), method.getReturnType(), method.getDeclaringClass());
+		// }
+		// }
 
 		// visit <clinit> body because this is where static field initializers are placed
 		// only visit field initializers here.
@@ -1137,7 +1137,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitClosureExpression(ClosureExpression node) {
-		VariableScope scope = new VariableScope(scopes.peek(), node, false);
+		VariableScope parent = scopes.peek();
+		ClosureExpression enclosingClosure = parent.getEnclosingClosure();
+
+		VariableScope scope = new VariableScope(parent, node, false);
 		scopes.push(scope);
 		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
@@ -1160,17 +1163,25 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				scope.addVariable("it", implicitParamType[0], VariableScope.OBJECT_CLASS_NODE);
 			}
 
-			// owner and delegate is the 'this' type of outside the closure
-			ClassNode thisType = scope.lookupName("this").type;
-			scope.addVariable("owner", thisType, VariableScope.CLOSURE_CLASS);
-			scope.addVariable("delegate", thisType, VariableScope.CLOSURE_CLASS);
-			scope.addVariable("getOwner", thisType, VariableScope.CLOSURE_CLASS);
-			scope.addVariable("getDelegate", thisType, VariableScope.CLOSURE_CLASS);
-
+			// Delegate is the declaring type of the enclosing call if one exists, or it is 'this'
 			CallAndType cat = scope.getEnclosingMethodCallExpression();
 			if (cat != null) {
-				scope.addVariable("this", cat.declaringType, cat.declaringType);
-				scope.addVariable("super", cat.declaringType.getUnresolvedSuperClass(), cat.declaringType.getUnresolvedSuperClass());
+				scope.addVariable("delegate", cat.declaringType, VariableScope.CLOSURE_CLASS);
+				scope.addVariable("getDelegate", cat.declaringType, VariableScope.CLOSURE_CLASS);
+			} else {
+				ClassNode thisType = scope.lookupName("this").type;
+				scope.addVariable("delegate", thisType, VariableScope.CLOSURE_CLASS);
+				scope.addVariable("getDelegate", thisType, VariableScope.CLOSURE_CLASS);
+			}
+
+			// Owner is 'this' if no enclosing closure, or 'Closure' if there is
+			if (enclosingClosure != null) {
+				scope.addVariable("owner", VariableScope.CLOSURE_CLASS, VariableScope.CLOSURE_CLASS);
+				scope.addVariable("getOwner", VariableScope.CLOSURE_CLASS, VariableScope.CLOSURE_CLASS);
+			} else {
+				ClassNode thisType = scope.lookupName("this").type;
+				scope.addVariable("owner", thisType, VariableScope.CLOSURE_CLASS);
+				scope.addVariable("getOwner", thisType, VariableScope.CLOSURE_CLASS);
 			}
 			super.visitClosureExpression(node);
 		}
@@ -1197,10 +1208,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			String methodName = call.call.getMethodAsString();
 			ClassNode inferredType;
 
+			ClassNode delegateType = call.declaringType;
 			if (dgmClosureMethods.contains(methodName)) {
-				inferredType = VariableScope.extractElementType(call.declaringType);
+				inferredType = VariableScope.extractElementType(delegateType);
 			} else if (dgmClosureIdentityMethods.contains(methodName)) {
-				inferredType = VariableScope.clone(call.declaringType);
+				inferredType = VariableScope.clone(delegateType);
 			} else {
 				// inferredType might be null
 				inferredType = dgmClosureMethodsMap.get(methodName);
@@ -1213,7 +1225,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					allInferred[allInferred.length - 1] = VariableScope.INTEGER_CLASS_NODE;
 				}
 				// if declaring type is a map and
-				if (call.declaringType.getName().equals(VariableScope.MAP_CLASS_NODE.getName())) {
+				if (delegateType.getName().equals(VariableScope.MAP_CLASS_NODE.getName())) {
 					if ((dgmClosureMaybeMap.contains(methodName) && numParams == 2)
 							|| (methodName.equals("eachWithIndex") && numParams == 3)) {
 						GenericsType[] typeParams = inferredType.getGenericsTypes();
@@ -1716,8 +1728,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		if (isDependentExpression(node)) {
 			// debugging help: objectExpressionType.push(objectExprType)
 			primaryType = primaryTypeStack.pop();
+			// FIXADE extract to separate method
+			// implicit this expressions do not have a primary type
+			if (completeExpressionStack.peek() instanceof MethodCallExpression
+					&& ((MethodCallExpression) completeExpressionStack.peek()).isImplicitThis()) {
+				primaryType = null;
+			}
 			isStatic = hasStaticObjectExpression(node);
-			scope.methodCallNumberOfArguments = getMethodCallArgs();
+			scope.setMethodCallNumberOfArguments(getMethodCallArgs());
 		} else {
 			primaryType = null;
 			isStatic = false;
@@ -1836,13 +1854,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		result.enclosingAssignment = enclosingAssignment;
 		VisitStatus status = requestor.acceptASTNode(node, result, enclosingElement);
 		VariableScope scope = scopes.peek();
-		scope.methodCallNumberOfArguments = -1; // forget the number of arguments
+		// forget the number of arguments
+		scope.setMethodCallNumberOfArguments(-1);
 
 		// when there is a category method, we don't want to store it
 		// as the declaring type since this will mess things up inside closures
 		ClassNode rememberedDeclaringType = result.declaringType;
 		if (scope.getCategoryNames().contains(rememberedDeclaringType)) {
-			rememberedDeclaringType = primaryType;
+			rememberedDeclaringType = primaryType != null ? primaryType : scope.getDelegateOrThis();
 		}
 		if (rememberedDeclaringType == null) {
 			rememberedDeclaringType = VariableScope.OBJECT_CLASS_NODE;

@@ -295,7 +295,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         
         public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
                 IJavaElement enclosingElement) {
-            if (result.confidence == TypeConfidence.UNKNOWN) {
+            if (result.confidence == TypeConfidence.UNKNOWN && node.getEnd() > 0) {
                 unknownNodes.add(node);
             }
             return VisitStatus.CONTINUE;
@@ -320,13 +320,18 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         public VisitStatus acceptASTNode(ASTNode visitorNode, TypeLookupResult visitorResult,
                 IJavaElement enclosingElement) {
             
-            if (visitorNode.getStart() == start && visitorNode.getEnd() == end && 
+        	// might have AST nodes with overlapping locations, so result may not be null
+            if (this.result == null && 
+            		visitorNode.getStart() == start && visitorNode.getEnd() == end && 
                     !(visitorNode instanceof MethodNode /* ignore the run() method*/) &&
                     !(visitorNode instanceof Statement /* ignore all statements */) &&
                     !(visitorNode instanceof ClassNode && ((ClassNode) visitorNode).isScript() /* ignore the script */ )) {
                 this.result = visitorResult;
                 this.node = visitorNode;
             }
+            
+            // always continue since we need to viist to the end to check consistency of 
+            // inferencing engine stacks
             return VisitStatus.CONTINUE;
         }
         
