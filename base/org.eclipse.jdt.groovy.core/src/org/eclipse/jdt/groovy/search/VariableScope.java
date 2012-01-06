@@ -324,6 +324,7 @@ public class VariableScope {
 			ClassNode type = getDelegateOrThis();
 			if (type != null) {
 				ClassNode superType = type.getSuperClass();
+				superType = superType == null ? VariableScope.OBJECT_CLASS_NODE : superType;
 				return new VariableInfo(superType, superType);
 			}
 		}
