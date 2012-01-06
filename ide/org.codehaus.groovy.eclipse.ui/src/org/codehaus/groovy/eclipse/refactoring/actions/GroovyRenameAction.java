@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
+import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.ui.actions.RenameAction;
 import org.eclipse.jface.text.ITextSelection;
@@ -29,18 +30,30 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 public class GroovyRenameAction extends RenameAction {
 
     private RenameDispatcherAction renameDelegate;
-    
+    private final GroovyEditor editor;
+
     public GroovyRenameAction(final JavaEditor editor) {
         super(editor);
+        if (editor instanceof GroovyEditor) {
+            this.editor = (GroovyEditor) editor;
+        } else {
+            this.editor = null;
+        }
         renameDelegate = new RenameDispatcherAction();
     }
 
+    @Override
     public void run(IStructuredSelection selection) {
         // do nothing...not applicable here
     }
 
+    @Override
     public void run(ITextSelection selection) {
-        renameDelegate.run(this);
+        if (editor != null) {
+            renameDelegate.setActiveEditor(this, editor);
+            renameDelegate.selectionChanged(this, selection);
+            renameDelegate.run(this);
+        }
     }
 
     @Override
