@@ -207,13 +207,17 @@ public class RefreshDSLDJob extends Job {
         
         private ISchedulingRule getSchedulingRule() {
             IResourceRuleFactory ruleFactory = ResourcesPlugin.getWorkspace().getRuleFactory();
-            return new MultiRule(new ISchedulingRule[] {
-                // use project modification rule as this is needed to create the .classpath file if it doesn't exist yet, or to update project references
-                ruleFactory.modifyRule(this.project.getProject()),
-                
-                // and external project modification rule in case the external folders are modified
-                ruleFactory.modifyRule(JavaModelManager.getExternalManager().getExternalFoldersProject())
-            });
+            
+            // FIXADE Arrgh...we need to grab a build rule here.  Looks like a classpath container refresh
+            // will grab the rule of projects that are contained in the container.
+//            return new MultiRule(new ISchedulingRule[] {
+//                // use project modification rule as this is needed to create the .classpath file if it doesn't exist yet, or to update project references
+//                ruleFactory.modifyRule(this.project.getProject()),
+//                
+//                // and external project modification rule in case the external folders are modified
+//                ruleFactory.modifyRule(JavaModelManager.getExternalManager().getExternalFoldersProject())
+//            });
+            return ruleFactory.buildRule();
         }
     }
 
