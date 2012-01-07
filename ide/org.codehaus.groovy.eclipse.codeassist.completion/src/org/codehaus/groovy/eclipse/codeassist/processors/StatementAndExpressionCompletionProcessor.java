@@ -352,13 +352,13 @@ public class StatementAndExpressionCompletionProcessor extends
             isStatic = isStatic() || requestor.isStatic;
             IProposalCreator[] creators = getAllProposalCreators();
             completionType = getCompletionType(requestor);
-            proposalCreatorLoop(context, requestor, completionType, isStatic, groovyProposals, creators);
-            // hmmm...may not be right. maybe need to go with 'this'
+            proposalCreatorLoop(context, requestor, completionType, isStatic, groovyProposals, creators, false);
             ClassNode closureThis = requestor.currentScope.getThis();
             if (closureThis != null && !closureThis.equals(completionType)) {
                 // inside of a closure
-                // must also add content assist for the delegate
-                proposalCreatorLoop(context, requestor, closureThis, isStatic, groovyProposals, creators);
+                // must also add content assist for this (previously did the
+                // delegate)
+                proposalCreatorLoop(context, requestor, closureThis, isStatic, groovyProposals, creators, true);
             }
         } else {
             // we are at the statement location of a script
@@ -451,8 +451,15 @@ public class StatementAndExpressionCompletionProcessor extends
     }
 
     private void proposalCreatorLoop(ContentAssistContext context, ExpressionCompletionRequestor requestor,
-            ClassNode completionType, boolean isStatic, List<IGroovyProposal> groovyProposals, IProposalCreator[] creators) {
+            ClassNode completionType, boolean isStatic, List<IGroovyProposal> groovyProposals, IProposalCreator[] creators,
+            boolean isClosureThis) {
         for (IProposalCreator creator : creators) {
+            if (isClosureThis && creator instanceof CategoryProposalCreator) {
+                // FIXADE need a better way to avoid duplicates.
+                // avoid duplicate DGMs by not proposing category proposals
+                // twice
+                continue;
+            }
             if (creator instanceof AbstractProposalCreator) {
                 ((AbstractProposalCreator) creator)
                         .setLhsType(requestor.lhsType);
