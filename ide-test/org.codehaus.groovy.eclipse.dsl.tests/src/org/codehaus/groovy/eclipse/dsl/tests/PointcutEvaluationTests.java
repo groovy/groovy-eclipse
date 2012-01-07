@@ -71,6 +71,7 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
                 IJavaElement enclosingElement) {
             context.setCurrentScope(result.scope);
             context.setTargetType(result.type);
+            context.resetBinding();
             Collection<?> matchResult = toMatch.matches(context, result.type);
             if (result != null) {
                 BindingSet set = context.getCurrentBinding();
@@ -533,6 +534,8 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
                 "\nActualBindings:\n" + bindings.getBindings(), results.length, bindings.getBindings().size());
     }
     
+    
+    
     private void assertSingleBinding(String bindingToString, Collection<?> binding) {
         if (bindingToString == null) {
             assertNull("Match should have been null", binding);
@@ -542,7 +545,7 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
         assertNotNull("Match should not be null", binding);
         
         String[] split = bindingToString.split(", ");
-        assertEquals("Unexpected number of bindings for " + binding, split.length, binding.size());
+        assertEquals("Unexpected number of bindings for " + BindingSet.printCollection(binding), split.length, binding.size());
         List<String> asList = Arrays.asList(split);
         for (Object object : binding) {
             String name = extractName(object);

@@ -29,7 +29,7 @@ import org.eclipse.core.resources.IStorage;
  * true
  * for references to 'this', or when a new expression is being started. As
  * opposed to {@link CurrentTypeIsEnclosingTypePointcut}, this pointcut always
- * matches on this, regardless of whether or not in a closure. This pointcut
+ * matches, regardless of whether or not in a closure. This pointcut
  * takes no arguments
  * 
  * @author andrew
@@ -48,9 +48,8 @@ public class IsThisTypePointcut extends AbstractPointcut {
      */
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
-        ClassNode enclosing = pattern.getCurrentScope().getThis();
-        ClassNode currentType = pattern.getCurrentType();
-        if (enclosing != null && currentType != null && enclosing.redirect() == currentType.redirect()) {
+        if (pattern.isPrimaryExpression()) {
+            ClassNode currentType = pattern.getCurrentType();
             return Collections.singleton(currentType);
         }
         return null;

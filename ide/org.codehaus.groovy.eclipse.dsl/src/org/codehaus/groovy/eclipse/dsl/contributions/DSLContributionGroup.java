@@ -77,6 +77,8 @@ public class DSLContributionGroup extends ContributionGroup {
     private Map<String, Object> wormhole;
 
     private boolean staticScope;
+    
+    private boolean isPrimaryExpression;
 
     public DSLContributionGroup(@SuppressWarnings("rawtypes") Closure contributionClosure) {
         this.contributionClosure = contributionClosure;
@@ -102,11 +104,14 @@ public class DSLContributionGroup extends ContributionGroup {
                 this.currentType = pattern.getCurrentType();
                 this.wormhole = scope.getWormhole();
                 this.staticScope = pattern.isStatic();
+                this.isPrimaryExpression = pattern.isPrimaryExpression();
                 contributionClosure.call();
             } catch (Exception e) {
                 GroovyLogManager.manager.logException(TraceCategory.DSL, e);
             } finally {
                 result = contributions;
+                // must set targetType here in case someone changed the delegate on us
+                pattern.setTargetType(currentType);
                 this.contributions = null;
                 this.scope = null;
                 this.resolver = null;
@@ -135,10 +140,18 @@ public class DSLContributionGroup extends ContributionGroup {
         return bindings.get(property);
     }
     
-    void setDelegate(Object arg) {
+    void setDelegateType(Object arg) {
         ClassNode delegate = asClassNode(arg);
         if (delegate != null) {
-            scope.addVariable("delegate", delegate, delegate);
+            // also need to set targetType, but only if primary expression
+            scope.addVariable("delegate", delegate, VariableScope.CLOSURE_CLASS);
+            scope.addVariable("getDelegate", delegate, VariableScope.CLOSURE_CLASS);
+            contributions.add(new EmptyContributionElement(currentType));
+            
+            if (isPrimaryExpression) {
+                // must save for later
+                currentType = delegate;
+            }
         }
     }
     

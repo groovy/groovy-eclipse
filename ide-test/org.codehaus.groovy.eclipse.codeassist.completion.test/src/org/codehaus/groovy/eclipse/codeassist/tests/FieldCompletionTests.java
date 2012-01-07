@@ -272,6 +272,42 @@ public class FieldCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "xxx", 1);
     }
     
+    // GRECLIPSE-1114
+    public void testClosuret6() throws Exception {
+        String contents = 
+        		"class Super {\n" +
+        		"  def xxx() { }\n" +
+        		"}\n" +
+        		"class Sub extends Super {\n" +
+        		"  def meth() {\n" + 
+                "  (0..10).each {\n" + 
+                "    xx\n" + 
+                "  }\n" +
+                "}";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "xx"), GroovyCompletionProposalComputer.class);
+        // from the delegate
+        proposalExists(proposals, "xxx", 1);
+    }
+    
+    // GRECLIPSE-1114
+    public void testClosuret7() throws Exception {
+        String contents = 
+                "class Super {\n" +
+                "  def xxx\n" +
+                "}\n" +
+                "class Sub extends Super {\n" +
+                "  def meth() {\n" + 
+                "  (0..10).each {\n" + 
+                "    xx\n" + 
+                "  }\n" +
+                "}";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "xx"), GroovyCompletionProposalComputer.class);
+        // from the delegate
+        proposalExists(proposals, "xxx", 1);
+    }
+    
     // GRECLIPSE-1175
     public void testInitializer1() throws Exception {
         String contents = 

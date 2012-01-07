@@ -59,13 +59,32 @@ public class DSLContentAssistTests extends CompletionTestCase {
         assertProposalOrdering(proposals, "getInstance", "aaa");
     }
     
-    public void testDSLProposalFirstMethod() throws Exception {
+    public void testDSLProposalFirstMethod1() throws Exception {
+        String contents = "import groovy.swing.SwingBuilder\n" +
+                "new SwingBuilder().edt {\n" +
+                "delegate.x\n" +
+                "}";
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, "delegate.")));
+        assertProposalOrdering(proposals, "frame", "registerBinding");
+    }
+    public void testDSLProposalFirstMethod2() throws Exception {
+        String contents = "import groovy.swing.SwingBuilder\n" +
+                "new SwingBuilder().edt {\n" +
+                "\n" +
+                "}";
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, "{\n")));
+        assertProposalOrdering(proposals, "frame", "registerBinding");
+    }
+    
+    // proposals should not exist since not applied to 'this'
+    public void testDSLProposalFirstMethod3() throws Exception {
         String contents = "import groovy.swing.SwingBuilder\n" +
                 "new SwingBuilder().edt {\n" +
                 "this.x\n" +
                 "}";
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, "this.")));
-        assertProposalOrdering(proposals, "frame", "registerBinding");
+        proposalExists(proposals, "frame", 0);
+        proposalExists(proposals, "registerBinding", 0);
     }
     
 }

@@ -163,7 +163,6 @@ public class StatementAndExpressionCompletionProcessor extends
         }
 
         private ClassNode findResultingType(TypeLookupResult result, boolean derefList) {
-            // FIXADE careful here.  this may only be necessary
             // if completing on a method call with an implicit 'this'.
             ClassNode candidate = getContext().location == ContentAssistLocation.METHOD_CONTEXT ? result.declaringType
                     : result.type;
@@ -354,11 +353,12 @@ public class StatementAndExpressionCompletionProcessor extends
             IProposalCreator[] creators = getAllProposalCreators();
             completionType = getCompletionType(requestor);
             proposalCreatorLoop(context, requestor, completionType, isStatic, groovyProposals, creators);
-            VariableInfo info = requestor.currentScope.lookupName("delegate");
-            if (info != null && !info.type.equals(completionType)) {
+            // hmmm...may not be right. maybe need to go with 'this'
+            ClassNode closureThis = requestor.currentScope.getThis();
+            if (closureThis != null && !closureThis.equals(completionType)) {
                 // inside of a closure
                 // must also add content assist for the delegate
-                proposalCreatorLoop(context, requestor, info.type, isStatic, groovyProposals, creators);
+                proposalCreatorLoop(context, requestor, closureThis, isStatic, groovyProposals, creators);
             }
         } else {
             // we are at the statement location of a script

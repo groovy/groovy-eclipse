@@ -28,7 +28,6 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
-import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 
 /**
  * @author Andrew Eisenberg
@@ -80,12 +79,20 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 
 	private boolean isStatic;
 	private Expression currentExpression;
+	private boolean isPrimaryExpression;
 
 	/**
 	 * @return true iff the current lookup is in a static scope
 	 */
 	protected boolean isStatic() {
 		return isStatic;
+	}
+
+	/**
+	 * @return true iff this expression is not part of a dotted expression
+	 */
+	protected boolean isPrimaryExpression() {
+		return isPrimaryExpression;
 	}
 
 	/**
@@ -113,12 +120,12 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 		ClassNode declaringType;
 		if (objectExpressionType != null) {
 			declaringType = objectExpressionType;
+			isPrimaryExpression = false;
 		} else {
+			isPrimaryExpression = true;
 			// Use delegate type if exists
-			VariableInfo info = scope.getDelegateOrThisInfo();
-			if (info != null) {
-				declaringType = info.declaringType;
-			} else {
+			declaringType = scope.getDelegateOrThis();
+			if (declaringType == null) {
 				declaringType = scope.getEnclosingTypeDeclaration();
 				if (declaringType == null) {
 					// part of an import statment

@@ -172,27 +172,26 @@ public class GroovyCompletionProposalComputer implements
                     }
                 }
             }
-        }
 
-        // extra filtering and sorting provided by third parties
-        try {
-            List<IProposalFilter> filters = ProposalProviderRegistry.getRegistry().getFiltersFor(assistContext.unit);
-            for (IProposalFilter filter : filters) {
-                try {
-                    if (filter instanceof IProposalFilterExtension) {
-                        List<ICompletionProposal> newProposals = ((IProposalFilterExtension) filter).filterExtendedProposals(
-                                proposals, assistContext, javaContext);
-                        proposals = newProposals == null ? proposals : newProposals;
+            // extra filtering and sorting provided by third parties
+            try {
+                List<IProposalFilter> filters = ProposalProviderRegistry.getRegistry().getFiltersFor(assistContext.unit);
+                for (IProposalFilter filter : filters) {
+                    try {
+                        if (filter instanceof IProposalFilterExtension) {
+                            List<ICompletionProposal> newProposals = ((IProposalFilterExtension) filter).filterExtendedProposals(
+                                    proposals, assistContext, javaContext);
+                            proposals = newProposals == null ? proposals : newProposals;
+                        }
+                    } catch (Exception e) {
+                        GroovyCore.logException("Exception when using third party proposal filter: "
+                                + filter.getClass().getCanonicalName(), e);
                     }
-                } catch (Exception e) {
-                    GroovyCore.logException("Exception when using third party proposal filter: "
-                            + filter.getClass().getCanonicalName(), e);
                 }
+            } catch (CoreException e) {
+                GroovyCore.logException("Exception accessing proposal provider registry", e);
             }
-        } catch (CoreException e) {
-            GroovyCore.logException("Exception accessing proposal provider registry", e);
         }
-
 
         if (event != null) {
             GroovyLogManager.manager

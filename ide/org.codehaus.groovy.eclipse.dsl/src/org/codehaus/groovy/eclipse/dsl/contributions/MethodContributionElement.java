@@ -73,8 +73,6 @@ public class MethodContributionElement implements IContributionElement {
     private final int relevanceMultiplier;
     private final boolean isDeprecated;
 
-    
-    
     public MethodContributionElement(String methodName, ParameterContribution[] params, String returnType, String declaringType, boolean isStatic, String provider, String doc, boolean useNamedArgs, boolean isDeprecated, int relevanceMultiplier) {
         this(methodName, params, NO_PARAMETER_CONTRIBUTION, NO_PARAMETER_CONTRIBUTION, returnType, declaringType, isStatic, provider, doc, useNamedArgs, isDeprecated, relevanceMultiplier);
     }

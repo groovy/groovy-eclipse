@@ -130,6 +130,8 @@ public class GroovyDSLDContext {
 
     private boolean isStatic;
     
+    private boolean isPrimaryExpression;
+    
     /**
      * called by the type lookup, not by the pointcuts
      * @param targetType
@@ -258,6 +260,13 @@ public class GroovyDSLDContext {
         return resolverCache;
     }
 
+    public void setPrimaryExpression(boolean isPrimaryExpression) {
+        this.isPrimaryExpression = isPrimaryExpression;
+    }
+    
+    public boolean isPrimaryExpression() {
+        return isPrimaryExpression;
+    }
 
     public void setStatic(boolean s) {
         isStatic = s;

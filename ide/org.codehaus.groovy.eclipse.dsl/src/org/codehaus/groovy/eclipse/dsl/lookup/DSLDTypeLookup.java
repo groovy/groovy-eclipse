@@ -67,7 +67,9 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
         pattern.setCurrentScope(scope);
         pattern.setTargetType(declaringType);
         pattern.setStatic(isStatic());
+        pattern.setPrimaryExpression(isPrimaryExpression());
         List<IContributionElement> elts = store.findContributions(pattern, disabledScriptsAsSet);
+        declaringType = pattern.getCurrentType(); // may have changed via a setDelegateType
         for (IContributionElement elt : elts) {
             TypeAndDeclaration td = elt.lookupType(name, declaringType, pattern.getResolverCache());
             if (td != null) {

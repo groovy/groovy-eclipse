@@ -115,13 +115,12 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
         // here we need to test for dynamically added fields and methods
         // they will not be the same instance, so we need to check
         // for equivalence some other way
-        if (maybeDeclaration.getClass() == declaration.getClass()) {
-            if (maybeDeclaration instanceof FieldNode) {
-                FieldNode maybeField = (FieldNode) maybeDeclaration;
-                FieldNode field = (FieldNode) declaration;
-                return maybeField.getName().equals(field.getName())
-                        && maybeField.getDeclaringClass().equals(field.getDeclaringClass());
-            } else if (maybeDeclaration instanceof JDTMethodNode) {
+        if (maybeDeclaration instanceof FieldNode && declaration instanceof FieldNode) {
+            FieldNode maybeField = (FieldNode) maybeDeclaration;
+            FieldNode field = (FieldNode) declaration;
+            return maybeField.getName().equals(field.getName()) && maybeField.getDeclaringClass().equals(field.getDeclaringClass());
+        } else if (declaration instanceof MethodNode) {
+            if (maybeDeclaration instanceof JDTMethodNode) {
                 // GRECLIPSE-1255 Catches the case where the node comes from
                 // JDT, we do not check for parameter count since JDT is
                 // ignorant of possible default parameters
@@ -136,7 +135,6 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
                         && maybeMethod.getDeclaringClass().equals(method.getDeclaringClass()) && checkParams(maybeMethod, method);
             }
         }
-
         // here check for inner class nodes
         if ((maybeDeclaration instanceof InnerClassNode && declaration instanceof JDTClassNode)
                 || (declaration instanceof InnerClassNode && maybeDeclaration instanceof JDTClassNode)) {
