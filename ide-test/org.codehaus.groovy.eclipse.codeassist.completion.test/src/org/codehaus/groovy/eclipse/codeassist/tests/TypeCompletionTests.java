@@ -185,7 +185,8 @@ public class TypeCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ".clas"));
         // really shoule be 1, but we are getting dups here.
 //        proposalExists(proposals, "class", 1, true);
-        proposalExists(proposals, "class", 2, true);
+//        proposalExists(proposals, "class", 2, true);
+        proposalExists(proposals, "class", 4, true);
     }
 
     public void testCompleteClass2() throws Exception {
