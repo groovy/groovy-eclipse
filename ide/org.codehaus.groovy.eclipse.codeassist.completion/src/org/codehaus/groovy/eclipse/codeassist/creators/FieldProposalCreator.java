@@ -78,11 +78,10 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
             if ((!isStatic || field.isStatic()) &&
                     ProposalUtils.looselyMatches(prefix, field.getName())) {
                 GroovyFieldProposal fieldProposal = new GroovyFieldProposal(field);
-                float relevanceMultiplier = isInterestingType(field
-                        .getType()) ? 101 : 1;
-                relevanceMultiplier *= field.isStatic() ? 0.1 : 1;
+                float relevanceMultiplier = isInterestingType(field.getType()) ? 101f : 1f;
+                relevanceMultiplier *= field.isStatic() ? 0.1 : 1f;
                 // de-emphasize 'this' references inside closure
-                relevanceMultiplier *= !isFirstTime ? 0.1 : 1;
+                relevanceMultiplier *= !isFirstTime ? 0.1 : 1f;
                 fieldProposal.setRelevanceMultiplier(relevanceMultiplier);
                 groovyProposals.add(fieldProposal);
 

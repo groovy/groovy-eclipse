@@ -71,10 +71,10 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                                 .getReturnType());
                 if (ProposalUtils.looselyMatches(prefix, methodName)) {
                     GroovyMethodProposal methodProposal = new GroovyMethodProposal(method, "Groovy", options);
-                    float relevanceMultiplier = isInterestingType ? 101 : 1;
-                    relevanceMultiplier *= method.isStatic() ? 0.1 : 1;
+                    float relevanceMultiplier = isInterestingType ? 101f : 1f;
+                    relevanceMultiplier *= method.isStatic() ? 0.1f : 1f;
                     // de-emphasize 'this' references inside closure
-                    relevanceMultiplier *= !alreadySeen.isEmpty() ? 0.1 : 1;
+                    relevanceMultiplier *= !alreadySeen.isEmpty() ? 0.1f : 1f;
                     methodProposal.setRelevanceMultiplier(relevanceMultiplier);
                     groovyProposals.add(methodProposal);
                 }
