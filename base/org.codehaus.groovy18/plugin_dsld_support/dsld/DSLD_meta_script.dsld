@@ -80,7 +80,7 @@ def insideContribution = { (enclosingCallName("accept") | enclosingCallName("con
 // note the different ways of calling the two composite pointcuts
 // Also, be careful to use parens around negation '~' since operator precedence may make the '~' apply to the call to 'accept' 
 (dsldFile & ( ~ insideContribution() ) & currentType(subType(Script)) & (~enclosingCallName("registerPointcut")) & 
-    currentTypeIsEnclosingType()).accept {
+    isThisType()).accept {
 	provider = "the meta-DSLD script"
  
 	// in here, we can list all pointcuts explicitly, or we can access the internal PointcutFactory object
@@ -110,7 +110,14 @@ def insideContribution = { (enclosingCallName("accept") | enclosingCallName("con
 	Registers a custom pointcut.  This pointcut is only available from within the current script.
 	You must specify a name for the pointcut as well as a closure that evaluates whether or not there is a match'''
 	
-    property name : "log", type: void, doc: "Logs a message to the Groovy Event Console.  Useful for debugging,"
+    property name : "log", type: void, doc: "Logs a message to the Groovy Event Console.  Useful for debugging."
+    
+    method name : "setDelegateType", type : void, params : [newDelegateType : String],
+    doc : '''
+    Sets the delegate type inside a closure.  This is different from <code>delegatesTo</code> in that the receiving type
+    is changed in the current scope.  In <code>delegatesTo</code>, the scope is not changed.  Rather, the methods of the
+    delegate are added to the target type's list of recognized methods.
+    '''
 }
 
 // Here, specify everything that can be used inside of an accept block (also called a Contribution Group)

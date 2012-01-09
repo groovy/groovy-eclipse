@@ -24,17 +24,18 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 
 /**
  * Creates proposals in a given completion context
- * 
+ *
  * @author Andrew Eisenberg
  * @created Nov 12, 2009
  */
 public interface IProposalCreator {
-    List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic);
+    List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic,
+            boolean isPrimary);
 
     /**
      * If true, then execute this creator twice when in closures. Once for
      * Delegate and once for This
-     * 
+     *
      * @return
      */
     boolean redoForLoopClosure();

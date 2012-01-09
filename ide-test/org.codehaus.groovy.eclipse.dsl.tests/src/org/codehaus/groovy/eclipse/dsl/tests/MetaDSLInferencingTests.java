@@ -64,12 +64,14 @@ public class MetaDSLInferencingTests extends AbstractDSLInferencingTest {
             // ignore since conflicts with Script.getProperty
 //            " property\n" +
             " wormhole\n" +
+            " setDelegateType\n" +
             " delegatesTo\n" +
             " delegatesToUseNamedArgs\n" +
             "}";
         assertDSLType(contents, "method");
 //        assertDSLType(contents, "property");
         assertDSLType(contents, "wormhole");
+        assertDSLType(contents, "setDelegateType");
         assertDSLType(contents, "delegatesTo");
         assertDSLType(contents, "delegatesToUseNamedArgs");
     }
@@ -80,11 +82,13 @@ public class MetaDSLInferencingTests extends AbstractDSLInferencingTest {
             // ignore since conflicts with Script.getProperty
 //            " property\n" +
             " wormhole\n" +
+            " setDelegateType\n" +
             " delegatesTo\n" +
             " delegatesToUseNamedArgs\n";
         assertUnknownDSLType(contents, "method");
 //        assertUnknownDSLType(contents, "property");
         assertUnknownDSLType(contents, "wormhole");
+        assertUnknownDSLType(contents, "setDelegateType");
         assertUnknownDSLType(contents, "delegatesTo");
         assertUnknownDSLType(contents, "delegatesToUseNamedArgs");
     }
@@ -97,12 +101,14 @@ public class MetaDSLInferencingTests extends AbstractDSLInferencingTest {
             // ignore since conflicts with Script.getProperty
 //            " property\n" +
             " wormhole\n" +
+            " setDelegateType\n" +
             " delegatesTo\n" +
             " delegatesToUseNamedArgs\n" +
             "}";
         assertUnknownDSLType(contents, "method");
 //        assertUnknownDSLType(contents, "property");
         assertUnknownDSLType(contents, "wormhole");
+        assertUnknownDSLType(contents, "setDelegateType");
         assertUnknownDSLType(contents, "delegatesTo");
         assertUnknownDSLType(contents, "delegatesToUseNamedArgs");
     }

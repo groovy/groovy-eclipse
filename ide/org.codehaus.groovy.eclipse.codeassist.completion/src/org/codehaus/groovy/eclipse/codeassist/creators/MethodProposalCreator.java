@@ -52,11 +52,16 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
     private Set<ClassNode> alreadySeen = Collections.emptySet();
 
     public List<IGroovyProposal> findAllProposals(ClassNode type,
-            Set<ClassNode> categories, String prefix, boolean isStatic) {
+ Set<ClassNode> categories, String prefix, boolean isStatic,
+            boolean isPrimary) {
+        boolean firstTime = alreadySeen.isEmpty();
         List<MethodNode> allMethods = getAllMethods(type);
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         Set<String> alreadySeenFields = new HashSet<String>();
-        boolean firstTime = alreadySeen.isEmpty();
+        if (isStatic) {
+            // "class" is added by FieldProposalCreator
+            alreadySeenFields.add("class");
+        }
 
         for (MethodNode method : allMethods) {
             String methodName = method.getName();
@@ -70,8 +75,7 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                     relevanceMultiplier *= method.isStatic() ? 0.1 : 1;
                     // de-emphasize 'this' references inside closure
                     relevanceMultiplier *= !alreadySeen.isEmpty() ? 0.1 : 1;
-                    methodProposal
-                            .setRelevanceMultiplier(relevanceMultiplier);
+                    methodProposal.setRelevanceMultiplier(relevanceMultiplier);
                     groovyProposals.add(methodProposal);
                 }
 
@@ -82,12 +86,9 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                     if (!alreadySeenFields.contains(mockFieldName)) {
                         // be careful not to add fields twice
                         alreadySeenFields.add(mockFieldName);
-                        if (hasNoField(method.getDeclaringClass(), method.getName())) {
-                            GroovyFieldProposal fieldProposal = new GroovyFieldProposal(
-                                    createMockField(method));
-                            fieldProposal
-                                    .setRelevanceMultiplier(isInterestingType ? 11
-                                            : 1);
+                        if (hasNoField(method.getDeclaringClass(), methodName)) {
+                            GroovyFieldProposal fieldProposal = new GroovyFieldProposal(createMockField(method));
+                            fieldProposal.setRelevanceMultiplier(isInterestingType ? 11 : 1);
                             groovyProposals.add(fieldProposal);
                         }
                     }
@@ -98,9 +99,7 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
         // now do methods from static imports
         ClassNode enclosingTypeDeclaration = currentScope
                 .getEnclosingTypeDeclaration();
-        if (enclosingTypeDeclaration != null && firstTime
-        // FIXADE not right, should only see these if at a primary location
-                && type.getName().equals(enclosingTypeDeclaration.getName())) {
+        if (enclosingTypeDeclaration != null && firstTime && isPrimary) {
             groovyProposals.addAll(getStaticImportProposals(prefix,
                     type.getModule()));
         }

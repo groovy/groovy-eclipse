@@ -38,7 +38,8 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  */
 public class CategoryProposalCreator extends AbstractProposalCreator {
 
-    public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic) {
+    public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic,
+            boolean isPrimary) {
         ClassNode candidate = VariableScope.maybeConvertFromPrimitive(type);
         Set<String> set = new HashSet<String>();
         getAllSupersAsStrings(candidate, set);

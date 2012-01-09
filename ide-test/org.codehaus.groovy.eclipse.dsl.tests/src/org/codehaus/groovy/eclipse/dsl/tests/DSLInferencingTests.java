@@ -22,6 +22,35 @@ import junit.framework.TestSuite;
  * @created Feb 18, 2011
  */
 public class DSLInferencingTests extends AbstractDSLInferencingTest {
+    private static final String SET_DELEGATE_TYPE_SCRIPT = 
+            "public interface Obj {\n" + 
+    "    String getFoo();\n" + 
+    "    int FOO1 = 9;\n" + 
+    "    int FOO2 = 9;\n" + 
+    "    int OTHER = 9;\n" + 
+    "    int BAR = 9;\n" + 
+    "    int BAZ1 = 9;\n" + 
+    "    int BAZ2 = 9;\n" + 
+    "    int BAZ3 = 9;\n" + 
+    " }\n" + 
+    "\"\".l { delegate }\n" +
+    "\"\".l { this }\n" +
+    "\"\".l { getFoo() }\n" +
+    "\"\".l { FOO1 }\n" +
+    "\"\".l { delegate.FOO2 }\n" +
+    "\"\".l { ''.OTHER }\n" +
+    "\"\".l { delegate.l { BAR } }\n" +
+    "\"\".l { 1.BAZ1 }\n" +
+    "\"\".l { 1.l { BAZ2 } }\n" +
+    "\"\".l { this.BAZ3 }\n" +
+    "";
+    /**
+     * 
+     */
+    private static final String SET_DELEGATE_TYPE_DSLD = "contribute(inClosure() & currentType(String)) {\n" + 
+    "  setDelegateType 'Obj'\n" + 
+    "}";
+
     public DSLInferencingTests(String name) {
         super(name);
     }
@@ -634,6 +663,120 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         int end = start + "hi".length();
         assertType(contents, start, end, "java.lang.Integer", true);
     }
+    
+    // GRECLIPSE-1321
+    public void testDelegatesTo7() throws Exception {
+        createDsls(
+                "contribute(currentType(String)) {\n" + 
+        		"  delegatesTo 'Obj'\n" + 
+        		"}");
+        String contents =
+                "public interface Obj {\n" + 
+                "    String getFoo();\n" + 
+                "    int foo(arg);\n" + 
+                " }\n" + 
+                "\"\".getFoo()" +
+                "\"\".foo()";
+        int start = contents.lastIndexOf("foo");
+        int end = start + "foo".length();
+        assertType(contents, start, end, "java.lang.Integer", true);
+        start = contents.lastIndexOf("getFoo");
+        end = start + "getFoo".length();
+        assertType(contents, start, end, "java.lang.String", true);
+    }
+    
+    // setDelegateType
+    public void testSetDelegateType1() throws Exception {
+        createDsls(
+                SET_DELEGATE_TYPE_DSLD);
+        String contents =
+                SET_DELEGATE_TYPE_SCRIPT;
+        int start = contents.lastIndexOf("delegate");
+        int end = start + "delegate".length();
+        assertType(contents, start, end, "Obj", true);
+    }
+    public void testSetDelegateType1a() throws Exception {
+        createDsls(
+                SET_DELEGATE_TYPE_DSLD);
+        String contents =
+                SET_DELEGATE_TYPE_SCRIPT;
+        int start = contents.lastIndexOf("this");
+        int end = start + "this".length();
+        assertType(contents, start, end, "Search", true);
+    }
+    public void testSetDelegateType2() throws Exception {
+        createDsls(
+                SET_DELEGATE_TYPE_DSLD);
+        String contents =
+                SET_DELEGATE_TYPE_SCRIPT;
+        int start = contents.lastIndexOf("getFoo");
+        int end = start + "getFoo".length();
+        assertType(contents, start, end, "java.lang.String", true);
+    }
+    public void testSetDelegateType3() throws Exception {
+        createDsls(
+                SET_DELEGATE_TYPE_DSLD);
+        String contents =
+                SET_DELEGATE_TYPE_SCRIPT;
+        int start = contents.lastIndexOf("FOO1");
+        int end = start + "FOO1".length();
+        assertType(contents, start, end, "java.lang.Integer", true);
+    }
+    public void testSetDelegateType4() throws Exception {
+        createDsls(
+                SET_DELEGATE_TYPE_DSLD);
+        String contents =
+                SET_DELEGATE_TYPE_SCRIPT;
+        int start = contents.lastIndexOf("FOO2");
+        int end = start + "FOO2".length();
+        assertType(contents, start, end, "java.lang.Integer", true);
+    }
+    public void testSetDelegateType5() throws Exception {
+        createDsls(
+                SET_DELEGATE_TYPE_DSLD);
+        String contents =
+                SET_DELEGATE_TYPE_SCRIPT;
+        int start = contents.lastIndexOf("OTHER");
+        int end = start + "OTHER".length();
+        assertUnknownConfidence(contents, start, end, "java.lang.String", true);
+    }
+    public void testSetDelegateType6() throws Exception {
+        createDsls(
+                SET_DELEGATE_TYPE_DSLD);
+        String contents =
+                SET_DELEGATE_TYPE_SCRIPT;
+        int start = contents.lastIndexOf("BAR");
+        int end = start + "BAR".length();
+        assertType(contents, start, end, "java.lang.Integer", true);
+    }
+    public void testSetDelegateType7() throws Exception {
+        createDsls(
+                SET_DELEGATE_TYPE_DSLD);
+        String contents =
+                SET_DELEGATE_TYPE_SCRIPT;
+        int start = contents.lastIndexOf("BAZ1");
+        int end = start + "BAZ1".length();
+        assertUnknownConfidence(contents, start, end, "java.lang.Integer", true);
+    }
+    public void testSetDelegateType8() throws Exception {
+        createDsls(
+                SET_DELEGATE_TYPE_DSLD);
+        String contents =
+                SET_DELEGATE_TYPE_SCRIPT;
+        int start = contents.lastIndexOf("BAZ2");
+        int end = start + "BAZ2".length();
+        assertUnknownConfidence(contents, start, end, "java.lang.Integer", true);
+    }
+    public void testSetDelegateType9() throws Exception {
+        createDsls(
+                SET_DELEGATE_TYPE_DSLD);
+        String contents =
+                SET_DELEGATE_TYPE_SCRIPT;
+        int start = contents.lastIndexOf("BAZ3");
+        int end = start + "BAZ3".length();
+        assertUnknownConfidence(contents, start, end, "Search", true);
+    }
+    
     private void createDSL() throws IOException {
         defaultFileExtension = "dsld";
         createUnit("SomeInterestingExamples", GroovyDSLDTestsActivator.getDefault().getTestResourceContents("SomeInterestingExamples.dsld"));

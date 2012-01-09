@@ -376,7 +376,8 @@ public class StatementAndExpressionCompletionProcessor extends
             }
             if (containingClass != null) {
                 groovyProposals.addAll(new CategoryProposalCreator().findAllProposals(containingClass,
-                        VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), false));
+                        VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), false,
+                        ContentAssistLocation.STATEMENT == context.location));
             }
             completionType = context.containingDeclaration instanceof ClassNode ? (ClassNode) context.containingDeclaration
                     : context.unit.getModuleNode().getScriptClassDummy();
@@ -466,7 +467,7 @@ public class StatementAndExpressionCompletionProcessor extends
                 ((AbstractProposalCreator) creator).setCurrentScope(requestor.currentScope);
             }
             groovyProposals.addAll(creator.findAllProposals(completionType, requestor.categories,
-                    context.getPerceivedCompletionExpression(), isStatic));
+                    context.getPerceivedCompletionExpression(), isStatic, ContentAssistLocation.STATEMENT == context.location));
         }
     }
 

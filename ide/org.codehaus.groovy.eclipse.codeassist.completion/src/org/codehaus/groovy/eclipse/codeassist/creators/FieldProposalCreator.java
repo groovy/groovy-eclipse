@@ -68,7 +68,9 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
     }
 
     public List<IGroovyProposal> findAllProposals(ClassNode type,
-            Set<ClassNode> categories, String prefix, boolean isStatic) {
+ Set<ClassNode> categories, String prefix, boolean isStatic,
+            boolean isPrimary) {
+        boolean isFirstTime = alreadySeen.isEmpty();
         Collection<FieldNode> allFields = getAllFields(type);
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         for (FieldNode field : allFields) {
@@ -80,7 +82,7 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
                         .getType()) ? 101 : 1;
                 relevanceMultiplier *= field.isStatic() ? 0.1 : 1;
                 // de-emphasize 'this' references inside closure
-                relevanceMultiplier *= !alreadySeen.isEmpty() ? 0.1 : 1;
+                relevanceMultiplier *= !isFirstTime ? 0.1 : 1;
                 fieldProposal.setRelevanceMultiplier(relevanceMultiplier);
                 groovyProposals.add(fieldProposal);
 
@@ -98,9 +100,7 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
         // now add all proposals coming from static imports
         ClassNode enclosingTypeDeclaration = currentScope
                 .getEnclosingTypeDeclaration();
-        if (enclosingTypeDeclaration != null && alreadySeen.isEmpty()
-        // FIXADE not right, should only see these if at a primary location
-                && type.getName().equals(enclosingTypeDeclaration.getName())) {
+        if (enclosingTypeDeclaration != null && isFirstTime && isPrimary) {
             groovyProposals.addAll(getStaticImportProposals(prefix,
                     type.getModule()));
         }
