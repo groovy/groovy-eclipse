@@ -44,15 +44,17 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         return name.charAt(0) != '<' && !name.contains("$");
     }
 
-    protected void getAllSupers(ClassNode type, Set<ClassNode> set) {
+    protected void getAllSupers(ClassNode type, Set<ClassNode> set, Set<ClassNode> except) {
         if (type == null) {
             return;
         }
-        set.add(type);
-        getAllSupers(type.getSuperClass(), set);
+        if (!except.contains(type)) {
+            set.add(type);
+        }
+        getAllSupers(type.getSuperClass(), set, except);
         for (ClassNode inter : (Iterable<ClassNode>) type.getAllInterfaces()) {
             if (! inter.getName().equals(type.getName())) {
-                getAllSupers(inter, set);
+                getAllSupers(inter, set, except);
             }
         }
     }
@@ -123,5 +125,9 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         } else {
             return false;
         }
+    }
+
+    public boolean redoForLoopClosure() {
+        return true;
     }
 }

@@ -353,12 +353,14 @@ public class StatementAndExpressionCompletionProcessor extends
             IProposalCreator[] creators = getAllProposalCreators();
             completionType = getCompletionType(requestor);
             proposalCreatorLoop(context, requestor, completionType, isStatic, groovyProposals, creators, false);
-            ClassNode closureThis = requestor.currentScope.getThis();
-            if (closureThis != null && !closureThis.equals(completionType)) {
-                // inside of a closure
-                // must also add content assist for this (previously did the
-                // delegate)
-                proposalCreatorLoop(context, requestor, closureThis, isStatic, groovyProposals, creators, true);
+            if (ContentAssistLocation.STATEMENT == context.location) {
+                ClassNode closureThis = requestor.currentScope.getThis();
+                if (closureThis != null && !closureThis.equals(completionType)) {
+                    // inside of a closure
+                    // must also add content assist for this (previously did the
+                    // delegate)
+                    proposalCreatorLoop(context, requestor, closureThis, isStatic, groovyProposals, creators, true);
+                }
             }
         } else {
             // we are at the statement location of a script
@@ -454,17 +456,14 @@ public class StatementAndExpressionCompletionProcessor extends
             ClassNode completionType, boolean isStatic, List<IGroovyProposal> groovyProposals, IProposalCreator[] creators,
             boolean isClosureThis) {
         for (IProposalCreator creator : creators) {
-            if (isClosureThis && creator instanceof CategoryProposalCreator) {
-                // FIXADE need a better way to avoid duplicates.
+            if (isClosureThis && !creator.redoForLoopClosure()) {
                 // avoid duplicate DGMs by not proposing category proposals
                 // twice
                 continue;
             }
             if (creator instanceof AbstractProposalCreator) {
-                ((AbstractProposalCreator) creator)
-                        .setLhsType(requestor.lhsType);
-                ((AbstractProposalCreator) creator)
-                        .setCurrentScope(requestor.currentScope);
+                ((AbstractProposalCreator) creator).setLhsType(requestor.lhsType);
+                ((AbstractProposalCreator) creator).setCurrentScope(requestor.currentScope);
             }
             groovyProposals.addAll(creator.findAllProposals(completionType, requestor.categories,
                     context.getPerceivedCompletionExpression(), isStatic));

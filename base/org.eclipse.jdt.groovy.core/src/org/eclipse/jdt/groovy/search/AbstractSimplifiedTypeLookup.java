@@ -79,20 +79,12 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 
 	private boolean isStatic;
 	private Expression currentExpression;
-	private boolean isPrimaryExpression;
 
 	/**
 	 * @return true iff the current lookup is in a static scope
 	 */
 	protected boolean isStatic() {
 		return isStatic;
-	}
-
-	/**
-	 * @return true iff this expression is not part of a dotted expression
-	 */
-	protected boolean isPrimaryExpression() {
-		return isPrimaryExpression;
 	}
 
 	/**
@@ -120,9 +112,7 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 		ClassNode declaringType;
 		if (objectExpressionType != null) {
 			declaringType = objectExpressionType;
-			isPrimaryExpression = false;
 		} else {
-			isPrimaryExpression = true;
 			// Use delegate type if exists
 			declaringType = scope.getDelegateOrThis();
 			if (declaringType == null) {

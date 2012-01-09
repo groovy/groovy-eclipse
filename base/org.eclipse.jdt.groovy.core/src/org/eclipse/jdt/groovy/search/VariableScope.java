@@ -218,6 +218,7 @@ public class VariableScope {
 	 * number of parameters of current method call or -1 if not a method call
 	 */
 	private int methodCallNumberOfArguments = -1;
+	private boolean isPrimaryNode;
 
 	public VariableScope(VariableScope parent, ASTNode enclosingNode, boolean isStatic) {
 		this.parent = parent;
@@ -264,6 +265,10 @@ public class VariableScope {
 		} else {
 			return null;
 		}
+	}
+
+	public void setPrimaryNode(boolean isPrimaryNode) {
+		this.isPrimaryNode = isPrimaryNode;
 	}
 
 	public void setCurrentNode(ASTNode currentNode) {
@@ -596,26 +601,6 @@ public class VariableScope {
 	}
 
 	/**
-	 * This class checks to see if there are type parameters on the type, and if the generics to resolve against are valid.
-	 * 
-	 * @param resolvedGenerics bound type parameters
-	 * @param unresolvedGenerics unbound type parameters
-	 * @param type type to resolve
-	 * @return
-	 */
-	private static boolean isValidGenerics(GenericsType[] resolvedGenerics, GenericsType[] unresolvedGenerics, ClassNode type) {
-		// first a quick check
-		GenericsType[] thisTypeGenerics = type.getGenericsTypes();
-		if (thisTypeGenerics == null || thisTypeGenerics.length == 0) {
-			return false;
-		}
-
-		// now a more detailed check
-		return resolvedGenerics != null && unresolvedGenerics != null && unresolvedGenerics.length == resolvedGenerics.length
-				&& resolvedGenerics.length > 0;
-	}
-
-	/**
 	 * Create a copy of this class, taking into account generics and redirects
 	 * 
 	 * @param type type to copy
@@ -740,6 +725,13 @@ public class VariableScope {
 	 */
 	public boolean isStatic() {
 		return isStaticScope;
+	}
+
+	/**
+	 * @return true iff the current node is not the RHS of a dotted expression
+	 */
+	public boolean isPrimaryNode() {
+		return isPrimaryNode;
 	}
 
 	public ClosureExpression getEnclosingClosure() {

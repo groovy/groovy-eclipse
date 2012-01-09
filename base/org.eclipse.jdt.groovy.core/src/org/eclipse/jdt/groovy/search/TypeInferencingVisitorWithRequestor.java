@@ -647,6 +647,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 			}
 		}
+		scope.setPrimaryNode(false);
+
 		VisitStatus status = notifyRequestor(node, requestor, result);
 		switch (status) {
 			case CONTINUE:
@@ -693,6 +695,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 			}
 		}
+		scope.setPrimaryNode(false);
 
 		VisitStatus status = notifyRequestor(node, requestor, result);
 		switch (status) {
@@ -748,6 +751,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 			}
 		}
+		scope.setPrimaryNode(false);
 		VisitStatus status = notifyRequestor(node, requestor, result);
 
 		switch (status) {
@@ -818,6 +822,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 			try {
 				VariableScope scope = scopes.peek();
+				scope.setPrimaryNode(false);
 				assignmentStorer.storeImport(imp, scope);
 				for (ITypeLookup lookup : lookups) {
 					TypeLookupResult candidate = lookup.lookupType(imp, scope);
@@ -1705,6 +1710,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		VariableScope currentScope = scopes.peek();
 		VariableInfo info = currentScope.lookupName("this");
 		ClassNode declaring = info == null ? VariableScope.OBJECT_CLASS_NODE : info.declaringType;
+		currentScope.setPrimaryNode(false);
 
 		TypeLookupResult noLookup = new TypeLookupResult(declaring, declaring, declaring, TypeConfidence.EXACT, currentScope);
 		VisitStatus status = notifyRequestor(node, requestor, noLookup);
@@ -1740,14 +1746,17 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			primaryType = null;
 			isStatic = false;
 		}
+		scope.setPrimaryNode(primaryType == null);
 
 		TypeLookupResult result = lookupExpressionType(node, primaryType, isStatic, scope);
 		return handleRequestor(node, primaryType, result);
 	}
 
 	private void handleCompleteExpression(Expression node, ClassNode exprType, ClassNode exprDeclaringType) {
+		VariableScope scope = scopes.peek();
+		scope.setPrimaryNode(false);
 		handleRequestor(node, exprDeclaringType, new TypeLookupResult(exprType, exprDeclaringType, node, TypeConfidence.EXACT,
-				scopes.peek()));
+				scope));
 	}
 
 	private void postVisit(Expression node, ClassNode type, ClassNode declaringType) {
@@ -1826,6 +1835,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				// visit the parameter itself
 				TypeLookupResult parameterResult = new TypeLookupResult(result.type, result.declaringType, node,
 						TypeConfidence.EXACT, scope);
+				scope.setPrimaryNode(false);
 				VisitStatus status = notifyRequestor(node, requestor, parameterResult);
 				switch (status) {
 					case CONTINUE:

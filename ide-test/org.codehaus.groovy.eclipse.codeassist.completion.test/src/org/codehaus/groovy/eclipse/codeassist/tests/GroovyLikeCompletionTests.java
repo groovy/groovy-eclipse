@@ -237,6 +237,120 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         checkReplacementString(proposals, "(third:third)", 1);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
     }
+    
+    private final static String CLOSURE_CONTENTS = 
+            "class Other {\n" + 
+            "    def first\n" + 
+            "    def second2() { } \n" + 
+            "}\n" + 
+            " \n" + 
+            "class MyOtherClass extends Other {\n" + 
+            "    def meth() {\n" + 
+            "        \"\".foo {\n" + 
+            "            substring(0)\n" +  // should find
+            "            first\n" +  // should find
+            "            second2()\n" +  // should find
+            "            delegate.substring(0)\n" +  // should find
+            "            delegate.first(0)\n" + // should not find
+            "            delegate.second2(0)\n" + // should not find
+            "            this.substring(0)\n" + // should not find
+            "            this.first(0)\n" + // should find
+            "            this.second2(0)\n" +  // should find
+            "            wait\n" +  // should find 2 only
+            "        }\n" + 
+            "    }\n" + 
+            "}";
+    private final static String CLOSURE_CONTENTS2 = 
+            "class Other {\n" + 
+            "    def first\n" + 
+            "    def second2() { } \n" + 
+            "}\n" + 
+            "class Other2 extends Other { }\n" + 
+            "class MyOtherClass extends Other {\n" + 
+            "    def meth() {\n" + 
+            "        new Other2().foo {\n" + 
+            "            first\n" +  // should find 2 only
+            "        }\n" + 
+            "    }\n" + 
+            "}";
+    // accessing members of super types in closures
+    public void testClosureCompletion1() throws Exception {
+        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, " substring"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "substring(arg0)", 1);
+    }
+    // accessing members of super types in closures
+    public void testClosureCompletion2() throws Exception {
+        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, " first"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "first", 1);
+    }
+    // accessing members of super types in closures
+    public void testClosureCompletion3() throws Exception {
+        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, " second2"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "second2()", 1);
+    }
+    // accessing members of super types in closures
+    public void testClosureCompletion4() throws Exception {
+        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "delegate.substring"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "substring(arg0)", 1);
+    }
+    // accessing members of super types in closures
+    public void testClosureCompletion5() throws Exception {
+        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "delegate.first"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "first", 0);
+    }
+    // accessing members of super types in closures
+    public void testClosureCompletion6() throws Exception {
+        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "delegate.second2"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "second2", 0);
+    }
+    // accessing members of super types in closures
+    public void testClosureCompletion7() throws Exception {
+        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "this.substring"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "substring", 0);
+    }
+    // accessing members of super types in closures
+    public void testClosureCompletion8() throws Exception {
+        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "this.first"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "first", 1);
+    }
+    // accessing members of super types in closures
+    public void testClosureCompletion9() throws Exception {
+        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "this.second2"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "second2()", 1);
+    }
+    // accessing members of super types in closures
+    public void testClosureCompletion10() throws Exception {
+        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "wait"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "wait()", 1);
+    }
+    // accessing members of super types in closures
+    public void testClosureCompletion11() throws Exception {
+        ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS2);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS2, "first"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "first", 1);
+    }
+
 
     protected void doWait() {
         // it seems like 

@@ -351,5 +351,4 @@ public class OtherCompletionTests extends CompletionTestCase {
 //        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, ".c"), GroovyCompletionProposalComputer.class);
 //        proposalExists(proposals, "center", 2);
 //    }
-    
 }

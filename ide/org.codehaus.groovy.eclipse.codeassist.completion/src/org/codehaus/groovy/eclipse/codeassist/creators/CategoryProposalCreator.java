@@ -100,4 +100,9 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         }
         return false;
     }
+
+    @Override
+    public boolean redoForLoopClosure() {
+        return true;
+    }
 }

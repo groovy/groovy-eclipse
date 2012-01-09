@@ -17,7 +17,9 @@
 package org.codehaus.groovy.eclipse.codeassist.creators;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -47,11 +49,14 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
 
     ProposalFormattingOptions options = ProposalFormattingOptions.newFromOptions();
 
+    private Set<ClassNode> alreadySeen = Collections.emptySet();
+
     public List<IGroovyProposal> findAllProposals(ClassNode type,
             Set<ClassNode> categories, String prefix, boolean isStatic) {
-        List<MethodNode> allMethods = type.getAllDeclaredMethods();
+        List<MethodNode> allMethods = getAllMethods(type);
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         Set<String> alreadySeenFields = new HashSet<String>();
+        boolean firstTime = alreadySeen.isEmpty();
 
         for (MethodNode method : allMethods) {
             String methodName = method.getName();
@@ -63,6 +68,8 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                     GroovyMethodProposal methodProposal = new GroovyMethodProposal(method, "Groovy", options);
                     float relevanceMultiplier = isInterestingType ? 101 : 1;
                     relevanceMultiplier *= method.isStatic() ? 0.1 : 1;
+                    // de-emphasize 'this' references inside closure
+                    relevanceMultiplier *= !alreadySeen.isEmpty() ? 0.1 : 1;
                     methodProposal
                             .setRelevanceMultiplier(relevanceMultiplier);
                     groovyProposals.add(methodProposal);
@@ -91,13 +98,40 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
         // now do methods from static imports
         ClassNode enclosingTypeDeclaration = currentScope
                 .getEnclosingTypeDeclaration();
-        if (enclosingTypeDeclaration != null
+        if (enclosingTypeDeclaration != null && firstTime
+        // FIXADE not right, should only see these if at a primary location
                 && type.getName().equals(enclosingTypeDeclaration.getName())) {
             groovyProposals.addAll(getStaticImportProposals(prefix,
                     type.getModule()));
         }
 
         return groovyProposals;
+    }
+
+    protected List<MethodNode> getAllMethods(ClassNode thisType) {
+        Set<ClassNode> types = new HashSet<ClassNode>();
+
+        List<MethodNode> allMethods = thisType.getAllDeclaredMethods();
+        if (!alreadySeen.isEmpty()) {
+            // remove all methods from classes that we have already visited
+            for (Iterator<MethodNode> methodIter = allMethods.iterator(); methodIter.hasNext();) {
+                if (alreadySeen.contains(methodIter.next().getDeclaringClass())) {
+                    methodIter.remove();
+                }
+            }
+        }
+
+
+        // keep track of the already seen types so that next time, we won't include them
+        getAllSupers(thisType, types, alreadySeen);
+        if (alreadySeen.isEmpty()) {
+            alreadySeen = types;
+        } else {
+            alreadySeen.addAll(types);
+        }
+
+
+        return allMethods;
     }
 
     private List<IGroovyProposal> getStaticImportProposals(String prefix,

@@ -61,16 +61,17 @@ public enum ContentAssistLocation {
      * start of a new statement. So, everything from expressions are available,
      * but also local variables and types should be included
      * Eg- all cases of 'A' fall into the STATEMENT location
-     *
+     * 
+     * <code>
      * A
      * foo.bar(A)
      * foo.bar(B, A)
      * foo.bar A
      * foo.bar() A // even though syntax error
+     * </code>
      *
-     * Hmmm...this is not really a 'statement' in the normal sense, but really a
-     * new expression
-     * that is not part of a dotted expression
+     * this is not really a 'statement' in the normal sense, but really a
+     * new expression that is not part of a dotted expression
      */
     STATEMENT,
     /**

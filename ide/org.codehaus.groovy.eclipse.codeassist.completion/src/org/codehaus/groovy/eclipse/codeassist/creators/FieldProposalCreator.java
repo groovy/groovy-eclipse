@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.codeassist.creators;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -58,6 +59,8 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
     private static final ClassNode[] NO_CLASSES = new ClassNode[0];
     private static final GroovyFieldProposal CLASS_PROPOSAL = createClassProposal();
 
+    private Set<ClassNode> alreadySeen = Collections.emptySet();
+
     private static GroovyFieldProposal createClassProposal() {
         FieldNode field = new FieldNode("class", Opcodes.ACC_PUBLIC & Opcodes.ACC_STATIC & Opcodes.ACC_FINAL, VariableScope.CLASS_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE, null);
         field.setDeclaringClass(VariableScope.OBJECT_CLASS_NODE);
@@ -76,6 +79,8 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
                 float relevanceMultiplier = isInterestingType(field
                         .getType()) ? 101 : 1;
                 relevanceMultiplier *= field.isStatic() ? 0.1 : 1;
+                // de-emphasize 'this' references inside closure
+                relevanceMultiplier *= !alreadySeen.isEmpty() ? 0.1 : 1;
                 fieldProposal.setRelevanceMultiplier(relevanceMultiplier);
                 groovyProposals.add(fieldProposal);
 
@@ -93,7 +98,8 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
         // now add all proposals coming from static imports
         ClassNode enclosingTypeDeclaration = currentScope
                 .getEnclosingTypeDeclaration();
-        if (enclosingTypeDeclaration != null
+        if (enclosingTypeDeclaration != null && alreadySeen.isEmpty()
+        // FIXADE not right, should only see these if at a primary location
                 && type.getName().equals(enclosingTypeDeclaration.getName())) {
             groovyProposals.addAll(getStaticImportProposals(prefix,
                     type.getModule()));
@@ -160,15 +166,15 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
 
     /**
      * returns all fields, even those that are converted into properties
-     * 
+     *
      * @param thisType
      * @return
-     * @see http://docs.codehaus.org/display/G ROOVY/Groovy+Beans
+     * @see http://docs.codehaus.org/display/GROOVY/Groovy+Beans
      */
     private Collection<FieldNode> getAllFields(ClassNode thisType) {
         // use a LinkedHashSet to preserve order
         Set<ClassNode> types = new LinkedHashSet<ClassNode>();
-        getAllSupers(thisType, types);
+        getAllSupers(thisType, types, alreadySeen);
         Map<String, FieldNode> nameFieldMap = new HashMap<String, FieldNode>();
         for (ClassNode type : types) {
             for (FieldNode field : type.getFields()) {
@@ -180,6 +186,12 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
                     }
                 }
             }
+        }
+        // don't do anything with these types next time
+        if (alreadySeen.isEmpty()) {
+            alreadySeen = types;
+        } else {
+            alreadySeen.addAll(types);
         }
         return nameFieldMap.values();
     }
