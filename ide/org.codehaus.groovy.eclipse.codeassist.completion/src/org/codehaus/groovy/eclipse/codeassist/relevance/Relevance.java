@@ -93,7 +93,7 @@ public enum Relevance {
      * @return the actual relavance of the associated proposal
      */
     public int getRelevance(float multiplier) {
-        return (int) ((float) value * multiplier);
+        return Math.max(1, (int) ((float) value * multiplier));
     }
 
     public int getRelavance() {
