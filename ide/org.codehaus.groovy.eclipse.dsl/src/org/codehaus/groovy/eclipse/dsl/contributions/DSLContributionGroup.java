@@ -385,27 +385,24 @@ public class DSLContributionGroup extends ContributionGroup {
         if (!type.getName().equals(Object.class.getName())) {
             // use this to resolve parameterized types
             GenericsMapper mapper = GenericsMapper.gatherGenerics(type, type.redirect());
+            
+            // naked variants of getter and setter methods must be added at the end
+            List<IContributionElement> accessorContribs = new ArrayList<IContributionElement>(1);
             for (MethodNode method : type.getMethods()) {
                 if ((exceptions == null || !exceptions.contains(method.getName())) && !(method instanceof ConstructorNode) && ! method.getName().contains("$")) {
                     ClassNode resolvedReturnType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(method.getReturnType()));
                     if (asCategory) {
                         delegateToCategoryMethod(useNamedArgs, isStatic, type, method, resolvedReturnType, isDeprecated);
                     } else {
-                        delegateToNonCategoryMethod(useNamedArgs, isStatic, type, method, resolvedReturnType, isDeprecated);
+                        delegateToNonCategoryMethod(useNamedArgs, isStatic, type, method, resolvedReturnType, isDeprecated, accessorContribs);
                     }
                 }
             }
+            contributions.addAll(accessorContribs);
         }
     }
 
-    /**
-     * @param useNamedArgs
-     * @param isStatic
-     * @param type
-     * @param method
-     * @param mapper
-     */
-    private void delegateToNonCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method, ClassNode resolvedReturnType, boolean isDeprecated) {
+    private void delegateToNonCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method, ClassNode resolvedReturnType, boolean isDeprecated, List<IContributionElement> accessorContribs) {
         String name = method.getName();
         contributions.add(new MethodContributionElement(name, toParameterContribution(method
                 .getParameters()), getTypeName(resolvedReturnType),
@@ -415,7 +412,7 @@ public class DSLContributionGroup extends ContributionGroup {
         // also add the associated property if applicable
         String prefix;
         if ((prefix = isAccessor(method, name)) != null) {
-            contributions.add(new PropertyContributionElement(Character.toLowerCase(name.charAt(prefix.length())) + name.substring(prefix.length()+1), getTypeName(resolvedReturnType), 
+            accessorContribs.add(new PropertyContributionElement(Character.toLowerCase(name.charAt(prefix.length())) + name.substring(prefix.length()+1), getTypeName(resolvedReturnType), 
                     getTypeName(method.getDeclaringClass()), (method.isStatic() || isStatic), provider, null, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         }
     }
@@ -431,13 +428,6 @@ public class DSLContributionGroup extends ContributionGroup {
         return null;
     }
 
-    
-    /**
-     * @param useNamedArgs
-     * @param type
-     * @param method
-     * @param mapper
-     */
     private void delegateToCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method, ClassNode resolvedReturnType, boolean isDeprecated) {
         if (method.getParameters() != null && method.getParameters().length > 0) {
             ClassNode firstType = method.getParameters()[0].getType();
