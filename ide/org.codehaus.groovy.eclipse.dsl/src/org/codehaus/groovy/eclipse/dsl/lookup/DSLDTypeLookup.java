@@ -15,6 +15,7 @@ import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
@@ -76,6 +77,21 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
             }
         }
         return null;
+    }
+    
+    /**
+     * setDelegateType must be called even for empty block statements
+     */
+    @Override
+    public void lookupInBlock(BlockStatement node, VariableScope scope) {
+        pattern.setCurrentScope(scope);
+        ClassNode delegateOrThis = scope.getDelegateOrThis();
+        if (delegateOrThis != null) {
+            pattern.setTargetType(delegateOrThis);
+            pattern.setStatic(isStatic());
+            store.findContributions(pattern, disabledScriptsAsSet);
+        }
+        // no need to return anything.  setDelegateType is called and evaluated implicitly
     }
     
     

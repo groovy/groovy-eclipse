@@ -45,6 +45,7 @@ import org.codehaus.groovy.ast.expr.NotExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
@@ -57,7 +58,6 @@ import org.objectweb.asm.Opcodes;
  * 
  *          Looks at the type associated with the ASTNode for the type <br>
  */
-@SuppressWarnings("nls")
 public class SimpleTypeLookup implements ITypeLookupExtension {
 
 	private GroovyCompilationUnit unit;
@@ -77,8 +77,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			objectExpressionType = ClassHelper.getWrapper(objectExpressionType);
 		}
 		ClassNode declaringType = objectExpressionType != null ? objectExpressionType : findDeclaringType(node, scope, confidence);
-		TypeLookupResult result = findType(node, objectExpressionType, declaringType, scope, confidence[0],
-				isStaticObjectExpression || (objectExpressionType == null && scope.isStatic()), objectExpressionType == null);
+		TypeLookupResult result = findType(node, declaringType, scope, confidence[0], isStaticObjectExpression
+				|| (objectExpressionType == null && scope.isStatic()), objectExpressionType == null);
 
 		return result;
 	}
@@ -125,6 +125,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			type = node.getType();
 		}
 		return new TypeLookupResult(type, scope.getEnclosingTypeDeclaration(), node /* should be methodnode? */, EXACT, scope);
+	}
+
+	public void lookupInBlock(BlockStatement node, VariableScope scope) {
 	}
 
 	private ClassNode findDeclaringType(Expression node, VariableScope scope, TypeConfidence[] confidence) {
@@ -191,9 +194,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		return VariableScope.OBJECT_CLASS_NODE;
 	}
 
-	// FIXADE remvoe objectExpressionType
-	private TypeLookupResult findType(Expression node, ClassNode objectExpressionType, ClassNode declaringType,
-			VariableScope scope, TypeConfidence confidence, boolean isStaticObjectExpression, boolean isPrimaryExpression) {
+	private TypeLookupResult findType(Expression node, ClassNode declaringType, VariableScope scope, TypeConfidence confidence,
+			boolean isStaticObjectExpression, boolean isPrimaryExpression) {
 
 		// check first to see if we have this type inferred
 		if (node instanceof VariableExpression) {

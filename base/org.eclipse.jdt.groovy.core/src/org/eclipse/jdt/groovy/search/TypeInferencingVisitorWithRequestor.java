@@ -1174,7 +1174,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				scope.addVariable("delegate", cat.declaringType, VariableScope.CLOSURE_CLASS);
 				scope.addVariable("getDelegate", cat.declaringType, VariableScope.CLOSURE_CLASS);
 			} else {
-				ClassNode thisType = scope.lookupName("this").type;
+				ClassNode thisType = scope.getThis();
 				scope.addVariable("delegate", thisType, VariableScope.CLOSURE_CLASS);
 				scope.addVariable("getDelegate", thisType, VariableScope.CLOSURE_CLASS);
 			}
@@ -1184,7 +1184,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				scope.addVariable("owner", VariableScope.CLOSURE_CLASS, VariableScope.CLOSURE_CLASS);
 				scope.addVariable("getOwner", VariableScope.CLOSURE_CLASS, VariableScope.CLOSURE_CLASS);
 			} else {
-				ClassNode thisType = scope.lookupName("this").type;
+				ClassNode thisType = scope.getThis();
 				scope.addVariable("owner", thisType, VariableScope.CLOSURE_CLASS);
 				scope.addVariable("getOwner", thisType, VariableScope.CLOSURE_CLASS);
 			}
@@ -1707,12 +1707,20 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	private boolean handleStatement(Statement node) {
 		// don't check the lookups because statements have no type.
 		// but individual requestors may choose to end the visit here
-		VariableScope currentScope = scopes.peek();
-		VariableInfo info = currentScope.lookupName("this");
-		ClassNode declaring = info == null ? VariableScope.OBJECT_CLASS_NODE : info.declaringType;
-		currentScope.setPrimaryNode(false);
+		VariableScope scope = scopes.peek();
+		ClassNode declaring = scope.getDelegateOrThis();
+		scope.setPrimaryNode(false);
 
-		TypeLookupResult noLookup = new TypeLookupResult(declaring, declaring, declaring, TypeConfidence.EXACT, currentScope);
+		if (node instanceof BlockStatement) {
+			for (ITypeLookup lookup : lookups) {
+				if (lookup instanceof ITypeLookupExtension) {
+					// must ensure that declaring type information at the start of the block is invoked
+					((ITypeLookupExtension) lookup).lookupInBlock((BlockStatement) node, scope);
+				}
+			}
+		}
+
+		TypeLookupResult noLookup = new TypeLookupResult(declaring, declaring, declaring, TypeConfidence.EXACT, scope);
 		VisitStatus status = notifyRequestor(node, requestor, noLookup);
 		switch (status) {
 			case CONTINUE:
@@ -1734,10 +1742,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		if (isDependentExpression(node)) {
 			// debugging help: objectExpressionType.push(objectExprType)
 			primaryType = primaryTypeStack.pop();
-			// FIXADE extract to separate method
 			// implicit this expressions do not have a primary type
-			if (completeExpressionStack.peek() instanceof MethodCallExpression
-					&& ((MethodCallExpression) completeExpressionStack.peek()).isImplicitThis()) {
+			if (isImplicitThis()) {
 				primaryType = null;
 			}
 			isStatic = hasStaticObjectExpression(node);
@@ -1750,6 +1756,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 		TypeLookupResult result = lookupExpressionType(node, primaryType, isStatic, scope);
 		return handleRequestor(node, primaryType, result);
+	}
+
+	protected boolean isImplicitThis() {
+		return completeExpressionStack.peek() instanceof MethodCallExpression
+				&& ((MethodCallExpression) completeExpressionStack.peek()).isImplicitThis();
 	}
 
 	private void handleCompleteExpression(Expression node, ClassNode exprType, ClassNode exprDeclaringType) {

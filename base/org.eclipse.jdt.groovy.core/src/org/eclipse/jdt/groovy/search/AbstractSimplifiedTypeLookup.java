@@ -27,6 +27,7 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
 /**
@@ -169,6 +170,9 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 
 	public final TypeLookupResult lookupType(Parameter node, VariableScope scope) {
 		return null;
+	}
+
+	public void lookupInBlock(BlockStatement node, VariableScope scope) {
 	}
 
 	/**

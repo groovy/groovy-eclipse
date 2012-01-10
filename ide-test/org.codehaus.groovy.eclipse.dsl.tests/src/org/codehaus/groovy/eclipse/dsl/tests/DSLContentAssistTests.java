@@ -21,7 +21,9 @@ import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestCase;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
@@ -32,6 +34,13 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  */
 public class DSLContentAssistTests extends CompletionTestCase {
 
+    /**
+     * 
+     */
+    private static final String SET_DELEGATE_ON_INT = "contribute(currentType(Integer) & enclosingCallName(\"foo\")) {\n" + 
+    "    setDelegateType(String)\n" + 
+    "}";
+
     public DSLContentAssistTests(String name) {
         super(name);
     }
@@ -40,7 +49,7 @@ public class DSLContentAssistTests extends CompletionTestCase {
     protected void setUp() throws Exception {
         super.setUp();
         createGenericProject();
-        IProject project = env.getProject("Project");
+        IProject project = getDefaultProject();
         GroovyRuntime.addLibraryToClasspath(JavaCore.create(project), GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID);
         env.fullBuild();
         new RefreshDSLDJob(project).run(null);
@@ -86,5 +95,61 @@ public class DSLContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "frame", 0);
         proposalExists(proposals, "registerBinding", 0);
     }
+    
+    // GRECLIPSE-1324
+    public void testEmptyClosure1() throws Exception {
+        createDsls(
+                SET_DELEGATE_ON_INT);
+        String contents = "1.foo {\n" + 
+        		"    // here\n" + 
+        		"}";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "\n    "));
+
+        // should see proposals from String, not Integer
+        proposalExists(proposals, "substring", 2);
+        
+        proposalExists(proposals, "chars", 1);
+        proposalExists(proposals, "abs", 0); // DGM
+        
+        // uh uh....should be 1, but duplicate
+        // one comes from String, other from CharSequence
+        proposalExists(proposals, "capitalize", 2); // DGM
+        proposalExists(proposals, "digits", 0);  
+    }
+    // GRECLIPSE-1324
+    public void testEmptyClosure2() throws Exception {
+        createDsls(
+                SET_DELEGATE_ON_INT);
+        String contents = "1.foo {\n" + 
+                "    to\n" + 
+                "}";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "\n    "));
+
+        // should see proposals from String, not Integer
+        proposalExists(proposals, "toUpperCase()", 1);
+        proposalExists(proposals, "toHexString()", 0);
+    }
+    
+    protected String[] createDsls(String ... dsls) {
+        return createDsls(0, dsls);
+    }
+    protected String[] createDsls(int startWith, String ... dsls) {
+        int i = startWith;
+        System.out.println("Now creating " + dsls.length + " DSLD files.");
+        for (String dsl : dsls) {
+            System.out.println("Creating:\n" + dsl + "\n");
+            IPath path = env.addFile(getDefaultProject().getFullPath(), "dsl" + i++ + ".dsld", dsl);
+            IFile file = env.getWorkspace().getRoot().getFile(path);
+            if (!file.exists()) {
+                fail("File " + file + " just created, but doesn't exist");
+            }
+        }
+        return dsls;
+    }
+
+    protected IProject getDefaultProject() {
+        return env.getProject("Project");
+    }
+
     
 }

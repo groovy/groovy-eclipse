@@ -72,7 +72,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                             methodProposal.setRelevanceMultiplier(isInterestingType(method.getReturnType()) ? 101 : 1);
                             groovyProposals.add(methodProposal);
                         }
-                    } else if (params.length == 1 && looselyMatchesGetterName(prefix, methodName)
+                    } else if (params.length == 1 && looselyMatchesGetterName(prefix, methodName, false)
                             && !existingFieldProposals.contains(methodName) && hasNoField(declaringClass, methodName)) {
                         // we are not handling setters...should we?
                         // add property

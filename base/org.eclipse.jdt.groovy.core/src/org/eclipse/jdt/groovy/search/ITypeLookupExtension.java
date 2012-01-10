@@ -13,10 +13,11 @@ package org.eclipse.jdt.groovy.search;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
 
 /**
  * An extension to the {@link ITypeLookup} interface that specifies that a particular expression visit occurs in the context of a
- * static object expression.  We use an extension interface because we do not want to break backwards compatibility with existing 
+ * static object expression. We use an extension interface because we do not want to break backwards compatibility with existing
  * third party implementors of {@link ITypeLookup}.
  * 
  * @author Andrew Eisenberg
@@ -37,4 +38,8 @@ public interface ITypeLookupExtension extends ITypeLookup {
 	TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType,
 			boolean isStaticObjectExpression);
 
+	/**
+	 * Determines the type inside of a BlockStatement
+	 */
+	void lookupInBlock(BlockStatement node, VariableScope scope);
 }

@@ -78,7 +78,7 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                     groovyProposals.add(methodProposal);
                 }
 
-                if (looselyMatchesGetterName(prefix, methodName)) {
+                if (looselyMatchesGetterName(prefix, methodName, true)) {
                     // if there is a getter or setter, then add a field proposal
                     // with the name being gotten
                     String mockFieldName = ProposalUtils.createMockFieldName(methodName);
