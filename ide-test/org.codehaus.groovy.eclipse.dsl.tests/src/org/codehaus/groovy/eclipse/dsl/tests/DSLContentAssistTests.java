@@ -25,6 +25,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
@@ -111,9 +112,15 @@ public class DSLContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "chars", 1);
         proposalExists(proposals, "abs", 0); // DGM
         
-        // uh uh....should be 1, but duplicate
-        // one comes from String, other from CharSequence
-        proposalExists(proposals, "capitalize", 2); // DGM
+        
+        if (GroovyUtils.GROOVY_LEVEL > 17) {
+            // uh uh....should be 1, but duplicate
+            // one comes from String, other from CharSequence
+            proposalExists(proposals, "capitalize", 2); // DGM
+        } else {
+            // only one capitalize method on 1.7
+            proposalExists(proposals, "capitalize", 1); // DGM
+        }
         proposalExists(proposals, "digits", 0);  
     }
     // GRECLIPSE-1324

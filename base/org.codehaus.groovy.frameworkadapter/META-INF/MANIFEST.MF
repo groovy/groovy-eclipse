@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Groovy Compiler Adapter
-Bundle-SymbolicName: org.codehaus.groovy.frameworkadapter
+Bundle-SymbolicName: org.codehaus.groovy.frameworkadapter;singleton:=true
 Bundle-Version: 2.6.1.qualifier
 Bundle-Vendor: The Codehaus
 Fragment-Host: org.eclipse.osgi;bundle-version="3.6.0"
