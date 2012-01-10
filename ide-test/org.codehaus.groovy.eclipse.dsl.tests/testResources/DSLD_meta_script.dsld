@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dsld
 
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassNode
@@ -32,21 +31,21 @@ import org.codehaus.groovy.ast.expr.MapEntryExpression
 // we can add more version checking on request
 supportsVersion(groovy:"1.7.10",groovyEclipse:"2.5.1")  
 
-interface IPointcut {
-	/**
-	 * Accepts a contribution group to this Pointcut. What this means
-	 * is that whenever this pointcut evaluates to a match, then the
-	 * contribution group is evaluated with the bindings that have 
-	 * been generated from the pointcut match
-	 *   
-	 * @param group the contribution group to accept
-	 * 
-	 * @deprecated Use <code>contribution(<pointcut_expression>)</code> instead
-	 */
-    @Deprecated
-	def accept(Closure group);
-} 
- 
+//interface IPointcut {
+//	/**
+//	 * Accepts a contribution group to this Pointcut. What this means
+//	 * is that whenever this pointcut evaluates to a match, then the
+//	 * contribution group is evaluated with the bindings that have 
+//	 * been generated from the pointcut match
+//	 *   
+//	 * @param group the contribution group to accept
+//	 * 
+//	 * @deprecated Use <code>contribution(<pointcut_expression>)</code> instead
+//	 */
+//    @Deprecated
+//	def accept(Closure group);
+//} 
+// 
 
 // You can store shared pointcuts in a variable 
 // This particular pointcut matches all join points that are inside of a 
@@ -59,7 +58,7 @@ def insideContribution = { (enclosingCallName("accept") | enclosingCallName("con
 
 // Ensure that the 'accept' method is available for all closures and variables that correspond to pointcuts
 (dsldFile & ( ~ insideContribution() )  & ( ~currentType(subType(Script)) )).accept {
-	delegatesTo IPointcut
+	delegatesTo "p.IPointcut"
 }
  
 // here we store all bound names inside of the wormhole so that they can be available later
@@ -91,11 +90,11 @@ def insideContribution = { (enclosingCallName("accept") | enclosingCallName("con
 
     Map<String, String> pointcutNames = org.codehaus.groovy.eclipse.dsl.script.PointcutFactory.docRegistry
     pointcutNames.each { pointcutName, pointcutDoc ->
-        method name : pointcutName, type: IPointcut, params : [pointcutArg : Object], doc : pointcutDoc,
+        method name : pointcutName, type: "p.IPointcut", params : [pointcutArg : Object], doc : pointcutDoc,
             isDeprecated : org.codehaus.groovy.eclipse.dsl.script.PointcutFactory.deprecatedRegistry.contains(pointcutName)
     }
     
-    method name : "contribute", type : void, params : [pointcut : IPointcut, contributionBlock : Closure], 
+    method name : "contribute", type : void, params : [pointcut : "p.IPointcut", contributionBlock : Closure], 
     doc : "Associates a pointcut expression with a contribution block."
 	
 	method name : "supportsVersion", type : void, params : [versionKindToName : Map.class ], 
@@ -112,12 +111,6 @@ def insideContribution = { (enclosingCallName("accept") | enclosingCallName("con
 	
     property name : "log", type: void, doc: "Logs a message to the Groovy Event Console.  Useful for debugging."
     
-    method name : "setDelegateType", type : void, params : [newDelegateType : String],
-    doc : '''
-    Sets the delegate type inside a closure.  This is different from <code>delegatesTo</code> in that the receiving type
-    is changed in the current scope.  In <code>delegatesTo</code>, the scope is not changed.  Rather, the methods of the
-    delegate are added to the target type's list of recognized methods.
-    '''
 }
 
 // Here, specify everything that can be used inside of an accept block (also called a Contribution Group)
@@ -183,7 +176,13 @@ def insideContribution = { (enclosingCallName("accept") | enclosingCallName("con
 	property name : "enclosingNode", type : ASTNode, doc : "This is the ASTNode enclosing the ASTNode being evaluated"
 	
     property name : "log", type: void, doc: "Logs a message to the Groovy Event Console.  Useful for debugging,"
-    
+    method name : "setDelegateType", type : void, params : [newDelegateType : String],
+    doc : '''
+    Sets the delegate type inside a closure.  This is different from <code>delegatesTo</code> in that the receiving type
+    is changed in the current scope.  In <code>delegatesTo</code>, the scope is not changed.  Rather, the methods of the
+    delegate are added to the target type's list of recognized methods.
+    '''
+
 	// Now, extract all bindings from the wormhole and add them as contributions 
 	for (binding in wormhole.bindings) {
 		property name : binding, type : Collection, doc : "Binding created from pointcut"

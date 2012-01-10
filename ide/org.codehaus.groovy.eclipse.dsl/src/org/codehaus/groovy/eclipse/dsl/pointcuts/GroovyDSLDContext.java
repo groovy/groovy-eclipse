@@ -129,6 +129,8 @@ public class GroovyDSLDContext {
     private Set<ClassNode> cachedHierarchy;
 
     private boolean isStatic;
+
+    private boolean isPrimaryNode;
     
     /**
      * called by the type lookup, not by the pointcuts
@@ -220,6 +222,7 @@ public class GroovyDSLDContext {
     
     public void setCurrentScope(VariableScope currentScope) {
         this.currentScope = currentScope;
+        isPrimaryNode = currentScope.isPrimaryNode();
     }
     
     public ClassNode getCurrentType() {
@@ -258,10 +261,14 @@ public class GroovyDSLDContext {
         return resolverCache;
     }
 
-    public boolean isPrimaryExpression() {
-        return currentScope.isPrimaryNode();
+    public boolean isPrimaryNode() {
+        return isPrimaryNode;
     }
-
+    
+    public void setPrimaryNode(boolean isPrimaryNode) {
+        this.isPrimaryNode = isPrimaryNode;
+    }
+    
     public void setStatic(boolean s) {
         isStatic = s;
     }

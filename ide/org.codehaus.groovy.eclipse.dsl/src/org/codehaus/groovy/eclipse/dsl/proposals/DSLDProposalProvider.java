@@ -22,6 +22,7 @@ import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.codeassist.processors.IProposalProvider;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
@@ -52,6 +53,7 @@ public class DSLDProposalProvider implements IProposalProvider {
             pattern.setCurrentScope(context.currentScope);
             pattern.setTargetType(completionType);
             pattern.setStatic(isStatic);
+            pattern.setPrimaryNode(context.location == ContentAssistLocation.STATEMENT);
             contributions = store.findContributions(pattern, DSLPreferences.getDisabledScriptsAsSet());
         
             boolean isMethodContext = context instanceof MethodInfoContentAssistContext;

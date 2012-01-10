@@ -111,13 +111,6 @@ def insideContribution = { (enclosingCallName("accept") | enclosingCallName("con
 	You must specify a name for the pointcut as well as a closure that evaluates whether or not there is a match'''
 	
     property name : "log", type: void, doc: "Logs a message to the Groovy Event Console.  Useful for debugging."
-    
-    method name : "setDelegateType", type : void, params : [newDelegateType : String],
-    doc : '''
-    Sets the delegate type inside a closure.  This is different from <code>delegatesTo</code> in that the receiving type
-    is changed in the current scope.  In <code>delegatesTo</code>, the scope is not changed.  Rather, the methods of the
-    delegate are added to the target type's list of recognized methods.
-    '''
 }
 
 // Here, specify everything that can be used inside of an accept block (also called a Contribution Group)
@@ -184,6 +177,13 @@ def insideContribution = { (enclosingCallName("accept") | enclosingCallName("con
 	
     property name : "log", type: void, doc: "Logs a message to the Groovy Event Console.  Useful for debugging,"
     
+    method name : "setDelegateType", type : void, params : [newDelegateType : String],
+    doc : '''
+    Sets the delegate type inside a closure.  This is different from <code>delegatesTo</code> in that the receiving type
+    is changed in the current scope.  In <code>delegatesTo</code>, the scope is not changed.  Rather, the methods of the
+    delegate are added to the target type's list of recognized methods.
+    '''
+
 	// Now, extract all bindings from the wormhole and add them as contributions 
 	for (binding in wormhole.bindings) {
 		property name : binding, type : Collection, doc : "Binding created from pointcut"

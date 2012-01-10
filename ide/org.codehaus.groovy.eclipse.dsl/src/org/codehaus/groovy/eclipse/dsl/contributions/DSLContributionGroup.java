@@ -104,7 +104,7 @@ public class DSLContributionGroup extends ContributionGroup {
                 this.currentType = pattern.getCurrentType();
                 this.wormhole = scope.getWormhole();
                 this.staticScope = pattern.isStatic();
-                this.isPrimaryExpression = pattern.isPrimaryExpression();
+                this.isPrimaryExpression = pattern.isPrimaryNode();
                 contributionClosure.call();
             } catch (Exception e) {
                 GroovyLogManager.manager.logException(TraceCategory.DSL, e);
