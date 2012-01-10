@@ -51,8 +51,7 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
 
     private Set<ClassNode> alreadySeen = Collections.emptySet();
 
-    public List<IGroovyProposal> findAllProposals(ClassNode type,
- Set<ClassNode> categories, String prefix, boolean isStatic,
+    public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic,
             boolean isPrimary) {
         boolean firstTime = alreadySeen.isEmpty();
         List<MethodNode> allMethods = getAllMethods(type);
@@ -99,7 +98,7 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
         // now do methods from static imports
         ClassNode enclosingTypeDeclaration = currentScope
                 .getEnclosingTypeDeclaration();
-        if (enclosingTypeDeclaration != null && firstTime && isPrimary) {
+        if (enclosingTypeDeclaration != null && firstTime && isPrimary && type.getModule() != null) {
             groovyProposals.addAll(getStaticImportProposals(prefix,
                     type.getModule()));
         }

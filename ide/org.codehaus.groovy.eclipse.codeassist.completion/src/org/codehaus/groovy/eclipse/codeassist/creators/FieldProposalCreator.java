@@ -99,9 +99,8 @@ public class FieldProposalCreator extends AbstractProposalCreator implements IPr
         // now add all proposals coming from static imports
         ClassNode enclosingTypeDeclaration = currentScope
                 .getEnclosingTypeDeclaration();
-        if (enclosingTypeDeclaration != null && isFirstTime && isPrimary) {
-            groovyProposals.addAll(getStaticImportProposals(prefix,
-                    type.getModule()));
+        if (enclosingTypeDeclaration != null && isFirstTime && isPrimary && type.getModule() != null) {
+            groovyProposals.addAll(getStaticImportProposals(prefix, type.getModule()));
         }
 
         return groovyProposals;
