@@ -6,7 +6,8 @@
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *      Kris De Volder - Initial implemenation
+ *      Kris De Volder - Initial implementation
+ *      Andrew Eisenberg - Alias support, tags as comments
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.tests;
 
@@ -30,6 +31,7 @@ import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest;
  * all against the same compilation unit contents.
  * 
  * @author Kris De Volder
+ * @author Andrew Eisenberg
  */
 public class InferencerWorkload implements Iterable<InferencerWorkload.InferencerTask> {
 	
@@ -51,7 +53,7 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
 	   DEFAULT_ALIASES.put("Z", "java.lang.Boolean");
 	   DEFAULT_ALIASES.put("STR", "java.lang.String");
 	   DEFAULT_ALIASES.put("LIST", "java.util.List");
-	   DEFAULT_ALIASES.put("MAP", "java.util.MAP");
+	   DEFAULT_ALIASES.put("MAP", "java.util.Map");
 	   DEFAULT_ALIASES.put("O", "java.lang.Object");
 	   
 	}
@@ -91,6 +93,7 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
 	private List<InferencerTask> tasks;
 	private String contents;
 	private final Map<String,String> aliases;
+	private boolean aliasesLocked = false; //Set to true when we start parsing the workloadDefinition
 	
 	public InferencerWorkload(File workloadDefinitionFile, String ... extraAliases) throws Exception {
 	    this(extractContents(workloadDefinitionFile), extraAliases);
@@ -128,9 +131,10 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
 	public InferencerWorkload(String workloadDefinition, String ... extraAliases) {
 	    aliases = new HashMap<String, String>(DEFAULT_ALIASES);
 	    for (int i = 0; i < extraAliases.length; i++) {
-	        aliases.put(extraAliases[i++], extraAliases[i]);
+	    	defAlias(extraAliases[i++], extraAliases[i]);
         }
 	    
+	    aliasesLocked = true; // Should allow changing aliases anymore from here onward.
 		StringBuilder stripped = new StringBuilder(); // The contents of the file minus the tags.
 		tasks = new ArrayList<InferencerWorkload.InferencerTask>();
 		int readPos = 0; //Boundary between processed and unprocessed input in workloadDefinition
@@ -199,6 +203,16 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
 		contents = stripped.toString();
 	}
 
+	protected void defAlias(String name, String expansion) {
+		Assert.assertTrue("Aliases must be defined *before* parsing the workload", !aliasesLocked);
+		String existing = aliases.get(name);
+		if (existing!=null) {
+			Assert.fail("Multiple definitions for alias "+name+" first = "+expansion+" second = "+expansion);
+		} else {
+			aliases.put(name, expansion);
+		}
+	}
+
 	/**
 	 * @return The text of the file, without the workload marker tags.
 	 */
@@ -234,5 +248,9 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
         } finally {
             unit.discardWorkingCopy();
         }
+	}
+	
+	public void perform(GroovyCompilationUnit unit) throws Exception {
+		perform(unit, false);
 	}
 }
