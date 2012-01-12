@@ -10,9 +10,20 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.tests;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.Reader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+
+import junit.framework.Assert;
+
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest;
 
 /**
  * Represents a test workload for the inferencer consisting of a number of inferencing tasks to be executed
@@ -22,10 +33,28 @@ import java.util.List;
  */
 public class InferencerWorkload implements Iterable<InferencerWorkload.InferencerTask> {
 	
-	private static final String BEG_MARK_START = "<**";
+	private static final String BEG_MARK_START = "/*!";
 	private static final String BEG_MARK_SEPARATOR = ":" ;
-	private static final String BEG_MARK_END = "**>" ;
-	private static final String END_MARK = "<***>" ;
+	private static final String BEG_MARK_END = "!*/" ;
+	private static final String END_MARK = "/*!*/" ;
+	
+	private static final Map<String, String> DEFAULT_ALIASES = new HashMap<String, String>();
+	static {
+	   DEFAULT_ALIASES.put("B", "java.lang.Byte");
+	   DEFAULT_ALIASES.put("C", "java.lang.Character");
+	   DEFAULT_ALIASES.put("D", "java.lang.Double");
+	   DEFAULT_ALIASES.put("F", "java.lang.Float");
+	   DEFAULT_ALIASES.put("I", "java.lang.Integer");
+	   DEFAULT_ALIASES.put("L", "java.lang.Long");
+	   DEFAULT_ALIASES.put("S", "java.lang.Short");
+	   DEFAULT_ALIASES.put("V", "java.lang.Void");
+	   DEFAULT_ALIASES.put("Z", "java.lang.Boolean");
+	   DEFAULT_ALIASES.put("STR", "java.lang.String");
+	   DEFAULT_ALIASES.put("LIST", "java.util.List");
+	   DEFAULT_ALIASES.put("MAP", "java.util.MAP");
+	   DEFAULT_ALIASES.put("O", "java.lang.Object");
+	   
+	}
 	
 	/**
 	 * Represents a single inferencing 'task' in a workload. Contains information
@@ -53,20 +82,55 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
 		public String getContents() {
 			return InferencerWorkload.this.getContents();
 		}
+		@Override
+		public String toString() {
+		    return "Type: " + expectedResultType + "\nDeclaring: " + expectedDeclaringType + "\nContents: " + getContents().substring(start, end);
+		}
 	}
 	
 	private List<InferencerTask> tasks;
-	private String contents; 
-
+	private String contents;
+	private final Map<String,String> aliases;
+	
+	public InferencerWorkload(File workloadDefinitionFile, String ... extraAliases) throws Exception {
+	    this(extractContents(workloadDefinitionFile), extraAliases);
+	}
+	
 	/**
+     * @param workloadDefinitionFile
+     * @return
+	 * @throws Exception 
+     */
+    private static String extractContents(File workloadDefinitionFile) throws Exception {
+        Reader r = new FileReader(workloadDefinitionFile);
+        BufferedReader br = new BufferedReader(r);
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line  = br.readLine()) != null) {
+            sb.append(line + "\n");
+        }
+        return sb.toString();
+    }
+
+    /**
 	 * Creates a workload from a 'definition'. The definition is the contents of some groovy file with
 	 * additional marker 'tags' inserted that contain the expected result and|or declaring type.
 	 * <p>
 	 * The tags will be stripped out during initialisation of the workload.
 	 * <p>
 	 * Tags look like <**ResultType:DeclaringType**>expression<***>.
+	 * <p>
+	 * In order to cut down on the length of the type specifications, there are aliases.
+	 * Default aliases are specified by {@value #DEFAULT_ALIASES}, but you can add your own
+	 * using the extraAliases argument.  It takes pairs of strings (alias, long name).
+	 * So, the length of extraAliases must be even.
 	 */
-	public InferencerWorkload(String workloadDefinition) {
+	public InferencerWorkload(String workloadDefinition, String ... extraAliases) {
+	    aliases = new HashMap<String, String>(DEFAULT_ALIASES);
+	    for (int i = 0; i < extraAliases.length; i++) {
+	        aliases.put(extraAliases[i++], extraAliases[i]);
+        }
+	    
 		StringBuilder stripped = new StringBuilder(); // The contents of the file minus the tags.
 		tasks = new ArrayList<InferencerWorkload.InferencerTask>();
 		int readPos = 0; //Boundary between processed and unprocessed input in workloadDefinition
@@ -94,11 +158,23 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
 				start = headStart + BEG_MARK_START.length();
 				end = separator;
 				String resultType = workloadDefinition.substring(start, end);
-
+				if (aliases.containsKey(resultType)) {
+				    resultType = aliases.get(resultType);
+				}
+                if (resultType.length() == 0) {
+                    resultType = null;
+                }
+				
 				//Extract declType
 				start = separator+BEG_MARK_SEPARATOR.length();
 				end = headEnd;
 				String declType = workloadDefinition.substring(start, end);
+                if (aliases.containsKey(declType)) {
+                    declType = aliases.get(declType);
+                }
+                if (declType.length() == 0) {
+                    declType = null;
+                }
 				
 				//Extract expression
 				start = headEnd+BEG_MARK_END.length();
@@ -132,5 +208,31 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
 	
 	public Iterator<InferencerTask> iterator() {
 		return tasks.iterator();
+	}
+	
+	/**
+	 * Performs inferencing on the given compilation unit.
+	 * It is assumed that the contents of the compilation unit
+	 * matches the contents of this inferencer task
+	 * @param unit
+	 */
+	public void perform(GroovyCompilationUnit unit, boolean assumeNoUnknowns) throws Exception {
+	    try {
+            unit.becomeWorkingCopy(null);
+            StringBuilder sb = new StringBuilder();
+            for (InferencerTask task : this) {
+                String res = AbstractInferencingTest.checkType(unit, task.start, task.end, task.expectedResultType, task.expectedDeclaringType, assumeNoUnknowns, false);
+                if (res != null) {
+                    sb.append("\n\nInferencing failure:\n" + res);
+                }
+                // only look for unknowns the first time
+                assumeNoUnknowns = false;
+            }
+            if (sb.length() > 0) {
+                Assert.fail(sb.toString());
+            }
+        } finally {
+            unit.discardWorkingCopy();
+        }
 	}
 }

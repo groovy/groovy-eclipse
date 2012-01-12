@@ -104,6 +104,56 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         assertNull("Problem!!! Object type has type parameters now.  See STS-1854", VariableScope.OBJECT_CLASS_NODE.getGenericsTypes());
 	}
 
+	/**
+	 * Checks the compilation unit for the expected type and declaring type.
+	 * @param assumeNoUnknowns 
+	 * @return null if all is OK, or else returns an error message specifying the problem
+	 */
+    public static String checkType(GroovyCompilationUnit unit, int exprStart,
+            int exprEnd, String expectedType, String expectedDeclaringType, boolean assumeNoUnknowns, boolean forceWorkingCopy) {
+        SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, forceWorkingCopy);
+        if (requestor.node == null) {
+            return "Did not find expected ASTNode\n";
+        }
+        if (expectedType != null && !expectedType.equals(printTypeName(requestor.result.type))) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Expected type not found.\n");
+            sb.append("Expected: " + expectedType + "\n");
+            sb.append("Found: " + printTypeName(requestor.result.type) + "\n");
+            sb.append("Declaring type: " + printTypeName(requestor.result.declaringType) + "\n");
+            sb.append("ASTNode: " + requestor.node + "\n");
+            sb.append("Confidence: " + requestor.result.confidence + "\n");
+            sb.append("Line, column: " + requestor.node.getLineNumber() + ", " + requestor.node.getColumnNumber());
+            return sb.toString();
+        }
+        if (expectedDeclaringType != null && !expectedDeclaringType.equals(printTypeName(requestor.result.declaringType))) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Expected declaring type not found.\n");
+            sb.append("Expected: " + expectedDeclaringType + "\n");
+            sb.append("Found: " + printTypeName(requestor.result.declaringType) + "\n");
+            sb.append("Type: " + printTypeName(requestor.result.type) + "\n");
+            sb.append("ASTNode: " + requestor.node + " : " +  requestor.node.getText() + "\n");
+            sb.append("Confidence: " + requestor.result.confidence + "\n");
+            sb.append("Line, column: " + requestor.node.getLineNumber() + ", " + requestor.node.getColumnNumber() + "\n");
+            return sb.toString();
+        }
+        
+        if (assumeNoUnknowns && !requestor.unknowns.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("The following Unknown nodes were found (line:column):\n");
+            for (ASTNode unknown : requestor.unknowns) {
+                sb.append("(" + unknown.getLineNumber() + ":" + unknown.getColumnNumber() + ") ");
+                sb.append(unknown + "\n");
+            }
+            return sb.toString();
+        }
+        
+        if (VariableScope.OBJECT_CLASS_NODE.getGenericsTypes() != null) {
+            return "Problem!!! Object type has type parameters now.  See STS-1854\n";
+        }
+        
+        return null;
+    }
 
 	protected void assertType(String contents, int exprStart, int exprEnd,
             String expectedType, String extraDocSnippet, boolean forceWorkingCopy) {
@@ -311,6 +361,8 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         public TypeLookupResult result;
         public ASTNode node;
         
+        public final List<ASTNode> unknowns = new ArrayList<ASTNode>();
+        
         public SearchRequestor(int start, int end) {
             super();
             this.start = start;
@@ -330,6 +382,9 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
                 this.node = visitorNode;
             }
             
+            if (visitorResult.confidence == TypeConfidence.UNKNOWN && visitorNode.getEnd() > 0) {
+                unknowns.add(visitorNode);
+            }
             // always continue since we need to viist to the end to check consistency of 
             // inferencing engine stacks
             return VisitStatus.CONTINUE;
