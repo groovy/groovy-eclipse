@@ -435,6 +435,7 @@ public class GroovyParser {
 
 		SourceUnit groovySourceUnit = new EclipseSourceUnit(eclipseFile, filepath, new String(sourceCode), groovyCompilerConfig,
 				groovyCompilationUnit.getClassLoader(), errorCollector);
+		groovySourceUnit.isReconcile = isReconcile;
 		GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult,
 				sourceCode.length, groovyCompilationUnit, groovySourceUnit, compilerOptions);
 		// FIXASC get this from the Antlr parser
