@@ -29,6 +29,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
@@ -113,7 +114,8 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             int exprEnd, String expectedType, String expectedDeclaringType, boolean assumeNoUnknowns, boolean forceWorkingCopy) {
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, forceWorkingCopy);
         if (requestor.node == null) {
-            return "Did not find expected ASTNode\n";
+            return "Did not find expected ASTNode.  (Start:" + exprStart + ", End:" + exprEnd + ")\n" +
+            		"text:" +  String.valueOf(CharOperation.subarray(unit.getContents(), exprStart, exprEnd)) + "\n";
         }
         if (expectedType != null && !expectedType.equals(printTypeName(requestor.result.type))) {
             StringBuilder sb = new StringBuilder();

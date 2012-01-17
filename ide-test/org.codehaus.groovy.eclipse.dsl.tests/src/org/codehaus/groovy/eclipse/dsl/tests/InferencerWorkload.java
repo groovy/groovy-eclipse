@@ -121,7 +121,7 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
 	 * <p>
 	 * The tags will be stripped out during initialisation of the workload.
 	 * <p>
-	 * Tags look like <**ResultType:DeclaringType**>expression<***>.
+	 * Tags look like (without the backslashes): <pre>\/*!ResultType:DeclaringType!*\/expression\/*!*\/</pre>.
 	 * <p>
 	 * In order to cut down on the length of the type specifications, there are aliases.
 	 * Default aliases are specified by {@value #DEFAULT_ALIASES}, but you can add your own
