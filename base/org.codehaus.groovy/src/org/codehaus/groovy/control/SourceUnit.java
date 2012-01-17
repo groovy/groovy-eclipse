@@ -94,6 +94,10 @@ public class SourceUnit extends ProcessingUnit {
      * The root of the Abstract Syntax Tree for the source
      */
     protected ModuleNode ast;
+    
+    // GRECLIPSE - start - provides ability to tell if this source unit was created during a reconciling compile
+    public boolean isReconcile;
+    // GRECLIPSE - end
 
     // GRECLIPSE start - temp fix whilst groovy guys sort it out
 //	public Map<ClassNode,Map<String,GenericsType>> genericParameters = new HashMap<ClassNode,Map<String,GenericsType>>();
