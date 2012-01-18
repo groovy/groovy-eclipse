@@ -99,16 +99,6 @@
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
-		<copy todir="${pluginsDestDir}/org.eclipse.test.performance">
-			<fileset dir="${workspaceDirBaseTest}/org.eclipse.test.performance">
-					<exclude name="**/bin"/>
-			</fileset>
-		</copy>
-		<copy todir="${pluginsDestDir}/org.eclipse.test.performance.win32">
-			<fileset dir="${workspaceDirBaseTest}/org.eclipse.test.performance.win32">
-					<exclude name="**/bin"/>
-			</fileset>
-		</copy>
   	
   	<!-- IDE Plugins -->
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse">
