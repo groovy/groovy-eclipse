@@ -11,6 +11,8 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.tests;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -231,10 +233,12 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
 	 * @param unit
 	 */
 	public void perform(GroovyCompilationUnit unit, boolean assumeNoUnknowns) throws Exception {
+		boolean doneSomething = false;
 	    try {
             unit.becomeWorkingCopy(null);
             StringBuilder sb = new StringBuilder();
             for (InferencerTask task : this) {
+            	doneSomething = true;
                 String res = AbstractInferencingTest.checkType(unit, task.start, task.end, task.expectedResultType, task.expectedDeclaringType, assumeNoUnknowns, false);
                 if (res != null) {
                     sb.append("\n\nInferencing failure:\n" + res);
@@ -248,6 +252,7 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
         } finally {
             unit.discardWorkingCopy();
         }
+	    assertTrue("Workload should have at least one annotated element", doneSomething);
 	}
 	
 	public void perform(GroovyCompilationUnit unit) throws Exception {
