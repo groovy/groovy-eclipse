@@ -1416,6 +1416,20 @@ public class InferencingTests extends AbstractInferencingTest {
         		"    }\n" + 
         		"}");
     }
+    
+    // GRECLIPSE-1341
+    public void testDeclarationAtBeginningOfMethod() throws Exception {
+        String contents = "class Problem2 {\n" + 
+        		"    String action() { }\n" + 
+        		"    def meth() {\n" + 
+        		"        def x = action()\n" + 
+        		"        x.substring()\n" + 
+        		"    }\n" + 
+        		"}";
+        int start = contents.lastIndexOf("substring");
+        int end = start + "substring".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
 
     protected void assertNoUnknowns(String contents) {
         GroovyCompilationUnit unit = createUnit("Search", contents);
