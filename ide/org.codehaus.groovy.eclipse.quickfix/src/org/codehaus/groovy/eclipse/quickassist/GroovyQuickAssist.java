@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.quickassist;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;

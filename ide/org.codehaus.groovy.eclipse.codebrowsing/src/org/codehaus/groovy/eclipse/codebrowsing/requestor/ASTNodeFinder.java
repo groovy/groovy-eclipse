@@ -35,6 +35,7 @@ import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
@@ -402,6 +403,12 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
                 check(importNode.getType());
             }
         }
+    }
+    
+    @Override
+    public void visitBinaryExpression(BinaryExpression expression) {
+        super.visitBinaryExpression(expression);
+        check(expression);
     }
 
     /**
