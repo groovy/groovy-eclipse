@@ -25,6 +25,7 @@ import org.codehaus.groovy.eclipse.quickassist.ConvertToMethodCompletionProposal
 import org.codehaus.groovy.eclipse.quickassist.ConvertToMultiLineStringCompletionProposal;
 import org.codehaus.groovy.eclipse.quickassist.ConvertToSingleLineStringCompletionProposal;
 import org.codehaus.groovy.eclipse.quickassist.RemoveUnnecessarySemicolonsCompletionProposal;
+import org.codehaus.groovy.eclipse.quickassist.SwapOperandsCompletionProposal;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.internal.core.CompilationUnit;
@@ -158,7 +159,52 @@ public class QuickAssistTests extends EclipseTestCase {
         String expected = "def z = 1;def a = 1";
        assertConversion(original, expected, null, RemoveUnnecessarySemicolonsCompletionProposal.class);
    }
+    
+    
+	public void testSwapOperands1() throws Exception {
+		assertConversion("if (c && ba)", "if (ba && c)", 7, 1,
+				SwapOperandsCompletionProposal.class);
+	}
+
+	public void testSwapOperands2() throws Exception {
+		assertConversion("if (c && ba && hello)", "if (hello && c && ba)", 13,
+				1, SwapOperandsCompletionProposal.class);
+	}
+
+	public void testSwapOperands3() throws Exception {
+		assertConversion("if (c && ba && hello)", "if (ba && c && hello)", 7,
+				1, SwapOperandsCompletionProposal.class);
+	}
+
+	public void testSwapOperands4() throws Exception {
+		assertConversion("if (c && (ba && hello))", "if ((ba && hello) && c)",
+				7, 1, SwapOperandsCompletionProposal.class);
+	}
+
+	public void testSwapOperands5() throws Exception {
+		assertConversion("def r = ba == c.q.q.q.q == ddd",
+				"def r = ddd == ba == c.q.q.q.q", 25, 1,
+				SwapOperandsCompletionProposal.class);
+	}
+
+	public void testSwapOperands6() throws Exception {
+		assertConversion("def r = ba == c.q.q.q.q == ddd",
+				"def r = c.q.q.q.q == ba == ddd", 12, 1,
+				SwapOperandsCompletionProposal.class);
+	}
    
+	public void testSwapOperands7() throws Exception {
+	    assertConversion("v  && g && a",
+	            "g  && v && a", "&&",
+	            SwapOperandsCompletionProposal.class);
+	}
+	
+	public void testSwapOperands8() throws Exception {
+	    assertConversion("g  || a && v",
+	            "g  || v && a", "&&",
+	            SwapOperandsCompletionProposal.class);
+	}
+	
     private void assertConversion(String original, String expected, String searchFor, Class<? extends AbstractGroovyCompletionProposal> proposalClass) throws Exception, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         int start = searchFor == null ? 0 : original.indexOf(searchFor);
         int length = searchFor == null ? 0 : searchFor.length();
