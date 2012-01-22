@@ -25,6 +25,7 @@ import org.codehaus.groovy.eclipse.quickassist.ConvertToMethodCompletionProposal
 import org.codehaus.groovy.eclipse.quickassist.ConvertToMultiLineStringCompletionProposal;
 import org.codehaus.groovy.eclipse.quickassist.ConvertToSingleLineStringCompletionProposal;
 import org.codehaus.groovy.eclipse.quickassist.RemoveUnnecessarySemicolonsCompletionProposal;
+import org.codehaus.groovy.eclipse.quickassist.SplitAssigmentCompletionProposal;
 import org.codehaus.groovy.eclipse.quickassist.SwapOperandsCompletionProposal;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -162,22 +163,22 @@ public class QuickAssistTests extends EclipseTestCase {
     
     
 	public void testSwapOperands1() throws Exception {
-		assertConversion("if (c && ba)", "if (ba && c)", 7, 1,
+		assertConversion("if (c && ba) { }", "if (ba && c) { }", 7, 1,
 				SwapOperandsCompletionProposal.class);
 	}
 
 	public void testSwapOperands2() throws Exception {
-		assertConversion("if (c && ba && hello)", "if (hello && c && ba)", 13,
+		assertConversion("if (c && ba && hello) { }", "if (hello && c && ba) { }", 13,
 				1, SwapOperandsCompletionProposal.class);
 	}
 
 	public void testSwapOperands3() throws Exception {
-		assertConversion("if (c && ba && hello)", "if (ba && c && hello)", 7,
+		assertConversion("if (c && ba && hello) { }", "if (ba && c && hello) { }", 7,
 				1, SwapOperandsCompletionProposal.class);
 	}
 
 	public void testSwapOperands4() throws Exception {
-		assertConversion("if (c && (ba && hello))", "if ((ba && hello) && c)",
+		assertConversion("if (c && (ba && hello)) { }", "if ((ba && hello) && c) { }",
 				7, 1, SwapOperandsCompletionProposal.class);
 	}
 
@@ -205,6 +206,91 @@ public class QuickAssistTests extends EclipseTestCase {
 	            SwapOperandsCompletionProposal.class);
 	}
 	
+	public void testSplitAssignment1() throws Exception {
+	    assertConversion("def foo = 1 + 4",
+	            "def foo\n" +
+	            "foo = 1 + 4",
+	            "=",
+	            SplitAssigmentCompletionProposal.class);
+	}
+	
+	public void testSplitAssignment2() throws Exception {
+	    assertConversion("def foo = 1 + 4",
+	            "def foo\n" +
+	            "foo = 1 + 4",
+	            "def foo = 1 + 4",
+	            SplitAssigmentCompletionProposal.class);
+	}
+
+	public void testSplitAssignment3() throws Exception {
+	    assertConversion("String foo = '1 + 4'",
+	            "String foo\n" +
+	            "foo = '1 + 4'",
+	            "=",
+	            SplitAssigmentCompletionProposal.class);
+	}
+	
+	public void testSplitAssignment4() throws Exception {
+	    assertConversion("def foo  =  1 + 4",
+	            "def foo\n" +
+	            "foo  =  1 + 4",
+	            "def foo  =  1 + 4",
+	            SplitAssigmentCompletionProposal.class);
+	}
+	
+	public void testSplitAssignment5() throws Exception {
+	    assertConversion("def foo  =  1 + 4",
+	            "def foo\n" +
+	            "foo  =  1 + 4",
+	            "=",
+	            SplitAssigmentCompletionProposal.class);
+	}
+	
+	public void testSplitAssignment6() throws Exception {
+	    assertConversion("/*something*/ def foo = 1 + 4",
+	            "/*something*/ def foo\n" +
+	            "foo = 1 + 4",
+	            "=",
+	            SplitAssigmentCompletionProposal.class);
+	}
+	
+	public void testSplitAssignment7() throws Exception {
+	    assertConversion("/*something*/ def foo = 1 + 4",
+	            "/*something*/ def foo\n" +
+	            "foo = 1 + 4",
+	            "def foo = 1 + 4",
+	            SplitAssigmentCompletionProposal.class);
+	}
+	
+	public void testSplitAssignment7a() throws Exception {
+	    assertConversion("def z = b = 8",
+	            "def z\n" + 
+	            "z = b = 8",
+	                    "def z = b = 8",
+	                    SplitAssigmentCompletionProposal.class);
+	}
+	
+	public void testSplitAssignment8() throws Exception {
+	    assertConversion(
+	    		//original
+	    		"class Foo {\n" + 
+	    		"\n" + 
+	    		"	def foo() {\n" + 
+	    		"		def bar = 1 + 4\n" + 
+	    		"	}\n" + 
+	    		"}",
+	    		//expect:
+	    		"class Foo {\n" + 
+	    		"\n" + 
+	    		"	def foo() {\n" + 
+	    		"		def bar\n" + 
+	    		"		bar = 1 + 4\n" + 
+	    		"	}\n" + 
+	    		"}",
+	    		//Selection:
+	            "def bar = 1 + 4",
+	            SplitAssigmentCompletionProposal.class);
+	}
     private void assertConversion(String original, String expected, String searchFor, Class<? extends AbstractGroovyCompletionProposal> proposalClass) throws Exception, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         int start = searchFor == null ? 0 : original.indexOf(searchFor);
         int length = searchFor == null ? 0 : searchFor.length();
