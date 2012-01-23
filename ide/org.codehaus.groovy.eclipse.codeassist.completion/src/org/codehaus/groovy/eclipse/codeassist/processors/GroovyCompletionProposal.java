@@ -169,4 +169,8 @@ public class GroovyCompletionProposal extends InternalCompletionProposal {
     public char[][] findParameterNames(IProgressMonitor monitor) {
         return super.findParameterNames(monitor);
     }
+
+    public boolean hasParameters() {
+        return super.getParameterTypeNames() != null && super.getParameterTypeNames().length > 0;
+    }
 }

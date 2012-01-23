@@ -579,6 +579,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         proposal.setPackageName(packageName);
 
         LazyGenericTypeProposal javaCompletionProposal = new LazyGenericTypeProposal(proposal, javaContext);
+        javaCompletionProposal.setTriggerCharacters(ProposalUtils.TYPE_TRIGGERS);
         javaCompletionProposal.setRelevance(proposal.getRelevance());
 		ImportRewrite r = groovyRewriter.getImportRewrite(monitor);
         if (r != null) {
@@ -875,8 +876,12 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
 
         LazyJavaCompletionProposal lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, javaContext,
                 getProposalOptions());
-
         lazyProposal.setRelevance(proposal.getRelevance());
+        if (proposal.hasParameters()) {
+            lazyProposal.setTriggerCharacters(ProposalUtils.METHOD_WITH_ARGUMENTS_TRIGGERS);
+        } else {
+            lazyProposal.setTriggerCharacters(ProposalUtils.METHOD_TRIGGERS);
+        }
 		ImportRewrite r = groovyRewriter.getImportRewrite(monitor);
         if (r != null) {
             ReflectionUtils.setPrivateField(LazyJavaTypeCompletionProposal.class, "fImportRewrite", lazyProposal, r);

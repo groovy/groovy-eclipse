@@ -1,5 +1,6 @@
 package org.codehaus.groovy.eclipse.codeassist.completions;
 
+import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.eclipse.jdt.core.CompletionProposal;
@@ -50,6 +51,11 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         this.proposalOptions = groovyFormatterPrefs;
         this.contributor = "Groovy";
         this.setRelevance(proposal.getRelevance());
+        if (proposal.hasParameters()) {
+            this.setTriggerCharacters(ProposalUtils.METHOD_WITH_ARGUMENTS_TRIGGERS);
+        } else {
+            this.setTriggerCharacters(ProposalUtils.METHOD_TRIGGERS);
+        }
     }
 
     public GroovyJavaMethodCompletionProposal(GroovyCompletionProposal proposal,

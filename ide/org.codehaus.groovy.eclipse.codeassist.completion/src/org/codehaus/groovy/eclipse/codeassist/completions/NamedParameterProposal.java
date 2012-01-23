@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.completions;
 
+import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.core.CompletionContext;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
@@ -85,6 +86,7 @@ public class NamedParameterProposal extends JavaCompletionProposal {
         coreContext = invocationContext.getCoreContext();
         this.paramName = paramName;
         this.paramSignature = paramSignature;
+        this.setTriggerCharacters(ProposalUtils.VAR_TRIGGER);
     }
 
     private String computeReplacementChoices(String name) {

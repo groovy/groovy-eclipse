@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
+import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
 import org.eclipse.jface.viewers.StyledString;
@@ -34,6 +35,7 @@ public class GroovyJavaFieldCompletionProposal extends JavaCompletionProposal {
                 image, displayString, proposal.getRelevance());
         this.proposal = proposal;
         this.setRelevance(proposal.getRelevance());
+        this.setTriggerCharacters(ProposalUtils.VAR_TRIGGER);
     }
 
     public CompletionProposal getProposal() {

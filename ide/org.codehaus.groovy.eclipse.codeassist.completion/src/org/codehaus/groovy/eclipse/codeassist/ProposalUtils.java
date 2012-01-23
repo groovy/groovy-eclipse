@@ -53,6 +53,24 @@ import org.eclipse.swt.graphics.Image;
  */
 public class ProposalUtils {
 
+    // Taken from org.eclipse.jdt.ui.text.java.CompletionProposalCollector
+
+    /** Triggers for method proposals without parameters. Do not modify. */
+    public final static char[] METHOD_TRIGGERS = new char[] { ';', ',', '.', '\t', '[', ' ' };
+
+    /** Triggers for method proposals. Do not modify. */
+    public final static char[] METHOD_WITH_ARGUMENTS_TRIGGERS = new char[] { '(', '-', ' ' };
+
+    /** Triggers for types. Do not modify. */
+    // public final static char[] TYPE_TRIGGERS = new char[] { '.', '\t', '[',
+    // '(', ' ' };
+    // In groovy, types are valid expression, so add all the var triggers as
+    // well
+    public final static char[] TYPE_TRIGGERS = new char[] { '.', '\t', '[', '(', ' ', '\t', ' ', ';' };
+
+    /** Triggers for variables. Do not modify. */
+    public final static char[] VAR_TRIGGER = new char[] { '\t', ' ', '=', ';', '.' };
+
     public static final List<IGroovyProposal> NO_PROPOSALS = Collections.emptyList();
 
     public static final ICompletionProposal[] NO_COMPLETIONS = new ICompletionProposal[0];
