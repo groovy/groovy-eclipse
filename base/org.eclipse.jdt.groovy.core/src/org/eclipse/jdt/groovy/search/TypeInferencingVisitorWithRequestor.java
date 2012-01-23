@@ -1321,10 +1321,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitConstantExpression(ConstantExpression node) {
-		if (node.getText().length() == 0 && node.getLength() != 0) {
-			// GRECLIPSE-1330 This is probably an empty expression in a gstring...can ignore.
-			return;
-		}
 		scopes.peek().setCurrentNode(node);
 		handleSimpleExpression(node);
 		scopes.peek().forgetCurrentNode();
