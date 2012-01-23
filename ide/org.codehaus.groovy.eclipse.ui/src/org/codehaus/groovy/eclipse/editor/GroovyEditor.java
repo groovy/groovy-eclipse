@@ -102,6 +102,7 @@ import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.ITextViewerExtension;
 import org.eclipse.jface.text.ITypedRegion;
 import org.eclipse.jface.text.Position;
+import org.eclipse.jface.text.Region;
 import org.eclipse.jface.text.TextUtilities;
 import org.eclipse.jface.text.link.ILinkedModeListener;
 import org.eclipse.jface.text.link.LinkedModeModel;
@@ -391,12 +392,12 @@ public class GroovyEditor extends CompilationUnitEditor {
                         if (!(fCloseAngularBrackets && fCloseBrackets)
                                 || nextToken == Symbols.TokenLESSTHAN
                                 ||         prevToken != Symbols.TokenLBRACE
-                                        && prevToken != Symbols.TokenRBRACE
-                                        && prevToken != Symbols.TokenSEMICOLON
-                                        && prevToken != Symbols.TokenSYNCHRONIZED
-                                        && prevToken != Symbols.TokenSTATIC
-                                        && (prevToken != Symbols.TokenIDENT || !isAngularIntroducer(previous))
-                                        && prevToken != Symbols.TokenEOF)
+                                && prevToken != Symbols.TokenRBRACE
+                                && prevToken != Symbols.TokenSEMICOLON
+                                && prevToken != Symbols.TokenSYNCHRONIZED
+                                && prevToken != Symbols.TokenSTATIC
+                                && (prevToken != Symbols.TokenIDENT || !isAngularIntroducer(previous))
+                                && prevToken != Symbols.TokenEOF)
                             return;
                         break;
 
@@ -412,15 +413,15 @@ public class GroovyEditor extends CompilationUnitEditor {
                         // GROOVY change, allow quote closing when there are no parens
                         if (!fCloseStrings
                                 || nextToken == Symbols.TokenIDENT
-//                                || prevToken == Symbols.TokenIDENT
+                                //                                || prevToken == Symbols.TokenIDENT
                                 || next != null && next.length() > 1
-//                                || previous != null && previous.length() > 1
+                                //                                || previous != null && previous.length() > 1
                                 )
                             // GROOVY end change
                             return;
                         break;
 
-                    // GROOVY change, allow curly braces closing in GStrings
+                        // GROOVY change, allow curly braces closing in GStrings
                     case '{':
                         if (!fCloseBraces || nextToken == Symbols.TokenIDENT || next != null && next.length() > 1)
                             return;
@@ -434,7 +435,7 @@ public class GroovyEditor extends CompilationUnitEditor {
                 if (event.character != '{' && !IDocument.DEFAULT_CONTENT_TYPE.equals(partition.getType()) && // original
                         // GROOVY change autoclose triple quotes
                         !shouldCloseTripleQuotes(document, offset, partition, getPeerCharacter(event.character))) { // GROOVY
-                                                                                                                    // change
+                    // change
                     return;
                 }
 
@@ -484,7 +485,7 @@ public class GroovyEditor extends CompilationUnitEditor {
                 fBracketLevelStack.push(level);
 
                 LinkedPositionGroup group= new LinkedPositionGroup();
-//                group.addPosition(new LinkedPosition(document, offset + 1, 0, LinkedPositionGroup.NO_STOP));
+                //                group.addPosition(new LinkedPosition(document, offset + 1, 0, LinkedPositionGroup.NO_STOP));
                 group.addPosition(new LinkedPosition(document, offset + insertedLength, 0, LinkedPositionGroup.NO_STOP)); // GROOVY change
 
                 LinkedModeModel model= new LinkedModeModel();
@@ -498,7 +499,7 @@ public class GroovyEditor extends CompilationUnitEditor {
                     document.addPositionUpdater(fUpdater);
                 }
                 level.fFirstPosition= new Position(offset, 1);
-//                level.fSecondPosition= new Position(offset + 1, 1);
+                //                level.fSecondPosition= new Position(offset + 1, 1);
                 level.fSecondPosition= new Position(offset + insertedLength, 1); // GROOVY change
                 document.addPosition(CATEGORY, level.fFirstPosition);
                 document.addPosition(CATEGORY, level.fSecondPosition);
@@ -506,14 +507,14 @@ public class GroovyEditor extends CompilationUnitEditor {
                 level.fUI= new EditorLinkedModeUI(model, sourceViewer);
                 level.fUI.setSimpleMode(true);
                 level.fUI.setExitPolicy(new GroovyExitPolicy(closingCharacter, getEscapeCharacter(closingCharacter), fBracketLevelStack));
-//                level.fUI.setExitPosition(sourceViewer, offset + 2, 0, Integer.MAX_VALUE);
+                //                level.fUI.setExitPosition(sourceViewer, offset + 2, 0, Integer.MAX_VALUE);
                 level.fUI.setExitPosition(sourceViewer, offset + 1 + insertedLength, 0, Integer.MAX_VALUE); // GROOVY change
                 level.fUI.setCyclingMode(LinkedModeUI.CYCLE_NEVER);
                 level.fUI.enter();
 
 
                 IRegion newSelection= level.fUI.getSelectedRegion();
-//                sourceViewer.setSelectedRange(newSelection.getOffset(), newSelection.getLength());
+                //                sourceViewer.setSelectedRange(newSelection.getOffset(), newSelection.getLength());
                 sourceViewer.setSelectedRange(newSelection.getOffset() - insertedLength + 1, newSelection.getLength()); // GROOVY change
 
                 event.doit= false;
@@ -595,8 +596,8 @@ public class GroovyEditor extends CompilationUnitEditor {
                         {
                             try {
                                 document.replace(level.fSecondPosition.offset,
-                                                 level.fSecondPosition.length,
-                                                 ""); //$NON-NLS-1$
+                                        level.fSecondPosition.length,
+                                        ""); //$NON-NLS-1$
                             } catch (BadLocationException e) {
                                 JavaPlugin.log(e);
                             }
@@ -637,10 +638,10 @@ public class GroovyEditor extends CompilationUnitEditor {
     private final GroovyBracketInserter groovyBracketInserter = new GroovyBracketInserter();
 
     public GroovyEditor() {
-		super();
+        super();
         setRulerContextMenuId("#GroovyCompilationUnitRulerContext"); //$NON-NLS-1$
         setEditorContextMenuId("#GroovyCompilationUnitEditorContext"); //$NON-NLS-1$
-	}
+    }
 
     @Override
     protected void setPreferenceStore(IPreferenceStore store) {
@@ -699,10 +700,10 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
     }
 
-	@Override
-	public IEditorInput getEditorInput() {
-	    return super.getEditorInput();
-	}
+    @Override
+    public IEditorInput getEditorInput() {
+        return super.getEditorInput();
+    }
 
     public int getCaretOffset() {
         ISourceViewer viewer = getSourceViewer();
@@ -723,55 +724,55 @@ public class GroovyEditor extends CompilationUnitEditor {
 
     @Override
     protected void setSelection(ISourceReference reference, boolean moveCursor) {
-    	super.setSelection(reference, moveCursor);
-    	// must override functionality because JavaEditor expects that there is a ';' at end of declaration
-    	try {
-			if (reference instanceof IImportDeclaration && moveCursor) {
-				int offset;
-				int length;
-				ISourceRange range = ((ISourceReference) reference).getSourceRange();
-				String content= reference.getSource();
-				if (content != null) {
-					int start = Math.max(content.indexOf("import") + 6, 7); //$NON-NLS-1$
-					while (start < content.length() && content.charAt(start) == ' ')
-						start++;
+        super.setSelection(reference, moveCursor);
+        // must override functionality because JavaEditor expects that there is a ';' at end of declaration
+        try {
+            if (reference instanceof IImportDeclaration && moveCursor) {
+                int offset;
+                int length;
+                ISourceRange range = ((ISourceReference) reference).getSourceRange();
+                String content= reference.getSource();
+                if (content != null) {
+                    int start = Math.max(content.indexOf("import") + 6, 7); //$NON-NLS-1$
+                    while (start < content.length() && content.charAt(start) == ' ')
+                        start++;
 
-					int end= content.trim().length();
-					do {
-						end--;
-					} while (end >= 0 && (content.charAt(end) == ' ' || content.charAt(end) == ';'));
+                    int end= content.trim().length();
+                    do {
+                        end--;
+                    } while (end >= 0 && (content.charAt(end) == ' ' || content.charAt(end) == ';'));
 
-					offset= range.getOffset() + start;
-					length= end - start + 1;  // Note, original JDT code has 8 here
+                    offset= range.getOffset() + start;
+                    length= end - start + 1;  // Note, original JDT code has 8 here
 
-					// just in case...
-					int docLength = ((IImportDeclaration) reference).getOpenable().getBuffer().getLength();
-					if (docLength < offset+length) {
-					    offset = docLength;
-					}
-				} else {
-					// fallback
-					offset= range.getOffset()+1;
-					length= range.getLength()-2;
-				}
+                    // just in case...
+                    int docLength = ((IImportDeclaration) reference).getOpenable().getBuffer().getLength();
+                    if (docLength < offset+length) {
+                        offset = docLength;
+                    }
+                } else {
+                    // fallback
+                    offset= range.getOffset()+1;
+                    length= range.getLength()-2;
+                }
 
-				if (offset > -1 && length > 0) {
+                if (offset > -1 && length > 0) {
 
-					try  {
-						getSourceViewer().getTextWidget().setRedraw(false);
-						getSourceViewer().revealRange(offset, length);
-						getSourceViewer().setSelectedRange(offset, length);
-					} finally {
-						getSourceViewer().getTextWidget().setRedraw(true);
-					}
+                    try  {
+                        getSourceViewer().getTextWidget().setRedraw(false);
+                        getSourceViewer().revealRange(offset, length);
+                        getSourceViewer().setSelectedRange(offset, length);
+                    } finally {
+                        getSourceViewer().getTextWidget().setRedraw(true);
+                    }
 
-					markInNavigationHistory();
-				}
+                    markInNavigationHistory();
+                }
 
-			}
-		} catch (JavaModelException e) {
-			GroovyCore.logException("Error selecting import statement", e);
-		}
+            }
+        } catch (JavaModelException e) {
+            GroovyCore.logException("Error selecting import statement", e);
+        }
     }
 
 
@@ -785,7 +786,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fOrganizeImports", group, new OrganizeGroovyImportsAction(this));
         IAction organizeImports = new OrganizeGroovyImportsAction(this);
         organizeImports
-                .setActionDefinitionId(IJavaEditorActionDefinitionIds.ORGANIZE_IMPORTS);
+        .setActionDefinitionId(IJavaEditorActionDefinitionIds.ORGANIZE_IMPORTS);
         setAction("OrganizeImports", organizeImports); //$NON-NLS-1$
 
         // use our FormatAll instead
@@ -795,14 +796,14 @@ public class GroovyEditor extends CompilationUnitEditor {
         // use our Format instead
         IAction formatAction = new FormatGroovyAction(this.getEditorSite(), FormatKind.FORMAT);
         formatAction
-                .setActionDefinitionId(IJavaEditorActionDefinitionIds.FORMAT);
+        .setActionDefinitionId(IJavaEditorActionDefinitionIds.FORMAT);
         setAction("Format", formatAction); //$NON-NLS-1$
         PlatformUI.getWorkbench().getHelpSystem().setHelp(formatAction, IJavaHelpContextIds.FORMAT_ACTION);
 
         // use our Indent instead
         IAction indentAction = new FormatGroovyAction(this.getEditorSite(), FormatKind.INDENT_ONLY);
         indentAction
-                .setActionDefinitionId(IJavaEditorActionDefinitionIds.INDENT);
+        .setActionDefinitionId(IJavaEditorActionDefinitionIds.INDENT);
         setAction("Indent", indentAction); //$NON-NLS-1$
         PlatformUI.getWorkbench().getHelpSystem().setHelp(indentAction, IJavaHelpContextIds.INDENT_ACTION);
 
@@ -832,7 +833,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         // remove most refactorings since they are not yet really supported
         removeRefactoringAction("fSelfEncapsulateField");
         removeRefactoringAction("fMoveAction");
-//        removeRefactoringAction("fRenameAction");
+        //        removeRefactoringAction("fRenameAction");
         removeRefactoringAction("fModifyParametersAction");
         // fPullUpAction
         // fPushDownAction
@@ -1203,7 +1204,7 @@ public class GroovyEditor extends CompilationUnitEditor {
                         && offset <= markOccurrenceTargetRegion.getOffset() + markOccurrenceTargetRegion.getLength())
                     return;
             }
-            setMarkOccurrenceTargetRegion(JavaWordFinder.findWord(document, offset));
+            setMarkOccurrenceTargetRegion(findMarkOccurrencesRegion(document, offset));
             setMarkOccurrenceModificationStamp(currentModificationStamp);
         }
 
@@ -1224,6 +1225,19 @@ public class GroovyEditor extends CompilationUnitEditor {
         groovyOccurrencesFinderJob = new OccurrencesFinderJob(document, locations, selection);
         groovyOccurrencesFinderJob.run(new NullProgressMonitor());
 
+    }
+
+    protected IRegion findMarkOccurrencesRegion(IDocument document, int offset) {
+        IRegion word = JavaWordFinder.findWord(document, offset);
+        try {
+            if (word != null && word.getLength() > 1 && document.getChar(word.getOffset()) == '$') {
+                // this is likely a GString expresion without {}, eg: "$var"
+                word = new Region(word.getOffset()+1, word.getLength()-1);
+            }
+        } catch (BadLocationException e) {
+            // if this ever gets thrown, then a more interesting exception will be thrown later
+        }
+        return word;
     }
 
     @Override
@@ -1256,7 +1270,7 @@ public class GroovyEditor extends CompilationUnitEditor {
                 // remove the marker updater for Java breakpoints, the groovy one will be used instead
                 List<IConfigurationElement> updaterSpecs = (List<IConfigurationElement>)
                         ReflectionUtils.getPrivateField(AbstractMarkerAnnotationModel.class,
-                        "fMarkerUpdaterSpecifications", model);
+                                "fMarkerUpdaterSpecifications", model);
                 for (Iterator<IConfigurationElement> specIter = updaterSpecs.iterator(); specIter
                         .hasNext();) {
                     IConfigurationElement spec = specIter.next();

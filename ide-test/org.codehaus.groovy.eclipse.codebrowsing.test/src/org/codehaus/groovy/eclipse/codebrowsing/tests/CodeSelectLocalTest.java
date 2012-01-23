@@ -47,6 +47,12 @@ public class CodeSelectLocalTest extends BrowsingTestCase {
         assertSelection(contents, "yyy");
     }
 
+    // GRECLIPSE-1330
+    public void testLocalVar5() throws Exception {
+        String contents = "def i\n\"$i\"";
+        assertSelection(contents, "i");
+    }
+
     void assertSelection(String contents, String varName) throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");

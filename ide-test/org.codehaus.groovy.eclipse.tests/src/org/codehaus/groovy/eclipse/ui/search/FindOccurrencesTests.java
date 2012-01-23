@@ -113,7 +113,7 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         doTest(contents, second, length, first, length, second, length, third, length);
     }
     
-    public void testFindDGMOccurrences1() throws Exception {
+    public void testFindGStringOccurrences1() throws Exception {
         String contents = "def xxx\nxxx \"$xxx\"\n\"$xxx\"\n\"${xxx}\"\n" + // first three are matches
         		"\"xxx\"\n'xxx'\n'$xxx'\n'${xxx}'";  // these aren't matches
         int length = "xxx".length();
@@ -122,6 +122,18 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int second = contents.indexOf("xxx", first+1);
         int third = contents.indexOf("xxx", second+1);
         int fourth = contents.indexOf("xxx", third+1);
+        doTest(contents, def, 1, def, length, first, length, second, length, third, length, fourth, length);
+    }
+    
+    public void testFindGStringOccurrences2() throws Exception {
+        String contents = "def i\ni \"$i\"\n\"$i\"\n\"${i}\"\n" + // first three are matches
+                "\"i\"\n'i'\n'$i'\n'${i}'";  // these aren't matches
+        int length = "i".length();
+        int def = contents.indexOf("i");
+        int first = contents.indexOf("i", def+1);
+        int second = contents.indexOf("i", first+1);
+        int third = contents.indexOf("i", second+1);
+        int fourth = contents.indexOf("i", third+1);
         doTest(contents, def, 1, def, length, first, length, second, length, third, length, fourth, length);
     }
     

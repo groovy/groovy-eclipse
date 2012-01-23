@@ -192,6 +192,10 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             // so, we may erroneously find matches here
             return;
         }
+        if (expression.getText().length() == 0 && expression.getLength() != 0) {
+            // GRECLIPSE-1330 This is probably an empty expression in a gstring...can ignore.
+            return;
+        }
         check(expression);
         super.visitConstantExpression(expression);
     }
