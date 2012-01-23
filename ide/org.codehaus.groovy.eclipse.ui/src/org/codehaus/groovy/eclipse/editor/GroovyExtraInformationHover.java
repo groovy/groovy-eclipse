@@ -1,5 +1,8 @@
 package org.codehaus.groovy.eclipse.editor;
 
+import java.io.IOException;
+import java.io.StringReader;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -9,6 +12,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.codebrowsing.elements.IGroovyResolvedElement;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ITypeRoot;
@@ -17,6 +21,7 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.debug.ui.JavaDebugHover;
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocBrowserInformationControlInput;
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover;
+import org.eclipse.jdt.internal.ui.text.javadoc.JavaDoc2HTMLTextReader;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.ui.IEditorPart;
@@ -73,7 +78,6 @@ public class GroovyExtraInformationHover extends JavadocHover {
         // first check to see if there would be a debug hover
         // if so, don't do any more work
         if (!alwaysReturnInformation) {
-            // Object o = new Object();
             Object o = debugHover.getHoverInfo2(textViewer, hoverRegion);
             if (o != null) {
                 // don't actually return anything since we
@@ -105,7 +109,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
             }
             if (elements[0] instanceof IGroovyResolvedElement) {
                 IGroovyResolvedElement resolvedElt = (IGroovyResolvedElement) elements[0];
-                if ((resolvedElt.getExtraDoc() != null && resolvedElt.getExtraDoc().length() > 0)) {
+                if ((extraDocAsHtml(resolvedElt) != null && extraDocAsHtml(resolvedElt).length() > 0)) {
                     return true;
                 }
             }
@@ -123,8 +127,8 @@ public class GroovyExtraInformationHover extends JavadocHover {
     private Object computeHover(IRegion hoverRegion, IJavaElement[] elements) {
         Object hover;
         hover = ReflectionUtils.executePrivateMethod(JavadocHover.class, "getHoverInfo", new Class[] { IJavaElement[].class,
-                ITypeRoot.class, IRegion.class, JavadocBrowserInformationControlInput.class }, this, new Object[] { elements,
-                getEditorInputJavaElement(), hoverRegion, null });
+            ITypeRoot.class, IRegion.class, JavadocBrowserInformationControlInput.class }, this, new Object[] { elements,
+            getEditorInputJavaElement(), hoverRegion, null });
         if (hover instanceof JavadocBrowserInformationControlInput && elements[0] instanceof IGroovyResolvedElement) {
             JavadocBrowserInformationControlInput input = (JavadocBrowserInformationControlInput) hover;
             hover = new JavadocBrowserInformationControlInput((JavadocBrowserInformationControlInput) input.getPrevious(),
@@ -145,9 +149,19 @@ public class GroovyExtraInformationHover extends JavadocHover {
             preamble = "";
         }
         if (elt.getExtraDoc() != null) {
-            return preamble + elt.getExtraDoc() + "\n<br><hr/><br>\n" + input.getHtml();
+            return preamble + extraDocAsHtml(elt) + "\n<br><hr/><br>\n" + input.getHtml();
         } else {
             return preamble + input.getHtml();
+        }
+    }
+
+    protected String extraDocAsHtml(IGroovyResolvedElement elt) {
+        JavaDoc2HTMLTextReader reader = new JavaDoc2HTMLTextReader(new StringReader(elt.getExtraDoc()));
+        try {
+            return reader.getString();
+        } catch (IOException e) {
+            GroovyCore.logException("Error extracting extra documentation", e);
+            return "";
         }
     }
 
