@@ -17,6 +17,7 @@ package org.eclipse.jdt.groovy.search;
 
 import java.util.List;
 
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 
@@ -41,21 +42,20 @@ public enum AccessorSupport {
 
 	public boolean isAccessorKind(MethodNode node, boolean isCategory) {
 		int args = isCategory ? 1 : 0;
+		ClassNode returnType = node.getReturnType();
 		switch (this) {
 			case GETTER:
-				return node.getParameters() == null || node.getParameters().length == args
-						&& !node.getReturnType().equals(VariableScope.VOID_CLASS_NODE);
+				return (node.getParameters() == null || node.getParameters().length == args)
+						&& !returnType.equals(VariableScope.VOID_CLASS_NODE);
 			case ISSER:
 				return !isCategory
-						&& node.getParameters() == null
-						|| node.getParameters().length == args
-						&& (node.getReturnType().equals(VariableScope.OBJECT_CLASS_NODE) || node.getReturnType().equals(
-								VariableScope.BOOLEAN_CLASS_NODE));
+						&& (node.getParameters() == null || node.getParameters().length == args)
+						&& (returnType.equals(VariableScope.OBJECT_CLASS_NODE)
+								|| returnType.equals(VariableScope.BOOLEAN_CLASS_NODE) || returnType
+									.equals(ClassHelper.boolean_TYPE));
 			case SETTER:
-				return node.getParameters() != null
-						&& node.getParameters().length == args + 1
-						&& (node.getReturnType().equals(VariableScope.VOID_CLASS_NODE) || node.getReturnType().equals(
-								VariableScope.OBJECT_CLASS_NODE));
+				return node.getParameters() != null && node.getParameters().length == args + 1
+						&& (returnType.equals(VariableScope.VOID_CLASS_NODE) || returnType.equals(VariableScope.OBJECT_CLASS_NODE));
 			case NONE:
 			default:
 				return false;
