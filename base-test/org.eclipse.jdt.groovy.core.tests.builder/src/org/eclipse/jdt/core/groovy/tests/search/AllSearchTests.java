@@ -39,6 +39,7 @@ public class AllSearchTests {
         suite.addTestSuite(JDTPropertyNodeInferencingTests.class);
         suite.addTestSuite(DeclarationInferencingTests.class);
         suite.addTestSuite(OperatorOverloadingInferencingTests.class);
+        suite.addTestSuite(SyntheticAccessorInferencingTests.class);
         return suite;
     }
 }

@@ -45,6 +45,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.GenericsMapper;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
@@ -480,12 +481,10 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
         
         // check for methods first, then fields, and then getter/setter variants of the name
-
-        String capitalized = Character.toTitleCase(text.charAt(0)) + text.substring(1);
-        String setMethod = "set" + capitalized;
-        String getMethod = "get" + capitalized;
-        String isMethod = "is" + capitalized;
-        
+        // these values might be null
+        String setMethod = AccessorSupport.SETTER.createAccessorName(text);
+        String getMethod = AccessorSupport.GETTER.createAccessorName(text);
+        String isMethod = AccessorSupport.ISSER.createAccessorName(text);
         
         IMethod lastFound = null;
         for (IMethod method : type.getMethods()) {

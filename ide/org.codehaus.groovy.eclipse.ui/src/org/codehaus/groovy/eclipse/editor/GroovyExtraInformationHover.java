@@ -109,7 +109,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
             }
             if (elements[0] instanceof IGroovyResolvedElement) {
                 IGroovyResolvedElement resolvedElt = (IGroovyResolvedElement) elements[0];
-                if ((extraDocAsHtml(resolvedElt) != null && extraDocAsHtml(resolvedElt).length() > 0)) {
+                if ((resolvedElt.getExtraDoc() != null && resolvedElt.getExtraDoc().length() > 0)) {
                     return true;
                 }
             }

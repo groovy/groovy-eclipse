@@ -25,8 +25,6 @@ import junit.framework.Test;
  *
  */
 public class JDTPropertyNodeInferencingTests extends AbstractInferencingTest {
- 
-    private static final String INTEGER = "java.lang.Integer";
 
     public static Test suite() {
         return buildTestSuite(JDTPropertyNodeInferencingTests.class);

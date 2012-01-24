@@ -36,6 +36,7 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
+import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
@@ -78,7 +79,8 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
                     groovyProposals.add(methodProposal);
                 }
 
-                if (looselyMatchesGetterName(prefix, methodName, true)) {
+                AccessorSupport accessor = findLooselyMatchedAccessorKind(prefix, methodName, false);
+                if (accessor.isAccessorKind(method, false)) {
                     // if there is a getter or setter, then add a field proposal
                     // with the name being gotten
                     String mockFieldName = ProposalUtils.createMockFieldName(methodName);

@@ -56,7 +56,8 @@ public class CategoryTypeLookup implements ITypeLookup {
 			} else if (text.startsWith("$")) {
 				text = text.substring(1);
 			}
-			String getterName = createGetterName(text);
+			String getterName = AccessorSupport.GETTER.createAccessorName(text);
+			String setterName = AccessorSupport.SETTER.createAccessorName(text);
 			for (ClassNode category : categories) {
 				List<MethodNode> methods = category.getMethods(text);
 
@@ -65,7 +66,19 @@ public class CategoryTypeLookup implements ITypeLookup {
 				// also check to see if the getter variant of any name is available
 				if (getterName != null) {
 					methods = category.getMethods(getterName);
-					possibleMethods.addAll(methods);
+					for (MethodNode method : methods) {
+						if (method.isStatic() && AccessorSupport.findAccessorKind(method, true) == AccessorSupport.GETTER) {
+							possibleMethods.add(method);
+						}
+					}
+				}
+				if (setterName != null) {
+					methods = category.getMethods(setterName);
+					for (MethodNode method : methods) {
+						if (method.isStatic() && AccessorSupport.findAccessorKind(method, true) == AccessorSupport.SETTER) {
+							possibleMethods.add(method);
+						}
+					}
 				}
 			}
 			for (MethodNode methodNode : possibleMethods) {
@@ -77,20 +90,6 @@ public class CategoryTypeLookup implements ITypeLookup {
 							getConfidence(declaringClass), scope);
 				}
 			}
-		}
-		return null;
-	}
-
-	/**
-	 * Convert name into a getter
-	 * 
-	 * @param text
-	 * @return name with get prefixed in front of it and first char capitalized or null if this name already looks like a getter or
-	 *         setter
-	 */
-	private String createGetterName(String name) {
-		if (!name.startsWith("get") && !name.startsWith("set") && name.length() > 0) {
-			return "get" + Character.toUpperCase(name.charAt(0)) + (name.length() > 1 ? name.substring(1) : "");
 		}
 		return null;
 	}

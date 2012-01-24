@@ -23,6 +23,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
@@ -106,24 +107,16 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         return field;
     }
 
-    protected boolean looselyMatchesGetterName(String prefix, String methodName, boolean includeIs) {
-        boolean isGetterName = false;
-        // is is allowed only for non-category methods
-        if (includeIs && methodName.length() > 2 && methodName.startsWith("is") && Character.isUpperCase(methodName.charAt(2))) {
-            isGetterName = true;
-        }
-
-        if (!isGetterName) {
-            if (methodName.length() > 3 && (methodName.startsWith("get") || methodName.startsWith("set"))
-                    && Character.isUpperCase(methodName.charAt(3))) {
-                isGetterName = true;
-            }
-        }
-        if (isGetterName) {
+    /**
+     * Determine the kind of accessor the prefix corresponds to, if any
+     */
+    protected AccessorSupport findLooselyMatchedAccessorKind(String prefix, String methodName, boolean isCategory) {
+        AccessorSupport accessor = AccessorSupport.create(methodName, isCategory);
+        if (accessor.isAccessor()) {
             String newName = ProposalUtils.createMockFieldName(methodName);
-            return ProposalUtils.looselyMatches(prefix, newName);
+            return ProposalUtils.looselyMatches(prefix, newName) ? accessor : AccessorSupport.NONE;
         } else {
-            return false;
+            return AccessorSupport.NONE;
         }
     }
 

@@ -112,11 +112,6 @@ public class GroovyCompletionProposalComputer implements
 
     public List<ICompletionProposal> computeCompletionProposals(
             ContentAssistInvocationContext context, IProgressMonitor monitor) {
-        return internalComputeCompletionProposals(context.getInvocationOffset(), context, monitor);
-    }
-
-    public List<ICompletionProposal> internalComputeCompletionProposals(int invocationOffset,
-            ContentAssistInvocationContext context, IProgressMonitor monitor) {
         if (! (context instanceof JavaContentAssistInvocationContext)) {
             return Collections.EMPTY_LIST;
         }
@@ -147,7 +142,7 @@ public class GroovyCompletionProposalComputer implements
         }
 
         IDocument document = context.getDocument();
-        ContentAssistContext assistContext = createContentAssistContext(gunit, invocationOffset, document);
+        ContentAssistContext assistContext = createContentAssistContext(gunit, context.getInvocationOffset(), document);
         List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
         if (assistContext != null) {
             List<IGroovyCompletionProcessorFactory> factories = locationFactoryMap.get(assistContext.location);
