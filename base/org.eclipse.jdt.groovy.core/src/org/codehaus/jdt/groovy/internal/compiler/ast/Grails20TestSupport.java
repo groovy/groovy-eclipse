@@ -42,6 +42,14 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
  */
 public class Grails20TestSupport {
 
+	public static boolean DEBUG = false;
+
+	private static void debug(String msg) {
+		if (DEBUG) {
+			System.out.println("Grails20TestSupport: " + msg);
+		}
+	}
+
 	private static final String GRAILS_UTIL_BUILD_SETTINGS = "grails.util.BuildSettings";
 	private static final String GRAILS_UTIL_BUILD_SETTINGS_HOLDER = "grails.util.BuildSettingsHolder";
 	CompilerOptions options;
@@ -110,29 +118,44 @@ public class Grails20TestSupport {
 	 */
 	@SuppressWarnings("rawtypes")
 	void ensureGrailsBuildSettings() {
+		debug("entering ensureGrailsBuildSettings");
 		try {
 			String projectName = options.groovyProjectName;
+			debug("projectName = " + projectName);
 			if (projectName != null) {
 				Class buildSettingsHolder = gcl.loadClass(GRAILS_UTIL_BUILD_SETTINGS_HOLDER);
+				debug("buildSettingsHolder = " + buildSettingsHolder);
 				Object buildSettings = getBuildSettings(buildSettingsHolder);
+				debug("buildSettings = " + buildSettings);
 				if (buildSettings == null) {
+					debug("Creating buildSettings");
 					buildSettings = createBuildSettings();
+					debug("created buildSettings = " + buildSettingsHolder);
 					setBuildSettings(buildSettingsHolder, buildSettings);
 					Object checkit = getBuildSettings(buildSettingsHolder);
+					debug("set and get buildsettings = " + checkit);
 				}
 			}
 		} catch (Exception e) {
+			debug("FAILED ensureGrailsBuildSettings");
 			e.printStackTrace();
 			// ignore ... classpath doesn't have what we expect.
 		}
+		debug("exiting ensureGrailsBuildSettings");
 	}
 
 	@SuppressWarnings("rawtypes")
 	private Object createBuildSettings() throws ClassNotFoundException, SecurityException, NoSuchMethodException,
 			IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
 		Class buildSettingsClass = gcl.loadClass(GRAILS_UTIL_BUILD_SETTINGS);
+		debug("BuildSettingsClass = " + buildSettingsClass);
 		Constructor constructor = buildSettingsClass.getConstructor(File.class, File.class);
-		return constructor.newInstance(getGrailsHome(), getProjectHome());
+		debug("Constructor = " + constructor);
+		Object grailsHome = getGrailsHome();
+		debug("grailsHome = " + grailsHome);
+		File projectHome = getProjectHome();
+		debug("projectHome = " + projectHome);
+		return constructor.newInstance(grailsHome, projectHome);
 	}
 
 	private Object getGrailsHome() {
