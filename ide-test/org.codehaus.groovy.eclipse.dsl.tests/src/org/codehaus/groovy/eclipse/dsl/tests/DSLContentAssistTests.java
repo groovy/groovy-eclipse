@@ -109,7 +109,7 @@ public class DSLContentAssistTests extends CompletionTestCase {
         // should see proposals from String, not Integer
         proposalExists(proposals, "substring", 2);
         
-        proposalExists(proposals, "chars", 1);
+        proposalExists(proposals, "bytes", 1); // synthetic accessor
         proposalExists(proposals, "abs", 0); // DGM
         
         
