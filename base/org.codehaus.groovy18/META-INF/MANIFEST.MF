@@ -129,4 +129,4 @@ Bundle-Vendor: Codehaus.org
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-Activator: org.codehaus.groovy.activator.GroovyActivator
-Eclipse-RegisterBuddy: registered
+Eclipse-BuddyPolicy: registered
