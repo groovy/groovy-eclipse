@@ -245,6 +245,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	private IJavaElement enclosingElement;
 	private ASTNode enclosingDeclarationNode;
 	private BinaryExpression enclosingAssignment;
+	private ConstructorCallExpression enclosingConstructorCall;
 
 	/**
 	 * The head of the stack is the current property/attribute/methodcall/binary expression being visited. This stack is used so we
@@ -1331,6 +1332,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		boolean shouldContinue = handleSimpleExpression(node);
 		if (shouldContinue) {
 			visitClassReference(node.getType());
+			if (node.getArguments() instanceof TupleExpression
+					&& ((TupleExpression) node.getArguments()).getExpressions().size() == 1) {
+				Expression arg = ((TupleExpression) node.getArguments()).getExpressions().get(0);
+				if (arg instanceof MapExpression) {
+					// this is a constructor call that is instantiated by a map.
+					// remember this, so that when visiting the map, we can
+					// infer field names
+					enclosingConstructorCall = node;
+				}
+			}
 			super.visitConstructorCallExpression(node);
 		}
 	}
@@ -1409,13 +1420,49 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		if (isDependentExpression(node)) {
 			primaryTypeStack.pop();
 		}
+		ClassNode newType;
+		if (enclosingConstructorCall != null) {
+			newType = enclosingConstructorCall.getType();
+			enclosingConstructorCall = null;
+		} else {
+			newType = null;
+		}
+
 		scopes.peek().setCurrentNode(node);
 		completeExpressionStack.push(node);
-		visitListOfExpressions(node.getMapEntryExpressions());
+		if (newType == null) {
+			// do a regular visit
+			for (MapEntryExpression entry : node.getMapEntryExpressions()) {
+				entry.visit(this);
+			}
+		} else {
+			for (MapEntryExpression entry : node.getMapEntryExpressions()) {
+				// visit the key as a field reference if we can find the field
+				Expression key = entry.getKeyExpression();
+				if (key instanceof ConstantExpression) {
+					String fieldName = key.getText();
+					FieldNode field = newType.getField(fieldName);
+					if (field != null) {
+						TypeLookupResult result = new TypeLookupResult(field.getType(), field.getDeclaringClass(), field,
+								TypeConfidence.EXACT, scopes.peek());
+						handleRequestor(key, newType, result);
+					} else {
+						handleSimpleExpression(key);
+					}
+				} else {
+					handleSimpleExpression(key);
+				}
+				// and visit the value as normal
+				handleSimpleExpression(entry.getValueExpression());
+			}
+		}
 		completeExpressionStack.pop();
 
+		// we can only have a parameterization for a non-empty map
+		// also, if this map is part of a constructor call, then
+		// we cannot parameterize since we did not perform the visit in the right way
 		ClassNode exprType;
-		if (node.getMapEntryExpressions().size() > 0) {
+		if (node.getMapEntryExpressions().size() > 0 && newType == null) {
 			exprType = primaryTypeStack.pop();
 		} else {
 			exprType = createParameterizedMap(VariableScope.OBJECT_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE);

@@ -854,5 +854,108 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         int end = start + toFind.length();
         assertType(contents, start, end, "java.util.List<java.lang.Integer>");
     }
-    
+/*
+class O {
+  def  aa
+  def bb
+}
+
+new O([8: 1, bb:8])
+
+def h = [8: 1, bb:8]
+*/
+    // this next section is not really generic inferencing, but it does involve maps, so I'll put it here
+    // GRECLIPSE-1229 constructors with map parameters
+    public void testConstructor1() throws Exception {
+        String contents = 
+                "class O {\n" + 
+        		"  boolean aa\n" + 
+        		"  int bb\n" + 
+        		"}\n" + 
+        		"new O(aa: 1, bb:8)";
+        int start = contents.lastIndexOf("aa");
+        int end = start + "aa".length();
+        assertType(contents, start, end, "java.lang.Boolean");
+        assertDeclaration(contents, start, end, "O", "aa", DeclarationKind.FIELD);
+        start = contents.lastIndexOf("bb");
+        end = start + "bb".length();
+        assertType(contents, start, end, "java.lang.Integer");
+        assertDeclaration(contents, start, end, "O", "bb", DeclarationKind.FIELD);
+    }
+    public void testConstructor2() throws Exception {
+        String contents = 
+                "class O {\n" + 
+                "  boolean aa\n" + 
+                "  int bb\n" + 
+                "}\n" + 
+                "new O([aa: 1, bb:8])";
+        int start = contents.lastIndexOf("aa");
+        int end = start + "aa".length();
+        assertType(contents, start, end, "java.lang.Boolean");
+        assertDeclaration(contents, start, end, "O", "aa", DeclarationKind.FIELD);
+        start = contents.lastIndexOf("bb");
+        end = start + "bb".length();
+        assertType(contents, start, end, "java.lang.Integer");
+        assertDeclaration(contents, start, end, "O", "bb", DeclarationKind.FIELD);
+    }
+    public void testConstructor3() throws Exception {
+        String contents = 
+                "class O {\n" + 
+                "  boolean aa\n" + 
+                "  int bb\n" + 
+                "}\n" + 
+                "new O([8: 1, bb:8])";
+        int start = contents.lastIndexOf("bb");
+        int end = start + "bb".length();
+        assertType(contents, start, end, "java.lang.Integer");
+        assertDeclaration(contents, start, end, "O", "bb", DeclarationKind.FIELD);
+    }
+    public void testConstructor4() throws Exception {
+        String contents = 
+                "class O {\n" + 
+                "  boolean aa\n" + 
+                "  int bb\n" + 
+                "}\n" + 
+                "new O([aa: 1, bb:8], 9)";
+        int start = contents.lastIndexOf("aa");
+        int end = start + "aa".length();
+        assertType(contents, start, end, "java.lang.String");
+        assertDeclaringType(contents, start, end, "null");
+        start = contents.lastIndexOf("bb");
+        end = start + "bb".length();
+        assertType(contents, start, end, "java.lang.String");
+        assertDeclaringType(contents, start, end, "null");
+    }
+    public void testConstructor5() throws Exception {
+        String contents = 
+                "class O {\n" + 
+                "  boolean aa\n" + 
+                "  int bb\n" + 
+                "}\n" + 
+                "new O(9, [aa: 1, bb:8])";
+        int start = contents.lastIndexOf("aa");
+        int end = start + "aa".length();
+        assertType(contents, start, end, "java.lang.String");
+        assertDeclaringType(contents, start, end, "null");
+        start = contents.lastIndexOf("bb");
+        end = start + "bb".length();
+        assertType(contents, start, end, "java.lang.String");
+        assertDeclaringType(contents, start, end, "null");
+    }
+    public void testConstructor6() throws Exception {
+        String contents = 
+                "class O {\n" + 
+                "  boolean aa\n" + 
+                "  int bb\n" + 
+                "}\n" + 
+                "def g = [aa: 1, bb:8]";
+        int start = contents.lastIndexOf("aa");
+        int end = start + "aa".length();
+        assertType(contents, start, end, "java.lang.String");
+        assertDeclaringType(contents, start, end, "null");
+        start = contents.lastIndexOf("bb");
+        end = start + "bb".length();
+        assertType(contents, start, end, "java.lang.String");
+        assertDeclaringType(contents, start, end, "null");
+    }
 }
