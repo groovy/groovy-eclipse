@@ -1376,8 +1376,13 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     public void visitClass(ClassNode node) {
         ClassNode oldNode = currentClass;
-        Map<String, GenericsType> oldPNames = genericParameterNames;
-        genericParameterNames = new HashMap<String, GenericsType>(genericParameterNames);
+        if (node instanceof InnerClassNode) {
+            if (Modifier.isStatic(node.getModifiers())) {
+                genericParameterNames = new HashMap<String, GenericsType>();
+            }
+        } else {
+            genericParameterNames = new HashMap<String, GenericsType>();
+        }
         currentClass = node;
         // GRECLIPSE: start
         if (!commencingResolution()) {
@@ -1439,7 +1444,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         
         super.visitClass(node);
 
-        genericParameterNames = oldPNames;
 
         // GRECLIPSE: start
         finishedResolution();

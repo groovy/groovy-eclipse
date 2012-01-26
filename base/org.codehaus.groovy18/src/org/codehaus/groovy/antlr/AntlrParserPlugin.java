@@ -1083,6 +1083,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // end
         if (isType(MODIFIERS, node)) {
             modifiers = modifiers(node, annotations, modifiers);
+            checkNoInvalidModifier(constructorDef, "Constructor", modifiers, Opcodes.ACC_STATIC, "static");
+            checkNoInvalidModifier(constructorDef, "Constructor", modifiers, Opcodes.ACC_FINAL, "final");
+            checkNoInvalidModifier(constructorDef, "Constructor", modifiers, Opcodes.ACC_ABSTRACT, "abstract");
+            checkNoInvalidModifier(constructorDef, "Constructor", modifiers, Opcodes.ACC_NATIVE, "native");
             node = node.getNextSibling();
         }
 
@@ -2970,9 +2974,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             // For an unfinished declaration 'new Foo' where the parentheses are missing an error
             // will be raised but recovery should allow for that - here that incorrect declaration
             // manifests as a null elist
-            // oldcode:
-            // configureAST(argumentListExpression, elist);
-            // newcode:
+            /*old{
+            configureAST(argumentListExpression, elist);
+            }new*/
             if (elist!=null) {
             	configureAST(argumentListExpression, elist);
             }

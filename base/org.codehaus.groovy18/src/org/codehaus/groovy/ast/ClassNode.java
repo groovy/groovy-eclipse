@@ -814,9 +814,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @return the method matching the given name and parameters or null
      */
     public FieldNode getDeclaredField(String name) {
-    	// GRECLIPSE: Need to do this because AnnotationVisitor.validateEnum calls it
         if (!redirect().lazyInitDone) redirect().lazyClassInit();
-        // end
         ClassNode r = redirect ();
         if (r.fieldIndex == null)
             r.fieldIndex = new HashMap<String,FieldNode> ();
