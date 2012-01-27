@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import java.util.Arrays;
+import java.util.Comparator;
+
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
@@ -94,11 +97,16 @@ public class OtherCompletionTests extends CompletionTestCase {
         assertEquals ("bar() : String - StringExtension (Category: StringExtension)", proposals[0].getDisplayString());
             
         proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "this.collect"), GroovyCompletionProposalComputer.class);
-        proposalExists(proposals, "collect", 2);
-        assertTrue (printProposals(proposals), ((proposals[0].getDisplayString().equals("collect(Closure closure) : List - DefaultGroovyMethods (Category: DefaultGroovyMethods)")) ||
-                     (proposals[1].getDisplayString().equals("collect(Closure closure) : List - DefaultGroovyMethods (Category: DefaultGroovyMethods)"))));
-        assertTrue (printProposals(proposals), ((proposals[0].getDisplayString().equals("collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)")) ||
-                     (proposals[1].getDisplayString().equals("collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)"))));
+        proposalExists(proposals, "collect", 3);
+        Arrays.sort(proposals, new Comparator<ICompletionProposal>() {
+            public int compare(ICompletionProposal o1, ICompletionProposal o2) {
+                return o1.getDisplayString().compareTo(o2.getDisplayString());
+            }
+        });
+        assertEquals(printProposals(proposals), "collect() : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[0].getDisplayString().toString());
+        assertEquals(printProposals(proposals), "collect(Closure transform) : List - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[1].getDisplayString().toString());
+        assertEquals(printProposals(proposals), "collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[2].getDisplayString().toString());
+        
     }
     
     public void testVisibility() throws Exception {
