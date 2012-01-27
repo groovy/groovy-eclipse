@@ -99,14 +99,14 @@ public class OtherCompletionTests extends CompletionTestCase {
         proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "this.collect"), GroovyCompletionProposalComputer.class);
         Arrays.sort(proposals, new Comparator<ICompletionProposal>() {
             public int compare(ICompletionProposal o1, ICompletionProposal o2) {
-                return o1.getDisplayString().compareTo(o2.getDisplayString());
+                return - o1.getDisplayString().compareTo(o2.getDisplayString());
             }
         });
         proposalExists(proposals, "collect", GroovyUtils.GROOVY_LEVEL < 18 ? 2 : 3);
-        assertEquals(printProposals(proposals), "collect() : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[0].getDisplayString().toString());
+        assertEquals(printProposals(proposals), "collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[0].getDisplayString().toString());
         assertEquals(printProposals(proposals), "collect(Closure transform) : List - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[1].getDisplayString().toString());
         if (GroovyUtils.GROOVY_LEVEL >= 18) {
-            assertEquals(printProposals(proposals), "collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[2].getDisplayString().toString());
+            assertEquals(printProposals(proposals), "collect() : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[2].getDisplayString().toString());
         }
     }
     
