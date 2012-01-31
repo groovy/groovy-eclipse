@@ -23,6 +23,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -67,10 +68,10 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
                 return VisitStatus.CONTINUE;
             }
             if (maybeDeclaration instanceof ClassNode) {
-                // sometimes generated methods and properties have a classnode
+                // sometimes generated methods and properties have a ClassNode
                 // as the declaration.
                 // we want to ignore these
-                if (!(node instanceof ClassExpression || node instanceof ClassNode)) {
+                if (!(node instanceof ClassExpression || node instanceof ClassNode || node instanceof ImportNode)) {
                     return VisitStatus.CONTINUE;
                 }
 
@@ -94,6 +95,24 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
                 maybeDeclaration = ((PropertyNode) maybeDeclaration).getField();
             }
 
+            if (node instanceof ImportNode && ((ImportNode) node).getType() != null) {
+                ImportNode imp = ((ImportNode) node);
+                node = imp.getType();
+                if (imp.isStatic()) {
+                    // check for static import reference
+                    boolean isStaticDecl = (declaration instanceof FieldNode && ((FieldNode) declaration).isStatic())
+                            || (declaration instanceof FieldNode && ((FieldNode) declaration).isStatic());
+                    if (isStaticDecl) {
+                        String declarationName = getDeclarationName();
+                        ClassNode declaringClass = declaration.getDeclaringClass();
+                        if (declarationName.equals(imp.getFieldName()) && declaringClass.equals(imp.getType())) {
+                            // add just the name here
+                        }
+                        return VisitStatus.CONTINUE;
+                    }
+                }
+            }
+
             if (isEquivalent(maybeDeclaration)) {
                 int flag = EqualityVisitor.checkForAssignment(node, result.getEnclosingAssignment()) ? F_WRITE_OCCURRENCE
                         : F_READ_OCCURRENCE;
@@ -101,6 +120,19 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
             }
         }
         return VisitStatus.CONTINUE;
+    }
+
+    private String getDeclarationName() {
+        if (declaration instanceof FieldNode) {
+            return ((FieldNode) declaration).getName();
+        } else if (declaration instanceof MethodNode) {
+            return ((MethodNode) declaration).getName();
+        } else if (declaration instanceof ClassNode) {
+            return ((ClassNode) declaration).getName();
+        } else {
+            // Variable
+            return declaration.getText();
+        }
     }
 
     // from IOccurrenceFinder

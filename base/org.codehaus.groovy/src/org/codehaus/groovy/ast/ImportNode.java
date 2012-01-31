@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.ast;
 
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.objectweb.asm.Opcodes;
 
 /**
@@ -149,7 +150,25 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
 
     // GRECLIPSE - start
     private boolean unresolvable = false;
+    private ConstantExpression aliasExpr;
+    private ConstantExpression fieldNameExpr;
     
+    public ConstantExpression getFieldNameExpr() {
+        return fieldNameExpr;
+    }
+
+    public void setFieldNameExpr(ConstantExpression fieldNameExpr) {
+        this.fieldNameExpr = fieldNameExpr;
+    }
+
+    public ConstantExpression getAliasExpr() {
+        return aliasExpr;
+    }
+
+    public void setAliasExpr(ConstantExpression aliasExpr) {
+        this.aliasExpr = aliasExpr;
+    }
+
     public void markAsUnresolvable() {
     	unresolvable=true;
     }

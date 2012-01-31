@@ -815,7 +815,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			ClassNode type = imp.getType();
 
 			if (type != null) {
-				enclosingElement = unit.getImport(imp.getClassName().replace('$', '.'));
+				String importName = imp.getClassName().replace('$', '.')
+						+ (imp.getFieldName() != null ? "." + imp.getFieldName() : "");
+				enclosingElement = unit.getImport(importName);
 				if (!enclosingElement.exists()) {
 					enclosingElement = oldEnclosingElement;
 				}
@@ -843,6 +845,20 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 						try {
 							if (type != null) {
 								visitClassReference(type);
+								// FIXADE this is a bit messy, shoud use existing infra to push and pop
+								completeExpressionStack.push(imp);
+								if (imp.getFieldNameExpr() != null) {
+									primaryTypeStack.push(type);
+									imp.getFieldNameExpr().visit(this);
+									dependentDeclaringTypeStack.pop();
+									dependentTypeStack.pop();
+								}
+
+								// if (imp.getAliasExpr() != null) {
+								// primaryTypeStack.push(type);
+								// imp.getAliasExpr().visit(this);
+								// }
+								completeExpressionStack.pop();
 							}
 						} catch (VisitCompleted e) {
 							if (e.status == VisitStatus.STOP_VISIT) {
@@ -2161,50 +2177,50 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 */
 	private boolean isPrimaryExpression(Expression node) {
 		if (!completeExpressionStack.isEmpty()) {
-			ASTNode maybeProperty = completeExpressionStack.peek();
-			if (maybeProperty instanceof PropertyExpression) {
-				PropertyExpression prop = (PropertyExpression) maybeProperty;
+			ASTNode complete = completeExpressionStack.peek();
+			if (complete instanceof PropertyExpression) {
+				PropertyExpression prop = (PropertyExpression) complete;
 				return prop.getObjectExpression() == node;
-			} else if (maybeProperty instanceof MethodCallExpression) {
-				MethodCallExpression prop = (MethodCallExpression) maybeProperty;
+			} else if (complete instanceof MethodCallExpression) {
+				MethodCallExpression prop = (MethodCallExpression) complete;
 				return prop.getObjectExpression() == node;
-			} else if (maybeProperty instanceof BinaryExpression) {
-				BinaryExpression prop = (BinaryExpression) maybeProperty;
+			} else if (complete instanceof BinaryExpression) {
+				BinaryExpression prop = (BinaryExpression) complete;
 				// both sides of the binary expression are primary since we need
 				// access to both of them when inferring binary expression types
 				return prop.getRightExpression() == node || prop.getLeftExpression() == node;
-			} else if (maybeProperty instanceof AttributeExpression) {
-				AttributeExpression prop = (AttributeExpression) maybeProperty;
+			} else if (complete instanceof AttributeExpression) {
+				AttributeExpression prop = (AttributeExpression) complete;
 				return prop.getObjectExpression() == node;
-			} else if (maybeProperty instanceof TernaryExpression) {
-				TernaryExpression prop = (TernaryExpression) maybeProperty;
+			} else if (complete instanceof TernaryExpression) {
+				TernaryExpression prop = (TernaryExpression) complete;
 				return prop.getTrueExpression() == node;
-			} else if (maybeProperty instanceof ForStatement) {
+			} else if (complete instanceof ForStatement) {
 				// this check is used to store the type of the collection expression so that it can be assigned to the for loop
 				// variable
-				ForStatement prop = (ForStatement) maybeProperty;
+				ForStatement prop = (ForStatement) complete;
 				return prop.getCollectionExpression() == node;
-			} else if (maybeProperty instanceof ListExpression) {
-				return ((ListExpression) maybeProperty).getExpressions().size() > 0
-						&& ((ListExpression) maybeProperty).getExpression(0) == node;
-			} else if (maybeProperty instanceof RangeExpression) {
-				return ((RangeExpression) maybeProperty).getFrom() == node;
-			} else if (maybeProperty instanceof MapEntryExpression) {
-				return ((MapEntryExpression) maybeProperty).getKeyExpression() == node
-						|| ((MapEntryExpression) maybeProperty).getValueExpression() == node;
-			} else if (maybeProperty instanceof MapExpression) {
-				return ((MapExpression) maybeProperty).getMapEntryExpressions().size() > 0
-						&& ((MapExpression) maybeProperty).getMapEntryExpressions().get(0) == node;
-			} else if (maybeProperty instanceof PrefixExpression) {
-				return ((PrefixExpression) maybeProperty).getExpression() == node;
-			} else if (maybeProperty instanceof PostfixExpression) {
-				return ((PostfixExpression) maybeProperty).getExpression() == node;
-			} else if (maybeProperty instanceof UnaryPlusExpression) {
-				return ((UnaryPlusExpression) maybeProperty).getExpression() == node;
-			} else if (maybeProperty instanceof UnaryMinusExpression) {
-				return ((UnaryMinusExpression) maybeProperty).getExpression() == node;
-			} else if (maybeProperty instanceof BitwiseNegationExpression) {
-				return ((BitwiseNegationExpression) maybeProperty).getExpression() == node;
+			} else if (complete instanceof ListExpression) {
+				return ((ListExpression) complete).getExpressions().size() > 0
+						&& ((ListExpression) complete).getExpression(0) == node;
+			} else if (complete instanceof RangeExpression) {
+				return ((RangeExpression) complete).getFrom() == node;
+			} else if (complete instanceof MapEntryExpression) {
+				return ((MapEntryExpression) complete).getKeyExpression() == node
+						|| ((MapEntryExpression) complete).getValueExpression() == node;
+			} else if (complete instanceof MapExpression) {
+				return ((MapExpression) complete).getMapEntryExpressions().size() > 0
+						&& ((MapExpression) complete).getMapEntryExpressions().get(0) == node;
+			} else if (complete instanceof PrefixExpression) {
+				return ((PrefixExpression) complete).getExpression() == node;
+			} else if (complete instanceof PostfixExpression) {
+				return ((PostfixExpression) complete).getExpression() == node;
+			} else if (complete instanceof UnaryPlusExpression) {
+				return ((UnaryPlusExpression) complete).getExpression() == node;
+			} else if (complete instanceof UnaryMinusExpression) {
+				return ((UnaryMinusExpression) complete).getExpression() == node;
+			} else if (complete instanceof BitwiseNegationExpression) {
+				return ((BitwiseNegationExpression) complete).getExpression() == node;
 			} else {
 				return false;
 			}
@@ -2233,13 +2249,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 */
 	private boolean isDependentExpression(Expression node) {
 		if (!completeExpressionStack.isEmpty()) {
-			ASTNode maybeProperty = completeExpressionStack.peek();
-			if (maybeProperty instanceof PropertyExpression) {
-				PropertyExpression prop = (PropertyExpression) maybeProperty;
+			ASTNode complete = completeExpressionStack.peek();
+			if (complete instanceof PropertyExpression) {
+				PropertyExpression prop = (PropertyExpression) complete;
 				return prop.getProperty() == node;
-			} else if (maybeProperty instanceof MethodCallExpression) {
-				MethodCallExpression prop = (MethodCallExpression) maybeProperty;
+			} else if (complete instanceof MethodCallExpression) {
+				MethodCallExpression prop = (MethodCallExpression) complete;
 				return prop.getMethod() == node;
+			} else if (complete instanceof ImportNode) {
+				ImportNode imp = (ImportNode) complete;
+				return node == imp.getAliasExpr() || node == imp.getFieldNameExpr();
 			} else {
 				return false;
 			}

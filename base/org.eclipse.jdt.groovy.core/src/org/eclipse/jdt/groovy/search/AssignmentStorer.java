@@ -143,15 +143,24 @@ public class AssignmentStorer {
 				}
 			}
 
-		} else if (node.isStatic() && type != null && node.getFieldName() != null) {
-			FieldNode field = type.getField(node.getFieldName());
-			if (field != null) {
-				scope.addVariable(field.getName(), field.getType(), type);
-			}
-			List<MethodNode> methods = type.getDeclaredMethods(node.getFieldName());
-			if (methods != null) {
-				for (MethodNode method : methods) {
-					scope.addVariable(method.getName(), method.getReturnType(), type);
+		} else {
+			String fieldName = node.getFieldName();
+			if (node.isStatic() && type != null && fieldName != null) {
+				String alias;
+				if (node.getAlias() != null) {
+					alias = node.getAlias();
+				} else {
+					alias = fieldName;
+				}
+				FieldNode field = type.getField(fieldName);
+				if (field != null) {
+					scope.addVariable(alias, field.getType(), type);
+				}
+				List<MethodNode> methods = type.getDeclaredMethods(fieldName);
+				if (methods != null) {
+					for (MethodNode method : methods) {
+						scope.addVariable(alias, method.getReturnType(), type);
+					}
 				}
 			}
 		}

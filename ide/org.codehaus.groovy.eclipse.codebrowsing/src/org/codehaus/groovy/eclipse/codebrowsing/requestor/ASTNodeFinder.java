@@ -405,6 +405,12 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             if (importNode.getType() != null) {
                 visitAnnotations(importNode);
                 check(importNode.getType());
+                if (importNode.getFieldNameExpr() != null) {
+                    check(importNode.getFieldNameExpr());
+                }
+                if (importNode.getAliasExpr() != null) {
+                    check(importNode.getAliasExpr());
+                }
             }
         }
     }

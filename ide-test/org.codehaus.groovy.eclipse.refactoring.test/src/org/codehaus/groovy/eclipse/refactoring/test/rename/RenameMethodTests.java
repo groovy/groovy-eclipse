@@ -8,6 +8,7 @@ import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSetup;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.refactoring.IJavaRefactorings;
 import org.eclipse.jdt.core.refactoring.descriptors.RenameJavaElementDescriptor;
@@ -39,6 +40,9 @@ public class RenameMethodTests extends RefactoringTest {
 		ICompilationUnit cu= createCUfromTestFile(getPackageP(), "A");
 		try{
 			IType classA= getType(cu, typeName);
+			if (classA == null) {
+                classA = cu.getJavaProject().findType(typeName);
+			}
 			IMethod method= classA.getMethod(methodName, signatures);
 			RenameJavaElementDescriptor descriptor= RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor(IJavaRefactorings.RENAME_METHOD);
 			descriptor.setUpdateReferences(updateReferences);
@@ -108,6 +112,11 @@ public class RenameMethodTests extends RefactoringTest {
 	}
     public void test9() throws Exception{
         helper2();
+    }
+    public void test10() throws Exception{
+        createCU(((IPackageFragmentRoot) getPackageP().getParent()).createPackageFragment("o", true, null), "Other.java", 
+                "package o;\npublic class Other { public static int FOO() { return 0; }\n }");
+        helper2_0("o.Other", "FOO", "BAR", new String[0], true, false);
     }
     public void testInitializer1() throws Exception {
         helper2();

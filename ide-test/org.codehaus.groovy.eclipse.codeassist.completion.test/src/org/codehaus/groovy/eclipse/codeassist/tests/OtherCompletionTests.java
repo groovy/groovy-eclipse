@@ -13,6 +13,8 @@ package org.codehaus.groovy.eclipse.codeassist.tests;
 import java.util.Arrays;
 import java.util.Comparator;
 
+import junit.framework.ComparisonFailure;
+
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
@@ -104,9 +106,14 @@ public class OtherCompletionTests extends CompletionTestCase {
         });
         proposalExists(proposals, "collect", GroovyUtils.GROOVY_LEVEL < 18 ? 2 : 3);
         assertEquals(printProposals(proposals), "collect(Collection arg1, Closure arg2) : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[0].getDisplayString().toString());
-        assertEquals(printProposals(proposals), "collect(Closure transform) : List - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[1].getDisplayString().toString());
+        try {
+        } catch (ComparisonFailure e) {
+        }
         if (GroovyUtils.GROOVY_LEVEL >= 18) {
+            assertEquals(printProposals(proposals), "collect(Closure transform) : List - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[1].getDisplayString().toString());
             assertEquals(printProposals(proposals), "collect() : Collection - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[2].getDisplayString().toString());
+        } else {
+            assertEquals(printProposals(proposals), "collect(Closure closure) : List - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[1].getDisplayString().toString());
         }
     }
     

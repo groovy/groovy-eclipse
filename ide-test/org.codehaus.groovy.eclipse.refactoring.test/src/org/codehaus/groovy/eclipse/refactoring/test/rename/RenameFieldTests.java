@@ -13,6 +13,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.refactoring.IJavaRefactorings;
 import org.eclipse.jdt.core.refactoring.descriptors.RenameJavaElementDescriptor;
@@ -62,6 +63,9 @@ public class RenameFieldTests extends RefactoringTest {
         ICompilationUnit cu = createCUfromTestFile(getPackageP(), "A");
         try {
             IType classA = getType(cu, typeName);
+            if (classA == null) {
+                classA = cu.getJavaProject().findType(typeName);
+            }
             IField field = classA.getField(fieldName);
             boolean isEnum = JdtFlags.isEnum(field);
             String id = isEnum ? IJavaRefactorings.RENAME_ENUM_CONSTANT
@@ -184,6 +188,14 @@ public class RenameFieldTests extends RefactoringTest {
     }
     public void test9() throws Exception {
         helper2();
+    }
+    public void test10() throws Exception {
+        helper2();
+    }
+    public void test11() throws Exception {
+        createCU(((IPackageFragmentRoot) getPackageP().getParent()).createPackageFragment("o", true, null), "Other.java", 
+                "package o;\npublic class Other { public static int FOO;\n }");
+        helper2_0("o.Other", "FOO", "BAR", true, false, false, false, false);
     }
     public void testScript1() throws Exception {
         helperScript();

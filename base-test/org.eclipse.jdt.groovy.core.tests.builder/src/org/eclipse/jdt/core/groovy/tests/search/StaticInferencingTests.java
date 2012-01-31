@@ -18,6 +18,7 @@ package org.eclipse.jdt.core.groovy.tests.search;
 import junit.framework.Test;
 
 /**
+ * Tests various kinds of static references
  * 
  * @author Andrew Eisenberg
  * @created Jun 9, 2011
@@ -136,13 +137,77 @@ public class StaticInferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, end, "GGG", false);
     }
     
-    
-    
-    
     public void testStaticReference1() throws Exception {
         String contents = "class GGG { static int length }\nGGG.length";
         int start = contents.lastIndexOf("length");
         int end = start + "length".length();
         assertType(contents, start, end, "java.lang.Integer", false);
+    }
+    
+    public void testStaticImport1() throws Exception {
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        String contents = "import static p.Other.FOO";
+        int start = contents.lastIndexOf("FOO");
+        int end = start + "FOO".length();
+        assertType(contents, start, end, "java.lang.Integer", false);
+    }
+    public void testStaticImport2() throws Exception {
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        String contents = "import static p.Other.FOO as BAR";
+        int start = contents.lastIndexOf("FOO");
+        int end = start + "FOO".length();
+        assertType(contents, start, end, "java.lang.Integer", false);
+    }
+    public void testStaticImport3() throws Exception {
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        String contents = "import static p.Other.FOO\nFOO";
+        int start = contents.lastIndexOf("FOO");
+        int end = start + "FOO".length();
+        assertType(contents, start, end, "java.lang.Integer", false);
+    }
+    public void testStaticImport4() throws Exception {
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        String contents = "import static p.Other.FOO as BAR\nFOO";
+        int start = contents.lastIndexOf("FOO");
+        int end = start + "FOO".length();
+        assertUnknownConfidence(contents, start, end, "Search", false);
+    }
+    public void testStaticImport5() throws Exception {
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        String contents = "import static p.Other.FO";
+        int start = contents.lastIndexOf("FO");
+        int end = start + "FO".length();
+        assertUnknownConfidence(contents, start, end, "Search", false);
+    }
+    public void testStaticImport6() throws Exception {
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        String contents = "import static p.Other.BAR\nBAR";
+        int start = contents.indexOf("BAR");
+        int end = start + "BAR".length();
+        assertType(contents, start, end, "java.lang.Boolean", false);
+        start = contents.lastIndexOf("BAR");
+        end = start + "BAR".length();
+        assertType(contents, start, end, "java.lang.Boolean", false);
+    }
+    public void testStaticImport7() throws Exception {
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        String contents = "import static p.Other.FOO\nFOO";
+        int start = contents.lastIndexOf("p.Other");
+        int end = start + "p.Other".length();
+        assertType(contents, start, end, "p.Other", false);
+    }
+    public void testStaticImport8() throws Exception {
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        String contents = "import static p.Other.FOO as BAR\nFOO";
+        int start = contents.lastIndexOf("p.Other");
+        int end = start + "p.Other".length();
+        assertType(contents, start, end, "p.Other", false);
+    }
+    public void testStaticImport9() throws Exception {
+        createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+        String contents = "import static p.Other.*\nFOO";
+        int start = contents.lastIndexOf("p.Other");
+        int end = start + "p.Other".length();
+        assertType(contents, start, end, "p.Other", false);
     }
 }

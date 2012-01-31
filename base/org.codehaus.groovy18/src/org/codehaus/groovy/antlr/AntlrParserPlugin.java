@@ -430,10 +430,18 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
 
         String alias = null;
+        // GRECLIPSE: start
+        AST aliasNode = null;
+        // end
         if (isType(LITERAL_as, node)) {
             //import is like "import Foo as Bar"
             node = node.getFirstChild();
-            AST aliasNode = node.getNextSibling();
+            // GRECLIPSE: start
+            /*old{
+            aliasNode = node.getNextSibling();
+            }new*/
+            aliasNode = node.getNextSibling();
+            // end
             alias = identifier(aliasNode);
         }
         
@@ -467,10 +475,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // import is like "import static foo.Bar.*"
                 // packageName is actually a className in this case
                 ClassNode type = ClassHelper.make(packageName);
+                // GRECLIPSE: start
+                /*old{
                 configureAST(type, importNode);
                 addStaticStarImport(type, packageName, annotations);
-                // GRECLIPSE: start: must configure sloc for import node
-                // new
+                }new*/
+                configureAST(type, packageNode);
+                addStaticStarImport(type, packageName, annotations);
                 ASTNode imp = (ASTNode) output.getStaticStarImports().get(packageName);
                 configureAST(imp, importNode);
                 // end
@@ -488,17 +499,26 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     "imports like 'import foo.* as Bar' are not "+
                     "supported and should be caught by the grammar");
         } else {
+            // GRECLIPSE: start: make import node available later on
+            ImportNode imp;
+            // end
             String name = identifier(nameNode);
             if (isStatic) {
                 // import is like "import static foo.Bar.method"
                 // packageName is really class name in this case
                 ClassNode type = ClassHelper.make(packageName);
+                // GRECLIPSE: start
+                /*old{
                 configureAST(type, importNode);
                 addStaticImport(type, name, alias, annotations);
-                // GRECLIPSE: start: must configure sloc for import node
-                // new
-                ASTNode imp = (ASTNode) output.getStaticImports().get(alias == null ? name : alias);
+                }new*/
+                configureAST(type, packageNode);
+                addStaticImport(type, name, alias, annotations);
+                imp = output.getStaticImports().get(alias == null ? name : alias);
                 configureAST(imp, importNode);
+                ConstantExpression nameExpr = new ConstantExpression(name);
+                configureAST(nameExpr, nameNode);
+                imp.setFieldNameExpr(nameExpr);
                 // end
             } else {
                 // import is like "import foo.Bar"
@@ -512,10 +532,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // end
                 addImport(type, name, alias, annotations);
                 // GRECLIPSE: start: be more precise about the sloc for the import node
-                ImportNode imp = output.getImport(alias == null ? name : alias);
+                imp = output.getImport(alias == null ? name : alias);
                 configureAST(imp, importNode);
                 // end
             }
+            // GRECLIPSE: start: configure alias ast
+            if (alias != null) {
+                ConstantExpression aliasExpr = new ConstantExpression(alias);
+                configureAST(aliasExpr, aliasNode);
+                imp.setAliasExpr(aliasExpr);
+            }
+            // end
         }
     }
 

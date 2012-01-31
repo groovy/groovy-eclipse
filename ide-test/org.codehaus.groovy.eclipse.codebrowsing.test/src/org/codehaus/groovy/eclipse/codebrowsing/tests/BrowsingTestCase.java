@@ -257,7 +257,7 @@ public abstract class BrowsingTestCase extends BuilderTests {
         IPath root = projectPath.append("src");
         env.addGroovyClass(root, "", name, contents);
         GroovyCompilationUnit unit = getGroovyCompilationUnit(root, name + ".groovy");
-        assertTrue("Hello groovy unit should exist", unit.exists());
+        assertTrue("groovy unit should exist", unit.exists());
         return unit;
     }
 

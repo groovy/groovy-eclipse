@@ -457,6 +457,51 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len, start6, len);
     }
     
+    public void testStaticImports1() throws Exception {
+        createUnit("p", "Other", "package p\nclass Other {\n  static int FOO\n static boolean BAR() { } }");
+        String contents = 
+                "import static p.Other.FOO\n" +
+                "FOO\n" +
+                "p.Other.FOO";
+        int start = contents.indexOf("FOO");
+        int len = "FOO".length();
+        int start1 = start;
+        int start2 = contents.indexOf("FOO", start1 + 1);
+        int start3 = contents.indexOf("FOO", start2 + 1);
+        doTest(contents, start, len, start1, len, start2, len, start3, len);        
+    }
+    
+    public void testStaticImports2() throws Exception {
+        createUnit("p", "Other", "package p\nclass Other {\n  static int FOO\n static boolean BAR() { } }");
+        String contents = 
+                "import static p.Other.BAR\n" +
+                        "BAR\n" +
+                        "p.Other.BAR";
+        int start = contents.indexOf("BAR");
+        int len = "BAR".length();
+        int start1 = start;
+        int start2 = contents.indexOf("BAR", start1 + 1);
+        int start3 = contents.indexOf("BAR", start2 + 1);
+        doTest(contents, start, len, start1, len, start2, len, start3, len);        
+    }
+    
+    public void testStaticImports3() throws Exception {
+        createUnit("p", "Other", "package p\nclass Other {\n  static int FOO\n static boolean BAR() { } }");
+        String contents = 
+                "import static p.Other.BAR\n" +
+                "import p.Other\n" +
+                "Other\n" +
+                "p.Other.BAR";
+        int start = contents.indexOf("p.Other");
+        int len1 = "p.Other".length();
+        int len = "Other".length();
+        int start1 = start;
+        int start2 = contents.indexOf("Other", start1 + len1);
+        int start3 = contents.indexOf("Other", start2 + 1);
+        int start4 = contents.indexOf("p.Other", start3 + 1);
+        doTest(contents, start, len1, start1, len1, start2, len, start3, len, start4, len1);
+    }
+    
     // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments
     public void _testDefaultParameters1a() throws Exception {
         String contents = 
