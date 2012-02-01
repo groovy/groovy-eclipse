@@ -9720,16 +9720,16 @@ public class GroovySimpleTest extends AbstractRegressionTest {
                 "A.groovy", 
                 "import static foo.Bar." 
         },
-        "----------\n" + 
+		"----------\n" + 
 		"1. ERROR in A.groovy (at line 1)\n" + 
 		"	import static foo.Bar.\n" + 
-		"	 ^\n" + 
-		"Groovy:unable to resolve class foo.Bar\n" + 
+		"	               ^\n" + 
+		"Groovy:Invalid import  @ line 1, column 15.\n" + 
 		"----------\n" + 
 		"2. ERROR in A.groovy (at line 1)\n" + 
 		"	import static foo.Bar.\n" + 
 		"	               ^\n" + 
-		"Groovy:Invalid import  @ line 1, column 15.\n" + 
+		"Groovy:unable to resolve class foo.Bar\n" + 
 		"----------\n");
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);

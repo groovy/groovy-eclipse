@@ -333,7 +333,7 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         expectingNoProblems();
         GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Child.groovy");
         unit.becomeWorkingCopy(null);
-        IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf("p"), "sql".length());
+        IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf("p"), "p".length());
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found type 'Parent'", "Parent", elt[0].getParent().getElementName());
     }
@@ -350,7 +350,7 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         expectingNoProblems();
         GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Child.groovy");
         unit.becomeWorkingCopy(null);
-        IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf("p"), "sql".length());
+        IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf("p"), "p".length());
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found type 'Parent'", "Parent", elt[0].getParent().getElementName());
     }
