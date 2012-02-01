@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!ELEMENT compiler (error*,command_line?,options?,classpaths?,error*,warning*,sources*,extra_problems?,stats?,exception*)>
+<!ELEMENT command_line (argument*)>
+<!ELEMENT options (option*)>
+<!ELEMENT classpaths (classpath+)>
+<!ELEMENT error (#PCDATA)>
+<!ELEMENT warning (#PCDATA)>
+<!ELEMENT sources (source+)>
+<!ELEMENT source (problems*,tasks*,(classfile | error)*)>
+<!ELEMENT problems (problem+)>
+<!ELEMENT problem (message,source_context,arguments?)>
+<!ELEMENT arguments (argument+)>
+<!ELEMENT tasks (task+)>
+<!ELEMENT task (message, source_context)>
+<!ELEMENT stats (time?,number_of_lines?,problem_summary?,number_of_classfiles?)>
+<!ELEMENT argument (#PCDATA)>
+<!ELEMENT option (#PCDATA)>
+<!ELEMENT classpath (#PCDATA)>
+<!ELEMENT message (#PCDATA)>
+<!ELEMENT number_of_lines (#PCDATA)>
+<!ELEMENT time (#PCDATA)>
+<!ELEMENT number_of_classfiles (#PCDATA)>
+<!ELEMENT classfile (#PCDATA)>
+<!ELEMENT source_context (#PCDATA)>
+<!ELEMENT problem_summary (#PCDATA)>
+<!ELEMENT exception (#PCDATA)>
+<!ELEMENT extra_problems (extra_problem+)>
+<!ELEMENT extra_problem (message,source_context)>
+<!ATTLIST argument value CDATA #REQUIRED>
+<!ATTLIST option key   CDATA #REQUIRED
+				 value CDATA #REQUIRED
+>
+<!ATTLIST classpath path CDATA #REQUIRED
+                    id   CDATA #REQUIRED
+>
+<!ATTLIST source path    CDATA #REQUIRED
+                 output  CDATA #IMPLIED
+                 package CDATA #IMPLIED>
+<!ATTLIST problems problems CDATA #REQUIRED
+				   errors   CDATA #REQUIRED
+				   warnings CDATA #REQUIRED
+>
+<!ATTLIST tasks tasks CDATA #REQUIRED>
+<!ATTLIST problem charEnd    CDATA #REQUIRED
+				  charStart  CDATA #REQUIRED
+				  severity   CDATA #REQUIRED
+				  line       CDATA #REQUIRED
+				  id         CDATA #REQUIRED
+				  problemID  CDATA #IMPLIED
+				  optionKey  CDATA #IMPLIED
+				  categoryID CDATA #IMPLIED
+>
+<!ATTLIST extra_problem charEnd   CDATA #REQUIRED
+				        charStart CDATA #REQUIRED
+				        severity  CDATA #REQUIRED
+				        line      CDATA #REQUIRED
+>
+<!ATTLIST extra_problems problems CDATA #REQUIRED
+>
+<!ATTLIST message value CDATA #REQUIRED>
+<!ATTLIST source_context value       CDATA #REQUIRED
+                         sourceStart CDATA #REQUIRED
+                         sourceEnd   CDATA #REQUIRED
+>
+<!ATTLIST task charEnd    CDATA #REQUIRED
+			   charStart  CDATA #REQUIRED
+			   line       CDATA #REQUIRED
+			   optionKey  CDATA #IMPLIED
+>
+<!ATTLIST classfile path CDATA #REQUIRED>
+<!ATTLIST error message CDATA #REQUIRED>
+<!ATTLIST warning message CDATA #REQUIRED>
+<!ATTLIST problem_summary problems CDATA #REQUIRED
+                          errors   CDATA #REQUIRED
+                          warnings CDATA #REQUIRED
+                          tasks    CDATA #REQUIRED
+>
+<!ATTLIST number_of_classfiles value CDATA #REQUIRED>
+<!ATTLIST time value CDATA #REQUIRED>
+<!ATTLIST number_of_lines value CDATA #REQUIRED>
+<!ATTLIST compiler name      CDATA #REQUIRED
+                  copyright CDATA #REQUIRED
+                  version   CDATA #REQUIRED
+>
+<!ATTLIST exception class CDATA #REQUIRED
+			        message CDATA #REQUIRED
+>

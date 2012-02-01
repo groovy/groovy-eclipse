@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?><component id="org.eclipse.jdt.core" version="2">
+    <resource path="model/org/eclipse/jdt/core/IJavaModelMarker.java" type="org.eclipse.jdt.core.IJavaModelMarker">
+        <filter id="1210056707">
+            <message_arguments>
+                <message_argument value="3.6.4"/>
+                <message_argument value="OUTPUT_OVERLAPPING_SOURCE"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="model/org/eclipse/jdt/core/IJavaModelStatusConstants.java" type="org.eclipse.jdt.core.IJavaModelStatusConstants">
+        <filter id="1210056707">
+            <message_arguments>
+                <message_argument value="3.6.4"/>
+                <message_argument value="OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="model/org/eclipse/jdt/core/JavaCore.java" type="org.eclipse.jdt.core.JavaCore">
+        <filter id="1142947843">
+            <message_arguments>
+                <message_argument value="3.6.4"/>
+                <message_argument value="CORE_OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>

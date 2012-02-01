@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Copyright (c) 2007, 2009 IBM Corporation and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+    
+    Contributors:
+        IBM Corporation - initial API and implementation
+ -->
+
+<!-- build script to create a plugin from ${plugin} -->
+<project name="${plugin}" default="export plug-in [_3.1.0]" basedir="..">
+
+<target name="export plug-in [_3.1.0]">
+	<antcall target="zz_internal_export">
+		<param name="jdt_core_version" value="3.1.0"/>
+	</antcall>
+</target>
+
+<target name="export plug-in [_3.0.0]">
+	<antcall target="zz_internal_export">
+		<param name="jdt_core_version" value="3.0.0"/>
+	</antcall>
+</target>
+
+<target name="export plug-in [_2.1.1]">
+	<antcall target="zz_internal_export">
+		<param name="jdt_core_version" value="2.1.1"/>
+	</antcall>
+</target>
+
+<target name="export plug-in [_2.1.0]">
+	<antcall target="zz_internal_export">
+		<param name="jdt_core_version" value="2.1.0"/>
+	</antcall>
+</target>
+
+<target name="export plug-in [_2.1.0] (directory structure)">
+	<antcall target="zz_internal_export_structure">
+		<param name="jdt_core_version" value="2.1.0"/>
+	</antcall>
+</target>
+
+<target name="export plug-in [_2.0.1]">
+	<antcall target="zz_internal_export">
+		<param name="jdt_core_version" value="2.0.1"/>
+	</antcall>
+</target>
+
+<target name="export plug-in [_2.0.0]">
+	<antcall target="zz_internal_export">
+		<param name="jdt_core_version" value="2.0.0"/>
+	</antcall>
+</target>
+
+<target name="export plug-in [_1.9.0]">
+	<antcall target="zz_internal_export">
+		<param name="jdt_core_version" value="1.9.0"/>
+	</antcall>
+</target>
+
+<target name="zz_internal_export">
+
+	<tstamp/>
+	<property name="export-dir" value="../../plugin-export" />
+	<property name="plugin" value="org.eclipse.jdt.core" />
+	<property name="plugin-dir" value="${export-dir}/${plugin}_${jdt_core_version}"/>
+
+	<echo message="TARGET: ${export-dir}" />
+	<mkdir dir="${export-dir}" />
+	<delete dir="${plugin-dir}" />
+	<mkdir dir="${plugin-dir}" />
+
+	<echo message="UPDATE jdtcore.jar" />
+	<jar 
+		jarfile="${plugin-dir}/jdtcore.jar"
+		basedir="bin"
+		manifest="META-INF/MANIFEST.MF"/>
+		
+	<echo message="UPDATE jdtCompilerAdapter.jar" />
+	<jar 
+		jarfile="${plugin-dir}/jdtCompilerAdapter.jar"
+		basedir="antbin"/>
+
+	<echo message="UPDATE plugin.xml" />
+	<copy file="plugin.xml" todir="${plugin-dir}" />
+	<echo message="UPDATE plugin.properties" />
+	<copy file="plugin.properties" todir="${plugin-dir}" />
+
+	<echo message="UPDATE .options" />
+	<copy file=".options" todir="${plugin-dir}" />
+
+	<echo message="UPDATE about.html" />
+	<copy file="about.html" todir="${plugin-dir}" />
+
+	<echo message="UPDATE jdtcoresrc.zip" />
+	<zip zipfile="${plugin-dir}/jdtcoresrc.zip">
+	    <fileset dir="batch" />
+	    <fileset dir="codeassist" />
+	    <fileset dir="compiler" />
+	    <fileset dir="dom" />
+	    <fileset dir="eval" />
+	    <fileset dir="formatter" />
+	    <fileset dir="model" />
+	    <fileset dir="search" />
+	</zip>		
+
+	<echo message="UPDATE jdtCompilerAdaptersrc.zip" />
+	<zip zipfile="${plugin-dir}/jdtCompilerAdaptersrc.zip">
+		<fileset dir="antadapter" />
+	</zip>	    
+
+	<echo message="UPDATE ${export-dir}/../${plugin}_${jdt_core_version}.zip" />
+	<zip zipfile="${export-dir}/../${plugin}_${jdt_core_version}.zip"
+	    basedir="${export-dir}" 
+	    includes="${plugin}_${jdt_core_version}/**"	/>		
+</target>
+
+<target name="zz_internal_export_structure">
+
+	<tstamp/>
+	<property name="export-dir" value="../../plugin-export" />
+	<property name="plugin" value="org.eclipse.jdt.core" />
+	<property name="bin_dest" value="${export-dir}/eclipse/plugins/${plugin}_${jdt_core_version}"/>
+	<property name="src_dest" value="${export-dir}/eclipse/plugins/org.eclipse.jdt.source_${jdt_core_version}/src/${plugin}_${jdt_core_version}"/>
+
+	<echo message="TARGET: ${export-dir}" />
+	<mkdir dir="${export-dir}" />
+	<delete dir="${bin_dest}" />
+	<delete dir="${src_dest}" />
+	<mkdir dir="${bin_dest}" />
+	<mkdir dir="${src_dest}" />
+
+	<echo message="UPDATE jdtcore.jar" />
+	<jar 
+		jarfile="${bin_dest}/jdtcore.jar"
+		basedir="bin" 
+		excludes="**/JDTCompilerAdapter.class,**/antadapter/*"/>
+		
+	<echo message="UPDATE jdtCompilerAdapter.jar" />
+	<jar 
+		jarfile="${bin_dest}/jdtCompilerAdapter.jar"
+		basedir="bin" 
+		includes="**/JDTCompilerAdapter.class,**/antadapter/*"/>
+
+	<echo message="UPDATE plugin.xml" />
+	<copy file="plugin.xml" todir="${bin_dest}" />
+	<echo message="UPDATE plugin.properties" />
+	<copy file="plugin.properties" todir="${bin_dest}" />
+
+	<echo message="UPDATE .options" />
+	<copy file=".options" todir="${bin_dest}" />
+
+	<echo message="UPDATE about.html" />
+	<copy file="about.html" todir="${bin_dest}" />
+
+	<echo message="UPDATE jdtcoresrc.zip" />
+	<zip zipfile="${src_dest}/jdtcoresrc.zip">
+	    <fileset dir="batch" />
+	    <fileset dir="codeassist" />
+	    <fileset dir="compiler" />
+	    <fileset dir="dom" />
+	    <fileset dir="eval" />
+	    <fileset dir="formatter" />
+	    <fileset dir="model" />
+	    <fileset dir="search" />
+	</zip>		
+</target>
+
+</project>
