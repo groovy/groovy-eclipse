@@ -33,6 +33,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.fragments.MethodCallFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.PropertyExpressionFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.SimpleExpressionASTFragment;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.core.JavaCore;
 
 /**
  * Tests to see that ASTFragments are created correctly
@@ -42,6 +43,11 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
  */
 public class ASTFragmentTests extends BrowsingTestCase {
 
+    @Override
+    protected void setUp() throws Exception {
+        System.out.println(JavaCore.getWorkingCopies(null));
+        super.setUp();
+    }
     private class TestFragmentVisitor extends FragmentVisitor {
         private Stack<ASTFragmentKind> expectedKinds;
 
@@ -212,6 +218,7 @@ public class ASTFragmentTests extends BrowsingTestCase {
     }
 
     public void testASTSubFragment1b() throws Exception {
+        System.out.println(JavaCore.getWorkingCopies(null));
         IASTFragment first = createFragmentFromText("a.b.c");
         String contents = "z.a.b.c.d";
         IASTFragment second = createFragmentFromText(contents, 2, contents.indexOf(".d"));
@@ -438,7 +445,9 @@ public class ASTFragmentTests extends BrowsingTestCase {
                 .get(0);
         Expression expr = statement instanceof ReturnStatement ? ((ReturnStatement) statement).getExpression()
                 : ((ExpressionStatement) statement).getExpression();
-        return new ASTFragmentFactory().createFragment(expr);
+        IASTFragment fragment = new ASTFragmentFactory().createFragment(expr);
+        unit.discardWorkingCopy();
+        return fragment;
     }
 
     private IASTFragment createFragmentFromText(String contents, int start, int end) throws Exception {

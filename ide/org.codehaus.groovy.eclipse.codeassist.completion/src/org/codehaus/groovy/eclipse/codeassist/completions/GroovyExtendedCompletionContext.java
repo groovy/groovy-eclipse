@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.jdt.groovy.internal.SimplifiedExtendedCompletionContext;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
@@ -36,7 +37,6 @@ import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
-import org.eclipse.jdt.internal.codeassist.InternalExtendedCompletionContext;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.SourceField;
 
@@ -45,7 +45,7 @@ import org.eclipse.jdt.internal.core.SourceField;
  * @author andrew
  * @created May 3, 2011
  */
-public class GroovyExtendedCompletionContext extends InternalExtendedCompletionContext {
+public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletionContext {
 
     /**
      *
@@ -93,8 +93,6 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
     private final Map<String, IJavaElement[]> visibleElements;
 
     public GroovyExtendedCompletionContext(ContentAssistContext context, VariableScope currentScope) {
-        // we don't use any of the code in the super class
-        super(null, null, null, null, null, null, null, null);
         this.context = context;
         this.currentScope = currentScope;
         this.visibleElements = new HashMap<String, IJavaElement[]>();
