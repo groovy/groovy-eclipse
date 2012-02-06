@@ -89,4 +89,4 @@ target.eclipse.zip=/opt/eclipse/src/eclipse-SDK-4.2M5-linux-gtk-x86_64.tar.gz
 orig.jdt.feature.version.range=[3.8.0.v20111130-1318-8-8lFpEFNOfwRc2R3LVOg_u9B15B,3.8.0.v20111130-1318-8-8lFpEFNOfwRc2R3LVOg_u9B15B]
 new.jdt.feature.version.range=[3.8.0,3.8.3)
 
-eclipse.update.site=http://download.eclipse.org/eclipse/updates/4.2-I-builds
+eclipse.update.site=http://download.eclipse.org/releases/juno/
