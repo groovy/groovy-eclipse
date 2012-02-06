@@ -14,7 +14,7 @@
 # limitations under the License.
 ###############################################################################
 
-workDir=${user.dir}/../GRECLIPSE-V2E37-JOB1
+workDir=${user.dir}/../GRECLIPSE-V2E42-JOB1
 
 # The location of this project. It provides the base directory for the build scripts.
 buildHome=${workDir}/ide/org.codehaus.groovy.eclipse.pluginbuilder
@@ -74,19 +74,19 @@ eclipseDir=/opt/eclipse/eclipse-rcp-ganymede-SR2-linux-gtk-x86_64
 # specify the location of the JDT sources
 # on the build server, this is in a different location, but locally, this should be the 
 # same place as the other sources.
-workspaceDirJdtPatch=${workDir}/../GRECLIPSE-JDT37-JOB1
+workspaceDirJdtPatch=${workDir}/../GRECLIPSE-JDT42-JOB1
 
 # Specify publish location
-publishLocation=/opt/ci.repository.codehaus.org/greclipse/snapshot/e37
+publishLocation=/opt/ci.repository.codehaus.org/greclipse/snapshot/e42
 
 # suffix for the build version
-buildTypePresentation=e37
+buildTypePresentation=e42
 
 # the location of the eclipse tarball to build against
-target.eclipse.zip=/opt/eclipse/src/eclipse-SDK-3.7RC4-linux-gtk-x86_64.tar.gz
+target.eclipse.zip=/opt/eclipse/src/eclipse-SDK-4.2M5-linux-gtk-x86_64.tar.gz
 
 # the original and new target versions of the JDT feature.  This change gets reflected in the content.xml
-orig.jdt.feature.version.range=[3.7.0.v20110121-7z8fFb7FMTfESMtR15KlAcZ9H155,3.7.0.v20110121-7z8fFb7FMTfESMtR15KlAcZ9H155]
-new.jdt.feature.version.range=[3.7.0,3.7.3)
+orig.jdt.feature.version.range=[3.8.0.v20111130-1318-8-8lFpEFNOfwRc2R3LVOg_u9B15B,3.8.0.v20111130-1318-8-8lFpEFNOfwRc2R3LVOg_u9B15B]
+new.jdt.feature.version.range=[3.8.0,3.8.3)
 
-eclipse.update.site=http://download.eclipse.org/releases/indigo
+eclipse.update.site=http://download.eclipse.org/eclipse/updates/4.2-I-builds
