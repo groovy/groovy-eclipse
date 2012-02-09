@@ -67,6 +67,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
         store.setDefault(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
 
+        // Dollar slashy string highlighting
+        store.setDefault(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_SLASHY_STRINGS, true);
+
         // JUnit Monospace font
         store.setDefault(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT, false);
 
@@ -125,6 +128,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
         store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
         store.setValue(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX, false);
+
+        // Dollar slashy string highlighting
+        store.setValue(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_SLASHY_STRINGS, true);
 
         // JUnit Monospace font
         store.setValue(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT, false);

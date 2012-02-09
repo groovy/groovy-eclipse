@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,7 +50,7 @@ import org.eclipse.ui.preferences.IWorkbenchPreferenceContainer;
  * preferences can be accessed directly via the preference store.
  */
 public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
-		implements IWorkbenchPreferencePage {
+implements IWorkbenchPreferencePage {
 
     class SpacerFieldEditor extends FieldEditor {
 
@@ -93,36 +93,36 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
 
     }
 
-	public GroovyEditorPreferencesPage() {
+    public GroovyEditorPreferencesPage() {
         super(GRID);
-		setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
-	}
+        setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
+    }
 
-	/**
-	 * Creates the field editors. Field editors are abstractions of the common
-	 * GUI blocks needed to manipulate various types of preferences. Each field
-	 * editor knows how to save and restore itself.
-	 */
-	@Override
+    /**
+     * Creates the field editors. Field editors are abstractions of the common
+     * GUI blocks needed to manipulate various types of preferences. Each field
+     * editor knows how to save and restore itself.
+     */
+    @Override
     public void createFieldEditors() {
 
-		// GJDK Color Prefs
+        // GJDK Color Prefs
         final ColorFieldEditor gjdkEditor = createColorEditor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR,
                 "GroovyEditorPreferencesPage.GJDK_method_color");
 
-		// Groovy Keyword Color Prefs
+        // Groovy Keyword Color Prefs
         final ColorFieldEditor gKeywordEditor = createColorEditor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR,
                 "GroovyEditorPreferencesPage.Groovy_keyword_color");
 
-		// Java Types Comment Color Prefs
+        // Java Types Comment Color Prefs
         final ColorFieldEditor javaTypesEditor = createColorEditor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR,
                 "GroovyEditorPreferencesPage.Java_types_color");
 
-		// Java Keyword Color Prefs
+        // Java Keyword Color Prefs
         final ColorFieldEditor javaKeywordEditor = createColorEditor(
                 PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR, "GroovyEditorPreferencesPage.Java_keyword_color");
 
-		// String Coloring
+        // String Coloring
         final ColorFieldEditor stringEditor = createColorEditor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR,
                 "GroovyEditorPreferencesPage.String_color");
 
@@ -162,6 +162,8 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
         addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING,
                 "Enable semantic highlighting (underline statically unknown references,\n"
                         + "highlight fields, methods, statics, and deprecated elements", c));
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_SLASHY_STRINGS,
+                "Highlight dollar slashy Strings: e.g., $/ ... /$", c));
 
         PreferenceLinkArea area = new PreferenceLinkArea(
                 c,
@@ -170,7 +172,7 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
                 " \n\n"
                         + "Semantic highlighting colors for fields and methods are inherited from Java and can be edited here: "
                         + "\n<a>Java -> Editor -> Syntax Coloring</a> page. And go to the <i>Java</i> section.",
-                (IWorkbenchPreferenceContainer) getContainer(), null);
+                        (IWorkbenchPreferenceContainer) getContainer(), null);
         area.getControl().setLayoutData(gd);
 
         // Change to Java Defaults
@@ -178,20 +180,20 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
         Button javaColorButton = new Button(parent, SWT.BUTTON1);
 
         javaColorButton.setText(Messages.getString("GroovyEditorPreferencesPage.Copy_Java_Color_Preferences"));
-		javaColorButton.addSelectionListener(new SelectionListener() {
-			public void widgetSelected(SelectionEvent arg0) {
+        javaColorButton.addSelectionListener(new SelectionListener() {
+            public void widgetSelected(SelectionEvent arg0) {
 
-				IPreferenceStore store = JavaPlugin.getDefault()
-						.getPreferenceStore();
-				RGB rgb = PreferenceConverter.getColor(store,
-				        IJavaColorConstants.JAVA_KEYWORD);
-				gjdkEditor.getColorSelector().setColorValue(rgb);
-				gKeywordEditor.getColorSelector().setColorValue(rgb);
-				javaTypesEditor.getColorSelector().setColorValue(rgb);
-				javaKeywordEditor.getColorSelector().setColorValue(rgb);
+                IPreferenceStore store = JavaPlugin.getDefault()
+                        .getPreferenceStore();
+                RGB rgb = PreferenceConverter.getColor(store,
+                        IJavaColorConstants.JAVA_KEYWORD);
+                gjdkEditor.getColorSelector().setColorValue(rgb);
+                gKeywordEditor.getColorSelector().setColorValue(rgb);
+                javaTypesEditor.getColorSelector().setColorValue(rgb);
+                javaKeywordEditor.getColorSelector().setColorValue(rgb);
 
-				rgb = PreferenceConverter.getColor(store,
-						IJavaColorConstants.JAVA_STRING);
+                rgb = PreferenceConverter.getColor(store,
+                        IJavaColorConstants.JAVA_STRING);
                 stringEditor.getColorSelector().setColorValue(rgb);
 
                 rgb = PreferenceConverter.getColor(store,
@@ -214,13 +216,13 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
                 numberEditor.getColorSelector().setColorValue(rgb);
                 defaultEditor.getColorSelector().setColorValue(rgb);
 
-			}
+            }
 
-			public void widgetDefaultSelected(SelectionEvent arg0) {
-			}
-		});
+            public void widgetDefaultSelected(SelectionEvent arg0) {
+            }
+        });
 
-	}
+    }
 
     private ColorFieldEditor createColorEditor(String preference, String nls) {
         Composite parent = getFieldEditorParent();
@@ -232,27 +234,27 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage
         return colorFieldEditor;
     }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
-	 */
-	public void init(IWorkbench workbench) {
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.eclipse.ui.IWorkbenchPreferencePage#init(org.eclipse.ui.IWorkbench)
+     */
+    public void init(IWorkbench workbench) {
+    }
 
-	@Override
+    @Override
     protected String getPageId() {
-		return "org.codehaus.groovy.eclipse.preferences.editor";
-	}
+        return "org.codehaus.groovy.eclipse.preferences.editor";
+    }
 
-	@Override
-	public boolean performOk() {
-	    boolean success = super.performOk();
-	    if (success) {
-    	    GroovyColorManager colorManager = GroovyPlugin.getDefault().getTextTools().getColorManager();
+    @Override
+    public boolean performOk() {
+        boolean success = super.performOk();
+        if (success) {
+            GroovyColorManager colorManager = GroovyPlugin.getDefault().getTextTools().getColorManager();
             colorManager.uninitialize();
             colorManager.initialize();
-	    }
-	    return success;
-	}
+        }
+        return success;
+    }
 }

@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,7 +46,7 @@ import org.eclipse.swt.graphics.RGB;
 
 public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
 
-	public final static String GROOVY_MULTILINE_STRINGS= "__groovy_multiline_string"; //$NON-NLS-1$
+    public final static String GROOVY_MULTILINE_STRINGS= "__groovy_multiline_string"; //$NON-NLS-1$
     /**
      * Array with legal content types.
      * @since 3.0
@@ -60,58 +60,58 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
         GROOVY_MULTILINE_STRINGS
     };
 
-	/**
-	 * Detector for empty comments.
-	 */
-	static class EmptyCommentDetector implements IWordDetector {
+    /**
+     * Detector for empty comments.
+     */
+    static class EmptyCommentDetector implements IWordDetector {
 
-		public boolean isWordStart(char c) {
-			return (c == '/');
-		}
+        public boolean isWordStart(char c) {
+            return (c == '/');
+        }
 
-		public boolean isWordPart(char c) {
-			return (c == '*' || c == '/');
-		}
-	}
+        public boolean isWordPart(char c) {
+            return (c == '*' || c == '/');
+        }
+    }
 
-	static class WordPredicateRule extends WordRule implements IPredicateRule {
+    static class WordPredicateRule extends WordRule implements IPredicateRule {
 
-		private final IToken fSuccessToken;
+        private final IToken fSuccessToken;
 
-		public WordPredicateRule(IToken successToken) {
-			super(new EmptyCommentDetector());
-			fSuccessToken= successToken;
-			addWord("/**/", fSuccessToken); //$NON-NLS-1$
-		}
+        public WordPredicateRule(IToken successToken) {
+            super(new EmptyCommentDetector());
+            fSuccessToken= successToken;
+            addWord("/**/", fSuccessToken); //$NON-NLS-1$
+        }
 
-		/*
-		 * @see org.eclipse.jface.text.rules.IPredicateRule#evaluate(ICharacterScanner, boolean)
-		 */
-		public IToken evaluate(ICharacterScanner scanner, boolean resume) {
-			return super.evaluate(scanner);
-		}
+        /*
+         * @see org.eclipse.jface.text.rules.IPredicateRule#evaluate(ICharacterScanner, boolean)
+         */
+        public IToken evaluate(ICharacterScanner scanner, boolean resume) {
+            return super.evaluate(scanner);
+        }
 
-		/*
-		 * @see org.eclipse.jface.text.rules.IPredicateRule#getSuccessToken()
-		 */
-		public IToken getSuccessToken() {
-			return fSuccessToken;
-		}
-	}
+        /*
+         * @see org.eclipse.jface.text.rules.IPredicateRule#getSuccessToken()
+         */
+        public IToken getSuccessToken() {
+            return fSuccessToken;
+        }
+    }
 
-	/**
-	 * Creates the partitioner and sets up the appropriate rules.
-	 */
-	public GroovyPartitionScanner() {
-		super();
+    /**
+     * Creates the partitioner and sets up the appropriate rules.
+     */
+    public GroovyPartitionScanner() {
+        super();
 
-		List<IRule> rules = createRules(false);
+        List<IRule> rules = createRules(false);
 
 
-		IPredicateRule[] result= new IPredicateRule[rules.size()];
-		rules.toArray(result);
-		setPredicateRules(result);
-	}
+        IPredicateRule[] result= new IPredicateRule[rules.size()];
+        rules.toArray(result);
+        setPredicateRules(result);
+    }
 
     public static List<IRule> createRules(boolean withColor) {
         IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
@@ -134,34 +134,37 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
         }
 
         IToken comment= new Token(objComment);
-		IToken mString = new Token(objmString);
+        IToken mString = new Token(objmString);
         IToken sString = new Token(objsString);
         IToken sComment= new Token(objsComment);
         IToken jdoc = new Token(objdComment);
 
-		List<IRule> rules= new ArrayList<IRule>();
+        List<IRule> rules= new ArrayList<IRule>();
 
-		// Add rule for single line comments.
+        // Add rule for single line comments.
         rules.add(new EndOfLineRule("//", sComment));
 
 
-		// Add rule for strings and character constants.
+        // Add rule for strings and character constants.
         rules.add(new MultiLineRule("'''", "'''", mString));
         rules.add(new MultiLineRule("\"\"\"", "\"\"\"", mString));
         // GRECLIPSE-1111 do not eagerly match these kinds of multiline strings
-        rules.add(new MultiLineRule("$/", "/$", mString, '\0', false));
         rules.add(new SingleLineRule("\"", "\"", sString, '\\'));
         rules.add(new SingleLineRule("'", "'", sString, '\\'));
 
+        // GRECLIPSE-1203 make dollar slashies optionally highlighted
+        if (store.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_SLASHY_STRINGS)) {
+            rules.add(new MultiLineRule("$/", "/$", mString, '\0', false));
+        }
 
-		// Add special case word rule.
-		rules.add(new WordPredicateRule(comment));
+        // Add special case word rule.
+        rules.add(new WordPredicateRule(comment));
 
         // Add rule for JavaDoc
         rules.add(new MultiLineRule("/**", "*/", jdoc, (char) 0, true)); //$NON-NLS-1$ //$NON-NLS-2$
 
-		// Add rules for multi-line comments
-		rules.add(new MultiLineRule("/*", "*/", comment, (char) 0, true)); //$NON-NLS-1$ //$NON-NLS-2$
+        // Add rules for multi-line comments
+        rules.add(new MultiLineRule("/*", "*/", comment, (char) 0, true)); //$NON-NLS-1$ //$NON-NLS-2$
 
         return rules;
     }

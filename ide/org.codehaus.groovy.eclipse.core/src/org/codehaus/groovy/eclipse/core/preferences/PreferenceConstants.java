@@ -48,6 +48,8 @@ public class PreferenceConstants {
 
 	public static final String GROOVY_EDITOR_DEFAULT_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".default.color";
 
+    public static final String GROOVY_EDITOR_HIGHLIGHT_SLASHY_STRINGS = GROOVY_EDITOR_HIGHLIGHT + ".slashy";
+
     public static final String GROOVY_EDITOR_BOLD_SUFFIX = "_bold";
 
     /**
