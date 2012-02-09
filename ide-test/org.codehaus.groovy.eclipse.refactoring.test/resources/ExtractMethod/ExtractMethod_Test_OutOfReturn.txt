@@ -20,7 +20,7 @@ def extract() {
 	}
 }
 
-def myMethod(it) {
+def myMethod(int it) {
 	println it
 }
 ###end

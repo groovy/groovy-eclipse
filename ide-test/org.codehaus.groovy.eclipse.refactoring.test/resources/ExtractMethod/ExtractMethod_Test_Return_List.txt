@@ -20,7 +20,7 @@ def sum = 0
 sum = meth(sum, l)
 print sum
 
-private List meth(List sum, List l) {
+private int meth(int sum, List l) {
     sum = l[1]
     return sum
 }

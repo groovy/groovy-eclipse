@@ -109,18 +109,17 @@ public class ASTVariableScanner {
 	}
 
 	private class DefaultVisit extends ASTVisitorDecorator<ASTVariableScanner> {
-		public DefaultVisit(ASTVariableScanner container) {
+        public DefaultVisit(ASTVariableScanner container) {
 			super(container);
 		}
 
 		@Override
 		public void visitVariableExpression(VariableExpression expression) {
 			super.visitVariableExpression(expression);
+            Variable var = expression.getAccessedVariable();
             if (expression.getEnd() < 1) {
                 return;
-            }
-			Variable var = expression.getAccessedVariable();
-            if (var != null && !(var instanceof FieldNode)) {
+            } else if (var != null && !(var instanceof FieldNode)) {
                 if (!declaredVariables.contains(var)) {
                     usedVariables.add(var);
 				}
@@ -165,9 +164,11 @@ public class ASTVariableScanner {
 
 		@Override
 		public void visitClosureExpression(ClosureExpression expression) {
-			for (Parameter p : expression.getParameters()) {
-                declaredInblockVariables.add(p);
-			}
+            if (expression.getParameters().length > 0) {
+                for (Parameter p : expression.getParameters()) {
+                    declaredInblockVariables.add(p);
+                }
+            }
 			expression.getCode().visit(new ClosureVisit(container));
 		}
 
@@ -231,11 +232,7 @@ public class ASTVariableScanner {
                 return;
             }
 			Variable var = expression.getAccessedVariable();
-            if (var != null && !(var instanceof FieldNode)
-            // sometimes the 'it' variable has already been stored, but
-            // sometimes it hasn't
-            // so, must explicitly check for it.
-                    && !var.getName().equals("it")) {
+            if (var != null && !(var instanceof FieldNode)) {
                 if (!declaredInblockVariables.contains(var) && !declaredVariables.contains(var)) {
                     usedVariables.add(var);
 				}
@@ -313,7 +310,8 @@ public class ASTVariableScanner {
 		@Override
 		public void visitVariableExpression(VariableExpression expression) {
 			Variable var = expression.getAccessedVariable();
-			if (var instanceof Parameter && var.isClosureSharedVariable()) {
+            // implicit closure variable
+            if (var instanceof Parameter && ((Parameter) var).getEnd() <= 0 && var.getName().equals("it")) {
                 declaredInblockVariables.add(var);
 			}
 			super.visitVariableExpression(expression);

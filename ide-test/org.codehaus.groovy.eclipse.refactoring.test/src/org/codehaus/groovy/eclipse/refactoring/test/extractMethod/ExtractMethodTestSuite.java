@@ -31,6 +31,7 @@ public class ExtractMethodTestSuite extends BaseTestSuite {
         TestSuite ts = new TestSuite("Extract Method Suite");
         List<File> files = getFileList("/ExtractMethod", "ExtractMethod_Test_");
         for (File file : files) {
+//            if (file.getName().contains("Closure_with_implicit"))
             ts.addTest(new ExtractMethodTestCase(file.getName(),file));
         }
         return ts;
