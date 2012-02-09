@@ -51,7 +51,8 @@ public class DSLContentAssistTests extends CompletionTestCase {
         super.setUp();
         createGenericProject();
         IProject project = getDefaultProject();
-        GroovyRuntime.addLibraryToClasspath(JavaCore.create(project), GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID);
+        AbstractDSLInferencingTest.refreshExternalFoldersProject();
+        GroovyRuntime.addLibraryToClasspath(JavaCore.create(project), GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, false);
         env.fullBuild();
         new RefreshDSLDJob(project).run(null);
         GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project);

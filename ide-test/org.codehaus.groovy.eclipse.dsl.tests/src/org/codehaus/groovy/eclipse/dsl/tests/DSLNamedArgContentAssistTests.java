@@ -41,7 +41,7 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         super.setUp();
         createGenericProject();
         IProject project = env.getProject("Project");
-        GroovyRuntime.addLibraryToClasspath(JavaCore.create(project), GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID);
+        GroovyRuntime.addLibraryToClasspath(JavaCore.create(project), GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, false);
         env.fullBuild();
         new RefreshDSLDJob(project).run(null);
         GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project);

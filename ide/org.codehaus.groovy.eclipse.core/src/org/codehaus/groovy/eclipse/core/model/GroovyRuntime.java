@@ -90,7 +90,7 @@ public class GroovyRuntime {
             // this breaks encapsulation, but it is the most logical place to
             // put it
             // add the DSLD classpath container
-            addLibraryToClasspath(javaProject, DSLD_CONTAINER_ID);
+            addLibraryToClasspath(javaProject, DSLD_CONTAINER_ID, true);
 
         } catch (final Exception e) {
             GroovyCore.logException("Failed to add groovy runtime support", e);
@@ -208,10 +208,11 @@ public class GroovyRuntime {
      *            The project to add add the classpath entry to.
      * @param libraryPath
      *            The path to add to the classpath.
+     * @param isExported TODO
      * @throws JavaModelException
      */
     public static void addLibraryToClasspath(final IJavaProject javaProject,
-            final IPath libraryPath) throws JavaModelException {
+            final IPath libraryPath, boolean isExported) throws JavaModelException {
 
         boolean alreadyExists = includesClasspathEntry(javaProject, libraryPath
                 .lastSegment());

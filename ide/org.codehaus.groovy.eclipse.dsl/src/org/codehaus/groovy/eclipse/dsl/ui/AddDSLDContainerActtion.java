@@ -58,4 +58,9 @@ public class AddDSLDContainerActtion extends AbstractAddClasspathContainerAction
         super.run(action);
         GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(targetProject.getProject());
     }
+
+    @Override
+    protected boolean exportClasspath() {
+        return false;
+    }
 }

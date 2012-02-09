@@ -39,7 +39,7 @@ public abstract class AbstractAddClasspathContainerAction implements IObjectActi
             if (GroovyRuntime.hasClasspathContainer(targetProject, getClasspathContainerPath())) {
                 GroovyRuntime.removeLibraryFromClasspath(targetProject, getClasspathContainerPath());
             } else {
-                GroovyRuntime.addLibraryToClasspath(targetProject, getClasspathContainerPath());
+                GroovyRuntime.addLibraryToClasspath(targetProject, getClasspathContainerPath(), exportClasspath());
             }
         } catch (final CoreException e) {
             GroovyCore.logException(errorMessage(), e);
@@ -87,6 +87,8 @@ public abstract class AbstractAddClasspathContainerAction implements IObjectActi
     }
 
     protected abstract IPath getClasspathContainerPath();
+
+    protected abstract boolean exportClasspath();
 
     protected abstract String errorMessage();
 

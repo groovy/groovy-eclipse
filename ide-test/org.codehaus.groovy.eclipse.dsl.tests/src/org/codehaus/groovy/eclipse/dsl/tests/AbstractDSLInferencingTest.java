@@ -31,8 +31,14 @@ import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+import org.eclipse.core.internal.resources.Folder;
+import org.eclipse.core.internal.resources.Workspace;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IStorage;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -76,7 +82,8 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         if (doRemoveClasspathContainer) {
             GroovyRuntime.removeClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, JavaCore.create(project));
         } else {
-            GroovyRuntime.addLibraryToClasspath(JavaCore.create(project), GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID);
+            refreshExternalFoldersProject();
+            GroovyRuntime.addLibraryToClasspath(JavaCore.create(project), GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, false);
             env.fullBuild();
             new RefreshDSLDJob(project).run(null);
         }
@@ -251,4 +258,26 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
     protected void assertUnknownDSLType(String contents, String name) {
         assertUnknownConfidence(contents, contents.indexOf(name), contents.indexOf(name) + name.length(), "Search", true);
     }
+    
+    /**
+     * Refreshes the external folders project.  It seems that the contents of linked folders are not being refreshed fast enough
+     * and we are getting {@link IllegalArgumentException}s because there is a resource that is aliased, but no longer exists
+     * @throws CoreException
+     */
+    protected static void refreshExternalFoldersProject() throws CoreException {
+        Workspace workspace = (Workspace) ResourcesPlugin.getWorkspace();
+        IProject externalProject = workspace.getRoot().getProject(".org.eclipse.jdt.core.external.folders");
+        if (externalProject.exists()) {
+            for (IResource member : externalProject.members()) {
+                if (member instanceof Folder) {
+                    Folder folder = (Folder) member;
+                    workspace.getAliasManager().updateAliases(folder, folder.getStore(), IResource.DEPTH_INFINITE, null);
+                    if (folder.exists()) {
+                        folder.refreshLocal(IResource.DEPTH_INFINITE, null);
+                    }
+                }
+            }
+        }
+    }
+
 }

@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,5 +43,10 @@ public class AddGroovyClasspathContainerAction extends AbstractAddClasspathConta
     @Override
     protected String removeText() {
         return "Remove Groovy libraries from classpath";
+    }
+
+    @Override
+    protected boolean exportClasspath() {
+        return false;
     }
 }

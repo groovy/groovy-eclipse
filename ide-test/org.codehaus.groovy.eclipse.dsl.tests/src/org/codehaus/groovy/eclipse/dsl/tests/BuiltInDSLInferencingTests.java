@@ -19,9 +19,7 @@ import junit.framework.TestSuite;
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
-import org.codehaus.groovy.eclipse.dsl.classpath.DSLDContainerInitializer;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IStorage;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
@@ -57,16 +55,6 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
         }
     }
 
-    private boolean containsGroovyDSLD() {
-        IStorage[] allContextKeys = GroovyDSLCoreActivator.getDefault().getContextStoreManager().getDSLDStore(project).getAllContextKeys();
-        for (IStorage storage : allContextKeys) {
-            if (storage.getName().equals("groovy.dsld")) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
     public void testSanity() throws Exception {
         IJavaProject javaProject = JavaCore.create(project);
         assertTrue("Should have DSL support classpath container", 

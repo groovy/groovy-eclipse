@@ -90,9 +90,6 @@ public class RefreshDSLDJob extends Job {
     
         public Set<IStorage> findFiles(IProgressMonitor monitor) {
             try {
-                project.refreshLocal(IResource.DEPTH_INFINITE, null);
-
-                
                 // first look for files in the project
                 project.accept(this);
 
@@ -122,29 +119,27 @@ public class RefreshDSLDJob extends Job {
                         // in 3.6 and earlier, it was not possible to refresh scripts in external folders 
                         // fixed in 3.7, consider removing when 3.6 is no longer supported.
                         IResource rootResource = root.getResource();
-                        // FIXADE Let's see if we can get away with just refreshing the project
-//                        if (rootResource == null && root instanceof ExternalPackageFragmentRoot) {
-//                            // external source roots return null for getResource, but do have a resource 
-//                            rootResource = ((ExternalPackageFragmentRoot) root).resource();
-//                        }
-//                        if (rootResource != null) {
-//                            try {
-////                                rootResource.refreshLocal(IResource.DEPTH_INFINITE, monitor);
-//                                project.refreshLocal(IResource.DEPTH_INFINITE, monitor);
-//                                root.close();
-//                                root.open(monitor);
-//                                if (monitor.isCanceled()) {
-//                                    throw new OperationCanceledException();
-//                                }
-//                                if (!root.exists() || !frag.exists()) {
-//                                    // must check a second time for existence because the close and re-opening of the root may 
-//                                    // have changed things
-//                                    continue;
-//                                }
-//                            } catch (CoreException e) {
-//                                GroovyDSLCoreActivator.logException(e);
-//                            }
-//                        }
+                        if (rootResource == null && root instanceof ExternalPackageFragmentRoot) {
+                            // external source roots return null for getResource, but do have a resource 
+                            rootResource = ((ExternalPackageFragmentRoot) root).resource();
+                        }
+                        if (rootResource != null) {
+                            try {
+                                rootResource.refreshLocal(IResource.DEPTH_INFINITE, monitor);
+                                root.close();
+                                root.open(monitor);
+                                if (monitor.isCanceled()) {
+                                    throw new OperationCanceledException();
+                                }
+                                if (!root.exists() || !frag.exists()) {
+                                    // must check a second time for existence because the close and re-opening of the root may 
+                                    // have changed things
+                                    continue;
+                                }
+                            } catch (CoreException e) {
+                                GroovyDSLCoreActivator.logException(e);
+                            }
+                        }
                         // FIXADE end workaround
                         
                         if (rootResource instanceof IFolder && ((IFolder) rootResource).getFolder("dsld").exists()) {
