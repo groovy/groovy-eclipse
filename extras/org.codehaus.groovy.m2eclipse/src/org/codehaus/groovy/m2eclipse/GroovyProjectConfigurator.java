@@ -53,7 +53,7 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
             // add dsl support if not already there
             IJavaProject javaProject = JavaCore.create(project);
             if (!GroovyRuntime.hasClasspathContainer(javaProject, GroovyRuntime.DSLD_CONTAINER_ID)) {
-                GroovyRuntime.addLibraryToClasspath(javaProject, GroovyRuntime.DSLD_CONTAINER_ID);
+                GroovyRuntime.addLibraryToClasspath(javaProject, GroovyRuntime.DSLD_CONTAINER_ID, false);
             }
         } else {
             GroovyRuntime.removeGroovyNature(project);
