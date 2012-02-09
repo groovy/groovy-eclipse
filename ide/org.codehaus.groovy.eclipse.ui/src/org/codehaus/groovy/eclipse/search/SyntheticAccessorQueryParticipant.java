@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.search;
 
 import org.codehaus.groovy.eclipse.core.search.SyntheticAccessorSearchRequestor;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaElement;
@@ -51,19 +52,31 @@ public class SyntheticAccessorQueryParticipant implements IQueryParticipant {
 
     class UISearchRequestor implements org.codehaus.groovy.eclipse.core.search.ISearchRequestor {
         private final ISearchRequestor requestor;
+        private final boolean targetIsGroovy;
 
-        public UISearchRequestor(ISearchRequestor requestor) {
+        public UISearchRequestor(ISearchRequestor requestor, boolean targetIsGroovy) {
             this.requestor = requestor;
+            this.targetIsGroovy = targetIsGroovy;
         }
 
+        /**
+         * Rules for when to match and when not to match.  See GRECLIPSE-1369
+         * 
+         * Target is:
+         *      Groovy property: match field and getter references in Java and Groovy.  Field reference will be error in Java</br>
+         *      Groovy getter: match field and getter references in Groovy.  Getter references only in Java</br>
+         *      Java field: match field and getter references in Groovy.  Field references only in Java</br>
+         *      Java method: match field and getter references in Groovy.  Getter references only in Java</br>
+         * 
+         * If Java target, then ignore extra references in Java
+         * If Groovy target, then ignore
+         */
         public void acceptMatch(SearchMatch match) {
             IJavaElement enclosingElement = (IJavaElement) match.getElement();
             if (enclosingElement != null) {
-                // don't ignore potential matches
-                // if (match.getAccuracy() == SearchMatch.A_INACCURATE) {
-                // return;
-                // }
-
+                if (!(enclosingElement.getOpenable() instanceof GroovyCompilationUnit) && !targetIsGroovy) {
+                    return;
+                }
                 boolean isWriteAccess = false;
                 boolean isReadAccess = false;
                 if (match instanceof FieldReferenceMatch) {
@@ -94,10 +107,10 @@ public class SyntheticAccessorQueryParticipant implements IQueryParticipant {
         private Match createJavaElementMatch(IJavaElement enclosingElement, int rule, int offset, int length, int accuracy,
                 boolean isReadAccess, boolean isWriteAccess, boolean insideDocComment, boolean isSuperInvocation) {
             return ReflectionUtils.executePrivateConstructor(JavaElementMatch.class, new Class<?>[] { Object.class,
-                    int.class,
-                    int.class, int.class, int.class, boolean.class, boolean.class, boolean.class, boolean.class }, new Object[] {
-                    enclosingElement, rule, offset, length, accuracy, isReadAccess, isWriteAccess, insideDocComment,
-                    isSuperInvocation });
+                int.class,
+                int.class, int.class, int.class, boolean.class, boolean.class, boolean.class, boolean.class }, new Object[] {
+                enclosingElement, rule, offset, length, accuracy, isReadAccess, isWriteAccess, insideDocComment,
+                isSuperInvocation });
         }
     }
 
@@ -107,9 +120,10 @@ public class SyntheticAccessorQueryParticipant implements IQueryParticipant {
             throws CoreException {
         if (querySpecification instanceof ElementQuerySpecification) {
             accessorRequestor = new SyntheticAccessorSearchRequestor();
-            accessorRequestor.findSyntheticMatches(((ElementQuerySpecification) querySpecification).getElement(),
+            IJavaElement element = ((ElementQuerySpecification) querySpecification).getElement();
+            accessorRequestor.findSyntheticMatches(element,
                     querySpecification.getLimitTo(), getSearchParticipants(), querySpecification.getScope(), new UISearchRequestor(
-                            requestor), monitor);
+                            requestor, element.getOpenable() instanceof GroovyCompilationUnit), monitor);
         }
     }
 

@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
@@ -199,6 +200,32 @@ public class SyntheticMemberSearchTests extends EclipseTestCase {
         assertNoMatch("run", "isExplicitIsser", contents, matches);
         assertMatch("run", "explicitIsser", contents, matches);
     }
+
+    // GRECLIPSE-1369
+    public void testSearchInJava5() throws Exception {
+        String contents =
+                "class AClass {\n" +
+                        "  int hhh;\n" +
+                        "  public int getHhh() {" +
+                        "    return hhh;" +
+                        "  }\n" +
+                        "  public void setHhh(int other) {" +
+                        "    this.hhh = other;\n" +
+                        "    this.getHhh();\n" +
+                        "    this.setHhh(0);\n" +
+                        "  }\n" +
+                        "}";
+        IType type = testProject.createUnit("", "AClass.java", contents).getType("AClass");
+        IField toSearch = type.getField("hhh");
+        SyntheticAccessorSearchRequestor synthRequestor = new SyntheticAccessorSearchRequestor();
+        TestSearchRequestor requestor = new TestSearchRequestor();
+        synthRequestor.findSyntheticMatches(toSearch, requestor, null);
+        List<SearchMatch> matches = requestor.matches;
+        // should not match the reference to the getter or the setter.
+        // the actual references are found by the real search engine
+        assertNumMatch(0, matches);
+    }
+
 
     private IJavaElement findSearchTarget(String name) throws JavaModelException {
         for (IJavaElement child : gType.getChildren()) {
