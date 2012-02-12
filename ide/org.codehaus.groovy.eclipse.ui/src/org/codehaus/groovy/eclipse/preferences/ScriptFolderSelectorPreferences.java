@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
@@ -48,7 +48,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 /**
  * Dialog for creating and editing script folders in the workspace
@@ -129,8 +128,14 @@ public class ScriptFolderSelectorPreferences {
 
     private BooleanFieldEditor disableButton;
 
-    public ScriptFolderSelectorPreferences(Composite parent) {
+    private final IEclipsePreferences preferences;
+
+    private final IPreferenceStore store;
+
+    public ScriptFolderSelectorPreferences(Composite parent, IEclipsePreferences preferences, IPreferenceStore store) {
         this.parent = parent;
+        this.preferences = preferences;
+        this.store = store;
     }
 
     public ListDialogField createListContents() {
@@ -150,10 +155,10 @@ public class ScriptFolderSelectorPreferences {
 
 
         disableButton = new BooleanFieldEditor(Activator.GROOVY_SCRIPT_FILTERS_ENABLED,
- "Enable script folder support",
+                "Enable script folder support",
                 BooleanFieldEditor.DEFAULT, inner);
-        IPreferenceStore preferenceStore = new ScopedPreferenceStore(new InstanceScope(), Activator.PLUGIN_ID);
-        disableButton.setPreferenceStore(preferenceStore);
+
+        disableButton.setPreferenceStore(store);
         disableButton.load();
 
         // inner composite contains the dialog itself
@@ -218,7 +223,7 @@ public class ScriptFolderSelectorPreferences {
 
     // returns the list of patterns alternating with their docopy state
     private List<String> findPatterns() {
-        return Activator.getDefault().getListStringPreference(Activator.GROOVY_SCRIPT_FILTERS,
+        return Activator.getDefault().getListStringPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS,
                 Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
     }
 
@@ -284,7 +289,7 @@ public class ScriptFolderSelectorPreferences {
             result.add(elt);
             result.add(patternList.isChecked(elt) ? "y" : "n");
         }
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS, result);
+        Activator.getDefault().setPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS, result);
 
     }
 
@@ -292,14 +297,11 @@ public class ScriptFolderSelectorPreferences {
         // must do the store before setting the preference
         // to ensure that the store is flushed
         disableButton.loadDefault();
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS,
+        Activator.getDefault().setPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS,
                 Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         resetElements();
     }
 
-    /**
-     *
-     */
     private void resetElements() {
         List<String> elements = findPatterns();
         List<String> filteredElements = new ArrayList<String>(elements.size() / 2);

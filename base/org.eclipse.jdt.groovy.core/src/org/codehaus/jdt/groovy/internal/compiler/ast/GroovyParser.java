@@ -468,7 +468,7 @@ public class GroovyParser {
 		// .class file output can be suppressed
 		if (allowTransforms && (sourceUnit instanceof SourceFile)) {
 			if (this.scriptFolderSelector == null) {
-				this.scriptFolderSelector = new ScriptFolderSelector();
+				this.scriptFolderSelector = new ScriptFolderSelector(((SourceFile) sourceUnit).resource.getProject());
 			}
 			SourceFile file = (SourceFile) sourceUnit;
 			if (scriptFolderSelector.isScript(file.resource)) {

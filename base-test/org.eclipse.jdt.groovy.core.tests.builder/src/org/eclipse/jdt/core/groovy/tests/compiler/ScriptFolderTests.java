@@ -18,8 +18,11 @@ import junit.framework.Test;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.groovy.tests.builder.ProjectUtils;
@@ -67,8 +70,8 @@ public class ScriptFolderTests extends BuilderTests {
         try {
             super.setUp();
         } finally {
-            origEnabled = Activator.getDefault().getBooleanPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
-            origPatterns = Activator.getDefault().getStringPreference(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
+            origEnabled = Activator.getDefault().getBooleanPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+            origPatterns = Activator.getDefault().getStringPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         }
     }
     
@@ -77,8 +80,8 @@ public class ScriptFolderTests extends BuilderTests {
         try {
             super.tearDown();
         } finally {
-            Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, String.valueOf(origEnabled));
-            Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS, origPatterns);
+            Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, String.valueOf(origEnabled));
+            Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, origPatterns);
         }
     }
     
@@ -155,29 +158,29 @@ public class ScriptFolderTests extends BuilderTests {
     
     // now that we have tested the settings, let's test that scripts are handled correctly
     public void testScriptInProjectNotCompiled() throws Exception {
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         createScriptInGroovyProject("Script", "def x", true);
         assertNoExists("Project/bin/Script.class");
         assertExists("Project/bin/Script.groovy");
     }
     public void testScriptInProjectNoCopy() throws Exception {
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER.replaceAll(",y", ",n"));
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER.replaceAll(",y", ",n"));
         createScriptInGroovyProject("Script", "def x", true);
         assertNoExists("Project/bin/Script.class");
         assertNoExists("Project/bin/Script.groovy");
     }
     public void testScriptInProjectDisabled() throws Exception {
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "false");
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "false");
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         createScriptInGroovyProject("Script", "def x", true);
         assertExists("Project/bin/Script.class");
         assertNoExists("Project/bin/Script.groovy");
     }
     public void testSourceInProjectCompiled() throws Exception {
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         createScriptInGroovyProject("Script", "class Script { }", false);  // creates a java file
         assertExists("Project/bin/Script.class");
         assertNoExists("Project/bin/Script.groovy");
@@ -186,8 +189,8 @@ public class ScriptFolderTests extends BuilderTests {
     
     // This is the big test.
     public void testComplexScriptFolderProject() throws Exception {
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,y,src2/**/*.groovy,y,src3/**/*.groovy,y");
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,y,src2/**/*.groovy,y,src3/**/*.groovy,y");
         ProjectUtils.createPredefinedProject("ScriptFoldersProject");
         env.fullBuild();
         
@@ -218,8 +221,8 @@ public class ScriptFolderTests extends BuilderTests {
     
     // as above, but don't copy
     public void testComplexScriptFolderProjectNoCopy() throws Exception {
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
-        Activator.getDefault().setPreference(Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,n,src2/**/*.groovy,n,src3/**/*.groovy,n");
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,n,src2/**/*.groovy,n,src3/**/*.groovy,n");
         ProjectUtils.createPredefinedProject("ScriptFoldersProject");
         env.fullBuild();
         
@@ -247,6 +250,169 @@ public class ScriptFolderTests extends BuilderTests {
         assertNoExists("ScriptFoldersProject/src3/Script3.class");
         assertNoExists("ScriptFoldersProject/src3/p/Script3.class");
     }
+    
+    // This is the big test.
+    public void testComplexScriptFolderProjectProjectSettings() throws Exception {
+        IProject project = ProjectUtils.createPredefinedProject("ScriptFoldersProject");
+        ProjectUtils.createPredefinedProject("ScriptFoldersProject2");
+        
+        IScopeContext projectScope = new ProjectScope(project);
+        IEclipsePreferences preferences = projectScope.getNode(Activator.PLUGIN_ID);
+        Activator.getDefault().setPreference(preferences, Activator.USING_PROJECT_PROPERTIES, "true");
+        
+        Activator.getDefault().setPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
+        Activator.getDefault().setPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,y,src2/**/*.groovy,y,src3/**/*.groovy,y");
+        env.fullBuild();
+        
+        // project root is a source folder, but it is not a script folder
+        assertExists("ScriptFoldersProject/bin/NotAScript1.class");
+        assertExists("ScriptFoldersProject/bin/p/NotAScript1.class");
+        assertNoExists("ScriptFoldersProject/bin/NotAScript1.groovy");
+        assertNoExists("ScriptFoldersProject/bin/p/NotAScript1.groovy");
+        
+        // src1 is a script folder and compiles to default out folder
+        assertExists("ScriptFoldersProject/bin/Script1.groovy");
+        assertExists("ScriptFoldersProject/bin/p/Script1.groovy");
+        assertNoExists("ScriptFoldersProject/bin/Script1.class");
+        assertNoExists("ScriptFoldersProject/bin/p/Script1.class");
+        
+        // src2 is a script folder and compiles to bin2
+        assertExists("ScriptFoldersProject/bin2/Script2.groovy");
+        assertExists("ScriptFoldersProject/bin2/p/Script2.groovy");
+        assertNoExists("ScriptFoldersProject/bin2/Script2.class");
+        assertNoExists("ScriptFoldersProject/bin2/p/Script2.class");
+        
+        // src3 is a script folder, and is its own out folder
+        assertExistsNotDerived("ScriptFoldersProject/src3/Script3.groovy");
+        assertExistsNotDerived("ScriptFoldersProject/src3/p/Script3.groovy");
+        assertNoExists("ScriptFoldersProject/src3/Script3.class");
+        assertNoExists("ScriptFoldersProject/src3/p/Script3.class");
+        
+        // now check another project
+        assertExists("ScriptFoldersProject2/bin/NotAScript1.class");
+        assertExists("ScriptFoldersProject2/bin/p/NotAScript1.class");
+        assertNoExists("ScriptFoldersProject2/bin/NotAScript1.groovy");
+        assertNoExists("ScriptFoldersProject2/bin/p/NotAScript1.groovy");
+        
+        assertNoExists("ScriptFoldersProject2/bin/Script1.groovy");
+        assertNoExists("ScriptFoldersProject2/bin/p/Script1.groovy");
+        assertExists("ScriptFoldersProject2/bin/Script1.class");
+        assertExists("ScriptFoldersProject2/bin/p/Script1.class");
+        
+        assertNoExists("ScriptFoldersProject2/bin2/Script2.groovy");
+        assertNoExists("ScriptFoldersProject2/bin2/p/Script2.groovy");
+        assertExists("ScriptFoldersProject2/bin2/Script2.class");
+        assertExists("ScriptFoldersProject2/bin2/p/Script2.class");
+        
+        assertExistsNotDerived("ScriptFoldersProject2/src3/Script3.groovy");
+        assertExistsNotDerived("ScriptFoldersProject2/src3/p/Script3.groovy");
+        assertExists("ScriptFoldersProject2/src3/Script3.class");
+        assertExists("ScriptFoldersProject2/src3/p/Script3.class");
+        
+        
+        
+        // now disable
+        Activator.getDefault().setPreference(preferences, Activator.USING_PROJECT_PROPERTIES, "false");
+        env.fullBuild();
+        assertExists("ScriptFoldersProject/bin/NotAScript1.class");
+        assertExists("ScriptFoldersProject/bin/p/NotAScript1.class");
+        assertNoExists("ScriptFoldersProject/bin/NotAScript1.groovy");
+        assertNoExists("ScriptFoldersProject/bin/p/NotAScript1.groovy");
+        
+        assertNoExists("ScriptFoldersProject/bin/Script1.groovy");
+        assertNoExists("ScriptFoldersProject/bin/p/Script1.groovy");
+        assertExists("ScriptFoldersProject/bin/Script1.class");
+        assertExists("ScriptFoldersProject/bin/p/Script1.class");
+        
+        assertNoExists("ScriptFoldersProject/bin2/Script2.groovy");
+        assertNoExists("ScriptFoldersProject/bin2/p/Script2.groovy");
+        assertExists("ScriptFoldersProject/bin2/Script2.class");
+        assertExists("ScriptFoldersProject/bin2/p/Script2.class");
+        
+        assertExistsNotDerived("ScriptFoldersProject/src3/Script3.groovy");
+        assertExistsNotDerived("ScriptFoldersProject/src3/p/Script3.groovy");
+        assertExists("ScriptFoldersProject/src3/Script3.class");
+        assertExists("ScriptFoldersProject/src3/p/Script3.class");
+        
+        
+        // other project should be the same
+        assertExists("ScriptFoldersProject2/bin/NotAScript1.class");
+        assertExists("ScriptFoldersProject2/bin/p/NotAScript1.class");
+        assertNoExists("ScriptFoldersProject2/bin/NotAScript1.groovy");
+        assertNoExists("ScriptFoldersProject2/bin/p/NotAScript1.groovy");
+        
+        assertNoExists("ScriptFoldersProject2/bin/Script1.groovy");
+        assertNoExists("ScriptFoldersProject2/bin/p/Script1.groovy");
+        assertExists("ScriptFoldersProject2/bin/Script1.class");
+        assertExists("ScriptFoldersProject2/bin/p/Script1.class");
+        
+        assertNoExists("ScriptFoldersProject2/bin2/Script2.groovy");
+        assertNoExists("ScriptFoldersProject2/bin2/p/Script2.groovy");
+        assertExists("ScriptFoldersProject2/bin2/Script2.class");
+        assertExists("ScriptFoldersProject2/bin2/p/Script2.class");
+        
+        assertExistsNotDerived("ScriptFoldersProject2/src3/Script3.groovy");
+        assertExistsNotDerived("ScriptFoldersProject2/src3/p/Script3.groovy");
+        assertExists("ScriptFoldersProject2/src3/Script3.class");
+        assertExists("ScriptFoldersProject2/src3/p/Script3.class");
+
+        
+        // now enable the workspace settings, add back project settings, but disable filters on the project
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
+        Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,y,src2/**/*.groovy,y,src3/**/*.groovy,y");
+        Activator.getDefault().setPreference(preferences, Activator.USING_PROJECT_PROPERTIES, "true");
+        Activator.getDefault().setPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "false");
+        env.fullBuild();
+        
+        assertExists("ScriptFoldersProject/bin/NotAScript1.class");
+        assertExists("ScriptFoldersProject/bin/p/NotAScript1.class");
+        assertNoExists("ScriptFoldersProject/bin/NotAScript1.groovy");
+        assertNoExists("ScriptFoldersProject/bin/p/NotAScript1.groovy");
+        
+        assertNoExists("ScriptFoldersProject/bin/Script1.groovy");
+        assertNoExists("ScriptFoldersProject/bin/p/Script1.groovy");
+        assertExists("ScriptFoldersProject/bin/Script1.class");
+        assertExists("ScriptFoldersProject/bin/p/Script1.class");
+        
+        assertNoExists("ScriptFoldersProject/bin2/Script2.groovy");
+        assertNoExists("ScriptFoldersProject/bin2/p/Script2.groovy");
+        assertExists("ScriptFoldersProject/bin2/Script2.class");
+        assertExists("ScriptFoldersProject/bin2/p/Script2.class");
+        
+        assertExistsNotDerived("ScriptFoldersProject/src3/Script3.groovy");
+        assertExistsNotDerived("ScriptFoldersProject/src3/p/Script3.groovy");
+        assertExists("ScriptFoldersProject/src3/Script3.class");
+        assertExists("ScriptFoldersProject/src3/p/Script3.class");
+        
+        
+        // Other project now has scripts
+        // project root is a source folder, but it is not a script folder
+        assertExists("ScriptFoldersProject2/bin/NotAScript1.class");
+        assertExists("ScriptFoldersProject2/bin/p/NotAScript1.class");
+        assertNoExists("ScriptFoldersProject2/bin/NotAScript1.groovy");
+        assertNoExists("ScriptFoldersProject2/bin/p/NotAScript1.groovy");
+        
+        // src1 is a script folder and compiles to default out folder
+        assertExists("ScriptFoldersProject2/bin/Script1.groovy");
+        assertExists("ScriptFoldersProject2/bin/p/Script1.groovy");
+        assertNoExists("ScriptFoldersProject2/bin/Script1.class");
+        assertNoExists("ScriptFoldersProject2/bin/p/Script1.class");
+        
+        // src2 is a script folder and compiles to bin2
+        assertExists("ScriptFoldersProject2/bin2/Script2.groovy");
+        assertExists("ScriptFoldersProject2/bin2/p/Script2.groovy");
+        assertNoExists("ScriptFoldersProject2/bin2/Script2.class");
+        assertNoExists("ScriptFoldersProject2/bin2/p/Script2.class");
+        
+        // src3 is a script folder, and is its own out folder
+        assertExistsNotDerived("ScriptFoldersProject2/src3/Script3.groovy");
+        assertExistsNotDerived("ScriptFoldersProject2/src3/p/Script3.groovy");
+        assertNoExists("ScriptFoldersProject2/src3/Script3.class");
+        assertNoExists("ScriptFoldersProject2/src3/p/Script3.class");
+
+
+    }
+
     
     
     

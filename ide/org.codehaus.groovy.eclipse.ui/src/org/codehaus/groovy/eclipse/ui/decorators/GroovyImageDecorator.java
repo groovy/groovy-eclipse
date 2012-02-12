@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
@@ -46,8 +47,8 @@ public class GroovyImageDecorator implements ILabelDecorator {
             // preference has changed. Ensure that from now on, the new
             // preferece is used
             // we should automatically do a refresh of all places where this is
-            // used, btu we are not doing that now.
-            scriptFolderSelector = new ScriptFolderSelector();
+            // used, but we are not doing that now.
+            scriptFolderSelector = new ScriptFolderSelector(null);
         }
     }
 
@@ -69,8 +70,8 @@ public class GroovyImageDecorator implements ILabelDecorator {
 
         // receive notification when script folders change
         listener = new PreferenceChangeListener();
-        Activator.getDefault().getPreferences().addPreferenceChangeListener(listener);
-        scriptFolderSelector = new ScriptFolderSelector();
+        InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID).addPreferenceChangeListener(listener);
+        scriptFolderSelector = new ScriptFolderSelector(null);
     }
 
     public Image decorateImage(Image image, Object element) {

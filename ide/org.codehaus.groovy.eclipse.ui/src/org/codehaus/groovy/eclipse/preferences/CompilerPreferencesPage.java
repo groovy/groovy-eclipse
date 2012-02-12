@@ -3,18 +3,24 @@ package org.codehaus.groovy.eclipse.preferences;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.core.runtime.preferences.IScopeContext;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.groovy.core.Activator;
+import org.eclipse.jdt.internal.ui.preferences.PropertyAndPreferencePage;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.preference.PreferencePage;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.eclipse.osgi.util.NLS;
@@ -35,6 +41,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.eclipse.ui.IWorkbenchPropertyPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
@@ -44,9 +51,14 @@ import org.eclipse.ui.internal.browser.WebBrowserPreference;
 import org.eclipse.ui.internal.browser.WorkbenchBrowserSupport;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.eclipse.ui.internal.ide.actions.OpenWorkspaceAction;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
-public class CompilerPreferencesPage extends PreferencePage implements
-        IWorkbenchPreferencePage {
+public class CompilerPreferencesPage extends PropertyAndPreferencePage implements
+IWorkbenchPreferencePage, IWorkbenchPropertyPage {
+    private static final String PROPERTY_ID = Activator.USING_PROJECT_PROPERTIES;
+
+    private static final String PREFERENCES_ID = "org.codehaus.groovy.eclipse.preferences.compiler";
+
     private static final String PROP_VM = "eclipse.vm"; //$NON-NLS-1$
 
     private static final String PROP_VMARGS = "eclipse.vmargs"; //$NON-NLS-1$
@@ -69,14 +81,39 @@ public class CompilerPreferencesPage extends PreferencePage implements
 
     private ScriptFolderSelectorPreferences scriptFolderSelector;
 
+    private IEclipsePreferences preferences;
+
     public CompilerPreferencesPage() {
-        super("Compiler");
-        setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
+        super();
         isGroovy17Disabled = CompilerUtils.isGroovy18DisabledOrMissing();
     }
 
     @Override
-    protected Control createContents(Composite parent) {
+    protected IPreferenceStore doGetPreferenceStore() {
+        IProject project = getProject();
+        ScopedPreferenceStore store;
+        if (project == null) {
+            // workspace settings
+            preferences = InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID);
+            store = new ScopedPreferenceStore(InstanceScope.INSTANCE, Activator.PLUGIN_ID);
+        } else {
+            // project settings
+            IScopeContext projectScope = new ProjectScope(project);
+            preferences = projectScope.getNode(Activator.PLUGIN_ID);
+            store = new ScopedPreferenceStore(projectScope, Activator.PLUGIN_ID);
+        }
+        return store;
+    }
+
+    public IEclipsePreferences getPreferences() {
+        if (preferences == null) {
+            doGetPreferenceStore();
+        }
+        return preferences;
+    }
+
+    @Override
+    protected Control createPreferenceContent(Composite parent) {
         final Composite page = new Composite(parent, SWT.NONE);
         GridLayout layout = new GridLayout();
         layout.numColumns = 1;
@@ -85,15 +122,21 @@ public class CompilerPreferencesPage extends PreferencePage implements
         page.setLayout(layout);
         page.setFont(parent.getFont());
 
-        // Groovy compiler
-        createCompilerSection(page);
+        if (getElement() == null) {
+            // Only for the workspace version
+            // Groovy compiler
+            createCompilerSection(page);
+        }
 
         // Groovy script folder
-        scriptFolderSelector = new ScriptFolderSelectorPreferences(page);
+        scriptFolderSelector = new ScriptFolderSelectorPreferences(page, getPreferences(), getPreferenceStore());
         scriptFolderSelector.createListContents();
 
-        // Groovy classpath container
-        createClasspathContainerSection(page);
+        if (getElement() == null) {
+            // Only for the workspace version
+            // Groovy classpath container
+            createClasspathContainerSection(page);
+        }
 
         return page;
     }
@@ -173,12 +216,12 @@ public class CompilerPreferencesPage extends PreferencePage implements
         switchTo.setText("Switch to " + CompilerUtils.getOtherVersion());
         switchTo.addSelectionListener(new SelectionListener() {
 
-        public void widgetSelected(SelectionEvent e) {
-            Shell shell = page.getShell();
-            boolean result = MessageDialog.openQuestion(shell, "Change compiler and restart?",
-                    "Do you want to change the compiler?\n\nIf you select \"Yes\"," +
-                    " the compiler will be changed and Eclipse will be restarted.\n\n" +
-                    "Make sure all your work is saved before clicking \"Yes\".");
+            public void widgetSelected(SelectionEvent e) {
+                Shell shell = page.getShell();
+                boolean result = MessageDialog.openQuestion(shell, "Change compiler and restart?",
+                        "Do you want to change the compiler?\n\nIf you select \"Yes\"," +
+                                " the compiler will be changed and Eclipse will be restarted.\n\n" +
+                        "Make sure all your work is saved before clicking \"Yes\".");
 
                 if (result) {
                     // change compiler
@@ -201,8 +244,8 @@ public class CompilerPreferencesPage extends PreferencePage implements
         moreInfoLink.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
                 false));
         moreInfoLink
-                .setText("<a href=\"http://docs.codehaus.org/display/GROOVY/Compiler+Switching+within+Groovy-Eclipse\">See here</a> for more information "
-                        + "on compiler switching (opens a browser window).");
+        .setText("<a href=\"http://docs.codehaus.org/display/GROOVY/Compiler+Switching+within+Groovy-Eclipse\">See here</a> for more information "
+                + "on compiler switching (opens a browser window).");
         moreInfoLink.addListener (SWT.Selection, new Listener() {
             public void handleEvent(Event event) {
                 openUrl(event.text);
@@ -248,11 +291,11 @@ public class CompilerPreferencesPage extends PreferencePage implements
         String property = FrameworkProperties.getProperty(PROP_VM);
         if (property == null) {
             MessageDialog
-                    .openError(
-                            shell,
-                            IDEWorkbenchMessages.OpenWorkspaceAction_errorTitle,
-                            NLS.bind(IDEWorkbenchMessages.OpenWorkspaceAction_errorMessage,
-                                    PROP_VM));
+            .openError(
+                    shell,
+                    IDEWorkbenchMessages.OpenWorkspaceAction_errorTitle,
+                    NLS.bind(IDEWorkbenchMessages.OpenWorkspaceAction_errorMessage,
+                            PROP_VM));
             return null;
         }
 
@@ -284,6 +327,7 @@ public class CompilerPreferencesPage extends PreferencePage implements
         return result.toString();
     }
 
+    @Override
     public void init(IWorkbench workbench) {}
 
     public static void openUrl(String location) {
@@ -354,12 +398,39 @@ public class CompilerPreferencesPage extends PreferencePage implements
     @Override
     protected void performDefaults() {
         super.performDefaults();
-        GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);
+        if (getProject() == null) {
+            GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, true);
+        } else {
+            enableProjectSpecificSettings(false);
+        }
         scriptFolderSelector.restoreDefaultsPressed();
     }
 
     private void applyPreferences() {
-        GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, groovyLibButt.getSelection());
+        if (getProject() == null) {
+            GroovyCoreActivator.getDefault().setPreference(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB_GLOBAL, groovyLibButt.getSelection());
+        } else {
+            getPreferenceStore().setValue(PROPERTY_ID, useProjectSettings());
+        }
         scriptFolderSelector.applyPreferences();
     }
+
+    @Override
+    protected boolean hasProjectSpecificOptions(IProject project) {
+        if (project != null && project.equals(getProject())) {
+            return getPreferenceStore().getBoolean(PROPERTY_ID);
+        }
+        return false;
+    }
+
+    @Override
+    protected String getPreferencePageID() {
+        return PREFERENCES_ID;
+    }
+
+    @Override
+    protected String getPropertyPageID() {
+        return PROPERTY_ID;
+    }
+
 }

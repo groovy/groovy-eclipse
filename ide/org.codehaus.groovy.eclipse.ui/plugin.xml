@@ -944,5 +944,19 @@
              name="Groovy synthetic getter and setter references"
              nature="org.eclipse.jdt.groovy.core.groovyNature">
        </queryParticipant>
+    </extension>
+    <extension
+          point="org.eclipse.ui.propertyPages">
+       <page
+             adaptable="true"
+             class="org.codehaus.groovy.eclipse.preferences.CompilerPreferencesPage"
+             id="org.codehaus.groovy.eclipse.preferences.compiler.project"
+             name="Groovy Compiler"
+             objectClass="org.eclipse.core.resources.IProject">
+          <filter
+                name="nature"
+                value="org.eclipse.jdt.groovy.core.groovyNature">
+          </filter>
+       </page>
     </extension> 
 </plugin>

@@ -154,11 +154,12 @@ public class ScriptFolderCompilationParticipant extends CompilationParticipant {
 	@Override
 	public void buildFinished(IJavaProject project) {
 		try {
-			if (compiledFiles == null || !ScriptFolderSelector.isEnabled()) {
+			IProject iproject = project.getProject();
+			if (compiledFiles == null || !ScriptFolderSelector.isEnabled(iproject)) {
 				return;
 			}
 
-			ScriptFolderSelector selector = new ScriptFolderSelector();
+			ScriptFolderSelector selector = new ScriptFolderSelector(iproject);
 			Map<IContainer, IContainer> sourceToOut = generateSourceToOut(project);
 			for (BuildContext compiledFile : compiledFiles) {
 				IFile file = compiledFile.getFile();

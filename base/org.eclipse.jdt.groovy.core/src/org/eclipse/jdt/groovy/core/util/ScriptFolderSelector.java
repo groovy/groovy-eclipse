@@ -12,7 +12,9 @@ package org.eclipse.jdt.groovy.core.util;
 
 import java.util.List;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.Activator;
 
@@ -25,26 +27,30 @@ public class ScriptFolderSelector {
 	private char[][] scriptPatterns;
 	private boolean[] doCopy;
 	private final boolean enabled;
+	private IEclipsePreferences preferences;
 
-	public static boolean isEnabled() {
+	public static boolean isEnabled(IProject project) {
 		// disabled by default
 		Activator activator = Activator.getDefault();
 		// perform null check since this is occasionally being called during shutdown after the plugin has been closed
 		if (activator != null) {
-			return activator.getBooleanPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+			IEclipsePreferences preferences = activator.getProjectOrWorkspacePreferences(project);
+			return activator.getBooleanPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
 		} else {
 			return false;
 		}
 	}
 
-	public ScriptFolderSelector() {
+	public ScriptFolderSelector(IProject project) {
+		Activator activator = Activator.getDefault();
+		preferences = activator.getProjectOrWorkspacePreferences(project);
 		// disabled by default
-		boolean isEnabled = Activator.getDefault().getBooleanPreference(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+		boolean isEnabled = activator.getBooleanPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
 		if (!isEnabled) {
 			this.enabled = false;
 			this.scriptPatterns = null;
 		} else {
-			init(Activator.getDefault().getListStringPreference(Activator.GROOVY_SCRIPT_FILTERS,
+			init(activator.getListStringPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS,
 					Activator.DEFAULT_GROOVY_SCRIPT_FILTER));
 			this.enabled = true;
 		}

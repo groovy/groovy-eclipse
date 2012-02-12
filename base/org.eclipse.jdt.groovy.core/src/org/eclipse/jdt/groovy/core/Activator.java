@@ -15,6 +15,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IScopeContext;
@@ -43,6 +45,9 @@ public class Activator extends Plugin {
 	// default list of regex filters to specify groovy scripts
 	public static final String DEFAULT_GROOVY_SCRIPT_FILTER = "scripts/**/*.groovy,y,src/main/resources/**/*.groovy,y,src/test/resources/**/*.groovy,y";
 
+	// preference constant that if true means this project uses its own compiler settings
+	public static final String USING_PROJECT_PROPERTIES = "org.codehaus.groovy.eclipse.preferences.compiler.project";
+
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
@@ -57,7 +62,10 @@ public class Activator extends Plugin {
 		return plugin;
 	}
 
-	public void setPreference(String key, List<String> vals) {
+	public void setPreference(IEclipsePreferences preferences, String key, List<String> vals) {
+		if (preferences == null) {
+			preferences = getProjectOrWorkspacePreferences(null);
+		}
 		String concat;
 		if (vals == null) {
 			concat = "";
@@ -73,28 +81,34 @@ public class Activator extends Plugin {
 			}
 			concat = sb.toString();
 		}
-		getPreferences().put(key, concat);
+		preferences.put(key, concat);
 		try {
-			getPreferences().flush();
+			preferences.flush();
 		} catch (BackingStoreException e) {
 			Util.log(e);
 		}
 	}
 
-	public void setPreference(String key, String val) {
+	public void setPreference(IEclipsePreferences preferences, String key, String val) {
 		if (val == null) {
 			val = "";
 		}
-		getPreferences().put(key, val);
+		if (preferences == null) {
+			preferences = getProjectOrWorkspacePreferences(null);
+		}
+		preferences.put(key, val);
 		try {
-			getPreferences().flush();
+			preferences.flush();
 		} catch (BackingStoreException e) {
 			Util.log(e);
 		}
 	}
 
-	public List<String> getListStringPreference(String key, String def) {
-		String result = getPreferences().get(key, def);
+	public List<String> getListStringPreference(IEclipsePreferences preferences, String key, String def) {
+		if (preferences == null) {
+			preferences = getProjectOrWorkspacePreferences(null);
+		}
+		String result = preferences.get(key, def);
 		if (result == null) {
 			result = "";
 		}
@@ -102,15 +116,36 @@ public class Activator extends Plugin {
 		return Arrays.asList(splits);
 	}
 
-	public String getStringPreference(String key, String def) {
-		return getPreferences().get(key, def);
+	public String getStringPreference(IEclipsePreferences preferences, String key, String def) {
+		if (preferences == null) {
+			preferences = getProjectOrWorkspacePreferences(null);
+		}
+		return preferences.get(key, def);
 	}
 
-	public IEclipsePreferences getPreferences() {
-		if (instanceScope == null) {
-			instanceScope = ((IScopeContext) new InstanceScope()).getNode(Activator.PLUGIN_ID);
+	public IEclipsePreferences getProjectOrWorkspacePreferences(IProject project) {
+		IEclipsePreferences projectPreferences = projectIsUsingProjectCompilerPreferences(project);
+		if (projectPreferences != null && projectPreferences.getBoolean(USING_PROJECT_PROPERTIES, false)) {
+			return projectPreferences;
+		} else {
+			if (instanceScope == null) {
+				instanceScope = InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID);
+			}
+			return instanceScope;
 		}
-		return instanceScope;
+	}
+
+	/**
+	 * @param project
+	 * @return
+	 */
+	private IEclipsePreferences projectIsUsingProjectCompilerPreferences(IProject project) {
+		if (project == null) {
+			return null;
+		}
+
+		IScopeContext projectScope = new ProjectScope(project);
+		return projectScope.getNode(PLUGIN_ID);
 	}
 
 	/**
@@ -118,7 +153,10 @@ public class Activator extends Plugin {
 	 * @param b
 	 * @return
 	 */
-	public boolean getBooleanPreference(String key, boolean def) {
-		return getPreferences().getBoolean(key, def);
+	public boolean getBooleanPreference(IEclipsePreferences preferences, String key, boolean def) {
+		if (preferences == null) {
+			preferences = getProjectOrWorkspacePreferences(null);
+		}
+		return preferences.getBoolean(key, def);
 	}
 }
