@@ -70,7 +70,7 @@ public class GroovyImageDecorator implements ILabelDecorator {
 
         // receive notification when script folders change
         listener = new PreferenceChangeListener();
-        InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID).addPreferenceChangeListener(listener);
+        new InstanceScope().getNode(Activator.PLUGIN_ID).addPreferenceChangeListener(listener);
         scriptFolderSelector = new ScriptFolderSelector(null);
     }
 

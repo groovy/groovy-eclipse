@@ -94,8 +94,9 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
         ScopedPreferenceStore store;
         if (project == null) {
             // workspace settings
-            preferences = InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID);
-            store = new ScopedPreferenceStore(InstanceScope.INSTANCE, Activator.PLUGIN_ID);
+            IScopeContext scope = new InstanceScope();
+            preferences = scope.getNode(Activator.PLUGIN_ID);
+            store = new ScopedPreferenceStore(scope, Activator.PLUGIN_ID);
         } else {
             // project settings
             IScopeContext projectScope = new ProjectScope(project);
