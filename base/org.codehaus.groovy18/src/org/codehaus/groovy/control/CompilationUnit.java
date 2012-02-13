@@ -22,6 +22,7 @@ import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CompileUnit;
+import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.classgen.*;
 import org.codehaus.groovy.control.customizers.CompilationCustomizer;
@@ -1116,12 +1117,22 @@ public class CompilationUnit extends ProcessingUnit {
                 context = classNode.getModule().getContext();
                 // GRECLIPSE get to the bottom of this - why are operations running multiple times that should only run once?
                 if (context == null || context.phase < phase || (context.phase==phase && !context.phaseComplete)) {                
-                    body.call(context, new GeneratorContext(this.ast), classNode);
+
+                    int offset = 1;
+                    Iterator<InnerClassNode> iterator = classNode.getInnerClasses();
+                    while (iterator.hasNext()) {
+                        iterator.next();
+                        offset++;
+                    }
+                    body.call(context, new GeneratorContext(this.ast, offset), classNode); 
+/****                1.8.6 seemed to adjust this code, who is impacted? can I remove our change below?      
+                  body.call(context, new GeneratorContext(this.ast), classNode);
                     // GRECLIPSE: start
                     if (phase==Phases.CLASS_GENERATION && getProgressListener()!=null && body==phaseOperations[phase].getLast()) {
                     	getProgressListener().generateComplete(phase,classNode);
                     }
                     // FIXASC (groovychange) end
+*****/
                 }
             } catch (CompilationFailedException e) {
                 // fall through, getErrorReporter().failIfErrors() will trigger

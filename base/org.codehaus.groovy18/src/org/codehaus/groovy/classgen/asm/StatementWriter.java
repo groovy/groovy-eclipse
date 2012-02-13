@@ -15,16 +15,6 @@
  */
 package org.codehaus.groovy.classgen.asm;
 
-import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.ATHROW;
-import static org.objectweb.asm.Opcodes.CHECKCAST;
-import static org.objectweb.asm.Opcodes.GOTO;
-import static org.objectweb.asm.Opcodes.IFEQ;
-import static org.objectweb.asm.Opcodes.MONITORENTER;
-import static org.objectweb.asm.Opcodes.MONITOREXIT;
-import static org.objectweb.asm.Opcodes.NOP;
-import static org.objectweb.asm.Opcodes.RETURN;
-
 import java.util.Iterator;
 import java.util.List;
 
@@ -57,6 +47,8 @@ import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.classgen.asm.CompileStack.BlockRecorder;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
+
+import static org.objectweb.asm.Opcodes.*;
 
 public class StatementWriter {
     // iterator
