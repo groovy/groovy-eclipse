@@ -129,7 +129,7 @@ public class Activator extends Plugin {
 			return projectPreferences;
 		} else {
 			if (instanceScope == null) {
-				instanceScope = InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID);
+				instanceScope = new InstanceScope().getNode(Activator.PLUGIN_ID);
 			}
 			return instanceScope;
 		}
