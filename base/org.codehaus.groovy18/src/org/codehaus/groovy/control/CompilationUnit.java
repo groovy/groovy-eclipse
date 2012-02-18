@@ -1224,11 +1224,14 @@ public class CompilationUnit extends ProcessingUnit {
 		// be correctly visited by the verifier and have certain optimizations performed (creating returns)
 		if (isReconcile) {
         	verifier.inlineStaticFieldInitializersIntoClinit=false;
-        	this.staticImportVisitor = null;
 //        	verifier.inlineFieldInitializersIntoInit=false;
+            // Maybe fix for GRECLIPSE-1371.  If you see this, then it's ok to delete this next line
+//        	this.staticImportVisitor = null;
+        	
 		} else {
+		    // Maybe fix for GRECLIPSE-1371.  If you see this, then it's ok to delete this next line
+//		    this.staticImportVisitor = new StaticImportVisitor();
         	verifier.inlineStaticFieldInitializersIntoClinit=true;
-            this.staticImportVisitor = new StaticImportVisitor();
 //        	verifier.inlineFieldInitializersIntoInit=true;
 		}
 		this.isReconcile = isReconcile;
