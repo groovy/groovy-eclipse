@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -69,11 +69,14 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
 
         HighlightedTypedPosition pos = null;
         if (result.confidence == TypeConfidence.UNKNOWN && node.getEnd() > 0) {
-            Position p = getPosition(node);
-            typedPosition.add(new HighlightedTypedPosition(p, HighlightKind.UNKNOWN));
+            // GRECLIPSE-1327 check to see if this is a synthetic call() on a closure reference
+            if (isRealASTNode(node)) {
+                Position p = getPosition(node);
+                typedPosition.add(new HighlightedTypedPosition(p, HighlightKind.UNKNOWN));
 
-            // don't continue if we have an unknown reference
-            return VisitStatus.CANCEL_BRANCH;
+                // don't continue if we have an unknown reference
+                return VisitStatus.CANCEL_BRANCH;
+            }
         } else if (node instanceof AnnotatedNode && isDeprecated(result.declaration)) {
             Position p = getPosition(node);
             pos = new HighlightedTypedPosition(p, HighlightKind.DEPRECATED);
@@ -102,14 +105,33 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         }
 
         if (pos != null && ((pos.getOffset() > 0 || pos.getLength() > 1) ||
-        // Expression nodes can be still valid and have an offset of 0 and a
-        // length of 1
-        // whereas field/method nodes, this is not allowed.
+                // Expression nodes can be still valid and have an offset of 0 and a
+                // length of 1
+                // whereas field/method nodes, this is not allowed.
                 node instanceof Expression)) {
             typedPosition.add(pos);
         }
 
         return VisitStatus.CONTINUE;
+    }
+
+    /**
+     * An AST node is "real" if it is an expression and the
+     * text of the expression matches the actual text in the file
+     */
+    private boolean isRealASTNode(ASTNode node) {
+        String text = node.getText();
+        if (text.length() != node.getLength()) {
+            return false;
+        }
+        char[] textArr = text.toCharArray();
+        for (int i = 0, j = node.getStart(); i < textArr.length; i++, j++) {
+            if (textArr[i] != contents[j]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 }
