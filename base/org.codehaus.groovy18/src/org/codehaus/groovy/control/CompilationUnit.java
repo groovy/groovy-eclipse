@@ -155,11 +155,6 @@ public class CompilationUnit extends ProcessingUnit {
 
         this.verifier = new Verifier();
         this.resolveVisitor = new ResolveVisitor(this);
-        // GRECLIPSE: start
-        // GRECLIPSE-1363 don't process static imports for reconcile
-        /*old{
-        this.staticImportVisitor = new StaticImportVisitor();
-        } new*/
         this.staticImportVisitor = new StaticImportVisitor();
         // end
         this.optimizer = new OptimizerVisitor(this);
@@ -1225,12 +1220,8 @@ public class CompilationUnit extends ProcessingUnit {
 		if (isReconcile) {
         	verifier.inlineStaticFieldInitializersIntoClinit=false;
 //        	verifier.inlineFieldInitializersIntoInit=false;
-            // Maybe fix for GRECLIPSE-1371.  If you see this, then it's ok to delete this next line
-//        	this.staticImportVisitor = null;
-        	
+        	staticImportVisitor.isReconcile = true;
 		} else {
-		    // Maybe fix for GRECLIPSE-1371.  If you see this, then it's ok to delete this next line
-//		    this.staticImportVisitor = new StaticImportVisitor();
         	verifier.inlineStaticFieldInitializersIntoClinit=true;
 //        	verifier.inlineFieldInitializersIntoInit=true;
 		}

@@ -127,7 +127,7 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
                 // special case...for static method calls, the start and end are
                 // of the entire expression, but we just want the name.
                 StaticMethodCallExpression smce = (StaticMethodCallExpression) node;
-                occurrenceLocation = new OccurrenceLocation(smce.getStart(), smce.getMethod().length(), flag,
+                occurrenceLocation = new OccurrenceLocation(smce.getStart(), Math.min(smce.getLength(), smce.getMethod().length()), flag,
                         "Occurrence of ''" + getElementName() + "''");
             } else {
                 SourceRange range = getSourceRange(node);
