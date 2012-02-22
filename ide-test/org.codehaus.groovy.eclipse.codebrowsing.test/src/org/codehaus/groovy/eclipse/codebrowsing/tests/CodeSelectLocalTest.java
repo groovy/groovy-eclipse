@@ -60,7 +60,7 @@ public class CodeSelectLocalTest extends BrowsingTestCase {
     }
 
     void assertSelection(String contents, String varName) throws Exception {
-    	assertSelection(contents, varName, varName)l
+        assertSelection(contents, varName, varName);
     }
 
     void assertSelection(String contents, String varName, String selectionText) throws Exception {
