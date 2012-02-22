@@ -7,6 +7,7 @@
  * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for bug 358827 - [1.7] exception analysis for t-w-r spoils null analysis
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.flow;
 
@@ -197,11 +198,13 @@ public void checkExceptionHandlers(TypeBinding raisedException, ASTNode location
 
 		traversedContext.recordReturnFrom(flowInfo.unconditionalInits());
 
-		if (traversedContext instanceof InsideSubRoutineFlowContext) {
-			ASTNode node = traversedContext.associatedNode;
-			if (node instanceof TryStatement) {
-				TryStatement tryStatement = (TryStatement) node;
-				flowInfo.addInitializationsFrom(tryStatement.subRoutineInits); // collect inits
+		if (!isExceptionOnAutoClose) {
+			if (traversedContext instanceof InsideSubRoutineFlowContext) {
+				ASTNode node = traversedContext.associatedNode;
+				if (node instanceof TryStatement) {
+					TryStatement tryStatement = (TryStatement) node;
+					flowInfo.addInitializationsFrom(tryStatement.subRoutineInits); // collect inits
+				}
 			}
 		}
 		traversedContext = traversedContext.parent;

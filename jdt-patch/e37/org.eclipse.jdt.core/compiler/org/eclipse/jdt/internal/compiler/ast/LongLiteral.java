@@ -30,7 +30,7 @@ public class LongLiteral extends NumberLiteral {
 	private char[] reducedForm; // no underscores
 
 	public static LongLiteral buildLongLiteral(char[] token, int s, int e) {
-//		// remove '_' and prefix '0' first
+		// remove '_' and prefix '0' first
 		char[] longReducedToken = removePrefixZerosAndUnderscores(token, true);
 		// GRECLIPSE - formatting issue GRECLIPSE-1216 - need proper fix from Eclipse 3.7.2: start
 //		switch(longReducedToken.length) {

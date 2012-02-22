@@ -578,7 +578,10 @@ public abstract class Scope {
 			}
 			return method;
 		}
-		if (genericTypeArguments != null)
+		// if method is generic and type arguments have been supplied, only then answer a problem 
+		// of ParameterizedMethodTypeMismatch, else a non-generic method was invoked using type arguments
+		// in which case this problem category will be bogus
+		if (genericTypeArguments != null && typeVariables != Binding.NO_TYPE_VARIABLES)
 			return new ProblemMethodBinding(method, method.selector, arguments, ProblemReasons.ParameterizedMethodTypeMismatch);
 		return null; // incompatible
 	}

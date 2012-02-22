@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -581,11 +581,13 @@ public final class JavaConventions {
 	 *   <li> The project output location path cannot be null, must be absolute and located inside the project.
 	 *   <li> Specific output locations (specified on source entries) can be null, if not they must be located inside the project,
 	 *   <li> A project entry cannot refer to itself directly (that is, a project cannot prerequisite itself).
-     *   <li> Classpath entries or output locations cannot coincidate or be nested in each other, except for the following scenarii listed below:
-	 *      <ul><li> A source folder can coincidate with its own output location, in which case this output can then contain library archives.
-	 *                     However, a specific output location cannot coincidate with any library or a distinct source folder than the one referring to it. </li>
+     *   <li> Classpath entries or output locations cannot coincide or be nested in each other, except for the following scenarios listed below:
+	 *      <ul><li> A source folder can coincide with its own output location, in which case this output can then contain library archives.
+	 *                     However, a specific output location cannot coincide with any library or a distinct source folder than the one referring to it.<br>
+	 *                     Note: Since 3.8, this behavior can be overridden by configuring {@link JavaCore#CORE_OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE}
+	 *                     </li>
 	 *              <li> A source/library folder can be nested in any source folder as long as the nested folder is excluded from the enclosing one. </li>
-	 * 			<li> An output location can be nested in a source folder, if the source folder coincidates with the project itself, or if the output
+	 * 			<li> An output location can be nested in a source folder, if the source folder coincides with the project itself, or if the output
 	 * 					location is excluded from the source folder.
 	 *      </ul>
 	 * </ul>

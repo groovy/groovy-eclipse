@@ -103,8 +103,9 @@ public class CompilationUnitProblemFinder extends Compiler {
 	 */
 	public void accept(ISourceType[] sourceTypes, PackageBinding packageBinding, AccessRestriction accessRestriction) {
 		// ensure to jump back to toplevel type for first one (could be a member)
-//		while (sourceTypes[0].getEnclosingType() != null)
-//			sourceTypes[0] = sourceTypes[0].getEnclosingType();
+		while (sourceTypes[0].getEnclosingType() != null) {
+			sourceTypes[0] = sourceTypes[0].getEnclosingType();
+		}
 
 		CompilationResult result =
 			new CompilationResult(sourceTypes[0].getFileName(), 1, 1, this.options.maxProblemsPerUnit);

@@ -248,8 +248,17 @@ private void addStackDepthMarker(int pc, int delta, TypeBinding typeBinding) {
 		this.stackDepthMarkers.add(new StackDepthMarker(pc, delta, typeBinding));
 	} else {
 		int size = this.stackDepthMarkers.size();
-		if (size == 0 || ((StackDepthMarker) this.stackDepthMarkers.get(size - 1)).pc != this.position) {
+		if (size == 0) {
 			this.stackDepthMarkers.add(new StackDepthMarker(pc, delta, typeBinding));
+		} else {
+			StackDepthMarker stackDepthMarker = (StackDepthMarker) this.stackDepthMarkers.get(size - 1);
+			if (stackDepthMarker.pc != this.position) {
+			this.stackDepthMarkers.add(new StackDepthMarker(pc, delta, typeBinding));
+			} else {
+				// We replace the recorded stack depth marker with a new value that contains the given typeBinding
+				// This case can happen when multiple conditional expression are nested see bug 362591
+				this.stackDepthMarkers.set(size - 1, new StackDepthMarker(pc, delta, typeBinding));
+			}
 		}
 	}
 }

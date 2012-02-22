@@ -1776,6 +1776,7 @@ public class ClasspathEntry implements IClasspathEntry {
 		// perform one separate iteration so as to not take precedence over previously checked scenarii (in particular should
 		// diagnose nesting source folder issue before this one, for example, [src]"Project/", [src]"Project/source/" and output="Project/" should
 		// first complain about missing exclusion pattern
+		IJavaModelStatus cachedStatus = null;
 		for (int i = 0 ; i < length; i++) {
 			IClasspathEntry entry = classpath[i];
 			if (entry == null) continue;
@@ -1788,30 +1789,53 @@ public class ClasspathEntry implements IClasspathEntry {
 
 			if (kind == IClasspathEntry.CPE_SOURCE) {
 				IPath output = entry.getOutputLocation();
-				if (output == null) continue; // 36465 - for 2.0 backward compatibility, only check specific output locations (the default can still coincidate)
-				// if (output == null) output = projectOutputLocation; // if no specific output, still need to check using default output (this line would check default output)
+				if (output == null) output = projectOutputLocation; // if no specific output, still need to check using default output (this line would check default output)
 				for (int j = 0; j < length; j++) {
 					IClasspathEntry otherEntry = classpath[j];
 					if (otherEntry == entry) continue;
 
-					// Build some common strings for status message
-					boolean opStartsWithProject = projectName.equals(otherEntry.getPath().segment(0));
-					String otherPathMsg = opStartsWithProject ? otherEntry.getPath().removeFirstSegments(1).toString() : otherEntry.getPath().makeRelative().toString();
-
 					switch (otherEntry.getEntryKind()) {
 						case IClasspathEntry.CPE_SOURCE :
-							if (otherEntry.getPath().equals(output)) {
-								return new JavaModelStatus(IJavaModelStatusConstants.INVALID_CLASSPATH, Messages.bind(Messages.classpath_cannotUseDistinctSourceFolderAsOutput, new String[] {entryPathMsg, otherPathMsg, projectName}));
+							// Bug 287164 : Report errors of overlapping output locations only if the user sets the corresponding preference.
+							// The check is required for backward compatibility with bug-fix 36465.
+							String option = javaProject.getOption(JavaCore.CORE_OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE, true);
+							if (otherEntry.getPath().equals(output) 
+									&& !JavaCore.IGNORE.equals(option)) {
+								boolean opStartsWithProject = projectName.equals(otherEntry.getPath().segment(0));
+								String otherPathMsg = opStartsWithProject ? otherEntry.getPath().removeFirstSegments(1).toString() : otherEntry.getPath().makeRelative().toString();
+								if (JavaCore.ERROR.equals(option)) {
+									return new JavaModelStatus(IStatus.ERROR, IJavaModelStatusConstants.OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE, 
+											Messages.bind(Messages.classpath_cannotUseDistinctSourceFolderAsOutput, new String[] {
+											entryPathMsg, otherPathMsg, projectName }));
+								}
+								if (cachedStatus == null) {
+									// Note that the isOK() is being overridden to return true. This is an exceptional scenario
+									cachedStatus = new JavaModelStatus(IStatus.OK, IJavaModelStatusConstants.OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE, 
+										Messages.bind(Messages.classpath_cannotUseDistinctSourceFolderAsOutput, new String[] {
+										entryPathMsg, otherPathMsg, projectName })){
+										public boolean isOK() {
+											return true;
+										}
+									};
+								}
 							}
 							break;
 						case IClasspathEntry.CPE_LIBRARY :
-							if (otherEntry.getPath().equals(output)) {
+							if (output != projectOutputLocation && otherEntry.getPath().equals(output)) {
+								boolean opStartsWithProject = projectName.equals(otherEntry.getPath().segment(0));
+								String otherPathMsg = opStartsWithProject ? otherEntry.getPath().removeFirstSegments(1).toString() : otherEntry.getPath().makeRelative().toString();
 								return new JavaModelStatus(IJavaModelStatusConstants.INVALID_CLASSPATH, Messages.bind(Messages.classpath_cannotUseLibraryAsOutput, new String[] {entryPathMsg, otherPathMsg, projectName}));
 							}
 					}
 				}
 			}
 		}
+
+		// NOTE: The above code that checks for IJavaModelStatusConstants.OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE, can be configured to return
+		// a WARNING status and hence should be at the end of this validation method. Any other code that might return a more severe ERROR should be 
+		// inserted before the mentioned code.
+		if (cachedStatus != null) return cachedStatus;
+
 		return JavaModelStatus.VERIFIED_OK;
 	}
 

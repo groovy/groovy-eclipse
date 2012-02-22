@@ -376,13 +376,8 @@ public class JavadocContents {
 		}
 		IType declaringType = this.type;
 		if (declaringType.isMember()) {
-			int depth = 0;
 			// might need to remove a part of the signature corresponding to the synthetic argument
 			if (!Flags.isStatic(declaringType.getFlags())) {
-				depth++;
-			}
-			if (depth != 0) {
-				// depth is 1
 				int indexOfOpeningParen = anchor.indexOf('(');
 				if (indexOfOpeningParen == -1) return null;
 				int index = indexOfOpeningParen;
@@ -390,6 +385,10 @@ public class JavadocContents {
 				int indexOfComma = anchor.indexOf(',', index);
 				if (indexOfComma != -1) {
 					index = indexOfComma + 2;
+				
+				} else {
+					// no argument, but a synthetic argument
+					index = anchor.indexOf(')', index);
 				}
 				anchor = anchor.substring(0, indexOfOpeningParen) + anchor.substring(index);
 			}

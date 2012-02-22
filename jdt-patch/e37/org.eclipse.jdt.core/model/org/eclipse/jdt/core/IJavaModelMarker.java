@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -114,4 +114,13 @@ public interface IJavaModelMarker {
 	 * @since 2.0
 	 */
 	String CLASSPATH_FILE_FORMAT = "classpathFileFormat"; //$NON-NLS-1$
+	
+	/**
+	 * Output overlapping another source attribute (value <code>"outputOverlappingSource"</code>). 
+	 * Used only on buildpath problem markers. The value of this attribute is 
+	 * either "true" or "false".
+	 * 
+	 * @since 3.6.4
+	 */
+	String OUTPUT_OVERLAPPING_SOURCE = "outputOverlappingSource"; //$NON-NLS-1$
 }

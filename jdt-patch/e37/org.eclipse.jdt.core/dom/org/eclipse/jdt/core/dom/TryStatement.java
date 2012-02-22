@@ -352,7 +352,7 @@ public class TryStatement extends Statement {
 	 */
 	public List resources() {
 		// more efficient than just calling unsupportedIn2_3() to check
-		if (this.resources == null) {
+		if (this.resources != null) {
 			unsupportedIn2_3();
 		}
 		return this.resources;

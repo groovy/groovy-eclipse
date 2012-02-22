@@ -215,6 +215,17 @@ public class ForStatement extends Statement {
 				exitBranch,
 				isConditionOptimizedFalse,
 				!isConditionTrue /*for(;;){}while(true); unreachable(); */);
+		// Variables initialized only for the purpose of the for loop can be removed for further flow info
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=359495
+		if (this.initializations != null) {
+			for (int i = 0; i < this.initializations.length; i++) {
+				Statement init = this.initializations[i];
+				if (init instanceof LocalDeclaration) {
+					LocalVariableBinding binding = ((LocalDeclaration) init).binding;
+					mergedInfo.resetAssignmentInfo(binding);
+				}
+			}
+		}
 		this.mergedInitStateIndex = currentScope.methodScope().recordInitializationStates(mergedInfo);
 		return mergedInfo;
 	}

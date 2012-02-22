@@ -433,7 +433,7 @@ public class JavaProject
 							new JavaModelStatus(IJavaModelStatusConstants.CLASSPATH_CYCLE, project, cycleString));
 					}
 				} else {
-					project.flushClasspathProblemMarkers(true, false);
+					project.flushClasspathProblemMarkers(true, false, false);
 				}
 			}
 		}
@@ -806,7 +806,7 @@ public class JavaProject
 		IMarker marker = null;
 		int severity;
 		String[] arguments = CharOperation.NO_STRINGS;
-		boolean isCycleProblem = false, isClasspathFileFormatProblem = false;
+		boolean isCycleProblem = false, isClasspathFileFormatProblem = false, isOutputOverlapping = false;
 		switch (status.getCode()) {
 
 			case  IJavaModelStatusConstants.CLASSPATH_CYCLE :
@@ -833,7 +833,17 @@ public class JavaProject
 					return; // setting == IGNORE
 				}
 				break;
-
+			case IJavaModelStatusConstants.OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE :
+				isOutputOverlapping = true;
+				setting = getOption(JavaCore.CORE_OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE, true);
+				if (JavaCore.ERROR.equals(setting)) {
+					severity = IMarker.SEVERITY_ERROR;
+				} else if (JavaCore.WARNING.equals(setting)) {
+					severity = IMarker.SEVERITY_WARNING;
+				} else {
+					return; // setting == IGNORE
+				}
+				break;
 			default:
 				IPath path = status.getPath();
 				if (path != null) arguments = new String[] { path.toString() };
@@ -855,6 +865,7 @@ public class JavaProject
 					IMarker.LOCATION,
 					IJavaModelMarker.CYCLE_DETECTED,
 					IJavaModelMarker.CLASSPATH_FILE_FORMAT,
+					IJavaModelMarker.OUTPUT_OVERLAPPING_SOURCE,
 					IJavaModelMarker.ID,
 					IJavaModelMarker.ARGUMENTS ,
 					IJavaModelMarker.CATEGORY_ID,
@@ -866,6 +877,7 @@ public class JavaProject
 					Messages.classpath_buildPath,
 					isCycleProblem ? "true" : "false",//$NON-NLS-1$ //$NON-NLS-2$
 					isClasspathFileFormatProblem ? "true" : "false",//$NON-NLS-1$ //$NON-NLS-2$
+					isOutputOverlapping ? "true" : "false", //$NON-NLS-1$ //$NON-NLS-2$
 					new Integer(status.getCode()),
 					Util.getProblemArgumentsForMarker(arguments) ,
 					new Integer(CategorizedProblem.CAT_BUILDPATH),
@@ -1359,18 +1371,20 @@ public class JavaProject
 	/**
 	 * Remove all markers denoting classpath problems
 	 */ //TODO (philippe) should improve to use a bitmask instead of booleans (CYCLE, FORMAT, VALID)
-	protected void flushClasspathProblemMarkers(boolean flushCycleMarkers, boolean flushClasspathFormatMarkers) {
+	protected void flushClasspathProblemMarkers(boolean flushCycleMarkers, boolean flushClasspathFormatMarkers, boolean flushOverlappingOutputMarkers) {
 		try {
 			if (this.project.isAccessible()) {
 				IMarker[] markers = this.project.findMarkers(IJavaModelMarker.BUILDPATH_PROBLEM_MARKER, false, IResource.DEPTH_ZERO);
 				for (int i = 0, length = markers.length; i < length; i++) {
 					IMarker marker = markers[i];
-					if (flushCycleMarkers && flushClasspathFormatMarkers) {
+					if (flushCycleMarkers && flushClasspathFormatMarkers && flushOverlappingOutputMarkers) {
 						marker.delete();
 					} else {
 						String cycleAttr = (String)marker.getAttribute(IJavaModelMarker.CYCLE_DETECTED);
 						String classpathFileFormatAttr =  (String)marker.getAttribute(IJavaModelMarker.CLASSPATH_FILE_FORMAT);
+						String overlappingOutputAttr = (String) marker.getAttribute(IJavaModelMarker.OUTPUT_OVERLAPPING_SOURCE);
 						if ((flushCycleMarkers == (cycleAttr != null && cycleAttr.equals("true"))) //$NON-NLS-1$
+							&& (flushOverlappingOutputMarkers == (overlappingOutputAttr != null && overlappingOutputAttr.equals("true"))) //$NON-NLS-1$
 							&& (flushClasspathFormatMarkers == (classpathFileFormatAttr != null && classpathFileFormatAttr.equals("true")))){ //$NON-NLS-1$
 							marker.delete();
 						}
@@ -1516,6 +1530,7 @@ public class JavaProject
 						propertyName.equals(JavaCore.CORE_ENABLE_CLASSPATH_MULTIPLE_OUTPUT_LOCATIONS) ||
 						propertyName.equals(JavaCore.CORE_INCOMPLETE_CLASSPATH) ||
 						propertyName.equals(JavaCore.CORE_CIRCULAR_CLASSPATH) ||
+						propertyName.equals(JavaCore.CORE_OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE) ||
 						propertyName.equals(JavaCore.CORE_INCOMPATIBLE_JDK_LEVEL))
 					{
 						manager.deltaState.addClasspathValidation(JavaProject.this);

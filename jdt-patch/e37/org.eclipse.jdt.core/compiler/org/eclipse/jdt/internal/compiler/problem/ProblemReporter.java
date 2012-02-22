@@ -13,6 +13,7 @@
  *     						bug 338303 - Warning about Redundant assignment conflicts with definite assignment
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.problem;
+// GROOVY PATCHED
 
 import java.io.CharConversionException;
 import java.io.PrintWriter;

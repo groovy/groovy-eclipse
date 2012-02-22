@@ -1205,7 +1205,13 @@ private ReferenceBinding getTypeFromCompoundName(char[][] compoundName, boolean 
 		packageBinding.addType(binding);
 	} else if (binding == TheNotFoundType) {
 		// report the missing class file first
-		this.problemReporter.isClassPathCorrect(compoundName, this.unitBeingCompleted, this.missingClassFileLocation);
+		if (!wasMissingType) {
+			/* Since missing types have been already been complained against while producing binaries, there is no class path 
+			 * misconfiguration now that did not also exist in some equivalent form while producing the class files which encode 
+			 * these missing types. So no need to bark again. Note that wasMissingType == true signals a type referenced in a .class 
+			 * file which could not be found when the binary was produced. See https://bugs.eclipse.org/bugs/show_bug.cgi?id=364450 */
+			this.problemReporter.isClassPathCorrect(compoundName, this.unitBeingCompleted, this.missingClassFileLocation);
+		}
 		// create a proxy for the missing BinaryType
 		binding = createMissingType(null, compoundName);
 	} else if (!isParameterized) {

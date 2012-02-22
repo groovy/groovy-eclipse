@@ -2130,5 +2130,29 @@ private void combineNullStatusChangeInAssertInfo(UnconditionalFlowInfo otherInit
 		}
 	}
 }
+
+public void resetAssignmentInfo(LocalVariableBinding local) {
+	resetAssignmentInfo(local.id + this.maxFieldCount);
+}
+
+public void resetAssignmentInfo(int position) {
+	if (this != DEAD_END) {
+		// position is zero-based
+		if (position < BitCacheSize) {
+			// use bits
+			long mask;
+			this.definiteInits &= (mask = ~(1L << position));
+			this.potentialInits &= mask;
+		} else {
+			// use extra vector
+			int vectorIndex = (position / BitCacheSize) - 1;
+			if (this.extra == null || vectorIndex >= this.extra[0].length) return;	// variable doesnt exist in flow info
+			long mask;
+			this.extra[0][vectorIndex] &=
+				(mask = ~(1L << (position % BitCacheSize)));
+			this.extra[1][vectorIndex] &= mask;
+		}
+	}
+}
 }
 

@@ -114,6 +114,7 @@ public class SetClasspathOperation extends ChangeClasspathOperation {
 		IJavaModelStatus status = super.verify();
 		if (!status.isOK())
 			return status;
+		this.project.flushClasspathProblemMarkers(false, false, true);
 		return ClasspathEntry.validateClasspath(	this.project, this.newRawClasspath, this.newOutputLocation);
 	}
 

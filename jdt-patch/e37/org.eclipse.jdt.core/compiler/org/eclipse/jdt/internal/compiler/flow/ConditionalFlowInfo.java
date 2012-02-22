@@ -252,4 +252,9 @@ public boolean isMarkedAsNullOrNonNullInAssertExpression(LocalVariableBinding lo
 	return (this.initsWhenTrue.isMarkedAsNullOrNonNullInAssertExpression(local)
 		|| this.initsWhenFalse.isMarkedAsNullOrNonNullInAssertExpression(local));
 }
+
+public void resetAssignmentInfo(LocalVariableBinding local) {
+	this.initsWhenTrue.resetAssignmentInfo(local);
+	this.initsWhenFalse.resetAssignmentInfo(local);
+}
 }

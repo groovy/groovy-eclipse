@@ -1829,6 +1829,19 @@ public final class JavaCore extends Plugin {
 	 */
 	public static final String CORE_ENABLE_CLASSPATH_MULTIPLE_OUTPUT_LOCATIONS = PLUGIN_ID + ".classpath.multipleOutputLocations"; //$NON-NLS-1$
 	/**
+	 * Core option ID: Reporting an output location overlapping another source location.
+	 * <p> Indicate the severity of the problem reported when a source entry's output location overlaps another
+	 * source entry. </p>
+	 * 
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.classpath.outputOverlappingAnotherSource"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "error", "warning", "ignore" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"warning"</code></dd>
+	 * </dl>
+	 * @since 3.6.4
+	 */
+	public static final String CORE_OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE = PLUGIN_ID + ".classpath.outputOverlappingAnotherSource";  //$NON-NLS-1$
+	/**
 	 * Core option ID: Set the timeout value for retrieving the method's parameter names from javadoc.
 	 * <p>Timeout in milliseconds to retrieve the method's parameter names from javadoc.
 	 * <p>If the value is <code>0</code>, the parameter names are not fetched and the raw names are returned.
@@ -3685,6 +3698,7 @@ public final class JavaCore extends Plugin {
 							try {
 								if (JavaBuilder.DEBUG)
 									System.out.println("Touching " + project.getElementName()); //$NON-NLS-1$
+								new ClasspathValidation((JavaProject) project).validate(); // https://bugs.eclipse.org/bugs/show_bug.cgi?id=287164
 								project.getProject().touch(progressMonitor2);
 							} catch (CoreException e) {
 								// could not touch this project: ignore

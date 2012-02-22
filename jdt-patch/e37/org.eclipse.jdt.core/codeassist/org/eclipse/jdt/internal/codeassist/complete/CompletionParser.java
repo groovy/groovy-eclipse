@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1167,7 +1167,8 @@ private void buildMoreGenericsCompletionContext(ASTNode node, boolean consumeTyp
 							if (prevKind == K_BETWEEN_NEW_AND_LEFT_BRACKET) {
 								
 								AllocationExpression exp;
-								if (this.expressionPtr > -1 && this.expressionStack[this.expressionPtr] instanceof AllocationExpression) {
+								if (this.expressionPtr > -1 && this.expressionStack[this.expressionPtr] instanceof AllocationExpression 
+										&& this.invocationType == QUALIFIED_ALLOCATION) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=361963
 									exp = new QualifiedAllocationExpression();
 									exp.type = ref;
 									((QualifiedAllocationExpression)exp).enclosingInstance = this.expressionStack[this.expressionPtr];

@@ -987,6 +987,13 @@ public class NameLookup implements SuffixConstants {
 					break;
 				case IPackageFragmentRoot.K_SOURCE :
 					seekTypesInSourcePackage(matchName, pkg, firstDot, partialMatch, topLevelTypeName, acceptFlags, requestor);
+					if (matchName.indexOf('$') != -1) {
+						matchName= matchName.replace('$', '.');
+						firstDot = matchName.indexOf('.');
+						if (!partialMatch)
+							topLevelTypeName = firstDot == -1 ? matchName : matchName.substring(0, firstDot);
+						seekTypesInSourcePackage(matchName, pkg, firstDot, partialMatch, topLevelTypeName, acceptFlags, requestor);
+					}
 					break;
 				default :
 					return;

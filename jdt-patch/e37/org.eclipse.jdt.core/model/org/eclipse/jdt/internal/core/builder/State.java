@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -44,7 +44,7 @@ private long previousStructuralBuildTime;
 private StringSet structurallyChangedTypes;
 public static int MaxStructurallyChangedTypes = 100; // keep track of ? structurally changed types, otherwise consider all to be changed
 
-public static final byte VERSION = 0x0019; // fix for 325755
+public static final byte VERSION = 0x001A; // fix for 287164
 
 static final byte SOURCE_FOLDER = 1;
 static final byte BINARY_FOLDER = 2;

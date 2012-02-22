@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -220,15 +220,10 @@ public void generateCode(ClassScope classScope, ClassFile classFile) {
 	} catch (AbortMethod e) {
 		if (e.compilationResult == CodeStream.RESTART_IN_WIDE_MODE) {
 			// a branch target required a goto_w, restart code gen in wide mode.
-				if (!restart) {
 				classFile.contentsOffset = problemResetPC;
 				classFile.methodCount--;
 				classFile.codeStream.resetInWideMode(); // request wide mode
-					restart = true;
-				} else {
-					restart = false;
-					abort = true;
-			}
+				restart = true;
 			} else if (e.compilationResult == CodeStream.RESTART_CODE_GEN_FOR_UNUSED_LOCALS_MODE) {
 				classFile.contentsOffset = problemResetPC;
 				classFile.methodCount--;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -101,7 +101,11 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			(this.action == null
 				? actionInfo
 				: (actionInfo.mergedWith(loopingContext.initsOnContinue))).copy());
-	this.preConditionInitStateIndex = currentScope.methodScope().recordInitializationStates(actionInfo);
+	/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=367023, we reach the condition at the bottom via two arcs, 
+	   one by free fall and another by continuing... Merge initializations propagated through the two pathways,
+	   cf, while and for loops.
+	*/
+	this.preConditionInitStateIndex = currentScope.methodScope().recordInitializationStates(actionInfo.mergedWith(loopingContext.initsOnContinue));
 	if (!isConditionOptimizedFalse && this.continueLabel != null) {
 		loopingContext.complainOnDeferredFinalChecks(currentScope, condInfo);
 		condLoopContext.complainOnDeferredFinalChecks(currentScope, condInfo);

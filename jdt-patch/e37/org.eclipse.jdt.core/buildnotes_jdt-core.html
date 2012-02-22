@@ -41,6 +41,146 @@
 	</td>
   </tr>
 </table>
+<a name="v_B83_R37x"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7.2 - January 18, 2012 - 3.7.2
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=368435">368435</a>
+[compiler] NPE while compile a method with unused local
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=361963">361963</a>
+Stack overflow when trying to code complete a generic list
+
+<a name="v_B82_R37x"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7.2 - January 11, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=366131">366131</a>
+[1.5][compiler] New generics compile error in Indigo SR1 for code that compiles in earlier Eclipse and javac
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=302850">302850</a>
+13 failures in JavaModel tests for the N20100214-2000 Mac OS X - Cocoa test machine
+
+<a name="v_B81_R37x"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7.2 - December 14, 2011
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=367023">367023</a>
+Error in JDT Core during AST creation
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=367566">367566</a>
+In try-with-resources statement close() method of resource is not called
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=366999">366999</a>
+VerifyError: Inconsistent stackmap frames
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=364450">364450</a>
+Dubious class path error triggers a full rebuild
+
+<a name="v_B80_R37x"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7.2 - November 30, 2011
+<br>Project org.eclipse.jdt.core v_B80_R37x
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B80_R37x">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359177">359177</a>
+Test MethodVerifyTest#testBug317719h fails when run with 1.6 JVM
+
+<a name="v_B79_R37x"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7.2 - November 23, 2011
+<br>Project org.eclipse.jdt.core v_B79_R37x
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B79_R37x">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=361053">361053</a>
+java.lang.VerifyError on try-with-resources
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=357110">357110</a>
+Problem with inner classes referenced from jars or class folders: &quot;The type ... cannot be resolved&quot;
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=362591">362591</a>
+VerifyError: Inconsistent stackmap frames
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=361441">361441</a>
+Error in JDT Core during AST creation
+
+<a name="v_B78_R37x"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7.2 - November 16, 2011
+<br>Project org.eclipse.jdt.core v_B78_R37x
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B78_R37x">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=361938">361938</a>
+Formerly working JLS3 parser not working -- Scanner reports com.sun.jdi.InvocationException occurred invoking method.
+
+<a name="v_B77_R37x"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.7.2 - November 2, 2011
+<br>Project org.eclipse.jdt.core v_B77_R37x
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_B77_R37x">cvs</a>).
+<h2>What's new in this drop</h2>
+<ul>
+<li>Added a new API OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=287164">287164</a> for details):
+<pre>
+/**
+ * Status constant indicating that the default or specific output folder is overlapping
+ * with another source location.
+ * @since 3.6.4
+ */
+public static final int OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE = 1013;
+</pre>
+</li>
+
+<li>Added a new option CORE_OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE to report an output location overlapping another source location(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=287164">287164</a> for details):
+<pre>
+/**
+ * Core option ID: Reporting an output location overlapping another source location.
+ * Indicate the severity of the problem reported when a source entry's output location overlaps another
+ * source entry.
+ * 
+ * Option id:"org.eclipse.jdt.core.classpath.outputOverlappingAnotherSource"
+ * Possible values:{ "error", "warning", "ignore" }
+ * Default:"error"
+ * 
+ * @since 3.6.4
+ */
+public static final String CORE_OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE = PLUGIN_ID + ".classpath.outputOverlappingAnotherSource";
+</pre>
+</li>
+</ul>
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=354766">354766</a>
+Javadoc content does not appear in content assist info window for non-static inner class constructors
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=287164">287164</a>
+Report build path error if source folder has other source folder as output folder
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359646">359646</a>
+Formatter fails silently if Java source contains 0x8000000000000000L
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359495">359495</a>
+[1.7][compiler] VerifyError in try-finally block with lock encompassing for-each block and unlock in finally clause
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=358827">358827</a>
+[1.7] exception analysis for t-w-r spoils null analysis
+
 <a name="v_B76_R37x"></a>
 <hr><h1>
 Eclipse Platform Build Notes<br>

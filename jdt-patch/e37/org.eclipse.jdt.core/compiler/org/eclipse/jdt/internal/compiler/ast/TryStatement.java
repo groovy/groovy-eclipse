@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,7 +7,9 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Stephan Herrmann - Contribution for bug 332637 - Dead Code detection removing code that isn't dead
+ *     Stephan Herrmann - Contributions for
+ *     							bug 332637 - Dead Code detection removing code that isn't dead
+ *     							bug 358827 - [1.7] exception analysis for t-w-r spoils null analysis
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -65,6 +67,7 @@ public class TryStatement extends SubRoutineStatement {
 	// for local variables table attributes
 	int mergedInitStateIndex = -1;
 	int preTryInitStateIndex = -1;
+	int postTryInitStateIndex = -1;
 	int[] postResourcesInitStateIndexes;
 	int naturalExitMergeInitStateIndex = -1;
 	int[] catchExitInitStateIndexes;
@@ -145,7 +148,9 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			if ((tryInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) != 0)
 				this.bits |= ASTNode.IsTryBlockExiting;
 		}
-
+		if (resourcesLength > 0) { 
+			this.postTryInitStateIndex = currentScope.methodScope().recordInitializationStates(tryInfo);
+		}
 		// check unreachable catch blocks
 		handlingContext.complainIfUnusedExceptionHandlers(this.scope, this);
 
@@ -258,7 +263,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				if (closeMethod != null && closeMethod.returnType.id == TypeIds.T_void) {
 					ReferenceBinding[] thrownExceptions = closeMethod.thrownExceptions;
 					for (int j = 0, length = thrownExceptions.length; j < length; j++) {
-						handlingContext.checkExceptionHandlers(thrownExceptions[j], this.resources[j], flowInfo, currentScope);
+						handlingContext.checkExceptionHandlers(thrownExceptions[j], this.resources[i], flowInfo, currentScope, true);
 					}
 				}
 			}
@@ -271,7 +276,9 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			if ((tryInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) != 0)
 				this.bits |= ASTNode.IsTryBlockExiting;
 		}
-
+		if (resourcesLength > 0) {
+			this.postTryInitStateIndex = currentScope.methodScope().recordInitializationStates(tryInfo);
+		}
 		// check unreachable catch blocks
 		handlingContext.complainIfUnusedExceptionHandlers(this.scope, this);
 
@@ -490,6 +497,13 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 					// inline resource closure
 					if (i > 0) {
 						int invokeCloseStartPc = codeStream.position; // https://bugs.eclipse.org/bugs/show_bug.cgi?id=343785
+						if (this.postTryInitStateIndex != -1) {
+							/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=361053, we are just past a synthetic instance of try-catch-finally.
+							   Our initialization type state is the same as it was at the end of the just concluded try (catch rethrows)
+							*/
+							codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.postTryInitStateIndex);
+							codeStream.addDefinitelyAssignedVariables(currentScope, this.postTryInitStateIndex);
+						}
 						codeStream.load(localVariable);
 						codeStream.ifnull(exitLabel);
 						codeStream.load(localVariable);
@@ -876,9 +890,6 @@ public boolean generateSubRoutineInvocation(BlockScope currentScope, CodeStream 
 	if (finallyMode == FINALLY_INLINE) {
 		if (isStackMapFrameCodeStream) {
 			((StackMapFrameCodeStream) codeStream).pushStateIndex(stateIndex);
-		}
-		if (secretLocal != null) {
-			codeStream.addVariable(secretLocal);
 		}
 		// cannot use jsr bytecode, then simply inline the subroutine
 		// inside try block, ensure to deactivate all catch block exception handlers while inlining finally block

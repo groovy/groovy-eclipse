@@ -185,17 +185,10 @@ public abstract class AbstractMethodDeclaration
 			// a fatal error was detected during code generation, need to restart code gen if possible
 			if (e.compilationResult == CodeStream.RESTART_IN_WIDE_MODE) {
 				// a branch target required a goto_w, restart code gen in wide mode.
-				if (!restart) {
 					classFile.contentsOffset = problemResetPC;
 					classFile.methodCount--;
 					classFile.codeStream.resetInWideMode(); // request wide mode
 					restart = true;
-				} else {
-					// after restarting in wide mode, code generation failed again
-					// report a problem
-					restart = false;
-					abort = true;
-				}
 				} else if (e.compilationResult == CodeStream.RESTART_CODE_GEN_FOR_UNUSED_LOCALS_MODE) {
 					classFile.contentsOffset = problemResetPC;
 					classFile.methodCount--;
