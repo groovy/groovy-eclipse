@@ -53,14 +53,24 @@ public class CodeSelectLocalTest extends BrowsingTestCase {
         assertSelection(contents, "i");
     }
 
+    // GRECLIPSE-1330
+    public void testLocalVar6() throws Exception {
+        String contents = "def i\n\"$i\"";
+        assertSelection(contents, "i", "$i");
+    }
+
     void assertSelection(String contents, String varName) throws Exception {
+    	assertSelection(contents, varName, varName)l
+    }
+
+    void assertSelection(String contents, String varName, String selectionText) throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");
         env.addGroovyClass(root, "", "Hello", contents);
         env.incrementalBuild();
         GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello.groovy");
         assertTrue("Hello groovy unit should exist", unit.exists());
-        IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf(varName), varName.length());
+        IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf(selectionText), selectionText.length());
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found local variable", varName, elt[0].getElementName());
         assertTrue("Should exist", elt[0].exists());

@@ -37,6 +37,12 @@ public class CodeSelectHelper implements ICodeSelectHelper {
     
     public IJavaElement[] select(GroovyCompilationUnit unit, int start, int length) {
         ModuleNode module = unit.getModuleNode();
+        // GRECLIPSE-1330 check for possible reference in GString
+        char[] contents = unit.getContents();
+        if (contents[start] == '$' && length > 1 && contents[start+1] != '{') {
+            start++;
+            length--;
+        }
         if (module != null) {
             String event = null;
             if (GroovyLogManager.manager.hasLoggers()) {
