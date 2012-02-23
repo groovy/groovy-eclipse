@@ -164,7 +164,7 @@
   	<!-- Generate metadata -->
     <java fork="true" dir="${updateSiteDir}" classname="org.eclipse.equinox.launcher.Main" maxmemory="256m">
         <arg value="-application"/>
-        <arg value="org.eclipse.equinox.p2.metadata.generator.EclipseGenerator"/>
+        <arg value="org.eclipse.equinox.p2.publisher.EclipseGenerator"/>
         <arg value="-updateSite"/>
         <arg value="${updateSiteDir}"/>
         <arg value="-base"/>

@@ -74,7 +74,7 @@
 	<property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
 	<property name="compilerArg" value=""/>
 	<target name="pre.@dot">
-		<groovy.jdtcompile destdir="${temp.folder}/@dot.bin" failonerror="true" nowarn="true" verbose="false" debug="true" includeAntRuntime="no" source="1.5" target="1.5"		>
+		<groovy.jdtcompile destdir="${temp.folder}/@dot" failonerror="true" nowarn="true" verbose="false" debug="true" includeAntRuntime="no" source="1.5" target="1.5"		>
 			<compilerarg line="${compilerArg}" compiler="${build.compiler}"/>
 			<classpath refid="@dot.classpath" />
 			<src path="src/"			/>

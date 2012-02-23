@@ -63,7 +63,7 @@ buildType=N
 buildTypePresentationPrefix=xx-
 
 # The eclipse build host. Must be an Eclipse SDK installation with JDT and PDE
-eclipseDir=/opt/eclipse/eclipse-rcp-ganymede-SR2-linux-gtk-x86_64
+eclipseDir=/opt/eclipse/eclipse-SDK-3.7RC4-linux-gtk
 
 
 
