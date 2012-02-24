@@ -57,8 +57,8 @@
 			<jvmarg value="-Dversion.full=${version.full}"/>
 			<jvmarg value="-Dversion.qualifier=${forceContextQualifier}"/>
 			<jvmarg value="-DforceContextQualifier=${forceContextQualifier}"/>
-  		<jvmarg value="-Xmx768M"/>
-  		<jvmarg value="-XX:PermSize=128M"/>
+  		<jvmarg value="-Xmx512M"/>
+  		<jvmarg value="-XX:PermSize=96M"/>
   		<!--<jvmarg value="-XX:MaxPermSize=256M "/>-->
 		 	<classpath>
     		<fileset dir="${eclipseDir}/plugins">
