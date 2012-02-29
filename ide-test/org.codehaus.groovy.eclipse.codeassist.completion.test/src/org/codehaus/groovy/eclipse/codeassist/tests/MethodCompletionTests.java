@@ -172,8 +172,30 @@ public class MethodCompletionTests extends CompletionTestCase {
             }
         }
         fail("expecting to find 2 'm' methods, but instead found " + methods.size() + ":\n" + methods);
-
     }
+    
+    // GRECLIPSE-1374
+    public void testParensExprs1() throws Exception {
+        String contents = "(1).\ndef u";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "(1)."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "abs", 1);
+    }
+    // GRECLIPSE-1374
+    public void testParensExprs2() throws Exception {
+        String contents = "(((1))).\ndef u";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "(((1)))."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "abs", 1);
+    }
+    // GRECLIPSE-1374
+    public void testParensExprs3() throws Exception {
+        String contents = "(((1))).abs()";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "(((1))).a"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "abs", 1);
+    }
+
 
     private List<MethodNode> delegateTestParameterNames(GroovyCompilationUnit unit) throws Exception {
         // for some reason, need to wait for indices to be built before this can work

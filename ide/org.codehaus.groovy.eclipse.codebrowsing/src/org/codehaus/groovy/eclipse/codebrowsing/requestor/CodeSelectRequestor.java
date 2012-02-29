@@ -315,8 +315,15 @@ public class CodeSelectRequestor implements ITypeRequestor {
         ASTNode node = (ASTNode) var;
         ClassNode type = result.type != null ? result.type : var.getType();
         
+        int start;
+        if (node instanceof Parameter) {
+            start = ((Parameter) node).getNameStart();
+        } else {
+            start = node.getStart();
+        }
+        
         // be compatible between 3.6 and 3.7+
-        return ReflectionUtils.createLocalVariable(enclosingElement, var.getName(), node.getStart(), Signature.createTypeSignature(createGenericsAwareName(type, true), false));
+        return ReflectionUtils.createLocalVariable(enclosingElement, var.getName(), start, Signature.createTypeSignature(createGenericsAwareName(type, true), false));
     }
 
 

@@ -67,6 +67,11 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
             completionExprStart = context.completionLocation - constructorCompletionText.length;
         }
 
+        if (completionExprStart < 0) {
+            // will get here for some kinds of bad syntax
+            return Collections.emptyList();
+        }
+
         GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
                 context, getJavaContext(), completionExprStart,
                 context.completionEnd - completionExprStart,

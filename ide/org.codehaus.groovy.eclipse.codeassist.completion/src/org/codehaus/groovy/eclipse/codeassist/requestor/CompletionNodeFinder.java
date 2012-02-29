@@ -568,19 +568,41 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     }
 
     @Override
+    public void visitPropertyExpression(PropertyExpression expression) {
+        if (!doTest(expression)) {
+            return;
+        }
+        Expression objectExpression = expression.getObjectExpression();
+        Expression propertyExpression = expression.getProperty();
+        if (supportingNodeEnd >= 0 && supportingNodeEnd < propertyExpression.getStart()) {
+            // GRECLIPSE-1374 probably completion after a parenthesized
+            // expression
+            createContext(objectExpression, blockStack.peek(), EXPRESSION);
+        }
+        super.visitPropertyExpression(expression);
+    }
+
+    @Override
     public void visitMethodCallExpression(MethodCallExpression call) {
         if (!doTest(call)) {
             return;
         }
+        Expression objectExpression = call.getObjectExpression();
+        Expression methodExpression = call.getMethod();
+        Expression arguments = call.getArguments();
 
         // here, we check to see if we are after the closing paren or before it.
         // not quite as easy as I would have hoped since the AST doesn't track
         // this information
-        Expression arguments = call.getArguments();
-        checkForAfterClosingParen(call.getMethod(), arguments);
+        checkForAfterClosingParen(methodExpression, arguments);
 
-        call.getObjectExpression().visit(this);
-        call.getMethod().visit(this);
+        objectExpression.visit(this);
+        if (supportingNodeEnd >= 0 && supportingNodeEnd < methodExpression.getStart()) {
+            // GRECLIPSE-1374 probably completion after a parenthesized
+            // expression
+            createContext(objectExpression, blockStack.peek(), EXPRESSION);
+        }
+        methodExpression.visit(this);
 
         // here do a check if we are inside of a method call, but we are not at
         // any particular expression (ie- this is the METHOD_CONTEXT)
@@ -592,14 +614,11 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
 
         // if we get here, then we still want to do the context
         // we are either at a paren, at a comma, or at a start of an expression
-        // FIXADE ,.. do we really want to use the ObjectExpression here?
-        // Oh...right.  this will affect the test inside of StatementAndExpression...
-        // declaring type or return type
-        createContextForCallContext(call, call.isImplicitThis() ? call.getMethod() : call.getObjectExpression(),
+        createContextForCallContext(call, call.isImplicitThis() ? methodExpression : objectExpression,
         // this is not exactly right since it will
         // fail on funky kinds of method calls, like those that are called by a
         // GString
-                call.getMethod().getText());
+                methodExpression.getText());
     }
 
     @Override
@@ -635,7 +654,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     }
 
     private void checkForAfterClosingParen(AnnotatedNode contextTarget, Expression arguments) {
-;        int lastArgEnd = findLastArgumentEnd(arguments);
+        int lastArgEnd = findLastArgumentEnd(arguments);
         int start = arguments.getStart();
         if (start == 0 && arguments instanceof TupleExpression && ((TupleExpression) arguments).getExpressions().size() > 0) {
             // Tuple expressions as argument lists do not always have slocs

@@ -27,7 +27,11 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.CodeSelectHelper;
 import org.codehaus.groovy.eclipse.core.search.FindAllReferencesRequestor;
@@ -161,7 +165,10 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
     }
 
     private Map<org.codehaus.groovy.ast.ASTNode, Integer> internalFindOccurences() {
-        if (nodeToLookFor != null && !(nodeToLookFor instanceof ConstantExpression)) {
+        if (nodeToLookFor != null && !(nodeToLookFor instanceof ConstantExpression)
+                && !(nodeToLookFor instanceof ClosureExpression) && !(nodeToLookFor instanceof DeclarationExpression)
+                && !(nodeToLookFor instanceof BinaryExpression)
+                && !(nodeToLookFor instanceof MethodCallExpression)) {
             FindAllReferencesRequestor requestor = new FindAllReferencesRequestor(nodeToLookFor);
             TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(gunit);
             visitor.visitCompilationUnit(requestor);

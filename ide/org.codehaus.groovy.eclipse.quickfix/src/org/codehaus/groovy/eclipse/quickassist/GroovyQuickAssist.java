@@ -89,6 +89,11 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
 		    proposalList.add(splitAssignment);
 		}
 		
+		SwapOperandsCompletionProposal swapOperands = new SwapOperandsCompletionProposal(context);
+		if (swapOperands.hasProposals()) {
+		    proposalList.add(swapOperands);
+		}
+		
 		
 		return proposalList.toArray(new IJavaCompletionProposal[0]);
 	}
