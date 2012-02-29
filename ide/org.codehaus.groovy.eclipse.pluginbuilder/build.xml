@@ -32,6 +32,8 @@
 			resultproperty="java.result">
 			<arg value="-application"/>
 			<arg value="org.eclipse.ant.core.antRunner"/>
+			<arg value="-data"/>
+			<arg value="${buildHome}/workspace-build"/>
 			<arg value="-f"/>
 			<arg value="${pdebuild.home}/build.xml"/>
 			<!--<arg value="-verbose"/>-->
