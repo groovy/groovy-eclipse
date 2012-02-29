@@ -28,7 +28,7 @@ we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Ecl
 		<!-- Install Eclipse Test Framework -->
 		<install-bundle 
 			eclipse.loc="${test.eclipse.base}/eclipse" 
-			updatesite.url="${test.library.update.site}" 
+			updatesite.url="file:${test.library.update.site}" 
 			feature.id="org.eclipse.test" />
 		
 		<echo message="Update site url = ${updateSiteURL}"/>
