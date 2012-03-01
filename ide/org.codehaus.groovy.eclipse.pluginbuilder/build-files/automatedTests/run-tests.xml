@@ -85,7 +85,6 @@ we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Ecl
     		</not>
       </condition>
     </target>
-
 	
 	<!--
 	To get good coverage while at the same time not taking a tremendously long time to build, 
