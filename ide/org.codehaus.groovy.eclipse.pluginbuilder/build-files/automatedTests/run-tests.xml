@@ -24,17 +24,15 @@ we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Ecl
 		<property name="updateSiteURL" value="file:${buildDirectory}/updateSite"/>
 		<echo message="Installing plug-ins for testing" />
 		
-		<!-- I don't think we need this... -->
 		<mkdir dir="${buildDirectory}/eclipse-test-framework"/>
 		<unzip dest="${buildDirectory}/eclipse-test-framework">
 			<fileset file="${test.library.update.site}"/>
 		</unzip>
-		<!-- End... I don't think we need this... -->
 
 		<!-- Install Eclipse Test Framework -->
 		<install-bundle 
 			eclipse.loc="${test.eclipse.base}/eclipse" 
-			updatesite.url="file:${test.library.update.site}" 
+			updatesite.url="file:${buildDirectory}/eclipse-test-framework" 
 			feature.id="org.eclipse.test" />
 		
 		<echo message="Update site url = ${updateSiteURL}"/>
