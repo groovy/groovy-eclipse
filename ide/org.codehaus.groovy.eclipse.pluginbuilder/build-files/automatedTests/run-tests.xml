@@ -55,6 +55,7 @@ we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Ecl
     	<property name="test-output" value="${test.eclipse.host}/org.codehaus.groovy.alltests.AllGroovyTests.xml" />
 			<property name="eclipse-home" value="${test.eclipse.host}" />
 			<property name="junit-stylesheet" value="${test.eclipse.base}/eclipse/plugins/org.eclipse.test_3.3.100/JUNIT.XSL" />
+			<property name="org.eclipse.test" value="3.3.100"/>
 			<property name="arch" value="${test_arch}"/>
 			<property name="os" value="${test_os}"/>
 			<property name="ws" value="${test_ws}"/>
@@ -67,6 +68,7 @@ we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Ecl
     	<property name="test-output" value="${test.eclipse.host}/org.codehaus.groovy.alltests.GroovyJDTTests.xml" />
 			<property name="eclipse-home" value="${test.eclipse.host}" />
 			<property name="junit-stylesheet" value="${test.eclipse.base}/eclipse/plugins/org.eclipse.test_3.3.100/JUNIT.XSL" />
+			<property name="org.eclipse.test" value="3.3.100"/>
 			<property name="arch" value="${test_arch}"/>
 			<property name="os" value="${test_os}"/>
 			<property name="ws" value="${test_ws}"/>
