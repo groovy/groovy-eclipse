@@ -2,7 +2,7 @@
 <feature
       id="org.codehaus.groovy.m2eclipse"
       label="%featureName"
-      version="2.6.1.qualifier"
+      version="2.7.0.qualifier"
       provider-name="%providerName">
 
    <description url="%descriptionURL">
@@ -24,7 +24,7 @@
       <import plugin="org.eclipse.jdt.groovy.core" version="2.0.1" match="greaterOrEqual"/>
       <import plugin="org.codehaus.groovy.eclipse.core" version="2.0.1" match="greaterOrEqual"/>
       <import plugin="org.eclipse.jdt.core" version="3.5.1" match="greaterOrEqual"/>
-      <import feature="org.codehaus.groovy.eclipse.feature" version="2.6.1.qualifier"/>
+      <import feature="org.codehaus.groovy.eclipse.feature" version="2.7.0.qualifier"/>
    </requires>
 
    <plugin
