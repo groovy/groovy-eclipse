@@ -351,11 +351,11 @@ public class OrganizeGroovyImports {
             // However, this leads to GRECLIPSE-1390 where imports are no longer reordered and sorted.
             // configure import rewriter to keep all existing imports.  This is different from how
             // JDT does organize imports, but this prevents annotations on imports from being removed
-            //
-            ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, true);
+            SortedSet<ImportNode> allImports = new ImportNodeCompatibilityWrapper(node).getAllImportNodes();
+            boolean safeToReorganize = isSafeToReorganize(allImports);
+            ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, !safeToReorganize);
 
-            SortedSet<ImportNode> allIMports = new ImportNodeCompatibilityWrapper(node).getAllImportNodes();
-            for (ImportNode imp : allIMports) {
+            for (ImportNode imp : allImports) {
                 String fieldName = imp.getFieldName();
                 if (fieldName == null) {
                     fieldName = "*";
@@ -378,7 +378,9 @@ public class OrganizeGroovyImports {
                                 aliases.put("n" + dottedClassName, alias);
                             }
                         } else {
-                            // rewriter.addStaticImport(dottedClassName, fieldName, true);
+                            if (safeToReorganize) {
+                                rewriter.addStaticImport(dottedClassName, fieldName, true);
+                            }
                             if (isAliased(imp)) {
                                 aliases.put("s" + dottedClassName + "." + fieldName, alias);
                                 if (imp.isStatic()) {
@@ -404,7 +406,7 @@ public class OrganizeGroovyImports {
                 visitor.visitClass(clazz);
             }
 
-            for (ImportNode imp : allIMports) {
+            for (ImportNode imp : allImports) {
                 // now remove all default imports
                 if (isDefaultImport(imp)) {
                     // remove default imports
@@ -449,6 +451,22 @@ public class OrganizeGroovyImports {
             GroovyCore.logException("Exception thrown when organizing imports for " + unit.getElementName(), e);
         }
         return null;
+    }
+
+    /**
+     * GRECLIPSE-1390
+     * Reorganizing imports (ie- sorting and grouping them) will remove annotations on import statements
+     * In general, we want to reorganize, but it is not safe to do so if the are any annotations on imports
+     * @param allImports all the imports in the compilation unit
+     * @return true iff it is safe to reorganize imports
+     */
+    private boolean isSafeToReorganize(SortedSet<ImportNode> allImports) {
+        for (ImportNode imp : allImports) {
+            if (imp.getAnnotations() != null && imp.getAnnotations().size() > 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static final Set<String> DEFAULT_IMPORTS = new HashSet<String>();
@@ -531,7 +549,7 @@ public class OrganizeGroovyImports {
      * @return
      */
     private boolean isEmpty(ModuleNode node) {
-        if (node == null || node.getClasses() == null || node.getClasses().size() == 0 && node.getImports().size() == 0) {
+        if (node == null || node.getClasses() == null || (node.getClasses().size() == 0 && node.getImports().size() == 0)) {
             return true;
         }
         if (node.getClasses().size() == 1 && node.getImports().size() == 0 && ((ClassNode) node.getClasses().get(0)).isScript()) {

@@ -24,6 +24,7 @@ import org.eclipse.jdt.core.ISourceRange
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.search.TypeNameMatch
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery
+import org.eclipse.jface.text.Document;
 import org.eclipse.text.edits.DeleteEdit
 import org.eclipse.text.edits.InsertEdit
 import org.eclipse.text.edits.TextEdit
@@ -135,6 +136,17 @@ class AbstractOrganizeImportsTest extends EclipseTestCase {
         }
     }
     
+    void doContentsCompareTest(originalContents, expectedContents) {
+        def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", originalContents)
+        testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
+        def unit = JavaCore.createCompilationUnitFrom(file)
+        OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
+        TextEdit edit = organize.calculateMissingImports()
+        def prefix = "package main;" + System.getProperty("line.separator") + System.getProperty("line.separator")
+        Document doc = new Document(prefix + originalContents)
+        edit.apply(doc);
+        assertEquals(prefix + expectedContents, doc.get())
+    }
     
     void doChoiceTest(contents, expectedChoices) {
         def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)

@@ -560,7 +560,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
         String contents =
                 """
                 @Deprecated
-                import javax.swing.text.html.*\n
+                import javax.swing.text.html.*
                 HTML
                 """
         doAddImportTest(contents)
@@ -571,55 +571,62 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
         // test a simple default import is removed
         String contents =
                 """
-                import java.util.List\n
-                import groovy.util.Proxy\n
-                List\n
+                import java.util.List
+                import groovy.util.Proxy
+                List
                 Proxy
                 """
-        doDeleteImportTest(contents, 2)
+        // only 1 delete edit since the imports are all deleted together
+        doDeleteImportTest(contents, 1)
     }
     // GRECLIPSE-1392
     void testDefaultImport2() {
         // test that star default imports are removed
         String contents =
                 """
-                import java.util.*\n
-                import groovy.util.*\n
-                List\n
+                import java.util.*
+                import groovy.util.*
+                List
                 Proxy
                 """
-        doDeleteImportTest(contents, 2)
+        // only 1 delete edit since the imports are all deleted together
+        doDeleteImportTest(contents, 1)
     }
     // GRECLIPSE-1392
     void testDefaultImport3() {
         // test that BigInteger and BigDecimal are removed
         String contents =
                 """
-                import java.math.BigDecimal\n
-                import gjava.math.BigInteger\n
-                BigDecimal\n
+                import java.math.BigDecimal
+                import gjava.math.BigInteger
+                BigDecimal
                 BigInteger
                 """
+        // only 1 delete edit since the imports are all deleted together
         doDeleteImportTest(contents, 2)
     }
     // GRECLIPSE-1392
     void testDefaultImport4() {
         // test that aliased default import not removed
-        String contents =
-                """
-                import java.util.List as LL\n
-                import groovy.util.Proxy as PP\n
-                LL\n
-                PP
-                """
-        doDeleteImportTest(contents, 0)
+        doContentsCompareTest(
+"""import java.util.List as LL
+import groovy.util.Proxy as PP
+LL
+PP"""
+, 
+"""import groovy.util.Proxy as PP
+
+import java.util.List as LL
+LL
+PP"""
+)
     }
     // GRECLIPSE-1392
     void testDefaultImport5() {
         // test that static import whose container is default is not removed
         String contents =
                 """
-                import static java.util.Collections.swap\n
+                import static java.util.Collections.swap
                 swap
                 """
         doDeleteImportTest(contents, 0)
