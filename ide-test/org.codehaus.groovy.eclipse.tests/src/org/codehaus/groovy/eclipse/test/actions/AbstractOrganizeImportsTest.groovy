@@ -37,7 +37,6 @@ class AbstractOrganizeImportsTest extends EclipseTestCase {
     
     protected void setUp() throws Exception {
         super.setUp()
-        testProject.addNature(GroovyNature.GROOVY_NATURE)
         GroovyRuntime.addGroovyRuntime(testProject.getProject())
         testProject.createGroovyTypeAndPackage("other", "Other.groovy", CONTENTS_SUPPORTING)
         testProject.createGroovyTypeAndPackage("other2", "Other.groovy", CONTENTS_SUPPORTING2)

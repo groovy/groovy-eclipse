@@ -20,10 +20,13 @@ import greclipse.org.eclipse.jdt.ui.CodeStyleConfiguration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.SortedSet;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -345,15 +348,19 @@ public class OrganizeGroovyImports {
         Map<String, String> aliases = new HashMap<String, String>();
 
         try {
+            // However, this leads to GRECLIPSE-1390 where imports are no longer reordered and sorted.
             // configure import rewriter to keep all existing imports.  This is different from how
             // JDT does organize imports, but this prevents annotations on imports from being removed
+            //
             ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, true);
 
-            for (ImportNode imp : new ImportNodeCompatibilityWrapper(node).getAllImportNodes()) {
+            SortedSet<ImportNode> allIMports = new ImportNodeCompatibilityWrapper(node).getAllImportNodes();
+            for (ImportNode imp : allIMports) {
                 String fieldName = imp.getFieldName();
                 if (fieldName == null) {
                     fieldName = "*";
                 }
+
                 if (imp.getType() != null) {
                     String className = imp.getClassName();
                     if (className != null) {
@@ -371,16 +378,14 @@ public class OrganizeGroovyImports {
                                 aliases.put("n" + dottedClassName, alias);
                             }
                         } else {
-                            //                            rewriter.addStaticImport(dottedClassName, fieldName, true);
+                            // rewriter.addStaticImport(dottedClassName, fieldName, true);
                             if (isAliased(imp)) {
                                 aliases.put("s" + dottedClassName + "." + fieldName, alias);
-
                                 if (imp.isStatic()) {
                                     // Static aliased imports have been added as existing imports incorrectly.
                                     // must go remove them
                                     rewriter.removeInvalidStaticAlias(dottedClassName + "." + alias);
                                 }
-
                             }
                         }
                     }
@@ -399,6 +404,25 @@ public class OrganizeGroovyImports {
                 visitor.visitClass(clazz);
             }
 
+            for (ImportNode imp : allIMports) {
+                // now remove all default imports
+                if (isDefaultImport(imp)) {
+                    // remove default imports
+                    String key;
+                    // not removing static imports
+                    String className = imp.getClassName();
+                    if (className != null) {
+                        key = className;
+                    } else {
+                        // an on-demand/star import
+                        key = imp.getPackageName();
+                        if (key.endsWith(".")) {
+                            key = key + "*";
+                        }
+                    }
+                    importsSlatedForRemoval.put(key, imp);
+                }
+            }
             // remove old
             // will not work for aliased imports
             for (String impStr : importsSlatedForRemoval.keySet()) {
@@ -418,9 +442,6 @@ public class OrganizeGroovyImports {
             }
 
             TextEdit edit = rewriter.rewriteImports(null);
-            // remove ';' from edits
-            // no longer needed since we have our own import rewriter
-            // edit = removeSemiColons(edit);
             return edit;
         } catch (CoreException e) {
             GroovyCore.logException("Exception thrown when organizing imports for " + unit.getElementName(), e);
@@ -428,6 +449,55 @@ public class OrganizeGroovyImports {
             GroovyCore.logException("Exception thrown when organizing imports for " + unit.getElementName(), e);
         }
         return null;
+    }
+
+    private static final Set<String> DEFAULT_IMPORTS = new HashSet<String>();
+    static {
+        DEFAULT_IMPORTS.add("java.lang.");
+        DEFAULT_IMPORTS.add("java.util.");
+        DEFAULT_IMPORTS.add("java.io.");
+        DEFAULT_IMPORTS.add("java.net.");
+        DEFAULT_IMPORTS.add("groovy.lang.");
+        DEFAULT_IMPORTS.add("groovy.util.");
+        DEFAULT_IMPORTS.add("java.math.BigDecimal");
+        DEFAULT_IMPORTS.add("java.math.BigInteger");
+    }
+
+    /**
+     * Checks to see if this import statment is a default import
+     * @param imp
+     * @return
+     */
+    private boolean isDefaultImport(ImportNode imp) {
+        // not really correct since I think Math.* is a default import. but OK for now
+        if (imp.isStatic()) {
+            return false;
+        }
+        // aliased imports are not considered default
+        if (imp.getType() != null && !imp.getType().getNameWithoutPackage().equals(imp.getAlias())) {
+            return false;
+        }
+
+        // now get the package name
+        String pkg;
+        if (imp.getType() != null) {
+            pkg = imp.getType().getPackageName();
+            if (pkg == null) {
+                pkg = ".";
+            } else {
+                pkg = pkg + ".";
+            }
+            if (pkg.equals("java.math.")) {
+                pkg = imp.getType().getName();
+            }
+        } else {
+            pkg = imp.getPackageName();
+            if (pkg == null) {
+                pkg = ".";
+            }
+        }
+
+        return DEFAULT_IMPORTS.contains(pkg);
     }
 
     /**

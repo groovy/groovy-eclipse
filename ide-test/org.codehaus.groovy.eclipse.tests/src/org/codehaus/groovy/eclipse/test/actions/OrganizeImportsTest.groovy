@@ -535,7 +535,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
             """
             import javax.swing.text.html.*
             """
-            doAddImportTest(contents)
+        doAddImportTest(contents)
     }
 
     // GRECLIPSE-1219
@@ -545,7 +545,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
                 @Deprecated
                 import javax.swing.text.html.*
                 """
-                doAddImportTest(contents)
+        doAddImportTest(contents)
     }
     // GRECLIPSE-1219
     void testAnnotationsOnImports2() {
@@ -554,7 +554,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
                 @Deprecated
                 import javax.swing.text.html.HTML
                 """
-                doDeleteImportTest(contents, 1)
+        doDeleteImportTest(contents, 1)
     }
     void testAnnotationsOnImports3() {
         String contents =
@@ -563,7 +563,66 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
                 import javax.swing.text.html.*\n
                 HTML
                 """
-                doAddImportTest(contents)
+        doAddImportTest(contents)
+    }
+    
+    // GRECLIPSE-1392
+    void testDefaultImport1() {
+        // test a simple default import is removed
+        String contents =
+                """
+                import java.util.List\n
+                import groovy.util.Proxy\n
+                List\n
+                Proxy
+                """
+        doDeleteImportTest(contents, 2)
+    }
+    // GRECLIPSE-1392
+    void testDefaultImport2() {
+        // test that star default imports are removed
+        String contents =
+                """
+                import java.util.*\n
+                import groovy.util.*\n
+                List\n
+                Proxy
+                """
+        doDeleteImportTest(contents, 2)
+    }
+    // GRECLIPSE-1392
+    void testDefaultImport3() {
+        // test that BigInteger and BigDecimal are removed
+        String contents =
+                """
+                import java.math.BigDecimal\n
+                import gjava.math.BigInteger\n
+                BigDecimal\n
+                BigInteger
+                """
+        doDeleteImportTest(contents, 2)
+    }
+    // GRECLIPSE-1392
+    void testDefaultImport4() {
+        // test that aliased default import not removed
+        String contents =
+                """
+                import java.util.List as LL\n
+                import groovy.util.Proxy as PP\n
+                LL\n
+                PP
+                """
+        doDeleteImportTest(contents, 0)
+    }
+    // GRECLIPSE-1392
+    void testDefaultImport5() {
+        // test that static import whose container is default is not removed
+        String contents =
+                """
+                import static java.util.Collections.swap\n
+                swap
+                """
+        doDeleteImportTest(contents, 0)
     }
 
 }
