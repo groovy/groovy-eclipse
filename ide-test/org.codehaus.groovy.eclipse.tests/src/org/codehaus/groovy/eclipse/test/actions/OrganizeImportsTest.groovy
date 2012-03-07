@@ -598,12 +598,12 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
         String contents =
                 """
                 import java.math.BigDecimal
-                import gjava.math.BigInteger
+                import java.math.BigInteger
                 BigDecimal
                 BigInteger
                 """
         // only 1 delete edit since the imports are all deleted together
-        doDeleteImportTest(contents, 2)
+        doDeleteImportTest(contents, 1)
     }
     // GRECLIPSE-1392
     void testDefaultImport4() {
