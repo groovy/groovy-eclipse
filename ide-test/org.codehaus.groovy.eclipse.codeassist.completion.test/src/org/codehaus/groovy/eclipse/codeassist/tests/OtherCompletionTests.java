@@ -358,6 +358,15 @@ public class OtherCompletionTests extends CompletionTestCase {
         checkReplacementString(proposals, "value", 1);
     }
     
+    // GRECLIPSE-1388
+    public void testBeforeScript() throws Exception {
+        String script = "\n\ndef x = 9";
+        ICompilationUnit groovyUnit = create(script);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(script, "\n"), GroovyCompletionProposalComputer.class);
+        assertProposalOrdering(proposals, "binding");
+    }
+    
     // not working in multiline strings yet
 //    public void testGString2() throws Exception {
 //        String groovyClass = 

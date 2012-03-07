@@ -304,7 +304,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         visitClassCodeContainer(code);
 
 
-        if (completionOffset < code.getStart()) {
+        if (completionOffset < code.getStart() && !isRunMethod(node)) {
             // probably inside an empty parameters list
             createContext(null, node, PARAMETER);
         }
