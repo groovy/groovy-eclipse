@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     Andrew Eisenberg - initial API and implementation
  *******************************************************************************/
@@ -17,8 +17,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.internal.events.BuildCommand;
+import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -28,14 +28,18 @@ import org.eclipse.jdt.core.JavaCore;
 /**
  * @author Andrew Eisenberg
  * @created Jul 21, 2009
- * 
- * Converts a legacty Groovy 1.x project into a 2.x project
- * <br><br>
- * Steps:<br>
- * 1. remove old groovy nature<br>
- * 2. add new groovy nature<br>
- * 3. remove old groovy builder<br>
- * 4. ensure java builder exists<br>
+ *
+ *          Converts a legacty Groovy 1.x project into a 2.x project <br>
+ * <br>
+ *          Steps:<br>
+ *          1. remove old groovy nature<br>
+ *          2. add new groovy nature<br>
+ *          3. remove old groovy builder<br>
+ *          4. ensure java builder exists<br>
+ *
+ *          As of Greclipse 2.7.0, This is no longer run on startup. But, this
+ *          funcionality is
+ *          available from the preferences page.
  */
 public class ConvertLegacyProject {
 
@@ -48,12 +52,12 @@ public class ConvertLegacyProject {
             convertProject(project);
         }
     }
-    
-    
+
+
     public void convertProject(IProject project) {
         try {
             IProjectDescription desc = project.getDescription();
-            
+
             String[] natures = desc.getNatureIds();
             List<String> newNatures = new LinkedList<String>();
             for (String nature : natures) {
@@ -62,9 +66,9 @@ public class ConvertLegacyProject {
                 }
             }
             newNatures.add(0, GROOVY_NATURE);
-            
+
             desc.setNatureIds(newNatures.toArray(new String[newNatures.size()]));
-            
+
             List<ICommand> builders = Arrays.asList(desc.getBuildSpec());
             List<ICommand> newBuilders = new ArrayList<ICommand>(builders.size());
             boolean javaBuilderFound = false;
@@ -88,7 +92,7 @@ public class ConvertLegacyProject {
             GroovyCore.logException("Exception thrown when converting for legacy project " + project.getName(), e);
         }
     }
-    
+
     public IProject[] getAllOldProjects() {
         IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
         List<IProject> legacyProjects = new ArrayList<IProject>();

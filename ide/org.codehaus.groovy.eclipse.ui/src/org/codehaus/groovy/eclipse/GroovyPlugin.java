@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -210,7 +210,8 @@ public class GroovyPlugin extends AbstractUIPlugin {
         getPreferenceStore().addPropertyChangeListener(ensure);
         PrefUtil.getInternalPreferenceStore().addPropertyChangeListener(ensure);
 
-        maybeAskToConvertLegacyProjects();
+        // Don't ask to convert projects any more.
+        //        maybeAskToConvertLegacyProjects();
     }
 
     private void removeMonospaceFontListener() {
@@ -228,6 +229,8 @@ public class GroovyPlugin extends AbstractUIPlugin {
         PrefUtil.getInternalPreferenceStore().removePropertyChangeListener(ensure);
     }
 
+    // don't ask to convert projects any more
+    @SuppressWarnings("unused")
     private void maybeAskToConvertLegacyProjects() {
         AskToConvertLegacyProjects ask = new AskToConvertLegacyProjects();
         if (getPreferenceStore().getBoolean(PreferenceConstants.GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS)) {
