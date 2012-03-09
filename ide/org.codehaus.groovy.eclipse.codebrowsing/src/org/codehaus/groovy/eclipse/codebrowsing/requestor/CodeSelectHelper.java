@@ -39,7 +39,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
         ModuleNode module = unit.getModuleNode();
         // GRECLIPSE-1330 check for possible reference in GString
         char[] contents = unit.getContents();
-        if (contents[start] == '$' && length > 1 && contents[start+1] != '{') {
+        if (length > 1 && start + length < contents.length && contents[start] == '$' && contents[start+1] != '{') {
             start++;
             length--;
         }

@@ -75,7 +75,16 @@ public class ProposalUtils {
 
     public static final ICompletionProposal[] NO_COMPLETIONS = new ICompletionProposal[0];
 
-    private static final ImageDescriptorRegistry registry= JavaPlugin.getImageDescriptorRegistry();
+    private static ImageDescriptorRegistry registry;
+    static {
+        try {
+            registry = JavaPlugin.getImageDescriptorRegistry();
+        } catch (Exception e) {
+            // exception in initialization when testing
+            e.printStackTrace();
+            registry = null;
+        }
+    }
     private static final CompletionProposalLabelProvider labelProvider = new CompletionProposalLabelProvider();
 
 
