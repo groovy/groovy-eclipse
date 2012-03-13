@@ -95,7 +95,7 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
      */
     private void smartPaste(IDocument d, DocumentCommand c) {
         try {
-            if (getPrefs().isSmartPaste() && c.length == 0 && indentor.isInEmptyLine(d, c.offset)) {
+            if (getPrefs().isSmartPaste() && indentor.isInEmptyLine(d, c.offset)) {
                 int pasteLine = d.getLineOfOffset(c.offset);
                 IRegion pasteLineRegion = d.getLineInformation(pasteLine);
 
@@ -106,18 +106,46 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
                 int endLine = workCopy.getLineOfOffset(pasteLineRegion.getOffset() + c.text.length());
 
                 int indentDiff = 0;
+
+                boolean isMultiLineComment = false;
+                boolean isMultiLineString= false;
                 for (int line = startLine; line <= endLine; line++) {
+                    IRegion lineRegion = workCopy.getLineInformation(line);
+                    String text = workCopy.get(lineRegion.getOffset(), lineRegion.getLength());
+
                     if (line - startLine < 2) {
                         // For first two lines use indentation logic to move the
                         // lines
                         int oldIndentLevel = indentor.getLineIndentLevel(workCopy, line);
                         int newIndentLevel = indentor.computeIndentForLine(workCopy, line);
-                        indentor.fixIndentation(workCopy, line, newIndentLevel);
+
+                        if (isMultiLineComment) {
+                            newIndentLevel++;
+                            indentor.fixIndentation(workCopy, line, newIndentLevel);
+                        } else if (!isMultiLineString) {
+                            indentor.fixIndentation(workCopy, line, newIndentLevel);
+                        }
                         indentDiff = newIndentLevel - oldIndentLevel;
                     } else {
                         int oldIndentLevel = indentor.getLineIndentLevel(workCopy, line);
                         int newIndentLevel = oldIndentLevel + indentDiff;
-                        indentor.fixIndentation(workCopy, line, newIndentLevel);
+                        if (isMultiLineComment) {
+                            indentor.fixIndentation(workCopy, line, newIndentLevel);
+                        } else if (!isMultiLineString) {
+                            indentor.fixIndentation(workCopy, line, newIndentLevel);
+                        }
+                    }
+
+                    if (text.indexOf("/*") != -1) {
+                        isMultiLineComment = true;
+                    }
+                    if ((text.indexOf("*/") != -1) && isMultiLineComment) {
+                        isMultiLineComment = false;
+                    } else if (((text.indexOf("\"\"\"") != -1) || (text.indexOf("'''") != -1)) && !isMultiLineComment) {
+                        if (isMultiLineString)
+                            isMultiLineString = false;
+                        else
+                            isMultiLineString = true;
                     }
                 }
 

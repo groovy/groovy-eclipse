@@ -729,4 +729,154 @@ def xxx() {
 }
 """
 	}
+
+	void testMuliLineCommentPaste1() {
+		makeEditor("""
+<***>
+""")
+		System.out.println(getText());
+		sendPaste("""
+/*
+ * A longer comment
+ * spanning several
+ * lines */""")
+		System.out.println(getText());
+		assertEditorContents("""
+
+/*
+ * A longer comment
+ * spanning several
+ * lines */<***>
+""")
+	}
+
+	void testMuliLineCommentPaste2() {
+		makeEditor("""if (0){
+    <***>
+}""")
+		System.out.println(getText());
+		sendPaste("""/*
+ * comment
+ */""")
+		System.out.println(getText());
+		assertEditorContents("""if (0){
+    /*
+     * comment
+     */<***>
+}""")
+
+	}
+
+	void testMuliLineCommentPaste3() {
+		makeEditor("""if (0){
+    <***>
+}""")
+		sendPaste("""/*
+ * comment
+ */""")
+
+		assertEditorContents("""if (0){
+    /*
+     * comment
+     */<***>
+}""")
+	}
+
+	void testMuliLineCommentPaste4() {
+		makeEditor("""""")
+		sendPaste("""/*
+ * comment
+ */""")
+
+		assertEditorContents("""/*
+ * comment
+ */<***>""")
+	}
+
+	void testMuliLineCommentPaste5() {
+		makeEditor("""
+<***>""")
+		System.out.println(getText());
+		sendPaste("""
+/*
+ * A longer comment
+ * spanning several
+ * lines
+ */""")
+		System.out.println(getText());
+		assertEditorContents("""
+
+/*
+ * A longer comment
+ * spanning several
+ * lines
+ */<***>""")
+	}
+
+
+	void testMuliLineStringPaste1() {
+		makeEditor("""if (0){
+    <***>
+}""")
+		sendPaste(
+				'''"""This is a line.
+Here is another one.
+And one more line."""'''
+				)
+
+		assertEditorContents('''if (0){
+    """This is a line.
+Here is another one.
+And one more line."""<***>
+}''')
+	}
+
+	void testMuliLineStringPaste2() {
+		makeEditor("""if (0){
+    a = <***>
+}""")
+		sendPaste('''"""This is a line.
+Here is another one.
+And one more line."""''')
+
+		assertEditorContents('''if (0){
+    a = """This is a line.
+Here is another one.
+And one more line."""<***>
+}''')
+	}
+
+	void testMuliLineStringPaste3() {
+		makeEditor("""if (0){
+    a = <***>
+}""")
+		sendPaste('''"""This is a line.
+        Here is another one.
+        And one more line."""''')
+
+		assertEditorContents('''if (0){
+    a = """This is a line.
+        Here is another one.
+        And one more line."""<***>
+}''')
+	}
+
+	void testMuliLineStringPaste4() {
+		makeEditor('''if (i ==0){
+    <***>
+}''')
+		sendPaste('''if (i == 0){
+    a = """This is a line.
+Here is another one.
+And one more line."""
+}''')
+
+		assertEditorContents('''if (i ==0){
+    if (i == 0){
+        a = """This is a line.
+Here is another one.
+And one more line."""
+    }<***>
+}''')
+	}
 }
