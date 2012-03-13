@@ -34,6 +34,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.builder.Problem;
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -226,6 +227,67 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		expectingCompiledClassesV("p1.Hello");
 		expectingNoProblems();
 		executeClass(projectPath, "p1.Hello", "Hello world", "");
+
+	}
+	
+	public void testNPEAnno_1398() throws Exception {
+		IPath projectPath = env.addProject("Project","1.5"); //$NON-NLS-1$ //$NON-NLS-2$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addClass(root, "", "Anno",		
+			"public @interface Anno {\n"+
+			"	String[] value();\n"+
+			"}");
+
+		env.addGroovyClass(root, "", "Const",		
+			"public class Const {\n"+
+			"				  private final static String instance= \"abc\";\n"+
+			"				}");
+		
+		env.addGroovyClass(root, "", "A",						
+			"@Anno(Const.instance)\n"+
+			"class A {}\n");
+		
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("Anno", "Const", "A");
+		expectingNoProblems();
+		IPath pathToSecond = env.addGroovyClass(root, "", "A",						
+				"@Anno(Const.instance)\n"+
+				"class A {}\n");
+		incrementalBuild(projectPath);
+
+    	if (GroovyUtils.GROOVY_LEVEL < 18) {
+			Problem[] probs = env.getProblemsFor(pathToSecond);
+			boolean p1found = false;
+			boolean p2found = false;
+			for (int i = 0; i < probs.length; i++) {
+				if (probs[i].getMessage().equals("Groovy:expected 'Const.instance' to be an inline constant of type java.lang.String not a property expression in @Anno")) {
+					p1found = true;
+				}
+				if (probs[i].getMessage().startsWith(
+						"Groovy:Attribute 'value' should have type 'java.lang.String'; but found type 'java.lang.Object' in @Anno")) {
+					p2found = true;
+				}
+			}
+			if (!p1found) {
+				printProblemsFor(pathToSecond);
+				fail("Didn't get expected message 'Groovy:expected 'Const.instance' to be an inline constant of type java.lang.String not a property expression in @Anno'\n");
+			}
+			if (!p2found) {
+				printProblemsFor(pathToSecond);
+				fail("Didn't get expected message 'Groovy:Attribute 'value' should have type 'java.lang.String'; but found type 'java.lang.Object' in @Anno'\n");
+			}
+    	} else {
+    		expectingNoProblems();
+    		expectingCompiledClassesV("A");
+    	}
 
 	}
 

@@ -162,6 +162,9 @@ public class AnnotationVisitor {
                   	  FieldNode fieldNode = type.getField(pe.getPropertyAsString());
                   	  if (fieldNode!=null && Modifier.isStatic(fieldNode.getModifiers()) && Modifier.isFinal(fieldNode.getModifiers())) {
                   		  Expression e = fieldNode.getInitialExpression();
+                  		  if (e==null) { // bug1398
+                  			  return exp;
+                  		  }
                   		  return (ConstantExpression)e;
                   	  }
                     }
