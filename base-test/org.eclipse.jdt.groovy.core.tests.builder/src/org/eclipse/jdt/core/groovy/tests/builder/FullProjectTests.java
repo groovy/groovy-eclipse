@@ -128,6 +128,39 @@ public class FullProjectTests extends GroovierBuilderTests {
 		assertContainsMethod(cn,"getInstance");
 	}
 	
+	public void testReconcilingWithTransforms_singletonallowedspecialchar() throws Exception {
+		if (GroovyUtils.GROOVY_LEVEL<18) {
+			return;
+		}
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		setTransformsOption(env.getJavaProject(projectPath), "SingletonASTTransformation$");
+		fullBuild(projectPath);
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "", "Foo",
+				"@Singleton\n"+
+		    	"class Foo {\n"+
+				"  void mone() {}\n"+
+		    	"}\n"
+			);
+
+		incrementalBuild(projectPath);
+		
+		IJavaProject p = env.getJavaProject(projectPath);
+		ICompilationUnit icu = ReconcilerUtils.getWorkingCopy(p,"Foo.groovy");
+		icu.becomeWorkingCopy(null);
+
+		List<ClassNode> classes = ((GroovyCompilationUnit)icu).getModuleNode().getClasses();
+		ClassNode cn = classes.get(0);
+		assertContainsMethod(cn,"getInstance");
+	}
+	
 	public void testReconcilingWithTransforms_multipleButOnlyOneAllowed() throws Exception {
 		if (GroovyUtils.GROOVY_LEVEL<18) {
 			return;
