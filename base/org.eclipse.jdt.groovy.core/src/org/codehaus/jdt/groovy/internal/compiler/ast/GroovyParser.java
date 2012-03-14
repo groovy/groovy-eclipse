@@ -545,7 +545,8 @@ public class GroovyParser {
 
 	private CompilationUnit makeCompilationUnit(GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean isReconcile,
 			boolean allowTransforms) {
-		CompilationUnit it = new CompilationUnit(null, null, loader, transformLoader, allowTransforms);
+		CompilationUnit it = new CompilationUnit(null, null, loader, transformLoader, allowTransforms,
+				compilerOptions.groovyTransformsToRunOnReconcile);
 		// Grails: start
 		// This code makes Grails 1.4.M1 AST transforms work.
 		if (allowTransforms && transformLoader != null && compilerOptions != null && ((compilerOptions.groovyFlags & 0x01) != 0)) {

@@ -147,6 +147,7 @@ public class CompilerOptions {
 	public static final String OPTIONG_GroovyClassLoaderPath = "org.eclipse.jdt.core.compiler.groovy.groovyClassLoaderPath"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyProjectName = "org.eclipse.jdt.core.compiler.groovy.groovyProjectName"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyExtraImports = "org.eclipse.jdt.core.compiler.groovy.groovyExtraImports"; //$NON-NLS-1$
+	public static final String OPTIONG_GroovyTransformsToRunOnReconcile = "org.eclipse.jdt.core.compiler.groovy.groovyTransformsToRunOnReconcile"; //$NON-NLS-1$
 	// GROOVY end
 	
 	/**
@@ -381,6 +382,7 @@ public class CompilerOptions {
 	public String groovyClassLoaderPath = null;
 	public String groovyExtraImports = null;
 	public String groovyProjectName = null;
+	public String groovyTransformsToRunOnReconcile = null;
 	// GROOVY end
 
 
@@ -1002,6 +1004,10 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportMethodCanBeStatic, getSeverityString(MethodCanBeStatic));
 		optionsMap.put(OPTION_ReportMethodCanBePotentiallyStatic, getSeverityString(MethodCanBePotentiallyStatic));
 		optionsMap.put(OPTION_ReportRedundantSpecificationOfTypeArguments, getSeverityString(RedundantSpecificationOfTypeArguments));
+		// GRECLIPSE start
+		// if not supplied here it isn't seen as something that can be set from elsewhere
+		optionsMap.put(OPTIONG_GroovyTransformsToRunOnReconcile,"");
+		// GRECLIPSE end
 		return optionsMap;
 	}
 
@@ -1571,6 +1577,14 @@ public class CompilerOptions {
 				this.groovyExtraImports = sysPropConfiguredExtraImports;
 			}
 		}
+		optionValue = optionsMap.get(OPTIONG_GroovyTransformsToRunOnReconcile);
+		if (optionValue!=null && ((String)optionValue).length()!=0) {
+			this.groovyTransformsToRunOnReconcile = (String)optionValue;
+		} else {
+			if (sysPropConfiguredGroovyTransforms!=null) {
+				this.groovyTransformsToRunOnReconcile = sysPropConfiguredGroovyTransforms;
+			}
+		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyProjectName)) != null) {
 			this.groovyProjectName = (String)optionValue;
 		}
@@ -1578,11 +1592,17 @@ public class CompilerOptions {
 	}
 	
 	static String sysPropConfiguredExtraImports = null;
+	static String sysPropConfiguredGroovyTransforms = null;
 	static {
 		try {
 			sysPropConfiguredExtraImports = System.getProperty("greclipse.extraimports");
 		} catch (Exception e) {
 			sysPropConfiguredExtraImports= null;
+		}
+		try {
+			sysPropConfiguredGroovyTransforms = System.getProperty("greclipse.transformsDuringReconcile");
+		} catch (Exception e) {
+			sysPropConfiguredGroovyTransforms= null;
 		}
 	}
 	

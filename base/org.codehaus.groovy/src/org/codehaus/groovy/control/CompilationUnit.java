@@ -130,7 +130,7 @@ public class CompilationUnit extends ProcessingUnit {
      * security stuff and a class loader for loading classes.
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, GroovyClassLoader loader) {
-        this(configuration, security, loader, null,true);
+        this(configuration, security, loader, null, true, null);
     }
     
     /**
@@ -148,7 +148,7 @@ public class CompilationUnit extends ProcessingUnit {
      * 
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, 
-                           GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean allowTransforms) 
+                           GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean allowTransforms, String groovyTransformsToRunOnReconcile) 
     {
     	
         super(configuration, loader, null);

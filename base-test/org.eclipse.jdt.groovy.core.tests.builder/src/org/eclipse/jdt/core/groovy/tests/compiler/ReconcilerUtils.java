@@ -66,21 +66,22 @@ public class ReconcilerUtils {
         }
     }
 
-    public static ReconcileResults reconcileAllCompilationUnits(IJavaProject project, boolean onlyGroovy) throws JavaModelException {
-        List<ICompilationUnit> allUnits = findAllUnits(project, onlyGroovy);
-        ReconcileResults results = new ReconcileResults();
-        long totalTime = 0;
-        for (ICompilationUnit unit : allUnits) {
-            long startTime = System.currentTimeMillis();
-            // this implicitly performs a reconcile
-            unit.becomeWorkingCopy(null);
-            long timeForUnit = System.currentTimeMillis() - startTime;
-            results.reconcileTimes.put(unit, timeForUnit);
-            totalTime += timeForUnit;
-            unit.discardWorkingCopy();
-        }
-        return results;
-    }
+    public static ReconcileResults reconcileAllCompilationUnits(
+			IJavaProject project, boolean onlyGroovy) throws JavaModelException {
+		List<ICompilationUnit> allUnits = findAllUnits(project, onlyGroovy);
+		ReconcileResults results = new ReconcileResults();
+		long totalTime = 0;
+		for (ICompilationUnit unit : allUnits) {
+			long startTime = System.currentTimeMillis();
+			// this implicitly performs a reconcile
+			unit.becomeWorkingCopy(null);
+			long timeForUnit = System.currentTimeMillis() - startTime;
+			results.reconcileTimes.put(unit, timeForUnit);
+			totalTime += timeForUnit;
+			unit.discardWorkingCopy();
+		}
+		return results;
+	}
 
     private static List<ICompilationUnit> findAllUnits(IJavaProject project,
             boolean onlyGroovy) throws JavaModelException {
@@ -102,4 +103,40 @@ public class ReconcilerUtils {
         }
         return units;
     }
+    
+
+	public static ICompilationUnit getWorkingCopy(IJavaProject project, String name) {
+		try {
+			ICompilationUnit icu = findUnit(project, name);
+			return icu;
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
+	private static ICompilationUnit findUnit(IJavaProject project, String name)
+			throws JavaModelException {
+		IPackageFragmentRoot[] roots = project.getAllPackageFragmentRoots();
+		List<ICompilationUnit> units = new ArrayList<ICompilationUnit>();
+		for (IPackageFragmentRoot root : roots) {
+			if (!root.isReadOnly()) {
+				for (IJavaElement child : root.getChildren()) {
+					if (child instanceof IPackageFragment) {
+						ICompilationUnit[] theseUnits = ((IPackageFragment) child)
+								.getCompilationUnits();
+						for (ICompilationUnit unit : theseUnits) {
+							if (unit instanceof GroovyCompilationUnit) {
+								if (unit.getElementName().equals(name)) {
+									return unit;
+								} else {
+									System.out.println(unit.getElementName());
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return null;
+	}
 }

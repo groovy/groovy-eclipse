@@ -31,6 +31,7 @@ import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 
@@ -50,6 +51,17 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     private ClassNode classNode;
     private GroovyClassLoader transformLoader;
 
+    // GRECLIPSE start
+    private boolean allowTransforms;
+    private List<String> localTransformsAllowed;
+    
+    public ASTTransformationCollectorCodeVisitor(SourceUnit source, GroovyClassLoader transformLoader, boolean allowTransforms, List<String> localTransformsAllowed) {
+        this(source,transformLoader);
+        this.allowTransforms = allowTransforms;
+        this.localTransformsAllowed = localTransformsAllowed;
+    }
+    // GRECLIPSE end
+    
     public ASTTransformationCollectorCodeVisitor(SourceUnit source, GroovyClassLoader transformLoader) {
         this.source = source;
         this.transformLoader = transformLoader;
@@ -193,6 +205,12 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
             }*/// newcode:
         	String[] transformClassNames = getTransformClassNames(annotation.getClassNode());
         	Class[] transformClasses = getTransformClasses(annotation.getClassNode());
+        	// GRECLIPSE start
+        	if (!this.allowTransforms) { // if 'doesnt-normally-allow-transforms' then only allow those specified
+	        	transformClassNames = trimTransformNames(transformClassNames);
+	        	transformClasses = trimTransformClasses(transformClasses);
+        	}
+        	// GRECLIPSE end
         	if (transformClassNames==null && transformClasses == null) {
         		continue;
         	}
@@ -202,6 +220,68 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         	// end
         }
     }
+    
+    // GRECLIPSE start
+    private String[] trimTransformNames(String[]names) {
+    	if (this.localTransformsAllowed.size()==0) {
+    		return names;
+    	}
+    	List<String> newnames = new ArrayList<String>();
+    	for (String name: names) {
+    		if (isAllowed(name)) {
+    			newnames.add(name);
+    		}
+    	}
+    	if (newnames.size()==names.length) {
+    		return names;
+    	}
+    	return newnames.toArray(new String[newnames.size()]);
+    }
+    
+    
+    private Class<?>[] trimTransformClasses(Class<?>[]names) {
+    	if (this.localTransformsAllowed.size()==0) {
+    		return names;
+    	}
+    	List<Class<?>> newnames = new ArrayList<Class<?>>();
+    	for (Class<?> clazz: names) {
+    		String name = clazz.getSimpleName();
+    		if (isAllowed(name)) {
+    			newnames.add(clazz);
+    		}
+    	}
+    	if (newnames.size()==names.length) {
+    		return names;
+    	}
+    	return newnames.toArray(new Class[newnames.size()]);
+    }
+    
+    /**
+     * Check the transform name against the allowed transforms.
+     * 
+     * @param transformName the name of the transform 
+     * @return true if it is allowed
+     */
+    private boolean isAllowed(String transformName) {
+    	for (String localTransformAllowed: localTransformsAllowed) {
+			if (localTransformAllowed.equals("*")) {
+				return true;
+			} else if (localTransformAllowed.endsWith("$")) {
+				// must be the last part of the name
+				if (transformName.endsWith(localTransformAllowed.substring(0,localTransformAllowed.length()-1))) {
+					return true;
+				}
+			} else {
+				// indexof is good enough
+				boolean b= transformName.indexOf(localTransformAllowed)!=-1;
+				if (b) {
+					return true;
+				}
+			}
+		}
+    	return false;
+    }
+    // GRECLIPSE end
     
     // GRECLIPSE: start: slight refactoring to provide a new method that can work with a real annotation
     private void addTransformsToClassNode(AnnotationNode annotation, Annotation transformClassAnnotation) {

@@ -120,7 +120,7 @@ public class CompilationUnit extends ProcessingUnit {
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, GroovyClassLoader loader) {
 		// GRECLIPSE extra param
-        this(configuration, security, loader, null,true);
+        this(configuration, security, loader, null, true, null);
     }
     
     // GRECLIPSE extraparam
@@ -138,7 +138,7 @@ public class CompilationUnit extends ProcessingUnit {
      * @param configuration - compilation configuration
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, 
-                           GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean allowTransforms) {
+                           GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean allowTransforms, String localTransformsToRunOnReconcile) {
         super(configuration, loader, null);
         this.allowTransforms = allowTransforms;
         this.transformLoader = transformLoader;
@@ -158,6 +158,22 @@ public class CompilationUnit extends ProcessingUnit {
         this.staticImportVisitor = new StaticImportVisitor();
         // end
         this.optimizer = new OptimizerVisitor(this);
+        // GRECLIPSE start
+        if (localTransformsToRunOnReconcile==null) {    
+    		this.localTransformsToRunOnReconcile = Collections.emptyList();
+    	} else {
+    		this.localTransformsToRunOnReconcile=new ArrayList<String>();
+	    	try {
+	    		StringTokenizer st = new StringTokenizer(localTransformsToRunOnReconcile,",");
+	    		while (st.hasMoreElements()) {
+	    			String classname = st.nextToken();
+	    			this.localTransformsToRunOnReconcile.add(classname);
+	    		}
+	    	} catch (Exception e) {
+	    		// presumed security exception
+	    	}
+    	}
+        // GRECLIPSE end
 
         phaseOperations = new LinkedList[Phases.ALL + 1];
         newPhaseOperations = new LinkedList[Phases.ALL + 1];
@@ -1207,6 +1223,7 @@ public class CompilationUnit extends ProcessingUnit {
 
 	public boolean allowTransforms = true;
 	public boolean isReconcile = false;
+	public List<String> localTransformsToRunOnReconcile = null;
 	
 	/**
 	 * Slightly modifies the behaviour of the phases based on what the caller really needs.  Some invocations of the compilation

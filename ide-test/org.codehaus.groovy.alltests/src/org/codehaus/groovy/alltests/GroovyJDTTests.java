@@ -15,6 +15,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.eclipse.jdt.core.groovy.tests.builder.BasicGroovyBuildTests;
+import org.eclipse.jdt.core.groovy.tests.builder.FullProjectTests;
 import org.eclipse.jdt.core.groovy.tests.compiler.ScriptFolderTests;
 import org.eclipse.jdt.core.groovy.tests.locations.ASTConverterTests;
 import org.eclipse.jdt.core.groovy.tests.locations.ASTNodeSourceLocationsTests;
@@ -49,6 +50,7 @@ public class GroovyJDTTests {
 
         // Builder tests
         suite.addTest(BasicGroovyBuildTests.suite());
+        suite.addTest(FullProjectTests.suite());
 
 		// Location tests
         suite.addTestSuite(LocationSupportTests.class);

@@ -205,7 +205,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         addGlobalTransforms(compilationUnit);
         // GRECLIPSE
         // want a subset to run during a reconcile...
-        if (!compilationUnit.allowTransforms) {
+        if (!compilationUnit.allowTransforms && compilationUnit.localTransformsToRunOnReconcile.size()==0) {
         	return;
         }
         // GRECLIPSE
@@ -213,7 +213,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         compilationUnit.addPhaseOperation(new CompilationUnit.PrimaryClassNodeOperation() {
             public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
                 ASTTransformationCollectorCodeVisitor collector = 
-                    new ASTTransformationCollectorCodeVisitor(source, compilationUnit.getTransformLoader());
+                    new ASTTransformationCollectorCodeVisitor(source, compilationUnit.getTransformLoader(),compilationUnit.allowTransforms,compilationUnit.localTransformsToRunOnReconcile);
                 collector.visitClass(classNode);
             }
         }, Phases.SEMANTIC_ANALYSIS);
