@@ -180,10 +180,8 @@ public class ExtractMethodPageContent extends Composite implements Observer {
 			variablesToCheck.add(p.getName());
 		}
 
-		IStatus statusOfUsedGroovyIdentifiers = new GroovyConventionsBuilder(
-				variablesToCheck, GroovyConventionsBuilder.VARIABLE)
-				.validateGroovyIdentifier().validateLowerCase(IStatus.WARNING)
-				.done();
+        IStatus statusOfUsedGroovyIdentifiers = new GroovyConventionsBuilder(variablesToCheck, GroovyConventionsBuilder.METHOD)
+                .validateGroovyIdentifier().validateLowerCase(IStatus.WARNING).done();
 		return StatusHelper.convertStatus(statusOfUsedGroovyIdentifiers);
 	}
 
