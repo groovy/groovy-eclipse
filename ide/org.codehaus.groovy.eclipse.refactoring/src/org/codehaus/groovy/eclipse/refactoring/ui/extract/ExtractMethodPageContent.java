@@ -27,11 +27,13 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyMethodRefactoring;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.GroovyConventionsBuilder;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.StatusHelper;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jdt.core.Signature;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableEditor;
@@ -121,7 +123,7 @@ public class ExtractMethodPageContent extends Composite implements Observer {
 				tblParameters.removeAll();
 				for (Parameter param : extractMethodRefactoring.getCallAndMethHeadParameters()) {
 					TableItem tblItem = new TableItem(tblParameters, SWT.NONE);
-					tblItem.setText(0, param.getType().getNameWithoutPackage());
+                    tblItem.setText(0, createSimpleTypeName(param.getType()));
 					setVariableNameInTable(param, tblItem);
 				}
 				tblParameters.setSelection(selectionIndex);
@@ -130,6 +132,23 @@ public class ExtractMethodPageContent extends Composite implements Observer {
 			updateView();
 		}
 	}
+
+    private String createSimpleTypeName(ClassNode node) {
+        String name = node.getName();
+        if (name.startsWith("[")) {
+            int arrayCount = Signature.getArrayCount(name);
+            String noArrayName = Signature.getElementType(name);
+            String simpleName = Signature.getSignatureSimpleName(noArrayName);
+            StringBuilder sb = new StringBuilder();
+            sb.append(simpleName);
+            for (int i = 0; i < arrayCount; i++) {
+                sb.append("[]");
+            }
+            return sb.toString();
+        } else {
+            return node.getNameWithoutPackage();
+        }
+    }
 
 	private void setVariableNameInTable(Parameter param, TableItem tblItem) {
 		String variableName = param.getName();

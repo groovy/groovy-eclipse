@@ -1,0 +1,33 @@
+###prop
+selectionType=points
+startLine=4
+startColumn=1
+endLine=6
+endColumn=1
+newMethodName=myExtract
+modifier=private
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+def hh() {
+    int[] i;
+    String[][][] j
+    j
+    def foo = j
+    foo
+}
+###exp
+def hh() {
+    int[] i;
+    String[][][] j
+    def foo = myExtract(j)
+    foo
+}
+
+private String[][][] myExtract(String[][][] j) {
+    j
+    def foo = j
+    return foo
+}
+###end

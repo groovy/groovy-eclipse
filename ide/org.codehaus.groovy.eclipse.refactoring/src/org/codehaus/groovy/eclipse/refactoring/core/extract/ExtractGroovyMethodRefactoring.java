@@ -527,8 +527,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     private ClassNode maybeConvertToPrimitiveType(ClassNode type) {
-        return ClassHelper.getUnwrapper(ClassHelper.make(type.getName()))
-                .getPlainNodeReference();
+        return ClassHelper.getUnwrapper(type).getPlainNodeReference();
     }
 
     private RefactoringStatus checkDuplicateMethod(IProgressMonitor pm) {

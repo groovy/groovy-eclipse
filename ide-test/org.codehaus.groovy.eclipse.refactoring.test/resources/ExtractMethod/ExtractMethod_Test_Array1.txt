@@ -1,0 +1,26 @@
+###prop
+selectionType=points
+startLine=3
+startColumn=1
+endLine=4
+endColumn=0
+newMethodName=myExtract
+modifier=private
+setPreferences=true
+indentation=space
+tabsize=4
+###src
+def hh() {
+    int[] i;
+    i
+}
+###exp
+def hh() {
+    int[] i;
+    myExtract(i)
+}
+
+private myExtract(int[] i) {
+    i
+}
+###end
