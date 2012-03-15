@@ -1233,20 +1233,40 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public String toString() {
         String ret = getName();
+        Set<ClassNode> alreadySeen = new HashSet<ClassNode>(); // GRECLIPSE added
         if (genericsTypes != null) {
             ret += " <";
             for (int i = 0; i < genericsTypes.length; i++) {
                 if (i != 0) ret += ", ";
                 GenericsType genericsType = genericsTypes[i];
-                ret += genericTypeAsString(genericsType);
+                ret += genericTypeAsString(genericsType,alreadySeen); // GRECLIPSE added alreadySeen
             }
             ret += ">";
         }
         if (redirect != null) {
-            ret += " -> " + redirect().toString();
+            ret += " -> " + redirect().toString(alreadySeen); // GRECLIPSE added alreadySeen
         }
         return ret;
     }
+    
+    // GRECLIPSE start
+    private String toString(Set<ClassNode> alreadySeen) {
+        String ret = getName();
+        if (genericsTypes != null) {
+            ret += " <";
+            for (int i = 0; i < genericsTypes.length; i++) {
+                if (i != 0) ret += ", ";
+                GenericsType genericsType = genericsTypes[i];
+                ret += genericTypeAsString(genericsType,alreadySeen);
+            }
+            ret += ">";
+        }
+        if (redirect != null) {
+            ret += " -> " + redirect().toString(alreadySeen);
+        }
+        return ret;
+    }
+    // GRECLIPSE end
 
     /**
      * This exists to avoid a recursive definition of toString. The default toString
@@ -1254,7 +1274,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @param genericsType
      * @return
      */
-    private String genericTypeAsString(GenericsType genericsType) {
+    private String genericTypeAsString(GenericsType genericsType,Set<ClassNode> alreadySeen) { // GRECLIPSE added alreadySeen
         String ret = genericsType.getName();
         if (genericsType.getUpperBounds() != null) {
             ret += " extends ";
@@ -1263,7 +1283,15 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
                 if (classNode.equals(this)) {
                     ret += classNode.getName();
                 } else {
-                    ret += classNode.toString();
+                	// GRECLIPSE start - added alreadySeen check
+                	// old:  ret += classNode.toString();
+                	if (alreadySeen.contains(classNode)) {
+                		ret+=classNode.getName();
+                	} else {
+                		alreadySeen.add(classNode);
+	                    ret += classNode.toString(alreadySeen);
+                	}
+                	// GRECLIPSE end
                 }
                 if (i + 1 < genericsType.getUpperBounds().length) ret += " & ";
             }
