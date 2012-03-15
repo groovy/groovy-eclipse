@@ -329,7 +329,7 @@ public class FullProjectTests extends GroovierBuilderTests {
 	
 	// other reconciling tests
 	
-	public void testReconcilingGPars() throws Exception {
+	public void xtestReconcilingGPars() throws Exception {
 		String fixture = "gpars";
 
 		IPath projectPath = env.addProject(fixture, "1.6");
