@@ -306,6 +306,9 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
                 if (!prefs.beforeOpeningParen) {
                     buffer.append(SPACE);
                 }
+            } else {
+                if (prefs.afterOpeningParen)
+                    buffer.append(SPACE);
             }
         } else {
             if (prefs.afterOpeningParen)
