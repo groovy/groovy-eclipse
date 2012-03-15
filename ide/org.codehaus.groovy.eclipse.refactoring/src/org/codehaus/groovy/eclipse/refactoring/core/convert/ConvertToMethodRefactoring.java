@@ -50,6 +50,9 @@ public class ConvertToMethodRefactoring {
     }
 
     private FieldNode getTargetField(GroovyCompilationUnit unit, int offset) {
+        if (unit.isOnBuildPath()) {
+            return null;
+        }
         try {
             FieldNode targetField = null;
             IJavaElement maybeField = unit.getElementAt(offset);

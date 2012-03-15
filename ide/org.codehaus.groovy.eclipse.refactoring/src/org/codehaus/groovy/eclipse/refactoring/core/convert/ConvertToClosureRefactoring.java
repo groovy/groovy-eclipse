@@ -47,6 +47,9 @@ public class ConvertToClosureRefactoring {
     }
 
     private IMethod findMethod(GroovyCompilationUnit unit, int offset) {
+        if (unit.isOnBuildPath()) {
+            return null;
+        }
         try {
             IJavaElement maybeMethod = unit.getElementAt(offset);
 
