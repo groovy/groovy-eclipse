@@ -123,6 +123,8 @@ public class VariableScope {
 		initializeProperties(CLASS_CLASS_NODE);
 	}
 
+	public static final ClassNode CLASS_ARRAY_CLASS_NODE = CLASS_CLASS_NODE.makeArray();
+
 	// primitive wrapper classes
 	public static final ClassNode INTEGER_CLASS_NODE = ClassHelper.Integer_TYPE;
 	public static final ClassNode LONG_CLASS_NODE = ClassHelper.Long_TYPE;

@@ -1204,6 +1204,19 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				ClassNode thisType = scope.getThis();
 				scope.addVariable("owner", thisType, VariableScope.CLOSURE_CLASS);
 				scope.addVariable("getOwner", thisType, VariableScope.CLOSURE_CLASS);
+
+				// only do this if we are not already in a closure
+				// no need to add twice
+				scope.addVariable("thisObject", VariableScope.OBJECT_CLASS_NODE, VariableScope.CLOSURE_CLASS);
+				scope.addVariable("getThisObject", VariableScope.OBJECT_CLASS_NODE, VariableScope.CLOSURE_CLASS);
+				scope.addVariable("resolveStategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS);
+				scope.addVariable("getResolveStategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS);
+				scope.addVariable("directive", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS);
+				scope.addVariable("getDirective", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS);
+				scope.addVariable("maximumNumberOfParameters", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS);
+				scope.addVariable("getMaximumNumberOfParameters", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS);
+				scope.addVariable("parameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS);
+				scope.addVariable("getParameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS);
 			}
 			super.visitClosureExpression(node);
 		}

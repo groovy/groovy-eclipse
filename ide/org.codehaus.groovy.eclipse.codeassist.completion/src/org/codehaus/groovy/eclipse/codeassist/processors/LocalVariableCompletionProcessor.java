@@ -36,6 +36,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -76,26 +77,49 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
         if (getContext().currentScope.getEnclosingClosure() != null) {
             List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>(1);
             VariableInfo ownerInfo = getContext().currentScope.lookupName("owner");
-            if (ProposalUtils.looselyMatches(getContext().completionExpression, "owner")) {
-                proposals.add(createFieldProposal("owner", ownerInfo.declaringType, ownerInfo.type).createJavaProposal(
-                        getContext(), getJavaContext()));
-            }
-            if (ProposalUtils.looselyMatches(getContext().completionExpression, "getOwner")) {
-                proposals.add(createMethodProposal("getOwner", ownerInfo.declaringType, ownerInfo.type).createJavaProposal(
-                        getContext(), getJavaContext()));
-            }
             VariableInfo delegateInfo = getContext().currentScope.lookupName("delegate");
-            if (ProposalUtils.looselyMatches(getContext().completionExpression, "delegate")) {
-                proposals.add(createFieldProposal("delegate", delegateInfo.declaringType, delegateInfo.type).createJavaProposal(
-                        getContext(), getJavaContext()));
-            }
-            if (ProposalUtils.looselyMatches(getContext().completionExpression, "getDelegate")) {
-                proposals.add(createMethodProposal("getDelegate", delegateInfo.declaringType, delegateInfo.type)
-                        .createJavaProposal(getContext(), getJavaContext()));
-            }
+            maybeAddClosureProperty(proposals, "owner", ownerInfo.declaringType, ownerInfo.type, false);
+            maybeAddClosureProperty(proposals, "getOwner", ownerInfo.declaringType, ownerInfo.type, true);
+            maybeAddClosureProperty(proposals, "delegate", delegateInfo.declaringType, delegateInfo.type, false);
+            maybeAddClosureProperty(proposals, "getDelegate", delegateInfo.declaringType, delegateInfo.type, true);
+            maybeAddClosureProperty(proposals, "thisObject", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+                    org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE, false);
+            maybeAddClosureProperty(proposals, "getThisObject", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+                    org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE, true);
+            maybeAddClosureProperty(proposals, "resolveStrategy", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+                    org.eclipse.jdt.groovy.search.VariableScope.INTEGER_CLASS_NODE, false);
+            maybeAddClosureProperty(proposals, "getResolveStrategy", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+                    org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE, true);
+            maybeAddClosureProperty(proposals, "directive", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+                    org.eclipse.jdt.groovy.search.VariableScope.INTEGER_CLASS_NODE, false);
+            maybeAddClosureProperty(proposals, "getDirective", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+                    org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE, true);
+            maybeAddClosureProperty(proposals, "maximumNumberOfParameters",
+                    org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+                    org.eclipse.jdt.groovy.search.VariableScope.INTEGER_CLASS_NODE, false);
+            maybeAddClosureProperty(proposals, "getMaximumNumberOfParameters",
+                    org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+                    org.eclipse.jdt.groovy.search.VariableScope.OBJECT_CLASS_NODE, true);
+            maybeAddClosureProperty(proposals, "parameterTypes", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+                    org.eclipse.jdt.groovy.search.VariableScope.CLASS_ARRAY_CLASS_NODE, false);
+            maybeAddClosureProperty(proposals, "getParameterTypes", org.eclipse.jdt.groovy.search.VariableScope.CLOSURE_CLASS,
+                    org.eclipse.jdt.groovy.search.VariableScope.CLASS_ARRAY_CLASS_NODE, true);
             return proposals;
         } else {
             return Collections.emptyList();
+        }
+    }
+
+    private void maybeAddClosureProperty(List<ICompletionProposal> proposals, String name, ClassNode type, ClassNode declaringType,
+            boolean isMethod) {
+        if (ProposalUtils.looselyMatches(getContext().completionExpression, name)) {
+            IGroovyProposal proposal;
+            if (isMethod) {
+                proposal = createMethodProposal(name, declaringType, type);
+            } else {
+                proposal = createFieldProposal(name, declaringType, type);
+            }
+            proposals.add(proposal.createJavaProposal(getContext(), getJavaContext()));
         }
     }
 

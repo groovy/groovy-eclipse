@@ -801,7 +801,51 @@ public class InferencingTests extends AbstractInferencingTest {
         end = start + "getOwner".length();
         assertType(contents, start, end, "Baz");
     }
+
     
+    public void testClosure6() throws Exception {
+        String contents = 
+                "def x = {\n" +
+                "maximumNumberOfParameters\n" +
+                "getMaximumNumberOfParameters()\n" +
+                "thisObject\n" +
+                "getThisObject()\n" +
+                "}";
+        int start = contents.lastIndexOf("maximumNumberOfParameters");
+        int end = start + "maximumNumberOfParameters".length();
+        assertType(contents, start, end, "java.lang.Integer");
+        start = contents.lastIndexOf("getMaximumNumberOfParameters");
+        end = start + "getMaximumNumberOfParameters".length();
+        assertType(contents, start, end, "java.lang.Integer");
+        start = contents.lastIndexOf("thisObject");
+        end = start + "thisObject".length();
+        assertType(contents, start, end, "java.lang.Object");
+        start = contents.lastIndexOf("getThisObject");
+        end = start + "getThisObject".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+    public void testClosure7() throws Exception {
+        String contents = 
+                "def x = { def y = {\n" +
+                "maximumNumberOfParameters\n" +
+                "getMaximumNumberOfParameters()\n" +
+                "thisObject\n" +
+                "getThisObject()\n" +
+                "}}";
+        int start = contents.lastIndexOf("maximumNumberOfParameters");
+        int end = start + "maximumNumberOfParameters".length();
+        assertType(contents, start, end, "java.lang.Integer");
+        start = contents.lastIndexOf("getMaximumNumberOfParameters");
+        end = start + "getMaximumNumberOfParameters".length();
+        assertType(contents, start, end, "java.lang.Integer");
+        start = contents.lastIndexOf("thisObject");
+        end = start + "thisObject".length();
+        assertType(contents, start, end, "java.lang.Object");
+        start = contents.lastIndexOf("getThisObject");
+        end = start + "getThisObject".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
     
     // the declaring type of things inside of a closure should be the declaring 
     // type of the method that calls the closure

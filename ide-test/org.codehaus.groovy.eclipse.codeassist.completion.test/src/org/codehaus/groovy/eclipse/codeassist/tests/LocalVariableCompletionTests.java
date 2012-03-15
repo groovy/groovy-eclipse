@@ -126,6 +126,12 @@ public class LocalVariableCompletionTests extends CompletionTestCase {
         String expected = "def x = { getDelegate() }";
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "{ getD"), "getDelegate");
     }
+    // GRECLIPSE=1387
+    public void testClsoureVar4a() throws Exception {
+        String contents = "def x = { thisO }";
+        String expected = "def x = { thisObject }";
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "{ thisO"), "thisObject");
+    }
     // GRECLIPSE=1267
     public void testClsoureVar5() throws Exception {
         String contents = "o\nd\nge";
