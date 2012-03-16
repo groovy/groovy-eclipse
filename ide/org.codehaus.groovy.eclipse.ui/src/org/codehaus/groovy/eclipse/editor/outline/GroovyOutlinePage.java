@@ -26,10 +26,10 @@ import org.eclipse.jdt.ui.JavaElementComparator;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.part.IPageSite;
 
 /**
  * @author Maxime Hamm
@@ -66,15 +66,17 @@ public class GroovyOutlinePage extends JavaOutlinePage {
             return;
         }
         // remove actions
-        IActionBars actionBars = getSite().getActionBars();
-        IToolBarManager toolBarManager = actionBars.getToolBarManager();
-        toolBarManager.removeAll();
-        toolBarManager.add(new GroovyLexicalSortingAction());
-        toolBarManager.update(true);
-
-        // remove all filters (they are related to above actions)
-        for (ViewerFilter vf : getOutlineViewer().getFilters()) {
-            //            getOutlineViewer().removeFilter(vf);
+        IPageSite site = getSite();
+        if (site != null) {
+            IActionBars actionBars = site.getActionBars();
+            if (actionBars != null) {
+                IToolBarManager toolBarManager = actionBars.getToolBarManager();
+                if (toolBarManager != null) {
+                    toolBarManager.removeAll();
+                    toolBarManager.add(new GroovyLexicalSortingAction());
+                    toolBarManager.update(true);
+                }
+            }
         }
 
         isInitialized = true;
