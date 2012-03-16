@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
@@ -137,6 +138,10 @@ class GroovyScriptOCompilationUnit extends OCompilationUnit {
                     @Override
                     protected SourceUnit getSourceUnit() {
                         return null;
+                    }
+
+                    @Override
+                    public void visitClosureExpression(ClosureExpression expression) {
                     }
 
                     @Override
