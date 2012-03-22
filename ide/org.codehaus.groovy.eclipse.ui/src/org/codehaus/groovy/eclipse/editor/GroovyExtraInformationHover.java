@@ -1,8 +1,5 @@
 package org.codehaus.groovy.eclipse.editor;
 
-import java.io.IOException;
-import java.io.StringReader;
-
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -12,16 +9,16 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.codebrowsing.elements.IGroovyResolvedElement;
-import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.debug.ui.JavaDebugHover;
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocBrowserInformationControlInput;
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover;
-import org.eclipse.jdt.internal.ui.text.javadoc.JavaDoc2HTMLTextReader;
+import org.eclipse.jdt.internal.ui.text.javadoc.JavadocContentAccess2;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.ui.IEditorPart;
@@ -149,21 +146,29 @@ public class GroovyExtraInformationHover extends JavadocHover {
             preamble = "";
         }
         if (elt.getExtraDoc() != null) {
-            return preamble + extraDocAsHtml(elt) + "\n<br><hr/><br>\n" + input.getHtml();
+
+            String wrapped = preamble + extraDocAsHtml(elt) + "\n<br/><hr/><br/>\n" + input.getHtml();
+            //            System.out.println(wrapped);
+            return wrapped;
         } else {
             return preamble + input.getHtml();
         }
     }
 
     protected String extraDocAsHtml(IGroovyResolvedElement elt) {
-        JavaDoc2HTMLTextReader reader = new JavaDoc2HTMLTextReader(new StringReader(elt.getExtraDoc()));
-        try {
-            return reader.getString();
-        } catch (IOException e) {
-            GroovyCore.logException("Error extracting extra documentation", e);
-            return "";
+        String extraDoc = "/**" + elt.getExtraDoc() + "*/";
+        if (!extraDoc.startsWith("/**")) {
+            extraDoc = "/**" + extraDoc;
         }
+        if (!extraDoc.endsWith("*/")) {
+            extraDoc = extraDoc + "*/";
+        }
+
+        return (String) ReflectionUtils.executePrivateMethod(JavadocContentAccess2.class, "javadoc2HTML", new Class[] {
+            IMember.class, String.class }, null, new Object[] { elt, extraDoc });
     }
+
+
 
     /**
      * @param inferredElement
