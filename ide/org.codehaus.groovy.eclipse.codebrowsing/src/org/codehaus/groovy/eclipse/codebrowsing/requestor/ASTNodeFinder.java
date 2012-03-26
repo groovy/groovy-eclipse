@@ -484,7 +484,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
      * @return true iff this node covers the interesting region
      */
     protected boolean doTest(ASTNode node) {
-        return r.regionIsCoveredByNode(node);
+        return node.getEnd() > 0 && r.regionIsCoveredByNode(node);
     }
 
     /**

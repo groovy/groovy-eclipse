@@ -21,17 +21,20 @@ package org.codehaus.groovy.eclipse.refactoring.actions;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.CandidateCollector;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.JavaRefactoringDispatcher;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.ISourceReference;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.refactoring.RenameSupport;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
@@ -44,15 +47,18 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
 
     public void run(IAction action) {
         if (initRefactoring()) {
-            CandidateCollector dispatcher = new CandidateCollector(getUnit(), getSelection());
+            ITextSelection selection = getSelection();
+            GroovyCompilationUnit unit = getUnit();
+            CandidateCollector dispatcher = new CandidateCollector(unit, selection);
             try {
                 ISourceReference target = dispatcher.getRefactoringTarget();
                 IPreferenceStore store = JavaPlugin.getDefault().getPreferenceStore();
                 boolean lightweight = store.getBoolean(PreferenceConstants.REFACTOR_LIGHTWEIGHT);
-                if (runViaAdapter(target, lightweight))
+                if (runViaAdapter(target, lightweight)) {
                     return;
+                }
                 if (target instanceof IMember || target instanceof ILocalVariable) {
-                    if (lightweight) {
+                    if (lightweight && nameMatches(((IJavaElement) target).getElementName(), unit, selection)) {
                         new GroovyRenameLinkedMode((IJavaElement) target, getEditor()).start();
                     } else {
                         openJavaRefactoringWizard((IJavaElement) target);
@@ -64,6 +70,33 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
                 displayErrorDialog(e.getMessage());
             }
         }
+    }
+
+    /**
+     * @param elementName
+     * @param unit
+     * @param selection
+     * @return true iff the selected name matches the element name
+     */
+    private boolean nameMatches(String elementName, GroovyCompilationUnit unit, ITextSelection selection) {
+        char[] contents = unit.getContents();
+        // need to expand the selection so that it covers an entire word
+        int start = selection.getOffset();
+        int end = start + selection.getLength();
+        while (start == contents.length || (start >= 0 && Character.isJavaIdentifierPart(contents[start]))) {
+            start --;
+        }
+        if (start != 0 || !Character.isJavaIdentifierPart(contents[start])) {
+            start ++;
+        }
+        while (end < contents.length && Character.isJavaIdentifierPart(contents[end])) {
+            end ++;
+        }
+        if (end > contents.length) {
+            end --;
+        }
+        char[] selectedText = CharOperation.subarray(contents, start, end);
+        return elementName.equals(String.valueOf(selectedText));
     }
 
     private boolean runViaAdapter(ISourceReference _target, boolean lightweight) {
