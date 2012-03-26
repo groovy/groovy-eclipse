@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,18 +35,18 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class GroovyShellLauncherTab extends JavaMainTab {
 
-	/**
-	 * Dialog for selecting the groovy class to run.
-	 */
-	@Override
+    /**
+     * Dialog for selecting the groovy class to run.
+     */
+    @Override
     protected void handleSearchButtonSelected() {
-	}
+    }
 
-	@Override
-	protected void createMainTypeEditor(Composite parent, String text) {
-	    super.createMainTypeEditor(parent, text);
+    @Override
+    protected void createMainTypeEditor(Composite parent, String text) {
+        super.createMainTypeEditor(parent, text);
         fMainText.getParent().setVisible(false);
-        fMainText.setText(groovy.ui.InteractiveShell.class.getName());
+        fMainText.setText(org.codehaus.groovy.tools.shell.Main.class.getName());
         Button fSearchButton = (Button) ReflectionUtils.getPrivateField(SharedJavaMainTab.class, "fSearchButton", this);
         fSearchButton.setVisible(false);
         Button fSearchExternalJarsCheckButton = (Button) ReflectionUtils.getPrivateField(JavaMainTab.class,
@@ -57,14 +57,14 @@ public class GroovyShellLauncherTab extends JavaMainTab {
         fConsiderInheritedMainButton.setVisible(false);
         Button fStopInMainCheckButton = (Button) ReflectionUtils.getPrivateField(JavaMainTab.class, "fStopInMainCheckButton", this);
         fStopInMainCheckButton.setVisible(false);
-	}
+    }
 
-	@Override
-	protected void updateMainTypeFromConfig(ILaunchConfiguration config) {
-	}
+    @Override
+    protected void updateMainTypeFromConfig(ILaunchConfiguration config) {
+    }
 
-	@Override
-	public void initializeFrom(ILaunchConfiguration config) {
+    @Override
+    public void initializeFrom(ILaunchConfiguration config) {
         String projectName = EMPTY_STRING;
         try {
             projectName = config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, EMPTY_STRING);
@@ -76,22 +76,22 @@ public class GroovyShellLauncherTab extends JavaMainTab {
 
         ReflectionUtils.executePrivateMethod(JavaLaunchTab.class, "setCurrentLaunchConfiguration",
                 new Class[] { ILaunchConfiguration.class }, this, new Object[] { config });
-	}
+    }
 
-	/**
-	 * @see org.eclipse.debug.ui.ILaunchConfigurationTab#getName()
-	 */
-	@Override
+    /**
+     * @see org.eclipse.debug.ui.ILaunchConfigurationTab#getName()
+     */
+    @Override
     public String getName() {
-		return "Groovy Shell"; //$NON-NLS-1$
-	}
+        return "Groovy Shell"; //$NON-NLS-1$
+    }
 
-	/**
-	 * @see org.eclipse.debug.ui.ILaunchConfigurationTab#getImage()
-	 */
-	@Override
+    /**
+     * @see org.eclipse.debug.ui.ILaunchConfigurationTab#getImage()
+     */
+    @Override
     public Image getImage() {
-		return JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CLASS);
-	}
+        return JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CLASS);
+    }
 
 }
