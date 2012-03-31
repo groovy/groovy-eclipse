@@ -57,7 +57,7 @@
           target: extract-create-install
          installs into the local repo                     
          =================================  -->
-	<target name="extract-create-install" depends="extract-create">
+	<target name="extract-create-install" depends="-mavenInit,extract-create">
 		<mavenInstall version="${version}" prefix="${jar.prefix}"/>
 	</target>
 

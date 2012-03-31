@@ -335,7 +335,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
 
         getLogger().info("Using Groovy-Eclipse compiler to compile both Java and Groovy files");
-        getLogger().info(
+        getLogger().debug(
                 "Compiling " + sourceFiles.length + " " + "source file"
                         + (sourceFiles.length == 1 ? "" : "s") + " to "
                         + destinationDir.getAbsolutePath());
@@ -419,9 +419,6 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             args.add("-verbose");
         }
 
-        if (verbose) {
-            getLogger().info("All args: " + args);
-        }
 
         if (config.getSourceEncoding() != null) {
             args.add("-encoding");
@@ -434,7 +431,8 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             if (startsWithHyphen(key)) { // don't add a "-" if the arg
                                             // already has one
                 args.add((String) key);
-            } else if (key != null) {
+            } else if (key != null && !key.equals("org.osgi.framework.system.packages")) {
+                // See https://jira.codehaus.org/browse/GRECLIPSE-1418 ignore the system packages option
                 /*
                  * Not sure what the possible range of usage looks like but I
                  * don't think this should allow for null keys? "-null" probably
@@ -449,6 +447,10 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
 
         args.addAll(composeSourceFiles(sourceFiles));
+        
+        if (verbose) {
+            getLogger().info("All args: " + args);
+        }
 
         return args.toArray(new String[args.size()]);
     }
