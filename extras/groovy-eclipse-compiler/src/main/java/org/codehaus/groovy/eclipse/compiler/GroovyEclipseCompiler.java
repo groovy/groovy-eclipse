@@ -71,6 +71,10 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     // see compiler.note.note in compiler.properties of javac sources
     private static final String[] NOTE_PREFIXES = { "Note: ", "\u6ce8: ", "\u6ce8\u610f\uff1a " };
 
+    private static final String JAVA_AGENT_CLASS_PARAM_NAME = "-javaAgentClass";
+
+    private String javaAgentClass = "";
+
     /**
      * Simple progress monitor to keep track of number of files compiled
      * 
@@ -404,9 +408,16 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         for (Entry<Object, Object> entry : (Iterable<Entry<Object, Object>>) config.getCustomCompilerArguments().entrySet()) {
 
             Object key = entry.getKey();
-            if (startsWithHyphen(key)) { // don't add a "-" if the arg
-                                         // already has one
-                args.add((String) key);
+            if (startsWithHyphen(key)) {
+                if (JAVA_AGENT_CLASS_PARAM_NAME.equals(key)) {
+                    setJavaAgentClass((String) entry.getValue());
+                    // do not add the custom java agent arg because it is not
+                    // expected by groovy-eclipse compiler
+                } else {
+                    // don't add a "-" if the arg
+                    // already has one
+                    args.add((String) key);
+                }
             } else if (key != null && !key.equals("org.osgi.framework.system.packages")) {
                 // See https://jira.codehaus.org/browse/GRECLIPSE-1418 ignore
                 // the system packages option
@@ -485,6 +496,13 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         cli.setExecutable(executable);
 
         try {
+            // we need to setup any javaagent before the -jar flag
+            if (!StringUtils.isEmpty(javaAgentClass)) {
+                cli.addArguments(new String[] { "-javaagent:" + getAdditionnalJavaAgentLocation() });
+            } else {
+                getLogger().info("no javaAgentClass seems to be set");
+            }
+
             cli.addArguments(new String[] { "-jar", groovyEclipseLocation });
 
             File argumentsFile = createFileWithArguments(args, config.getOutputLocation());
@@ -497,6 +515,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             if (!StringUtils.isEmpty(config.getMeminitial())) {
                 cli.addArguments(new String[] { "-J-Xms" + config.getMeminitial() });
             }
+
         } catch (IOException e) {
             throw new CompilerException("Error creating file with javac arguments", e);
         }
@@ -773,8 +792,21 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
     }
 
+    private String getAdditionnalJavaAgentLocation() throws CompilerException {
+        return getClassLocation(getJavaAgentClass());
+    }
+
     private String getGroovyEclipseBatchLocation() throws CompilerException {
-        Class<Main> cls = Main.class;
+        return getClassLocation(Main.class.getName());
+    }
+
+    private String getClassLocation(String className) throws CompilerException {
+        Class<?> cls;
+        try {
+            cls = Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            throw new CompilerException("Cannot find the requested className <" + className + "> in classpath");
+        }
         ProtectionDomain pDomain = cls.getProtectionDomain();
         CodeSource cSource = pDomain.getCodeSource();
         if (cSource != null) {
@@ -786,12 +818,13 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 getLogger().warn("Unsupported Encoding for URL: " + loc, e);
                 file = new File(loc.getPath());
             }
+            getLogger().info("Found location <" + file.getPath() + "> for className <" + className + ">");
             return file.getPath();
         } else {
-            throw new CompilerException("Cannot find the location of groovy-eclipse-batch jar");
+            throw new CompilerException("Cannot find the location of the requested className <" + className + "> in classpath");
         }
     }
-
+    
     /**
      * Get the path of the javac tool executable: try to find it depending the
      * OS or the <code>java.home</code> system property or the
@@ -837,5 +870,13 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
 
         return javaExe.getAbsolutePath();
+    }
+
+    public String getJavaAgentClass() {
+        return javaAgentClass;
+    }
+
+    public void setJavaAgentClass(String className) {
+        this.javaAgentClass = className;
     }
 }
