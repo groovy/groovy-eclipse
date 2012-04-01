@@ -411,6 +411,7 @@ public class CompilerOptions {
 	public String groovyClassLoaderPath = null;
 	public String groovyExtraImports = null;
 	public String groovyProjectName = null;
+	public String groovyTransformsToRunOnReconcile = null;
 	// GROOVY end
 
 	// === Support for Null Annotations: ===
