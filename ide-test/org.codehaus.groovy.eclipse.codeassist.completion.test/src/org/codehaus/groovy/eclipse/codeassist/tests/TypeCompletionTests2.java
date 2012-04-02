@@ -51,8 +51,24 @@ public class TypeCompletionTests2 extends CompletionTestCase {
     public void testBrokenScript1() throws Exception {
         String contents = "def x(HTML";
         String expected = "import javax.swing.text.html.HTML;\n\ndef x(HTML";
-        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
-                HTML_PROPOSAL);
+        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
+    }
+
+    protected void tryInLoop(String contents, String expected, String target, String proposal) throws Exception {
+        int MAX_TRIES = 5;
+        Exception last = null;
+        int i;
+        for (i = 0; i < MAX_TRIES; i++) {
+            try {
+                checkProposalApplicationType(contents, expected, getIndexOf(contents, target),
+                        proposal);
+            } catch (Exception e) {
+                last = e;
+            }
+        }
+        if (last != null && i >= MAX_TRIES) {
+            throw last;
+        }
     }
     
     public void testBrokenScript2() throws Exception {
@@ -62,8 +78,7 @@ public class TypeCompletionTests2 extends CompletionTestCase {
         }
         String contents = "package f\n\ndef x(HTML";
         String expected = "package f\n\nimport javax.swing.text.html.HTML;\n\n\ndef x(HTML";
-        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
-                HTML_PROPOSAL);
+        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
     }
     
     public void testBrokenScript3() throws Exception {
@@ -73,8 +88,7 @@ public class TypeCompletionTests2 extends CompletionTestCase {
         }
         String contents = "/**some stuff*/\npackage f\n\ndef x(HTML";
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML;\n\n\ndef x(HTML";
-        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
-                HTML_PROPOSAL);
+        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
     }
     
     // Bug !!! See GRECLIPSE-1231  import statements placed on same line because ';' is not recognized as part of the import statement
@@ -85,8 +99,7 @@ public class TypeCompletionTests2 extends CompletionTestCase {
         }
         String contents = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI;\n\ndef x(HTML";
         String expected = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI;import javax.swing.text.html.HTML;\n\n\ndef x(HTML";
-        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
-                HTML_PROPOSAL);
+        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
     }
     
     // Bug !!! See GRECLIPSE-1231  import statements placed on same line because ';' is not recognized as part of the import statement
@@ -97,8 +110,7 @@ public class TypeCompletionTests2 extends CompletionTestCase {
         }
         String contents = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI;\n\ndef x(HTML";
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI;import javax.swing.text.html.HTML;\n\n\ndef x(HTML";
-        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
-                HTML_PROPOSAL);
+        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
     }
     
 
@@ -114,8 +126,7 @@ public class TypeCompletionTests2 extends CompletionTestCase {
         		"import javax.swing.text.html.HTML;\n" +
         		"\n" +
         		"HTML";
-        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
-                HTML_PROPOSAL);
+        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
     }
     public void testBrokenScript7() throws Exception {
         // disabled on 17 and earlier since parser recovery not implemented
@@ -139,8 +150,7 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "\n" + 
                 "def x(HTML\n" + 
                 "";
-        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
-                HTML_PROPOSAL);
+        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
     }
     public void testBrokenScript8() throws Exception {
         String contents = 
@@ -158,8 +168,7 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "import javax.swing.text.html.HTML;\n" + 
                 "\n" + 
                 "def x(HTML";
-        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
-                HTML_PROPOSAL);
+        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
     }
 
     
@@ -182,8 +191,7 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "import java.awt.dnd.DropTarget as Foo\n" + 
                 "\n" + 
                 "def x(HTML";
-        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
-                HTML_PROPOSAL);
+        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
     }
 
     public void testBrokenScript10() throws Exception {
@@ -203,8 +211,7 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "import java.awt.dnd.DropTarget as Foo\n" + 
                 "\n" + 
                 "def x(HTML";
-        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
-                HTML_PROPOSAL);
+        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
     }
     
     // GRECLIPSE-926
@@ -237,21 +244,18 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "            HTML\n" + 
                 "         }\n" + 
                 "    }";
-        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTMLT),
-                HTMLTableCaptionElement_PROPOSAL);
+        tryInLoop(contents, expected, HTMLT, HTMLTableCaptionElement_PROPOSAL);
     }
 
     public void testBrokenClass1() throws Exception {
         String contents = "/**some stuff*/\npackage f\n\nclass Y {\ndef x(HTML";
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML;\n\nclass Y {\ndef x(HTML";
-        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
-                HTML_PROPOSAL);
+        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
     }
     
     public void testBrokenClass2() throws Exception {
         String contents = "/**some stuff*/\npackage f\n\nclass Y extends HTML {\ndef x(H";
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML;\n\nclass Y extends HTML {\ndef x(H";
-        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
-                HTML_PROPOSAL);
+        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
     }
 }

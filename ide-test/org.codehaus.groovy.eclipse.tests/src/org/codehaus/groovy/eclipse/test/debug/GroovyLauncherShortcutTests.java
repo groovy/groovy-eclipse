@@ -77,6 +77,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
     class ConsoleListener implements IConsoleLineTrackerExtension {
         private IConsole console;
         String text = null;
+        private int exitValue;
 
         public void consoleClosed() {
             text = getText();
@@ -86,6 +87,12 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
             return console.getDocument().get();
         }
         public void dispose() {
+            IProcess process = console.getProcess();
+            try {
+                exitValue = process.isTerminated() ? process.getExitValue() : Integer.MIN_VALUE;
+            } catch (DebugException e) {
+                exitValue = Integer.MIN_VALUE;
+            }
             this.console = null;
         }
         public void init(IConsole console) {
@@ -95,8 +102,12 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         public void lineAppended(IRegion line) { }
 
         int getExitValue() throws DebugException {
-            IProcess process = console.getProcess();
-            return process.isTerminated() ? process.getExitValue() : Integer.MIN_VALUE;
+            if (console != null) {
+                IProcess process = console.getProcess();
+                return process.isTerminated() ? process.getExitValue() : Integer.MIN_VALUE;
+            } else {
+                return exitValue;
+            }
         }
 
         public IConsole getConsole() {
