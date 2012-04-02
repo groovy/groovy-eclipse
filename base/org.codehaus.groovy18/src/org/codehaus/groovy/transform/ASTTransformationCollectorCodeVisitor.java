@@ -21,6 +21,7 @@ import groovy.lang.GroovyClassLoader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -226,6 +227,9 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     	if (this.localTransformsAllowed.size()==0) {
     		return names;
     	}
+    	if (names == null) {
+    	    return NONE;
+    	}
     	List<String> newnames = new ArrayList<String>();
     	for (String name: names) {
     		if (isAllowed(name)) {
@@ -243,6 +247,9 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     	if (this.localTransformsAllowed.size()==0) {
     		return names;
     	}
+        if (names == null) {
+            return NO_CLASSES;
+        }
     	List<Class<?>> newnames = new ArrayList<Class<?>>();
     	for (Class<?> clazz: names) {
     		String name = clazz.getSimpleName();
