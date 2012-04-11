@@ -11,28 +11,9 @@
  ******************************************************************************/
 package org.codehaus.groovy.classgen;
 
-import static java.lang.reflect.Modifier.isAbstract;
-import static java.lang.reflect.Modifier.isFinal;
-import static java.lang.reflect.Modifier.isNative;
-import static java.lang.reflect.Modifier.isStatic;
-import static java.lang.reflect.Modifier.isStrict;
-import static java.lang.reflect.Modifier.isSynchronized;
-import static java.lang.reflect.Modifier.isTransient;
-import static java.lang.reflect.Modifier.isVolatile;
-
 import java.util.List;
 
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ConstructorNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.InnerClassNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
@@ -47,12 +28,13 @@ import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
-import org.objectweb.asm.Opcodes;
 
+import static java.lang.reflect.Modifier.*;
+import static org.objectweb.asm.Opcodes.*;
 /**
  * ClassCompletionVerifier
  */
-public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements Opcodes {
+public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
 
     private ClassNode currentClass;
     private SourceUnit source;
@@ -130,6 +112,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
         checkClassForModifier(node, isNative(node.getModifiers()), "native");
         if (!(node instanceof InnerClassNode)) {
             checkClassForModifier(node, isStatic(node.getModifiers()), "static");
+            checkClassForModifier(node, isPrivate(node.getModifiers()), "private");
         }
         // don't check synchronized here as it overlaps with ACC_SUPER
     }
@@ -193,7 +176,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
     private void checkMethodsForIncorrectModifiers(ClassNode cn) {
         if (!cn.isInterface()) return;
         for (MethodNode method : cn.getMethods()) {
-            if (isFinal(method.getModifiers())) {
+            if (method.isFinal()) {
                 addError("The " + getDescription(method) + " from " + getDescription(cn) +
                         " must not be final. It is by definition abstract.", method);
             }
@@ -220,7 +203,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
             for (MethodNode superMethod : cn.getSuperClass().getMethods(method.getName())) {
                 Parameter[] superParams = superMethod.getParameters();
                 if (!hasEqualParameterTypes(params, superParams)) continue;
-                if (!isFinal(superMethod.getModifiers())) break;
+                if (!superMethod.isFinal()) break;
                 addInvalidUseOfFinalError(method, params, superMethod.getDeclaringClass());
                 return;
             }
@@ -321,8 +304,8 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport implements 
 
     private void checkOverloadingPrivateAndPublic(MethodNode node) {
         if (isConstructor(node)) return;
-        boolean hasPrivate = false;
-        boolean hasPublic = false;
+        boolean hasPrivate = node.isPrivate();
+        boolean hasPublic = node.isPublic();
         for (MethodNode method : currentClass.getMethods(node.getName())) {
             if (method == node) continue;
             if (!method.getDeclaringClass().equals(node.getDeclaringClass())) continue;

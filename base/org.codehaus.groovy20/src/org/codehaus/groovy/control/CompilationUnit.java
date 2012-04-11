@@ -19,11 +19,7 @@ import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyRuntimeException;
 
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.CompileUnit;
-import org.codehaus.groovy.ast.InnerClassNode;
-import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.classgen.*;
 import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.codehaus.groovy.control.io.InputStreamReaderSource;
@@ -64,7 +60,7 @@ public class CompilationUnit extends ProcessingUnit {
     //---------------------------------------------------------------------------
     // CONSTRUCTION AND SUCH
 
-    private GroovyClassLoader transformLoader;  // Classloader for global and local transforms
+    protected ASTTransformationsContext astTransformationsContext; // AST transformations state data
 
     protected Map<String, SourceUnit> sources;    // The SourceUnits from which this unit is built
     protected Map summariesBySourceName;      // Summary of each SourceUnit
@@ -120,7 +116,7 @@ public class CompilationUnit extends ProcessingUnit {
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, GroovyClassLoader loader) {
 		// GRECLIPSE extra param
-        this(configuration, security, loader, null,true);
+        this(configuration, security, loader, null,true,null);
     }
     
     // GRECLIPSE extraparam
@@ -138,10 +134,11 @@ public class CompilationUnit extends ProcessingUnit {
      * @param configuration - compilation configuration
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, 
-                           GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean allowTransforms) {
+                           GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean allowTransforms, String localTransformsToRunOnReconcile) {
         super(configuration, loader, null);
+        this.astTransformationsContext = new ASTTransformationsContext(this, transformLoader);
+
         this.allowTransforms = allowTransforms;
-        this.transformLoader = transformLoader;
         this.names = new ArrayList<String>();
         this.queuedSources = new LinkedList<SourceUnit>();
         this.sources = new HashMap<String, SourceUnit>();
@@ -158,6 +155,22 @@ public class CompilationUnit extends ProcessingUnit {
         this.staticImportVisitor = new StaticImportVisitor();
         // end
         this.optimizer = new OptimizerVisitor(this);
+        // GRECLIPSE start
+        if (localTransformsToRunOnReconcile==null) {    
+    		this.localTransformsToRunOnReconcile = Collections.emptyList();
+    	} else {
+    		this.localTransformsToRunOnReconcile=new ArrayList<String>();
+	    	try {
+	    		StringTokenizer st = new StringTokenizer(localTransformsToRunOnReconcile,",");
+	    		while (st.hasMoreElements()) {
+	    			String classname = st.nextToken();
+	    			this.localTransformsToRunOnReconcile.add(classname);
+	    		}
+	    	} catch (Exception e) {
+	    		// presumed security exception
+	    	}
+    	}
+        // GRECLIPSE end
 
         phaseOperations = new LinkedList[Phases.ALL + 1];
         newPhaseOperations = new LinkedList[Phases.ALL + 1];
@@ -206,7 +219,7 @@ public class CompilationUnit extends ProcessingUnit {
             @Override
             public void call(SourceUnit source, GeneratorContext context,
                              ClassNode classNode) throws CompilationFailedException {
-                InnerClassCompletionVisitor iv = new InnerClassCompletionVisitor();
+                InnerClassCompletionVisitor iv = new InnerClassCompletionVisitor(CompilationUnit.this, source);
                 iv.visitClass(classNode);
             }
         }, Phases.CANONICALIZATION);
@@ -238,7 +251,7 @@ public class CompilationUnit extends ProcessingUnit {
      * @return - the transform class loader
      */
     public GroovyClassLoader getTransformLoader() {
-        return transformLoader == null ? getClassLoader() : transformLoader;
+        return astTransformationsContext.getTransformLoader() == null ? getClassLoader() : astTransformationsContext.getTransformLoader();
     }
     
     
@@ -350,6 +363,13 @@ public class CompilationUnit extends ProcessingUnit {
             if (debug) e.printStackTrace();
         }
         return result[0];
+    }
+
+    /**
+     * @return the AST transformations current context
+     */
+    public ASTTransformationsContext getASTTransformationsContext() {
+        return astTransformationsContext;
     }
 
     //---------------------------------------------------------------------------
@@ -517,6 +537,14 @@ public class CompilationUnit extends ProcessingUnit {
         this.progressCallback = callback;
     }
 
+    public ClassgenCallback getClassgenCallback() {
+        return classgenCallback;
+    }
+
+    public ProgressCallback getProgressCallback() {
+        return progressCallback;
+    }
+
     //---------------------------------------------------------------------------
     // ACTIONS
 
@@ -666,9 +694,7 @@ public class CompilationUnit extends ProcessingUnit {
 
     private PrimaryClassNodeOperation staticImport = new PrimaryClassNodeOperation() {
         public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
-            if (staticImportVisitor != null) {
-                staticImportVisitor.visitClass(classNode, source);
-            }
+            staticImportVisitor.visitClass(classNode, source);
         }
     };
 
@@ -817,7 +843,7 @@ public class CompilationUnit extends ProcessingUnit {
             // also takes care of both \ and / depending on the host compiling environment
             if (sourceName != null)
                 sourceName = sourceName.substring(Math.max(sourceName.lastIndexOf('\\'), sourceName.lastIndexOf('/')) + 1);
-            ClassGenerator generator = new AsmClassGenerator(source, context, visitor, sourceName);
+            AsmClassGenerator generator = new AsmClassGenerator(source, context, visitor, sourceName);
 
             //
             // Run the generation and create the class (if required)
@@ -860,7 +886,49 @@ public class CompilationUnit extends ProcessingUnit {
 
 
     protected ClassVisitor createClassVisitor() {
-        return new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        CompilerConfiguration config = getConfiguration();
+        int computeMaxStackAndFrames = ClassWriter.COMPUTE_MAXS;
+        if (config.getOptimizationOptions().get("indy")==Boolean.TRUE) {
+            computeMaxStackAndFrames += ClassWriter.COMPUTE_FRAMES;
+    }
+        return new ClassWriter(computeMaxStackAndFrames) {
+            private ClassNode getClassNode(String name) {
+                // try classes under compilation
+                CompileUnit cu = getAST();
+                ClassNode cn = cu.getClass(name);
+                if (cn!=null) return cn;
+                // try inner classes
+                cn = cu.getGeneratedInnerClass(name);
+                if (cn!=null) return cn;
+                // try class loader classes
+                try {
+                    cn = ClassHelper.make(
+                            cu.getClassLoader().loadClass(name,false,true),
+                            false);
+                } catch (Exception e) {
+                    throw new GroovyBugError(e);
+                }
+                return cn;
+            }
+            private ClassNode getCommonSuperClassNode(ClassNode c, ClassNode d) {
+                // adapted from ClassWriter code
+                if (c.isDerivedFrom(d)) return d;
+                if (d.isDerivedFrom(c)) return c;
+                if (c.isInterface() || d.isInterface()) return ClassHelper.OBJECT_TYPE;
+                do {
+                    c = c.getSuperClass();
+                } while (c!=null && !d.isDerivedFrom(c));
+                if (c==null) return ClassHelper.OBJECT_TYPE;
+                return c;
+            }
+            @Override
+            protected String getCommonSuperClass(String arg1, String arg2) {
+                ClassNode a = getClassNode(arg1.replace('/', '.')); 
+                ClassNode b = getClassNode(arg2.replace('/', '.'));
+                return getCommonSuperClassNode(a,b).getName().replace('.','/');
+            }
+
+        };
     }
 
     //---------------------------------------------------------------------------
@@ -1207,6 +1275,7 @@ public class CompilationUnit extends ProcessingUnit {
 
 	public boolean allowTransforms = true;
 	public boolean isReconcile = false;
+	public List<String> localTransformsToRunOnReconcile = null;
 	
 	/**
 	 * Slightly modifies the behaviour of the phases based on what the caller really needs.  Some invocations of the compilation

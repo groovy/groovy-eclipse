@@ -24,6 +24,8 @@ import org.codehaus.groovy.ast.stmt.*;
 import org.codehaus.groovy.classgen.asm.BytecodeHelper;
 import org.codehaus.groovy.classgen.asm.MopWriter;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.ClassNodeSkip;
+import org.codehaus.groovy.classgen.asm.WriterController;
+import org.codehaus.groovy.classgen.asm.WriterControllerFactory;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.RuntimeParserException;
 import org.codehaus.groovy.syntax.Token;
@@ -32,6 +34,7 @@ import org.codehaus.groovy.reflection.ClassInfo;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -227,7 +230,13 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         node.addConstructor(constructor);
     }
 
-    private void addStaticMetaClassField(ClassNode node, final String classInternalName) {
+    private static boolean isInnerClassOf(ClassNode a, ClassNode b) {
+        if (a.redirect()==b) return true;
+        if (b.redirect() instanceof InnerClassNode) return isInnerClassOf(a, b.redirect().getOuterClass());
+        return false;
+    }
+    
+    private void addStaticMetaClassField(final ClassNode node, final String classInternalName) {
         String _staticClassInfoFieldName = "$staticClassInfo";
         while (node.getDeclaredField(_staticClassInfoFieldName) != null)
             _staticClassInfoFieldName = _staticClassInfoFieldName + "$";
@@ -246,8 +255,11 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                     public void visit(MethodVisitor mv) {
                         mv.visitVarInsn(ALOAD, 0);
                         mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;");
-                        mv.visitMethodInsn(INVOKESTATIC, classInternalName, "$get$$class$" + classInternalName.replaceAll("\\/", "\\$"), "()Ljava/lang/Class;");
-
+                        if (BytecodeHelper.isClassLiteralPossible(node) || BytecodeHelper.isSameCompilationUnit(classNode, node)) {
+                            BytecodeHelper.visitClassLiteral(mv,node);
+                        } else {
+                        	mv.visitMethodInsn(INVOKESTATIC, classInternalName, "$get$$class$" + classInternalName.replaceAll("\\/", "\\$"), "()Ljava/lang/Class;");
+                        }
                         Label l1 = new Label();
                         mv.visitJumpInsn(IF_ACMPEQ, l1);
 
@@ -556,7 +568,8 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     }
 
     protected void addReturnIfNeeded(MethodNode node) {
-        ReturnAdder.addReturnIfNeeded(node);
+        ReturnAdder adder = new ReturnAdder();
+        adder.visitMethod(node);
     }
 
     public void visitField(FieldNode node) {
@@ -681,6 +694,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         addDefaultParameters(methods, new DefaultArgsAction(){
             public void call(ArgumentListExpression arguments, Parameter[] newParams, MethodNode method) {
                 MethodCallExpression expression = new MethodCallExpression(VariableExpression.THIS_EXPRESSION, method.getName(), arguments);
+                expression.setMethodTarget(method);
                 expression.setImplicitThis(true);
                 Statement code = null;
                 if (method.isVoidMethod()) {
@@ -1396,14 +1410,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 name, mods, ClassHelper.VOID_TYPE,
                 Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, methodCode);        
         
-        methodCode.addStatement(new BytecodeSequence(new BytecodeInstruction() {
-            @Override
-            public void visit(MethodVisitor mv) {
-                final String classInternalName = BytecodeHelper.getClassInternalName(node);
-                mv.visitInsn(ACONST_NULL);
-                mv.visitFieldInsn(PUTSTATIC, classInternalName, "$callSiteArray", "Ljava/lang/ref/SoftReference;");
-            }
-        }));
+        methodCode.addStatement(new SwapInitStatement());
         for (FieldNode fn : node.getFields()) {
             if (!fn.isStatic() || !fn.isSynthetic() || !fn.getName().startsWith("$const$")) continue;
             if (fn.getInitialExpression()==null) continue;
@@ -1451,6 +1458,34 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             result.setType(type);
         }
         return result;
+    }
+
+    private static class SwapInitStatement extends BytecodeSequence {
+
+        private WriterController controller;
+
+        public SwapInitStatement() {
+            super(new SwapInitInstruction());
+            ((SwapInitInstruction)getInstructions().get(0)).statement = this;
+        }
+
+        @Override
+        public void visit(final GroovyCodeVisitor visitor) {
+            if (visitor instanceof AsmClassGenerator) {
+                AsmClassGenerator generator = (AsmClassGenerator) visitor;
+                controller = generator.getController();
+            }
+            super.visit(visitor);
+        }
+
+        private static class SwapInitInstruction extends BytecodeInstruction {
+            SwapInitStatement statement;
+
+            @Override
+            public void visit(final MethodVisitor mv) {
+                statement.controller.getCallSiteWriter().makeCallSiteArrayInitializer();
+            }
+        }
     }
 
 }

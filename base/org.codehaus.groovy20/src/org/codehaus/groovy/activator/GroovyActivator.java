@@ -27,11 +27,11 @@ public class GroovyActivator extends Plugin {
 
     public static final String PLUGIN_ID = "org.codehaus.groovy"; //$NON-NLS-1$
     
-	public static final String GROOVY_ALL_JAR = "lib/groovy-all-1.8.6.jar"; //$NON-NLS-1$
-	public static final String GROOVY_JAR = "lib/groovy-1.8.6.jar"; //$NON-NLS-1$
-    public static final String ASM_JAR = "lib/asm-3.2.jar"; //$NON-NLS-1$
+	public static final String GROOVY_ALL_JAR = "lib/groovy-all-2.0.0-beta-3-SNAPSHOT.jar"; //$NON-NLS-1$
+	public static final String GROOVY_JAR = "lib/groovy-2.0.0-beta-3-SNAPSHOT.jar"; //$NON-NLS-1$
+    public static final String ASM_JAR = "lib/asm-4.0.jar"; //$NON-NLS-1$
     public static final String GROOVY_GPP_JAR = "extras/groovypp-0.4.248_1.8.0.jar"; //$NON-NLS-1$
-    public static final int GROOVY_LEVEL = 17;
+//    public static final int GROOVY_LEVEL = 17;
 
     public static URL GROOVY_JAR_URL;
     public static URL GROOVY_GPP_URL;

@@ -15,3 +15,5 @@
 14-Nov-11: groovy 1.8.4  
 26-Jan-12: groovy 1.8.5
 13-Feb-12: groovy 1.8.6
+
+10-Apr-12: took groovy 2.0.0 beta3 snapshot dated 10April and moved to it - as first go at 2.0 support

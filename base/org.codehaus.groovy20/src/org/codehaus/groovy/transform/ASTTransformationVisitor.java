@@ -17,6 +17,7 @@
 package org.codehaus.groovy.transform;
 
 import groovy.lang.GroovyClassLoader;
+import groovy.transform.CompilationUnitAware;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,6 +26,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,6 +45,7 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.classgen.GeneratorContext;
+import org.codehaus.groovy.control.ASTTransformationsContext;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilePhase;
@@ -78,7 +81,8 @@ import org.codehaus.groovy.syntax.SyntaxException;
  */
 public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
 
-    private CompilePhase phase;
+    private final ASTTransformationsContext context;
+    private final CompilePhase phase;
     private SourceUnit source;
     private List<ASTNode[]> targetNodes;
     private Map<ASTNode, List<ASTTransformation>> transforms;
@@ -86,8 +90,9 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
     private static CompilationUnit compUnit;
     private static Set<String> globalTransformNames = new HashSet<String>();
 
-    private ASTTransformationVisitor(CompilePhase phase) {
+    private ASTTransformationVisitor(final CompilePhase phase, final ASTTransformationsContext context) {
         this.phase = phase;
+        this.context = context;
     }
 
     protected SourceUnit getSourceUnit() {
@@ -109,7 +114,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         // only descend if we have annotations to look for
         Map<Class<? extends ASTTransformation>, Set<ASTNode>> baseTransforms = classNode.getTransforms(phase);
         if (!baseTransforms.isEmpty()) {
-            transformInstances = new HashMap<Class<? extends ASTTransformation>, ASTTransformation>();
+            final Map<Class<? extends ASTTransformation>, ASTTransformation> transformInstances = new HashMap<Class<? extends ASTTransformation>, ASTTransformation>();
             for (Class<? extends ASTTransformation> transformClass : baseTransforms.keySet()) {
                 try {
                     transformInstances.put(transformClass, transformClass.newInstance());
@@ -158,6 +163,9 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 			if (okToSet) {
                 				source.getErrorCollector().transformActive=true; 
                 			}
+                			if (snt instanceof CompilationUnitAware) {
+                        		((CompilationUnitAware)snt).setCompilationUnit(context.getCompilationUnit());
+                   			}
 	                		snt.visit(node, source);
                 		} finally {
                 			if (okToSet) {
@@ -202,10 +210,11 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
     
 
     public static void addPhaseOperations(final CompilationUnit compilationUnit) {
-        addGlobalTransforms(compilationUnit);
+        final ASTTransformationsContext context = compilationUnit.getASTTransformationsContext();
+        addGlobalTransforms(context);
         // GRECLIPSE
         // want a subset to run during a reconcile...
-        if (!compilationUnit.allowTransforms) {
+        if (!compilationUnit.allowTransforms && compilationUnit.localTransformsToRunOnReconcile.size()==0) {
         	return;
         }
         // GRECLIPSE
@@ -213,12 +222,12 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         compilationUnit.addPhaseOperation(new CompilationUnit.PrimaryClassNodeOperation() {
             public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
                 ASTTransformationCollectorCodeVisitor collector = 
-                    new ASTTransformationCollectorCodeVisitor(source, compilationUnit.getTransformLoader());
+                    new ASTTransformationCollectorCodeVisitor(source, compilationUnit.getTransformLoader(),compilationUnit.allowTransforms,compilationUnit.localTransformsToRunOnReconcile);
                 collector.visitClass(classNode);
             }
         }, Phases.SEMANTIC_ANALYSIS);
         for (CompilePhase phase : CompilePhase.values()) {
-            final ASTTransformationVisitor visitor = new ASTTransformationVisitor(phase);
+            final ASTTransformationVisitor visitor = new ASTTransformationVisitor(phase, context);
             switch (phase) {
                 case INITIALIZATION:
                 case PARSING:
@@ -239,16 +248,16 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         }
     }
 
-    public static void addGlobalTransformsAfterGrab() {
-        doAddGlobalTransforms(compUnit, false);
+    public static void addGlobalTransformsAfterGrab(ASTTransformationsContext context) {
+        doAddGlobalTransforms(context, false);
     }
     
-    public static void addGlobalTransforms(CompilationUnit compilationUnit) {
-        compUnit = compilationUnit;
-        doAddGlobalTransforms(compilationUnit, true);
+    public static void addGlobalTransforms(ASTTransformationsContext context) {
+        doAddGlobalTransforms(context, true);
     }
 
-    private static void doAddGlobalTransforms(CompilationUnit compilationUnit, boolean isFirstScan) {
+    private static void doAddGlobalTransforms(ASTTransformationsContext context, boolean isFirstScan) {
+        final CompilationUnit compilationUnit = context.getCompilationUnit();
     	// GRECLIPSE: added check to determine what is allowed through:
     	ensurelobalTransformsAllowedInReconcileInitialized();
         GroovyClassLoader transformLoader = compilationUnit.getTransformLoader();
@@ -280,23 +289,27 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 // BufferedReader svcIn = new BufferedReader(new InputStreamReader(service.openStream()));
                 // now
            
+           		BufferedReader svcIn = null;
                 InputStream is = service.openStream();
-                BufferedReader svcIn = new BufferedReader(new InputStreamReader(is));
-               
-                // end
                 try {
-                    className = svcIn.readLine();
-                } catch (IOException ioe) {
-                    compilationUnit.getErrorCollector().addError(new SimpleMessage(
-                        "IOException reading the service definition at "
-                        + service.toExternalForm() + " because of exception " + ioe.toString(), null));
-                    continue;
-                }
+	                svcIn = new BufferedReader(new InputStreamReader(is));               
+ 	               // end
+   	               try {
+    	               className = svcIn.readLine();
+        	       } catch (IOException ioe) {
+            	       compilationUnit.getErrorCollector().addError(new SimpleMessage(
+                       	"IOException reading the service definition at "
+                       + service.toExternalForm() + " because of exception " + ioe.toString(), null));
+                    	continue;
+                   }
+                Set<String> disabledGlobalTransforms = compilationUnit.getConfiguration().getDisabledGlobalASTTransformations();
+                if (disabledGlobalTransforms==null) disabledGlobalTransforms=Collections.emptySet();
                 while (className != null) {
                     if (!className.startsWith("#") && className.length() > 0) {
-                        if (transformNames.containsKey(className)) {
-                            if (!service.equals(transformNames.get(className))) {
-                                compilationUnit.getErrorCollector().addWarning(
+                        if (!disabledGlobalTransforms.contains(className)) {
+                            if (transformNames.containsKey(className)) {
+                                if (!service.equals(transformNames.get(className))) {
+                                    compilationUnit.getErrorCollector().addWarning(
                                         WarningMessage.POSSIBLE_ERRORS,
                                         "The global transform for class " + className + " is defined in both "
                                             + transformNames.get(className).toExternalForm()
@@ -305,17 +318,19 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                                             + " - the former definition will be used and the latter ignored.",
                                         null,
                                         null);
-                            }
-
-                        } else {
+                                }
+                                
+                            } else {
                         	// GRECLIPSE: start
                         	/*old{
                         		transformNames.put(className, service);
                         	}new*/
-                        	if (compilationUnit.allowTransforms || globalTransformsAllowedInReconcile.contains(className)) {
-                        		transformNames.put(className, service);
-                        	}
+                        	    if (compilationUnit.allowTransforms || globalTransformsAllowedInReconcile.contains(className)) {
+                        		    
+                        		    transformNames.put(className, service);
+                        	    }
                         	// GRECLIPSE: end
+                            }
                         }
                     }
                     try {
@@ -327,6 +342,10 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                         //noinspection UnnecessaryContinue
                         continue;
                     }
+                }
+                } finally {
+                  if (svcIn!=null) 
+                  svcIn.close();
                 }
                 // GRECLIPSE: start
                 is.close();
@@ -359,19 +378,19 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         // can be added for only for new transforms that have come in 
         if(isFirstScan) {
             for (Map.Entry<String, URL> entry : transformNames.entrySet()) {
-                globalTransformNames.add(entry.getKey());
+                context.getGlobalTransformNames().add(entry.getKey());
             }
-            addPhaseOperationsForGlobalTransforms(compilationUnit, transformNames, isFirstScan);
+            addPhaseOperationsForGlobalTransforms(context.getCompilationUnit(), transformNames, isFirstScan);
         } else {
             Iterator<Map.Entry<String, URL>> it = transformNames.entrySet().iterator();
             while(it.hasNext()) {
                 Map.Entry<String, URL> entry = it.next();
-                if(!globalTransformNames.add(entry.getKey())) {
+                if(!context.getGlobalTransformNames().add(entry.getKey())) {
                     // phase operations for this transform class have already been added before, so remove from current scan cycle
                     it.remove(); 
                 }
             }
-            addPhaseOperationsForGlobalTransforms(compilationUnit, transformNames, isFirstScan);
+            addPhaseOperationsForGlobalTransforms(context.getCompilationUnit(), transformNames, isFirstScan);
         }
     }
     
@@ -418,6 +437,9 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 if (ASTTransformation.class.isAssignableFrom(gTransClass)) {
                 	try {
                 	final ASTTransformation instance = (ASTTransformation)gTransClass.newInstance();
+                	if (instance instanceof CompilationUnitAware) {
+                        ((CompilationUnitAware)instance).setCompilationUnit(compilationUnit);
+                    }
                     CompilationUnit.SourceUnitOperation suOp = new CompilationUnit.SourceUnitOperation() {
                 		// GRECLIPSE: start
                     	private boolean isBuggered = false;

@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.classgen.asm;
 
+import groovy.lang.GroovyRuntimeException;
+
+import java.lang.reflect.Constructor;
 import java.util.Map;
 
 import org.codehaus.groovy.GroovyBugError;
@@ -29,9 +32,19 @@ import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.SourceUnit;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 public class WriterController {
 
+    private static Constructor indyWriter;
+    static {
+        try {
+            Class indyClass = WriterController.class.getClassLoader().loadClass("org.codehaus.groovy.classgen.asm.indy.InvokeDynamicWriter");
+            indyWriter = indyClass.getConstructor(WriterController.class);
+        } catch (Exception e) {
+            indyWriter = null;
+        }        
+    }
     private AsmClassGenerator acg;
     private MethodVisitor methodVisitor;
     private CompileStack compileStack;
@@ -43,6 +56,7 @@ public class WriterController {
     private String internalClassName;
     private InvocationWriter invocationWriter;
     private BinaryExpressionHelper binaryExpHelper, fastPathBinaryExpHelper;
+    private UnaryExpressionHelper unaryExpressionHelper, fastPathUnaryExpressionHelper;
     private AssertionWriter assertionWriter;
     private String internalBaseClassName;
     private ClassNode outermostClass;
@@ -55,15 +69,18 @@ public class WriterController {
     private StatementWriter statementWriter;
     private boolean fastPath = false;
     private TypeChooser typeChooser;
+    private int bytecodeVersion = Opcodes.V1_5; 
 
     public void init(AsmClassGenerator asmClassGenerator, GeneratorContext gcon, ClassVisitor cv, ClassNode cn) {
         Map<String,Boolean> optOptions = cn.getCompileUnit().getConfig().getOptimizationOptions();
+        boolean invokedynamic=false;
         if (optOptions.isEmpty()) {
             // IGNORE
         } else if (optOptions.get("all")==Boolean.FALSE) {
             optimizeForInt=false;
             // set other optimizations options to false here
         } else {
+            if (optOptions.get("indy")==Boolean.TRUE) invokedynamic=true;
             if (optOptions.get("int")==Boolean.FALSE) optimizeForInt=false;
             // set other optimizations options to false here
         }
@@ -71,13 +88,27 @@ public class WriterController {
         this.outermostClass = null;
         this.internalClassName = BytecodeHelper.getClassInternalName(classNode);
         this.callSiteWriter = new CallSiteWriter(this);
-        this.invocationWriter = new InvocationWriter(this);
+        
+        if (invokedynamic) {
+            bytecodeVersion = Opcodes.V1_7;
+            try {
+                this.invocationWriter = (InvocationWriter) indyWriter.newInstance(this);
+            } catch (Exception e) {
+                throw new GroovyRuntimeException("Cannot use invokedynamic, indy module was excluded from this build.");
+            }
+        } else {
+        	this.invocationWriter = new InvocationWriter(this);
+        }
 
         this.binaryExpHelper = new BinaryExpressionHelper(this);
+        this.unaryExpressionHelper = new UnaryExpressionHelper(this);
         if (optimizeForInt) {
             this.fastPathBinaryExpHelper = new BinaryExpressionMultiTypeDispatcher(this);            
+            // todo: replace with a real fast path unary expression helper when available
+            this.fastPathUnaryExpressionHelper = new UnaryExpressionHelper(this);
         } else {
             this.fastPathBinaryExpHelper = this.binaryExpHelper;
+            this.fastPathUnaryExpressionHelper = new UnaryExpressionHelper(this);
         }
         this.operandStack = new OperandStack(this);
         this.assertionWriter = new AssertionWriter(this);
@@ -149,11 +180,19 @@ public class WriterController {
         return invocationWriter;
     }
 
-    public BinaryExpressionHelper getBinaryExpHelper() {
+    public BinaryExpressionHelper getBinaryExpressionHelper() {
         if (fastPath) {
             return fastPathBinaryExpHelper;
         } else {
             return binaryExpHelper;
+        }
+    }
+
+    public UnaryExpressionHelper getUnaryExpressionHelper() {
+        if (fastPath) {
+            return fastPathUnaryExpressionHelper;
+        } else {
+            return unaryExpressionHelper;
         }
     }
 
@@ -304,5 +343,9 @@ public class WriterController {
 
     public boolean isFastPath() {
         return fastPath;
+    }
+    
+    public int getBytecodeVersion() {
+        return bytecodeVersion;
     }
 }

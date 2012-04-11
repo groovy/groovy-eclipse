@@ -234,7 +234,7 @@ tokens {
     STATIC_IMPORT; ENUM_DEF; ENUM_CONSTANT_DEF; FOR_EACH_CLAUSE; ANNOTATION_DEF; ANNOTATIONS;
     ANNOTATION; ANNOTATION_MEMBER_VALUE_PAIR; ANNOTATION_FIELD_DEF; ANNOTATION_ARRAY_INIT;
     TYPE_ARGUMENTS; TYPE_ARGUMENT; TYPE_PARAMETERS; TYPE_PARAMETER; WILDCARD_TYPE;
-    TYPE_UPPER_BOUNDS; TYPE_LOWER_BOUNDS; CLOSURE_LIST;
+    TYPE_UPPER_BOUNDS; TYPE_LOWER_BOUNDS; CLOSURE_LIST;MULTICATCH;MULTICATCH_TYPES;
 }
 
 {
@@ -919,6 +919,7 @@ wildcardType
 typeArgumentsDiamond
 {Token first = LT(1);}
     :   LT! GT! nls!
+    {#typeArgumentsDiamond = #(create(TYPE_ARGUMENTS, "TYPE_ARGUMENTS",first,LT(1)), #typeArgumentsDiamond);}
     ;
 
 // Type arguments to a class or interface type
@@ -1884,6 +1885,25 @@ parameterDeclaration!
         }*/
     ;
 
+multicatch_types
+{Token first = LT(1);}
+    :
+        nls!
+        classOrInterfaceType[false]
+        (
+            BOR! nls! classOrInterfaceType[false]
+        )*
+
+        {#multicatch_types = #(create(MULTICATCH_TYPES, "MULTICATCH_TYPES",first,LT(1)), #multicatch_types);}
+    ;
+
+multicatch
+{Token first = LT(1);}
+    :   nls! (FINAL)? ("def")? (m:multicatch_types)? id:IDENT!
+        {
+          #multicatch = #(create(MULTICATCH,"MULTICATCH",first, LT(1)),m,id);
+        }
+    ;
 /*OBS*
 variableLengthParameterDeclaration!  {Token first = LT(1);}
     :   pm:parameterModifier t:typeSpec[false] TRIPLE_DOT! id:IDENT
@@ -2438,7 +2458,7 @@ finallyClause {Token first = LT(1);}
 
 // an exception handler
 handler {Token first = LT(1);}
-    :   "catch"! LPAREN! pd:parameterDeclaration! RPAREN! nlsWarn! handlerCs:compoundStatement!
+    :   "catch"! LPAREN! pd:multicatch! RPAREN! nlsWarn! handlerCs:compoundStatement!
         {#handler = #(create(LITERAL_catch,"catch",first,LT(1)),pd,handlerCs);}
     ;
 
@@ -4537,6 +4557,22 @@ options {
     // TODO:  Recognize all the Java identifier parts here (except '$').
     ;
 
+protected
+DIGITS_WITH_UNDERSCORE
+options {
+    paraphrase="a sequence of digits and underscores, bordered by digits";
+}
+    :   DIGIT (DIGITS_WITH_UNDERSCORE_OPT)?
+    ;
+
+protected
+DIGITS_WITH_UNDERSCORE_OPT
+options {
+    paraphrase="a sequence of digits and underscores with maybe underscore starting";
+}
+    :   (DIGIT | '_')* DIGIT
+    ;
+
 // a numeric literal
 NUM_INT
 options {
@@ -4564,27 +4600,29 @@ options {
 *OBS*/
         // TODO:  This complex pattern seems wrong.  Verify or fix.
         (   '0' {isDecimal = true;} // special case for just '0'
-            (   ('x'|'X')
+            (   // hex digits
+                ('x'|'X')
                 {isDecimal = false;}
-                (                                                                                   // hex
-                    // the 'e'|'E' and float suffix stuff look
-                    // like hex digits, hence the (...)+ doesn't
-                    // know when to stop: ambig. ANTLR resolves
-                    // it correctly by matching immediately. It
-                    // is therefor ok to hush warning.
-                    options {
-                        warnWhenFollowAmbig=false;
-                    }
-                :   HEX_DIGIT
-                )+
+                HEX_DIGIT
+                (   options { warnWhenFollowAmbig=false; }
+                    : (options { warnWhenFollowAmbig=false; } : HEX_DIGIT | '_')*
+                    HEX_DIGIT
+                )?
+
+            |   //binary literal
+                ('b'|'B') ('0'|'1') (('0'|'1'|'_')* ('0'|'1'))?
+                {isDecimal = false;}
 
             |   //float or double with leading zero
-                (('0'..'9')+ ('.'('0'..'9')|EXPONENT|FLOAT_SUFFIX)) => ('0'..'9')+
+                (   DIGITS_WITH_UNDERSCORE
+                    ( '.' DIGITS_WITH_UNDERSCORE | EXPONENT | FLOAT_SUFFIX)
+                ) => DIGITS_WITH_UNDERSCORE
 
-            |   ('0'..'7')+                                                                     // octal
+            |   // octal
+                ('0'..'7') (('0'..'7'|'_')* ('0'..'7'))?
                 {isDecimal = false;}
             )?
-        |   ('1'..'9') ('0'..'9')*  {isDecimal=true;}               // non-zero decimal
+        |   ('1'..'9') (DIGITS_WITH_UNDERSCORE_OPT)? {isDecimal=true;}               // non-zero decimal
         )
         (   ('l'|'L') { _ttype = NUM_LONG; }
         |   ('i'|'I') { _ttype = NUM_INT; }
@@ -4594,7 +4632,7 @@ options {
         |
             (~'.' | '.' ('0'..'9')) =>
             {isDecimal}?
-            (   '.' ('0'..'9')+ (EXPONENT)? (f2:FLOAT_SUFFIX {t=f2;} | g2:BIG_SUFFIX {t=g2;})?
+            (   '.' DIGITS_WITH_UNDERSCORE (e:EXPONENT)? (f2:FLOAT_SUFFIX {t=f2;} | g2:BIG_SUFFIX {t=g2;})?
             |   EXPONENT (f3:FLOAT_SUFFIX {t=f3;} | g3:BIG_SUFFIX {t=g3;})?
             |   f4:FLOAT_SUFFIX {t=f4;}
             )
@@ -4626,7 +4664,7 @@ EXPONENT
 options {
     paraphrase="an exponent";
 }
-    :   ('e'|'E') ('+'|'-')? ('0'..'9')+
+    :   ('e'|'E') ('+'|'-')? ('0'..'9'|'_')* ('0'..'9')
     ;
 
 

@@ -52,6 +52,7 @@ public class CompileUnit {
     private CodeSource codeSource;
     private Map<String,ClassNode> classesToCompile = new HashMap<String, ClassNode>();
     private Map<String,SourceUnit> classNameToSource = new HashMap<String, SourceUnit>();
+    private Map<String, InnerClassNode> generatedInnerClasses = new HashMap();
     
     public CompileUnit(GroovyClassLoader classLoader, CompilerConfiguration config) {
     	this(classLoader, null, config);
@@ -179,6 +180,14 @@ public class CompileUnit {
     
     public Iterator<String> iterateClassNodeToCompile(){
         return classesToCompile.keySet().iterator();
+    }
+
+    public InnerClassNode getGeneratedInnerClass(String name) {
+        return generatedInnerClasses.get(name);
+    }
+    
+    public void addGeneratedInnerClass(InnerClassNode icn) {
+        generatedInnerClasses.put(icn.getName(), icn);
     }
 
     // GRECLIPSE: start: access sorted list

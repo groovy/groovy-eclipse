@@ -177,7 +177,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     protected Object lazyInitLock = new Object();
 
     // clazz!=null when resolved
-    // GRECLIPSE: to protected
     protected Class clazz;
     // only false when this classNode is constructed from a class
     // GRECLIPSE: from private to protected
@@ -782,7 +781,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (redirect!=null) return redirect().equals(o);
         if (!(o instanceof ClassNode)) return false;
         ClassNode cn = (ClassNode) o;
-        return (cn.getName().equals(getName()));
+        return (cn.getText().equals(getText()));
     }
 
     public int hashCode() {
@@ -1232,17 +1231,21 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public String toString() {
+        return toString(true);
+    }
+
+    public String toString(boolean showRedirect) {
         String ret = getName();
         if (genericsTypes != null) {
             ret += " <";
             for (int i = 0; i < genericsTypes.length; i++) {
                 if (i != 0) ret += ", ";
                 GenericsType genericsType = genericsTypes[i];
-                ret += genericTypeAsString(genericsType);
+                ret += genericTypeAsString(genericsType, showRedirect);
             }
             ret += ">";
         }
-        if (redirect != null) {
+        if (redirect != null && showRedirect) {
             ret += " -> " + redirect().toString();
         }
         return ret;
@@ -1252,9 +1255,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * This exists to avoid a recursive definition of toString. The default toString
      * in GenericsType calls ClassNode.toString(), which calls GenericsType.toString(), etc. 
      * @param genericsType
+     * @param showRedirect
      * @return
      */
-    private String genericTypeAsString(GenericsType genericsType) {
+    private String genericTypeAsString(GenericsType genericsType, boolean showRedirect) {
         String ret = genericsType.getName();
         if (genericsType.getUpperBounds() != null) {
             ret += " extends ";
@@ -1263,7 +1267,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
                 if (classNode.equals(this)) {
                     ret += classNode.getName();
                 } else {
-                    ret += classNode.toString();
+                    ret += classNode.toString(showRedirect);
                 }
                 if (i + 1 < genericsType.getUpperBounds().length) ret += " & ";
             }
@@ -1624,6 +1628,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return redirect!=null;
     }
      
+    @Override
+    public String getText() {
+        return getName();
+    }
+    
      // GRECLIPSE start
 	public String getClassInternalName() {
 		if (redirect!=null) return redirect().getClassInternalName();

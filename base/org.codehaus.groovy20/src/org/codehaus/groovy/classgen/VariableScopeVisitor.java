@@ -17,7 +17,6 @@ package org.codehaus.groovy.classgen;
 
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.*;
-import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
@@ -467,11 +466,19 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         
         pushState();
 
-        currentClass = node;
-        currentScope.setClassScope(node);
+        prepareVisit(node);
 
         super.visitClass(node);
         popState();
+    }
+
+    /**
+     * Setup the current class node context.
+     * @param node
+     */
+    public void prepareVisit(ClassNode node) {
+        currentClass = node;
+        currentScope.setClassScope(node);
     }
 
     protected void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
