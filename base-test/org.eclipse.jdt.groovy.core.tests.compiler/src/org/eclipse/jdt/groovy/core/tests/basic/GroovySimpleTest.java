@@ -100,19 +100,25 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         String[] newcps = new String[cps.length+3];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-			URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry(
-					"lib/groovy-1.8.6.jar");
-        	if (groovyJar==null) {
-        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.10.jar");
-            	if (groovyJar==null) {
-            		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
-            	}
-        	}
+            URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry(
+                    "lib/groovy-2.0.0-beta-3-SNAPSHOT.jar");
+            if (groovyJar==null) {
+				groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.6.jar");
+	        	if (groovyJar==null) {
+	        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.10.jar");
+	            	if (groovyJar==null) {
+	            		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
+	            	}
+	        	}
+            }
             newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
-        	URL asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-3.2.jar");
-        	if (asmJar==null) {
-        		asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-2.2.3.jar");
-        	}
+            URL asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-4.0.jar");
+            if (asmJar==null) {
+	        	asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-3.2.jar");
+	        	if (asmJar==null) {
+	        		asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-2.2.3.jar");
+	        	}
+            }
             newcps[newcps.length-2] = FileLocator.resolve(asmJar).getFile();
 	        // FIXASC think more about why this is here... the tests that need it specify the option but that is just for
 	        // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when
@@ -8629,9 +8635,80 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"package q\n"+
 			"class Wibble {" +
 			"  String field = 'abcd';\n"+
-			"  @PackageScope String field2 = 'abcd';\n"+
+			"  @groovy.transform.PackageScope String field2 = 'abcd';\n"+
 			"}\n"
 		},"20"); // 0x2 = private 0x0 = default (so field2 has had private vis removed by annotation)
+	}
+
+	public void testTypeChecked() {
+		if (GroovyUtils.GROOVY_LEVEL<20) {
+			return;
+		}
+		runNegativeTest(new String[]{
+				"Foo.groovy",
+				"import groovy.transform.TypeChecked\n"+
+				"@TypeChecked\n"+
+				"void method(String message) {\n"+
+				"   if (rareCondition) {\n"+
+				"        println \"Did you spot the error in this ${message.toUppercase()}?\"\n"+
+				"   }\n"+
+				"}"
+		},
+		"----------\n" + 
+		"1. ERROR in Foo.groovy (at line 4)\n" + 
+		"	if (rareCondition) {\n" + 
+		"	    ^\n" + 
+		"Groovy:[Static type checking] - The variable [rareCondition] is undeclared.\n" + 
+		"----------\n" + 
+		"2. ERROR in Foo.groovy (at line 5)\n" + 
+		"	println \"Did you spot the error in this ${message.toUppercase()}?\"\n" + 
+		"	                                         ^\n" + 
+		"Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase()\n" + 
+		"----------\n");
+	}
+	
+	public void testTypeChecked2() {
+		if (GroovyUtils.GROOVY_LEVEL<20) {
+			return;
+		}
+		runNegativeTest(new String[]{
+				"Foo.groovy",
+				"import groovy.transform.TypeChecked\n"+
+				"@TypeChecked\n"+
+				"void method(String message) {\n"+
+				"   List<Integer> ls = new ArrayList<Integer>();\n"+
+				"   ls.add(123);\n"+
+				"   ls.add('abc');\n"+
+				"}"
+		},
+		"----------\n" + 
+		"1. ERROR in Foo.groovy (at line 6)\n" + 
+		"	ls.add(\'abc\');\n" + 
+		"	^\n" + 
+		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)\n" + 
+		"----------\n");
+	}
+	
+	public void testCompileStatic() {
+		if (GroovyUtils.GROOVY_LEVEL<20) {
+			return;
+		}
+		runNegativeTest(new String[]{
+				"Foo.groovy",
+				"import groovy.transform.CompileStatic\n"+
+				"@CompileStatic\n"+
+				"void method(String message) {\n"+
+				"   List<Integer> ls = new ArrayList<Integer>();\n"+
+				"   ls.add(123);\n"+
+				"   ls.add('abc');\n"+
+				"}"
+		},
+		"----------\n" + 
+		"1. ERROR in Foo.groovy (at line 6)\n" + 
+		"	ls.add(\'abc\');\n" + 
+		"	^\n" + 
+		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)\n" + 
+		"----------\n");
 	}
 	
 	public void testGroovyAnnotation() {

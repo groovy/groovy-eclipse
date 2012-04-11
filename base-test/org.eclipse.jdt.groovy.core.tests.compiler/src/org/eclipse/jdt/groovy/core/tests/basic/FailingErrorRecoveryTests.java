@@ -74,18 +74,23 @@ public class FailingErrorRecoveryTests extends AbstractRegressionTest {
         String[] newcps = new String[cps.length+3];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-			URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry(
-					"lib/groovy-1.8.6.jar");
-            if (groovyJar==null) {
-                groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.10.jar");
-                if (groovyJar==null) {
-                    groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
-                }
-            }
+        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.0.0-beta-3-SNAPSHOT.jar");
+        	if (groovyJar==null) {
+				groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.6.jar");
+	            if (groovyJar==null) {
+	                groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.10.jar");
+	                if (groovyJar==null) {
+	                    groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
+	                }
+	            }
+        	}
             newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
-            URL asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-3.2.jar");
+            URL asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-4.0.jar");
             if (asmJar==null) {
-                asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-2.2.3.jar");
+	            asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-3.2.jar");
+	            if (asmJar==null) {
+	                asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-2.2.3.jar");
+	            }
             }
             newcps[newcps.length-2] = FileLocator.resolve(asmJar).getFile();
             // FIXASC think more about why this is here... the tests that need it specify the option but that is just for

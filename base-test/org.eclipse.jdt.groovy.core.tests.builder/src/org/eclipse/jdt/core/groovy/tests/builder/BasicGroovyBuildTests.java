@@ -1459,6 +1459,9 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 	
 	// The first groovy++ test
 	public void testGpp1() throws Exception {
+    	if (GroovyUtils.GROOVY_LEVEL != 18) {
+    		return;
+    	}
 		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
@@ -1499,6 +1502,9 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 	}
 	
 	public void testGpp1AnnotatedPackage() throws Exception {
+    	if (GroovyUtils.GROOVY_LEVEL != 18) {
+    		return;
+    	}
 		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
@@ -1543,6 +1549,9 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 	 * just checking if it works in standard form.
 	 */
 	public void testGrunit_1() throws Exception {
+    	if (GroovyUtils.GROOVY_LEVEL != 18) {
+    		return;
+    	}
 		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
@@ -1578,6 +1587,10 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 	 * same as test above *but* uses .grunit suffix
 	 */
 	public void testGrunit_2() throws Exception {
+    	if (GroovyUtils.GROOVY_LEVEL != 18) {
+    		return;
+    	}
+
 		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
@@ -1609,6 +1622,10 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 	 * Checks that the content type is registered correctly.
 	 */
 	public void testDotGppFiles() throws Exception {
+    	if (GroovyUtils.GROOVY_LEVEL != 18) {
+    		return;
+    	}
+
 		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
