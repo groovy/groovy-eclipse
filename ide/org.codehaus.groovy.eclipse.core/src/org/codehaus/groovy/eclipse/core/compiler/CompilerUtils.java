@@ -74,10 +74,17 @@ public class CompilerUtils {
         return active == null || active.length == 0;
     }
 
-    /**
-     * @param disabled17Bundle
-     * @return
-     */
+    public static boolean isGroovy20DisabledOrMissing() {
+        BundleDescription disabled20Bundle = null;
+        disabled20Bundle = getDisabled20BundleDescription();
+        if (disabled20Bundle != null) {
+            return true;
+        }
+
+        Bundle[] active = Platform.getBundles("org.codehaus.groovy", "2.0.0");
+        return active == null || active.length == 0;
+    }
+
     private static BundleDescription getDisabled18BundleDescription() {
         BundleDescription[] bundles = Platform.getPlatformAdmin().getState(false).getDisabledBundles();
         for (BundleDescription bundle : bundles) {
@@ -90,10 +97,30 @@ public class CompilerUtils {
         return null;
     }
 
+    private static BundleDescription getDisabled20BundleDescription() {
+        BundleDescription[] bundles = Platform.getPlatformAdmin().getState(false).getDisabledBundles();
+        for (BundleDescription bundle : bundles) {
+            if (bundle.getSymbolicName().equals("org.codehaus.groovy") && bundle.getVersion().getMajor() == 2
+                    && bundle.getVersion().getMinor() == 0) {
+                return bundle;
+            }
+        }
+        return null;
+    }
+
     public static Bundle getActiveGroovyBundle() {
         String version17 = "[1.7.0,1.7.99)";
         String version18 = "1.8.6";
-        Bundle[] active = Platform.getBundles("org.codehaus.groovy", (isGroovy18DisabledOrMissing() ? version17 : version18));
+        String version20 = "2.0.0";
+        String versionToUse = version20;
+        if (isGroovy20DisabledOrMissing()) {
+            if (isGroovy18DisabledOrMissing()) {
+                versionToUse = version17;
+            } else {
+                versionToUse = version18;
+            }
+        }
+        Bundle[] active = Platform.getBundles("org.codehaus.groovy", version20);
         return active != null && active.length > 0 ? active[0] : null;
     }
 
