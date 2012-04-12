@@ -294,6 +294,9 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
     }
     
     // GRECLIPSE start: empty
+    //  http://jira.codehaus.org/browse/GRECLIPSE-1421
+    // cannot put this in the interface because that would break API
+    // only put here
     public void visitEmptyExpression(EmptyExpression expression) {
     }
     // GRECLIPSE end

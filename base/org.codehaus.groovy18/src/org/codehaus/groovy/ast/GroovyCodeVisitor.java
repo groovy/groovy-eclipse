@@ -139,9 +139,5 @@ public interface GroovyCodeVisitor {
 
     void visitBytecodeExpression(BytecodeExpression expression);
     
-    // GRECLIPSE: start: 
-    // also visit empty expressions
-    void visitEmptyExpression(EmptyExpression expression);
-    // GRECLIPSE: end
 }
 

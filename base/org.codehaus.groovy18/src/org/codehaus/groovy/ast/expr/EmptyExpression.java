@@ -16,6 +16,7 @@
 
 package org.codehaus.groovy.ast.expr;
 
+import org.codehaus.groovy.ast.CodeVisitorSupport;
 import org.codehaus.groovy.ast.GroovyCodeVisitor;
 
 /**
@@ -36,7 +37,9 @@ public class EmptyExpression extends Expression {
 
     public void visit(GroovyCodeVisitor visitor) {
         // GRECLIPSE start: 
-        visitor.visitEmptyExpression(this);
+        if (visitor instanceof CodeVisitorSupport) {
+            ((CodeVisitorSupport) visitor).visitEmptyExpression(this);
+        }
         // GRECLIPSE end
         return;
     }
