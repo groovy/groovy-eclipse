@@ -21,12 +21,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.groovy.ast.ASTNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
@@ -39,12 +36,10 @@ import org.codehaus.groovy.eclipse.codebrowsing.fragments.BinaryExpressionFragme
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.MethodCallFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.PropertyExpressionFragment;
-import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.FindAllOccurrencesVisitor;
-import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode;
-import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode.VisitKind;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.Activator;
+import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
 import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferences;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -430,43 +425,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
      * @return
      */
     private ClassNode getContainingClassNode() {
-        ModuleNode module = getCu().getModuleNode();
-        if (module == null) {
-            return null;
-        }
-
-        ClassNode scriptClass = null;
-        ClassNode result = null;
-        int selectionStart = getSelectionStart();
-        List<ClassNode> classes = module.getClasses();
-		for (ClassNode clazz : (Iterable<ClassNode>) classes) {
-			if (clazz.isScript()) {
-				scriptClass = clazz;
-			} else {
-				if (clazz.getStart() <= selectionStart && clazz.getEnd() >= selectionStart) {
-					result = clazz;
-				}
-			}
-		}
-		if (result == null) {
-			if (scriptClass != null && scriptClass.getStart() <= selectionStart && scriptClass.getEnd() >= selectionStart) {
-                result = scriptClass;
-			} else {
-				// ensure this method never returns null
-                result = ASTNodeCompatibilityWrapper.getScriptClassDummy(module);
-            }
-		} else {
-			// look for inner classes
-            Iterator<InnerClassNode> innerClasses = ASTNodeCompatibilityWrapper.getInnerClasses(result);
-			while (innerClasses != null && innerClasses.hasNext()) {
-				InnerClassNode inner = innerClasses.next();
-				if (inner.getStart() <= selectionStart && inner.getEnd() >= selectionStart) {
-					result = inner;
-                    innerClasses = ASTNodeCompatibilityWrapper.getInnerClasses(inner);
-				}
-			}
-        }
-        return result;
+        return ASTTools.getContainingClassNode(getCu().getModuleNode(), getSelectionStart());
     }
 
 
@@ -556,14 +515,8 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
 
 
     private IASTFragment getSelectedFragment() {
-        if (selectedFragment != null) {
-            return selectedFragment;
-        }
-        FindSurroundingNode finder = new FindSurroundingNode(new Region(getSelectionStart(), getSelectionLength()),
-                VisitKind.SURROUNDING_NODE);
-        IASTFragment fragment = finder.doVisitSurroundingNode(getCu().getModuleNode());
-        if (ASTFragmentKind.isExpressionKind(fragment)) {
-            selectedFragment = (IASTFragment) fragment;
+        if (selectedFragment == null) {
+            selectedFragment = ASTTools.getSelectionFragment(getCu().getModuleNode(), getSelectionStart(), getSelectionLength());
         }
         return selectedFragment;
     }

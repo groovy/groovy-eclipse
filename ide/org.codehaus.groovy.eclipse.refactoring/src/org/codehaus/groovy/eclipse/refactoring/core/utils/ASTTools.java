@@ -19,17 +19,32 @@
 package org.codehaus.groovy.eclipse.refactoring.core.utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ASTNodeCompatibilityWrapper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.InnerClassNode;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.VariableScope;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentKind;
+import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
+import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode;
+import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode.VisitKind;
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetParser;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
@@ -253,4 +268,79 @@ public class ASTTools {
 		}
 	}
 
+    public static Set<Variable> getVariablesInScope(ModuleNode moduleNode, ASTNode node) {
+        FindSurroundingNode find = new FindSurroundingNode(new Region(node), VisitKind.PARENT_STACK);
+        find.doVisitSurroundingNode(moduleNode);
+        List<IASTFragment> parentStack = new ArrayList<IASTFragment>(find.getParentStack());
+        Collections.reverse(parentStack);
+
+        Set<Variable> vars = new HashSet<Variable>();
+        for (IASTFragment fragment : parentStack) {
+            ASTNode astNode = fragment.getAssociatedNode();
+            VariableScope scope;
+            if (astNode instanceof BlockStatement) {
+                scope = ((BlockStatement) astNode).getVariableScope();
+            } else if (astNode instanceof MethodNode) {
+                scope = ((MethodNode) astNode).getVariableScope();
+            } else if (astNode instanceof ClosureExpression) {
+                scope = ((ClosureExpression) astNode).getVariableScope();
+            } else {
+                scope = null;
+            }
+            if (scope != null) {
+                Iterator<Variable> declaredVariables = scope.getDeclaredVariablesIterator();
+                while (declaredVariables.hasNext()) {
+                    vars.add(declaredVariables.next());
+                }
+            }
+        }
+
+        return vars;
+    }
+
+    public static ClassNode getContainingClassNode(ModuleNode moduleNode, int offset) {
+        ClassNode containingClassNode = null;
+        ClassNode scriptClass = null;
+        List<ClassNode> classes = moduleNode.getClasses();
+        for (ClassNode clazz : (Iterable<ClassNode>) classes) {
+            if (clazz.isScript()) {
+                scriptClass = clazz;
+            } else {
+                if (clazz.getStart() <= offset && clazz.getEnd() >= offset) {
+                    containingClassNode = clazz;
+                }
+            }
+        }
+        if (containingClassNode == null) {
+            if (scriptClass != null && scriptClass.getStart() <= offset && scriptClass.getEnd() >= offset) {
+                containingClassNode = scriptClass;
+            } else {
+                // ensure this method never returns null
+                containingClassNode = ASTNodeCompatibilityWrapper.getScriptClassDummy(moduleNode);
+            }
+        } else {
+            // look for inner classes
+            Iterator<InnerClassNode> innerClasses = ASTNodeCompatibilityWrapper.getInnerClasses(containingClassNode);
+            while (innerClasses != null && innerClasses.hasNext()) {
+                InnerClassNode inner = innerClasses.next();
+                if (inner.getStart() <= offset && inner.getEnd() >= offset) {
+                    containingClassNode = inner;
+                    innerClasses = ASTNodeCompatibilityWrapper.getInnerClasses(inner);
+                }
+            }
+        }
+        return containingClassNode;
+    }
+
+    public static IASTFragment getSelectionFragment(ModuleNode moduleNode, int selectionStart, int selectionLength) {
+        FindSurroundingNode finder = new FindSurroundingNode(new Region(selectionStart, selectionLength),
+                VisitKind.SURROUNDING_NODE);
+
+        IASTFragment selectionFragment = null;
+        IASTFragment fragment = finder.doVisitSurroundingNode(moduleNode);
+        if (ASTFragmentKind.isExpressionKind(fragment)) {
+            selectionFragment = fragment;
+        }
+        return selectionFragment;
+    }
 }

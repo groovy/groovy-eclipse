@@ -41,7 +41,8 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
                     new ConvertToSingleLineStringCompletionProposal(context).hasProposals() ||
                     new RemoveUnnecessarySemicolonsCompletionProposal(context).hasProposals() ||
                     new SwapOperandsCompletionProposal(context).hasProposals() ||
-                    new SplitAssigmentCompletionProposal(context).hasProposals();
+                    new SplitAssigmentCompletionProposal(context).hasProposals() ||
+                    new AssignStatementToNewLocalProposal(context).hasProposals();
 		}
 		return false;
 	}
@@ -92,6 +93,11 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
 		SwapOperandsCompletionProposal swapOperands = new SwapOperandsCompletionProposal(context);
 		if (swapOperands.hasProposals()) {
 		    proposalList.add(swapOperands);
+		}
+		
+		AssignStatementToNewLocalProposal assignStatement = new AssignStatementToNewLocalProposal(context);
+		if (assignStatement.hasProposals()) {
+		    proposalList.add(assignStatement);
 		}
 		
 		

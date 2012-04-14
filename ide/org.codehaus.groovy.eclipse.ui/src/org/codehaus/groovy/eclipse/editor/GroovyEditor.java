@@ -25,6 +25,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.editor.actions.ExpandSelectionAction;
+import org.codehaus.groovy.eclipse.editor.actions.GroovyConvertLocalToFieldAction;
 import org.codehaus.groovy.eclipse.editor.actions.GroovyExtractConstantAction;
 import org.codehaus.groovy.eclipse.editor.actions.GroovyExtractLocalAction;
 import org.codehaus.groovy.eclipse.editor.actions.GroovyExtractMethodAction;
@@ -850,7 +851,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         removeRefactoringAction("fConvertNestedToTopAction");
         removeRefactoringAction("fInferTypeArgumentsAction");
         removeRefactoringAction("fInlineAction");
-        removeRefactoringAction("fConvertLocalToFieldAction");
+        // fConvertLocalToFieldAction
         removeRefactoringAction("fConvertAnonymousToNestedAction");
         removeRefactoringAction("fIntroduceIndirectionAction");
         // fInlineAction
@@ -880,6 +881,12 @@ public class GroovyEditor extends CompilationUnitEditor {
         extractLocalAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.EXTRACT_LOCAL_VARIABLE);
         setAction("ExtractLocalVariable", extractLocalAction); //$NON-NLS-1$
         replaceRefactoringAction("fExtractTempAction", extractLocalAction);
+
+        // use our Convert local instead
+        GroovyConvertLocalToFieldAction convertLocalAction = new GroovyConvertLocalToFieldAction(this);
+        convertLocalAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.PROMOTE_LOCAL_VARIABLE);
+        setAction("ConvertLocalToField", convertLocalAction);
+        replaceRefactoringAction("fConvertLocalToFieldAction", convertLocalAction);
 
         // selections
         ExpandSelectionAction selectionAction= new ExpandSelectionAction(this,
