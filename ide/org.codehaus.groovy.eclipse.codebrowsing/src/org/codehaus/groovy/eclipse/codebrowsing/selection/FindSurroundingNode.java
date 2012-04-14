@@ -362,8 +362,8 @@ public class FindSurroundingNode extends ASTNodeFinder {
     @Override
     public void visitClosureListExpression(ClosureListExpression node) {
         nodeStack.push(factory.createFragment(node));
-        check(node);
         super.visitClosureListExpression(node);
+        check(node);
         nodeStack.pop();
     }
 
@@ -428,24 +428,24 @@ public class FindSurroundingNode extends ASTNodeFinder {
     @Override
     public void visitNotExpression(NotExpression node) {
         nodeStack.push(factory.createFragment(node));
-        check(node);
         super.visitNotExpression(node);
+        check(node);
         nodeStack.pop();
     }
 
     @Override
     public void visitPostfixExpression(PostfixExpression node) {
         nodeStack.push(factory.createFragment(node));
-        check(node);
         super.visitPostfixExpression(node);
+        check(node);
         nodeStack.pop();
     }
 
     @Override
     public void visitPrefixExpression(PrefixExpression node) {
         nodeStack.push(factory.createFragment(node));
-        check(node);
         super.visitPrefixExpression(node);
+        check(node);
         nodeStack.pop();
     }
 
@@ -460,40 +460,40 @@ public class FindSurroundingNode extends ASTNodeFinder {
     @Override
     public void visitRangeExpression(RangeExpression node) {
         nodeStack.push(factory.createFragment(node));
-        check(node);
         super.visitRangeExpression(node);
+        check(node);
         nodeStack.pop();
     }
 
     @Override
     public void visitShortTernaryExpression(ElvisOperatorExpression node) {
         nodeStack.push(factory.createFragment(node));
-        check(node);
         super.visitShortTernaryExpression(node);
+        check(node);
         nodeStack.pop();
     }
 
     @Override
     public void visitSpreadExpression(SpreadExpression node) {
         nodeStack.push(factory.createFragment(node));
-        check(node);
         super.visitSpreadExpression(node);
+        check(node);
         nodeStack.pop();
     }
 
     @Override
     public void visitSpreadMapExpression(SpreadMapExpression node) {
         nodeStack.push(factory.createFragment(node));
-        check(node);
         super.visitSpreadMapExpression(node);
+        check(node);
         nodeStack.pop();
     }
 
     @Override
     public void visitTernaryExpression(TernaryExpression node) {
         nodeStack.push(factory.createFragment(node));
-        check(node);
         super.visitTernaryExpression(node);
+        check(node);
         nodeStack.pop();
     }
 
@@ -579,6 +579,7 @@ public class FindSurroundingNode extends ASTNodeFinder {
     public void visitConstantExpression(ConstantExpression node) {
         nodeStack.push(factory.createFragment(node));
         super.visitConstantExpression(node);
+        check(node);
         nodeStack.pop();
     }
 

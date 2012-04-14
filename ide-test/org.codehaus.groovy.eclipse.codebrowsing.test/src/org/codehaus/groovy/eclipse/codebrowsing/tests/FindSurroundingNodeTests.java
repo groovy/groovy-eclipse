@@ -159,6 +159,124 @@ public class FindSurroundingNodeTests extends BrowsingTestCase {
         unit = checkRegion(contents, initialRegion, expectedRegion);
     }
 
+    public void testFindSurrounding8a() throws Exception {
+        String contents = "foo()++";
+        Region initialRegion = new Region(contents.lastIndexOf('f'), 1);
+        Region expectedRegion = new Region(contents.lastIndexOf("foo"), "foo".length());
+        GroovyCompilationUnit unit = checkRegion(contents, initialRegion, expectedRegion);
+
+        initialRegion = expectedRegion;
+        expectedRegion = new Region(contents.lastIndexOf("foo()"), "foo()".length());
+        unit = checkRegion(contents, unit, initialRegion, expectedRegion);
+
+        initialRegion = expectedRegion;
+        expectedRegion = new Region(0, contents.length());
+        unit = checkRegion(contents, initialRegion, expectedRegion);
+    }
+
+    public void testFindSurrounding8b() throws Exception {
+        String contents = "++foo()";
+        Region initialRegion = new Region(contents.lastIndexOf('f'), 1);
+        Region expectedRegion = new Region(contents.lastIndexOf("foo"), "foo".length());
+        GroovyCompilationUnit unit = checkRegion(contents, initialRegion, expectedRegion);
+
+        initialRegion = expectedRegion;
+        expectedRegion = new Region(contents.lastIndexOf("foo()"), "foo()".length());
+        unit = checkRegion(contents, unit, initialRegion, expectedRegion);
+
+        initialRegion = expectedRegion;
+        expectedRegion = new Region(0, contents.length());
+        unit = checkRegion(contents, initialRegion, expectedRegion);
+    }
+
+    public void testFindSurrounding8c() throws Exception {
+        String contents = "!foo()";
+        Region initialRegion = new Region(contents.lastIndexOf('f'), 1);
+        Region expectedRegion = new Region(contents.lastIndexOf("foo"), "foo".length());
+        GroovyCompilationUnit unit = checkRegion(contents, initialRegion, expectedRegion);
+
+        initialRegion = expectedRegion;
+        expectedRegion = new Region(contents.lastIndexOf("foo()"), "foo()".length());
+        unit = checkRegion(contents, unit, initialRegion, expectedRegion);
+
+        initialRegion = expectedRegion;
+        expectedRegion = new Region(0, contents.length());
+        unit = checkRegion(contents, initialRegion, expectedRegion);
+    }
+
+    public void testFindSurrounding9a() throws Exception {
+        String contents = "1..9";
+        Region initialRegion = new Region(contents.lastIndexOf('9'), 0);
+        Region expectedRegion = new Region(contents.lastIndexOf("9"), "9".length());
+        checkRegion(contents, initialRegion, expectedRegion);
+
+        initialRegion = expectedRegion;
+        expectedRegion = new Region(0, contents.length());
+        checkRegion(contents, initialRegion, expectedRegion);
+    }
+
+    public void testFindSurrounding9b() throws Exception {
+        String contents = "1..9";
+        Region initialRegion = new Region(contents.lastIndexOf('1'), 0);
+        Region expectedRegion = new Region(contents.lastIndexOf("1"), "1".length());
+        checkRegion(contents, initialRegion, expectedRegion);
+
+        initialRegion = expectedRegion;
+        expectedRegion = new Region(0, contents.length());
+        checkRegion(contents, initialRegion, expectedRegion);
+    }
+
+    // Disaboked see http://jira.codehaus.org/browse/GRECLIPSE-1425
+    public void _testFindSurrounding10() throws Exception {
+        String contents = "x = a ?: b";
+        Region initialRegion = new Region(contents.lastIndexOf('a'), 0);
+        Region expectedRegion = new Region(contents.lastIndexOf("a"), "a".length());
+        GroovyCompilationUnit unit = checkRegion(contents, initialRegion, expectedRegion);
+
+        initialRegion = expectedRegion;
+        expectedRegion = new Region(contents.lastIndexOf("a ?: b"), "a ?: b".length());
+        unit = checkRegion(contents, unit, initialRegion, expectedRegion);
+
+        initialRegion = expectedRegion;
+        expectedRegion = new Region(0, contents.length());
+        unit = checkRegion(contents, initialRegion, expectedRegion);
+    }
+
+    // Disaboked see http://jira.codehaus.org/browse/GRECLIPSE-1425
+    public void _testFindSurrounding10a() throws Exception {
+        String contents = "x = a ? b1 : b";
+        Region initialRegion = new Region(contents.lastIndexOf('a'), 0);
+        Region expectedRegion = new Region(contents.lastIndexOf("a"), "a".length());
+        GroovyCompilationUnit unit = checkRegion(contents, initialRegion, expectedRegion);
+
+        initialRegion = expectedRegion;
+        expectedRegion = new Region(contents.lastIndexOf("a ? b1 : b"), "a ? b1: b".length());
+        unit = checkRegion(contents, unit, initialRegion, expectedRegion);
+
+        initialRegion = expectedRegion;
+        expectedRegion = new Region(0, contents.length());
+        unit = checkRegion(contents, initialRegion, expectedRegion);
+    }
+
+    public void testFindSurrounding11() throws Exception {
+        String contents = "x = [a : b]";
+        Region initialRegion = new Region(contents.lastIndexOf('a'), 0);
+        Region expectedRegion = new Region(contents.lastIndexOf("a"), "a".length());
+        GroovyCompilationUnit unit = checkRegion(contents, initialRegion, expectedRegion);
+
+        initialRegion = expectedRegion;
+        expectedRegion = new Region(contents.lastIndexOf("a : b"), "a : b".length());
+        unit = checkRegion(contents, unit, initialRegion, expectedRegion);
+
+        initialRegion = expectedRegion;
+        expectedRegion = new Region(contents.lastIndexOf("[a : b]"), "[a : b]".length());
+        unit = checkRegion(contents, unit, initialRegion, expectedRegion);
+
+        initialRegion = expectedRegion;
+        expectedRegion = new Region(0, contents.length());
+        unit = checkRegion(contents, initialRegion, expectedRegion);
+    }
+
     private GroovyCompilationUnit checkRegion(String contents, Region initialRegion,
             Region expectedRegion) throws Exception {
         GroovyCompilationUnit unit = getCompilationUnitFor(contents);
