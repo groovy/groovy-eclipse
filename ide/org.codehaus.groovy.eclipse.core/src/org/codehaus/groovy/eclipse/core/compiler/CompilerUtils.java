@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.codehaus.groovy.eclipse.core.compiler;
 
 import static org.eclipse.core.runtime.FileLocator.resolve;
@@ -47,11 +46,6 @@ import org.osgi.framework.BundleException;
  *
  */
 public class CompilerUtils {
-
-
-    /**
-     * @return
-     */
     public static String getGroovyVersion() {
         Bundle groovyBundle = getActiveGroovyBundle();
         return groovyBundle != null ? groovyBundle.getVersion().toString() : "NONE";
@@ -88,8 +82,7 @@ public class CompilerUtils {
     private static BundleDescription getDisabled18BundleDescription() {
         BundleDescription[] bundles = Platform.getPlatformAdmin().getState(false).getDisabledBundles();
         for (BundleDescription bundle : bundles) {
-            if (bundle.getSymbolicName().equals("org.codehaus.groovy") &&
- bundle.getVersion().getMajor() == 1
+            if (bundle.getSymbolicName().equals("org.codehaus.groovy") && bundle.getVersion().getMajor() == 1
                     && bundle.getVersion().getMinor() == 8) {
                 return bundle;
             }
@@ -137,6 +130,9 @@ public class CompilerUtils {
     public static URL getExportedGroovyAllJar() {
         try {
             Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
+            if (groovyBundle == null) {
+                throw new RuntimeException("Could not find groovy bundle");
+            }
             Enumeration<URL> enu = groovyBundle.findEntries("lib", "groovy-all-*.jar", false);
             if (enu == null) {
                 // in some versions of the plugin, the groovy-all jar is in the base directory of the plugins

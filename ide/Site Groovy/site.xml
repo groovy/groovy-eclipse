@@ -13,6 +13,9 @@
    <feature url="features/org.codehaus.groovy18.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy18.feature" version="0.0.0.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
+   <feature url="features/org.codehaus.groovy20.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy20.feature" version="0.0.0.qualifier">
+      <category name="org.codehaus.groovy.compilers"/>
+   </feature>
    <feature url="features/org.codehaus.groovy.m2eclipse_0.0.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse" version="0.0.0.qualifier">
       <category name="org.codehaus.groovy.m2eclipse"/>
    </feature>

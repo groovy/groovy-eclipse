@@ -17,7 +17,6 @@
  */
 package org.codehaus.groovy.frameworkadapter.util;
 
-
 public enum SpecifiedVersion { 
     _16(6, "16"), _17(7, "17"), _18(8, "18"), _19(9, "19"), _20(0, "20"), UNSPECIFIED(-1, "0"); 
     public final int minorVersion;
@@ -26,6 +25,4 @@ public enum SpecifiedVersion {
         this.minorVersion = minorVersion;
         this.versionName = versionName;
     }
-    
-    
 }
