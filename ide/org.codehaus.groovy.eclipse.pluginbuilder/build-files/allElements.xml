@@ -109,6 +109,12 @@
 			<property name="zipargs" value="" />
 		</ant>
 	</target>
+	<target name="assemble.org.codehaus.groovy20.feature">
+		<echo message="Assembling org.codehaus.groovy20.feature"/>
+		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
+			<property name="zipargs" value="" />
+		</ant>
+	</target>
 	<target name="assemble.org.codehaus.groovy18.feature">
 		<echo message="Assembling org.codehaus.groovy18.feature"/>
 		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
