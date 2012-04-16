@@ -325,6 +325,47 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
 	}
 	
+
+	public void testCompileStatic() throws Exception {
+		if (GroovyUtils.GROOVY_LEVEL < 20) {
+    		return;
+    	}
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "", "Outer",
+		    	"import groovy.transform.CompileStatic;\n"+
+		   		"@CompileStatic \n"+
+				"int fact(int n) {\n"+
+				"	if (n==1) {return 1;\n"+
+				"	} else {return n+fact(n-1);}\n"+
+				"}\n"
+			);
+		
+//		env.addClass(root, "", "Client",
+//		    	"public class Client {\n"+
+//		    	"  { new Outer.Inner(); }\n"+
+//		        "}\n"
+//				);
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("Outer");
+		expectingNoProblems();
+//		env.addClass(root, "", "Client", "public class Client {\n"
+//				+ "  { new Outer.Inner(); }\n" + "}\n");
+//		incrementalBuild(projectPath);
+//		expectingNoProblems();
+//		expectingCompiledClassesV("Client");
+
+	}
+	
 	public void test1167() throws Exception {
 		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
