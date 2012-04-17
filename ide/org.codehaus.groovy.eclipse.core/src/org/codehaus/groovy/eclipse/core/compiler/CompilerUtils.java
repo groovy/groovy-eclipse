@@ -113,7 +113,7 @@ public class CompilerUtils {
                 versionToUse = version18;
             }
         }
-        Bundle[] active = Platform.getBundles("org.codehaus.groovy", version20);
+        Bundle[] active = Platform.getBundles("org.codehaus.groovy", versionToUse);
         return active != null && active.length > 0 ? active[0] : null;
     }
 
