@@ -191,10 +191,6 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
         classpathLabel2.setLayoutData(gd);
     }
 
-    /**
-     * @param parent
-     * @param page
-     */
     protected void createCompilerSection(final Composite page) {
         Label compilerLabel = new Label(page, SWT.WRAP);
         compilerLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
@@ -211,35 +207,67 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
         compilerPage.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
         Label compilerVersion = new Label(compilerPage, SWT.LEFT | SWT.WRAP);
-        compilerVersion.setText("You are currently using Groovy Compiler version " + CompilerUtils.getGroovyVersion() + ".");
+        compilerVersion.setText("You are currently using Groovy Compiler version " + CompilerUtils.getGroovyVersion(true) + ".");
 
-        Button switchTo = new Button(compilerPage, SWT.PUSH);
-        switchTo.setText("Switch to " + CompilerUtils.getOtherVersion());
-        switchTo.addSelectionListener(new SelectionListener() {
+        String[] otherVersions = CompilerUtils.getOtherVersions(CompilerUtils.getGroovyVersion(false));
 
-            public void widgetSelected(SelectionEvent e) {
-                Shell shell = page.getShell();
-                boolean result = MessageDialog.openQuestion(shell, "Change compiler and restart?",
-                        "Do you want to change the compiler?\n\nIf you select \"Yes\"," +
-                                " the compiler will be changed and Eclipse will be restarted.\n\n" +
-                        "Make sure all your work is saved before clicking \"Yes\".");
-
-                if (result) {
-                    // change compiler
-                    IStatus status = CompilerUtils.switchVersions(isGroovy17Disabled);
-                    if (status == Status.OK_STATUS) {
-                        restart(shell);
-                    } else {
-                        ErrorDialog error = new ErrorDialog(shell,
-                                "Error occurred", "Error occurred when trying to enable Groovy " + CompilerUtils.getOtherVersion(),
-                                status, IStatus.ERROR);
-                        error.open();
+        for (int v=0;v<otherVersions.length;v++) {
+            final String version = otherVersions[v];
+            Button switchTo = new Button(compilerPage, SWT.PUSH);
+            switchTo.setText("Switch to " + version);
+            switchTo.addSelectionListener(new SelectionListener() {
+                public void widgetSelected(SelectionEvent e) {
+                    Shell shell = page.getShell();
+                    boolean result = MessageDialog.openQuestion(shell, "Change compiler and restart?",
+                            "Do you want to change the compiler?\n\nIf you select \"Yes\"," +
+                                    " the compiler will be changed and Eclipse will be restarted.\n\n" +
+                            "Make sure all your work is saved before clicking \"Yes\".");
+                    if (result) {
+                        // change compiler
+                        IStatus status = CompilerUtils.switchVersions(version);
+                        if (status == Status.OK_STATUS) {
+                            restart(shell);
+                        } else {
+                            ErrorDialog error = new ErrorDialog(shell,
+                                    "Error occurred", "Error occurred when trying to enable Groovy " + CompilerUtils.getOtherVersion(),
+                                    status, IStatus.ERROR);
+                            error.open();
+                        }
                     }
                 }
-            }
 
-            public void widgetDefaultSelected(SelectionEvent e) {}
-        });
+                public void widgetDefaultSelected(SelectionEvent e) {}
+            });
+        }
+
+        // TODO delete if stuff above is behaving...
+        //        Button switchTo = new Button(compilerPage, SWT.PUSH);
+        //        switchTo.setText("Switch to " + CompilerUtils.getOtherVersion());
+        //        switchTo.addSelectionListener(new SelectionListener() {
+        //
+        //            public void widgetSelected(SelectionEvent e) {
+        //                Shell shell = page.getShell();
+        //                boolean result = MessageDialog.openQuestion(shell, "Change compiler and restart?",
+        //                        "Do you want to change the compiler?\n\nIf you select \"Yes\"," +
+        //                                " the compiler will be changed and Eclipse will be restarted.\n\n" +
+        //                        "Make sure all your work is saved before clicking \"Yes\".");
+        //
+        //                if (result) {
+        //                    // change compiler
+        //                    IStatus status = CompilerUtils.switchVersions(isGroovy17Disabled);
+        //                    if (status == Status.OK_STATUS) {
+        //                        restart(shell);
+        //                    } else {
+        //                        ErrorDialog error = new ErrorDialog(shell,
+        //                                "Error occurred", "Error occurred when trying to enable Groovy " + CompilerUtils.getOtherVersion(),
+        //                                status, IStatus.ERROR);
+        //                        error.open();
+        //                    }
+        //                }
+        //            }
+        //
+        //            public void widgetDefaultSelected(SelectionEvent e) {}
+        //        });
 
         Link moreInfoLink = new Link(compilerPage, 0);
         moreInfoLink.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,

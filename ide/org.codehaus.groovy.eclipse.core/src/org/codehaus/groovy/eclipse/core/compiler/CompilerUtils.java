@@ -39,6 +39,7 @@ import org.eclipse.osgi.service.resolver.DisabledInfo;
 import org.eclipse.osgi.service.resolver.State;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Version;
 
 /**
  * @author Andrew Eisenberg
@@ -46,37 +47,75 @@ import org.osgi.framework.BundleException;
  *
  */
 public class CompilerUtils {
-    public static String getGroovyVersion() {
+    public static String getGroovyVersion(boolean includeQualifier) {
         Bundle groovyBundle = getActiveGroovyBundle();
-        return groovyBundle != null ? groovyBundle.getVersion().toString() : "NONE";
+        if (groovyBundle == null) {
+            return "NONE";
+        }
+        if (includeQualifier) {
+            return groovyBundle.getVersion().toString();
+        } else {
+            Version v = groovyBundle.getVersion();
+            return v.getMajor() + "." + v.getMinor() + "." + v.getMicro();
+        }
     }
 
     public static String getOtherVersion() {
         return isGroovy18DisabledOrMissing() ? "1.8" : "1.7";
     }
 
+    /**
+     * @param the current version, major.minor.micro (e.g. "1.7.10")
+     * @return array of versions that are candidates for switching to e.g.
+     *         {"1.7","1.8"}
+     */
+    public static String[] getOtherVersions(String currentVersion) {
+        if (currentVersion.startsWith("1.7.")) {
+            return new String[] { "1.8", "2.0" };
+        } else if (currentVersion.startsWith("1.8.")) {
+            return new String[] { "1.7", "2.0" };
+        } else if (currentVersion.startsWith("2.0.")) {
+            return new String[] { "1.7", "1.8" };
+        }
+        return new String[] {};
+    }
+
+    public static boolean isGroovy17DisabledOrMissing() {
+        BundleDescription disabled17Bundle = getDisabledBundleDescription(1, 7);
+        if (disabled17Bundle != null) {
+            return true;
+        }
+        Bundle[] active = Platform.getBundles("org.codehaus.groovy", "1.7.10");
+        return active == null || active.length == 0;
+    }
+
     public static boolean isGroovy18DisabledOrMissing() {
-        BundleDescription disabled18Bundle = null;
-        disabled18Bundle = getDisabled18BundleDescription();
+        BundleDescription disabled18Bundle = getDisabled18BundleDescription();
         if (disabled18Bundle != null) {
             return true;
         }
-
-        // it might be that there is no 1.8 jar. If the 1.8 jar is missing, we
-        // use 1.7
         Bundle[] active = Platform.getBundles("org.codehaus.groovy", "1.8.6");
         return active == null || active.length == 0;
     }
 
     public static boolean isGroovy20DisabledOrMissing() {
-        BundleDescription disabled20Bundle = null;
-        disabled20Bundle = getDisabled20BundleDescription();
+        BundleDescription disabled20Bundle = getDisabled20BundleDescription();
         if (disabled20Bundle != null) {
             return true;
         }
-
         Bundle[] active = Platform.getBundles("org.codehaus.groovy", "2.0.0");
         return active == null || active.length == 0;
+    }
+
+    private static BundleDescription getDisabledBundleDescription(int majorVersion, int minorVersion) {
+        BundleDescription[] bundles = Platform.getPlatformAdmin().getState(false).getDisabledBundles();
+        for (BundleDescription bundle : bundles) {
+            if (bundle.getSymbolicName().equals("org.codehaus.groovy") && bundle.getVersion().getMajor() == majorVersion
+                    && bundle.getVersion().getMinor() == minorVersion) {
+                return bundle;
+            }
+        }
+        return null;
     }
 
     private static BundleDescription getDisabled18BundleDescription() {
@@ -201,59 +240,125 @@ public class CompilerUtils {
 
     }
 
+    private static List<Bundle> accumulateBundlesForDisabling(String... versions) {
+        List<Bundle> toDisable = new ArrayList<Bundle>();
+        for (String version : versions) {
+            Bundle[] forDisabling = Platform.getBundles("org.codehaus.groovy", version);
+            if (forDisabling != null) {
+                for (Bundle b : forDisabling) {
+                    toDisable.add(b);
+                }
+            }
+        }
+        return toDisable;
+    }
+
     /**
-     * Swtiches to or from groovy version 1.6.x depending on the boolean passed
-     * in
+     * Attempt to switch to a specified version. The version is specified as
+     * major.minor, for example "1.7".
      * A restart is required immediately after or else many exceptions will be
      * thrown.
      *
-     * @param toVersion16
+     * @param version to switch to, e.g. "1.7", "1.8" or "2.0"
      * @return {@link Status.OK_STATUS} if successful or error status that
      *         contains the exception thrown otherwise
      */
-    public static IStatus switchVersions(boolean toVersion18) {
+    public static IStatus switchVersions(String versionToSwitchTo) {
         String version17 = "[1.7.0,1.8.0)";
         String version18 = "[1.8.0,1.9.0)";
-
+        String version20 = "[2.0.0,2.1.0)";
+        boolean to17 = versionToSwitchTo.equals("1.7");
+        boolean to18 = versionToSwitchTo.equals("1.8");
+        boolean to20 = versionToSwitchTo.equals("2.0");
 
         try {
             State state = ((StateManager) Platform.getPlatformAdmin()).getSystemState();
-            if (toVersion18) {
-                BundleDescription disabled18 = getDisabled18BundleDescription();
-                if (disabled18 != null) {
-                    // remove the disabled info so that we can find the 1.8
-                    // version of the plugin
-                    DisabledInfo info = createDisabledInfo(state, disabled18.getBundleId());
+            if (to17) {
+                BundleDescription disabledBundle = getDisabledBundleDescription(1, 7);
+                if (disabledBundle != null) {
+                    // remove the disabled info so that we can find it
+                    DisabledInfo info = createDisabledInfo(state, disabledBundle.getBundleId());
+                    Platform.getPlatformAdmin().removeDisabledInfo(info);
+                }
+            }
+            if (to18) {
+                BundleDescription disabledBundle = getDisabled18BundleDescription();
+                if (disabledBundle != null) {
+                    // remove the disabled info so that we can find it
+                    DisabledInfo info = createDisabledInfo(state, disabledBundle.getBundleId());
+                    Platform.getPlatformAdmin().removeDisabledInfo(info);
+                }
+            }
+            if (to20) {
+                BundleDescription disabledBundle = getDisabled20BundleDescription();
+                if (disabledBundle != null) {
+                    // remove the disabled info so that we can find it
+                    DisabledInfo info = createDisabledInfo(state, disabledBundle.getBundleId());
                     Platform.getPlatformAdmin().removeDisabledInfo(info);
                 }
             }
 
-            Bundle[] toDisable = Platform.getBundles("org.codehaus.groovy", (toVersion18 ? version17 : version18));
-            Bundle toEnable = toVersion18 ? getHighestVersion(state, 8) : getHighestVersion(state, 7);
+            List<Bundle> toDisable = new ArrayList<Bundle>();
+            if (to17) {
+                toDisable = accumulateBundlesForDisabling(version18, version20);
+            } else if (to18) {
+                toDisable = accumulateBundlesForDisabling(version17, version20);
+            } else if (to20) {
+                toDisable = accumulateBundlesForDisabling(version17, version18);
+            }
 
-            if (toDisable == null || toDisable.length == 0) {
-                throw new Exception("Could not find any " + (toVersion18 ? "1.7" : "1.8") + " groovy version to disable");
+            Bundle toEnable = null;
+            if (to17) {
+                toEnable = getHighestVersion(state,1,7);
+            } else if (to18) {
+                toEnable = getHighestVersion(state,1,8);
+            } else if (to20) {
+                toEnable = getHighestVersion(state,2,0);
+            }
+
+            if (toDisable == null || toDisable.size() == 0) {
+                String insert = "";
+                if (to17)
+                    insert = "1.8 or 2.0";
+                else if (to18)
+                    insert = "1.7 or 2.0";
+                else if (to20)
+                    insert = "1.7 or 1.8";
+                throw new Exception("Could not find any " + insert + " groovy versions to disable");
             }
             if (toEnable == null) {
-                throw new Exception("Could not find any " + (toVersion18 ? "1.8" : "1.7") + " groovy version to enable");
+                String insert = "";
+                if (to17)
+                    insert = "1.8 or 2.0";
+                else if (to18)
+                    insert = "1.7 or 2.0";
+                else if (to20)
+                    insert = "1.7 or 1.8";
+                throw new Exception("Could not find any " + insert + " groovy versions to enable");
             }
 
             for (Bundle bundle : toDisable) {
                 // bundle.stop();
-                if (!toVersion18) {
-                    DisabledInfo info = createDisabledInfo(state, bundle.getBundleId());
-                    Platform.getPlatformAdmin().addDisabledInfo(info);
-                    switch (bundle.getState()) {
-                        case Bundle.ACTIVE:
-                        case Bundle.INSTALLED:
-                        case Bundle.STARTING:
-                        case Bundle.RESOLVED:
-                            bundle.stop();
-                    }
+                DisabledInfo info = createDisabledInfo(state, bundle.getBundleId());
+                Platform.getPlatformAdmin().addDisabledInfo(info);
+                switch (bundle.getState()) {
+                    case Bundle.ACTIVE:
+                    case Bundle.INSTALLED:
+                    case Bundle.STARTING:
+                    case Bundle.RESOLVED:
+                        bundle.stop();
                 }
             }
 
-            CompilerLevelUtils.writeConfigurationVersion(toVersion18 ? SpecifiedVersion._18 : SpecifiedVersion._17,
+            SpecifiedVersion sv = null;
+            if (to17)
+                sv = SpecifiedVersion._17;
+            else if (to18)
+                sv = SpecifiedVersion._18;
+            else if (to20)
+                sv = SpecifiedVersion._20;
+
+            CompilerLevelUtils.writeConfigurationVersion(sv,
             // need to get the system bundle
                     GroovyCoreActivator.getDefault().getBundle().getBundleContext().getBundle(0).getBundleContext());
             return Status.OK_STATUS;
@@ -267,21 +372,23 @@ public class CompilerUtils {
 
     /**
      * @param state the SystemState object
+     * @param majorVersion
      * @param minorVersion
      * @return the highest version of the org.codehause.groovy bundle with
-     * the specified minor version number
+     *         the specified major/minor versions
      */
-    private static Bundle getHighestVersion(State state, int minorVersion) {
+    private static Bundle getHighestVersion(State state, int majorVersion, int minorVersion) {
         BundleDescription[] allGroovyBundles = state.getBundles("org.codehaus.groovy");
         BundleDescription highestMinorVersion = null;
         for (BundleDescription groovyBundle : allGroovyBundles) {
-            if (groovyBundle.getVersion().getMinor() == minorVersion) {
-                if (highestMinorVersion == null) {
-                    highestMinorVersion = groovyBundle;
-                } else {
-                    highestMinorVersion = highestMinorVersion.getVersion()
-                        .compareTo(groovyBundle.getVersion()) == 1 ?
-                                highestMinorVersion : groovyBundle;
+            if (groovyBundle.getVersion().getMajor() == majorVersion) {
+                if (groovyBundle.getVersion().getMinor() == minorVersion) {
+                    if (highestMinorVersion == null) {
+                        highestMinorVersion = groovyBundle;
+                    } else {
+                        highestMinorVersion = highestMinorVersion.getVersion().compareTo(groovyBundle.getVersion()) == 1 ? highestMinorVersion
+                                : groovyBundle;
+                    }
                 }
             }
         }

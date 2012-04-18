@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.core;
 
-import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 
 /**
@@ -29,41 +28,42 @@ public class CompilerSwitchTests extends EclipseTestCase {
     public void testname() throws Exception {
         System.out.println("This test suite is disabled");
     }
-    public void _testClassPathContainerContents() throws Exception {
-        // we no longer have any ui for compiler switching,
-        // so this test is useless
-
-        String current = CompilerUtils.getGroovyVersion();
-        assertTrue("Compiler version should default to 1.7, but is instead" + current,
-                current.contains("1.7"));
-        String other = CompilerUtils.getOtherVersion();
-        assertTrue("Other compiler version should be 1.6, but is instead" + other,
-                other.contains("1.6"));
-
-        // switch to 1.6
-        CompilerUtils.switchVersions(false);
-
-        current = CompilerUtils.getGroovyVersion();
-
-        assertTrue("Compiler version should be 1.6, but is instead" + current,
-                current.contains("1.6"));
-
-        other = CompilerUtils.getOtherVersion();
-        assertTrue("Other compiler version should be 1.7, but is instead" + other,
-                other.contains("1.7"));
-
-        // switch back to 1.7
-        CompilerUtils.switchVersions(true);
-
-        current = CompilerUtils.getGroovyVersion();
-        assertTrue("Compiler version should be 1.7, but is instead" + current,
-                current.contains("1.7"));
-
-        other = CompilerUtils.getOtherVersion();
-        assertTrue("Other compiler version should be 1.6, but is instead" + other,
-                other.contains("1.6"));
-
-
-
-    }
+    // TODO these tests look out of date?
+    //    public void _testClassPathContainerContents() throws Exception {
+    //        // we no longer have any ui for compiler switching,
+    //        // so this test is useless
+    //
+    //        String current = CompilerUtils.getGroovyVersion();
+    //        assertTrue("Compiler version should default to 1.7, but is instead" + current,
+    //                current.contains("1.7"));
+    //        String other = CompilerUtils.getOtherVersion();
+    //        assertTrue("Other compiler version should be 1.6, but is instead" + other,
+    //                other.contains("1.6"));
+    //
+    //        // switch to 1.6
+    //        CompilerUtils.switchVersions("1.6");
+    //
+    //        current = CompilerUtils.getGroovyVersion();
+    //
+    //        assertTrue("Compiler version should be 1.6, but is instead" + current,
+    //                current.contains("1.6"));
+    //
+    //        other = CompilerUtils.getOtherVersion();
+    //        assertTrue("Other compiler version should be 1.7, but is instead" + other,
+    //                other.contains("1.7"));
+    //
+    //        // switch back to 1.7
+    //        CompilerUtils.switchVersions("1.7");
+    //
+    //        current = CompilerUtils.getGroovyVersion();
+    //        assertTrue("Compiler version should be 1.7, but is instead" + current,
+    //                current.contains("1.7"));
+    //
+    //        other = CompilerUtils.getOtherVersion();
+    //        assertTrue("Other compiler version should be 1.6, but is instead" + other,
+    //                other.contains("1.6"));
+    //
+    //
+    //
+    //    }
 }
