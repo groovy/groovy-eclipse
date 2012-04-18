@@ -137,6 +137,7 @@ public class CompilerHook implements HookConfigurator, AdaptorHook {
     }
 
     private void handleBundle(BundleDescription bundle, State state, BundleContext context) throws BundleException {
+        // TODO with 2.0 we now have a funny minor version of '0' - wonder if this should start taking major into account?
         if (bundle.getVersion().getMinor() == version.minorVersion) {
             getBundle(bundle, context).start();
             adapter.getPlatformAdmin().removeDisabledInfo(createDisabledInfo(state, bundle));
