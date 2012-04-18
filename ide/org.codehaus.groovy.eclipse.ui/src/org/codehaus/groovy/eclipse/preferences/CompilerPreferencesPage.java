@@ -222,6 +222,7 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
                             "Do you want to change the compiler?\n\nIf you select \"Yes\"," +
                                     " the compiler will be changed and Eclipse will be restarted.\n\n" +
                             "Make sure all your work is saved before clicking \"Yes\".");
+
                     if (result) {
                         // change compiler
                         IStatus status = CompilerUtils.switchVersions(version);
