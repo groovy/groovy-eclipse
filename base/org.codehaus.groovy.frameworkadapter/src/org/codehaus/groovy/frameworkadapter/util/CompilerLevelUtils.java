@@ -99,7 +99,7 @@ public class CompilerLevelUtils {
         }
         return internalFindSysProperVersion((String) props.get(GROOVY_COMPILER_LEVEL));
     }
-    
+     
     /**
      * @param version the version to switch to
      * @param context  must be the {@link BundleContext} of the system bundle
