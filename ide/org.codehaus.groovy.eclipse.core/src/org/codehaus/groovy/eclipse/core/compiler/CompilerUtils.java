@@ -43,10 +43,19 @@ import org.osgi.framework.Version;
 
 /**
  * @author Andrew Eisenberg
+ * @author Andy Clement
  * @created Sep 22, 2009
- *
+ * 
  */
 public class CompilerUtils {
+
+    /**
+     * Note: Used by Grails
+     */
+    public static String getGroovyVersion() {
+        return getGroovyVersion(true);
+    }
+
     public static String getGroovyVersion(boolean includeQualifier) {
         Bundle groovyBundle = getActiveGroovyBundle();
         if (groovyBundle == null) {
@@ -369,6 +378,7 @@ public class CompilerUtils {
                             + "\n\nSee the error log for more information.", e);
         }
     }
+
 
     /**
      * @param state the SystemState object
