@@ -45,7 +45,7 @@ import org.osgi.framework.Version;
  * @author Andrew Eisenberg
  * @author Andy Clement
  * @created Sep 22, 2009
- * 
+ *
  */
 public class CompilerUtils {
 
