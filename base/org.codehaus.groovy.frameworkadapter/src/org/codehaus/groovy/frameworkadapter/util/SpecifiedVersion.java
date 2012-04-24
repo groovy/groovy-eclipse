@@ -17,12 +17,44 @@
  */
 package org.codehaus.groovy.frameworkadapter.util;
 
-public enum SpecifiedVersion { 
-    _16(6, "16"), _17(7, "17"), _18(8, "18"), _19(9, "19"), _20(0, "20"), UNSPECIFIED(-1, "0"); 
+import org.osgi.framework.Version;
+
+public enum SpecifiedVersion {
+    _16(1, 6, "16"), _17(1, 7, "17"), _18(1, 8, "18"), _19(1, 9, "19"), _20(2, 0, "20"), UNSPECIFIED(-1, -1, "0");
+    public final int majorVersion;
     public final int minorVersion;
     public final String versionName;
-    SpecifiedVersion(int minorVersion, String versionName) {
+
+    SpecifiedVersion(int majorVersion, int minorVersion, String versionName) {
+        this.majorVersion = majorVersion;
         this.minorVersion = minorVersion;
         this.versionName = versionName;
+    }
+    
+    public String toVersionString() {
+        return "[" + majorVersion + "." + minorVersion + "."  + 0 + "," + majorVersion + "." + minorVersion + "."  + 99 + ")";
+    }
+    
+    public static SpecifiedVersion findVersion(Version ver) {
+        if (ver.getMajor() == 2) {
+            if (ver.getMinor() == 0) {
+                return _20;
+            }
+        }
+        if (ver.getMajor() == 1) {
+            if (ver.getMinor() == 6) {
+                return _16;
+            }
+            if (ver.getMinor() == 7) {
+                return _17;
+            }
+            if (ver.getMinor() == 8) {
+                return _18;
+            }
+            if (ver.getMinor() == 9) {
+                return _19;
+            }
+        }
+        return UNSPECIFIED;
     }
 }

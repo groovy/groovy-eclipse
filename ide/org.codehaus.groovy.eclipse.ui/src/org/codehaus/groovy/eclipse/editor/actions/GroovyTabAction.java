@@ -118,7 +118,7 @@ public class GroovyTabAction extends TextEditorAction {
      * @throws BadLocationException
      */
     private boolean isInSmartTabRegion(IDocument d, int offset) throws BadLocationException {
-        String lineStartText = getIndentor().getLineTextUpto(d, offset);
+        String lineStartText = GroovyIndentationService.getLineTextUpto(d, offset);
         return lineStartText.trim().equals("");
     }
 
@@ -286,12 +286,13 @@ public class GroovyTabAction extends TextEditorAction {
         ITextEditor editor = getTextEditor();
         if (editor instanceof JavaEditor) {
             ISourceViewer viewer = ((JavaEditor) editor).getViewer();
-            if (viewer != null)
+            if (viewer != null) {
                 viewer.setSelectedRange(newOffset, newLength);
-        } else
+            }
+        } else {
             // this is too intrusive, but will never get called anyway
             getTextEditor().selectAndReveal(newOffset, newLength);
-
+        }
     }
 
     // //////////////////////////////////////////////////////////////////////////
