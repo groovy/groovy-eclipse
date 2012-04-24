@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2003-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -44,11 +46,11 @@ import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
 
 /**
- * Common class to process the convert to closure refactoring.
+ * Common class to process the assign to new local variable refactoring.
  * Used by both the completion proposal and the refactor menu option.
  *
- * @author Geoff Denning
- * @created Nov 15, 2011
+ * @author Stephanie Van Dyk sevandyk@gmail.com
+ * @created April 15, 2012
  */
 // FIXGWD: This class should be converted into a proper refactoring class which
 // extends Refactoring.
@@ -174,6 +176,10 @@ public class AssignStatementToNewLocalRefactoring {
             candidate = ((MethodCallExpression) expression).getMethodAsString();
         } else if (expression instanceof StaticMethodCallExpression) {
             candidate = ((StaticMethodCallExpression) expression).getMethod();
+        } else if (expression instanceof MapExpression) {
+            candidate = "map";
+        } else if (expression instanceof ListExpression) {
+            candidate = "list";
         } else {
             candidate = "temp";
         }

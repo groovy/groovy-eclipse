@@ -30,10 +30,10 @@ import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.swt.graphics.Point;
 
 /**
- * Exchanges left and right binary infix operands. eg. (a && b) becomes (b && a)
+ * Assigns a statement to a new local variable. eg. "new Point(2,3)" becomes "def temp = new Point(2,3)"
  * 
  * @author Stephanie Van Dyk sevandyk@gmail.com
- * @created Mar 10, 2012
+ * @created April 12, 2012
  */
 public class AssignStatementToNewLocalProposal extends
 		AbstractGroovyCompletionProposal {
