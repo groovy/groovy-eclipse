@@ -364,7 +364,7 @@ public class QuickAssistTests extends EclipseTestCase {
 	public void testAssignStatementToLocalRefactoring8() throws Exception {
 		assertConversion("class Foo {\n" + "	void bar(int a){\n" + "[1, 2]\n"
 				+ "}}", "class Foo {\n" + "	void bar(int a){\n"
-				+ "def temp = [1, 2]\n" + "}}", "[1, 2]",
+				+ "def list = [1, 2]\n" + "}}", "[1, 2]",
 				AssignStatementToNewLocalProposal.class);
 	}
 
