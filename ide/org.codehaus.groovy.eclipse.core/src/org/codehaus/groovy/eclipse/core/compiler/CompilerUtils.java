@@ -39,6 +39,7 @@ import org.eclipse.osgi.service.resolver.DisabledInfo;
 import org.eclipse.osgi.service.resolver.State;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Version;
 
 /**
  * @author Andrew Eisenberg
@@ -59,34 +60,33 @@ public class CompilerUtils {
         return SpecifiedVersion.findVersion(groovyBundle.getVersion());
     }
 
-    // FIXADE not used...consider deleting
-    // public static boolean isGroovyVersionDisabledOrMissing(SpecifiedVersion
-    // version) {
-    // BundleDescription disabledBundle = null;
-    // disabledBundle = getDisabledBundleDescription(version);
-    // if (disabledBundle != null) {
-    // return true;
-    // }
-    //
-    // Bundle[] active = Platform.getBundles("org.codehaus.groovy",
-    // version.toVersionString());
-    // if (active == null) {
-    // return true;
-    // }
-    //
-    // // getBundles returns bundles with version >= specified version,
-    // // so must do one more check to see if there is a bundle where the
-    // // major.minor version matches
-    // for (Bundle bundle : active) {
-    // Version bundleVersion = bundle.getVersion();
-    // if (bundleVersion.getMajor() == version.majorVersion &&
-    // bundleVersion.getMajor() == version.majorVersion) {
-    // return false;
-    // }
-    // }
-    // // no bundle with specifed version has been found
-    // return true;
-    // }
+    /**
+     * Note: Used by Grails tooling
+     */
+    public static boolean isGroovyVersionDisabledOrMissing(SpecifiedVersion version) {
+        BundleDescription disabledBundle = null;
+        disabledBundle = getDisabledBundleDescription(version);
+        if (disabledBundle != null) {
+            return true;
+        }
+
+        Bundle[] active = Platform.getBundles("org.codehaus.groovy", version.toVersionString());
+        if (active == null) {
+            return true;
+        }
+
+        // getBundles returns bundles with version >= specified version,
+        // so must do one more check to see if there is a bundle where the
+        // major.minor version matches
+        for (Bundle bundle : active) {
+            Version bundleVersion = bundle.getVersion();
+            if (bundleVersion.getMajor() == version.majorVersion && bundleVersion.getMajor() == version.majorVersion) {
+                return false;
+            }
+        }
+        // no bundle with specifed version has been found
+        return true;
+    }
 
     public static Bundle getBundle(SpecifiedVersion version) {
         Bundle[] active = Platform.getBundles("org.codehaus.groovy", version.toVersionString());
@@ -391,20 +391,16 @@ public class CompilerUtils {
         return Platform.getBundles("org.codehaus.groovy", null);
     }
 
-    // FIXADE not used. Consider deleting
-    // private static BundleDescription
-    // getDisabledBundleDescription(SpecifiedVersion version) {
-    // BundleDescription[] bundles =
-    // Platform.getPlatformAdmin().getState(false).getDisabledBundles();
-    // for (BundleDescription bundle : bundles) {
-    // if (bundle.getSymbolicName().equals("org.codehaus.groovy") &&
-    // bundle.getVersion().getMajor() == version.majorVersion
-    // && bundle.getVersion().getMinor() == version.minorVersion) {
-    // return bundle;
-    // }
-    // }
-    // return null;
-    // }
+    private static BundleDescription getDisabledBundleDescription(SpecifiedVersion version) {
+        BundleDescription[] bundles = Platform.getPlatformAdmin().getState(false).getDisabledBundles();
+        for (BundleDescription bundle : bundles) {
+            if (bundle.getSymbolicName().equals("org.codehaus.groovy") && bundle.getVersion().getMajor() == version.majorVersion
+                    && bundle.getVersion().getMinor() == version.minorVersion) {
+                return bundle;
+            }
+        }
+        return null;
+    }
 
     /**
      * @param state
