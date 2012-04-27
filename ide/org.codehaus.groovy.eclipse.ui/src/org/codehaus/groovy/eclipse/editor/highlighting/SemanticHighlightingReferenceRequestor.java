@@ -120,12 +120,13 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
      * text of the expression matches the actual text in the file
      */
     private boolean isRealASTNode(ASTNode node) {
+        int contentsLen = contents.length;
         String text = node.getText();
         if (text.length() != node.getLength()) {
             return false;
         }
         char[] textArr = text.toCharArray();
-        for (int i = 0, j = node.getStart(); i < textArr.length; i++, j++) {
+        for (int i = 0, j = node.getStart(); i < textArr.length && j < contentsLen; i++, j++) {
             if (textArr[i] != contents[j]) {
                 return false;
             }
