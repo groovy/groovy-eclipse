@@ -24,6 +24,7 @@ import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightingExtenderRegistry;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.text.SingleTokenJavaScanner;
 import org.eclipse.jdt.internal.ui.text.java.CompletionProposalCategory;
@@ -31,11 +32,11 @@ import org.eclipse.jdt.internal.ui.text.java.ContentAssistProcessor;
 import org.eclipse.jdt.internal.ui.text.java.JavaAutoIndentStrategy;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProcessor;
 import org.eclipse.jdt.internal.ui.text.java.hover.JavaInformationProvider;
-import org.eclipse.jdt.internal.ui.text.java.hover.JavaTypeHover;
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover;
 import org.eclipse.jdt.ui.text.IColorManager;
 import org.eclipse.jdt.ui.text.IJavaPartitions;
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration;
+import org.eclipse.jdt.ui.text.java.hover.IJavaEditorTextHover;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
@@ -57,8 +58,8 @@ import org.eclipse.ui.texteditor.ITextEditor;
 
 public class GroovyConfiguration extends JavaSourceViewerConfiguration {
 
-	public GroovyConfiguration(GroovyColorManager colorManager, IPreferenceStore preferenceSource, ITextEditor editor) {
-	    super(colorManager, preferenceSource, editor, IJavaPartitions.JAVA_PARTITIONING);
+    public GroovyConfiguration(GroovyColorManager colorManager, IPreferenceStore preferenceSource, ITextEditor editor) {
+        super(colorManager, preferenceSource, editor, IJavaPartitions.JAVA_PARTITIONING);
         ReflectionUtils.setPrivateField(JavaSourceViewerConfiguration.class, "fStringScanner", this,
                 createStringScanner(colorManager, preferenceSource));
         ReflectionUtils.setPrivateField(JavaSourceViewerConfiguration.class, "fCodeScanner", this,
@@ -115,7 +116,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
                 IJavaPartitions.JAVA_STRING,
                 IJavaPartitions.JAVA_CHARACTER,
                 GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS
-            };
+        };
     }
 
     @SuppressWarnings("unchecked")
@@ -183,23 +184,31 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
     @Override
     public IInformationPresenter getInformationPresenter(ISourceViewer sourceViewer) {
         IInformationPresenter informationPresenter = super.getInformationPresenter(sourceViewer);
-        JavaInformationProvider provider = (JavaInformationProvider) informationPresenter
-                .getInformationProvider(IDocument.DEFAULT_CONTENT_TYPE);
-        JavaTypeHover implementation = (JavaTypeHover) ReflectionUtils.getPrivateField(JavaInformationProvider.class,
-                "fImplementation", provider);
-        // when the extra information is invoked from this way, always return
-        // some information since there is no BestMatchHover to fall back on
-        // This hover is typically invoked when pressing F2.
-        // Hovers that are invoked through a mouse, use a BestMatchHover.
-        GroovyExtraInformationHover hover = new GroovyExtraInformationHover(true);
-        hover.setEditor(this.getEditor());
-        ReflectionUtils.setPrivateField(JavaTypeHover.class, "fJavadocHover", implementation, hover);
+
+        // the org.eclipse.jdt.internal.ui.text.java.hover.JavaTypeHover was removed in 4.2.M7
+        // if this class doesn't exist then we don't need to do anything with it.
+        try {
+            Class<?> clazz = Class.forName("org.eclipse.jdt.internal.ui.text.java.hover.JavaTypeHover");
+            JavaInformationProvider provider = (JavaInformationProvider) informationPresenter
+                    .getInformationProvider(IDocument.DEFAULT_CONTENT_TYPE);
+            IJavaEditorTextHover implementation = (IJavaEditorTextHover) ReflectionUtils.getPrivateField(JavaInformationProvider.class,
+                    "fImplementation", provider);
+            // when the extra information is invoked from this way, always return
+            // some information since there is no BestMatchHover to fall back on
+            // This hover is typically invoked when pressing F2.
+            // Hovers that are invoked through a mouse, use a BestMatchHover.
+            GroovyExtraInformationHover hover = new GroovyExtraInformationHover(true);
+            hover.setEditor(this.getEditor());
+            ReflectionUtils.setPrivateField(clazz, "fJavadocHover", implementation, hover);
+        } catch (ClassNotFoundException e) {
+            // can ignore.  Will happen if on 4.2 or later
+        }
         return informationPresenter;
     }
 
     @Override
-    protected Map<String, ITextEditor> getHyperlinkDetectorTargets(ISourceViewer sourceViewer) {
-        Map<String, ITextEditor> targets = super.getHyperlinkDetectorTargets(sourceViewer);
+    protected Map<String, IAdaptable> getHyperlinkDetectorTargets(ISourceViewer sourceViewer) {
+        Map<String, IAdaptable> targets = super.getHyperlinkDetectorTargets(sourceViewer);
         targets.put("org.codehaus.groovy.eclipse.groovyCode", getEditor()); //$NON-NLS-1$
         return targets;
     }
