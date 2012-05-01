@@ -24,7 +24,6 @@ import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightingExtenderRegistry;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.text.SingleTokenJavaScanner;
 import org.eclipse.jdt.internal.ui.text.java.CompletionProposalCategory;
@@ -206,9 +205,14 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         return informationPresenter;
     }
 
+    /*
+     * Type parameters have changed between 3.7 and 4.2.  So just remove them
+     * Otherwise compile errors
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    protected Map<String, IAdaptable> getHyperlinkDetectorTargets(ISourceViewer sourceViewer) {
-        Map<String, IAdaptable> targets = super.getHyperlinkDetectorTargets(sourceViewer);
+    protected Map getHyperlinkDetectorTargets(ISourceViewer sourceViewer) {
+        Map targets = super.getHyperlinkDetectorTargets(sourceViewer);
         targets.put("org.codehaus.groovy.eclipse.groovyCode", getEditor()); //$NON-NLS-1$
         return targets;
     }
