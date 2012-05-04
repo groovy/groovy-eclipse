@@ -74,7 +74,7 @@ eclipseDir=/opt/eclipse/eclipse-SDK-3.7RC4-linux-gtk
 # specify the location of the JDT sources
 # on the build server, this is in a different location, but locally, this should be the 
 # same place as the other sources.
-workspaceDirJdtPatch=${workDir}/../GRECLIPSE-JDT37-JOB1
+workspaceDirJdtPatch=${workDir}/jdt-patch/e37
 
 # Specify publish location
 publishLocation=/opt/ci.repository.codehaus.org/greclipse/snapshot/e37
