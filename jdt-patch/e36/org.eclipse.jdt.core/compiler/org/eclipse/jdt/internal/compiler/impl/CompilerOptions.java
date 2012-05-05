@@ -141,6 +141,7 @@ public class CompilerOptions {
 	public static final String OPTIONG_GroovyClassLoaderPath = "org.eclipse.jdt.core.compiler.groovy.groovyClassLoaderPath"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyProjectName = "org.eclipse.jdt.core.compiler.groovy.groovyProjectName"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyExtraImports = "org.eclipse.jdt.core.compiler.groovy.groovyExtraImports"; //$NON-NLS-1$
+	public static final String OPTIONG_GroovyTransformsToRunOnReconcile = "org.eclipse.jdt.core.compiler.groovy.groovyTransformsToRunOnReconcile"; //$NON-NLS-1$
 	// GROOVY end
 	
 	// Backward compatibility
@@ -360,6 +361,7 @@ public class CompilerOptions {
 	public String groovyClassLoaderPath = null;
 	public String groovyExtraImports = null;
 	public String groovyProjectName = null;
+	public String groovyTransformsToRunOnReconcile = null;
 	// GROOVY end
 
 
