@@ -12,7 +12,9 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.lang.reflect.Modifier;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -520,9 +522,15 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		if ((bits & PROPERTIES_INITIALIZED) == 0) {
 			lazyClassInit();
 			// getX methods
+			Set<String> existing = new HashSet<String>();
 			for (MethodNode methodNode : getMethods()) {
 				if (isGetter(methodNode)) {
-					super.addProperty(createPropertyNodeForMethodNode(methodNode));
+					// STS-2628 be careful not to double-add properties if there is a getter and an isser variant
+					String propertyName = convertToPropertyName(methodNode.getName());
+					if (!existing.contains(propertyName)) {
+						existing.add(propertyName);
+						super.addProperty(createPropertyNodeForMethodNode(methodNode, propertyName));
+					}
 				}
 			}
 			// fields - FIXASC nyi for fields
@@ -534,29 +542,46 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		}
 	}
 
-	private PropertyNode createPropertyNodeForMethodNode(MethodNode methodNode) {
+	private PropertyNode createPropertyNodeForMethodNode(MethodNode methodNode, String propertyName) {
 		ClassNode propertyType = methodNode.getReturnType();
-		String methodName = methodNode.getName();
-		StringBuffer propertyName = new StringBuffer();
-		propertyName.append(Character.toLowerCase(methodName.charAt(3)));
-		if (methodName.length() > 4) {
-			propertyName.append(methodName.substring(4));
-		}
+
 		int mods = methodNode.getModifiers();
-		String name = propertyName.toString();
-		FieldNode field = this.getField(name);
+		FieldNode field = this.getField(propertyName);
 		if (field == null) {
-			field = new FieldNode(name, mods, propertyType, this, null);
+			field = new FieldNode(propertyName, mods, propertyType, this, null);
 			field.setDeclaringClass(this);
 		} else {
 			// field already exists
 			// must remove this field since when "addProperty" is called
 			// later on, it will add it again. We do not want dups.
-			this.removeField(name);
+			this.removeField(propertyName);
 		}
 		PropertyNode property = new PropertyNode(field, mods, null, null);
 		property.setDeclaringClass(this);
 		return property;
+	}
+
+	/**
+	 * Converts from a method get/set/is name to a property name Assumes that methodName is more than 4/3 characters long and starts
+	 * with a proper prefix
+	 * 
+	 * @param methodNode
+	 * @return
+	 */
+	private String convertToPropertyName(String methodName) {
+		StringBuffer propertyName = new StringBuffer();
+		int prefixLen;
+		if (methodName.startsWith("is")) {
+			prefixLen = 2;
+		} else {
+			prefixLen = 3;
+		}
+		propertyName.append(Character.toLowerCase(methodName.charAt(prefixLen)));
+		if (methodName.length() > prefixLen + 1) {
+			propertyName.append(methodName.substring(prefixLen + 1));
+		}
+		String name = propertyName.toString();
+		return name;
 	}
 
 	/**

@@ -252,6 +252,25 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "Flar", 1);
     }
     
+    /**
+     * STS-2628
+     * ensure no double adding of named properties for booleans
+     */
+    public void testNamedArgs7() throws Exception {
+        create("Flar",
+                "class Flar {\n" +
+                        "  boolean aaa\n" +
+                        "  boolean bbb\n" +
+                        "  boolean ccc\n" +
+                "}\n");
+        String contents = "new Flar()";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, "("));
+        proposalExists(proposals, "aaa : __", 1);
+        proposalExists(proposals, "bbb : __", 1);
+        proposalExists(proposals, "ccc : __", 1);
+        proposalExists(proposals, "Flar", 1);
+    }
+    
     
     public void testParamGuessing1() throws Exception {
         create("p", "Flar",
