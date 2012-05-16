@@ -22,6 +22,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -51,12 +53,12 @@ public class CompilerUtils {
      * Note: Used by Grails tooling
      */
     public static String getGroovyVersion() {
-        Bundle groovyBundle = getActiveGroovyBundle();
+        BundleDescription groovyBundle = getActiveGroovyBundleDescription();
         return groovyBundle != null ? groovyBundle.getVersion().toString() : "NONE";
     }
 
     public static SpecifiedVersion getActiveGroovyVersion() {
-        Bundle groovyBundle = getActiveGroovyBundle();
+        BundleDescription groovyBundle = getActiveGroovyBundleDescription();
         return SpecifiedVersion.findVersion(groovyBundle.getVersion());
     }
 
@@ -97,14 +99,15 @@ public class CompilerUtils {
         }
     }
 
-    public static Bundle getActiveGroovyBundle() {
-        Bundle[] active = getAllGroovyBundles();
-        if (active == null) {
+    private static BundleDescription getActiveGroovyBundleDescription() {
+        BundleDescription[] active = getAllGroovyBundleDescriptions();
+        if (active == null || active.length == 0) {
             return null;
         }
         // go through each bundle in versioned order and see if it is disabled
+        // The highest bundle that is not disabled is the active bundle
         BundleDescription[] disabled = Platform.getPlatformAdmin().getState(false).getDisabledBundles();
-        for (Bundle bundle : active) {
+        for (BundleDescription bundle : active) {
             boolean isAvailable = true;
             for (BundleDescription d : disabled) {
                 if (d.getVersion().equals(bundle.getVersion()) && d.getSymbolicName().equals(bundle.getSymbolicName())) {
@@ -119,61 +122,19 @@ public class CompilerUtils {
         return null;
     }
 
+    public static Bundle getActiveGroovyBundle() {
+        BundleDescription bundleDesc = getActiveGroovyBundleDescription();
+        if (bundleDesc == null) {
+            return null;
+        }
+        Bundle[] allBundles = Platform.getBundles("org.codehaus.groovy", bundleDesc.getVersion().toString());
+        if (allBundles == null || allBundles.length == 0) {
+            return null;
+        }
+        return allBundles[0];
+    }
 
 
-    // public static String getOtherVersion() {
-    // return isGroovy18DisabledOrMissing() ? "1.8" : "1.7";
-    // }
-    //
-    // public static boolean isGroovy18DisabledOrMissing() {
-    // BundleDescription disabled18Bundle = null;
-    // disabled18Bundle = getDisabled18BundleDescription();
-    // if (disabled18Bundle != null) {
-    // return true;
-    // }
-    //
-    // // it might be that there is no 1.8 jar. If the 1.8 jar is missing, we
-    // // use 1.7
-    // Bundle[] active = Platform.getBundles("org.codehaus.groovy", "1.8.6");
-    // return active == null || active.length == 0;
-    // }
-    //
-    // public static boolean isGroovy20DisabledOrMissing() {
-    // BundleDescription disabled20Bundle = null;
-    // disabled20Bundle = getDisabled20BundleDescription();
-    // if (disabled20Bundle != null) {
-    // return true;
-    // }
-    //
-    // Bundle[] active = Platform.getBundles("org.codehaus.groovy", "2.0.0");
-    // return active == null || active.length == 0;
-    // }
-    //
-    // private static BundleDescription getDisabled18BundleDescription() {
-    // BundleDescription[] bundles =
-    // Platform.getPlatformAdmin().getState(false).getDisabledBundles();
-    // for (BundleDescription bundle : bundles) {
-    // if (bundle.getSymbolicName().equals("org.codehaus.groovy") &&
-    // bundle.getVersion().getMajor() == 1
-    // && bundle.getVersion().getMinor() == 8) {
-    // return bundle;
-    // }
-    // }
-    // return null;
-    // }
-    //
-    // private static BundleDescription getDisabled20BundleDescription() {
-    // BundleDescription[] bundles =
-    // Platform.getPlatformAdmin().getState(false).getDisabledBundles();
-    // for (BundleDescription bundle : bundles) {
-    // if (bundle.getSymbolicName().equals("org.codehaus.groovy") &&
-    // bundle.getVersion().getMajor() == 2
-    // && bundle.getVersion().getMinor() == 0) {
-    // return bundle;
-    // }
-    // }
-    // return null;
-    // }
 
     /**
      * Returns the groovy-all-*.jar that is used in the Eclipse project. We know
@@ -272,26 +233,27 @@ public class CompilerUtils {
         try {
             State state = ((StateManager) Platform.getPlatformAdmin()).getSystemState();
             Bundle toBundle = getBundle(toVersion);
-            Bundle[] allBundles = getAllGroovyBundles();
+            BundleDescription[] allBundles = getAllGroovyBundleDescriptions();
             if (toBundle == null) {
                 throw new Exception("Could not find any " + toVersion + " groovy version to enable");
             }
 
             // go through all bundles and ensure disabled
-            for (Bundle bundle : allBundles) {
+            for (BundleDescription bundle : allBundles) {
                 DisabledInfo info = createDisabledInfo(state, bundle.getBundleId());
                 if (bundle.equals(toBundle)) {
                     // ensure enabled
                     Platform.getPlatformAdmin().removeDisabledInfo(info);
                 } else {
+                    // don't actually stop
+                    // switch (bundle.getState()) {
+                    // case Bundle.ACTIVE:
+                    // case Bundle.INSTALLED:
+                    // case Bundle.STARTING:
+                    // case Bundle.RESOLVED:
+                    // bundle.stop();
+                    // }
                     // ensure disabled
-                    switch (bundle.getState()) {
-                        case Bundle.ACTIVE:
-                        case Bundle.INSTALLED:
-                        case Bundle.STARTING:
-                        case Bundle.RESOLVED:
-                            bundle.stop();
-                    }
                     Platform.getPlatformAdmin().addDisabledInfo(info);
                 }
             }
@@ -315,60 +277,6 @@ public class CompilerUtils {
         return home;
     }
 
-    // public static String getOtherVersion() {
-    // return isGroovy18DisabledOrMissing() ? "1.8" : "1.7";
-    // }
-    //
-    // public static boolean isGroovy18DisabledOrMissing() {
-    // BundleDescription disabled18Bundle = null;
-    // disabled18Bundle = getDisabled18BundleDescription();
-    // if (disabled18Bundle != null) {
-    // return true;
-    // }
-    //
-    // // it might be that there is no 1.8 jar. If the 1.8 jar is missing, we
-    // // use 1.7
-    // Bundle[] active = Platform.getBundles("org.codehaus.groovy", "1.8.6");
-    // return active == null || active.length == 0;
-    // }
-    //
-    // public static boolean isGroovy20DisabledOrMissing() {
-    // BundleDescription disabled20Bundle = null;
-    // disabled20Bundle = getDisabled20BundleDescription();
-    // if (disabled20Bundle != null) {
-    // return true;
-    // }
-    //
-    // Bundle[] active = Platform.getBundles("org.codehaus.groovy", "2.0.0");
-    // return active == null || active.length == 0;
-    // }
-    //
-    // private static BundleDescription getDisabled18BundleDescription() {
-    // BundleDescription[] bundles =
-    // Platform.getPlatformAdmin().getState(false).getDisabledBundles();
-    // for (BundleDescription bundle : bundles) {
-    // if (bundle.getSymbolicName().equals("org.codehaus.groovy") &&
-    // bundle.getVersion().getMajor() == 1
-    // && bundle.getVersion().getMinor() == 8) {
-    // return bundle;
-    // }
-    // }
-    // return null;
-    // }
-    //
-    // private static BundleDescription getDisabled20BundleDescription() {
-    // BundleDescription[] bundles =
-    // Platform.getPlatformAdmin().getState(false).getDisabledBundles();
-    // for (BundleDescription bundle : bundles) {
-    // if (bundle.getSymbolicName().equals("org.codehaus.groovy") &&
-    // bundle.getVersion().getMajor() == 2
-    // && bundle.getVersion().getMinor() == 0) {
-    // return bundle;
-    // }
-    // }
-    // return null;
-    // }
-
     public static File[] findJarsInDotGroovyLocation() {
         String home = getDotGroovyLibLocation();
         if (home != null) {
@@ -387,8 +295,17 @@ public class CompilerUtils {
         return new File[0];
     }
 
-    private static Bundle[] getAllGroovyBundles() {
-        return Platform.getBundles("org.codehaus.groovy", null);
+    private static BundleDescription[] getAllGroovyBundleDescriptions() {
+        BundleDescription[] bundles = Platform.getPlatformAdmin().getState(false).getBundles("org.codehaus.groovy");
+        // sort by version
+        Arrays.sort(bundles, new Comparator<BundleDescription>() {
+            public int compare(BundleDescription l, BundleDescription r) {
+                // reverse order so highest version is first
+                return r.getVersion().compareTo(l.getVersion());
+            }
+        });
+        return bundles;
+        // return Platform.getBundles("org.codehaus.groovy", null);
     }
 
     private static BundleDescription getDisabledBundleDescription(SpecifiedVersion version) {
