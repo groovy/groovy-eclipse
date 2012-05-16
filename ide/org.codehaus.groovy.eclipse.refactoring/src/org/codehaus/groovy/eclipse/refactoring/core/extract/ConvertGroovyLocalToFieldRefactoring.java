@@ -113,13 +113,11 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
 
     @Override
     public boolean getDeclareFinal() {
-        // TODO
         return false;
     }
 
     @Override
     public boolean getDeclareStatic() {
-        // TODO
         return false;
     }
 
@@ -135,7 +133,6 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
 
     @Override
     public int getInitializeIn() {
-        // TODO
         return INITIALIZE_IN_METHOD;
     }
 
@@ -147,12 +144,10 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
 
     @Override
     public void setDeclareFinal(boolean declareFinal) {
-        // TODO
     }
 
     @Override
     public void setDeclareStatic(boolean declareStatic) {
-        // TODO
     }
 
     @Override
@@ -163,24 +158,20 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
 
     @Override
     public void setInitializeIn(int initializeIn) {
-        // TODO
     }
 
     @Override
     public boolean canEnableSettingStatic() {
-        // TODO
         return false;
     }
 
     @Override
     public boolean canEnableSettingFinal() {
-        // TODO
         return false;
     }
 
     @Override
     public boolean canEnableSettingDeclareInConstructors() {
-        // TODO
         return false;
     }
 
@@ -191,7 +182,6 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
 
     @Override
     public boolean canEnableSettingDeclareInFieldDeclaration() {
-        // TODO
         return false;
     }
 
@@ -248,7 +238,7 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
             }
             pm.worked(1);
 
-            // TODO Check declaration for local type usage
+            // We should check declaration for local type usage here
 
             this.variableExpressionInDeclaration = variableExpressionInDeclaration;
 
