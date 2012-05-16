@@ -72,7 +72,8 @@ import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.TextEditGroup;
 
 /**
- *
+ * See GRECLIPSE-1436 for areas where this refactoring can be improved.
+ * 
  * @author Daniel Phan
  * @created 2012-01-26
  */
