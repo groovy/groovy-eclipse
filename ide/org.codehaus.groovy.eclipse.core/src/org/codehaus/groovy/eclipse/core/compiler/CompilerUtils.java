@@ -90,13 +90,16 @@ public class CompilerUtils {
         return true;
     }
 
-    public static Bundle getBundle(SpecifiedVersion version) {
-        Bundle[] active = Platform.getBundles("org.codehaus.groovy", version.toVersionString());
-        if (active != null && active.length > 0) {
-            return active[0];
-        } else {
-            return null;
+    public static BundleDescription getBundleDescription(SpecifiedVersion version) {
+        BundleDescription[] active = getAllGroovyBundleDescriptions();
+        // return highest bundle version that matches the major.minor specified
+        // version
+        for (BundleDescription bundle : active) {
+            if (bundle.getVersion().getMajor() == version.majorVersion && bundle.getVersion().getMinor() == version.minorVersion) {
+                return bundle;
+            }
         }
+        return null;
     }
 
     private static BundleDescription getActiveGroovyBundleDescription() {
@@ -232,7 +235,7 @@ public class CompilerUtils {
     public static IStatus switchVersions(SpecifiedVersion fromVersion, SpecifiedVersion toVersion) {
         try {
             State state = ((StateManager) Platform.getPlatformAdmin()).getSystemState();
-            Bundle toBundle = getBundle(toVersion);
+            BundleDescription toBundle = getBundleDescription(toVersion);
             BundleDescription[] allBundles = getAllGroovyBundleDescriptions();
             if (toBundle == null) {
                 throw new Exception("Could not find any " + toVersion + " groovy version to enable");
@@ -305,7 +308,6 @@ public class CompilerUtils {
             }
         });
         return bundles;
-        // return Platform.getBundles("org.codehaus.groovy", null);
     }
 
     private static BundleDescription getDisabledBundleDescription(SpecifiedVersion version) {

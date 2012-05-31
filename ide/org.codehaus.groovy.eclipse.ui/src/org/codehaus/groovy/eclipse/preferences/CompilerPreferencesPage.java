@@ -24,6 +24,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
+import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -53,7 +54,6 @@ import org.eclipse.ui.internal.browser.WorkbenchBrowserSupport;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.eclipse.ui.internal.ide.actions.OpenWorkspaceAction;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
-import org.osgi.framework.Bundle;
 
 public class CompilerPreferencesPage extends PropertyAndPreferencePage implements
 IWorkbenchPreferencePage, IWorkbenchPropertyPage {
@@ -242,7 +242,7 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
      * @param toVersion
      */
     private void switchVersion(final SpecifiedVersion toVersion, final Composite compilerPage) {
-        final Bundle toBundle = CompilerUtils.getBundle(toVersion);
+        final BundleDescription toBundle = CompilerUtils.getBundleDescription(toVersion);
         if (toBundle == null) {
             // this version is not installed
             return;
