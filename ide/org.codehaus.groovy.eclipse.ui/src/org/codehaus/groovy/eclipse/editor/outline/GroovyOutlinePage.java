@@ -48,7 +48,11 @@ public class GroovyOutlinePage extends JavaOutlinePage {
         initializeViewer();
 
         outlineUnit.refresh();
-        getOutlineViewer().refresh();
+
+        JavaOutlineViewer outlineViewer = getOutlineViewer();
+        if (outlineViewer != null) {
+            outlineViewer.refresh();
+        }
     }
 
     public OCompilationUnit getOutlineCompilationUnit() {

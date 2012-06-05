@@ -685,6 +685,49 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         assertType(contents, start, end, "java.lang.String", true);
     }
     
+    // GRECLIPSE-1442
+    public void testDelegatesTo8() throws Exception {
+        createDsls(
+                "contribute(currentType(\"Delegatee\")) {\n" + 
+                "    delegatesTo type: \"MyCategory\", asCategory: true\n" + 
+                "}");
+        String contents =
+                "class MyCategory {\n" + 
+                "    static int getSomething(Delegatee d) { }\n" + 
+                "}\n" + 
+                "class Delegatee { }\n" + 
+                "new Delegatee().something \n" + 
+                "new Delegatee().getSomething()";
+        int start = contents.lastIndexOf("getSomething");
+        int end = start + "getSomething".length();
+        assertType(contents, start, end, "java.lang.Integer", true);
+        start = contents.lastIndexOf("something");
+        end = start + "something".length();
+        assertType(contents, start, end, "java.lang.Integer", true);
+    }
+    
+    // GRECLIPSE-1442
+    public void testDelegatesTo9() throws Exception {
+        createDsls(
+                "contribute(currentType(\"Delegatee\")) {\n" + 
+                        "    delegatesTo type: \"MyCategory\", asCategory: true\n" + 
+                "}");
+        String contents =
+                "class MyCategory {\n" + 
+                "    static boolean isSomething(Delegatee d) { }\n" + 
+                "}\n" + 
+                "class Delegatee { }\n" + 
+                "new Delegatee().something \n" + 
+                "new Delegatee().isSomething()";
+        int start = contents.lastIndexOf("isSomething");
+        int end = start + "isSomething".length();
+        assertType(contents, start, end, "java.lang.Boolean", true);
+        start = contents.lastIndexOf("something");
+        end = start + "something".length();
+        assertType(contents, start, end, "java.lang.Boolean", true);
+    }
+    
+    
     // setDelegateType
     public void testSetDelegateType1() throws Exception {
         createDsls(
