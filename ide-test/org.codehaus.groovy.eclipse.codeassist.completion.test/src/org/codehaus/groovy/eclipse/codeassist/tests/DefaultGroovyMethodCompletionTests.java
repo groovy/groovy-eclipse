@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssistActivator;
+import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaMethodCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -33,6 +34,7 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
     private static final String CONTENTS = "class Class { public Class() {\n }\n void doNothing(int x) { this.toString(); new Object().toString(); } }";
     private static final String SCRIPTCONTENTS = "def x = 9\nx++\nnew Object().toString()\nnew Thread().startD";
     private static final String CLOSURECONTENTS = "def x = { t -> print t }";
+    private static final String LISTCONTENTS = "[].findA";
 
     public DefaultGroovyMethodCompletionTests(String name) {
         super(name);
@@ -169,10 +171,10 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
         ICompilationUnit unit = createGroovyWithContents("Script", contents);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "iterator"), GroovyCompletionProposalComputer.class);
         if (GroovyUtils.GROOVY_LEVEL >= 18) {
-            proposalExists(proposals, "iterator", 2);
+            proposalExists(proposals, "iterator", 1);
         } else {
             // groovy 1.7
-            proposalExists(proposals, "iterator", 3);
+            proposalExists(proposals, "iterator", 2);
         }
     }
     
@@ -207,6 +209,15 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
         } finally {
             setDGMFilter();
         }
+    }
+    
+    // GRECLIPSE-1422
+    public void testNoDups() throws Exception {
+        ICompilationUnit unit = createGroovyWithContents("Script", LISTCONTENTS);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(LISTCONTENTS, "findA"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "findAll", 2);
+        assertTrue(proposals[0] instanceof GroovyJavaMethodCompletionProposal);
+        assertTrue(proposals[1] instanceof GroovyJavaMethodCompletionProposal);
     }
     
     private void setDGMFilter(String... filter) {

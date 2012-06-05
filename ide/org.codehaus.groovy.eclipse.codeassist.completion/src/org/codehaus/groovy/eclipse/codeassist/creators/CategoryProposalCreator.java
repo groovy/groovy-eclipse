@@ -16,9 +16,12 @@
 
 package org.codehaus.groovy.eclipse.codeassist.creators;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
@@ -53,6 +56,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         DGMProposalFilter filter = new DGMProposalFilter();
         List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
         Set<String> existingFieldProposals = new HashSet<String>();
+        Map<String, List<MethodNode>> existingMethodProposals = new HashMap<String, List<MethodNode>>();
         for (ClassNode category : categories) {
             List<MethodNode> allMethods = category.getAllDeclaredMethods();
             boolean isDGMCategory = isDGMCategory(category);
@@ -67,10 +71,17 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                 if (method.isStatic() && method.isPublic()) {
                     Parameter[] params = method.getParameters();
                     if (ProposalUtils.looselyMatches(prefix, methodName)) {
-                        if (params != null && params.length > 0 && set.contains(params[0].getType().getName())) {
+                        if (params != null && params.length > 0 && set.contains(params[0].getType().getName())
+                                && !dupMethod(method, existingMethodProposals)) {
                             GroovyCategoryMethodProposal methodProposal = new GroovyCategoryMethodProposal(method);
                             methodProposal.setRelevanceMultiplier(isInterestingType(method.getReturnType()) ? 101 : 1);
                             groovyProposals.add(methodProposal);
+                            List<MethodNode> methodList = existingMethodProposals.get(methodName);
+                            if (methodList == null) {
+                                methodList = new ArrayList<MethodNode>(2);
+                                existingMethodProposals.put(methodName, methodList);
+                            }
+                            methodList.add(method);
                         }
                     } else if (params.length == 1
                             && findLooselyMatchedAccessorKind(prefix, methodName, true).isAccessorKind(method, true)
@@ -86,6 +97,40 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
             }
         }
         return groovyProposals;
+    }
+
+    /**
+     * Check thatthe new method hasn't already been added
+     * We SHOULD be checking if this new method is more specific than the old
+     * method
+     * and replacing if it is, but we are not doing that.
+     *
+     * @param method
+     * @param existingMethodProposals
+     * @return
+     */
+    private boolean dupMethod(MethodNode newMethod, Map<String, List<MethodNode>> existingMethodProposals) {
+        List<MethodNode> otherMethods = existingMethodProposals.get(newMethod.getName());
+        if (otherMethods != null) {
+            Parameter[] newParameters = newMethod.getParameters();
+            for (MethodNode otherMethod : otherMethods) {
+                Parameter[] otherParameters = otherMethod.getParameters();
+                if (otherParameters.length == newParameters.length) {
+                    // already know that the first parameter has a matching
+                    // type, so
+                    // start with remaining parameters
+                    for (int i = 1; i < otherParameters.length; i++) {
+                        if (!otherParameters[i].getType().getName().equals(newParameters[i].getType().getName())) {
+                            // there is a mismatched parameter
+                            continue;
+                        }
+                    }
+                    // all parameters match
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
