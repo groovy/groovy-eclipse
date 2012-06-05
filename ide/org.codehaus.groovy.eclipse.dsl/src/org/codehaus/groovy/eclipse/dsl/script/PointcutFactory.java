@@ -323,7 +323,7 @@ public class PointcutFactory {
                 ProjectNaturePointcut.class,
                 createDoc("Matches on the Eclipse project nature for the current project.  "
                         + "For example:<blockquote>Groovy proejcts: <code>org.eclipse.jdt.groovy.core.groovyNature</code><br>"
-                        + "Grails project: <code>com.springsource.sts.grails.core.nature</code></blockquote>",
+                        + "Grails project: <code>org.grails.ide.eclipse.core.nature</code></blockquote>",
                         "The name of the project nature to check",
                         "The project nature that was matched, or null if there was no match."), false);
         registerGlobalPointcut(

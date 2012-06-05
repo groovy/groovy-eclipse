@@ -352,6 +352,9 @@ public class DSLDScriptExecutor {
             groovyVersion = groovyBundle.getVersion();
         }
         Bundle grailsBundle = Platform.getBundle("com.springsource.sts.grails.core");
+        if (grailsBundle == null) {
+            grailsBundle = Platform.getBundle("org.grails.ide.eclipse.core");
+        }
         if (grailsBundle != null) {
             grailsToolingVersion = grailsBundle.getVersion();
         }

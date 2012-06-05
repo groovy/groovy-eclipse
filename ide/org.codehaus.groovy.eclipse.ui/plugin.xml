@@ -200,7 +200,7 @@
             name="Groovy Class"
             icon="icons/newgroovyclass_wiz.gif"
             category="org.codehaus.groovy.eclipse"
-            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             id="org.codehaus.groovy.eclipse.ui.groovyClassWizard">
          <class class="org.codehaus.groovy.eclipse.wizards.NewClassWizard">
@@ -219,7 +219,7 @@
             category="org.codehaus.groovy.eclipse"
             class="org.codehaus.groovy.eclipse.wizards.GroovyProjectWizard"
             descriptionImage="icons/full/newgroovyprj_wiz.gif"
-            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective"
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective"
 						project="true"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard">
@@ -233,7 +233,7 @@
             icon="icons/newgroovytestsuite_wiz.gif"
             id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"
             name="Groovy Test Case"
-            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective">
+            preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective">
          <class class="org.codehaus.groovy.eclipse.wizards.NewGroovyTestCaseWizard">
             <parameter
                 name="javatype"
