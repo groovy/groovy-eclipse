@@ -169,6 +169,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			try {
 				Thread.currentThread().setContextClassLoader(groovyCompilationUnit.getTransformLoader());
 				groovyCompilationUnit.compile(phase);
+			} catch (GroovyBugError e) {
+				groovySourceUnit.getErrorCollector().addError(
+						new SyntaxErrorMessage(new SyntaxException(e.getBugText(), e, 1, 0), groovySourceUnit));
 			} finally {
 				Thread.currentThread().setContextClassLoader(cl);
 			}
