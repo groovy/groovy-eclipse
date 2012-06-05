@@ -215,9 +215,8 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
     public void testNoDups() throws Exception {
         ICompilationUnit unit = createGroovyWithContents("Script", LISTCONTENTS);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(LISTCONTENTS, "findA"), GroovyCompletionProposalComputer.class);
+        // should find 2, not 4.  dups removed
         proposalExists(proposals, "findAll", 2);
-        assertTrue(proposals[0] instanceof GroovyJavaMethodCompletionProposal);
-        assertTrue(proposals[1] instanceof GroovyJavaMethodCompletionProposal);
     }
     
     private void setDGMFilter(String... filter) {

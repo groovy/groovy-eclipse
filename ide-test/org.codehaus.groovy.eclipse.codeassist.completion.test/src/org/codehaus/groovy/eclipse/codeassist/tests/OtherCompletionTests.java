@@ -139,12 +139,7 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompilationUnit groovyUnit = create(groovyClass);
         fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, ".c"), GroovyCompletionProposalComputer.class);
-        if (GroovyUtils.GROOVY_LEVEL < 18) {
-            proposalExists(proposals, "center", 2);
-        } else {
-            // two new variants of 'center' were added in 1.8.2
-            proposalExists(proposals, "center", 4);
-        }
+        proposalExists(proposals, "center", 2);
     }
     
     // GRECLIPSE-706
