@@ -252,7 +252,12 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         if (paramNames == null) {
             paramNames = new char[params.length][];
             for (int i = 0; i < params.length; i++) {
-                paramNames[i] = params[i].getName().toCharArray();
+                String name = params[i].getName();
+                if (name != null) {
+                    paramNames[i] = name.toCharArray();
+                } else {
+                    paramNames[i] = ("arg" + i).toCharArray();
+                }
             }
         }
 
