@@ -506,6 +506,13 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		else
 			return new JavaModelException(new JavaModelStatus(status.getSeverity(), status.getCode(), status.getMessage()));
 	}
+	
+	// GROOVY start: add a stub method so that we don't break compatibility with E42RC4.  Once the JDT patch is updated to this level, this method should be removed
+	protected Object openWhenClosed(Object info, boolean nuthin, IProgressMonitor monitor) throws JavaModelException {
+		return openWhenClosed(info, monitor);
+	}
+	// GROOVY end
+
 	/*
 	 * Opens an <code>Openable</code> that is known to be closed (no check for <code>isOpen()</code>).
 	 * Returns the created element info.
