@@ -169,9 +169,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			try {
 				Thread.currentThread().setContextClassLoader(groovyCompilationUnit.getTransformLoader());
 				groovyCompilationUnit.compile(phase);
-			} catch (GroovyBugError e) {
-				groovySourceUnit.getErrorCollector().addError(
-						new SyntaxErrorMessage(new SyntaxException(e.getBugText(), e, 1, 0), groovySourceUnit));
 			} finally {
 				Thread.currentThread().setContextClassLoader(cl);
 			}
@@ -213,12 +210,20 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 					}
 				}
 				if (reportit) {
-					System.err.println("Groovy Bug --- " + gbr.getBugText());
+					System.err.println("Internal Groovy Error --- " + gbr.getBugText());
 					gbr.printStackTrace();
 					// The groovy compiler threw an exception
 					// FIXASC (M3) Should record these errors as a problem on the project
 					// should *not* throw these because of bad syntax in the file
-					Util.log(gbr, "Groovy bug when compiling.");
+					Util.log(gbr, "Internal groovy compiler error.");
+
+					// Also need to record these problems as compiler errors since some users will not think to check the log
+					// This is mostly a fix for problems like those in GRECLIPSE-1420, where a GBError is thrown when it is really
+					// just a syntax problem.
+					groovySourceUnit.getErrorCollector().addError(
+							new SyntaxErrorMessage(new SyntaxException("Internal groovy compiler error.\n" + gbr.getBugText(), gbr,
+									1, 0), groovySourceUnit));
+					recordProblems(groovySourceUnit.getErrorCollector().getErrors());
 				}
 			}
 		}
