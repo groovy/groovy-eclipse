@@ -52,6 +52,14 @@
          version="0.0.0"/>
 
    <includes
+         id="org.codehaus.groovy.alltests.feature"
+         version="0.0.0"/>
+
+   <includes
+         id="org.codehaus.groovy.alltests.feature.source"
+         version="0.0.0"/>
+
+   <includes
          id="org.codehaus.groovy17.feature"
          version="0.0.0"/>
 
