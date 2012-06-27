@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -75,19 +75,22 @@ public class BreakpointUpdater implements IMarkerUpdater {
             return false;
         }
         try {
-            ValidBreakpointLocationFinder finder = new ValidBreakpointLocationFinder(
-                    ((Integer) marker.getAttribute(IMarker.LINE_NUMBER)).intValue());
-            ASTNode validNode = finder.findValidBreakpointLocation(unit.getModuleNode());
-            if (validNode == null) {
-                return false;
+            Object attribute = marker.getAttribute(IMarker.LINE_NUMBER);
+            if (attribute != null) {
+                ValidBreakpointLocationFinder finder = new ValidBreakpointLocationFinder(
+                        ((Integer) attribute).intValue());
+                ASTNode validNode = finder.findValidBreakpointLocation(unit.getModuleNode());
+                if (validNode == null) {
+                    return false;
+                }
+                int line = validNode.getLineNumber();
+                MarkerUtilities.setLineNumber(marker, line);
+                if(isLineBreakpoint(marker)) {
+                    ensureRanges(document, marker, line);
+                    return lineBreakpointExists(marker.getResource(), ((IJavaLineBreakpoint)breakpoint).getTypeName(), line, marker) == null;
+                }
             }
-            int line = validNode.getLineNumber();
-            MarkerUtilities.setLineNumber(marker, line);
-            if(isLineBreakpoint(marker)) {
-                ensureRanges(document, marker, line);
-                return lineBreakpointExists(marker.getResource(), ((IJavaLineBreakpoint)breakpoint).getTypeName(), line, marker) == null;
-            }
-            
+
             return true;
         } catch (CoreException e) {
             GroovyCore.logException("Error updating breakpoint", e);
@@ -121,7 +124,7 @@ public class BreakpointUpdater implements IMarkerUpdater {
             return null;
         }
     }
-    
+
     /**
      * Updates the charstart and charend ranges if necessary for the given line.
      * Returns immediately if the line is not valid (< 0 or greater than the total line number count)
@@ -140,7 +143,7 @@ public class BreakpointUpdater implements IMarkerUpdater {
         MarkerUtilities.setCharStart(marker, charstart);
         MarkerUtilities.setCharEnd(marker, charend);
     }
-    
+
     /**
      * Returns if the specified marker is for an <code>IJavaLineBreakpoint</code>
      * @param marker
@@ -151,7 +154,7 @@ public class BreakpointUpdater implements IMarkerUpdater {
     private boolean isLineBreakpoint(IMarker marker) {
         return MarkerUtilities.isMarkerType(marker, "org.eclipse.jdt.debug.javaLineBreakpointMarker"); //$NON-NLS-1$
     }
-    
+
     /**
      * Searches for an existing line breakpoint on the specified line in the current type that does not match the id of the specified marker
      * @param resource the resource to care about
@@ -177,14 +180,14 @@ public class BreakpointUpdater implements IMarkerUpdater {
             if (marker != null && marker.exists() && marker.getType().equals(markerType) && currentmarker.getId() != marker.getId()) {
                 String breakpointTypeName = breakpoint.getTypeName();
                 if ((breakpointTypeName.equals(typeName) || breakpointTypeName.startsWith(typeName + '$')) &&
-                    breakpoint.getLineNumber() == lineNumber &&
-                    resource.equals(marker.getResource())) {
-                        return breakpoint;
+                        breakpoint.getLineNumber() == lineNumber &&
+                        resource.equals(marker.getResource())) {
+                    return breakpoint;
                 }
             }
         }
         return null;
-    }   
+    }
 
 
 }
