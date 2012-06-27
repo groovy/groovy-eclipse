@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,12 +31,17 @@ public class CompilationUnit implements ICompilationUnit {
 		// == Main.NONE: absorbent element, do not output class files;
 		// else: use as the path of the directory into which class files must
 		//       be written.
+	private boolean ignoreOptionalProblems;
 
 public CompilationUnit(char[] contents, String fileName, String encoding) {
 	this(contents, fileName, encoding, null);
 }
 public CompilationUnit(char[] contents, String fileName, String encoding,
 		String destinationPath) {
+	this(contents, fileName, encoding, destinationPath, false);
+}
+public CompilationUnit(char[] contents, String fileName, String encoding,
+		String destinationPath, boolean ignoreOptionalProblems) {
 	this.contents = contents;
 	char[] fileNameCharArray = fileName.toCharArray();
 	switch(File.separatorChar) {
@@ -61,6 +66,7 @@ public CompilationUnit(char[] contents, String fileName, String encoding,
 	this.mainTypeName = CharOperation.subarray(fileNameCharArray, start, end);
 	this.encoding = encoding;
 	this.destinationPath = destinationPath;
+	this.ignoreOptionalProblems = ignoreOptionalProblems;
 }
 public char[] getContents() {
 	if (this.contents != null)
@@ -85,6 +91,9 @@ public char[] getMainTypeName() {
 }
 public char[][] getPackageName() {
 	return null;
+}
+public boolean ignoreOptionalProblems() {
+	return this.ignoreOptionalProblems;
 }
 public String toString() {
 	return "CompilationUnit[" + new String(this.fileName) + "]";  //$NON-NLS-2$ //$NON-NLS-1$

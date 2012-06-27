@@ -18,11 +18,9 @@ import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.codegen.Opcodes;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
-import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.InvocationSite;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
@@ -37,7 +35,6 @@ import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
-import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
 
 public class FieldReference extends Reference implements InvocationSite {
 
@@ -114,12 +111,12 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
 	if (!this.binding.isStatic()) {
 		if (this.receiver.isThis()) {
-			currentScope.resetEnclosingMethodStaticFlag();
+			currentScope.resetDeclaringClassMethodStaticFlag(this.binding.declaringClass);
 		}
 	} else if (this.receiver.isThis()) {
 		if ((this.receiver.bits & ASTNode.IsImplicitThis) == 0) {
 			// explicit this, not allowed in static context
-			currentScope.resetEnclosingMethodStaticFlag();
+			currentScope.resetDeclaringClassMethodStaticFlag(this.binding.declaringClass);
 		}
 	}
 	return flowInfo;
@@ -136,7 +133,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		this.receiver.checkNPE(currentScope, flowContext, flowInfo);
 		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
 		if (this.receiver.isThis()) {
-			currentScope.resetEnclosingMethodStaticFlag();
+			currentScope.resetDeclaringClassMethodStaticFlag(this.binding.declaringClass);
 		}
 	} else if (this.receiver.isThis()) {
 		if ((this.receiver.bits & ASTNode.IsImplicitThis) == 0) {
@@ -670,23 +667,5 @@ public void traverse(ASTVisitor visitor, BlockScope scope) {
 		this.receiver.traverse(visitor, scope);
 	}
 	visitor.endVisit(this, scope);
-}
-
-public VariableBinding variableBinding(Scope scope) {
-	if (scope != null) {
-		CompilerOptions options = scope.compilerOptions();
-		if(!options.includeFieldsInNullAnalysis) return null;
-		if (this.receiver.isThis()) return this.binding;
-		if (this.binding != null && this.binding.declaringClass != null && this.binding.isStatic()) {
-			// does the static field belong to the current type or one of the enclosing ones?
-			ClassScope enclosingClass = scope.enclosingClassScope();
-			while (enclosingClass != null) {
-				TypeDeclaration type = enclosingClass.referenceContext;
-				if (type != null && (this.binding.declaringClass.original() == type.binding)) return this.binding;
-				enclosingClass = enclosingClass.enclosingClassScope();
-			}
-		}
-	}
-	return null;
 }
 }

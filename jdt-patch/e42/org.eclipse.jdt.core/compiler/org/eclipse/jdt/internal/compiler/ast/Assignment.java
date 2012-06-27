@@ -15,6 +15,8 @@
  *     						bug 349326 - [1.7] new warning for missing try-with-resources
  *							bug 186342 - [compiler][null] Using annotations for null checking
  *							bug 358903 - Filter practically unimportant resource leak warnings
+ *							bug 370639 - [compiler][resource] restore the default for resource leak warnings
+ *							bug 365859 - [compiler][null] distinguish warnings based on flow analysis vs. null annotations
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -43,46 +45,44 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	// record setting a variable: various scenarii are possible, setting an array reference,
 // a field reference, a blank final field reference, a field of an enclosing instance or
 // just a local variable.
-	VariableBinding var = this.lhs.variableBinding(currentScope);
+	LocalVariableBinding local = this.lhs.localVariableBinding();
 	if ((this.expression.implicitConversion & TypeIds.UNBOXING) != 0) {
 		this.expression.checkNPE(currentScope, flowContext, flowInfo);
 	}
 	
 	FlowInfo preInitInfo = null;
-	LocalVariableBinding localToAnalyseAsResource = null;
-	if (var instanceof LocalVariableBinding 
+	boolean shouldAnalyseResource = local != null
 			&& flowInfo.reachMode() == FlowInfo.REACHABLE 
+			&& currentScope.compilerOptions().analyseResourceLeaks
 			&& (FakedTrackingVariable.isAnyCloseable(this.expression.resolvedType)
-					|| this.expression.resolvedType == TypeBinding.NULL)) {
-		localToAnalyseAsResource = (LocalVariableBinding) var;
-
+					|| this.expression.resolvedType == TypeBinding.NULL);
+	if (shouldAnalyseResource) {
 		preInitInfo = flowInfo.unconditionalCopy();
 		// analysis of resource leaks needs additional context while analyzing the RHS:
-		FakedTrackingVariable.preConnectTrackerAcrossAssignment(this, localToAnalyseAsResource, this.expression);
+		FakedTrackingVariable.preConnectTrackerAcrossAssignment(this, local, this.expression);
 	}
 	
 	flowInfo = ((Reference) this.lhs)
 		.analyseAssignment(currentScope, flowContext, flowInfo, this, false)
 		.unconditionalInits();
 
-	if (localToAnalyseAsResource != null) {
-		FakedTrackingVariable.handleResourceAssignment(currentScope, preInitInfo, flowInfo, this, this.expression, localToAnalyseAsResource);
-	} else {
+	if (shouldAnalyseResource)
+		FakedTrackingVariable.handleResourceAssignment(currentScope, preInitInfo, flowInfo, this, this.expression, local);
+	else
 		FakedTrackingVariable.cleanUpAfterAssignment(currentScope, this.lhs.bits, this.expression);
-	}
 
 	int nullStatus = this.expression.nullStatus(flowInfo);
-	if (var != null && (var.type.tagBits & TagBits.IsBaseType) == 0) {
+	if (local != null && (local.type.tagBits & TagBits.IsBaseType) == 0) {
 		if (nullStatus == FlowInfo.NULL) {
-			flowContext.recordUsingNullReference(currentScope, var, this.lhs,
+			flowContext.recordUsingNullReference(currentScope, local, this.lhs,
 				FlowContext.CAN_ONLY_NULL | FlowContext.IN_ASSIGNMENT, flowInfo);
 		}
 	}
-	nullStatus = checkAssignmentAgainstNullAnnotation(currentScope, flowContext, var, nullStatus, this.expression);
-	if (var != null && (var.type.tagBits & TagBits.IsBaseType) == 0) {
-		flowInfo.markNullStatus(var, nullStatus);
+	nullStatus = checkAssignmentAgainstNullAnnotation(currentScope, flowContext, local, nullStatus, this.expression, this.expression.resolvedType);
+	if (local != null && (local.type.tagBits & TagBits.IsBaseType) == 0) {
+		flowInfo.markNullStatus(local, nullStatus);
 		if (flowContext.initsOnFinally != null)
-			flowContext.initsOnFinally.markNullStatus(var, nullStatus);
+			flowContext.initsOnFinally.markNullStatus(local, nullStatus);
 	}
 	return flowInfo;
 }
@@ -235,8 +235,5 @@ public void traverse(ASTVisitor visitor, BlockScope scope) {
 }
 public LocalVariableBinding localVariableBinding() {
 	return this.lhs.localVariableBinding();
-}
-public VariableBinding variableBinding(Scope scope) {
-	return this.lhs.variableBinding(scope);
 }
 }

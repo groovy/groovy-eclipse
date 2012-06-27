@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,7 @@
  *								bug 349326 - [1.7] new warning for missing try-with-resources
  *								bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 365519 - editorial cleanup after bug 186342 and bug 365387
+ *								bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -139,7 +140,7 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 				}
 					
 			}
-			this.scope.checkUnclosedCloseables(flowInfo, null/*don't report against a specific location*/, null);
+			this.scope.checkUnclosedCloseables(flowInfo, null, null/*don't report against a specific location*/, null);
 		} catch (AbortMethod e) {
 			this.ignoreFurtherInvestigation = true;
 		}

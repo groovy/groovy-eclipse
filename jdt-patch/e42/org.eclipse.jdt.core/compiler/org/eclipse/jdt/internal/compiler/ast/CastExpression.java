@@ -33,7 +33,6 @@ import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
-import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 
 public class CastExpression extends Expression {
@@ -444,13 +443,6 @@ public Expression innermostCastedExpression(){
  */
 public LocalVariableBinding localVariableBinding() {
 	return this.expression.localVariableBinding();
-}
-
-/**
- * @see org.eclipse.jdt.internal.compiler.ast.Expression#variableBinding(Scope)
- */
-public VariableBinding variableBinding(Scope scope) {
-	return this.expression.variableBinding(scope);
 }
 
 public int nullStatus(FlowInfo flowInfo) {

@@ -125,7 +125,6 @@
  * 								    RequiredNonNullButProvidedNull
  * 									RequiredNonNullButProvidedPotentialNull
  * 									RequiredNonNullButProvidedUnknown
- * 									MissingNullAnnotationType
  * 									NullAnnotationNameMustBeQualified
  * 									IllegalReturnNullityRedefinition
  * 									IllegalRedefinitionToNonNullParameter
@@ -141,6 +140,15 @@
  *									RedundantNullDefaultAnnotationType
  *									RedundantNullDefaultAnnotationMethod
  *									ContradictoryNullAnnotations
+ *									IllegalAnnotationForBaseType
+ *									RedundantNullCheckOnSpecdNonNullLocalVariable
+ *									SpecdNonNullLocalVariableComparisonYieldsFalse
+ *									RequiredNonNullButProvidedSpecdNullable
+ *									MissingDefaultCase
+ *									MissingEnumConstantCaseDespiteDefault
+ *									UninitializedLocalVariableHintMissingDefault
+ *									UninitializedBlankFinalFieldHintMissingDefault
+ *									ShouldReturnValueHintMissingDefault
  *******************************************************************************/
 package org.eclipse.jdt.core.compiler;
 
@@ -1287,26 +1295,6 @@ void setSourceStart(int sourceStart);
     int UnusedTypeArgumentsForConstructorInvocation = MethodRelated + 660;
 
 	/**
-	 * Null analysis for fields
-	 */
-    /** @since 3.8*/
-	int NullFieldReference = Internal + FieldRelated + 670;
-	/** @since 3.8*/
-	int PotentialNullFieldReference = Internal + FieldRelated + 671;
-	/** @since 3.8*/
-	int RedundantNullCheckOnNullField = Internal + FieldRelated + 672;
-	/** @since 3.8*/
-	int NullFieldComparisonYieldsFalse = Internal + FieldRelated + 673;
-	/** @since 3.8*/
-	int RedundantNullCheckOnNonNullField = Internal + FieldRelated + 674;
-	/** @since 3.8*/
-	int NonNullFieldComparisonYieldsFalse = Internal + FieldRelated + 675;
-	/** @since 3.8*/
-	int RedundantFieldNullAssignment = Internal + FieldRelated + 676;
-	/** @since 3.8*/
-	int NullFieldInstanceofYieldsFalse = Internal + FieldRelated + 677;
-	
-	/**
 	 * Corrupted binaries
 	 */
 	/** @since 3.1 */
@@ -1363,6 +1351,18 @@ void setSourceStart(int sourceStart);
 	int EnumConstantCannotDefineAbstractMethod = MethodRelated + 764;
 	/** @since 3.5 */
 	int AbstractMethodInEnum = MethodRelated + 765;
+	/** @since 3.8 */
+	int MissingEnumDefaultCase = Internal + 766;
+	/** @since 3.8 */
+	int MissingDefaultCase = Internal + 767;
+	/** @since 3.8 */
+	int MissingEnumConstantCaseDespiteDefault = FieldRelated + 768;
+	/** @since 3.8 */
+	int UninitializedLocalVariableHintMissingDefault = Internal + 769;
+	/** @since 3.8 */
+	int UninitializedBlankFinalFieldHintMissingDefault = FieldRelated + 770;
+	/** @since 3.8 */
+	int ShouldReturnValueHintMissingDefault = MethodRelated + 771;
 
 	/**
 	 * Var args
@@ -1464,7 +1464,7 @@ void setSourceStart(int sourceStart);
 	/** @since 3.8 */
 	int RequiredNonNullButProvidedUnknown = TypeRelated + 912;
 	/** @since 3.8 */
-	int MissingNullAnnotationType = ImportRelated + 913;
+	int MissingNonNullByDefaultAnnotationOnPackage = Internal + 913; // https://bugs.eclipse.org/bugs/show_bug.cgi?id=372012
 	/** @since 3.8 */
 	int IllegalReturnNullityRedefinition = MethodRelated + 914;
 	/** @since 3.8 */
@@ -1486,7 +1486,7 @@ void setSourceStart(int sourceStart);
 	/** @since 3.8 */
 	int IllegalAnnotationForBaseType = TypeRelated + 923;
 	/** @since 3.8 */
-	int RedundantNullDefaultAnnotation = Internal + 925;
+	int RedundantNullDefaultAnnotation = Internal + 925; // shouldn't actually occur any more after bug 366063
 	/** @since 3.8 */
 	int RedundantNullDefaultAnnotationPackage = Internal + 926;
 	/** @since 3.8 */
@@ -1495,6 +1495,14 @@ void setSourceStart(int sourceStart);
 	int RedundantNullDefaultAnnotationMethod = Internal + 928;
 	/** @since 3.8 */
 	int ContradictoryNullAnnotations = Internal + 929;
+	/** @since 3.8 */
+	int MissingNonNullByDefaultAnnotationOnType = Internal + 930; // https://bugs.eclipse.org/bugs/show_bug.cgi?id=372012
+	/** @since 3.8 */
+	int RedundantNullCheckOnSpecdNonNullLocalVariable = Internal + 931;
+	/** @since 3.8 */
+	int SpecdNonNullLocalVariableComparisonYieldsFalse = Internal + 932;
+	/** @since 3.8 */
+	int RequiredNonNullButProvidedSpecdNullable = Internal + 933;
 
 	/**
 	 * External problems -- These are problems defined by other plugins

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1000,6 +1000,28 @@ public final class CompletionEngine
 				if(keys[i] != null) {
 					AcceptedConstructor value = (AcceptedConstructor) values[i];
 					if(value != null) {
+						char[] fullyQualifiedEnclosingTypeOrPackageName = null;
+						done : for (int j = 0; j < this.onDemandImportCacheCount; j++) {
+							ImportBinding importBinding = this.onDemandImportsCache[j];
+
+							char[][] importName = importBinding.compoundName;
+							char[] importFlatName = CharOperation.concatWith(importName, '.');
+
+							if(fullyQualifiedEnclosingTypeOrPackageName == null) {
+								fullyQualifiedEnclosingTypeOrPackageName = value.packageName;
+							}
+							if(CharOperation.equals(fullyQualifiedEnclosingTypeOrPackageName, importFlatName)) {
+								if(importBinding.isStatic()) {
+									if((value.modifiers & ClassFileConstants.AccStatic) != 0) {
+										value.mustBeQualified = true;
+										break done;
+									}
+								} else {
+									value.mustBeQualified = true;
+									break done;
+								}
+							}
+						}
 						if (value.proposeType) {
 							proposeType(
 									value.packageName,
@@ -1831,7 +1853,7 @@ public final class CompletionEngine
 							if(!this.requestor.isIgnored(CompletionProposal.KEYWORD)) {
 								setSourceAndTokenRange(importReference.sourceStart, importReference.sourceEnd);
 								CompletionOnKeyword keyword = (CompletionOnKeyword)importReference;
-								findKeywords(keyword.getToken(), keyword.getPossibleKeywords(), false, false);
+								findKeywords(keyword.getToken(), keyword.getPossibleKeywords(), true, false, parsedUnit.currentPackage != null);
 							}
 							if(this.noProposal && this.problem != null) {
 								this.requestor.completionFailure(this.problem);
@@ -2393,7 +2415,7 @@ public final class CompletionEngine
 	private void completionOnKeyword(ASTNode astNode) {
 		if (!this.requestor.isIgnored(CompletionProposal.KEYWORD)) {
 			CompletionOnKeyword keyword = (CompletionOnKeyword)astNode;
-			findKeywords(keyword.getToken(), keyword.getPossibleKeywords(), keyword.canCompleteEmptyToken(), false);
+			findKeywords(keyword.getToken(), keyword.getPossibleKeywords(), keyword.canCompleteEmptyToken(), false, false);
 		}
 	}
 	
@@ -2542,7 +2564,7 @@ public final class CompletionEngine
 		} else {
 			if (!access.isInsideAnnotation) {
 				if (!this.requestor.isIgnored(CompletionProposal.KEYWORD)) {
-					findKeywords(this.completionToken, new char[][]{Keywords.NEW}, false, false);
+					findKeywords(this.completionToken, new char[][]{Keywords.NEW}, false, false, false);
 				}
 
 				ObjectVector fieldsFound = new ObjectVector();
@@ -3198,7 +3220,7 @@ public final class CompletionEngine
 			findTypesAndPackages(this.completionToken, scope, true, false, new ObjectVector());
 			if (!this.requestor.isIgnored(CompletionProposal.KEYWORD)) {
 				if (this.completionToken != null && this.completionToken.length != 0) {
-					findKeywords(this.completionToken, singleNameReference.possibleKeywords, false, false);
+					findKeywords(this.completionToken, singleNameReference.possibleKeywords, false, false, false);
 				} else {
 					findTrueOrFalseKeywords(singleNameReference.possibleKeywords);
 				}
@@ -4009,6 +4031,13 @@ public final class CompletionEngine
 	private int computeRelevanceForClass(){
 		if(this.assistNodeIsClass) {
 			return R_CLASS;
+		}
+		return 0;
+	}
+	
+	private int computeRelevanceForConstructor() {
+		if (this.assistNodeIsConstructor) {
+			return R_CONSTRUCTOR;
 		}
 		return 0;
 	}
@@ -5319,7 +5348,7 @@ public final class CompletionEngine
 							if(!isIgnored(CompletionProposal.CONSTRUCTOR_INVOCATION, CompletionProposal.TYPE_REF)) {
 								char[] packageName = currentType.isLocalType() ? null : currentType.qualifiedPackageName();
 								char[] typeName = currentType.qualifiedSourceName();
-								
+								int constructorRelevance = relevance + computeRelevanceForConstructor();
 								InternalCompletionProposal proposal =  createProposal(CompletionProposal.CONSTRUCTOR_INVOCATION, this.actualCompletionPosition);
 								proposal.setDeclarationSignature(getSignature(currentType));
 								proposal.setSignature(getSignature(constructor));
@@ -5346,7 +5375,7 @@ public final class CompletionEngine
 								typeProposal.setFlags(currentType.modifiers);
 								typeProposal.setReplaceRange(this.startPosition - this.offset, this.endPosition - this.offset);
 								typeProposal.setTokenRange(this.startPosition - this.offset, this.endPosition - this.offset);
-								typeProposal.setRelevance(relevance);
+								typeProposal.setRelevance(constructorRelevance);
 								proposal.setRequiredProposals( new CompletionProposal[]{typeProposal});
 								
 								proposal.setIsContructor(true);
@@ -5354,7 +5383,7 @@ public final class CompletionEngine
 								proposal.setFlags(constructor.modifiers);
 								proposal.setReplaceRange(this.endPosition - this.offset, this.endPosition - this.offset);
 								proposal.setTokenRange(this.tokenStart - this.offset, this.tokenEnd - this.offset);
-								proposal.setRelevance(relevance);
+								proposal.setRelevance(constructorRelevance);
 								if(parameterNames != null) proposal.setParameterNames(parameterNames);
 								this.requestor.accept(proposal);
 								if(DEBUG) {
@@ -8028,7 +8057,7 @@ public final class CompletionEngine
 
 	// what about onDemand types? Ignore them since it does not happen!
 	// import p1.p2.A.*;
-	private void findKeywords(char[] keyword, char[][] choices, boolean canCompleteEmptyToken, boolean staticFieldsAndMethodOnly) {
+	private void findKeywords(char[] keyword, char[][] choices, boolean canCompleteEmptyToken, boolean staticFieldsAndMethodOnly, boolean ignorePackageKeyword) {
 		if(choices == null || choices.length == 0) return;
 
 		int length = keyword.length;
@@ -8037,6 +8066,8 @@ public final class CompletionEngine
 				if (length <= choices[i].length
 					&& CharOperation.prefixEquals(keyword, choices[i], false /* ignore case */
 				)){
+					if (ignorePackageKeyword && CharOperation.equals(choices[i], Keywords.PACKAGE))
+						continue;
 					int relevance = computeBaseRelevance();
 					relevance += computeRelevanceForResolution();
 					relevance += computeRelevanceForInterestingProposal();
@@ -8053,8 +8084,8 @@ public final class CompletionEngine
 						InternalCompletionProposal proposal =  createProposal(CompletionProposal.KEYWORD, this.actualCompletionPosition);
 						proposal.setName(choices[i]);
 						proposal.setCompletion(choices[i]);
-						proposal.setReplaceRange(this.startPosition - this.offset, this.endPosition - this.offset);
-						proposal.setTokenRange(this.tokenStart - this.offset, this.tokenEnd - this.offset);
+						proposal.setReplaceRange((canCompleteEmptyToken && (this.startPosition < 0)) ? 0 : this.startPosition - this.offset, this.endPosition - this.offset);
+						proposal.setTokenRange((canCompleteEmptyToken && (this.tokenStart < 0)) ? 0 : this.tokenStart - this.offset, this.tokenEnd - this.offset);
 						proposal.setRelevance(relevance);
 						this.requestor.accept(proposal);
 						if(DEBUG) {
@@ -8154,7 +8185,7 @@ public final class CompletionEngine
 		}
 		System.arraycopy(keywords, 0, keywords = new char[count][], 0, count);
 
-		findKeywords(token, keywords, false, false);
+		findKeywords(token, keywords, false, false, false);
 	}
 	private void findLabels(char[] label, char[][] choices) {
 		if(choices == null || choices.length == 0) return;
@@ -9150,7 +9181,7 @@ public final class CompletionEngine
 				((scope instanceof MethodScope && !((MethodScope)scope).isStatic)
 				|| ((methodScope = scope.enclosingMethodScope()) != null && !methodScope.isStatic))) {
 			if (token.length > 0) {
-				findKeywords(token, new char[][]{Keywords.THIS}, false, true);
+				findKeywords(token, new char[][]{Keywords.THIS}, false, true, false);
 			} else {
 				int relevance = computeBaseRelevance();
 				relevance += computeRelevanceForResolution();
@@ -10469,9 +10500,9 @@ public final class CompletionEngine
 				if (this.assistNodeInJavadoc == 0 || (this.assistNodeInJavadoc & CompletionOnJavadoc.BASE_TYPES) != 0) {
 					if (proposeBaseTypes) {
 						if (proposeVoidType) {
-							findKeywords(token, BASE_TYPE_NAMES, false, false);
+							findKeywords(token, BASE_TYPE_NAMES, false, false, false);
 						} else {
-							findKeywords(token, BASE_TYPE_NAMES_WITHOUT_VOID, false, false);
+							findKeywords(token, BASE_TYPE_NAMES_WITHOUT_VOID, false, false, false);
 						}
 					}
 				}
@@ -12321,6 +12352,7 @@ public final class CompletionEngine
 		relevance += computeRelevanceForCaseMatching(this.completionToken, simpleTypeName);
 		relevance += computeRelevanceForExpectingType(packageName, simpleTypeName);
 		relevance += computeRelevanceForQualification(isQualified);
+		relevance += computeRelevanceForConstructor();
 
 		boolean isInterface = false;
 		int kind = typeModifiers & (ClassFileConstants.AccInterface | ClassFileConstants.AccEnum | ClassFileConstants.AccAnnotation);

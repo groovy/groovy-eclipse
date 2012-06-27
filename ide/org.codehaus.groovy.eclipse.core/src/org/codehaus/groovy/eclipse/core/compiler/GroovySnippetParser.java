@@ -71,6 +71,10 @@ public class GroovySnippetParser {
             return fileName;
         }
 
+        public boolean ignoreOptionalProblems() {
+            return false;
+        }
+
     }
 
     private CategorizedProblem[] problems;

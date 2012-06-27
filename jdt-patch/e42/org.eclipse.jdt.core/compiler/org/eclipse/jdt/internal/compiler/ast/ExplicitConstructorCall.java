@@ -11,6 +11,7 @@
  *								bug 319201 - [null] no warning when unboxing SingleNameReference causes NPE
  *								bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 361407 - Resource leak warning when resource is assigned to a field outside of constructor
+ *								bug 370639 - [compiler][resource] restore the default for resource leak warnings
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -75,13 +76,16 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 			}
 			// process arguments
 			if (this.arguments != null) {
+				boolean analyseResources = currentScope.compilerOptions().analyseResourceLeaks;
 				for (int i = 0, max = this.arguments.length; i < max; i++) {
 					flowInfo =
 						this.arguments[i]
 							.analyseCode(currentScope, flowContext, flowInfo)
 							.unconditionalInits();
-					// if argument is an AutoCloseable insert info that it *may* be closed (by the target constructor, i.e.)
-					flowInfo = FakedTrackingVariable.markPassedToOutside(currentScope, this.arguments[i], flowInfo, false);
+					if (analyseResources) {
+						// if argument is an AutoCloseable insert info that it *may* be closed (by the target constructor, i.e.)
+						flowInfo = FakedTrackingVariable.markPassedToOutside(currentScope, this.arguments[i], flowInfo, false);
+					}
 					if ((this.arguments[i].implicitConversion & TypeIds.UNBOXING) != 0) {
 						this.arguments[i].checkNPE(currentScope, flowContext, flowInfo);
 					}

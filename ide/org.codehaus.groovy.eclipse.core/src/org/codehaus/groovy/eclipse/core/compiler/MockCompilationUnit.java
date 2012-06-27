@@ -19,7 +19,7 @@ package org.codehaus.groovy.eclipse.core.compiler;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 
 class MockCompilationUnit implements ICompilationUnit {
-    
+
     private char[] contents;
     private char[] fileName;
 
@@ -27,7 +27,7 @@ class MockCompilationUnit implements ICompilationUnit {
         this.contents = contents;
         this.fileName = fileName;
     }
-    
+
     public char[] getContents() {
         return contents;
     }
@@ -43,5 +43,9 @@ class MockCompilationUnit implements ICompilationUnit {
     public char[] getFileName() {
         return fileName;
     }
-    
+
+    public boolean ignoreOptionalProblems() {
+        return false;
+    }
+
 }

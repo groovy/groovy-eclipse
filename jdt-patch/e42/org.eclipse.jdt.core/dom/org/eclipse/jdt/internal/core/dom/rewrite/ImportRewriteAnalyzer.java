@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -271,28 +271,39 @@ public final class ImportRewriteAnalyzer {
 			int nextLength= next.getLength();
 			int nextOffsetLine= root.getLineNumber(nextOffset);
 
-			int extendedStart = root.getExtendedStartPosition(next);
-			int extendedLength = root.getExtendedLength(next);
+			int extendedStart = root.getExtendedStartPosition(curr);
+			if (extendedStart < this.replaceRange.getOffset()) {
+				// don't touch the first comments before the start of import declarations
+				extendedStart = currOffset;
+			}
+			int extendedLength = root.getExtendedLength(curr);
 			// if next import is on a different line, modify the end position to the next line begin offset
+			int nextLineOffset = nextOffset; // offset at the start of next line. Next import may not start here
 			if (currEndLine < nextOffsetLine) {
 				currEndLine++;
-				nextOffset= root.getPosition(currEndLine, 0);
+				nextLineOffset = root.getPosition(currEndLine, 0); 
+				// There may be some leading comments (or line delimiters) before the next import. The start of those comments
+				// is not the real start offset of the next import. So don't change nextOffset
 			}
 			// retrieve preceding and trailing comments if any
 			IRegion rangeBefore = null;
 			IRegion rangeAfter = null;
-			if (nextOffset != extendedStart) {
-				rangeBefore = new Region(extendedStart, extendedStart - nextOffset + 1);
+			
+			if (currOffset > extendedStart) {
+				rangeBefore = new Region(extendedStart, currOffset - extendedStart);
 			}
-			if (nextLength != extendedLength) {
-				rangeAfter = new Region(nextOffset + nextLength, extendedLength - nextLength + 1);
+			int currLen = curr.getLength();
+			if (currLen < extendedLength - (currOffset - extendedStart)) {
+				int currEndOffset = currOffset + currLen;
+				int rangeBeforeLen = rangeBefore != null? rangeBefore.getLength() : 0;
+				rangeAfter = new Region(currEndOffset, extendedLength - rangeBeforeLen - currLen);
 			}
 			currPackage.add(
 					new ImportDeclEntry(
 							packName.length(), 
 							name, 
 							isStatic, 
-							new Region(currOffset, nextOffset - currOffset),
+							new Region(currOffset, nextLineOffset - currOffset), // should not include leading comments of next import, line delimiters, etc.
 							rangeBefore,
 							rangeAfter));
 			currOffset= nextOffset;
@@ -304,7 +315,7 @@ public final class ImportRewriteAnalyzer {
 
 				currPackage= new PackageEntry(); // create a comment package entry for this
 				this.packageEntries.add(currPackage);
-				currPackage.add(new ImportDeclEntry(packName.length(), null, false, new Region(currOffset, nextOffset - currOffset)));
+				currPackage.add(new ImportDeclEntry(packName.length(), null, false, new Region(nextLineOffset, nextOffset - nextLineOffset)));
 
 				currOffset= nextOffset;
 			}
@@ -318,8 +329,23 @@ public final class ImportRewriteAnalyzer {
 			currPackage= new PackageEntry(packName, null, isStatic);
 			this.packageEntries.add(currPackage);
 		}
-		int length= this.replaceRange.getOffset() + this.replaceRange.getLength() - curr.getStartPosition();
-		currPackage.add(new ImportDeclEntry(packName.length(), name, isStatic, new Region(curr.getStartPosition(), length)));
+		int currStartOffset = curr.getStartPosition();
+		int currLen = curr.getLength();
+		int extendedStartOffset = root.getExtendedStartPosition(curr);
+		IRegion leadingComments = null;
+		IRegion allTrailingComments = null;
+		
+		if (currStartOffset > extendedStartOffset) {
+			leadingComments = new Region(extendedStartOffset, currOffset - extendedStartOffset);
+		}
+		int length= this.replaceRange.getOffset() + this.replaceRange.getLength() - currStartOffset;
+		int extendedLength = root.getExtendedLength(curr);
+		if (currLen < extendedLength - (currOffset - extendedStartOffset)) {
+			int currEndOffset = currOffset + currLen;
+			int leadingCommentsLen = leadingComments != null? leadingComments.getLength() : 0;
+			allTrailingComments = new Region(currEndOffset, extendedLength - leadingCommentsLen - currLen);
+		}
+		currPackage.add(new ImportDeclEntry(packName.length(), name, isStatic, new Region(curr.getStartPosition(), length), leadingComments, allTrailingComments));
 	}
 
 	private IRegion[] retrieveExistingCommentsInImports(CompilationUnit root) {
@@ -766,6 +792,14 @@ public final class ImportRewriteAnalyzer {
 						}
 					} else if (!doStarImport || currDecl.isOnDemand() || onDemandConflicts == null || onDemandConflicts.contains(currDecl.getSimpleName())) {
 						int offset= region.getOffset();
+						IRegion rangeBefore = currDecl.getPrecedingCommentRange();
+						if (rangeBefore != null && currPos > rangeBefore.getOffset()) {
+							// moved ahead of the leading comments, bring the currPos back
+							currPos = rangeBefore.getOffset();
+						}
+						if (rangeBefore != null) {
+							stringsToInsert.add(buffer.getText(rangeBefore.getOffset(), rangeBefore.getLength()));
+						}
 						removeAndInsertNew(buffer, currPos, offset, stringsToInsert, resEdit);
 						stringsToInsert.clear();
 						currPos= offset + region.getLength();
@@ -773,6 +807,10 @@ public final class ImportRewriteAnalyzer {
 						String simpleName = currDecl.getTypeQualifiedName();
 						if (simpleName.indexOf('.') != -1) {
 							IRegion rangeBefore = currDecl.getPrecedingCommentRange();
+							if (rangeBefore != null && currPos > rangeBefore.getOffset()) {
+								// moved ahead of the leading comments, bring the currPos back
+								currPos = rangeBefore.getOffset();
+							}
 							if (rangeBefore != null) {
 								stringsToInsert.add(buffer.getText(rangeBefore.getOffset(), rangeBefore.getLength()));
 							}

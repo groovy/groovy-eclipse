@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2011 IBM Corporation and others.
+ * Copyright (c) 2004, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -117,8 +117,8 @@ public class ASTParser {
 	 * Creates a new object for creating a Java abstract syntax tree
      * (AST) following the specified set of API rules.
      *
- 	 * @param level the API level; one of the LEVEL constants
-     * declared on <code>AST</code>
+ 	 * @param level the API level; one of the <code>.JLS*</code> level constants
+     * declared on {@link AST}
 	 * @return new ASTParser instance
 	 */
 	public static ASTParser newParser(int level) {
@@ -213,13 +213,13 @@ public class ASTParser {
 	 * N.B. This constructor is package-private.
 	 * </p>
 	 *
-	 * @param level the API level; one of the LEVEL constants
-	 * declared on <code>AST</code>
+	 * @param level the API level; one of the <code>JLS*</code> level constants
+	 * declared on {@link AST}
 	 */
 	ASTParser(int level) {
 		switch(level) {
 			case AST.JLS2_INTERNAL:
-			case AST.JLS3:
+			case AST.JLS3_INTERNAL:
 			case AST.JLS4:
 				break;
 			default:

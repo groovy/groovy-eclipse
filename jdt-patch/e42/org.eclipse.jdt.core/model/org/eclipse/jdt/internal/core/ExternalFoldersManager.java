@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -34,6 +36,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -49,13 +52,20 @@ public class ExternalFoldersManager {
 	private Set pendingFolders; // subset of keys of 'folders', for which linked folders haven't been created yet.
 	private int counter = 0;
 	/* Singleton instance */
-	private static ExternalFoldersManager MANAGER = new ExternalFoldersManager();
+	private static ExternalFoldersManager MANAGER;
 
 	private ExternalFoldersManager() {
 		// Prevent instantiation
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=377806
+		if (Platform.isRunning()) {
+			getFolders();
+		}
 	}
 	
-	public static ExternalFoldersManager getExternalFoldersManager() {
+	public static synchronized ExternalFoldersManager getExternalFoldersManager() {
+		if (MANAGER == null) {
+			 MANAGER = new ExternalFoldersManager();
+		}
 		return MANAGER;
 	}
 	
@@ -121,20 +131,22 @@ public class ExternalFoldersManager {
 			result = externalFoldersProject.getFolder(LINKED_FOLDER_NAME + this.counter++);
 		} while (result.exists());
 		if (scheduleForCreation) {
-			if (this.pendingFolders == null)
-				this.pendingFolders = new HashSet();
+			synchronized(this) {
+				if (this.pendingFolders == null)
+					this.pendingFolders = Collections.synchronizedSet(new HashSet());
+			}
 			this.pendingFolders.add(externalFolderPath);
 		}
 		knownFolders.put(externalFolderPath, result);
 		return result;
 	}
-
+	
 	/** 
 	 * Try to remove the argument from the list of folders pending for creation.
 	 * @param externalPath to link to
 	 * @return true if the argument was found in the list of pending folders and could be removed from it.
 	 */
-	public boolean removePendingFolder(Object externalPath) {
+	public synchronized boolean removePendingFolder(Object externalPath) {
 		if (this.pendingFolders == null)
 			return false;
 		return this.pendingFolders.remove(externalPath);
@@ -149,15 +161,53 @@ public class ExternalFoldersManager {
 									IProject externalFoldersProject, IProgressMonitor monitor) throws CoreException {
 		
 		IFolder result = addFolder(externalFolderPath, externalFoldersProject, false);
-		if (!result.exists())
-			result.createLink(externalFolderPath, IResource.ALLOW_MISSING_LOCAL, monitor);
-		else if (refreshIfExistAlready)
-			result.refreshLocal(IResource.DEPTH_INFINITE,  monitor);
+		try {
+			if (!result.exists())
+				result.createLink(externalFolderPath, IResource.ALLOW_MISSING_LOCAL, monitor);
+			else if (refreshIfExistAlready)
+				result.refreshLocal(IResource.DEPTH_INFINITE,  monitor);
+		}
+		catch(IllegalArgumentException e) {
+			if (System.getProperty("jdt.bug.367669") != null) { //$NON-NLS-1$
+				System.out.println("============================================================================================================"); //$NON-NLS-1$
+				System.out.println("The following logs are created for troubleshooting bug: https://bugs.eclipse.org/bugs/show_bug.cgi?id=367669"); //$NON-NLS-1$
+				System.out.println("Exteral folder: " + externalFolderPath); //$NON-NLS-1$
+				System.out.println("Link folder: " + result.toString()); //$NON-NLS-1$
+				File externalFile = new File(externalFolderPath.toOSString());
+				System.out.println(externalFile.exists() ? "External folder exists" : "ERROR: External folder DOES NOT exist"); //$NON-NLS-1$ //$NON-NLS-2$
+				System.out.println(result.exists() ? "Link for folder exists" : "ERROR: Link for folder does not exist");  //$NON-NLS-1$//$NON-NLS-2$
+				IProject externalFolderProject = getExternalFoldersProject();
+				IFile externalProjectFile = externalFolderProject.getFile(IProjectDescription.DESCRIPTION_FILE_NAME);
+				if (externalProjectFile.exists()) {
+					System.out.println("External Folder Project exists with following content:"); //$NON-NLS-1$
+					BufferedInputStream bs = new BufferedInputStream(externalProjectFile.getContents());
+					int available = 0;
+					try {
+						while ((available = bs.available()) > 0) {
+							byte[] contents = new byte[available];
+							bs.read(contents);
+							System.out.println(new String(contents));
+						}
+						bs.close();
+					} catch (IOException e1) {
+						System.out.println("Error reading external folder project file: Here is the stack trace:"); //$NON-NLS-1$
+						e1.printStackTrace();
+					}
+				}
+				else {
+					System.out.println("ERROR: External folders project doesn't exist."); //$NON-NLS-1$
+				}
+				System.out.println("========================================== Debug information ends =========================================="); //$NON-NLS-1$
+			}
+			throw e;
+		}
 		return result;
 	}
 
 	public void createPendingFolders(IProgressMonitor monitor) throws JavaModelException{
-		if (this.pendingFolders == null || this.pendingFolders.isEmpty()) return;
+		synchronized (this) {
+			if (this.pendingFolders == null || this.pendingFolders.isEmpty()) return;
+		}
 		
 		IProject externalFoldersProject = null;
 		try {
@@ -166,16 +216,22 @@ public class ExternalFoldersManager {
 		catch(CoreException e) {
 			throw new JavaModelException(e);
 		}
-		Iterator iterator = this.pendingFolders.iterator();
-		while (iterator.hasNext()) {
-			Object folderPath = iterator.next();
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=368152
+		// To avoid race condition (from addFolder and removeFolder, load the map elements into an array and clear the map immediately.
+		// The createLinkFolder being in the synchronized block can cause a deadlock and hence keep it out of the synchronized block. 
+		Object[] arrayOfFolders = null;
+		synchronized (this.pendingFolders) {
+			arrayOfFolders = this.pendingFolders.toArray();
+			this.pendingFolders.clear();
+		}
+
+		for (int i=0; i < arrayOfFolders.length; i++) {
 			try {
-				createLinkFolder((IPath) folderPath, false, externalFoldersProject, monitor);
+				createLinkFolder((IPath) arrayOfFolders[i], false, externalFoldersProject, monitor);
 			} catch (CoreException e) {
-				Util.log(e, "Error while creating a link for external folder :" + folderPath); //$NON-NLS-1$
+				Util.log(e, "Error while creating a link for external folder :" + arrayOfFolders[i]); //$NON-NLS-1$
 			}
 		}
-		this.pendingFolders.clear();
 	}
 	
 	public void cleanUp(IProgressMonitor monitor) throws CoreException {

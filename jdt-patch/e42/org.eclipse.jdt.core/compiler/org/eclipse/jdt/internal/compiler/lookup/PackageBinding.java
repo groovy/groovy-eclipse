@@ -10,6 +10,7 @@
  *     Stephan Herrmann - Contributions for
  *								bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 365519 - editorial cleanup after bug 186342 and bug 365387
+ *								bug 365531 - [compiler][null] investigate alternative strategy for internally encoding nullness defaults
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -26,8 +27,9 @@ public class PackageBinding extends Binding implements TypeConstants {
 	HashtableOfType knownTypes;
 	HashtableOfPackage knownPackages;
 
-	// annotation type binding representing the default that has been defined for this package (using @NonNullByDefault)
-	protected TypeBinding nullnessDefaultAnnotation;
+	// code representing the default that has been defined for this package (using @NonNullByDefault)
+	// one of Binding.{NO_NULL_DEFAULT,NULL_UNSPECIFIED_BY_DEFAULT,NONNULL_BY_DEFAULT}
+	protected int defaultNullness = NO_NULL_DEFAULT;
 
 protected PackageBinding() {
 	// for creating problem package
@@ -284,12 +286,6 @@ void checkIfNullAnnotationType(ReferenceBinding type) {
 		if (!(type instanceof UnresolvedReferenceBinding)) // unresolved will need to check back for the resolved type
 			this.environment.nonnullByDefaultAnnotationPackage = null; // don't check again
 	}
-}
-
-public TypeBinding getNullnessDefaultAnnotation(Scope scope) {
-	if (this.nullnessDefaultAnnotation instanceof UnresolvedReferenceBinding)
-		return this.nullnessDefaultAnnotation = this.environment.getNullAnnotationResolved(this.nullnessDefaultAnnotation, scope);
-	return this.nullnessDefaultAnnotation;
 }
 
 public char[] readableName() /*java.lang*/ {

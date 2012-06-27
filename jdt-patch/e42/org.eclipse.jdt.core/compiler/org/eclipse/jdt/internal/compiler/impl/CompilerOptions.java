@@ -13,6 +13,9 @@
  *     							bug 295551 - Add option to automatically promote all warnings to errors
  *     							bug 349326 - [1.7] new warning for missing try-with-resources
  *								bug 186342 - [compiler][null] Using annotations for null checking
+ *								bug 370639 - [compiler][resource] restore the default for resource leak warnings
+ *								bug 366063 - Compiler should not add synthetic @NonNull annotations
+ *								bug 374605 - Unreasonable warning for enum-based switch statements
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.impl;
 // GROOVY PATCHED
@@ -28,7 +31,6 @@ import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
-import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
@@ -117,6 +119,8 @@ public class CompilerOptions {
 	public static final String OPTION_ReportMissingOverrideAnnotationForInterfaceMethodImplementation = "org.eclipse.jdt.core.compiler.problem.missingOverrideAnnotationForInterfaceMethodImplementation"; //$NON-NLS-1$
 	public static final String OPTION_ReportMissingDeprecatedAnnotation = "org.eclipse.jdt.core.compiler.problem.missingDeprecatedAnnotation"; //$NON-NLS-1$
 	public static final String OPTION_ReportIncompleteEnumSwitch = "org.eclipse.jdt.core.compiler.problem.incompleteEnumSwitch"; //$NON-NLS-1$
+	public static final String OPTION_ReportMissingEnumCaseDespiteDefault = "org.eclipse.jdt.core.compiler.problem.missingEnumCaseDespiteDefault"; //$NON-NLS-1$
+	public static final String OPTION_ReportMissingDefaultCase = "org.eclipse.jdt.core.compiler.problem.missingDefaultCase"; //$NON-NLS-1$
 	public static final String OPTION_ReportForbiddenReference =  "org.eclipse.jdt.core.compiler.problem.forbiddenReference"; //$NON-NLS-1$
 	public static final String OPTION_ReportDiscouragedReference =  "org.eclipse.jdt.core.compiler.problem.discouragedReference"; //$NON-NLS-1$
 	public static final String OPTION_SuppressWarnings =  "org.eclipse.jdt.core.compiler.problem.suppressWarnings"; //$NON-NLS-1$
@@ -139,7 +143,6 @@ public class CompilerOptions {
 	public static final String OPTION_ReportTasks = "org.eclipse.jdt.core.compiler.problem.tasks"; //$NON-NLS-1$
 	public static final String OPTION_ReportUnusedObjectAllocation = "org.eclipse.jdt.core.compiler.problem.unusedObjectAllocation";  //$NON-NLS-1$
 	public static final String OPTION_IncludeNullInfoFromAsserts = "org.eclipse.jdt.core.compiler.problem.includeNullInfoFromAsserts";  //$NON-NLS-1$
-	public static final String OPTION_IncludeFieldsInNullAnalysis = "org.eclipse.jdt.core.compiler.problem.includeFieldsInNullAnalysis";  //$NON-NLS-1$
 	public static final String OPTION_ReportMethodCanBeStatic = "org.eclipse.jdt.core.compiler.problem.reportMethodCanBeStatic";  //$NON-NLS-1$
 	public static final String OPTION_ReportMethodCanBePotentiallyStatic = "org.eclipse.jdt.core.compiler.problem.reportMethodCanBePotentiallyStatic";  //$NON-NLS-1$
 	public static final String OPTION_ReportRedundantSpecificationOfTypeArguments =  "org.eclipse.jdt.core.compiler.problem.redundantSpecificationOfTypeArguments"; //$NON-NLS-1$
@@ -147,8 +150,8 @@ public class CompilerOptions {
 	public static final String OPTION_ReportPotentiallyUnclosedCloseable = "org.eclipse.jdt.core.compiler.problem.potentiallyUnclosedCloseable"; //$NON-NLS-1$
 	public static final String OPTION_ReportExplicitlyClosedAutoCloseable = "org.eclipse.jdt.core.compiler.problem.explicitlyClosedAutoCloseable"; //$NON-NLS-1$
 	public static final String OPTION_ReportNullSpecViolation = "org.eclipse.jdt.core.compiler.problem.nullSpecViolation";  //$NON-NLS-1$
-	public static final String OPTION_ReportPotentialNullSpecViolation = "org.eclipse.jdt.core.compiler.problem.potentialNullSpecViolation";  //$NON-NLS-1$
-	public static final String OPTION_ReportNullSpecInsufficientInfo = "org.eclipse.jdt.core.compiler.problem.nullSpecInsufficientInfo";  //$NON-NLS-1$
+	public static final String OPTION_ReportNullAnnotationInferenceConflict = "org.eclipse.jdt.core.compiler.problem.nullAnnotationInferenceConflict";  //$NON-NLS-1$
+	public static final String OPTION_ReportNullUncheckedConversion = "org.eclipse.jdt.core.compiler.problem.nullUncheckedConversion";  //$NON-NLS-1$
 	public static final String OPTION_ReportRedundantNullAnnotation = "org.eclipse.jdt.core.compiler.problem.redundantNullAnnotation";  //$NON-NLS-1$
 	public static final String OPTION_AnnotationBasedNullAnalysis = "org.eclipse.jdt.core.compiler.annotation.nullanalysis"; //$NON-NLS-1$
 	public static final String OPTION_NullableAnnotationName = "org.eclipse.jdt.core.compiler.annotation.nullable"; //$NON-NLS-1$
@@ -158,7 +161,7 @@ public class CompilerOptions {
 	static final char[][] DEFAULT_NULLABLE_ANNOTATION_NAME = CharOperation.splitOn('.', "org.eclipse.jdt.annotation.Nullable".toCharArray()); //$NON-NLS-1$
 	static final char[][] DEFAULT_NONNULL_ANNOTATION_NAME = CharOperation.splitOn('.', "org.eclipse.jdt.annotation.NonNull".toCharArray()); //$NON-NLS-1$
 	static final char[][] DEFAULT_NONNULLBYDEFAULT_ANNOTATION_NAME = CharOperation.splitOn('.', "org.eclipse.jdt.annotation.NonNullByDefault".toCharArray()); //$NON-NLS-1$
-	public static final String OPTION_NonNullIsDefault = "org.eclipse.jdt.core.compiler.annotation.nonnullisdefault";  //$NON-NLS-1$
+	public static final String OPTION_ReportMissingNonNullByDefaultAnnotation = "org.eclipse.jdt.core.compiler.annotation.missingNonNullByDefaultAnnotation";  //$NON-NLS-1$
 	// GROOVY start
 	// This first one is the MASTER OPTION and if null, rather than ENABLED or DISABLED then the compiler will abort
 	// FIXASC (M3) aborting is just a short term action to enable us to ensure the right paths into the compiler configure it
@@ -247,7 +250,7 @@ public class CompilerOptions {
 	public static final int AnnotationSuperInterface = IrritantSet.GROUP1 | ASTNode.Bit10;
 	public static final int TypeHiding = IrritantSet.GROUP1 | ASTNode.Bit11;
 	public static final int MissingOverrideAnnotation = IrritantSet.GROUP1 | ASTNode.Bit12;
-	public static final int IncompleteEnumSwitch = IrritantSet.GROUP1 | ASTNode.Bit13;
+	public static final int MissingEnumConstantCase = IrritantSet.GROUP1 | ASTNode.Bit13;
 	public static final int MissingDeprecatedAnnotation = IrritantSet.GROUP1 | ASTNode.Bit14;
 	public static final int DiscouragedReference = IrritantSet.GROUP1 | ASTNode.Bit15;
 	public static final int UnhandledWarningToken = IrritantSet.GROUP1 | ASTNode.Bit16;
@@ -277,9 +280,11 @@ public class CompilerOptions {
 	public static final int PotentiallyUnclosedCloseable = IrritantSet.GROUP2 | ASTNode.Bit9;
 	public static final int ExplicitlyClosedAutoCloseable = IrritantSet.GROUP2 | ASTNode.Bit10;
 	public static final int NullSpecViolation = IrritantSet.GROUP2 | ASTNode.Bit11;
-	public static final int PotentialNullSpecViolation = IrritantSet.GROUP2 | ASTNode.Bit12;
-	public static final int NullSpecInsufficientInfo = IrritantSet.GROUP2 | ASTNode.Bit13;
+	public static final int NullAnnotationInferenceConflict = IrritantSet.GROUP2 | ASTNode.Bit12;
+	public static final int NullUncheckedConversion = IrritantSet.GROUP2 | ASTNode.Bit13;
 	public static final int RedundantNullAnnotation = IrritantSet.GROUP2 | ASTNode.Bit14;
+	public static final int MissingNonNullByDefaultAnnotation = IrritantSet.GROUP2 | ASTNode.Bit15;
+	public static final int MissingDefaultCase = IrritantSet.GROUP2 | ASTNode.Bit16;
 
 	// Severity level for handlers
 	/** 
@@ -399,10 +404,12 @@ public class CompilerOptions {
 	public boolean ignoreMethodBodies;
 	/** Raise null related warnings for variables tainted inside an assert statement (java 1.4 and above)*/
 	public boolean includeNullInfoFromAsserts;
-	/** Specify if fields are to be included in null analysis */
-	public boolean includeFieldsInNullAnalysis;
 	/** Controls whether forced generic type problems get reported  */
 	public boolean reportUnavoidableGenericTypeProblems;
+	/** Indicates that the 'ignore optional problems from source folder' option need to be ignored
+	 *  See https://bugs.eclipse.org/bugs/show_bug.cgi?id=372377
+	 */
+	public boolean ignoreSourceFolderWarningOption;
 
 	// GROOVY start
 	public int buildGroovyFiles = 0; // 0=dontknow 1=no 2=yes
@@ -424,8 +431,11 @@ public class CompilerOptions {
 	/** Fully qualified name of annotation to use as marker for default nonnull. */
 	public char[][] nonNullByDefaultAnnotationName;
 	/** TagBits-encoded default for non-annotated types. */
-	public long defaultNonNullness; // 0 or TagBits#AnnotationNonNull
-
+	public long intendedDefaultNonNullness; // 0 or TagBits#AnnotationNonNull
+	/** Should resources (objects of type Closeable) be analysed for matching calls to close()? */
+	public boolean analyseResourceLeaks;
+	/** Should missing enum cases be reported even if a default case exists in the same switch? */
+	public boolean reportMissingEnumCaseDespiteDefault;
 
 	// keep in sync with warningTokenToIrritant and warningTokenFromIrritant
 	public final static String[] warningTokens = {
@@ -576,8 +586,10 @@ public class CompilerOptions {
 				return OPTION_ReportTypeParameterHiding;
 			case MissingOverrideAnnotation :
 				return OPTION_ReportMissingOverrideAnnotation;
-			case IncompleteEnumSwitch :
+			case MissingEnumConstantCase :
 				return OPTION_ReportIncompleteEnumSwitch;
+			case MissingDefaultCase :
+				return OPTION_ReportMissingDefaultCase;
 			case MissingDeprecatedAnnotation :
 				return OPTION_ReportMissingDeprecatedAnnotation;
 			case DiscouragedReference :
@@ -616,6 +628,8 @@ public class CompilerOptions {
 				return OPTION_ReportMethodCanBeStatic;
 			case MethodCanBePotentiallyStatic :
 				return OPTION_ReportMethodCanBePotentiallyStatic;
+			case MissingNonNullByDefaultAnnotation :
+				return OPTION_ReportMissingNonNullByDefaultAnnotation;
 			case RedundantSpecificationOfTypeArguments :
 				return OPTION_ReportRedundantSpecificationOfTypeArguments;
 			case UnclosedCloseable :
@@ -626,10 +640,10 @@ public class CompilerOptions {
 				return OPTION_ReportExplicitlyClosedAutoCloseable;
 			case NullSpecViolation :
 				return OPTION_ReportNullSpecViolation;
-			case PotentialNullSpecViolation :
-				return OPTION_ReportPotentialNullSpecViolation;
-			case NullSpecInsufficientInfo :
-				return OPTION_ReportNullSpecInsufficientInfo;
+			case NullAnnotationInferenceConflict :
+				return OPTION_ReportNullAnnotationInferenceConflict;
+			case NullUncheckedConversion :
+				return OPTION_ReportNullUncheckedConversion;
 			case RedundantNullAnnotation :
 				return OPTION_ReportRedundantNullAnnotation;
 		}
@@ -729,7 +743,9 @@ public class CompilerOptions {
 			OPTION_ReportForbiddenReference,
 			OPTION_ReportHiddenCatchBlock,
 			OPTION_ReportIncompatibleNonInheritedInterfaceMethod,
+			OPTION_ReportMissingDefaultCase,
 			OPTION_ReportIncompleteEnumSwitch,
+			OPTION_ReportMissingEnumCaseDespiteDefault,
 			OPTION_ReportIndirectStaticAccess,
 			OPTION_ReportInvalidJavadoc,
 			OPTION_ReportInvalidJavadocTags,
@@ -802,10 +818,10 @@ public class CompilerOptions {
 			OPTION_NonNullAnnotationName,
 			OPTION_NullableAnnotationName,
 			OPTION_NonNullByDefaultAnnotationName,
-			OPTION_NonNullIsDefault,
+			OPTION_ReportMissingNonNullByDefaultAnnotation,
 			OPTION_ReportNullSpecViolation,
-			OPTION_ReportPotentialNullSpecViolation,
-			OPTION_ReportNullSpecInsufficientInfo,
+			OPTION_ReportNullAnnotationInferenceConflict,
+			OPTION_ReportNullUncheckedConversion,
 			OPTION_ReportRedundantNullAnnotation
 		};
 		return result;
@@ -845,7 +861,8 @@ public class CompilerOptions {
 				return "boxing"; //$NON-NLS-1$
 			case TypeHiding :
 				return "hiding"; //$NON-NLS-1$
-			case IncompleteEnumSwitch :
+			case MissingEnumConstantCase :
+			case MissingDefaultCase :
 				return "incomplete-switch"; //$NON-NLS-1$
 			case MissingDeprecatedAnnotation :
 				return "dep-ann"; //$NON-NLS-1$
@@ -870,9 +887,10 @@ public class CompilerOptions {
 			case PotentialNullReference :
 			case RedundantNullCheck :
 			case NullSpecViolation :
-			case PotentialNullSpecViolation :
-			case NullSpecInsufficientInfo :
+			case NullAnnotationInferenceConflict :
+			case NullUncheckedConversion :
 			case RedundantNullAnnotation :
+			case MissingNonNullByDefaultAnnotation:
 				return "null"; //$NON-NLS-1$
 			case FallthroughCase :
 				return "fallthrough"; //$NON-NLS-1$
@@ -1013,7 +1031,9 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportUnnecessaryElse, getSeverityString(UnnecessaryElse));
 		optionsMap.put(OPTION_ReportAutoboxing, getSeverityString(AutoBoxing));
 		optionsMap.put(OPTION_ReportAnnotationSuperInterface, getSeverityString(AnnotationSuperInterface));
-		optionsMap.put(OPTION_ReportIncompleteEnumSwitch, getSeverityString(IncompleteEnumSwitch));
+		optionsMap.put(OPTION_ReportIncompleteEnumSwitch, getSeverityString(MissingEnumConstantCase));
+		optionsMap.put(OPTION_ReportMissingEnumCaseDespiteDefault, this.reportMissingEnumCaseDespiteDefault ? ENABLED : DISABLED);
+		optionsMap.put(OPTION_ReportMissingDefaultCase, getSeverityString(MissingDefaultCase));
 		optionsMap.put(OPTION_ReportInvalidJavadoc, getSeverityString(InvalidJavadoc));
 		optionsMap.put(OPTION_ReportInvalidJavadocTagsVisibility, getVisibilityString(this.reportInvalidJavadocTagsVisibility));
 		optionsMap.put(OPTION_ReportInvalidJavadocTags, this.reportInvalidJavadocTags ? ENABLED : DISABLED);
@@ -1044,7 +1064,6 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportMissingOverrideAnnotation, getSeverityString(MissingOverrideAnnotation));
 		optionsMap.put(OPTION_ReportMissingOverrideAnnotationForInterfaceMethodImplementation, this.reportMissingOverrideAnnotationForInterfaceMethodImplementation ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportMissingDeprecatedAnnotation, getSeverityString(MissingDeprecatedAnnotation));
-		optionsMap.put(OPTION_ReportIncompleteEnumSwitch, getSeverityString(IncompleteEnumSwitch));
 		optionsMap.put(OPTION_ReportUnusedLabel, getSeverityString(UnusedLabel));
 		optionsMap.put(OPTION_ReportUnusedTypeArgumentsForMethodInvocation, getSeverityString(UnusedTypeArguments));
 		optionsMap.put(OPTION_Compliance, versionFromJdkLevel(this.complianceLevel));
@@ -1084,7 +1103,6 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportTasks, getSeverityString(Tasks));
 		optionsMap.put(OPTION_ReportUnusedObjectAllocation, getSeverityString(UnusedObjectAllocation));
 		optionsMap.put(OPTION_IncludeNullInfoFromAsserts, this.includeNullInfoFromAsserts ? ENABLED : DISABLED);
-		optionsMap.put(OPTION_IncludeFieldsInNullAnalysis, this.includeFieldsInNullAnalysis ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportMethodCanBeStatic, getSeverityString(MethodCanBeStatic));
 		optionsMap.put(OPTION_ReportMethodCanBePotentiallyStatic, getSeverityString(MethodCanBePotentiallyStatic));
 		optionsMap.put(OPTION_ReportRedundantSpecificationOfTypeArguments, getSeverityString(RedundantSpecificationOfTypeArguments));
@@ -1093,16 +1111,13 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportExplicitlyClosedAutoCloseable, getSeverityString(ExplicitlyClosedAutoCloseable));
 		optionsMap.put(OPTION_AnnotationBasedNullAnalysis, this.isAnnotationBasedNullAnalysisEnabled ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportNullSpecViolation, getSeverityString(NullSpecViolation));
-		optionsMap.put(OPTION_ReportPotentialNullSpecViolation, getSeverityString(PotentialNullSpecViolation));
-		optionsMap.put(OPTION_ReportNullSpecInsufficientInfo, getSeverityString(NullSpecInsufficientInfo));
+		optionsMap.put(OPTION_ReportNullAnnotationInferenceConflict, getSeverityString(NullAnnotationInferenceConflict));
+		optionsMap.put(OPTION_ReportNullUncheckedConversion, getSeverityString(NullUncheckedConversion));
 		optionsMap.put(OPTION_ReportRedundantNullAnnotation, getSeverityString(RedundantNullAnnotation));
 		optionsMap.put(OPTION_NullableAnnotationName, String.valueOf(CharOperation.concatWith(this.nullableAnnotationName, '.')));
 		optionsMap.put(OPTION_NonNullAnnotationName, String.valueOf(CharOperation.concatWith(this.nonNullAnnotationName, '.')));
 		optionsMap.put(OPTION_NonNullByDefaultAnnotationName, String.valueOf(CharOperation.concatWith(this.nonNullByDefaultAnnotationName, '.')));
-		if (this.defaultNonNullness == TagBits.AnnotationNonNull)
-			optionsMap.put(OPTION_NonNullIsDefault, CompilerOptions.ENABLED);
-		else
-			optionsMap.put(OPTION_NonNullIsDefault, CompilerOptions.DISABLED);
+		optionsMap.put(OPTION_ReportMissingNonNullByDefaultAnnotation, getSeverityString(MissingNonNullByDefaultAnnotation));
 		// GRECLIPSE start
 		// if not supplied here it isn't seen as something that can be set from elsewhere
 		optionsMap.put(OPTIONG_GroovyTransformsToRunOnReconcile,"");
@@ -1255,17 +1270,20 @@ public class CompilerOptions {
 		// ignore method bodies
 		this.ignoreMethodBodies = false;
 		
+		this.ignoreSourceFolderWarningOption = false;
+		
 		// allow null info from asserts to be considered downstream by default
 		this.includeNullInfoFromAsserts = false;
-		
-		// null analysis for fields
-		this.includeFieldsInNullAnalysis = false;
 		
 		this.isAnnotationBasedNullAnalysisEnabled = false;
 		this.nullableAnnotationName = DEFAULT_NULLABLE_ANNOTATION_NAME;
 		this.nonNullAnnotationName = DEFAULT_NONNULL_ANNOTATION_NAME;
 		this.nonNullByDefaultAnnotationName = DEFAULT_NONNULLBYDEFAULT_ANNOTATION_NAME;
-		this.defaultNonNullness = 0;
+		this.intendedDefaultNonNullness = 0;
+		
+		this.analyseResourceLeaks = true;
+
+		this.reportMissingEnumCaseDespiteDefault = false;
 	}
 
 	public void set(Map optionsMap) {
@@ -1486,13 +1504,6 @@ public class CompilerOptions {
 				this.includeNullInfoFromAsserts = false;
 			}
 		}
-		if ((optionValue = optionsMap.get(OPTION_IncludeFieldsInNullAnalysis)) != null) {
-			if (ENABLED.equals(optionValue)) {
-				this.includeFieldsInNullAnalysis = true;
-			} else if (DISABLED.equals(optionValue)) {
-				this.includeFieldsInNullAnalysis = false;
-			}
-		}
 		if ((optionValue = optionsMap.get(OPTION_ReportMethodWithConstructorName)) != null) updateSeverity(MethodWithConstructorName, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportOverridingPackageDefaultMethod)) != null) updateSeverity(OverriddenPackageDefaultMethod, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportDeprecation)) != null) updateSeverity(UsingDeprecatedAPI, optionValue);
@@ -1535,7 +1546,15 @@ public class CompilerOptions {
 		if ((optionValue = optionsMap.get(OPTION_ReportAnnotationSuperInterface)) != null) updateSeverity(AnnotationSuperInterface, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportMissingOverrideAnnotation)) != null) updateSeverity(MissingOverrideAnnotation, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportMissingDeprecatedAnnotation)) != null) updateSeverity(MissingDeprecatedAnnotation, optionValue);
-		if ((optionValue = optionsMap.get(OPTION_ReportIncompleteEnumSwitch)) != null) updateSeverity(IncompleteEnumSwitch, optionValue);
+		if ((optionValue = optionsMap.get(OPTION_ReportIncompleteEnumSwitch)) != null) updateSeverity(MissingEnumConstantCase, optionValue);
+		if ((optionValue = optionsMap.get(OPTION_ReportMissingEnumCaseDespiteDefault)) != null) {
+			if (ENABLED.equals(optionValue)) {
+				this.reportMissingEnumCaseDespiteDefault = true;
+			} else if (DISABLED.equals(optionValue)) {
+				this.reportMissingEnumCaseDespiteDefault = false;
+			}
+		}
+		if ((optionValue = optionsMap.get(OPTION_ReportMissingDefaultCase)) != null) updateSeverity(MissingDefaultCase, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportUnhandledWarningToken)) != null) updateSeverity(UnhandledWarningToken, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportUnusedWarningToken)) != null) updateSeverity(UnusedWarningToken, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportUnusedLabel)) != null) updateSeverity(UnusedLabel, optionValue);
@@ -1556,6 +1575,13 @@ public class CompilerOptions {
 		if ((optionValue = optionsMap.get(OPTION_ReportUnclosedCloseable)) != null) updateSeverity(UnclosedCloseable, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportPotentiallyUnclosedCloseable)) != null) updateSeverity(PotentiallyUnclosedCloseable, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportExplicitlyClosedAutoCloseable)) != null) updateSeverity(ExplicitlyClosedAutoCloseable, optionValue);
+		if (getSeverity(UnclosedCloseable) == ProblemSeverities.Ignore
+				&& getSeverity(PotentiallyUnclosedCloseable) == ProblemSeverities.Ignore
+				&& getSeverity(ExplicitlyClosedAutoCloseable) == ProblemSeverities.Ignore) {
+			this.analyseResourceLeaks = false;
+		} else {
+			this.analyseResourceLeaks = true;
+		}
 		if ((optionValue = optionsMap.get(OPTION_AnnotationBasedNullAnalysis)) != null) {
 			this.isAnnotationBasedNullAnalysisEnabled = ENABLED.equals(optionValue);
 		}
@@ -1570,8 +1596,8 @@ public class CompilerOptions {
 				}
 				// "ignore" is not valid for this option
 			}
-			if ((optionValue = optionsMap.get(OPTION_ReportPotentialNullSpecViolation)) != null) updateSeverity(PotentialNullSpecViolation, optionValue);
-			if ((optionValue = optionsMap.get(OPTION_ReportNullSpecInsufficientInfo)) != null) updateSeverity(NullSpecInsufficientInfo, optionValue);
+			if ((optionValue = optionsMap.get(OPTION_ReportNullAnnotationInferenceConflict)) != null) updateSeverity(NullAnnotationInferenceConflict, optionValue);
+			if ((optionValue = optionsMap.get(OPTION_ReportNullUncheckedConversion)) != null) updateSeverity(NullUncheckedConversion, optionValue);
 			if ((optionValue = optionsMap.get(OPTION_ReportRedundantNullAnnotation)) != null) updateSeverity(RedundantNullAnnotation, optionValue);
 			if ((optionValue = optionsMap.get(OPTION_NullableAnnotationName)) != null) {
 				this.nullableAnnotationName = CharOperation.splitAndTrimOn('.', ((String)optionValue).toCharArray());
@@ -1582,12 +1608,7 @@ public class CompilerOptions {
 			if ((optionValue = optionsMap.get(OPTION_NonNullByDefaultAnnotationName)) != null) {
 				this.nonNullByDefaultAnnotationName = CharOperation.splitAndTrimOn('.', ((String)optionValue).toCharArray());
 			}
-			if ((optionValue = optionsMap.get(OPTION_NonNullIsDefault)) != null) {
-				if (CompilerOptions.ENABLED.equals(optionValue))
-					this.defaultNonNullness = TagBits.AnnotationNonNull;
-				else if (CompilerOptions.DISABLED.equals(optionValue))
-					this.defaultNonNullness = 0;
-			}
+			if ((optionValue = optionsMap.get(OPTION_ReportMissingNonNullByDefaultAnnotation)) != null) updateSeverity(MissingNonNullByDefaultAnnotation, optionValue);
 		}
 
 		// Javadoc options
@@ -1836,9 +1857,8 @@ public class CompilerOptions {
 		buf.append("\n\t- missing @Override annotation: ").append(getSeverityString(MissingOverrideAnnotation)); //$NON-NLS-1$
 		buf.append("\n\t- missing @Override annotation for interface method implementation: ").append(this.reportMissingOverrideAnnotationForInterfaceMethodImplementation ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- missing @Deprecated annotation: ").append(getSeverityString(MissingDeprecatedAnnotation)); //$NON-NLS-1$
-		buf.append("\n\t- incomplete enum switch: ").append(getSeverityString(IncompleteEnumSwitch)); //$NON-NLS-1$
+		buf.append("\n\t- incomplete enum switch: ").append(getSeverityString(MissingEnumConstantCase)); //$NON-NLS-1$
 		buf.append("\n\t- raise null related warnings for variables tainted in assert statements: ").append(this.includeNullInfoFromAsserts ? ENABLED : DISABLED); //$NON-NLS-1$
-		buf.append("\n\t- include fields in null analysis: ").append(this.includeFieldsInNullAnalysis ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- suppress warnings: ").append(this.suppressWarnings ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- suppress optional errors: ").append(this.suppressOptionalErrors ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- unhandled warning token: ").append(getSeverityString(UnhandledWarningToken)); //$NON-NLS-1$

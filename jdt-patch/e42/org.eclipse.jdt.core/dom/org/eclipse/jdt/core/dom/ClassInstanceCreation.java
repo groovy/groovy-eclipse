@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -211,7 +211,7 @@ public class ClassInstanceCreation extends Expression {
 	 */
 	ClassInstanceCreation (AST ast) {
 		super(ast);
-		if (ast.apiLevel >= AST.JLS3) {
+		if (ast.apiLevel >= AST.JLS3_INTERNAL) {
 			this.typeArguments = new ASTNode.NodeList(TYPE_ARGUMENTS_PROPERTY);
 		}
 	}
@@ -297,7 +297,7 @@ public class ClassInstanceCreation extends Expression {
 		if (this.ast.apiLevel == AST.JLS2_INTERNAL) {
 			result.setName((Name) getName().clone(target));
 		}
-		if (this.ast.apiLevel >= AST.JLS3) {
+		if (this.ast.apiLevel >= AST.JLS3_INTERNAL) {
 			result.typeArguments().addAll(ASTNode.copySubtrees(target, typeArguments()));
 			result.setType((Type) getType().clone(target));
 		}
@@ -327,7 +327,7 @@ public class ClassInstanceCreation extends Expression {
 			if (this.ast.apiLevel == AST.JLS2_INTERNAL) {
 				acceptChild(visitor, getName());
 			}
-			if (this.ast.apiLevel >= AST.JLS3) {
+			if (this.ast.apiLevel >= AST.JLS3_INTERNAL) {
 				acceptChildren(visitor, this.typeArguments);
 				acceptChild(visitor, getType());
 			}

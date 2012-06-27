@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -269,7 +269,7 @@ public class TypeDeclaration extends AbstractTypeDeclaration {
 		if (ast.apiLevel == AST.JLS2_INTERNAL) {
 			this.superInterfaceNames = new ASTNode.NodeList(SUPER_INTERFACES_PROPERTY);
 		}
-		if (ast.apiLevel >= AST.JLS3) {
+		if (ast.apiLevel >= AST.JLS3_INTERNAL) {
 			this.typeParameters = new ASTNode.NodeList(TYPE_PARAMETERS_PROPERTY);
 			this.superInterfaceTypes = new ASTNode.NodeList(SUPER_INTERFACE_TYPES_PROPERTY);
 		}
@@ -438,7 +438,7 @@ public class TypeDeclaration extends AbstractTypeDeclaration {
 		}
 		result.setInterface(isInterface());
 		result.setName((SimpleName) getName().clone(target));
-		if (this.ast.apiLevel >= AST.JLS3) {
+		if (this.ast.apiLevel >= AST.JLS3_INTERNAL) {
 			result.modifiers().addAll(ASTNode.copySubtrees(target, modifiers()));
 			result.typeParameters().addAll(
 					ASTNode.copySubtrees(target, typeParameters()));
@@ -474,7 +474,7 @@ public class TypeDeclaration extends AbstractTypeDeclaration {
 				acceptChildren(visitor, this.superInterfaceNames);
 				acceptChildren(visitor, this.bodyDeclarations);
 			}
-			if (this.ast.apiLevel >= AST.JLS3) {
+			if (this.ast.apiLevel >= AST.JLS3_INTERNAL) {
 				acceptChild(visitor, getJavadoc());
 				acceptChildren(visitor, this.modifiers);
 				acceptChild(visitor, getName());

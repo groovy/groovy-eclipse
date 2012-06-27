@@ -12,6 +12,7 @@
  *								bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 365519 - editorial cleanup after bug 186342 and bug 365387
  *								bug 358903 - Filter practically unimportant resource leak warnings
+ *								bug 365531 - [compiler][null] investigate alternative strategy for internally encoding nullness defaults
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 // GROOVY PATCHED
@@ -50,14 +51,6 @@ abstract public class ReferenceBinding extends TypeBinding {
 	int typeBits; // additional bits characterizing this type
 
 	public static final ReferenceBinding LUB_GENERIC = new ReferenceBinding() { /* used for lub computation */
-		public boolean hasTypeBit(int bit) { return false; }
-	};
-
-	/**
-	 * This faked annotation type binding marks types with unspecified nullness.
-	 * For use in {@link PackageBinding#nullnessDefaultAnnotation} and SourceTypeBinding#nullnessDefaultAnnotation
-	 */
-	final static ReferenceBinding NULL_UNSPECIFIED = new ReferenceBinding() { /* faked type binding */
 		public boolean hasTypeBit(int bit) { return false; }
 	};
 
@@ -688,6 +681,9 @@ public void computeId() {
 			}
 			break;
 		case 5 :
+			packageName = this.compoundName[0];
+			switch (packageName[0]) {
+				case 'j' :
 			if (!CharOperation.equals(TypeConstants.JAVA, this.compoundName[0]))
 				return;
 			packageName = this.compoundName[1];
@@ -715,6 +711,38 @@ public void computeId() {
 				}
 				return;
 	}
+					return;
+				case 'o':
+					if (!CharOperation.equals(TypeConstants.ORG, this.compoundName[0]))
+						return;
+					packageName = this.compoundName[1];
+					if (packageName.length == 0) return; // just to be safe
+
+					if (CharOperation.equals(TypeConstants.ECLIPSE, packageName)) {
+						packageName = this.compoundName[2];
+						if (packageName.length == 0) return; // just to be safe
+						switch (packageName[0]) {
+							case 'c' :
+								if (CharOperation.equals(packageName, TypeConstants.CORE)) { 
+									typeName = this.compoundName[3];
+									if (typeName.length == 0) return; // just to be safe
+									switch (typeName[0]) {
+										case 'r' :
+											char[] memberTypeName = this.compoundName[4];
+											if (memberTypeName.length == 0) return; // just to be safe
+											if (CharOperation.equals(typeName, TypeConstants.ORG_ECLIPSE_CORE_RUNTIME_ASSERT[3])
+													&& CharOperation.equals(memberTypeName, TypeConstants.ORG_ECLIPSE_CORE_RUNTIME_ASSERT[4]))
+												this.id = TypeIds.T_OrgEclipseCoreRuntimeAssert;
+											return;
+									}
+								}
+								return;
+						}
+						return;
+					}
+					return;
+			}
+			break;
 }
 }
 

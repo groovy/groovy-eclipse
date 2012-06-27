@@ -12,6 +12,7 @@
  *     							bug 349326 - [1.7] new warning for missing try-with-resources
  *								bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 361407 - Resource leak warning when resource is assigned to a field outside of constructor
+ *								bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -177,7 +178,7 @@ public void analyseCode(ClassScope classScope, InitializationFlowContext initial
 		constructorContext.complainIfUnusedExceptionHandlers(this);
 		// check unused parameters
 		this.scope.checkUnusedParameters(this.binding);
-		this.scope.checkUnclosedCloseables(flowInfo, null/*don't report against a specific location*/, null);
+		this.scope.checkUnclosedCloseables(flowInfo, null, null/*don't report against a specific location*/, null);
 	} catch (AbortMethod e) {
 		this.ignoreFurtherInvestigation = true;
 	}

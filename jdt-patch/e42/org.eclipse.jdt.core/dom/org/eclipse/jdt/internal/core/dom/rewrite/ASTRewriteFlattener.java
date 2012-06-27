@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,6 +23,13 @@ public class ASTRewriteFlattener extends ASTVisitor {
 	 * @deprecated
 	 */
 	/*package*/ static final int JLS2_INTERNAL = AST.JLS2;
+	
+	/**
+	 * Internal synonynm for deprecated constant AST.JSL3
+	 * to alleviate deprecation warnings.
+	 * @deprecated
+	 */
+	/*package*/ static final int JLS3_INTERNAL = AST.JLS3;
 
 	public static String asString(ASTNode node, RewriteEventStore store) {
 		ASTRewriteFlattener flattener= new ASTRewriteFlattener(store);
@@ -368,7 +375,7 @@ public class ASTRewriteFlattener extends ASTVisitor {
 	 * @see ASTVisitor#visit(ConstructorInvocation)
 	 */
 	public boolean visit(ConstructorInvocation node) {
-		if (node.getAST().apiLevel() >= AST.JLS3) {
+		if (node.getAST().apiLevel() >= JLS3_INTERNAL) {
 			visitList(node, ConstructorInvocation.TYPE_ARGUMENTS_PROPERTY, String.valueOf(','), String.valueOf('<'), String.valueOf('>'));
 		}
 		this.result.append("this("); //$NON-NLS-1$
@@ -489,7 +496,7 @@ public class ASTRewriteFlattener extends ASTVisitor {
 	 */
 	public boolean visit(ImportDeclaration node) {
 		this.result.append("import "); //$NON-NLS-1$
-		if (node.getAST().apiLevel() >= AST.JLS3) {
+		if (node.getAST().apiLevel() >= JLS3_INTERNAL) {
 			if (getBooleanAttribute(node, ImportDeclaration.STATIC_PROPERTY)) {
 				this.result.append("static ");//$NON-NLS-1$
 			}
@@ -631,7 +638,7 @@ public class ASTRewriteFlattener extends ASTVisitor {
 			expression.accept(this);
 			this.result.append('.');
 		}
-		if (node.getAST().apiLevel() >= AST.JLS3) {
+		if (node.getAST().apiLevel() >= JLS3_INTERNAL) {
 			visitList(node, MethodInvocation.TYPE_ARGUMENTS_PROPERTY, String.valueOf(','), String.valueOf('<'), String.valueOf('>'));
 		}
 
@@ -662,7 +669,7 @@ public class ASTRewriteFlattener extends ASTVisitor {
 	 * @see ASTVisitor#visit(PackageDeclaration)
 	 */
 	public boolean visit(PackageDeclaration node) {
-		if (node.getAST().apiLevel() >= AST.JLS3) {
+		if (node.getAST().apiLevel() >= JLS3_INTERNAL) {
 			ASTNode javadoc = getChildNode(node, PackageDeclaration.JAVADOC_PROPERTY);
 			if (javadoc != null) {
 				javadoc.accept(this);
@@ -760,7 +767,7 @@ public class ASTRewriteFlattener extends ASTVisitor {
 			visitList(node, SingleVariableDeclaration.MODIFIERS2_PROPERTY, String.valueOf(' '), Util.EMPTY_STRING, String.valueOf(' '));
 		}
 		getChildNode(node, SingleVariableDeclaration.TYPE_PROPERTY).accept(this);
-		if (node.getAST().apiLevel() >= AST.JLS3) {
+		if (node.getAST().apiLevel() >= JLS3_INTERNAL) {
 			if (getBooleanAttribute(node, SingleVariableDeclaration.VARARGS_PROPERTY)) {
 				this.result.append("...");//$NON-NLS-1$
 			}
@@ -796,7 +803,7 @@ public class ASTRewriteFlattener extends ASTVisitor {
 			expression.accept(this);
 			this.result.append('.');
 		}
-		if (node.getAST().apiLevel() >= AST.JLS3) {
+		if (node.getAST().apiLevel() >= JLS3_INTERNAL) {
 			visitList(node, SuperConstructorInvocation.TYPE_ARGUMENTS_PROPERTY, String.valueOf(','), String.valueOf('<'), String.valueOf('>'));
 		}
 		this.result.append("super("); //$NON-NLS-1$
@@ -829,7 +836,7 @@ public class ASTRewriteFlattener extends ASTVisitor {
 			this.result.append('.');
 		}
 		this.result.append("super."); //$NON-NLS-1$
-		if (node.getAST().apiLevel() >= AST.JLS3) {
+		if (node.getAST().apiLevel() >= JLS3_INTERNAL) {
 			visitList(node, SuperMethodInvocation.TYPE_ARGUMENTS_PROPERTY, String.valueOf(','), String.valueOf('<'), String.valueOf('>'));
 		}
 		getChildNode(node, SuperMethodInvocation.NAME_PROPERTY).accept(this);
@@ -940,7 +947,7 @@ public class ASTRewriteFlattener extends ASTVisitor {
 		boolean isInterface= getBooleanAttribute(node, TypeDeclaration.INTERFACE_PROPERTY);
 		this.result.append(isInterface ? "interface " : "class "); //$NON-NLS-1$ //$NON-NLS-2$
 		getChildNode(node, TypeDeclaration.NAME_PROPERTY).accept(this);
-		if (apiLevel >= AST.JLS3) {
+		if (apiLevel >= JLS3_INTERNAL) {
 			visitList(node, TypeDeclaration.TYPE_PARAMETERS_PROPERTY, String.valueOf(','), String.valueOf('<'), String.valueOf('>'));
 		}
 
@@ -1096,7 +1103,7 @@ public class ASTRewriteFlattener extends ASTVisitor {
 	 */
 	public boolean visit(MethodRefParameter node) {
 		getChildNode(node, MethodRefParameter.TYPE_PROPERTY).accept(this);
-		if (node.getAST().apiLevel() >= AST.JLS3) {
+		if (node.getAST().apiLevel() >= JLS3_INTERNAL) {
 			if (getBooleanAttribute(node, MethodRefParameter.VARARGS_PROPERTY)) {
 				this.result.append("..."); //$NON-NLS-1$
 			}

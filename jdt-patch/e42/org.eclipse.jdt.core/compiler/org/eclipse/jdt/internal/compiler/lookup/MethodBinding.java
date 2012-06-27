@@ -12,6 +12,7 @@
  *								bug 367203 - [compiler][null] detect assigning null to nonnull argument
  *								bug 365519 - editorial cleanup after bug 186342 and bug 365387
  *								bug 365662 - [compiler][null] warn on contradictory and redundant null annotations
+ *								bug 365531 - [compiler][null] investigate alternative strategy for internally encoding nullness defaults
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -448,10 +449,9 @@ public final char[] constantPoolName() {
 }
 
 /**
- * After method verifier has finished, fill in missing nullness values from the applicable default.
- * @param annotationBinding the null annotation specified to be the default at the current code location.
+ * After method verifier has finished, fill in missing @NonNull specification from the applicable default.
  */
-protected void fillInDefaultNonNullness(TypeBinding annotationBinding) {
+protected void fillInDefaultNonNullness() {
 	if (this.parameterNonNullness == null)
 		this.parameterNonNullness = new Boolean[this.parameters.length];
 	AbstractMethodDeclaration sourceMethod = sourceMethod();
@@ -464,9 +464,7 @@ protected void fillInDefaultNonNullness(TypeBinding annotationBinding) {
 			added = true;
 			this.parameterNonNullness[i] = Boolean.TRUE;
 			if (sourceMethod != null) {
-				Argument argument = sourceMethod.arguments[i];
-				sourceMethod.addParameterNonNullAnnotation(argument, (ReferenceBinding)annotationBinding);
-				argument.binding.tagBits |= TagBits.AnnotationNonNull;
+				sourceMethod.arguments[i].binding.tagBits |= TagBits.AnnotationNonNull;
 			}
 		} else if (this.parameterNonNullness[i].booleanValue()) {
 			sourceMethod.scope.problemReporter().nullAnnotationIsRedundant(sourceMethod, i);
@@ -479,8 +477,6 @@ protected void fillInDefaultNonNullness(TypeBinding annotationBinding) {
 		&& (this.tagBits & (TagBits.AnnotationNonNull|TagBits.AnnotationNullable)) == 0)
 	{
 		this.tagBits |= TagBits.AnnotationNonNull;
-		if (sourceMethod != null)
-			sourceMethod.addNonNullAnnotation((ReferenceBinding)annotationBinding);
 	} else if ((this.tagBits & TagBits.AnnotationNonNull) != 0) {
 		sourceMethod.scope.problemReporter().nullAnnotationIsRedundant(sourceMethod, -1/*signifies method return*/);
 	}

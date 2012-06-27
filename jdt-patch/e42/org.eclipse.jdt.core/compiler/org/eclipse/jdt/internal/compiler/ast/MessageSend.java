@@ -13,6 +13,7 @@
  *								bug 349326 - [1.7] new warning for missing try-with-resources
  *								bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 358903 - Filter practically unimportant resource leak warnings
+ *								bug 370639 - [compiler][resource] restore the default for resource leak warnings
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -23,6 +24,7 @@ import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.codegen.Opcodes;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
+import org.eclipse.jdt.internal.compiler.flow.UnconditionalFlowInfo;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
@@ -64,9 +66,11 @@ public class MessageSend extends Expression implements InvocationSite {
 
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	boolean nonStatic = !this.binding.isStatic();
+	boolean wasInsideAssert = ((flowContext.tagBits & FlowContext.HIDE_NULL_COMPARISON_WARNING) != 0);
 	flowInfo = this.receiver.analyseCode(currentScope, flowContext, flowInfo, nonStatic).unconditionalInits();
 	// recording the closing of AutoCloseable resources:
-	if (CharOperation.equals(TypeConstants.CLOSE, this.selector)) 
+	boolean analyseResources = currentScope.compilerOptions().analyseResourceLeaks;
+	if (analyseResources && CharOperation.equals(TypeConstants.CLOSE, this.selector)) 
 	{
 		FakedTrackingVariable trackingVariable = FakedTrackingVariable.getCloseTrackingVariable(this.receiver);
 		if (trackingVariable != null) { // null happens if receiver is not a local variable or not an AutoCloseable
@@ -82,7 +86,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
 		if (this.receiver.isThis()) {
 			// accessing non-static method without an object
-			currentScope.resetEnclosingMethodStaticFlag();
+			currentScope.resetDeclaringClassMethodStaticFlag(this.binding.declaringClass);
 		}
 	} else if (this.receiver.isThis()) {
 		if ((this.receiver.bits & ASTNode.IsImplicitThis) == 0) {
@@ -91,15 +95,49 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		}
 	}
 
+	FlowInfo conditionFlowInfo;
 	if (this.arguments != null) {
 		int length = this.arguments.length;
 		for (int i = 0; i < length; i++) {
-			if ((this.arguments[i].implicitConversion & TypeIds.UNBOXING) != 0) {
-				this.arguments[i].checkNPE(currentScope, flowContext, flowInfo);
+			Expression argument = this.arguments[i];
+			if ((argument.implicitConversion & TypeIds.UNBOXING) != 0) {
+				argument.checkNPE(currentScope, flowContext, flowInfo);
 			}
-			flowInfo = this.arguments[i].analyseCode(currentScope, flowContext, flowInfo).unconditionalInits();
-			// if argument is an AutoCloseable insert info that it *may* be closed (by the target method, i.e.)
-			flowInfo = FakedTrackingVariable.markPassedToOutside(currentScope, this.arguments[i], flowInfo, false);
+			if (this.receiver.resolvedType != null 
+					&& this.receiver.resolvedType.id == TypeIds.T_OrgEclipseCoreRuntimeAssert
+					&& argument.resolvedType != null
+					&& argument.resolvedType.id == TypeIds.T_boolean) {
+				Constant cst = argument.optimizedBooleanConstant();
+				boolean isOptimizedTrueAssertion = cst != Constant.NotAConstant && cst.booleanValue() == true;
+				boolean isOptimizedFalseAssertion = cst != Constant.NotAConstant && cst.booleanValue() == false;
+				flowContext.tagBits |= FlowContext.HIDE_NULL_COMPARISON_WARNING;
+				conditionFlowInfo = argument.analyseCode(currentScope, flowContext, flowInfo.copy());
+				if (!wasInsideAssert) {
+					flowContext.tagBits &= ~FlowContext.HIDE_NULL_COMPARISON_WARNING;
+				}
+				UnconditionalFlowInfo assertWhenTrueInfo = conditionFlowInfo.initsWhenTrue().unconditionalInits();
+				FlowInfo assertInfo = conditionFlowInfo.initsWhenFalse();
+				if (isOptimizedTrueAssertion) {
+					assertInfo.setReachMode(FlowInfo.UNREACHABLE_OR_DEAD);
+				}
+				if (!isOptimizedFalseAssertion) {
+					// if assertion is not false for sure, only then it makes sense to carry the flow info ahead.
+					// if the code does reach ahead, it means the assert didn't cause an exit, and so
+					// the expression inside it shouldn't change the prior flowinfo
+					// viz. org.eclipse.core.runtime.Assert.isLegal(false && o != null)
+					
+					// keep the merge from the initial code for the definite assignment
+					// analysis, tweak the null part to influence nulls downstream
+					flowInfo = flowInfo.mergedWith(assertInfo.nullInfoLessUnconditionalCopy()).
+						addInitializationsFrom(assertWhenTrueInfo.discardInitializationInfo());
+				}
+			} else {
+				flowInfo = argument.analyseCode(currentScope, flowContext, flowInfo).unconditionalInits();
+			}
+			if (analyseResources) {
+				// if argument is an AutoCloseable insert info that it *may* be closed (by the target method, i.e.)
+				flowInfo = FakedTrackingVariable.markPassedToOutside(currentScope, argument, flowInfo, false);
+			}
 		}
 		analyseArguments(currentScope, flowContext, flowInfo, this.binding, this.arguments);
 	}
@@ -116,11 +154,6 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		//               NullReferenceTest#test0510
 	}
 	manageSyntheticAccessIfNecessary(currentScope, flowInfo);
-	// a method call can result in changed values for fields, 
-	// so wipe out null info for fields collected till now.
-	CompilerOptions options = currentScope.compilerOptions();
-	if(options.includeFieldsInNullAnalysis)
-		flowInfo.resetNullInfoForFields();
 	return flowInfo;
 }
 public void checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInfo) {

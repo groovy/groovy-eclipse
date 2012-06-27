@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,9 @@
  *								bug 349326 - [1.7] new warning for missing try-with-resources
  *								bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 365983 - [compiler][null] AIOOB with null annotation analysis and varargs
+ *								bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
+ *								bug 370930 - NonNull annotation not considered for enhanced for loops
+ *								bug 365859 - [compiler][null] distinguish warnings based on flow analysis vs. null annotations
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -89,7 +92,7 @@ protected void analyseArguments(BlockScope currentScope, FlowContext flowContext
 				Expression argument = arguments[i];
 				int nullStatus = argument.nullStatus(flowInfo); // slight loss of precision: should also use the null info from the receiver.
 				if (nullStatus != FlowInfo.NON_NULL) // if required non-null is not provided
-					flowContext.recordNullityMismatch(currentScope, argument, nullStatus, expectedType);
+					flowContext.recordNullityMismatch(currentScope, argument, argument.resolvedType, expectedType, nullStatus);
 			}
 		}
 	}
@@ -97,13 +100,17 @@ protected void analyseArguments(BlockScope currentScope, FlowContext flowContext
 
 /** Check null-ness of 'local' against a possible null annotation */
 protected int checkAssignmentAgainstNullAnnotation(BlockScope currentScope, FlowContext flowContext,
-												   VariableBinding var, int nullStatus, Expression expression)
+												   LocalVariableBinding local, int nullStatus, Expression expression, TypeBinding providedType)
 {
-	if (var != null
-			&& (var.tagBits & TagBits.AnnotationNonNull) != 0
+	if (local != null) {
+		if ((local.tagBits & TagBits.AnnotationNonNull) != 0
 			&& nullStatus != FlowInfo.NON_NULL) {
-		flowContext.recordNullityMismatch(currentScope, expression, nullStatus, var.type);
-		nullStatus=FlowInfo.NON_NULL;
+			flowContext.recordNullityMismatch(currentScope, expression, providedType, local.type, nullStatus);
+			return FlowInfo.NON_NULL;
+		} else if ((local.tagBits & TagBits.AnnotationNullable) != 0
+				&& nullStatus == FlowInfo.UNKNOWN) {	// provided a legacy type?
+			return FlowInfo.POTENTIALLY_NULL;			// -> use more specific info from the annotation
+		}
 	}
 	return nullStatus;
 }
@@ -126,14 +133,14 @@ public int complainIfUnreachable(FlowInfo flowInfo, BlockScope scope, int previo
 			if (previousComplaintLevel < COMPLAINED_UNREACHABLE) {
 				scope.problemReporter().unreachableCode(this);
 				if (endOfBlock)
-					scope.checkUnclosedCloseables(flowInfo, null, null);
+					scope.checkUnclosedCloseables(flowInfo, null, null, null);
 			}
 			return COMPLAINED_UNREACHABLE;
 		} else {
 			if (previousComplaintLevel < COMPLAINED_FAKE_REACHABLE) {
 				scope.problemReporter().fakeReachable(this);
 				if (endOfBlock)
-					scope.checkUnclosedCloseables(flowInfo, null, null);
+					scope.checkUnclosedCloseables(flowInfo, null, null, null);
 			}
 			return COMPLAINED_FAKE_REACHABLE;
 		}

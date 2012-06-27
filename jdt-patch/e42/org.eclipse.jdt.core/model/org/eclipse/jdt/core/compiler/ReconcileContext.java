@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2011 IBM Corporation and others.
+ * Copyright (c) 2005, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -31,7 +31,7 @@ import org.eclipse.jdt.internal.core.ReconcileWorkingCopyOperation;
  * participants while a reconcile operation is running.
  * <p>
  * A reconcile participant can get the AST for the reconcile-operation using
- * {@link #getAST3()}. If the participant modifies in any way the AST
+ * {@link #getAST4()}. If the participant modifies in any way the AST
  * (either by modifying the source of the working copy, or modifying another entity
  * that would result in different bindings for the AST), it is expected to reset the
  * AST in the context using {@link #resetAST()}.
@@ -83,6 +83,8 @@ public ReconcileContext(ReconcileWorkingCopyOperation operation, CompilationUnit
  * <ul>
  * <li> The working copy does not exist (ELEMENT_DOES_NOT_EXIST)</li>
  * </ul>
+ * @deprecated JLS3 has been deprecated. This method has been replaced by {@link #getAST4()} which returns an AST
+ * with JLS4 level.
  */
 public org.eclipse.jdt.core.dom.CompilationUnit getAST3() throws JavaModelException {
 	if (this.operation.astLevel != AST.JLS3 || !this.operation.resolveBindings) {
@@ -172,9 +174,8 @@ public int getReconcileFlags() {
 /**
  * Returns the delta describing the change to the working copy being reconciled.
  * Returns <code>null</code> if there is no change.
- * Note that the delta's AST is not yet positioned at this stage. Use {@link #getAST3()}
- * to get the current AST or  {@link #getAST4()} to get the current AST if you are using
- * {@link AST#JLS4} ast level.
+ * Note that the delta's AST is not yet positioned at this stage. Use {@link #getAST4()}
+ * to get the current AST.
  *
  * @return the delta describing the change, or <code>null</code> if none
  */

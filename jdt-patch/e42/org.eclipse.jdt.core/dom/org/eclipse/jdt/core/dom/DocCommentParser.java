@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2011 IBM Corporation and others.
+ * Copyright (c) 2004, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -39,7 +39,7 @@ class DocCommentParser extends AbstractCommentParser {
 			case AST.JLS2_INTERNAL :
 				this.sourceLevel = ClassFileConstants.JDK1_3;
 				break;
-			case AST.JLS3:
+			case AST.JLS3_INTERNAL:
 				this.sourceLevel = ClassFileConstants.JDK1_5;
 				break;
 			default:

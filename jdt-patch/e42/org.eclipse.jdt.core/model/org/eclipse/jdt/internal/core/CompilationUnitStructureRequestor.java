@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -81,6 +81,12 @@ public class CompilationUnitStructureRequestor extends ReferenceInfoAdapter impl
 	 */
 	private HashtableOfObjectToInt occurenceCounts;
 
+	/*
+	 * A table to store the occurrence count of anonymous types. The key will be the handle to the
+	 * enclosing type of the anonymous.
+	 */
+	private HashtableOfObjectToInt localOccurrenceCounts;
+
 	/**
 	 * Stack of parent scope info objects. The info on the
 	 * top of the stack is the parent of the next element found.
@@ -128,6 +134,7 @@ protected CompilationUnitStructureRequestor(ICompilationUnit unit, CompilationUn
 	this.unitInfo = unitInfo;
 	this.newElements = newElements;
 	this.occurenceCounts = new HashtableOfObjectToInt();
+	this.localOccurrenceCounts = new HashtableOfObjectToInt(5);
 }
 /**
  * @see ISourceElementRequestor
@@ -706,6 +713,20 @@ protected void resolveDuplicates(SourceRefElement handle) {
 	else {
 		this.occurenceCounts.put(handle, ++occurenceCount);
 		handle.occurrenceCount = occurenceCount;
+	}
+
+	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=342393
+	// For anonymous source types, the occurrence count should be in the context
+	// of the enclosing type.
+	if (handle instanceof SourceType && handle.getElementName().length() == 0) {
+		Object key = handle.getParent().getAncestor(IJavaElement.TYPE);
+		occurenceCount = this.localOccurrenceCounts.get(key);
+		if (occurenceCount == -1)
+			this.localOccurrenceCounts.put(key, 1);
+		else {
+			this.localOccurrenceCounts.put(key, ++occurenceCount);
+			((SourceType)handle).localOccurrenceCount = occurenceCount;
+		}
 	}
 }
 protected IMemberValuePair getMemberValuePair(MemberValuePair memberValuePair) {

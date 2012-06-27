@@ -1780,7 +1780,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			char[] filename = getFileName();
 			p = new DefaultProblemFactory().createProblem(filename, 0, new String[] { msg }, 0, new String[] { msg }, sev, soffset,
 					eoffset, line, scol);
-			this.problemReporter.record(p, compilationResult, this);
+			this.problemReporter.record(p, compilationResult, this, false);
 			errorsRecorded.add(message);
 			System.err.println(new String(compilationResult.getFileName()) + ": " + line + " " + msg);
 		}

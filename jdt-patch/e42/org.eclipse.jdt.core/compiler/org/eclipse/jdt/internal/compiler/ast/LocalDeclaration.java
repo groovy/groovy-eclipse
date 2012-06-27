@@ -14,6 +14,8 @@
  *							bug 349326 - [1.7] new warning for missing try-with-resources
  *							bug 186342 - [compiler][null] Using annotations for null checking
  *							bug 358903 - Filter practically unimportant resource leak warnings
+ *							bug 370639 - [compiler][resource] restore the default for resource leak warnings
+ *							bug 365859 - [compiler][null] distinguish warnings based on flow analysis vs. null annotations
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -45,12 +47,21 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		this.bits |= ASTNode.IsLocalDeclarationReachable; // only set if actually reached
 	}
 	if (this.binding != null && this.type.resolvedType instanceof TypeVariableBinding) {
+		TypeVariableBinding typeVariableBinding = (TypeVariableBinding) this.type.resolvedType;
 		MethodScope methodScope= this.binding.declaringScope.methodScope();
-		AbstractMethodDeclaration methodDeclaration = methodScope.referenceMethod();
-		if (methodDeclaration != null && ((methodDeclaration.bits & ASTNode.CanBeStatic) != 0) && methodDeclaration.binding != null) {
+		if (methodScope != null && methodScope.referenceContext instanceof TypeDeclaration) {
+			// initialization scope
+			methodScope = methodScope.enclosingMethodScope();
+		}
+		AbstractMethodDeclaration methodDeclaration = (methodScope != null) ? methodScope.referenceMethod() : null;
+		if (methodDeclaration != null && methodDeclaration.binding != null) {
 			TypeVariableBinding[] typeVariables = methodDeclaration.binding.typeVariables();
+			if (typeVariables == null) typeVariables = Binding.NO_TYPE_VARIABLES;
 			if (typeVariables == Binding.NO_TYPE_VARIABLES) {
 				// Method declares no type variables.
+				if (typeVariableBinding != null && typeVariableBinding.declaringElement instanceof TypeBinding)
+					currentScope.resetDeclaringClassMethodStaticFlag((TypeBinding) typeVariableBinding.declaringElement);
+				else
 				currentScope.resetEnclosingMethodStaticFlag();
 			} else {
 				// to check whether the resolved type for this is declared by enclosing method as a type variable
@@ -63,7 +74,10 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				}
 				if (!usesEnclosingTypeVar) {
 					// uses a type variable not declared by enclosing method
-					currentScope.resetEnclosingMethodStaticFlag();
+					if (typeVariableBinding != null && typeVariableBinding.declaringElement instanceof TypeBinding)
+						currentScope.resetDeclaringClassMethodStaticFlag((TypeBinding) typeVariableBinding.declaringElement);
+					else
+						currentScope.resetEnclosingMethodStaticFlag();
 				}
 			}
 		}
@@ -78,6 +92,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	FlowInfo preInitInfo = null;
 	boolean shouldAnalyseResource = this.binding != null 
 			&& flowInfo.reachMode() == FlowInfo.REACHABLE 
+			&& currentScope.compilerOptions().analyseResourceLeaks
 			&& FakedTrackingVariable.isAnyCloseable(this.initialization.resolvedType);
 	if (shouldAnalyseResource) {
 		preInitInfo = flowInfo.unconditionalCopy();
@@ -102,7 +117,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		this.bits &= ~FirstAssignmentToLocal;  // int i = (i = 0);
 	}
 	flowInfo.markAsDefinitelyAssigned(this.binding);
-	nullStatus = checkAssignmentAgainstNullAnnotation(currentScope, flowContext, this.binding, nullStatus, this.initialization);
+	nullStatus = checkAssignmentAgainstNullAnnotation(currentScope, flowContext, this.binding, nullStatus, this.initialization, this.initialization.resolvedType);
 	if ((this.binding.type.tagBits & TagBits.IsBaseType) == 0) {
 		flowInfo.markNullStatus(this.binding, nullStatus);
 		// no need to inform enclosing try block since its locals won't get

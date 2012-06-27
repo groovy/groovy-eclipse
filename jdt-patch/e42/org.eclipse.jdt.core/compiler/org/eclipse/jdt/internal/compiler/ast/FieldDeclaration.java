@@ -74,13 +74,6 @@ public FlowInfo analyseCode(MethodScope initializationScope, FlowContext flowCon
 				.analyseCode(initializationScope, flowContext, flowInfo)
 				.unconditionalInits();
 		flowInfo.markAsDefinitelyAssigned(this.binding);
-		if (this.binding.isFinal() && this.binding.isStatic()) {
-			int nullStatus = this.initialization.nullStatus(flowInfo);
-			// static final field being initialized. Record its null status for future reference
-			// since the flowInfo from an initialization wont be available in a method
-			flowInfo.markNullStatus(this.binding, nullStatus);
-//			this.binding.setNullStatusForStaticFinalField(nullStatus);
-		}
 	}
 	return flowInfo;
 }
@@ -128,6 +121,12 @@ public boolean isStatic() {
 	if (this.binding != null)
 		return this.binding.isStatic();
 	return (this.modifiers & ClassFileConstants.AccStatic) != 0;
+}
+
+public boolean isFinal() {
+	if (this.binding != null)
+		return this.binding.isFinal();
+	return (this.modifiers & ClassFileConstants.AccFinal) != 0;
 }
 
 public StringBuffer printStatement(int indent, StringBuffer output) {

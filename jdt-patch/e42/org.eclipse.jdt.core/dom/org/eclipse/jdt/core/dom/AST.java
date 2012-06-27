@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -102,6 +102,7 @@ public final class AST {
 
 	/**
 	 * Constant for indicating the AST API that handles JLS2.
+	 * <p>
 	 * This API is capable of handling all constructs
 	 * in the Java language as described in the Java Language
      * Specification, Second Edition (JLS2).
@@ -109,6 +110,7 @@ public final class AST {
      * Java language, and the JLS2 API can be used to manipulate
      * programs written in all versions of the Java language
      * up to and including J2SE 1.4.
+     * </p>
      *
 	 * @since 3.0
 	 * @deprecated Clients should use the {@link #JLS4} AST API instead.
@@ -124,6 +126,7 @@ public final class AST {
 	
 	/**
 	 * Constant for indicating the AST API that handles JLS3.
+	 * <p>
 	 * This API is capable of handling all constructs in the
 	 * Java language as described in the Java Language
 	 * Specification, Third Edition (JLS3).
@@ -131,21 +134,31 @@ public final class AST {
      * Java language, and the JLS3 API can be used to manipulate
      * programs written in all versions of the Java language
      * up to and including J2SE 5 (aka JDK 1.5).
+     * </p>
      *
 	 * @since 3.1
+	 * @deprecated Clients should use the {@link #JLS4} AST API instead.
 	 */
 	public static final int JLS3 = 3;
+	
+	/**
+	 * Internal synonym for {@link #JLS3}. Use to alleviate
+	 * deprecation warnings.
+	 * @since 3.8
+	 */
+	/*package*/ static final int JLS3_INTERNAL = JLS3;
 
 	/**
-	 * Constant for indicating the AST API that handles JLS4.
+	 * Constant for indicating the AST API that handles JLS4 (aka JLS7).
+	 * <p>
 	 * This API is capable of handling all constructs in the
 	 * Java language as described in the Java Language
-	 * Specification, Third Edition (JLS3) plus all the new language
-	 * features described in the JSR334.
+	 * Specification, Java SE 7 Edition (JLS7) as specified by JSR336.
 	 * JLS4 is a superset of all earlier versions of the
 	 * Java language, and the JLS4 API can be used to manipulate
 	 * programs written in all versions of the Java language
-	 * up to and including J2SE 7 (aka JDK 1.7).
+	 * up to and including Java SE 7 (aka JDK 1.7).
+	 * </p>
 	 *
 	 * @since 3.7.1
 	 */
@@ -163,7 +176,7 @@ public final class AST {
 	 * into a compilation unit. This method is not intended to be called by clients.
 	 * </p>
 	 *
- 	 * @param level the API level; one of the LEVEL constants
+ 	 * @param level the API level; one of the <code>JLS*</code> level constants
 	 * @param compilationUnitDeclaration an internal AST node for a compilation unit declaration
 	 * @param source the string of the Java compilation unit
 	 * @param options compiler options
@@ -194,7 +207,7 @@ public final class AST {
 	 * into a compilation unit. This method is not intended to be called by clients.
 	 * </p>
 	 *
- 	 * @param level the API level; one of the LEVEL constants
+ 	 * @param level the API level; one of the <code>JLS*</code> level constants
 	 * @param compilationUnitDeclaration an internal AST node for a compilation unit declaration
 	 * @param options compiler options
 	 * @param workingCopy the working copy that the AST is created from
@@ -245,11 +258,11 @@ public final class AST {
      * AST level in all cases, even when dealing with source of earlier JDK versions like 1.3 or 1.4.
      * </p>
      *
- 	 * @param level the API level; one of the LEVEL constants
+ 	 * @param level the API level; one of the <code>JLS*</code> level constants
 	 * @return new AST instance following the specified set of API rules.
 	 * @exception IllegalArgumentException if:
 	 * <ul>
-	 * <li>the API level is not one of the LEVEL constants</li>
+	 * <li>the API level is not one of the <code>JLS*</code> level constants</li>
 	 * </ul>
      * @since 3.0
 	 */
@@ -621,8 +634,8 @@ public final class AST {
 	 * Creates a new, empty abstract syntax tree using default options.
 	 *
 	 * @see JavaCore#getDefaultOptions()
-	 * @deprecated Clients should port their code to use the new JLS3 AST API and call
-	 *    {@link #newAST(int) AST.newAST(AST.JLS3)} instead of using this constructor.
+	 * @deprecated Clients should port their code to use the new JLS4 AST API and call
+	 *    {@link #newAST(int) AST.newAST(AST.JLS4)} instead of using this constructor.
 	 */
 	public AST() {
 		this(JavaCore.getDefaultOptions());
@@ -632,13 +645,13 @@ public final class AST {
 	 * Creates a new Java abstract syntax tree
      * (AST) following the specified set of API rules.
      *
- 	 * @param level the API level; one of the JLS* level constants
+ 	 * @param level the API level; one of the <code>JLS*</code> level constants
      * @since 3.0
 	 */
 	private AST(int level) {
 		switch(level) {
 			case JLS2_INTERNAL :
-			case JLS3 :
+			case JLS3_INTERNAL :
 				this.apiLevel = level;
 				// initialize a scanner
 				this.scanner = new Scanner(
@@ -681,6 +694,7 @@ public final class AST {
 	 *    (<code>"assert"</code> is now a keyword);
 	 *    <code>"1.5"</code> means the source code is as per JDK 1.5
 	 *    (<code>"enum"</code> is now a keyword);
+	 *    <code>"1.7"</code> means the source code is as per JDK 1.7;
 	 *    additional legal values may be added later. </li>
 	 * </ul>
 	 * Options other than the above are ignored.
@@ -689,8 +703,8 @@ public final class AST {
 	 * @param options the table of options (key type: <code>String</code>;
 	 *    value type: <code>String</code>)
 	 * @see JavaCore#getDefaultOptions()
-	 * @deprecated Clients should port their code to use the new JLS3 AST API and call
-	 *    {@link #newAST(int) AST.newAST(AST.JLS3)} instead of using this constructor.
+	 * @deprecated Clients should port their code to use the new JLS4 AST API and call
+	 *    {@link #newAST(int) AST.newAST(AST.JLS4)} instead of using this constructor.
 	 */
 	public AST(Map options) {
 		this(JLS2);
@@ -727,7 +741,7 @@ public final class AST {
 	/**
 	 * Return the API level supported by this AST.
 	 *
-	 * @return level the API level; one of the <code>JLS*</code>LEVEL
+	 * @return level the API level; one of the <code>JLS*</code> level constants
      * declared on <code>AST</code>; assume this set is open-ended
      * @since 3.0
 	 */

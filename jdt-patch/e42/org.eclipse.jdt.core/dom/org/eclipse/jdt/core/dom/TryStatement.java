@@ -114,7 +114,7 @@ public class TryStatement extends Statement {
 	public static List propertyDescriptors(int apiLevel) {
 		switch (apiLevel) {
 			case AST.JLS2_INTERNAL :
-			case AST.JLS3 :
+			case AST.JLS3_INTERNAL :
 				return PROPERTY_DESCRIPTORS;
 			default :
 				return PROPERTY_DESCRIPTORS_4_0;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-    Copyright (c) 2007, 2009 IBM Corporation and others.
+    Copyright (c) 2007, 2012 IBM Corporation and others.
     All rights reserved. This program and the accompanying materials
     are made available under the terms of the Eclipse Public License v1.0
     which accompanies this distribution, and is available at
@@ -69,6 +69,7 @@
 		<copy todir="${ecj-temp-folder}">
 			<fileset dir="${target.folder}">
 				<exclude name="org/eclipse/jdt/core/CheckDebugAttributes*.*"/>
+				<exclude name="org/eclipse/jdt/core/BuildJarIndex*.*"/>
 			</fileset>
 		</copy>
 	</target>
@@ -105,6 +106,7 @@
 			<zipfileset dir="compiler" />
 			<zipfileset dir="antadapter">
 				<exclude name="org/eclipse/jdt/core/CheckDebugAttributes.java"/>
+				<exclude name="org/eclipse/jdt/core/BuildJarIndex.java"/>
 			</zipfileset>
 			<zipfileset dir="scripts">
 				<include name="about.html" />
@@ -131,6 +133,7 @@
 			<fileset dir="compiler" />
 			<fileset dir="antadapter">
 				<exclude name="org/eclipse/jdt/core/CheckDebugAttributes.java"/>
+				<exclude name="org/eclipse/jdt/core/BuildJarIndex.java"/>
 			</fileset>
 		</copy>
 

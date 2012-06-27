@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -43,11 +43,15 @@ class PackageFragmentRootInfo extends OpenableElementInfo {
 	 * A array with all the non-java resources contained by this PackageFragment
 	 */
 	protected Object[] nonJavaResources;
+
+	private boolean ignoreOptionalProblems;
+	private boolean initialized;
 /**
  * Create and initialize a new instance of the receiver
  */
 public PackageFragmentRootInfo() {
 	this.nonJavaResources = null;
+	this.initialized = false;
 }
 /**
  * Starting at this folder, create non-java resources for this package fragment root
@@ -167,6 +171,13 @@ public int getRootKind() {
  */
 protected SourceMapper getSourceMapper() {
 	return this.sourceMapper;
+}
+boolean ignoreOptionalProblems(PackageFragmentRoot packageFragmentRoot) throws JavaModelException {
+	if (this.initialized == false) {
+		this.ignoreOptionalProblems = ((ClasspathEntry) packageFragmentRoot.getRawClasspathEntry()).ignoreOptionalProblems();
+		this.initialized = true;
+	}
+	return this.ignoreOptionalProblems;
 }
 private static boolean isClasspathEntry(IPath path, IClasspathEntry[] resolvedClasspath) {
 	for (int i = 0, length = resolvedClasspath.length; i < length; i++) {

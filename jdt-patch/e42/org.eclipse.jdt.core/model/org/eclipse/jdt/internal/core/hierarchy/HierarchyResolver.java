@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -90,9 +90,9 @@ public HierarchyResolver(INameEnvironment nameEnvironment, Map settings, Hierarc
 	IErrorHandlingPolicy policy = DefaultErrorHandlingPolicies.exitAfterAllProblems();
 	ProblemReporter problemReporter = new ProblemReporter(policy, this.options, problemFactory);
 
-	setEnvironment(
-		new LookupEnvironment(this, this.options, problemReporter, nameEnvironment),
-		builder);
+	LookupEnvironment environment = new LookupEnvironment(this, this.options, problemReporter, nameEnvironment);
+	environment.mayTolerateMissingType = true;
+	setEnvironment(environment, builder);
 }
 public HierarchyResolver(LookupEnvironment lookupEnvironment, HierarchyBuilder builder) {
 	setEnvironment(lookupEnvironment, builder);

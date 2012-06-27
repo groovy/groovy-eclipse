@@ -130,7 +130,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 								// recover upstream null info
 						isConditionOptimizedTrue,
 						(condInfo.tagBits & FlowInfo.UNREACHABLE) == 0
-								? flowInfo.addInitializationsFrom(condInfo.initsWhenFalse()) 
+								? flowInfo.copy().addInitializationsFrom(condInfo.initsWhenFalse()) // https://bugs.eclipse.org/bugs/show_bug.cgi?id=380927
 								: condInfo,
 							// recover null inits from before condition analysis
 						false, // never consider opt false case for DO loop, since break can always occur (47776)

@@ -275,13 +275,6 @@ public long getAnnotationTagBits() {
 	return originalField.tagBits;
 }
 
-public int getAnalysisId(int maxFieldCount) {
-	TypeBinding original = this.declaringClass.original();
-	if (original instanceof SourceTypeBinding)
-		return ((SourceTypeBinding)original).fieldAnalysisOffset + this.id;
-	return this.id;
-}
-
 public final boolean isDefault() {
 	return !isPublic() && !isProtected() && !isPrivate();
 }

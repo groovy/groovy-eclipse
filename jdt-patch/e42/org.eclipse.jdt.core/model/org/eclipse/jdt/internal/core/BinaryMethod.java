@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -97,22 +97,18 @@ public ILocalVariable[] getParameters() throws JavaModelException {
 				-1,
 				true);
 		localVariables[i] = localVariable;
-		IAnnotation[] annotations = getAnnotations(localVariable, info.getParameterAnnotations(i), info.getTagBits());
+		IAnnotation[] annotations = getAnnotations(localVariable, info.getParameterAnnotations(i));
 		localVariable.annotations = annotations;
 	}
 	return localVariables;
 }
-private IAnnotation[] getAnnotations(JavaElement annotationParent, IBinaryAnnotation[] binaryAnnotations, long tagBits) {
-	IAnnotation[] standardAnnotations = getStandardAnnotations(tagBits);
-	if (binaryAnnotations == null)
-		return standardAnnotations;
+private IAnnotation[] getAnnotations(JavaElement annotationParent, IBinaryAnnotation[] binaryAnnotations) {
+	if (binaryAnnotations == null) return Annotation.NO_ANNOTATIONS;
 	int length = binaryAnnotations.length;
-	int standardLength = standardAnnotations.length;
-	IAnnotation[] annotations = new IAnnotation[length + standardLength];
+	IAnnotation[] annotations = new IAnnotation[length];
 	for (int i = 0; i < length; i++) {
 		annotations[i] = Util.getAnnotation(annotationParent, binaryAnnotations[i], null);
 	}
-	System.arraycopy(standardAnnotations, 0, annotations, length, standardLength);
 	return annotations;
 }
 public IMemberValuePair getDefaultValue() throws JavaModelException {

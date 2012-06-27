@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1562,6 +1562,18 @@ public class ClasspathEntry implements IClasspathEntry {
 		}
 		return null;
 	}	
+
+	public boolean ignoreOptionalProblems() {
+		if (this.entryKind == IClasspathEntry.CPE_SOURCE) {
+			for (int i = 0; i < this.extraAttributes.length; i++) {
+				IClasspathAttribute attrib = this.extraAttributes[i];
+				if (IClasspathAttribute.IGNORE_OPTIONAL_PROBLEMS.equals(attrib.getName())) {
+					return "true".equals(attrib.getValue()); //$NON-NLS-1$
+				}
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * Validate a given classpath and output location for a project, using the following rules:

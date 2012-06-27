@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Terry Parker <tparker@google.com> (Google Inc.)  https://bugs.eclipse.org/365499
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 import java.util.HashMap;
@@ -28,6 +29,7 @@ public class JavaModelCache {
 	public static final int DEFAULT_OPENABLE_SIZE = 250; // average 6629 bytes per openable (includes children) -> maximum size : 662900*BASE_VALUE bytes
 	public static final int DEFAULT_CHILDREN_SIZE = 250*20; // average 20 children per openable
 	public static final String RATIO_PROPERTY = "org.eclipse.jdt.core.javamodelcache.ratio"; //$NON-NLS-1$
+	public static final String JAR_TYPE_RATIO_PROPERTY = "org.eclipse.jdt.core.javamodelcache.jartyperatio"; //$NON-NLS-1$
 	
 	public static final Object NON_EXISTING_JAR_TYPE_INFO = new Object();
 
@@ -72,9 +74,9 @@ public class JavaModelCache {
 	protected LRUCache jarTypeCache;
 
 public JavaModelCache() {
-	// set the size of the caches in function of the maximum amount of memory available
+	// set the size of the caches as a function of the maximum amount of memory available
 	double ratio = getMemoryRatio();
-	// adjust the size of the openable cache in function of the RATIO_PROPERTY property
+	// adjust the size of the openable cache using the RATIO_PROPERTY property
 	double openableRatio = getOpenableRatio();
 	this.projectCache = new HashMap(DEFAULT_PROJECT_SIZE); // NB: Don't use a LRUCache for projects as they are constantly reopened (e.g. during delta processing)
 	if (VERBOSE) {
@@ -91,13 +93,21 @@ public JavaModelCache() {
 }
 
 private double getOpenableRatio() {
-	String property = System.getProperty(RATIO_PROPERTY);
+	return getRatioForProperty(RATIO_PROPERTY);
+}
+
+private double getJarTypeRatio() {
+	return getRatioForProperty(JAR_TYPE_RATIO_PROPERTY);
+}
+
+private double getRatioForProperty(String propertyName) {
+	String property = System.getProperty(propertyName);
 	if (property != null) {
 		try {
 			return Double.parseDouble(property);
 		} catch (NumberFormatException e) {
 			// ignore
-			Util.log(e, "Could not parse value for " + RATIO_PROPERTY + ": " + property); //$NON-NLS-1$ //$NON-NLS-2$
+			Util.log(e, "Could not parse value for " + propertyName + ": " + property); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 	return 1.0;
@@ -249,7 +259,7 @@ protected void removeInfo(JavaElement element) {
 	}
 }
 protected void resetJarTypeCache() {
-	this.jarTypeCache = new LRUCache((int) (DEFAULT_OPENABLE_SIZE * getMemoryRatio()));
+	this.jarTypeCache = new LRUCache((int) (DEFAULT_OPENABLE_SIZE * getMemoryRatio() * getJarTypeRatio()));
 }
 public String toString() {
 	return toStringFillingRation(""); //$NON-NLS-1$

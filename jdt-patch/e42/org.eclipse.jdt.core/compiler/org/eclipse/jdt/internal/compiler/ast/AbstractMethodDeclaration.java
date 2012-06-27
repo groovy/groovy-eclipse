@@ -11,10 +11,9 @@
  *								bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 367203 - [compiler][null] detect assigning null to nonnull argument
  *								bug 365519 - editorial cleanup after bug 186342 and bug 365387
+ *								bug 365531 - [compiler][null] investigate alternative strategy for internally encoding nullness defaults
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
-
-import java.util.Arrays;
 
 import org.eclipse.jdt.core.compiler.*;
 import org.eclipse.jdt.internal.compiler.*;
@@ -72,41 +71,6 @@ public abstract class AbstractMethodDeclaration
 			default :
 				throw new AbortMethod(this.compilationResult, problem);
 		}
-	}
-
-	/**
-	 * Materialize a non-null annotation that has been added from the current default,
-	 * in order to ensure that this annotation will be generated into the .class file, too.
-	 */
-	public void addNonNullAnnotation(ReferenceBinding annotationBinding) {
-		this.annotations = addAnnotation(this, this.annotations, annotationBinding);
-	}
-
-	/**
-	 * Materialize a non-null parameter annotation that has been added from the current default,
-	 * in order to ensure that this annotation will be generated into the .class file, too.
-	 */
-	public void addParameterNonNullAnnotation(Argument argument, ReferenceBinding annotationBinding) {
-		if (argument.type != null) // null happens for constructors of anonymous classes
-			argument.annotations = addAnnotation(argument.type, argument.annotations, annotationBinding);
-	}
-
-	private Annotation[] addAnnotation(ASTNode location, Annotation[] oldAnnotations, ReferenceBinding annotationBinding) {
-		long pos = ((long)location.sourceStart<<32) + location.sourceEnd;
-		long[] poss = new long[annotationBinding.compoundName.length];
-		Arrays.fill(poss, pos);
-		MarkerAnnotation annotation = new MarkerAnnotation(new QualifiedTypeReference(annotationBinding.compoundName, poss), location.sourceStart);
-		annotation.declarationSourceEnd = location.sourceEnd;
-		annotation.resolvedType = annotationBinding;
-		annotation.bits = IsSynthetic;
-		if (oldAnnotations == null) {
-			oldAnnotations = new Annotation[] {annotation};
-		} else {
-			int len = oldAnnotations.length;
-			System.arraycopy(oldAnnotations, 0, oldAnnotations=new Annotation[len+1], 1, len);
-			oldAnnotations[0] = annotation;
-		}
-		return oldAnnotations;
 	}
 
 	/**

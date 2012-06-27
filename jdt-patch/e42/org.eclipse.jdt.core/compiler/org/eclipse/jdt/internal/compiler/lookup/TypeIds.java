@@ -107,6 +107,9 @@ public interface TypeIds {
 	final int T_ConfiguredAnnotationNonNull = 66;
 	final int T_ConfiguredAnnotationNonNullByDefault = 67;
 
+	// new in 3.8 to identify org.eclipse.core.runtime.Assert
+	final int T_OrgEclipseCoreRuntimeAssert = 68;
+
 	final int NoId = Integer.MAX_VALUE;
 
 	public static final int IMPLICIT_CONVERSION_MASK = 0xFF;

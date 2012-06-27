@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -489,7 +489,7 @@ int internalKind() throws JavaModelException {
 	JavaModelManager manager = JavaModelManager.getJavaModelManager();
 	PackageFragmentRootInfo info = (PackageFragmentRootInfo) manager.peekAtInfo(this);
 	if (info == null) {
-		info = (PackageFragmentRootInfo) openWhenClosed(createElementInfo(), null);
+		info = (PackageFragmentRootInfo) openWhenClosed(createElementInfo(), false, null);
 	}
 	return info.getRootKind();
 }
@@ -709,6 +709,14 @@ public boolean hasChildren() throws JavaModelException {
 
 public int hashCode() {
 	return resource().hashCode();
+}
+
+public boolean ignoreOptionalProblems() {
+	try {
+		return ((PackageFragmentRootInfo) getElementInfo()).ignoreOptionalProblems(this);
+	} catch (JavaModelException e) {
+		return false;
+	}
 }
 
 /**

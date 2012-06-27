@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,7 @@
  *     							bug 185682 - Increment/decrement operators mark local variables as read
  *     							bug 349326 - [1.7] new warning for missing try-with-resources
  *								bug 186342 - [compiler][null] Using annotations for null checking
+ *								bug 365859 - [compiler][null] distinguish warnings based on flow analysis vs. null annotations
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -173,6 +174,14 @@ public class LocalVariableBinding extends VariableBinding {
 			buffer.append('#');
 			buffer.append(scopeIndex);
 		}
+	}
+
+	public boolean isNonNull() {
+		return (this.tagBits & TagBits.AnnotationNonNull) != 0;
+	}
+
+	public boolean isNullable() {
+		return (this.tagBits & TagBits.AnnotationNullable) != 0;
 	}
 
 	// Answer whether the variable binding is a secret variable added for code gen purposes

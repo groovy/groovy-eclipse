@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -283,7 +283,7 @@ public Object getElementInfo(IProgressMonitor monitor) throws JavaModelException
 	JavaModelManager manager = JavaModelManager.getJavaModelManager();
 	Object info = manager.getInfo(this);
 	if (info != null && info != JavaModelCache.NON_EXISTING_JAR_TYPE_INFO) return info;
-	return openWhenClosed(createElementInfo(), monitor);
+	return openWhenClosed(createElementInfo(), false, monitor);
 }
 /*
  * @see IJavaElement

@@ -7,7 +7,9 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Stephan Herrmann - Contribution for bug 349326 - [1.7] new warning for missing try-with-resources
+ *     Stephan Herrmann - Contributions for
+ *								bug 349326 - [1.7] new warning for missing try-with-resources
+ *								bug 374605 - Unreasonable warning for enum-based switch statements
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -49,6 +51,9 @@ public class MethodScope extends BlockScope {
 
 	// inner-emulation
 	public SyntheticArgumentBinding[] extraSyntheticArguments;
+
+	// remember suppressed warning re missing 'default:' to give hints on possibly related flow problems
+	public boolean hasMissingSwitchDefault; // TODO(stephan): combine flags to a bitset?
 
 public MethodScope(ClassScope parent, ReferenceContext context, boolean isStatic) {
 	super(METHOD_SCOPE, parent);

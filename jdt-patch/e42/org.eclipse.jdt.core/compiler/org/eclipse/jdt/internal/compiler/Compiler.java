@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -655,7 +655,7 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 							0, // source end
 							0, // line number
 							0),// column number
-					unit);
+					unit, true);
 
 			/* hand back the compilation result */
 			if (!result.hasBeenAccepted) {
@@ -717,7 +717,7 @@ public class Compiler implements ITypeRequestor, ProblemSeverities {
 					if (distantProblem instanceof DefaultProblem) { // fixup filename TODO (philippe) should improve API to make this official
 						((DefaultProblem) distantProblem).setOriginatingFileName(result.getFileName());
 					}
-					result.record(distantProblem, unit);
+					result.record(distantProblem, unit, true);
 				}
 			} else {
 				/* distant internal exception which could not be reported back there */

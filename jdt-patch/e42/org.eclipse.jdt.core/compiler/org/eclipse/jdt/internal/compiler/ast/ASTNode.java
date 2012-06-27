@@ -13,6 +13,7 @@
  *     							bug 185682 - Increment/decrement operators mark local variables as read
  *     							bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 365519 - editorial cleanup after bug 186342 and bug 365387
+ *								bug 374605 - Unreasonable warning for enum-based switch statements
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -133,6 +134,7 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	public static final int IsReachable = Bit32;
 	public static final int LabelUsed = Bit7;
 	public static final int DocumentedFallthrough = Bit30; // switch statement
+	public static final int DocumentedCasesOmitted = Bit31; // switch statement
 
 	// local decls
 	public static final int IsLocalDeclarationReachable = Bit31;

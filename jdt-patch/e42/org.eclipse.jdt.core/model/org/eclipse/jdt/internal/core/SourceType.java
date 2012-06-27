@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -35,6 +35,12 @@ import org.eclipse.jdt.internal.core.util.Messages;
  */
 
 public class SourceType extends NamedMember implements IType {
+
+/*
+ * A count to uniquely identify this element within the context of the enclosing type.
+ * Currently this is computed and used only for anonymous types.
+ */
+public int localOccurrenceCount = 1;
 
 protected SourceType(JavaElement parent, String name) {
 	super(parent, name);
@@ -274,6 +280,13 @@ public String getFullyQualifiedName(char enclosingTypeSeparator) {
  */
 public String getFullyQualifiedParameterizedName() throws JavaModelException {
 	return getFullyQualifiedName('.', true/*show parameters*/);
+}
+/*
+ * For source types, the occurrence count is the one computed in the context of the immediately enclosing type.
+ *
+ */
+protected String getOccurrenceCountSignature() {
+	return Integer.toString(this.localOccurrenceCount);
 }
 /*
  * @see JavaElement
@@ -815,8 +828,9 @@ public ITypeHierarchy newTypeHierarchy(
 	return op.getResult();
 }
 public JavaElement resolved(Binding binding) {
-	SourceRefElement resolvedHandle = new ResolvedSourceType(this.parent, this.name, new String(binding.computeUniqueKey()));
+	ResolvedSourceType resolvedHandle = new ResolvedSourceType(this.parent, this.name, new String(binding.computeUniqueKey()));
 	resolvedHandle.occurrenceCount = this.occurrenceCount;
+	resolvedHandle.localOccurrenceCount = this.localOccurrenceCount;
 	return resolvedHandle;
 }
 /**

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -142,7 +142,7 @@ public class PackageDeclaration extends ASTNode {
 	 */
 	PackageDeclaration(AST ast) {
 		super(ast);
-		if (ast.apiLevel >= AST.JLS3) {
+		if (ast.apiLevel >= AST.JLS3_INTERNAL) {
 			this.annotations = new ASTNode.NodeList(ANNOTATIONS_PROPERTY);
 		}
 	}
@@ -202,7 +202,7 @@ public class PackageDeclaration extends ASTNode {
 	ASTNode clone0(AST target) {
 		PackageDeclaration result = new PackageDeclaration(target);
 		result.setSourceRange(getStartPosition(), getLength());
-		if (this.ast.apiLevel >= AST.JLS3) {
+		if (this.ast.apiLevel >= AST.JLS3_INTERNAL) {
 			result.setJavadoc((Javadoc) ASTNode.copySubtree(target, getJavadoc()));
 			result.annotations().addAll(ASTNode.copySubtrees(target, annotations()));
 		}
@@ -224,7 +224,7 @@ public class PackageDeclaration extends ASTNode {
 	void accept0(ASTVisitor visitor) {
 		boolean visitChildren = visitor.visit(this);
 		if (visitChildren) {
-			if (this.ast.apiLevel >= AST.JLS3) {
+			if (this.ast.apiLevel >= AST.JLS3_INTERNAL) {
 				acceptChild(visitor, getJavadoc());
 				acceptChildren(visitor, this.annotations);
 			}

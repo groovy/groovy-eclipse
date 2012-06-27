@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -40,11 +40,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.parser.RecoveryScannerData;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
@@ -73,6 +75,7 @@ public class CompilationResult {
 	public char[][] packageName;
 	public boolean checkSecondaryTypes = false; // check for secondary types which were created after the initial buildTypeBindings call
 	private int numberOfErrors;
+	private boolean hasMandatoryErrors;
 
 	private static final int[] EMPTY_LINE_ENDS = Util.EMPTY_INT_ARRAY;
 	private static final Comparator PROBLEM_COMPARATOR = new Comparator() {
@@ -247,6 +250,41 @@ public CategorizedProblem[] getProblems() {
 	}
 	return this.problems;
 }
+/**
+ * Same as getProblems() but don't answer problems that actually concern the enclosing package.
+ */
+public CategorizedProblem[] getCUProblems() {
+	// Re-adjust the size of the problems if necessary and filter package problems
+	if (this.problems != null) {
+		CategorizedProblem[] filteredProblems = new CategorizedProblem[this.problemCount];
+		int keep = 0;
+		for (int i=0; i< this.problemCount; i++) {
+			CategorizedProblem problem = this.problems[i];
+			if (problem.getID() != IProblem.MissingNonNullByDefaultAnnotationOnPackage) {
+				filteredProblems[keep++] = problem;
+			} else if (this.compilationUnit != null) {
+				if (CharOperation.equals(this.compilationUnit.getMainTypeName(), TypeConstants.PACKAGE_INFO_NAME)) {
+					filteredProblems[keep++] = problem;
+				}
+			}
+		}
+		if (keep < this.problemCount) {
+			System.arraycopy(filteredProblems, 0, filteredProblems = new CategorizedProblem[keep], 0, keep);
+			this.problemCount = keep;
+		}
+		this.problems = filteredProblems;
+		if (this.maxProblemPerUnit > 0 && this.problemCount > this.maxProblemPerUnit){
+			quickPrioritize(this.problems, 0, this.problemCount - 1);
+			this.problemCount = this.maxProblemPerUnit;
+			System.arraycopy(this.problems, 0, (this.problems = new CategorizedProblem[this.problemCount]), 0, this.problemCount);
+		}
+
+		// Stable sort problems per source positions.
+		Arrays.sort(this.problems, 0, this.problems.length, CompilationResult.PROBLEM_COMPARATOR);
+		//quickSort(problems, 0, problems.length-1);
+	}
+	return this.problems;
+}
 
 /**
  * Answer the tasks (TO-DO, ...) encountered during compilation.
@@ -273,6 +311,10 @@ public CategorizedProblem[] getTasks() {
 public boolean hasErrors() {
 	return this.numberOfErrors != 0;
 		}
+
+public boolean hasMandatoryErrors() {
+	return this.hasMandatoryErrors;
+}
 
 public boolean hasProblems() {
 	return this.problemCount != 0;
@@ -324,6 +366,11 @@ public void recordPackageName(char[][] packName) {
 }
 
 public void record(CategorizedProblem newProblem, ReferenceContext referenceContext) {
+	record(newProblem, referenceContext, true);
+	return;
+}
+
+public void record(CategorizedProblem newProblem, ReferenceContext referenceContext, boolean mandatoryError) {
 	//new Exception("VERBOSE PROBLEM REPORTING").printStackTrace();
 	if(newProblem.getID() == IProblem.Task) {
 		recordTask(newProblem);
@@ -343,6 +390,7 @@ public void record(CategorizedProblem newProblem, ReferenceContext referenceCont
 	}
 	if (newProblem.isError()) {
 		this.numberOfErrors++;
+		if (mandatoryError) this.hasMandatoryErrors = true;
 		if ((newProblem.getID() & IProblem.Syntax) != 0) {
 		this.hasSyntaxError = true;
 }

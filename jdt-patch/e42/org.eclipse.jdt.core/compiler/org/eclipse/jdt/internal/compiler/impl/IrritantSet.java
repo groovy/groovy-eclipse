@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,9 @@
  *     Stephan Herrmann - Contributions for
  *     							bug 349326 - [1.7] new warning for missing try-with-resources
  *								bug 186342 - [compiler][null] Using annotations for null checking
+ *								bug 370639 - [compiler][resource] restore the default for resource leak warnings
+ *								bug 265744 - Enum switch should warn about missing default
+ *								bug 374605 - Unreasonable warning for enum-based switch statements
  *******************************************************************************/
 
 package org.eclipse.jdt.internal.compiler.impl;
@@ -47,7 +50,7 @@ public class IrritantSet {
 	public static final IrritantSet FALLTHROUGH = new IrritantSet(CompilerOptions.FallthroughCase);
 	public static final IrritantSet FINALLY = new IrritantSet(CompilerOptions.FinallyBlockNotCompleting);
 	public static final IrritantSet HIDING = new IrritantSet(CompilerOptions.MaskedCatchBlock);
-	public static final IrritantSet INCOMPLETE_SWITCH = new IrritantSet(CompilerOptions.IncompleteEnumSwitch);
+	public static final IrritantSet INCOMPLETE_SWITCH = new IrritantSet(CompilerOptions.MissingEnumConstantCase);
 	public static final IrritantSet NLS = new IrritantSet(CompilerOptions.NonExternalizedString);
 	public static final IrritantSet NULL = new IrritantSet(CompilerOptions.NullReference);
 	public static final IrritantSet RAW = new IrritantSet(CompilerOptions.RawTypeReference);
@@ -100,18 +103,20 @@ public class IrritantSet {
 				| CompilerOptions.UnusedLabel
 				| CompilerOptions.UnusedTypeArguments
 				| CompilerOptions.UnusedWarningToken
-				| CompilerOptions.ComparingIdentical)
+				| CompilerOptions.ComparingIdentical
+				| CompilerOptions.MissingEnumConstantCase)
 			// group-2 warnings enabled by default
 			.set(
 				CompilerOptions.DeadCode
 				|CompilerOptions.Tasks
-				|CompilerOptions.NullSpecInsufficientInfo
+				|CompilerOptions.UnclosedCloseable
+				|CompilerOptions.NullUncheckedConversion
 				|CompilerOptions.RedundantNullAnnotation);
 		// default errors IF AnnotationBasedNullAnalysis is enabled:
 		COMPILER_DEFAULT_ERRORS.set(
 				CompilerOptions.NullSpecViolation
-				|CompilerOptions.PotentialNullSpecViolation);
-			
+				|CompilerOptions.NullAnnotationInferenceConflict);
+
 		ALL.setAll();
 		HIDING
 			.set(CompilerOptions.FieldHiding)
@@ -121,8 +126,8 @@ public class IrritantSet {
 			.set(CompilerOptions.PotentialNullReference)
 			.set(CompilerOptions.RedundantNullCheck)
 			.set(CompilerOptions.NullSpecViolation)
-			.set(CompilerOptions.PotentialNullSpecViolation)
-			.set(CompilerOptions.NullSpecInsufficientInfo)
+			.set(CompilerOptions.NullAnnotationInferenceConflict)
+			.set(CompilerOptions.NullUncheckedConversion)
 			.set(CompilerOptions.RedundantNullAnnotation);
 
 		RESTRICTION.set(CompilerOptions.DiscouragedReference);
@@ -143,6 +148,7 @@ public class IrritantSet {
 		RESOURCE
 			.set(CompilerOptions.PotentiallyUnclosedCloseable)
 			.set(CompilerOptions.ExplicitlyClosedAutoCloseable);
+		INCOMPLETE_SWITCH.set(CompilerOptions.MissingDefaultCase);
 		String suppressRawWhenUnchecked = System.getProperty("suppressRawWhenUnchecked"); //$NON-NLS-1$
 		if (suppressRawWhenUnchecked != null && "true".equalsIgnoreCase(suppressRawWhenUnchecked)) { //$NON-NLS-1$
 			UNCHECKED.set(CompilerOptions.RawTypeReference);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,9 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Terry Parker <tparker@google.com> 
+ *           - Contribution for https://bugs.eclipse.org/bugs/show_bug.cgi?id=372418
+ *           -  Another problem with inner classes referenced from jars or class folders: "The type ... cannot be resolved"
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
 
@@ -114,7 +117,7 @@ private void computeClasspathLocations(
 						createOutputFolder(outputFolder);
 				}
 				sLocations.add(
-					ClasspathLocation.forSourceFolder((IContainer) target, outputFolder, entry.fullInclusionPatternChars(), entry.fullExclusionPatternChars()));
+					ClasspathLocation.forSourceFolder((IContainer) target, outputFolder, entry.fullInclusionPatternChars(), entry.fullExclusionPatternChars(), entry.ignoreOptionalProblems()));
 				continue nextEntry;
 
 			case IClasspathEntry.CPE_PROJECT :
@@ -271,6 +274,16 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 		// if an additional source file is waiting to be compiled, answer it BUT not if this is a secondary type search
 		// if we answer X.java & it no longer defines Y then the binary type looking for Y will think the class path is wrong
 		// let the recompile loop fix up dependents when the secondary type Y has been deleted from X.java
+		// Only enclosing type names are present in the additional units table, so strip off inner class specifications
+		// when doing the lookup (https://bugs.eclipse.org/372418). 
+		// Also take care of $ in the name of the class (https://bugs.eclipse.org/Bug 377401)
+		int index = qualifiedTypeName.indexOf('$');
+		if (index > 0) {
+			String enclosingTypeName = qualifiedTypeName.substring(0, index);
+			SourceFile unit = (SourceFile) this.additionalUnits.get(enclosingTypeName); // doesn't have file extension
+			if (unit != null)
+				return new NameEnvironmentAnswer(unit, null /*no access restriction*/);
+		}
 		SourceFile unit = (SourceFile) this.additionalUnits.get(qualifiedTypeName); // doesn't have file extension
 		if (unit != null)
 			return new NameEnvironmentAnswer(unit, null /*no access restriction*/);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -56,6 +56,7 @@ import org.eclipse.jdt.internal.compiler.util.Messages;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
+import org.eclipse.jdt.internal.core.hierarchy.HierarchyResolver;
 import org.eclipse.jdt.internal.core.BinaryMember;
 import org.eclipse.jdt.internal.core.BinaryType;
 import org.eclipse.jdt.internal.core.ClassFile;
@@ -72,10 +73,12 @@ import org.eclipse.jdt.internal.core.PackageFragmentRoot;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.core.SourceMapper;
 import org.eclipse.jdt.internal.core.SourceMethod;
+import org.eclipse.jdt.internal.core.SourceType;
 import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
-import org.eclipse.jdt.internal.core.hierarchy.HierarchyResolver;
 import org.eclipse.jdt.internal.core.index.Index;
 import org.eclipse.jdt.internal.core.search.*;
+import org.eclipse.jdt.internal.core.search.indexing.IIndexConstants;
+import org.eclipse.jdt.internal.core.util.ASTNodeFinder;
 import org.eclipse.jdt.internal.core.util.HandleFactory;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -148,6 +151,8 @@ SimpleLookupTable bindings;
 HashSet methodHandles;
 
 private final boolean searchPackageDeclaration;
+private int sourceStartOfMethodToRetain;
+private int sourceEndOfMethodToRetain;
 
 public static class WorkingCopyDocument extends JavaSearchDocument {
 	public org.eclipse.jdt.core.ICompilationUnit workingCopy;
@@ -296,6 +301,22 @@ public MatchLocator(
 		this.searchPackageDeclaration = ((OrPattern)pattern).hasPackageDeclaration();
 	} else {
 		this.searchPackageDeclaration = false;
+	}
+	if (pattern instanceof MethodPattern) {
+	    IType type = ((MethodPattern) pattern).declaringType;
+	    if (type != null && !type.isBinary()) {
+	    	SourceType sourceType = (SourceType) type;
+	    	IMember local = sourceType.getOuterMostLocalContext();
+	    	if (local instanceof IMethod) { // remember this method's range so we don't purge its statements.
+	    		try {
+	    			ISourceRange range = local.getSourceRange();
+	    			this.sourceStartOfMethodToRetain  = range.getOffset();
+	    			this.sourceEndOfMethodToRetain = this.sourceStartOfMethodToRetain + range.getLength() - 1; // offset is 0 based.
+	    		} catch (JavaModelException e) {
+	    			// drop silently. 
+	    		}
+	    	}
+	    }
 	}
 }
 /**
@@ -879,10 +900,47 @@ protected TypeBinding getType(Object typeKey, char[] typeName) {
 	// Get binding from unit scope
 	char[][] compoundName = CharOperation.splitOn('.', typeName);
 	TypeBinding typeBinding = this.unitScope.getType(compoundName, compoundName.length);
+	if (typeBinding == null || !typeBinding.isValidBinding()) {
+		typeBinding = this.lookupEnvironment.getType(compoundName);
+	}
 	this.bindings.put(typeKey, typeBinding);
-	return typeBinding.isValidBinding() ? typeBinding : null;
+	return typeBinding != null && typeBinding.isValidBinding() ? typeBinding : null;
 }
 public MethodBinding getMethodBinding(MethodPattern methodPattern) {
+    MethodBinding methodBinding = getMethodBinding0(methodPattern);
+    if (methodBinding != null)
+    	return methodBinding; // known to be valid.
+    // special handling for methods of anonymous/local types. Since these cannot be looked up in the environment the usual way ...
+    if (methodPattern.focus instanceof SourceMethod) {
+    	char[] typeName = PatternLocator.qualifiedPattern(methodPattern.declaringSimpleName, methodPattern.declaringQualification);
+    	if (CharOperation.indexOf(IIndexConstants.ONE_STAR, typeName, true) >= 0) { // See org.eclipse.jdt.core.search.SearchPattern.enclosingTypeNames(IType)
+    		IType type = methodPattern.declaringType;
+    		IType enclosingType = type.getDeclaringType();
+    		while (enclosingType != null) {
+    			type = enclosingType;
+    			enclosingType = type.getDeclaringType();
+    		}
+    		typeName = type.getFullyQualifiedName().toCharArray();
+    		TypeBinding declaringTypeBinding = getType(typeName, typeName);
+    		if (declaringTypeBinding instanceof SourceTypeBinding) {
+    			SourceTypeBinding sourceTypeBinding = ((SourceTypeBinding) declaringTypeBinding);
+    			ClassScope skope = sourceTypeBinding.scope;
+    			if (skope != null) {
+    				CompilationUnitDeclaration unit = skope.referenceCompilationUnit();
+    				if (unit != null) {
+    					AbstractMethodDeclaration amd = new ASTNodeFinder(unit).findMethod((IMethod) methodPattern.focus);
+    					if (amd != null && amd.binding != null && amd.binding.isValidBinding()) {
+    						this.bindings.put(methodPattern, amd.binding);
+    						return amd.binding;
+    					}
+    				}
+    			}
+    		}
+    	}
+    }
+	return null;
+}
+private MethodBinding getMethodBinding0(MethodPattern methodPattern) {
 	if (this.unitScope == null) return null;
 	// Try to get binding from cache
 	Binding binding = (Binding) this.bindings.get(methodPattern);
@@ -993,7 +1051,7 @@ public void initialize(JavaProject project, int possibleMatchSize) throws JavaMo
 			this.options,
 			new DefaultProblemFactory());
 	this.lookupEnvironment = new LookupEnvironment(this, this.options, problemReporter, this.nameEnvironment);
-
+	this.lookupEnvironment.mayTolerateMissingType = true;
 	this.parser = MatchLocatorParser.createParser(problemReporter, this);
 
 	// basic parser needs also to be reset as project options may have changed
@@ -1727,6 +1785,10 @@ protected void process(PossibleMatch possibleMatch, boolean bindingsWereCreated)
 		}
 		reportMatching(unit, mustResolve);
 	} catch (AbortCompilation e) {
+		if (BasicSearchEngine.VERBOSE) {
+			System.out.println("AbortCompilation while resolving unit " + String.valueOf(unit.getFileName())); //$NON-NLS-1$
+			e.printStackTrace();
+		}
 		// could not resolve: report inaccurate matches
 		reportMatching(unit, false); // do not resolve when cu has errors
 		if (!(e instanceof AbortCompilationUnit)) {
@@ -1747,14 +1809,19 @@ protected void purgeMethodStatements(TypeDeclaration type, boolean checkEachMeth
 			for (int j = 0, length = methods.length; j < length; j++) {
 				AbstractMethodDeclaration method = methods[j];
 				if (!this.currentPossibleMatch.nodeSet.hasPossibleNodes(method.declarationSourceStart, method.declarationSourceEnd)) {
+					if (this.sourceStartOfMethodToRetain != method.declarationSourceStart || this.sourceEndOfMethodToRetain != method.declarationSourceEnd) { // approximate, but no big deal
 					method.statements = null;
 					method.javadoc = null;
 				}
 			}
+			}
 		} else {
 			for (int j = 0, length = methods.length; j < length; j++) {
-				methods[j].statements = null;
-				methods[j].javadoc = null;
+				AbstractMethodDeclaration method = methods[j];
+				if (this.sourceStartOfMethodToRetain != method.declarationSourceStart || this.sourceEndOfMethodToRetain != method.declarationSourceEnd) { // approximate, but no big deal
+					method.statements = null;
+					method.javadoc = null;
+				}
 			}
 		}
 	}

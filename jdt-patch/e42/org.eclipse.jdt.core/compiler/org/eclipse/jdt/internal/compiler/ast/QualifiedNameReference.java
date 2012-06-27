@@ -11,6 +11,7 @@
  *     							bug 185682 - Increment/decrement operators mark local variables as read
  *								bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 365519 - editorial cleanup after bug 186342 and bug 365387
+ *								bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -85,7 +86,7 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 				}
 			}
 			if (!lastFieldBinding.isStatic()) {
-				currentScope.resetEnclosingMethodStaticFlag();
+				currentScope.resetDeclaringClassMethodStaticFlag(lastFieldBinding.declaringClass);
 			}
 			break;
 		case Binding.LOCAL :
@@ -194,7 +195,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 				}
 			}
 			if (!fieldBinding.isStatic()) {
-				currentScope.resetEnclosingMethodStaticFlag();
+				currentScope.resetDeclaringClassMethodStaticFlag(fieldBinding.declaringClass);
 			}
 			break;
 		case Binding.LOCAL : // reading a local variable
@@ -240,14 +241,8 @@ public void checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInf
 			}
 			flowInfo.markAsComparedEqualToNonNull(local);
 			// from thereon it is set
-			if ((flowContext.tagBits & FlowContext.HIDE_NULL_COMPARISON_WARNING) != 0) {
-				flowInfo.markedAsNullOrNonNullInAssertExpression(local);
-			}
 			if (flowContext.initsOnFinally != null) {
 				flowContext.initsOnFinally.markAsComparedEqualToNonNull(local);
-				if ((flowContext.tagBits & FlowContext.HIDE_NULL_COMPARISON_WARNING) != 0) {
-					flowContext.initsOnFinally.markedAsNullOrNonNullInAssertExpression(local);
-				}
 			}
 		}
 	}
@@ -785,6 +780,13 @@ public TypeBinding getOtherFieldBindings(BlockScope scope) {
 			: type;
 }
 
+public boolean isFieldAccess() {
+	if (this.otherBindings != null) {
+		return true;
+	}
+	return (this.bits & ASTNode.RestrictiveFlagMASK) == Binding.FIELD;
+}
+
 public void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo) {
 	//If inlinable field, forget the access emulation, the code gen will directly target it
 	if (((this.bits & ASTNode.DepthMASK) == 0) || (this.constant != Constant.NotAConstant)) {
@@ -1069,33 +1071,5 @@ public void traverse(ASTVisitor visitor, ClassScope scope) {
 
 public String unboundReferenceErrorName() {
 	return new String(this.tokens[0]);
-}
-
-public VariableBinding variableBinding(Scope scope) {
-	// if this is a *static* field and its actualResolvedType is the type in which we currently are asking for the binding,
-	// we can safely return the field binding
-	if (scope != null) {
-		CompilerOptions options = scope.compilerOptions();
-		if(!options.includeFieldsInNullAnalysis) return null;
-		if (this.binding != null && (this.bits & RestrictiveFlagMASK) == Binding.FIELD) {
-			FieldBinding fieldBinding;
-			if (this.otherBindings == null) {
-				fieldBinding = (FieldBinding) this.binding;
-			} else {
-				fieldBinding = this.otherBindings[this.otherBindings.length - 1];
-			}
-			if (fieldBinding.isStatic()) {
-				// does the static field belong to the current type or one of the enclosing ones?
-				ClassScope enclosingClass = scope.enclosingClassScope();
-				while (enclosingClass != null) {
-					TypeDeclaration type = enclosingClass.referenceContext;
-					if (type != null && fieldBinding.declaringClass.original() == type.binding)
-						return fieldBinding;
-					enclosingClass = enclosingClass.enclosingClassScope();
-				}
-			}
-		}
-	}
-	return super.variableBinding(scope);
 }
 }

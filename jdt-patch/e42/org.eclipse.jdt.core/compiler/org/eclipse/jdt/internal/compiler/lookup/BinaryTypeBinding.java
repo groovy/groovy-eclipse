@@ -13,6 +13,7 @@
  *								bug 364890 - BinaryTypeBinding should use char constants from Util
  *								bug 365387 - [compiler][null] bug 186342: Issues to follow up post review and verification.
  *								bug 358903 - Filter practically unimportant resource leak warnings
+ *								bug 365531 - [compiler][null] investigate alternative strategy for internally encoding nullness defaults
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 // GROOVY PATCHED
@@ -395,14 +396,6 @@ void cachePartsFrom(IBinaryType binaryType, boolean needFieldsAndMethods) {
 		}
 		if (this.environment.globalOptions.storeAnnotations)
 			setAnnotations(createAnnotations(binaryType.getAnnotations(), this.environment, missingTypeNames));
-
-		if (this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled
-				&& CharOperation.equals(TypeConstants.PACKAGE_INFO_NAME, binaryType.getSourceName())) 
-		{
-			// only for package-info.java can type-level null-annotations (i.e., @NonNullByDefault) 
-			// on a binary type influence the compilation
-			scanPackageInfoForNullDefaultAnnotation(binaryType);
-		}
 	} finally {
 		// protect against incorrect use of the needFieldsAndMethods flag, see 48459
 		if (this.fields == null)
@@ -1199,35 +1192,55 @@ void scanMethodForNullAnnotation(IBinaryMethod method, MethodBinding methodBindi
 		return;
 	char[][] nullableAnnotationName = this.environment.getNullableAnnotationName();
 	char[][] nonNullAnnotationName = this.environment.getNonNullAnnotationName();
-	if (nullableAnnotationName == null || nonNullAnnotationName == null)
+	char[][] nonNullByDefaultAnnotationName = this.environment.getNonNullByDefaultAnnotationName();
+	if (nullableAnnotationName == null || nonNullAnnotationName == null || nonNullByDefaultAnnotationName == null)
 		return; // not well-configured to use null annotations
+
+	int currentDefault = NO_NULL_DEFAULT;
+	if ((this.tagBits & TagBits.AnnotationNonNullByDefault) != 0) {
+		currentDefault = NONNULL_BY_DEFAULT;
+	} else if ((this.tagBits & TagBits.AnnotationNullUnspecifiedByDefault) != 0) {
+		currentDefault = NULL_UNSPECIFIED_BY_DEFAULT;
+	}
 
 	// return:
 	IBinaryAnnotation[] annotations = method.getAnnotations();
+	boolean explicitNullness = false;
 	if (annotations != null) {
 		for (int i = 0; i < annotations.length; i++) {
 			char[] annotationTypeName = annotations[i].getTypeName();
 			if (annotationTypeName[0] != Util.C_RESOLVED)
 				continue;
 			char[][] typeName = CharOperation.splitOn('/', annotationTypeName, 1, annotationTypeName.length-1); // cut of leading 'L' and trailing ';'
-			if (CharOperation.equals(typeName, nonNullAnnotationName)) {
-				methodBinding.tagBits |= TagBits.AnnotationNonNull;
-				break;
+			if (CharOperation.equals(typeName, nonNullByDefaultAnnotationName)) {
+				methodBinding.tagBits |= TagBits.AnnotationNonNullByDefault;
+				currentDefault = NONNULL_BY_DEFAULT;
 			}
-			if (CharOperation.equals(typeName, nullableAnnotationName)) {
+			if (!explicitNullness && CharOperation.equals(typeName, nonNullAnnotationName)) {
+				methodBinding.tagBits |= TagBits.AnnotationNonNull;
+				explicitNullness = true;
+			}
+			if (!explicitNullness && CharOperation.equals(typeName, nullableAnnotationName)) {
 				methodBinding.tagBits |= TagBits.AnnotationNullable;
-				break;
+				explicitNullness = true;
 			}
 		}
+	}
+	if (!explicitNullness 
+			&& (methodBinding.returnType != null && !methodBinding.returnType.isBaseType()) 
+			&& currentDefault == NONNULL_BY_DEFAULT) {
+		methodBinding.tagBits |= TagBits.AnnotationNonNull;
 	}
 
 	// parameters:
 	TypeBinding[] parameters = methodBinding.parameters;
 	int numVisibleParams = parameters.length;
 	int numParamAnnotations = method.getAnnotatedParametersCount();
+	if (numParamAnnotations > 0 || currentDefault == NONNULL_BY_DEFAULT) {
+		for (int j = 0; j < numVisibleParams; j++) {
+			explicitNullness = false;
 	if (numParamAnnotations > 0) {
 		int startIndex = numParamAnnotations - numVisibleParams;
-		for (int j = 0; j < numVisibleParams; j++) {
 			IBinaryAnnotation[] paramAnnotations = method.getParameterAnnotations(j+startIndex);
 			if (paramAnnotations != null) {
 				for (int i = 0; i < paramAnnotations.length; i++) {
@@ -1239,25 +1252,38 @@ void scanMethodForNullAnnotation(IBinaryMethod method, MethodBinding methodBindi
 						if (methodBinding.parameterNonNullness == null)
 							methodBinding.parameterNonNullness = new Boolean[numVisibleParams];
 						methodBinding.parameterNonNullness[j] = Boolean.TRUE;
+							explicitNullness = true;
 						break;
 					} else if (CharOperation.equals(typeName, nullableAnnotationName)) {
 						if (methodBinding.parameterNonNullness == null)
 							methodBinding.parameterNonNullness = new Boolean[numVisibleParams];
 						methodBinding.parameterNonNullness[j] = Boolean.FALSE;
+							explicitNullness = true;
 						break;
 					}
 				}
 			}
 		}
+			if (!explicitNullness && currentDefault == NONNULL_BY_DEFAULT) {
+				if (methodBinding.parameterNonNullness == null)
+					methodBinding.parameterNonNullness = new Boolean[numVisibleParams];
+				if (methodBinding.parameters[j]!= null && !methodBinding.parameters[j].isBaseType()) {
+					methodBinding.parameterNonNullness[j] = Boolean.TRUE;
 	}
 }
-void scanPackageInfoForNullDefaultAnnotation(IBinaryType binaryType) {
+		}
+	}
+}
+void scanTypeForNullDefaultAnnotation(IBinaryType binaryType, PackageBinding packageBinding, BinaryTypeBinding binaryBinding) {
 	char[][] nonNullByDefaultAnnotationName = this.environment.getNonNullByDefaultAnnotationName();
 	if (nonNullByDefaultAnnotationName == null)
 		return; // not well-configured to use null annotations
 
 	IBinaryAnnotation[] annotations = binaryType.getAnnotations();
+	boolean isPackageInfo = CharOperation.equals(binaryBinding.sourceName(), TypeConstants.PACKAGE_INFO_NAME);
 	if (annotations != null) {
+		long annotationBit = 0L;
+		int nullness = NO_NULL_DEFAULT;
 		int length = annotations.length;
 		for (int i = 0; i < length; i++) {
 			char[] annotationTypeName = annotations[i].getTypeName();
@@ -1272,15 +1298,55 @@ void scanPackageInfoForNullDefaultAnnotation(IBinaryType binaryType) {
 						&& !((BooleanConstant)value).booleanValue())
 					{
 						// parameter is 'false': this means we cancel defaults from outer scopes:
-						this.getPackage().nullnessDefaultAnnotation = ReferenceBinding.NULL_UNSPECIFIED;
+						annotationBit = TagBits.AnnotationNullUnspecifiedByDefault;
+						nullness = NULL_UNSPECIFIED_BY_DEFAULT;
+						break;
+					}
+				}
+				annotationBit = TagBits.AnnotationNonNullByDefault;
+				nullness = NONNULL_BY_DEFAULT;
+				break;
+			}
+		}
+		if (annotationBit != 0L) {
+			binaryBinding.tagBits |= annotationBit;
+			if (isPackageInfo)
+				packageBinding.defaultNullness = nullness;
 						return;
 					}
 				}
-				this.getPackage().nullnessDefaultAnnotation = 
-						this.environment.getNullAnnotationBinding(TagBits.AnnotationNonNull, false/*resolve*/);
+	if (isPackageInfo) {
+		// no default annotations found in package-info
+		packageBinding.defaultNullness = Binding.NULL_UNSPECIFIED_BY_DEFAULT;
+		return;
+	}
+	ReferenceBinding enclosingTypeBinding = binaryBinding.enclosingType;
+	if (enclosingTypeBinding != null) {
+		if ((enclosingTypeBinding.tagBits & TagBits.AnnotationNonNullByDefault) != 0) {
+			binaryBinding.tagBits |= TagBits.AnnotationNonNullByDefault;
+			return;
+		} else if ((enclosingTypeBinding.tagBits & TagBits.AnnotationNullUnspecifiedByDefault) != 0) {
+			binaryBinding.tagBits |= TagBits.AnnotationNullUnspecifiedByDefault;
 				return;
 			}
 		}
+	// no annotation found on the type or its enclosing types
+	// check the package-info for default annotation if not already done before
+	if (packageBinding.defaultNullness == Binding.NO_NULL_DEFAULT && !isPackageInfo) {
+		// this will scan the annotations in package-info
+		ReferenceBinding packageInfo = packageBinding.getType(TypeConstants.PACKAGE_INFO_NAME);
+		if (packageInfo == null) {
+			packageBinding.defaultNullness = Binding.NULL_UNSPECIFIED_BY_DEFAULT;
+		}
+	}
+	// no @NonNullByDefault at type level, check containing package:
+	switch (packageBinding.defaultNullness) {
+		case Binding.NONNULL_BY_DEFAULT : 
+			binaryBinding.tagBits |= TagBits.AnnotationNonNullByDefault;
+			break;
+		case Binding.NULL_UNSPECIFIED_BY_DEFAULT :
+			binaryBinding.tagBits |= TagBits.AnnotationNullUnspecifiedByDefault;
+			break;
 	}
 }
 

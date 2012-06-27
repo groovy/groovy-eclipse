@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,8 @@
  *     Stephan Herrmann - Contributions for
  *     							bug 358827 - [1.7] exception analysis for t-w-r spoils null analysis
  *								bug 186342 - [compiler][null] Using annotations for null checking
+ *								bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
+ *								bug 365859 - [compiler][null] distinguish warnings based on flow analysis vs. null annotations
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.flow;
 
@@ -19,6 +21,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Expression;
+import org.eclipse.jdt.internal.compiler.ast.FakedTrackingVariable;
 import org.eclipse.jdt.internal.compiler.ast.LabeledStatement;
 import org.eclipse.jdt.internal.compiler.ast.Reference;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
@@ -55,15 +58,16 @@ public class FlowContext implements TypeConstants {
 
 	public int tagBits;
 
-	// array to store the expected type from the potential error location (for display in error messages):
-	public TypeBinding[] expectedTypes = null;
+	// array to store the provided and expected types from the potential error location (for display in error messages):
+	public TypeBinding[][] providedExpectedTypes = null;
 
 	public static final int DEFER_NULL_DIAGNOSTIC = 0x1;
 	public static final int PREEMPT_NULL_DIAGNOSTIC = 0x2;
 	/**
 	 * used to hide null comparison related warnings inside assert statements 
 	 */
-	public static final int HIDE_NULL_COMPARISON_WARNING = 0x4;
+	public static final int HIDE_NULL_COMPARISON_WARNING = 0x1000;
+	public static final int HIDE_NULL_COMPARISON_WARNING_MASK = 0xF000;
 
 public static final int CAN_ONLY_NULL_NON_NULL = 0x0000;
 //check against null and non null, with definite values -- comparisons
@@ -74,6 +78,8 @@ public static final int CAN_ONLY_NON_NULL = 0x0002;
 public static final int MAY_NULL = 0x0003;
 //check binding a value to a @NonNull variable 
 public final static int ASSIGN_TO_NONNULL = 0x0080;
+//check against unclosed resource at early exit:
+public static final int EXIT_RESOURCE = 0x0800;
 // check against null, with potential values -- NPE guard
 public static final int CHECK_MASK = 0x00FF;
 public static final int IN_COMPARISON_NULL = 0x0100;
@@ -83,7 +89,7 @@ public static final int IN_ASSIGNMENT = 0x0300;
 // check happened in an assignment
 public static final int IN_INSTANCEOF = 0x0400;
 // check happened in an instanceof expression
-public static final int CONTEXT_MASK = ~CHECK_MASK;
+public static final int CONTEXT_MASK = ~CHECK_MASK & ~HIDE_NULL_COMPARISON_WARNING_MASK;
 
 public FlowContext(FlowContext parent, ASTNode associatedNode) {
 	this.parent = parent;
@@ -556,20 +562,32 @@ public void recordContinueFrom(FlowContext innerFlowContext, FlowInfo flowInfo) 
 	// default implementation: do nothing
 }
 
-protected void recordExpectedType(TypeBinding expectedType, int nullCount) {
+/** 
+ * Record that we found an early exit from a method while a resource is in scope.
+ * @param scope enclosing scope
+ * @param flowInfo flowInfo at the point of the early exit
+ * @param trackingVar representation of the resource
+ * @param reference the return or throw statement marking the early exit
+ * @return true if the situation has been handled by this flow context.
+ */
+public boolean recordExitAgainstResource(BlockScope scope, FlowInfo flowInfo, FakedTrackingVariable trackingVar, ASTNode reference) {
+	return false; // not handled
+}
+
+protected void recordProvidedExpectedTypes(TypeBinding providedType, TypeBinding expectedType, int nullCount) {
 	if (nullCount == 0) {
-		this.expectedTypes = new TypeBinding[5];
-	} else if (this.expectedTypes == null) {
+		this.providedExpectedTypes = new TypeBinding[5][];
+	} else if (this.providedExpectedTypes == null) {
 		int size = 5;
 		while (size <= nullCount) size *= 2;
-		this.expectedTypes = new TypeBinding[size];
+		this.providedExpectedTypes = new TypeBinding[size][];
 	}
-	else if (nullCount >= this.expectedTypes.length) {
-		int oldLen = this.expectedTypes.length;
-		System.arraycopy(this.expectedTypes, 0,
-			this.expectedTypes = new TypeBinding[nullCount * 2], 0, oldLen);
+	else if (nullCount >= this.providedExpectedTypes.length) {
+		int oldLen = this.providedExpectedTypes.length;
+		System.arraycopy(this.providedExpectedTypes, 0,
+			this.providedExpectedTypes = new TypeBinding[nullCount * 2][], 0, oldLen);
 	}
-	this.expectedTypes[nullCount] = expectedType;
+	this.providedExpectedTypes[nullCount] = new TypeBinding[]{providedType, expectedType};
 }
 
 protected boolean recordFinalAssignment(VariableBinding variable, Reference finalReference) {
@@ -580,7 +598,9 @@ protected boolean recordFinalAssignment(VariableBinding variable, Reference fina
  * Record a null reference for use by deferred checks. Only looping or
  * finally contexts really record that information.
  * @param local the local variable involved in the check
- * @param expression the expression within which local lays
+ * @param location the location triggering the analysis, for normal null dereference
+ *      this is an expression resolving to 'local', for resource leaks it is an
+ *      early exit statement.
  * @param status the status against which the check must be performed; one of
  * 		{@link #CAN_ONLY_NULL CAN_ONLY_NULL}, {@link #CAN_ONLY_NULL_NON_NULL
  * 		CAN_ONLY_NULL_NON_NULL}, {@link #MAY_NULL MAY_NULL},
@@ -588,8 +608,8 @@ protected boolean recordFinalAssignment(VariableBinding variable, Reference fina
  *      combined with a context indicator (one of {@link #IN_COMPARISON_NULL},
  *      {@link #IN_COMPARISON_NON_NULL}, {@link #IN_ASSIGNMENT} or {@link #IN_INSTANCEOF})
  */
-protected void recordNullReference(VariableBinding local,
-	Expression expression, int status) {
+protected void recordNullReference(LocalVariableBinding local,
+	ASTNode location, int status) {
 	// default implementation: do nothing
 }
 
@@ -620,41 +640,42 @@ public void recordSettingFinal(VariableBinding variable, Reference finalReferenc
  * context).
  * @param scope the scope into which the check is performed
  * @param local the local variable involved in the check
- * @param reference the expression within which local lies
+ * @param location the location triggering the analysis, for normal null dereference
+ *      this is an expression resolving to 'local', for resource leaks it is an
+ *      early exit statement.
  * @param checkType the status against which the check must be performed; one
  * 		of {@link #CAN_ONLY_NULL CAN_ONLY_NULL}, {@link #CAN_ONLY_NULL_NON_NULL
  * 		CAN_ONLY_NULL_NON_NULL}, {@link #MAY_NULL MAY_NULL}, potentially
  *      combined with a context indicator (one of {@link #IN_COMPARISON_NULL},
  *      {@link #IN_COMPARISON_NON_NULL}, {@link #IN_ASSIGNMENT} or {@link #IN_INSTANCEOF})
+ *      and a bit to indicate whether the reference is being recorded inside an assert, 
+ *      {@link #HIDE_NULL_COMPARISON_WARNING}
  * @param flowInfo the flow info at the check point; deferring contexts will
  *  	perform supplementary checks against flow info instances that cannot
  *  	be known at the time of calling this method (they are influenced by
  * 		code that follows the current point)
  */
-public void recordUsingNullReference(Scope scope, VariableBinding local,
-		Expression reference, int checkType, FlowInfo flowInfo) {
+public void recordUsingNullReference(Scope scope, LocalVariableBinding local,
+		ASTNode location, int checkType, FlowInfo flowInfo) {
 	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) != 0 ||
 			flowInfo.isDefinitelyUnknown(local)) {
 		return;
 	}
-	switch (checkType) {
+	// if reference is being recorded inside an assert, we will not raise redundant null check warnings
+	checkType |= (this.tagBits & FlowContext.HIDE_NULL_COMPARISON_WARNING);
+	int checkTypeWithoutHideNullWarning = checkType & ~FlowContext.HIDE_NULL_COMPARISON_WARNING_MASK;
+	switch (checkTypeWithoutHideNullWarning) {
 		case CAN_ONLY_NULL_NON_NULL | IN_COMPARISON_NULL:
 		case CAN_ONLY_NULL_NON_NULL | IN_COMPARISON_NON_NULL:
 			if (flowInfo.isDefinitelyNonNull(local)) {
-				if (checkType == (CAN_ONLY_NULL_NON_NULL | IN_COMPARISON_NON_NULL)) {
-					if ((this.tagBits & FlowContext.HIDE_NULL_COMPARISON_WARNING) == 0) {
-						scope.problemReporter().variableRedundantCheckOnNonNull(local, reference);
+				if (checkTypeWithoutHideNullWarning == (CAN_ONLY_NULL_NON_NULL | IN_COMPARISON_NON_NULL)) {
+					if ((checkType & HIDE_NULL_COMPARISON_WARNING) == 0) {
+						scope.problemReporter().localVariableRedundantCheckOnNonNull(local, location);
 					}
-					if (!flowInfo.isMarkedAsNullOrNonNullInAssertExpression(local)) {
-						flowInfo.initsWhenFalse().setReachMode(FlowInfo.UNREACHABLE_BY_NULLANALYSIS);
-					}
+					flowInfo.initsWhenFalse().setReachMode(FlowInfo.UNREACHABLE_BY_NULLANALYSIS);
 				} else {
-					if ((this.tagBits & FlowContext.HIDE_NULL_COMPARISON_WARNING) == 0) {
-						scope.problemReporter().variableNonNullComparedToNull(local, reference);
-					}
-					if (!flowInfo.isMarkedAsNullOrNonNullInAssertExpression(local)) {
-						flowInfo.initsWhenTrue().setReachMode(FlowInfo.UNREACHABLE_BY_NULLANALYSIS);
-					}
+					scope.problemReporter().localVariableNonNullComparedToNull(local, location);
+					flowInfo.initsWhenTrue().setReachMode(FlowInfo.UNREACHABLE_BY_NULLANALYSIS);
 				}
 				return;
 			}
@@ -666,50 +687,45 @@ public void recordUsingNullReference(Scope scope, VariableBinding local,
 		case CAN_ONLY_NULL | IN_COMPARISON_NON_NULL:
 		case CAN_ONLY_NULL | IN_ASSIGNMENT:
 		case CAN_ONLY_NULL | IN_INSTANCEOF:
+			Expression reference = (Expression)location;
 			if (flowInfo.isDefinitelyNull(local)) {
-				switch(checkType & CONTEXT_MASK) {
+				switch(checkTypeWithoutHideNullWarning & CONTEXT_MASK) {
 					case FlowContext.IN_COMPARISON_NULL:
-						if (((checkType & CHECK_MASK) == CAN_ONLY_NULL) && (reference.implicitConversion & TypeIds.UNBOXING) != 0) { // check for auto-unboxing first and report appropriate warning
-							scope.problemReporter().variableNullReference(local, reference);
+						if (((checkTypeWithoutHideNullWarning & CHECK_MASK) == CAN_ONLY_NULL) && (reference.implicitConversion & TypeIds.UNBOXING) != 0) { // check for auto-unboxing first and report appropriate warning
+							scope.problemReporter().localVariableNullReference(local, reference);
 							return;
 						}
-						if ((this.tagBits & FlowContext.HIDE_NULL_COMPARISON_WARNING) == 0) {
-							scope.problemReporter().variableRedundantCheckOnNull(local, reference);
+						if ((checkType & HIDE_NULL_COMPARISON_WARNING) == 0) {
+							scope.problemReporter().localVariableRedundantCheckOnNull(local, reference);
 						}
-						if (!flowInfo.isMarkedAsNullOrNonNullInAssertExpression(local)) {
-							flowInfo.initsWhenFalse().setReachMode(FlowInfo.UNREACHABLE_BY_NULLANALYSIS);
-						}
+						flowInfo.initsWhenFalse().setReachMode(FlowInfo.UNREACHABLE_BY_NULLANALYSIS);
 						return;
 					case FlowContext.IN_COMPARISON_NON_NULL:
-						if (((checkType & CHECK_MASK) == CAN_ONLY_NULL) && (reference.implicitConversion & TypeIds.UNBOXING) != 0) { // check for auto-unboxing first and report appropriate warning
-							scope.problemReporter().variableNullReference(local, reference);
+						if (((checkTypeWithoutHideNullWarning & CHECK_MASK) == CAN_ONLY_NULL) && (reference.implicitConversion & TypeIds.UNBOXING) != 0) { // check for auto-unboxing first and report appropriate warning
+							scope.problemReporter().localVariableNullReference(local, reference);
 							return;
 						}
-						if ((this.tagBits & FlowContext.HIDE_NULL_COMPARISON_WARNING) == 0) {
-							scope.problemReporter().variableNullComparedToNonNull(local, reference);
-						}
-						if (!flowInfo.isMarkedAsNullOrNonNullInAssertExpression(local)) {
-							flowInfo.initsWhenTrue().setReachMode(FlowInfo.UNREACHABLE_BY_NULLANALYSIS);
-						}
+						scope.problemReporter().localVariableNullComparedToNonNull(local, reference);
+						flowInfo.initsWhenTrue().setReachMode(FlowInfo.UNREACHABLE_BY_NULLANALYSIS);
 						return;
 					case FlowContext.IN_ASSIGNMENT:
-						scope.problemReporter().variableRedundantNullAssignment(local, reference);
+						scope.problemReporter().localVariableRedundantNullAssignment(local, reference);
 						return;
 					case FlowContext.IN_INSTANCEOF:
-						scope.problemReporter().variableNullInstanceof(local, reference);
+						scope.problemReporter().localVariableNullInstanceof(local, reference);
 						return;
 				}
 			} else if (flowInfo.isPotentiallyNull(local)) {
-				switch(checkType & CONTEXT_MASK) {
+				switch(checkTypeWithoutHideNullWarning & CONTEXT_MASK) {
 					case FlowContext.IN_COMPARISON_NULL:
-						if (((checkType & CHECK_MASK) == CAN_ONLY_NULL) && (reference.implicitConversion & TypeIds.UNBOXING) != 0) { // check for auto-unboxing first and report appropriate warning
-							scope.problemReporter().variablePotentialNullReference(local, reference);
+						if (((checkTypeWithoutHideNullWarning & CHECK_MASK) == CAN_ONLY_NULL) && (reference.implicitConversion & TypeIds.UNBOXING) != 0) { // check for auto-unboxing first and report appropriate warning
+							scope.problemReporter().localVariablePotentialNullReference(local, reference);
 							return;
 						}
 						break;
 					case FlowContext.IN_COMPARISON_NON_NULL:
-						if (((checkType & CHECK_MASK) == CAN_ONLY_NULL) && (reference.implicitConversion & TypeIds.UNBOXING) != 0) { // check for auto-unboxing first and report appropriate warning
-							scope.problemReporter().variablePotentialNullReference(local, reference);
+						if (((checkTypeWithoutHideNullWarning & CHECK_MASK) == CAN_ONLY_NULL) && (reference.implicitConversion & TypeIds.UNBOXING) != 0) { // check for auto-unboxing first and report appropriate warning
+							scope.problemReporter().localVariablePotentialNullReference(local, reference);
 							return;
 						}
 						break;
@@ -720,11 +736,11 @@ public void recordUsingNullReference(Scope scope, VariableBinding local,
 			break;
 		case MAY_NULL :
 			if (flowInfo.isDefinitelyNull(local)) {
-				scope.problemReporter().variableNullReference(local, reference);
+				scope.problemReporter().localVariableNullReference(local, location);
 				return;
 			}
 			if (flowInfo.isPotentiallyNull(local)) {
-				scope.problemReporter().variablePotentialNullReference(local, reference);
+				scope.problemReporter().localVariablePotentialNullReference(local, location);
 				return;
 			}
 			break;
@@ -732,7 +748,7 @@ public void recordUsingNullReference(Scope scope, VariableBinding local,
 			// never happens
 	}
 	if (this.parent != null) {
-		this.parent.recordUsingNullReference(scope, local, reference, checkType,
+		this.parent.recordUsingNullReference(scope, local, location, checkType,
 				flowInfo);
 	}
 }
@@ -775,25 +791,33 @@ public String toString() {
  * Record that a nullity mismatch was detected against an annotated type reference.
  * @param currentScope scope for error reporting
  * @param expression the expression violating the specification
- * @param nullStatus the null status of expression at the current location
+ * @param providedType the type of the provided value, i.e., either expression or an element thereof (in ForeachStatements)
  * @param expectedType the declared type of the spec'ed variable, for error reporting.
+ * @param nullStatus the null status of expression at the current location
  */
-public void recordNullityMismatch(BlockScope currentScope, Expression expression, int nullStatus, TypeBinding expectedType) {
+public void recordNullityMismatch(BlockScope currentScope, Expression expression, TypeBinding providedType, TypeBinding expectedType, int nullStatus) {
+	if (providedType == null) {
+		return; // assume type error was already reported
+	}
 	if (expression.localVariableBinding() != null) { // flowContext cannot yet handle non-localvar expressions (e.g., fields)
 		// find the inner-most flowContext that might need deferred handling:
 		FlowContext currentContext = this;
 		while (currentContext != null) {
 			// some flow contexts implement deferred checking, should we participate in that?
-			if (currentContext.internalRecordNullityMismatch(expression, nullStatus, expectedType, ASSIGN_TO_NONNULL))
+			int isInsideAssert = 0x0;
+			if ((this.tagBits & FlowContext.HIDE_NULL_COMPARISON_WARNING) != 0) {
+				isInsideAssert = FlowContext.HIDE_NULL_COMPARISON_WARNING;
+			}
+			if (currentContext.internalRecordNullityMismatch(expression, providedType, nullStatus, expectedType, ASSIGN_TO_NONNULL | isInsideAssert))
 				return;
 			currentContext = currentContext.parent;
 		}
 	}
 	// no reason to defer, so report now:
 	char[][] annotationName = currentScope.environment().getNonNullAnnotationName();
-	currentScope.problemReporter().nullityMismatch(expression, expectedType, nullStatus, annotationName);
+	currentScope.problemReporter().nullityMismatch(expression, providedType, expectedType, nullStatus, annotationName);
 }
-protected boolean internalRecordNullityMismatch(Expression expression, int nullStatus, TypeBinding expectedType, int checkType) {
+protected boolean internalRecordNullityMismatch(Expression expression, TypeBinding providedType, int nullStatus, TypeBinding expectedType, int checkType) {
 	// nop, to be overridden in subclasses
 	return false; // not recorded
 }

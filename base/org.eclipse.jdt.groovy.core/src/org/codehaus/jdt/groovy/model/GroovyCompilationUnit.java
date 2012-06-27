@@ -149,7 +149,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	 */
 	public ModuleNodeInfo getNewModuleInfo() {
 		try {
-			openWhenClosed(createElementInfo(), new NullProgressMonitor());
+			openWhenClosed(createElementInfo(), false/* or should it be true... ? */, new NullProgressMonitor());
 		} catch (JavaModelException e) {
 			Util.log(e, "Exception thrown when trying to get Groovy module node for " + this.getElementName()); //$NON-NLS-1$
 		}

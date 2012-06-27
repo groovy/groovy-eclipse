@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,6 @@ package org.eclipse.jdt.internal.core.search.matching;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jdt.core.*;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.*;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
@@ -45,19 +44,19 @@ public class SuperTypeNamesCollector {
 		public boolean visit(TypeDeclaration typeDeclaration, BlockScope scope) {
 			ReferenceBinding binding = typeDeclaration.binding;
 			if (SuperTypeNamesCollector.this.matches(binding))
-				collectSuperTypeNames(binding);
+				collectSuperTypeNames(binding, binding.compoundName);
 			return true;
 		}
 		public boolean visit(TypeDeclaration typeDeclaration, CompilationUnitScope scope) {
 			ReferenceBinding binding = typeDeclaration.binding;
 			if (SuperTypeNamesCollector.this.matches(binding))
-				collectSuperTypeNames(binding);
+				collectSuperTypeNames(binding, binding.compoundName);
 			return true;
 		}
 		public boolean visit(TypeDeclaration memberTypeDeclaration, ClassScope scope) {
 			ReferenceBinding binding = memberTypeDeclaration.binding;
 			if (SuperTypeNamesCollector.this.matches(binding))
-				collectSuperTypeNames(binding);
+				collectSuperTypeNames(binding, binding.compoundName);
 			return true;
 		}
 		public boolean visit(FieldDeclaration fieldDeclaration, MethodScope scope) {
@@ -82,6 +81,9 @@ IProgressMonitor progressMonitor;
 char[][][] result;
 int resultIndex;
 
+char[][][] samePackageSuperTypeName; // set only if focus is null
+int samePackageIndex;
+
 public SuperTypeNamesCollector(
 	SearchPattern pattern,
 	char[] typeSimpleName,
@@ -98,6 +100,21 @@ public SuperTypeNamesCollector(
 	this.progressMonitor = progressMonitor;
 }
 
+private boolean addIfSamePackage(char[][] compoundName, char[][] path) {
+	if (compoundName.length != path.length) return false;
+	int resultLength = this.samePackageSuperTypeName.length;
+	for (int i = 0; i < resultLength; i++)
+		if (CharOperation.equals(this.samePackageSuperTypeName[i], compoundName)) return false; // already known
+	
+	for (int i = 0, length = compoundName.length - 1; i < length; i ++) {
+		if (!CharOperation.equals(compoundName[i], path[i])) return false;
+	}
+	if (resultLength == this.samePackageIndex)
+		System.arraycopy(this.samePackageSuperTypeName, 0, this.samePackageSuperTypeName = new char[resultLength*2][][], 0, resultLength);
+	this.samePackageSuperTypeName[this.samePackageIndex++] = compoundName;
+	return true;
+}
+
 protected void addToResult(char[][] compoundName) {
 	int resultLength = this.result.length;
 	for (int i = 0; i < resultLength; i++)
@@ -107,6 +124,7 @@ protected void addToResult(char[][] compoundName) {
 		System.arraycopy(this.result, 0, this.result = new char[resultLength*2][][], 0, resultLength);
 	this.result[this.resultIndex++] = compoundName;
 }
+
 /*
  * Parse the given compiation unit and build its type bindings.
  */
@@ -141,7 +159,7 @@ public char[][][] collect() throws JavaModelException {
 			if (this.type.isBinary()) {
 				BinaryTypeBinding binding = this.locator.cacheBinaryType(this.type, null);
 				if (binding != null)
-					collectSuperTypeNames(binding);
+					collectSuperTypeNames(binding, null);
 			} else {
 				ICompilationUnit unit = this.type.getCompilationUnit();
 				SourceType sourceType = (SourceType) this.type;
@@ -150,7 +168,7 @@ public char[][][] collect() throws JavaModelException {
 				if (parsedUnit != null) {
 					TypeDeclaration typeDecl = new ASTNodeFinder(parsedUnit).findType(this.type);
 					if (typeDecl != null && typeDecl.binding != null)
-						collectSuperTypeNames(typeDecl.binding);
+						collectSuperTypeNames(typeDecl.binding, null);
 				}
 			}
 		} catch (AbortCompilation e) {
@@ -171,6 +189,7 @@ public char[][][] collect() throws JavaModelException {
 	Util.sort(paths); // sort by projects
 	JavaProject previousProject = null;
 	this.result = new char[1][][];
+	this.samePackageSuperTypeName = new char[1][][];
 	this.resultIndex = 0;
 	for (int i = 0, length = paths.length; i < length; i++) {
 		try {
@@ -191,7 +210,7 @@ public char[][][] collect() throws JavaModelException {
 				IClassFile classFile = (IClassFile) openable;
 				BinaryTypeBinding binding = this.locator.cacheBinaryType(classFile.getType(), null);
 				if (matches(binding))
-					collectSuperTypeNames(binding);
+					collectSuperTypeNames(binding, binding.compoundName);
 			}
 		} catch (AbortCompilation e) {
 			// ignore: continue with next element
@@ -206,11 +225,15 @@ public char[][][] collect() throws JavaModelException {
 /**
  * Collects the names of all the supertypes of the given type.
  */
-protected void collectSuperTypeNames(ReferenceBinding binding) {
+protected void collectSuperTypeNames(ReferenceBinding binding, char[][] path) {
 	ReferenceBinding superclass = binding.superclass();
+	if (path != null) {
+		boolean samePackage = addIfSamePackage(superclass.compoundName, path);
+		if (!samePackage) path = null;
+	}
 	if (superclass != null) {
 		addToResult(superclass.compoundName);
-		collectSuperTypeNames(superclass);
+		collectSuperTypeNames(superclass, null);
 	}
 
 	ReferenceBinding[] interfaces = binding.superInterfaces();
@@ -218,7 +241,7 @@ protected void collectSuperTypeNames(ReferenceBinding binding) {
 		for (int i = 0; i < interfaces.length; i++) {
 			ReferenceBinding interfaceBinding = interfaces[i];
 			addToResult(interfaceBinding.compoundName);
-			collectSuperTypeNames(interfaceBinding);
+			collectSuperTypeNames(interfaceBinding, null);
 		}
 	}
 }
@@ -253,6 +276,9 @@ protected String[] getPathsOfDeclaringType() {
 		IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
 		this.progressMonitor == null ? null : new SubProgressMonitor(this.progressMonitor, 100));
 	return pathCollector.getPaths();
+}
+public char[][][] getSamePackageSuperTypeNames() {
+	return this.samePackageSuperTypeName;
 }
 protected boolean matches(char[][] compoundName) {
 	int length = compoundName.length;

@@ -3934,7 +3934,6 @@ public class ClassFile implements TypeConstants, TypeIds {
 
 		// retrieve the enclosing one guaranteed to be the one matching the propagated flow info
 		// 1FF9ZBU: LFCOM:ALL - Local variable attributes busted (Sanity check)
-		// see also https://bugs.eclipse.org/bugs/show_bug.cgi?id=247564#c65
 		this.codeStream.maxFieldCount = aType.scope.outerMostClassScope().referenceType().maxFieldCount;
 	}
 

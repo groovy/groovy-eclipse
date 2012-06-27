@@ -36,7 +36,6 @@ import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
-import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
 import org.eclipse.jdt.internal.compiler.problem.ShouldNotImplement;
 import org.eclipse.jdt.internal.compiler.util.Messages;
@@ -526,23 +525,17 @@ public final boolean checkCastTypesCompatibility(Scope scope, TypeBinding castTy
  * @param flowInfo the upstream flow info; caveat: may get modified
  */
 public void checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInfo) {
-	VariableBinding var = variableBinding(scope);
-	if (var != null &&
-			(var.type.tagBits & TagBits.IsBaseType) == 0) {
+	LocalVariableBinding local = localVariableBinding();
+	if (local != null &&
+			(local.type.tagBits & TagBits.IsBaseType) == 0) {
 		if ((this.bits & ASTNode.IsNonNull) == 0) {
-			flowContext.recordUsingNullReference(scope, var, this,
+			flowContext.recordUsingNullReference(scope, local, this,
 					FlowContext.MAY_NULL, flowInfo);
 		}
-		flowInfo.markAsComparedEqualToNonNull(var );
+		flowInfo.markAsComparedEqualToNonNull(local);
 			// from thereon it is set
-		if ((flowContext.tagBits & FlowContext.HIDE_NULL_COMPARISON_WARNING) != 0) {
-			flowInfo.markedAsNullOrNonNullInAssertExpression(var);
-		}
 		if (flowContext.initsOnFinally != null) {
-			flowContext.initsOnFinally.markAsComparedEqualToNonNull(var);
-			if ((flowContext.tagBits & FlowContext.HIDE_NULL_COMPARISON_WARNING) != 0) {
-				flowContext.initsOnFinally.markedAsNullOrNonNullInAssertExpression(var);
-			}
+			flowContext.initsOnFinally.markAsComparedEqualToNonNull(local);
 		}
 	}
 }
@@ -873,9 +866,9 @@ public int nullStatus(FlowInfo flowInfo) {
 		this.constant != null && this.constant != Constant.NotAConstant)
 	return FlowInfo.NON_NULL; // constant expression cannot be null
 
-	VariableBinding var = variableBinding(null);
-	if (var != null)
-		return flowInfo.nullStatus(var);
+	LocalVariableBinding local = localVariableBinding();
+	if (local != null)
+		return flowInfo.nullStatus(local);
 	return FlowInfo.NON_NULL;
 }
 
@@ -1112,16 +1105,5 @@ public void traverse(ASTVisitor visitor, BlockScope scope) {
  */
 public void traverse(ASTVisitor visitor, ClassScope scope) {
 	// nothing to do
-}
-
-/**
- * Returns the field or local variable referenced by this node. Can be a direct reference (SingleNameReference)
- * or thru a cast expression etc...
- * This is used for the purpose of obtaining a local variable or field binding for the purpose of null analysis.
- * @param scope This is the current scope in which binding is requested and is needed to ascertain if a static field
- * belongs to the current type for null analysis. A <code>null</code> value may be passed to this parameter
-*/
-public VariableBinding variableBinding(Scope scope) {
-	return null;
 }
 }

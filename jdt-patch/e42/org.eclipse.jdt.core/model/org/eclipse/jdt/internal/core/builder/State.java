@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,7 +27,7 @@ public class State {
 // NOTE: this state cannot contain types that are not defined in this project
 
 String javaProjectName;
-ClasspathMultiDirectory[] sourceLocations;
+public ClasspathMultiDirectory[] sourceLocations;
 ClasspathLocation[] binaryLocations;
 // keyed by the project relative path of the type (i.e. "src1/p1/p2/A.java"), value is a ReferenceCollection or an AdditionalTypeCollection
 SimpleLookupTable references;
@@ -44,7 +44,7 @@ private long previousStructuralBuildTime;
 private StringSet structurallyChangedTypes;
 public static int MaxStructurallyChangedTypes = 100; // keep track of ? structurally changed types, otherwise consider all to be changed
 
-public static final byte VERSION = 0x001A; // fix for 287164
+public static final byte VERSION = 0x001B;
 
 static final byte SOURCE_FOLDER = 1;
 static final byte BINARY_FOLDER = 2;
@@ -246,7 +246,7 @@ static State read(IProject project, DataInputStream in) throws IOException {
 		if ((folderName = in.readUTF()).length() > 0) sourceFolder = project.getFolder(folderName);
 		if ((folderName = in.readUTF()).length() > 0) outputFolder = project.getFolder(folderName);
 		ClasspathMultiDirectory md =
-			(ClasspathMultiDirectory) ClasspathLocation.forSourceFolder(sourceFolder, outputFolder, readNames(in), readNames(in));
+			(ClasspathMultiDirectory) ClasspathLocation.forSourceFolder(sourceFolder, outputFolder, readNames(in), readNames(in), in.readBoolean());
 		if (in.readBoolean())
 			md.hasIndependentOutputFolder = true;
 		newState.sourceLocations[i] = md;
@@ -425,6 +425,7 @@ void write(DataOutputStream out) throws IOException {
 		out.writeUTF(md.binaryFolder.getProjectRelativePath().toString());
 		writeNames(md.inclusionPatterns, out);
 		writeNames(md.exclusionPatterns, out);
+		out.writeBoolean(md.ignoreOptionalProblems);
 		out.writeBoolean(md.hasIndependentOutputFolder);
 	}
 

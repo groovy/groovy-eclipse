@@ -1421,6 +1421,7 @@ private boolean checkKeyword() {
 			char[][] keywords = new char[Keywords.COUNT][];
 			int count = 0;
 			if(unit.typeCount == 0
+				&& (!this.compilationUnit.isPackageInfo() || this.compilationUnit.currentPackage != null)
 				&& this.lastModifiers == ClassFileConstants.AccDefault) {
 				keywords[count++] = Keywords.IMPORT;
 			}
@@ -1430,33 +1431,35 @@ private boolean checkKeyword() {
 				&& this.compilationUnit.currentPackage == null) {
 				keywords[count++] = Keywords.PACKAGE;
 			}
-			if((this.lastModifiers & ClassFileConstants.AccPublic) == 0) {
-				boolean hasNoPublicType = true;
-				for (int i = 0; i < unit.typeCount; i++) {
-					if((unit.types[i].typeDeclaration.modifiers & ClassFileConstants.AccPublic) != 0) {
-						hasNoPublicType = false;
+			if (!this.compilationUnit.isPackageInfo()) {
+				if((this.lastModifiers & ClassFileConstants.AccPublic) == 0) {
+					boolean hasNoPublicType = true;
+					for (int i = 0; i < unit.typeCount; i++) {
+						if((unit.types[i].typeDeclaration.modifiers & ClassFileConstants.AccPublic) != 0) {
+							hasNoPublicType = false;
+						}
+					}
+					if(hasNoPublicType) {
+						keywords[count++] = Keywords.PUBLIC;
 					}
 				}
-				if(hasNoPublicType) {
-					keywords[count++] = Keywords.PUBLIC;
+				if((this.lastModifiers & ClassFileConstants.AccAbstract) == 0
+					&& (this.lastModifiers & ClassFileConstants.AccFinal) == 0) {
+					keywords[count++] = Keywords.ABSTRACT;
 				}
-			}
-			if((this.lastModifiers & ClassFileConstants.AccAbstract) == 0
-				&& (this.lastModifiers & ClassFileConstants.AccFinal) == 0) {
-				keywords[count++] = Keywords.ABSTRACT;
-			}
-			if((this.lastModifiers & ClassFileConstants.AccAbstract) == 0
-				&& (this.lastModifiers & ClassFileConstants.AccFinal) == 0) {
-				keywords[count++] = Keywords.FINAL;
-			}
-
-			keywords[count++] = Keywords.CLASS;
-			if (this.options.complianceLevel >= ClassFileConstants.JDK1_5) {
-				keywords[count++] = Keywords.ENUM;
-			}
-
-			if((this.lastModifiers & ClassFileConstants.AccFinal) == 0) {
-				keywords[count++] = Keywords.INTERFACE;
+				if((this.lastModifiers & ClassFileConstants.AccAbstract) == 0
+					&& (this.lastModifiers & ClassFileConstants.AccFinal) == 0) {
+					keywords[count++] = Keywords.FINAL;
+				}
+	
+				keywords[count++] = Keywords.CLASS;
+				if (this.options.complianceLevel >= ClassFileConstants.JDK1_5) {
+					keywords[count++] = Keywords.ENUM;
+				}
+	
+				if((this.lastModifiers & ClassFileConstants.AccFinal) == 0) {
+					keywords[count++] = Keywords.INTERFACE;
+				}
 			}
 			if(count != 0) {
 				System.arraycopy(keywords, 0, keywords = new char[count][], 0, count);

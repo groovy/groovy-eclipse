@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -107,6 +107,15 @@ public RecoveredElement add(Statement statement, int bracketBalanceValue) {
 	/* default behavior is to delegate recording to parent if any */
 	resetPendingModifiers();
 	if (this.parent == null) return this; // ignore
+	if (this instanceof RecoveredType) {
+		TypeDeclaration typeDeclaration = ((RecoveredType) this).typeDeclaration;
+		if (typeDeclaration != null && (typeDeclaration.bits & ASTNode.IsAnonymousType) != 0) { 
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=291040, new X(<SelectOnMessageSend:zoo()>) { ???
+			if (statement.sourceStart > typeDeclaration.sourceStart && statement.sourceEnd < typeDeclaration.sourceEnd) {
+				return this;
+			}
+		}
+	}
 	this.updateSourceEndIfNecessary(previousAvailableLineEnd(statement.sourceStart - 1));
 	return this.parent.add(statement, bracketBalanceValue);
 }

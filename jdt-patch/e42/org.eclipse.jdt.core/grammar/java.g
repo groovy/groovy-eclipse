@@ -1234,27 +1234,31 @@ AllocationHeader ::= 'new' ClassType '(' ArgumentListopt ')'
 /.$putCase consumeAllocationHeader(); $break ./
 /:$readableName AllocationHeader:/
 
-ClassInstanceCreationExpression ::= 'new' OnlyTypeArguments ClassType '(' ArgumentListopt ')' UnqualifiedClassBodyopt
+ClassInstanceCreationExpression ::= 'new' OnlyTypeArguments ClassType EnterInstanceCreationArgumentList '(' ArgumentListopt ')' UnqualifiedClassBodyopt
 /.$putCase consumeClassInstanceCreationExpressionWithTypeArguments(); $break ./
 
-ClassInstanceCreationExpression ::= 'new' ClassType '(' ArgumentListopt ')' UnqualifiedClassBodyopt
+ClassInstanceCreationExpression ::= 'new' ClassType EnterInstanceCreationArgumentList '(' ArgumentListopt ')' UnqualifiedClassBodyopt
 /.$putCase consumeClassInstanceCreationExpression(); $break ./
 --1.1 feature
 
-ClassInstanceCreationExpression ::= Primary '.' 'new' OnlyTypeArguments ClassType '(' ArgumentListopt ')' QualifiedClassBodyopt
+ClassInstanceCreationExpression ::= Primary '.' 'new' OnlyTypeArguments ClassType EnterInstanceCreationArgumentList '(' ArgumentListopt ')' QualifiedClassBodyopt
 /.$putCase consumeClassInstanceCreationExpressionQualifiedWithTypeArguments() ; $break ./
 
-ClassInstanceCreationExpression ::= Primary '.' 'new' ClassType '(' ArgumentListopt ')' QualifiedClassBodyopt
+ClassInstanceCreationExpression ::= Primary '.' 'new' ClassType EnterInstanceCreationArgumentList '(' ArgumentListopt ')' QualifiedClassBodyopt
 /.$putCase consumeClassInstanceCreationExpressionQualified() ; $break ./
 
 --1.1 feature
-ClassInstanceCreationExpression ::= ClassInstanceCreationExpressionName 'new' ClassType '(' ArgumentListopt ')' QualifiedClassBodyopt
+ClassInstanceCreationExpression ::= ClassInstanceCreationExpressionName 'new' ClassType EnterInstanceCreationArgumentList '(' ArgumentListopt ')' QualifiedClassBodyopt
 /.$putCase consumeClassInstanceCreationExpressionQualified() ; $break ./
 /:$readableName ClassInstanceCreationExpression:/
 
-ClassInstanceCreationExpression ::= ClassInstanceCreationExpressionName 'new' OnlyTypeArguments ClassType '(' ArgumentListopt ')' QualifiedClassBodyopt
+ClassInstanceCreationExpression ::= ClassInstanceCreationExpressionName 'new' OnlyTypeArguments ClassType EnterInstanceCreationArgumentList '(' ArgumentListopt ')' QualifiedClassBodyopt
 /.$putCase consumeClassInstanceCreationExpressionQualifiedWithTypeArguments() ; $break ./
 /:$readableName ClassInstanceCreationExpression:/
+
+EnterInstanceCreationArgumentList ::= $empty
+/.$putCase consumeEnterInstanceCreationArgumentList(); $break ./
+/:$readableName EnterInstanceCreationArgumentList:/
 
 ClassInstanceCreationExpressionName ::= Name '.'
 /.$putCase consumeClassInstanceCreationExpressionName() ; $break ./

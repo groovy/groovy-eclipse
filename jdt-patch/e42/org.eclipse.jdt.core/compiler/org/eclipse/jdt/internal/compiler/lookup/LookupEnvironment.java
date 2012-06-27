@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,7 @@
  *     Stephan Herrmann - contributions for
  *     							bug 337868 - [compiler][model] incomplete support for package-info.java when using SearchableEnvironment
  *								bug 186342 - [compiler][null] Using annotations for null checking
+ *								bug 365531 - [compiler][null] investigate alternative strategy for internally encoding nullness defaults
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 // GROOVY PATCHED
@@ -703,6 +704,9 @@ public BinaryTypeBinding createBinaryTypeFrom(IBinaryType binaryType, PackageBin
 	}
 	packageBinding.addType(binaryBinding);
 	setAccessRestriction(binaryBinding, accessRestriction);
+	// need type annotations before processing methods (for @NonNullByDefault)
+	if (this.globalOptions.isAnnotationBasedNullAnalysisEnabled)
+		binaryBinding.scanTypeForNullDefaultAnnotation(binaryType, packageBinding, binaryBinding);
 	binaryBinding.cachePartsFrom(binaryType, needFieldsAndMethods);
 	return binaryBinding;
 }
@@ -1100,59 +1104,6 @@ public char[][] getNonNullAnnotationName() {
 
 public char[][] getNonNullByDefaultAnnotationName() {
 	return this.globalOptions.nonNullByDefaultAnnotationName;
-}
-
-/**
- * Answer the type binding representing the null-annotation identified by the given tag bits.
- * @param annotationTagBit tag bits potentially denoting a null-annotation
- * @param resolve should the resulting type binding be resolved?
- * @return the corresponding annotation type binding
- * 		or <code>null</code> if no annotation bits are contained in the given tag bits.
- */
-public TypeBinding getNullAnnotationBinding(long annotationTagBit, boolean resolve) {
-	char[][] name = null;
-	if (annotationTagBit == TagBits.AnnotationNonNull)
-		name = getNonNullAnnotationName();
-	else if (annotationTagBit == TagBits.AnnotationNullable)
-		name = getNullableAnnotationName();
-	else
-		return null;
-	if (resolve)
-		return getType(name);
-	else
-		return getTypeFromCompoundName(name, false, false);
-}
-
-/**
- * Inspect the given tag bits and answer a corresponding null annotation type binding
- * @param defaultTagBit tag bits representing the default applicable at the current code location
- * @param resolve should the resulting type binding be resolved?
- * @return the corresponding concrete annotation type binding (<code>@NonNull</code> or <code>@Nullable</code>)
- * 		or <code>null</code> if no bits of a default-annotation are contained in the given tag bits.
- */
-public TypeBinding getNullAnnotationBindingFromDefault(long defaultTagBit, boolean resolve) {
-	if ((defaultTagBit & TagBits.AnnotationNullUnspecifiedByDefault) != 0)
-		return ReferenceBinding.NULL_UNSPECIFIED;
-	if ((defaultTagBit & TagBits.AnnotationNonNullByDefault) != 0)
-		return getNullAnnotationBinding(TagBits.AnnotationNonNull, resolve);
-	return null;
-}
-
-TypeBinding getNullAnnotationResolved(TypeBinding nullAnnotation, Scope scope) {
-	// avoid unspecific error "The type in.valid cannot be resolved. It is indirectly referenced from required .class files"
-	boolean tolerateMissing = this.mayTolerateMissingType;
-	this.mayTolerateMissingType = true;
-	try {
-		nullAnnotation = BinaryTypeBinding.resolveType(nullAnnotation, this, false);
-	} finally {
-		this.mayTolerateMissingType = tolerateMissing;
-	}
-	if (nullAnnotation instanceof MissingTypeBinding) {
-		// convert error into a specific one:
-		scope.problemReporter().missingNullAnnotationType(((MissingTypeBinding)nullAnnotation).compoundName);
-		return null;
-	}
-	return nullAnnotation;
 }
 
 /* Answer the top level package named name if it exists in the cache.

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2008 IBM Corporation and others.
+ * Copyright (c) 2004, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -226,14 +226,22 @@ public abstract class NamedMember extends Member {
 		}
 		StringBuffer buffer = new StringBuffer(declaringType.getTypeQualifiedName(enclosingTypeSeparator, showParameters));
 		buffer.append(enclosingTypeSeparator);
-		String simpleName = this.name.length() == 0 ? Integer.toString(this.occurrenceCount) : this.name;
+		String simpleName = this.name.length() == 0 ? getOccurrenceCountSignature() : this.name;
 		buffer.append(simpleName);
 		if (showParameters) {
 			appendTypeParameters(buffer);
 		}
 		return buffer.toString();
 	}
-
+	/*
+	 * Returns the String representation of the occurrence count for this element.
+	 * The occurrence count is a unique number representation to identify the particular element.
+	 *
+	 * @return the occurrence count for this element in the form of String
+	 */
+	protected String getOccurrenceCountSignature() {
+		return Integer.toString(this.occurrenceCount);
+	}
 	protected ITypeParameter[] getTypeParameters() throws JavaModelException {
 		return null;
 	}

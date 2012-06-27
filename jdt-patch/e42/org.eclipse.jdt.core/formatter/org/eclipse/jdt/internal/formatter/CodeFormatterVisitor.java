@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2011 IBM Corporation and others.
+ * Copyright (c) 2002, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1880,12 +1880,12 @@ public class CodeFormatterVisitor extends ASTVisitor {
 					this.scribe.redoAlignment(e);
 				}
 			} while (!ok);
+			
+			this.scribe.exitAlignment(resourcesAlignment, true);
 			if (isNextToken(TerminalTokens.TokenNameSEMICOLON)) {
 				// take care of trailing semicolon
 				this.scribe.printNextToken(TerminalTokens.TokenNameSEMICOLON, spaceBeforeSemicolon);
 			}
-			this.scribe.exitAlignment(resourcesAlignment, true);
-
 			this.scribe.printNextToken(TerminalTokens.TokenNameRPAREN, spaceBeforeClosingParen);
 		}
 	}

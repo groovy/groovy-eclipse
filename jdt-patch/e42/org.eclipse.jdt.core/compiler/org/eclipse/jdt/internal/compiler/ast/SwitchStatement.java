@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,8 @@
  *     Stephan Herrmann - Contributions for 
  *     							bug 319201 - [null] no warning when unboxing SingleNameReference causes NPE
  *     							bug 349326 - [1.7] new warning for missing try-with-resources
+ *								bug 265744 - Enum switch should warn about missing default
+ *								bug 374605 - Unreasonable warning for enum-based switch statements
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -450,6 +452,7 @@ public class SwitchStatement extends Statement {
 			boolean isEnumSwitch = false;
 			boolean isStringSwitch = false;
 			TypeBinding expressionType = this.expression.resolveType(upperScope);
+			CompilerOptions compilerOptions = upperScope.compilerOptions();
 			if (expressionType != null) {
 				this.expression.computeConversion(upperScope, expressionType, expressionType);
 				checkType: {
@@ -463,14 +466,14 @@ public class SwitchStatement extends Statement {
 							break checkType;
 					} else if (expressionType.isEnum()) {
 						isEnumSwitch = true;
-						if (upperScope.compilerOptions().complianceLevel < ClassFileConstants.JDK1_5) {
+						if (compilerOptions.complianceLevel < ClassFileConstants.JDK1_5) {
 							upperScope.problemReporter().incorrectSwitchType(this.expression, expressionType); // https://bugs.eclipse.org/bugs/show_bug.cgi?id=360317
 						}
 						break checkType;
 					} else if (upperScope.isBoxingCompatibleWith(expressionType, TypeBinding.INT)) {
 						this.expression.computeConversion(upperScope, TypeBinding.INT, expressionType);
 						break checkType;
-					} else if (upperScope.compilerOptions().complianceLevel >= ClassFileConstants.JDK1_7 && expressionType.id == TypeIds.T_JavaLangString) {
+					} else if (compilerOptions.complianceLevel >= ClassFileConstants.JDK1_7 && expressionType.id == TypeIds.T_JavaLangString) {
 						isStringSwitch = true;
 						break checkType;
 					}
@@ -535,9 +538,19 @@ public class SwitchStatement extends Statement {
 					upperScope.problemReporter().undocumentedEmptyBlock(this.blockStart, this.sourceEnd);
 				}
 			}
-			// for enum switch, check if all constants are accounted for (if no default)
-			if (isEnumSwitch && this.defaultCase == null
-					&& upperScope.compilerOptions().getSeverity(CompilerOptions.IncompleteEnumSwitch) != ProblemSeverities.Ignore) {
+			// check default case for all kinds of switch:
+			if (this.defaultCase == null) {
+				if (compilerOptions.getSeverity(CompilerOptions.MissingDefaultCase) == ProblemSeverities.Ignore) {
+					if (isEnumSwitch) {
+						upperScope.methodScope().hasMissingSwitchDefault = true;
+					}
+				} else {
+					upperScope.problemReporter().missingDefaultCase(this, isEnumSwitch, expressionType);
+				}
+			}
+			// for enum switch, check if all constants are accounted for (perhaps depending on existence of a default case)
+			if (isEnumSwitch && compilerOptions.complianceLevel >= ClassFileConstants.JDK1_5) {
+				if (this.defaultCase == null || compilerOptions.reportMissingEnumCaseDespiteDefault) {
 				int constantCount = this.constants == null ? 0 : this.constants.length; // could be null if no case statement
 				if (constantCount == this.caseCount
 						&& this.caseCount != ((ReferenceBinding)expressionType).enumConstantCount()) {
@@ -551,7 +564,11 @@ public class SwitchStatement extends Statement {
 									break findConstant;
 							}
 							// enum constant did not get referenced from switch
-							upperScope.problemReporter().missingEnumConstantCase(this, enumConstant);
+								boolean suppress = (this.defaultCase != null && (this.defaultCase.bits & DocumentedCasesOmitted) != 0);
+								if (!suppress) {
+									upperScope.problemReporter().missingEnumConstantCase(this, enumConstant);
+								}
+							}
 						}
 					}
 				}

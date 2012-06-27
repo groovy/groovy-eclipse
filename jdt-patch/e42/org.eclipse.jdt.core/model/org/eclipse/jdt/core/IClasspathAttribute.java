@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2011 IBM Corporation and others.
+ * Copyright (c) 2005, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -86,6 +86,19 @@ public interface IClasspathAttribute {
 	 * @since 3.8
 	 */
 	String SOURCE_ATTACHMENT_ENCODING = "source_encoding"; //$NON-NLS-1$
+
+	/**
+	 * Constant for the name of the ignore optional compile problems attribute.
+	 * This attribute is valid only for classpath entries describing source folders.
+	 * The possible values for this attribute are <code>"true"</code> or
+	 * <code>"false"</code>. When not present, <code>"false"</code> is assumed.
+	 * If the value of this attribute is <code>"true"</code>, all optional problems
+	 * from the source folder described by this classpath entry will not be reported
+	 * by the compiler.
+	 *
+	 * @since 3.8
+	 */
+	String IGNORE_OPTIONAL_PROBLEMS = "ignore_optional_problems"; //$NON-NLS-1$
 
 	/**
 	 * Constant for the name of the optional attribute. The possible values

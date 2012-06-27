@@ -73,7 +73,7 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 				}
 				if (!fieldBinding.isStatic()) {
 					// https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
-					currentScope.resetEnclosingMethodStaticFlag();
+					currentScope.resetDeclaringClassMethodStaticFlag(fieldBinding.declaringClass);
 				}
 				manageSyntheticAccessIfNecessary(currentScope, flowInfo, true /*read-access*/);
 				break;
@@ -121,7 +121,7 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 			}
 			if (!fieldBinding.isStatic()) {
 				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
-				currentScope.resetEnclosingMethodStaticFlag();
+				currentScope.resetDeclaringClassMethodStaticFlag(fieldBinding.declaringClass);
 			}
 			break;
 		case Binding.LOCAL : // assigning to a local variable
@@ -174,7 +174,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			}
 			if (!fieldBinding.isStatic()) {
 				// https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
-				currentScope.resetEnclosingMethodStaticFlag();
+				currentScope.resetDeclaringClassMethodStaticFlag(fieldBinding.declaringClass);
 			}
 			break;
 		case Binding.LOCAL : // reading a local variable
@@ -806,20 +806,6 @@ public LocalVariableBinding localVariableBinding() {
 	return null;
 }
 
-public VariableBinding variableBinding(Scope scope) {
-	switch (this.bits & ASTNode.RestrictiveFlagMASK) {
-		case Binding.FIELD : 
-			// reading a field
-			if (scope != null) {
-				CompilerOptions options = scope.compilerOptions();
-				if(!options.includeFieldsInNullAnalysis) return null;
-			}			
-			//$FALL-THROUGH$
-		case Binding.LOCAL : // reading a local variable
-			return (VariableBinding) this.binding;
-	}
-	return null;
-}
 public void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo) {
 	//If inlinable field, forget the access emulation, the code gen will directly target it
 	if (((this.bits & ASTNode.DepthMASK) == 0) || (this.constant != Constant.NotAConstant)) {
@@ -872,10 +858,11 @@ public int nullStatus(FlowInfo flowInfo) {
 	}
 	switch (this.bits & ASTNode.RestrictiveFlagMASK) {
 		case Binding.FIELD : // reading a field
+			return FlowInfo.UNKNOWN;
 		case Binding.LOCAL : // reading a local variable
-			VariableBinding variable = (VariableBinding) this.binding;
-			if (variable != null)
-				return flowInfo.nullStatus(variable);
+			LocalVariableBinding local = (LocalVariableBinding) this.binding;
+			if (local != null)
+				return flowInfo.nullStatus(local);
 	}
 	return FlowInfo.NON_NULL; // never get there
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -87,8 +87,8 @@ public SourceElementParser(
 		DefaultErrorHandlingPolicies.exitAfterAllProblems(),
 		options,
 		problemFactory) {
-		public void record(CategorizedProblem problem, CompilationResult unitResult, ReferenceContext context) {
-			unitResult.record(problem, context); // TODO (jerome) clients are trapping problems either through factory or requestor... is result storing needed?
+		public void record(CategorizedProblem problem, CompilationResult unitResult, ReferenceContext context, boolean mandatoryError) {
+			unitResult.record(problem, context, mandatoryError); // TODO (jerome) clients are trapping problems either through factory or requestor... is result storing needed?
 			SourceElementParser.this.requestor.acceptProblem(problem);
 		}
 	};

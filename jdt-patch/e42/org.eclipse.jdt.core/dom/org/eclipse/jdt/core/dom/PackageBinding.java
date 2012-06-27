@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -73,7 +73,7 @@ class PackageBinding implements IPackageBinding {
 						String unitName = "package-info.java"; //$NON-NLS-1$
 						ICompilationUnit unit = pkgs[i].getCompilationUnit(unitName);
 						if (unit != null && unit.exists()) {
-							ASTParser p = ASTParser.newParser(AST.JLS3);
+							ASTParser p = ASTParser.newParser(AST.JLS3_INTERNAL);
 							p.setSource(unit);
 							p.setResolveBindings(true);
 							p.setUnitName(unitName);

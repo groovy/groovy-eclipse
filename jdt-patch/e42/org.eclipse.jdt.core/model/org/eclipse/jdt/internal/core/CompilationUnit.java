@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1023,6 +1023,9 @@ public boolean hasResourceChanged() {
 	if (resource == null) return false;
 	return ((CompilationUnitElementInfo)info).timestamp != resource.getModificationStamp();
 }
+public boolean ignoreOptionalProblems() {
+	return getPackageFragmentRoot().ignoreOptionalProblems();
+}
 /**
  * @see IWorkingCopy#isBasedOn(IResource)
  * @deprecated
@@ -1094,12 +1097,12 @@ public org.eclipse.jdt.core.dom.CompilationUnit makeConsistent(int astLevel, boo
 			info.resolveBindings = resolveBindings;
 			info.reconcileFlags = reconcileFlags;
 			info.problems = problems;
-			openWhenClosed(info, monitor);
+			openWhenClosed(info, true, monitor);
 			org.eclipse.jdt.core.dom.CompilationUnit result = info.ast;
 			info.ast = null;
 			return result;
 		} else {
-			openWhenClosed(createElementInfo(), monitor);
+			openWhenClosed(createElementInfo(), true, monitor);
 			return null;
 		}
 	} finally {
