@@ -77,11 +77,11 @@ we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Ecl
 	</target>
 
 	<!-- - - - - - - - - - - - - - - - - - 
-          target: should-run-17-tests   
+          target: should-run-18-tests   
           sets the property if e37 is the target eclipse                   
          - - - - - - - - - - - - - - - - - -->
     <target name="-initCompilerLevel">
-    	<condition property="compiler.level" value="18" else="17">
+    	<condition property="compiler.level" value="20" else="18">
     		<not>
       		<equals arg1="${eclipse.target.version}" arg2="e42"/>
     		</not>
@@ -90,7 +90,7 @@ we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Ecl
 	
 	<!--
 	To get good coverage while at the same time not taking a tremendously long time to build, 
-	we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Eclipse 3.7 build  
+	we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Eclipse 3.7 build, and Grovy 2.0 tests on Eclipse 4.2
 	-->
 	<target name="run" depends="-init,-initCompilerLevel,-runTestSuite" description="Run manually defined tests and create a report.">
 	</target>
