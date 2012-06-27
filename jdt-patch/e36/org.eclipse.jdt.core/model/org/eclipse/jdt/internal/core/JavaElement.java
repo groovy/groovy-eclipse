@@ -9,7 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-
+// GROOVY PATCHED
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -503,6 +503,13 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		else
 			return new JavaModelException(new JavaModelStatus(status.getSeverity(), status.getCode(), status.getMessage()));
 	}
+
+	// GROOVY start
+	// placeholder as this method exists in e42
+	protected Object openWhenClosed(Object info, boolean b, IProgressMonitor monitor) throws JavaModelException {
+		return openWhenClosed(info,monitor);
+	}
+	// GROOVY end
 	/*
 	 * Opens an <code>Openable</code> that is known to be closed (no check for <code>isOpen()</code>).
 	 * Returns the created element info.

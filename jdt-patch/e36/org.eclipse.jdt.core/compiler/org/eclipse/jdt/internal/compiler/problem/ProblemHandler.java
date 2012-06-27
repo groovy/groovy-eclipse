@@ -9,7 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.problem;
-
+// GROOVY PATCHED
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -198,4 +198,11 @@ public void handle(
 public void record(CategorizedProblem problem, CompilationResult unitResult, ReferenceContext referenceContext) {
 	unitResult.record(problem, referenceContext);
 }
+
+//GROOVY start
+//added because this exists in e42
+public void record(CategorizedProblem problem, CompilationResult unitResult, ReferenceContext referenceContext, boolean b) {
+	record(problem,unitResult,referenceContext);
+}
+//GROOVY end
 }
