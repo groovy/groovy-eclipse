@@ -14,7 +14,8 @@ Bundle-ClassPath: groovy-eclipse.jar,
  eclipse-trace.jar,
  lib/groovy-groovysh-2.0.0.jar,
  lib/groovy-swing-2.0.0.jar,
- lib/groovy-xml-2.0.0.jar
+ lib/groovy-xml-2.0.0.jar,
+ lib/groovy-test-2.0.0.jar
 Groovy-Runtime-Jars: groovy.jar
 Export-Package: antlr,
  antlr.ASdebug,
@@ -40,6 +41,7 @@ Export-Package: antlr,
  groovy.swing.binding,
  groovy.swing.factory,
  groovy.swing.impl,
+ groovy.test,
  groovy.time,
  groovy.transform,
  groovy.ui,

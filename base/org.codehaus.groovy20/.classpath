@@ -15,5 +15,6 @@
 	<classpathentry exported="true" kind="lib" path="lib/groovy-swing-2.0.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/groovy-xml-2.0.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/groovy-groovysh-2.0.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/groovy-test-2.0.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
