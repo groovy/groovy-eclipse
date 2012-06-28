@@ -15,14 +15,14 @@
  */
 package org.codehaus.groovy.classgen.asm;
 
-import java.lang.reflect.Modifier;
-
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.reflection.ReflectionCache;
 import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+
+import java.lang.reflect.Modifier;
 
 /**
  * A helper class for bytecode generation with AsmClassGenerator.

@@ -27,10 +27,9 @@ public class GroovyActivator extends Plugin {
 
     public static final String PLUGIN_ID = "org.codehaus.groovy"; //$NON-NLS-1$
     
-	public static final String GROOVY_ALL_JAR = "lib/groovy-all-2.0.0-beta-3-SNAPSHOT.jar"; //$NON-NLS-1$
-	public static final String GROOVY_JAR = "lib/groovy-2.0.0-beta-3-SNAPSHOT.jar"; //$NON-NLS-1$
+	public static final String GROOVY_ALL_JAR = "lib/groovy-all-2.0.0.jar"; //$NON-NLS-1$
+	public static final String GROOVY_JAR = "lib/groovy-2.0.0.jar"; //$NON-NLS-1$
     public static final String ASM_JAR = "lib/asm-4.0.jar"; //$NON-NLS-1$
-    public static final String GROOVY_GPP_JAR = "extras/groovypp-0.4.248_1.8.0.jar"; //$NON-NLS-1$
 //    public static final int GROOVY_LEVEL = 17;
 
     public static URL GROOVY_JAR_URL;
@@ -55,7 +54,6 @@ public class GroovyActivator extends Plugin {
             GROOVY_JAR_URL = FileLocator.resolve(context.getBundle().getEntry(GroovyActivator.GROOVY_JAR));
             GROOVY_ALL_JAR_URL = FileLocator.resolve(context.getBundle().getEntry(GroovyActivator.GROOVY_ALL_JAR));
             ASM_JAR_URL = FileLocator.resolve(context.getBundle().getEntry(GroovyActivator.ASM_JAR));
-            GROOVY_GPP_URL = FileLocator.resolve(context.getBundle().getEntry(GroovyActivator.GROOVY_GPP_JAR));
         } catch (Exception e) {
             getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, "Error starting groovy plugin", e));
         }

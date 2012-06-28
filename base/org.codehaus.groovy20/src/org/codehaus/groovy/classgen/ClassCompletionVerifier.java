@@ -544,8 +544,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
             addError(   
                     "A transform used a generics containing ClassNode "+ node + " " +
                     "for "+getRefDescriptor(ref) + 
- "directly. You are not supposed to do this. "
-							+
+					"directly. You are not supposed to do this. " +
                     "Please create a new ClassNode refering to the old ClassNode " +
                     "and use the new ClassNode instead of the old one. Otherwise " +
                     "the compiler will create wrong descriptors and a potential " +

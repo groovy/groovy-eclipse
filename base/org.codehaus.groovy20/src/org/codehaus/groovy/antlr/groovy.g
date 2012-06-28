@@ -332,6 +332,7 @@ tokens {
         return attachLast(create(type, txt, first), last);
     }
     
+    // GRECLIPSE start
 	private Stack<Integer> commentStartPositions = new Stack<Integer>();
 
 	public void startComment(int line, int column) {
@@ -352,6 +353,7 @@ tokens {
 			comments.add(comment);
 		} 
 	}
+    // GRECLIPSE end
 	
 	
     /** 

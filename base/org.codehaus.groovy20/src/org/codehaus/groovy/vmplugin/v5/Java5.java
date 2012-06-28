@@ -16,16 +16,15 @@
 
 package org.codehaus.groovy.vmplugin.v5;
 
-import java.lang.reflect.*;
-import java.lang.annotation.*;
-import java.util.List;
-
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.vmplugin.VMPlugin;
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.vmplugin.VMPlugin;
 
+import java.lang.annotation.*;
+import java.lang.reflect.*;
+import java.util.List;
 /**
  * java 5 based functions
  *

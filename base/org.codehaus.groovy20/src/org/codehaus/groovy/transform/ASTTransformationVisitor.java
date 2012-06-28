@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2010 the original author or authors.
+ * Copyright 2008-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,48 +16,26 @@
 
 package org.codehaus.groovy.transform;
 
-import groovy.lang.GroovyClassLoader;
 import groovy.transform.CompilationUnitAware;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
-
 import org.codehaus.groovy.GroovyException;
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
-import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.classgen.GeneratorContext;
-import org.codehaus.groovy.control.ASTTransformationsContext;
-import org.codehaus.groovy.control.CompilationFailedException;
-import org.codehaus.groovy.control.CompilationUnit;
-import org.codehaus.groovy.control.CompilePhase;
-import org.codehaus.groovy.control.Phases;
-import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.*;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.control.messages.WarningMessage;
+
+import groovy.lang.GroovyClassLoader;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.*;
+import java.io.InputStream;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.syntax.SyntaxException;
-
 /**
  * This class handles the invocation of the ASTAnnotationTransformation
  * when it is encountered by a tree walk.  One instance of each exists
@@ -429,7 +407,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                         WarningMessage.POSSIBLE_ERRORS,
                         "Transform Class " + entry.getKey() + " is specified as a global transform in " + entry.getValue().toExternalForm()
                         + " but it is not annotated by " + GroovyASTTransformation.class.getName()
-                        + " the global tranform associated with it may fail and cause the compilation to fail.", 
+                        + " the global transform associated with it may fail and cause the compilation to fail.", 
                         null,
                         null));
                     continue;

@@ -136,9 +136,9 @@ public class CompilationUnit extends ProcessingUnit {
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, 
                            GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean allowTransforms, String localTransformsToRunOnReconcile) {
         super(configuration, loader, null);
-        this.astTransformationsContext = new ASTTransformationsContext(this, transformLoader);
 
         this.allowTransforms = allowTransforms;
+        this.astTransformationsContext = new ASTTransformationsContext(this, transformLoader);
         this.names = new ArrayList<String>();
         this.queuedSources = new LinkedList<SourceUnit>();
         this.sources = new HashMap<String, SourceUnit>();
@@ -153,7 +153,6 @@ public class CompilationUnit extends ProcessingUnit {
         this.verifier = new Verifier();
         this.resolveVisitor = new ResolveVisitor(this);
         this.staticImportVisitor = new StaticImportVisitor();
-        // end
         this.optimizer = new OptimizerVisitor(this);
         // GRECLIPSE start
         if (localTransformsToRunOnReconcile==null) {    
@@ -854,7 +853,6 @@ public class CompilationUnit extends ProcessingUnit {
             // end
 	            generator.visitClass(classNode);
 	
-	
 	            byte[] bytes = ((ClassWriter) visitor).toByteArray();
 	            /// GRECLIPSE: start: added classNode, sourceUnit
 	            /*old{
@@ -888,7 +886,7 @@ public class CompilationUnit extends ProcessingUnit {
     protected ClassVisitor createClassVisitor() {
         CompilerConfiguration config = getConfiguration();
         int computeMaxStackAndFrames = ClassWriter.COMPUTE_MAXS;
-        if (config.getOptimizationOptions().get("indy")==Boolean.TRUE) {
+        if (Boolean.TRUE.equals(config.getOptimizationOptions().get("indy"))) {
             computeMaxStackAndFrames += ClassWriter.COMPUTE_FRAMES;
     }
         return new ClassWriter(computeMaxStackAndFrames) {
