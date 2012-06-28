@@ -82,9 +82,7 @@ we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Ecl
          - - - - - - - - - - - - - - - - - -->
     <target name="-initCompilerLevel">
     	<condition property="compiler.level" value="20" else="18">
-    		<not>
-      		<equals arg1="${eclipse.target.version}" arg2="e42"/>
-    		</not>
+    		<equals arg1="${eclipse.target.version}" arg2="e42"/>
       </condition>
     </target>
 	
