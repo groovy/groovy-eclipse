@@ -32,6 +32,7 @@ import org.codehaus.groovy.eclipse.test.AllUITests;
 public class AllGroovyTests {
     public static Test suite() throws Exception {
         TestSuite suite = new TestSuite("All Groovy Tests"); //$NON-NLS-1$
+        suite.addTestSuite(SanityTest.class);
         suite.addTest(AllUITests.suite());
         suite.addTest(AllCoreTests.suite());
         suite.addTest(AllJUnitTests.suite());
