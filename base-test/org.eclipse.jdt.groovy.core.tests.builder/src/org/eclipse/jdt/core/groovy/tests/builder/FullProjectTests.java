@@ -31,12 +31,15 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IProblemRequestor;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.groovy.tests.compiler.ReconcilerUtils;
 import org.eclipse.jdt.core.groovy.tests.compiler.ReconcilerUtils.ReconcileResults;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 
 /**
  * These tests are about building and working with complete projects.
@@ -135,7 +138,7 @@ public class FullProjectTests extends GroovierBuilderTests {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
-		setTransformsOption(env.getJavaProject(projectPath), "SingletonASTTransformation$");
+		setTransformsOption(env.getJavaProject(projectPath), "Singleton$");
 		fullBuild(projectPath);
 		// remove old package fragment root so that names don't collide
 		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
@@ -237,6 +240,94 @@ public class FullProjectTests extends GroovierBuilderTests {
 		assertContainsMethod(cn, "method");
 	}
 	
+	@SuppressWarnings("deprecation")
+	public void testReconcilingWithTransforms_compileStatic() throws Exception {
+		if (GroovyUtils.GROOVY_LEVEL<18) {
+			return;
+		}
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		
+		IJavaProject ijp = env.getJavaProject(projectPath);
+		// this setting is irrelevant, the ASTTransformationCodeCollectorVisitor.isAllowed always lets it through
+//		setTransformsOption(ijp, "groovy.transform.CompileStatic");
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "", "Foo",
+				"@groovy.transform.CompileStatic\n"+
+		    	"class Foo {\n"+
+				"  void xxx(int i) { xxx('abc');}\n"+
+		    	"}\n"
+			);
+
+		incrementalBuild(projectPath);
+		System.err.println("now reconciling");
+		ICompilationUnit icu = ReconcilerUtils.getWorkingCopy(ijp,"Foo.groovy");
+		PR pr = new PR();
+		icu.becomeWorkingCopy(pr,null);
+		assertContains(pr.problems,"Cannot find matching method Foo#xxx");
+	}
+	
+	@SuppressWarnings("deprecation")
+	public void testReconcilingWithTransforms_typeChecked() throws Exception {
+		if (GroovyUtils.GROOVY_LEVEL<18) {
+			return;
+		}
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		
+		IJavaProject ijp = env.getJavaProject(projectPath);
+		// this setting is irrelevant, the ASTTransformationCodeCollectorVisitor.isAllowed always lets it through
+//		setTransformsOption(ijp, "groovy.transform.TypeChecked");
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "", "Foo",
+				"@groovy.transform.TypeChecked\n"+
+		    	"class Foo {\n"+
+				"  void xxx(int i) { xxx('abc');}\n"+
+		    	"}\n"
+			);
+
+		incrementalBuild(projectPath);
+		
+		ICompilationUnit icu = ReconcilerUtils.getWorkingCopy(ijp,"Foo.groovy");
+		PR pr = new PR();
+		icu.becomeWorkingCopy(pr,null);
+		assertContains(pr.problems,"Cannot find matching method Foo#xxx");
+	}
+	
+	static class PR implements IProblemRequestor {
+		
+		public String problems="";
+		
+		public void acceptProblem(IProblem problem) {
+			problems=problems+"\n"+problem.toString();
+		}
+
+		public void beginReporting() {
+		}
+
+		public void endReporting() {
+		}
+
+		public boolean isActive() {
+			return true;
+		}
+		
+	}
+	
 	
 	public void testReconcilingWithTransforms_multipleAndWildcard() throws Exception {
 		if (GroovyUtils.GROOVY_LEVEL<18) {
@@ -311,6 +402,13 @@ public class FullProjectTests extends GroovierBuilderTests {
 			}
 		}
 		fail("Did not find method named '"+methodname+"' in class '"+cn.getName()+"'");
+	}
+	
+	public static void assertContains(String data,String expected) {
+		if (data.indexOf(expected)!=-1) {
+			return;
+		}
+		fail("Expected '"+expected+"' in data '"+data+"'");
 	}
 
 	public static void assertDoesNotContainMethod(ClassNode cn, String methodname) {

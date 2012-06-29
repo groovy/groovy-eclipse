@@ -192,9 +192,9 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         addGlobalTransforms(context);
         // GRECLIPSE
         // want a subset to run during a reconcile...
-        if (!compilationUnit.allowTransforms && compilationUnit.localTransformsToRunOnReconcile.size()==0) {
-        	return;
-        }
+//        if (!compilationUnit.allowTransforms && compilationUnit.localTransformsToRunOnReconcile.size()==0) {
+//        	return;
+//        }
         // GRECLIPSE
 
         compilationUnit.addPhaseOperation(new CompilationUnit.PrimaryClassNodeOperation() {

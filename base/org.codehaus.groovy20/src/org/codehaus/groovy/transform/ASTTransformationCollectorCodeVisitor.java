@@ -193,6 +193,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     public void visitAnnotations(AnnotatedNode node) {
         super.visitAnnotations(node);
         for (AnnotationNode annotation : node.getAnnotations()) {
+        	
         	// GRECLIPSE: start: under eclipse we may be asking a node that has no backing class
         	/*{
             Annotation transformClassAnnotation = getTransformClassAnnotation(annotation.getClassNode());
@@ -202,14 +203,14 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
             }
             addTransformsToClassNode(annotation, transformClassAnnotation);
             }*/// newcode:
-        	String[] transformClassNames = getTransformClassNames(annotation.getClassNode());
-        	Class[] transformClasses = getTransformClasses(annotation.getClassNode());
-        	// GRECLIPSE start
-        	if (!this.allowTransforms) { // if 'doesnt-normally-allow-transforms' then only allow those specified
-	        	transformClassNames = trimTransformNames(transformClassNames);
-	        	transformClasses = trimTransformClasses(transformClasses);
+        	if (!this.allowTransforms) {
+        		if (!isAllowed(annotation.getClassNode().getName())) {
+        			continue;
+        		}
         	}
         	// GRECLIPSE end
+        	String[] transformClassNames = getTransformClassNames(annotation.getClassNode());
+        	Class[] transformClasses = getTransformClasses(annotation.getClassNode());
         	if (transformClassNames==null && transformClasses == null) {
         		continue;
         	}
@@ -221,40 +222,6 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     }
     
     // GRECLIPSE start
-    private String[] trimTransformNames(String[]names) {
-    	if (this.localTransformsAllowed.size()==0) {
-    		return names;
-    	}
-    	List<String> newnames = new ArrayList<String>();
-    	for (String name: names) {
-    		if (isAllowed(name)) {
-    			newnames.add(name);
-    		}
-    	}
-    	if (newnames.size()==names.length) {
-    		return names;
-    	}
-    	return newnames.toArray(new String[newnames.size()]);
-    }
-    
-    
-    private Class<?>[] trimTransformClasses(Class<?>[]names) {
-    	if (this.localTransformsAllowed.size()==0) {
-    		return names;
-    	}
-    	List<Class<?>> newnames = new ArrayList<Class<?>>();
-    	for (Class<?> clazz: names) {
-    		String name = clazz.getSimpleName();
-    		if (isAllowed(name)) {
-    			newnames.add(clazz);
-    		}
-    	}
-    	if (newnames.size()==names.length) {
-    		return names;
-    	}
-    	return newnames.toArray(new Class[newnames.size()]);
-    }
-    
     /**
      * Check the transform name against the allowed transforms.
      * 
@@ -262,6 +229,12 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
      * @return true if it is allowed
      */
     private boolean isAllowed(String transformName) {
+    	if (transformName.equals("groovy.transform.CompileStatic")) {
+    		return true;
+    	}
+    	if (transformName.equals("groovy.transform.TypeChecked")) {
+    		return true;
+    	}
     	for (String localTransformAllowed: localTransformsAllowed) {
 			if (localTransformAllowed.equals("*")) {
 				return true;
