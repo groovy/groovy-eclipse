@@ -21,6 +21,7 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.impl.IntConstant;
 import org.eclipse.jdt.internal.compiler.impl.StringConstant;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
@@ -39,6 +40,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 public class JDTAnnotationNode extends AnnotationNode {
 
 	private static final char[] jlString = "Ljava/lang/String;".toCharArray();
+	private static final char[] baseInt = "I".toCharArray();
 
 	private boolean membersInitialized = false;
 	private AnnotationBinding annotationBinding;
@@ -166,6 +168,13 @@ public class JDTAnnotationNode extends AnnotationNode {
 		} else if (CharOperation.equals(b.signature(), jlString)) {
 			String v = ((StringConstant) value).stringValue();
 			return new ConstantExpression(v);
+		} else if (b.isBaseType()) {
+			char[] sig = b.signature();
+			if (CharOperation.equals(sig, baseInt)) {
+				return new ConstantExpression(((IntConstant) value).intValue());
+			} else {
+				throw new GroovyEclipseBug("NYI for signature " + new String(sig));
+			}
 		} else if (b.isClass()) {
 			ClassExpression classExpression = new ClassExpression(resolver.convertToClassNode((TypeBinding) value));
 			return classExpression;
