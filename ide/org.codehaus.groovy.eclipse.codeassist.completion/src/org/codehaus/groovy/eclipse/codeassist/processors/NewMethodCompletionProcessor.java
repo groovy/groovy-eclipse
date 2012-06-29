@@ -235,6 +235,11 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
                     return result;
                 }
             }
+
+            ClassNode redirect = target.redirect();
+            if (redirect != target) {
+                return findResolvedType(redirect, toResolve);
+            }
         }
         return null;
     }

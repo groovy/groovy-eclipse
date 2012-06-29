@@ -60,6 +60,8 @@ public class SemicolonRemover extends GroovyFormatter {
             }
         } catch (BadLocationException e) {
             GroovyCore.logException("Cannot perform semicolon removal.", e);
+        } finally {
+            scanner.dispose();
         }
 
         return edits;
