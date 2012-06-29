@@ -559,14 +559,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         modifiers |= Opcodes.ACC_ABSTRACT | Opcodes.ACC_INTERFACE | Opcodes.ACC_ANNOTATION;
 
         String name = identifier(node);
-        node = node.getNextSibling();
-        ClassNode superClass = ClassHelper.OBJECT_TYPE;
-        
         // GRECLIPSE: start
         GroovySourceAST groovySourceAST = (GroovySourceAST) node;
         int nameStart = locations.findOffset(groovySourceAST.getLine(), groovySourceAST.getColumn());
         int nameEnd = locations.findOffset(groovySourceAST.getLineLast(), groovySourceAST.getColumnLast())-1;
         // end
+
+        node = node.getNextSibling();
+        ClassNode superClass = ClassHelper.OBJECT_TYPE;
 
         GenericsType[] genericsType = null;
         if (isType(TYPE_PARAMETERS,node)) {

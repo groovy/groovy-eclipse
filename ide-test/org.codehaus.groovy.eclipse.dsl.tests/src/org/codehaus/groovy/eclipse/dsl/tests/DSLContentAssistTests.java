@@ -17,14 +17,20 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestCase;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
@@ -71,6 +77,9 @@ public class DSLContentAssistTests extends CompletionTestCase {
     }
     
     public void testDSLProposalFirstMethod1() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL >= 20) {
+            addJarToProject("groovy-swing-2.0.0.jar");
+        }
         String contents = "import groovy.swing.SwingBuilder\n" +
                 "new SwingBuilder().edt {\n" +
                 "delegate.x\n" +
@@ -79,6 +88,9 @@ public class DSLContentAssistTests extends CompletionTestCase {
         assertProposalOrdering(proposals, "frame", "registerBinding");
     }
     public void testDSLProposalFirstMethod2() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL >= 20) {
+            addJarToProject("groovy-swing-2.0.0.jar");
+        }
         String contents = "import groovy.swing.SwingBuilder\n" +
                 "new SwingBuilder().edt {\n" +
                 "\n" +
@@ -89,6 +101,9 @@ public class DSLContentAssistTests extends CompletionTestCase {
     
     // proposals should not exist since not applied to 'this'
     public void testDSLProposalFirstMethod3() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL >= 20) {
+            addJarToProject("groovy-swing-2.0.0.jar");
+        }
         String contents = "import groovy.swing.SwingBuilder\n" +
                 "new SwingBuilder().edt {\n" +
                 "this.x\n" +
@@ -129,6 +144,19 @@ public class DSLContentAssistTests extends CompletionTestCase {
         // should see proposals from String, not Integer
         proposalExists(proposals, "toUpperCase()", 1);
         proposalExists(proposals, "toHexString()", 0);
+    }
+    
+    protected void addJarToProject(String jarName) throws JavaModelException, IOException {
+        String externalFilePath = findExternalFilePath(jarName);
+        env.addExternalJar(getDefaultProject().getFullPath(), externalFilePath);
+    }
+
+    protected String findExternalFilePath(String jarName)
+            throws MalformedURLException, IOException {
+        URL url = GroovyDSLDTestsActivator.getDefault().getTestResourceURL(jarName);
+        URL resolved = FileLocator.resolve(url);
+        String externalFilePath = resolved.getFile();
+        return externalFilePath;
     }
     
     protected String[] createDsls(String ... dsls) {

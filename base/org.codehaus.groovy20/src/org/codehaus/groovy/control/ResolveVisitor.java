@@ -841,7 +841,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             ret = transformPropertyExpression((PropertyExpression) exp);
         } else if (exp instanceof DeclarationExpression) {
             ret = transformDeclarationExpression((DeclarationExpression) exp);
-        } else if (exp instanceof BinaryExpression) {
+        } else if (exp instanceof BinaryExpression 
+                // GRECLIPSE: avoid transforming CompareIdentity and CompareToNull
+                && exp.getClass() == BinaryExpression.class) {
             ret = transformBinaryExpression((BinaryExpression) exp);
         } else if (exp instanceof MethodCallExpression) {
             ret = transformMethodCallExpression((MethodCallExpression) exp);
