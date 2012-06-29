@@ -33,6 +33,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
  */
 public class RefactoringTestPlugin extends Plugin {
 
+    public static String PLUGIN_ID = "org.codehaus.groovy.eclipse.refactoring.test";
 	private static RefactoringTestPlugin fgDefault;
 
 	public RefactoringTestPlugin() {
@@ -63,7 +64,7 @@ public class RefactoringTestPlugin extends Plugin {
     }
     
     public static String getPluginId() {
-        return "org.codehaus.groovy.eclipse.refactoring";
+        return PLUGIN_ID;
     }
 
 

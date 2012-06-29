@@ -10,42 +10,33 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.refactoring.test.rename;
 
-import java.io.IOException;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.codehaus.groovy.eclipse.refactoring.test.DebugUtils;
 import org.codehaus.groovy.eclipse.refactoring.test.ParticipantTesting;
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTest;
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSetup;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.refactoring.IJavaElementMapper;
 import org.eclipse.jdt.core.refactoring.IJavaRefactorings;
 import org.eclipse.jdt.core.refactoring.descriptors.RenameJavaElementDescriptor;
 import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory;
 import org.eclipse.jdt.internal.corext.refactoring.rename.RenameTypeProcessor;
-import org.eclipse.jdt.internal.corext.refactoring.rename.RenamingNameSuggestor;
 import org.eclipse.jdt.internal.corext.refactoring.tagging.INameUpdating;
 import org.eclipse.ltk.core.refactoring.Refactoring;
-import org.eclipse.ltk.core.refactoring.RefactoringDescriptor;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.participants.RenameRefactoring;
 
 public class RenameTypeTests extends RefactoringTest {
 
-    private static final Class clazz= RenameTypeTests.class;
+    private static final Class<RenameTypeTests> clazz= RenameTypeTests.class;
     private static final String REFACTORING_PATH= "RenameType/";
 
     public RenameTypeTests(String name) {
@@ -64,27 +55,12 @@ public class RenameTypeTests extends RefactoringTest {
         return REFACTORING_PATH;
     }
 
-    private IType getClassFromTestFile(IPackageFragment pack, String className) throws Exception{
-        return getType(createCUfromTestFile(pack, className), className);
-    }
-
     private RenameJavaElementDescriptor createRefactoringDescriptor(IType type, String newName) {
         RenameJavaElementDescriptor descriptor= RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor(IJavaRefactorings.RENAME_TYPE);
         descriptor.setJavaElement(type);
         descriptor.setNewName(newName);
         descriptor.setUpdateReferences(true);
         return descriptor;
-    }
-
-    private void helper1_0(String className, String newName) throws Exception {
-        IType classA= getClassFromTestFile(getPackageP(), className);
-        RefactoringStatus result= performRefactoring(createRefactoringDescriptor(classA, newName));
-        assertNotNull("precondition was supposed to fail", result);
-        DebugUtils.dump("result: " + result);
-    }
-
-    private void helper1() throws Exception{
-        helper1_0("A", "B");
     }
 
     private String[] helperWithTextual(String oldCuName, String oldName, String newName, String newCUName, boolean updateReferences, boolean updateTextualMatches) throws Exception{
@@ -122,10 +98,6 @@ public class RenameTypeTests extends RefactoringTest {
         return helperWithTextual(oldName, oldName, newName, newCUName, updateReferences, false);
     }
 
-    private void helper2(String oldName, String newName, boolean updateReferences) throws Exception{
-        helper2_0(oldName, newName, newName, updateReferences);
-    }
-
     private String[] helper2(String oldName, String newName) throws Exception{
         return helper2_0(oldName, newName, newName, true);
     }
@@ -139,79 +111,6 @@ public class RenameTypeTests extends RefactoringTest {
         setSomeLocalOptions(getPackageP().getJavaProject(), "lv", "_lv");
         setSomeArgumentOptions(getPackageP().getJavaProject(), "pm", "_pm");
         fIsPreDeltaTest= true;
-    }
-
-    private void helper3(String oldName, String newName, boolean updateRef, boolean updateTextual, boolean updateSimilar) throws JavaModelException, CoreException, IOException, Exception {
-        helper3(oldName, newName, updateRef, updateTextual, updateSimilar, null);
-    }
-
-    private void helper3(String oldName, String newName, boolean updateRef, boolean updateTextual, boolean updateSimilar, String nonJavaFiles) throws JavaModelException, CoreException, IOException, Exception {
-        RefactoringDescriptor descriptor= initWithAllOptions(oldName, oldName, newName, updateRef, updateTextual, updateSimilar, nonJavaFiles, RenamingNameSuggestor.STRATEGY_EMBEDDED);
-        Refactoring ref= createRefactoring(descriptor);
-        RefactoringStatus status= performRefactoring(ref, false);
-        assertNull("was supposed to pass", status);
-        checkResultInClass(newName);
-        checkMappedSimilarElementsExist(ref);
-    }
-
-    private void helper3_inner(String oldName, String oldInnerName, String newName, String innerNewName, boolean updateRef, boolean updateTextual, boolean updateSimilar, String nonJavaFiles) throws JavaModelException, CoreException, IOException, Exception {
-        RefactoringDescriptor descriptor= initWithAllOptions(oldName, oldInnerName, innerNewName, updateRef, updateTextual, updateSimilar, nonJavaFiles, RenamingNameSuggestor.STRATEGY_EMBEDDED);
-        Refactoring ref= createRefactoring(descriptor);
-        assertNull("was supposed to pass", performRefactoring(ref, false));
-        checkResultInClass(newName);
-        checkMappedSimilarElementsExist(ref);
-    }
-
-    private void checkMappedSimilarElementsExist(Refactoring ref) {
-        RenameTypeProcessor rtp= (RenameTypeProcessor) ((RenameRefactoring) ref).getProcessor();
-        IJavaElementMapper mapper= (IJavaElementMapper) rtp.getAdapter(IJavaElementMapper.class);
-        IJavaElement[] similarElements= rtp.getSimilarElements();
-        if (similarElements == null)
-            return;
-        for (int i= 0; i < similarElements.length; i++) {
-            IJavaElement element= similarElements[i];
-            if (! (element instanceof ILocalVariable)) {
-                IJavaElement newElement= mapper.getRefactoredJavaElement(element);
-                assertTrue(newElement.exists());
-                assertFalse(element.exists());
-            }
-        }
-
-    }
-
-    private void helper3_fail(String oldName, String newName, boolean updateSimilar, boolean updateTextual, boolean updateRef, int matchStrategy) throws JavaModelException, CoreException, IOException, Exception {
-        RefactoringDescriptor descriptor= initWithAllOptions(oldName, oldName, newName, updateRef, updateTextual, updateSimilar, null, matchStrategy);
-        assertNotNull("was supposed to fail", performRefactoring(descriptor));
-    }
-
-    private void helper3_fail(String oldName, String newName, boolean updateSimilar, boolean updateTextual, boolean updateRef) throws JavaModelException, CoreException, IOException, Exception {
-        RefactoringDescriptor descriptor= initWithAllOptions(oldName, oldName, newName, updateRef, updateTextual, updateSimilar, null, RenamingNameSuggestor.STRATEGY_SUFFIX);
-        assertNotNull("was supposed to fail", performRefactoring(descriptor));
-    }
-
-    private RefactoringDescriptor initWithAllOptions(String oldName, String innerOldName, String innerNewName, boolean updateReferences, boolean updateTextualMatches, boolean updateSimilar, String nonJavaFiles, int matchStrategy) throws Exception, JavaModelException, CoreException {
-        ICompilationUnit cu= createCUfromTestFile(getPackageP(), oldName);
-        IType classA= getType(cu, innerOldName);
-        RenameJavaElementDescriptor descriptor= createRefactoringDescriptor(classA, innerNewName);
-        setTheOptions(descriptor, updateReferences, updateTextualMatches, updateSimilar, nonJavaFiles, matchStrategy);
-        return descriptor;
-    }
-
-    private void setTheOptions(RenameJavaElementDescriptor descriptor, boolean updateReferences, boolean updateTextualMatches, boolean updateSimilar, String nonJavaFiles, int matchStrategy) {
-        descriptor.setUpdateReferences(updateReferences);
-        descriptor.setUpdateTextualOccurrences(updateTextualMatches);
-        if (nonJavaFiles!=null) {
-            descriptor.setUpdateQualifiedNames(true);
-            descriptor.setFileNamePatterns(nonJavaFiles);
-        }
-        descriptor.setUpdateSimilarDeclarations(updateSimilar);
-        descriptor.setMatchStrategy(matchStrategy);
-    }
-
-    private void checkResultInClass(String typeName) throws JavaModelException, IOException {
-        ICompilationUnit newcu= getPackageP().getCompilationUnit(typeName + ".groovy");
-        assertTrue("cu " + newcu.getElementName()+ " does not exist", newcu.exists());
-        assertEqualLines("invalid renaming", getFileContents(getOutputTestFileName(typeName)), newcu.getSource());
     }
 
     private void setSomeFieldOptions(IJavaProject project, String prefixes, String suffixes, boolean forStatic) {

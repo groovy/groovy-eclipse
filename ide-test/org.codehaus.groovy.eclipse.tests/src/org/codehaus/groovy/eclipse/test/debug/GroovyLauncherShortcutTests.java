@@ -87,6 +87,9 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
             return console.getDocument().get();
         }
         public void dispose() {
+            if (console == null) {
+                return;
+            }
             IProcess process = console.getProcess();
             try {
                 exitValue = process.isTerminated() ? process.getExitValue() : Integer.MIN_VALUE;

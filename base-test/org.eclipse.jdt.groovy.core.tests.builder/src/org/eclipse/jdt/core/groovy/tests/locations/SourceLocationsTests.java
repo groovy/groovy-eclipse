@@ -27,9 +27,11 @@ import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -257,6 +259,41 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 		ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
 		assertUnitWithSingleType(source, unit);
 	}
+    
+    public void testSourceLocationsInterface() throws Exception {
+        String source = "package p1;\n"+
+                "/*t0s*/interface /*t0sn*/Hello/*t0en*/ {\n"+
+                "   /*m0s*/public /*m0sn*/hello/*m0en*/(args, String blargs)/*m0e*/\n"+
+                "}/*t0e*/\n";
+        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
+        assertUnitWithSingleType(source, unit);
+    }
+    
+    public void testSourceLocationsAbstractClass() throws Exception {
+        String source = "package p1;\n"+
+                "/*t0s*/abstract class /*t0sn*/Hello/*t0en*/ {\n"+
+                "   /*m0s*/public abstract /*m0sn*/hello/*m0en*/(args, String blargs)/*m0e*/\n"+
+                "}/*t0e*/\n";
+        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
+        assertUnitWithSingleType(source, unit);
+    }
+    
+    public void testSourceLocationsAnnotationDeclaration() throws Exception {
+        String source = "package p1;\n"+
+        "/*t0s*/@interface /*t0sn*/Hello/*t0en*/ {\n"+
+        "   /*m0s*/String /*m0sn*/val/*m0en*/()/*m0sb*//*m0e*/\n"+
+        "}/*t0e*/\n";
+        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
+        assertUnitWithSingleType(source, unit);
+    }
+    public void testSourceLocationsEnumDeclaration() throws Exception {
+        String source = "package p1;\n"+
+                "/*t0s*/enum /*t0sn*/Hello/*t0en*/ {\n"+
+                "}/*t0e*/\n";
+        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
+        assertUnitWithSingleType(source, unit);
+    }
+
 
 	// next test a variety of slocs for var decl fragments
 
@@ -264,16 +301,17 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 			throws Exception, JavaModelException {
 		assertUnit(unit, source);
 		
-		ASTParser newParser = ASTParser.newParser(AST.JLS3);
+		ASTParser newParser = ASTParser.newParser(AST.JLS4);
 		newParser.setSource(unit);
         org.eclipse.jdt.core.dom.CompilationUnit ast = (org.eclipse.jdt.core.dom.CompilationUnit) newParser.createAST(null);
 		int maxLength = ((CompilationUnit) unit).getContents().length-1;
 		IType decl = unit.getTypes()[0];
 		AbstractTypeDeclaration typeDecl = (AbstractTypeDeclaration) ast.types().get(0);
         assertDeclaration(decl, typeDecl, 0, source, maxLength);
+        
 		IJavaElement[] children = decl.getChildren();
 		List<BodyDeclaration> bodyDecls = typeDecl.bodyDeclarations(); 
-		for (int i = 0, j= 0, k = 0, l = 0; i < children.length; i++, j++, l++) {
+		for (int i = 0, j= 0; i < children.length; i++, j++) {
 			// look for method variants that use default params
 			if (i > 0 && (children[i] instanceof IMethod) && children[i].getElementName().equals(children[i-1].getElementName())) {
 				j--;
@@ -284,7 +322,13 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 			// the subsequent fragments have a start at the name start and an end after the fragment's optional expression (or the name end if there is none.
 			// so, here check to see if the name start and source start are the same.  If so, then this is a second fragment
 
-			assertDeclaration((IMember) children[i], bodyDecls.get(i), j, source, maxLength);
+	        if (decl.isEnum()) {
+	            // not properly testing synthetic enum members yet
+	            IMember member = (IMember) children[i];
+	            assertEquals(new SourceRange(0, 0), member.getSourceRange());
+	        } else {
+	            assertDeclaration((IMember) children[i], bodyDecls.get(i), j, source, maxLength);
+	        }
 		}
 	}
 
@@ -362,8 +406,16 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 		    // body start is only calculated for methods
 		    String bodyStartTag = "/*" + astKind + methodNumber + "sb*/";
 		    int bodyStart = source.indexOf(bodyStartTag) + bodyStartTag.length();
-            MethodDeclaration md = (MethodDeclaration) bd;
-            assertEquals(bd + "\nhas incorrect body start value", bodyStart, md.getBody().getStartPosition());
+		    if (bd instanceof MethodDeclaration) {
+		        MethodDeclaration md = (MethodDeclaration) bd;
+		        // will be null for interfaces or abstract methods
+		        if (md.getBody() != null) {
+    		        int actualBodyStart = md.getBody().getStartPosition();
+    		        assertEquals(bd + "\nhas incorrect body start value", bodyStart, actualBodyStart);
+		        }
+		    } else if (bd instanceof AnnotationTypeMemberDeclaration) {
+		        // no body start to check
+		    }
 		}
 	}
 	
@@ -386,7 +438,7 @@ public class SourceLocationsTests extends GroovierBuilderTests {
 
 	
 	private IPath createGenericProject() throws Exception {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);

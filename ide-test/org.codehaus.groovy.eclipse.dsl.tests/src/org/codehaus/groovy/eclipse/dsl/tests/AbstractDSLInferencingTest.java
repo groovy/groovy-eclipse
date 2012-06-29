@@ -131,12 +131,6 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         env.addExternalJar(project.getFullPath(), externalFilePath);
     }
 
-    /**
-     * @param jarName
-     * @return
-     * @throws MalformedURLException
-     * @throws IOException
-     */
     protected String findExternalFilePath(String jarName)
             throws MalformedURLException, IOException {
         URL url = GroovyDSLDTestsActivator.getDefault().getTestResourceURL(jarName);

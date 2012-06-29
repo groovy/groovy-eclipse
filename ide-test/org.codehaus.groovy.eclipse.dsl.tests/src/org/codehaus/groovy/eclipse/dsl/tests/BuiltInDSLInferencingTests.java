@@ -27,6 +27,7 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.internal.core.ExternalPackageFragmentRoot;
 
 /**
@@ -48,11 +49,6 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
     protected void setUp() throws Exception {
         doRemoveClasspathContainer = false;
         super.setUp();
-        try {
-            wait(60*1000);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     public void testSanity() throws Exception {
@@ -206,6 +202,9 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
     }
     
     public void testSwingBuilder1() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL >= 20) {
+            addJarToProject("groovy-swing-2.0.0-rc-4.jar");
+        }
         String contents = "new groovy.swing.SwingBuilder().edt { frame }";
         int start = contents.lastIndexOf("frame");
         int end = start + "frame".length();
@@ -213,6 +212,9 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
         assertDeclaringType(contents, start, end, "groovy.swing.SwingBuilder", true);
     }
     public void testSwingBuilder2() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL >= 20) {
+            addJarToProject("groovy-swing-2.0.0-rc-4.jar");
+        }
         String contents = "groovy.swing.SwingBuilder.edtBuilder { frame }";
         int start = contents.lastIndexOf("frame");
         int end = start + "frame".length();
