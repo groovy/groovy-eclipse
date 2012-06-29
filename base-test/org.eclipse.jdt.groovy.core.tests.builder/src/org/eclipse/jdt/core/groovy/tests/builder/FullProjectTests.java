@@ -39,7 +39,6 @@ import org.eclipse.jdt.core.groovy.tests.compiler.ReconcilerUtils.ReconcileResul
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.core.JavaModelManager;
 
 /**
  * These tests are about building and working with complete projects.
@@ -99,7 +98,7 @@ public class FullProjectTests extends GroovierBuilderTests {
 	}
 	
 	public void testReconcilingWithTransforms_singletonallowed() throws Exception {
-		if (GroovyUtils.GROOVY_LEVEL<18) {
+		if (GroovyUtils.GROOVY_LEVEL<20) {
 			return;
 		}
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
@@ -242,7 +241,7 @@ public class FullProjectTests extends GroovierBuilderTests {
 	
 	@SuppressWarnings("deprecation")
 	public void testReconcilingWithTransforms_compileStatic() throws Exception {
-		if (GroovyUtils.GROOVY_LEVEL<18) {
+		if (GroovyUtils.GROOVY_LEVEL<20) {
 			return;
 		}
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
@@ -276,7 +275,7 @@ public class FullProjectTests extends GroovierBuilderTests {
 	
 	@SuppressWarnings("deprecation")
 	public void testReconcilingWithTransforms_typeChecked() throws Exception {
-		if (GroovyUtils.GROOVY_LEVEL<18) {
+		if (GroovyUtils.GROOVY_LEVEL<20) {
 			return;
 		}
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
