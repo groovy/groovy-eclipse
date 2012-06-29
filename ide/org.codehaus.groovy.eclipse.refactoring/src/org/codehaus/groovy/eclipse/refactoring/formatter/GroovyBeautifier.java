@@ -131,6 +131,8 @@ public class GroovyBeautifier {
                 replaceWhiteSpaceAfter(edits, lastToken,
                         lastToken.getType() == GroovyTokenTypeBridge.SL_COMMENT ? formatter.getNewLine() : "");
             }
+
+            tokens.dispose();
         }
     }
 
@@ -153,6 +155,8 @@ public class GroovyBeautifier {
             replaceFromTo(editStart, tokens.getOffset(last), replaceWith, edits);
         } catch (BadLocationException e) {
             Util.log(e);
+        } finally {
+            tokens.dispose();
         }
     }
 
