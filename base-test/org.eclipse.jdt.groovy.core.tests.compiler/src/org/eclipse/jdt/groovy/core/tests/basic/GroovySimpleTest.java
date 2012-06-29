@@ -8689,6 +8689,45 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n");
 	}
 	
+	/**
+	 * Testing the code in the StaticTypeCheckingSupport.checkCompatibleAssignmentTypes.
+	 * 
+	 * That method does a lot of equality by == testing against classnode constants, which doesn't work so well for us...
+	 */
+	public void testCompileStatic2() {
+		if (GroovyUtils.GROOVY_LEVEL<20) {
+			return;
+		}
+		runConformTest(new String[]{
+			"Foo.groovy",
+			"import groovy.transform.CompileStatic;\n"+
+			"\n"+
+			"import java.util.Properties;\n"+
+			"\n"+
+			"class One { \n"+
+			"   @CompileStatic\n"+
+			"   private String getPropertyValue(String propertyName, Properties props, String defaultValue) {\n"+
+			"       // First check whether we have a system property with the given name.\n"+
+			"       def value = getValueFromSystemOrBuild(propertyName, props)\n"+
+			"\n"+
+			"       // Return the BuildSettings value if there is one, otherwise\n"+
+			"       // use the default.\n"+
+			"       return value != null ? value : defaultValue \n"+
+			"   }\n"+
+			"\n"+
+			"   @CompileStatic\n"+
+			"   private getValueFromSystemOrBuild(String propertyName, Properties props) {\n"+
+			"       def value = System.getProperty(propertyName)\n"+
+			"       if (value != null) return value\n"+
+			"\n"+
+			"       // Now try the BuildSettings config.\n"+
+			"       value = props[propertyName]\n"+
+			"       return value\n"+
+			"   } \n"+
+			"}  \n"
+		},"");
+	}
+	
 	public void testCompileStatic() {
 		if (GroovyUtils.GROOVY_LEVEL<20) {
 			return;
