@@ -131,7 +131,7 @@ public class FullProjectTests extends GroovierBuilderTests {
 	}
 	
 	public void testReconcilingWithTransforms_singletonallowedspecialchar() throws Exception {
-		if (GroovyUtils.GROOVY_LEVEL<18) {
+		if (GroovyUtils.GROOVY_LEVEL<20) {
 			return;
 		}
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
