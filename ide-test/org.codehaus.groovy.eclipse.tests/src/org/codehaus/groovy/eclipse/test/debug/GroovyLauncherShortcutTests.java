@@ -29,8 +29,10 @@ import org.codehaus.groovy.eclipse.test.TestProject;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.debug.core.DebugException;
+import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.model.IProcess;
 import org.eclipse.debug.internal.ui.DebugUIPlugin;
@@ -46,7 +48,9 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaApplicationLaunchShortcut;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IRegion;
+import org.junit.Assert;
 
 /**
  *
@@ -74,53 +78,70 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         }
     }
 
-    class ConsoleListener implements IConsoleLineTrackerExtension {
-        private IConsole console;
-        String text = null;
-        private int exitValue;
-
-        public void consoleClosed() {
-            text = getText();
-        }
-        String getText() {
-            if (console == null) return text;
-            return console.getDocument().get();
-        }
-        public void dispose() {
-            if (console == null) {
-                return;
-            }
-            IProcess process = console.getProcess();
-            try {
-                exitValue = process.isTerminated() ? process.getExitValue() : Integer.MIN_VALUE;
-            } catch (DebugException e) {
-                exitValue = Integer.MIN_VALUE;
-            }
-            this.console = null;
-        }
-        public void init(IConsole console) {
-            this.console = console;
-        }
-
-        public void lineAppended(IRegion line) { }
-
-        int getExitValue() throws DebugException {
-            if (console != null) {
-                IProcess process = console.getProcess();
-                return process.isTerminated() ? process.getExitValue() : Integer.MIN_VALUE;
-            } else {
-                return exitValue;
-            }
-        }
-
-        public IConsole getConsole() {
-            return console;
-        }
-
-        boolean isTerminated() {
-            return console == null || console.getProcess().isTerminated();
-        }
-    }
+    // FIXADE probably not needed.  can delete
+//    class ConsoleListener implements IConsoleLineTrackerExtension {
+//        private IConsole console;
+//        String text = null;
+//        private int exitValue;
+//
+//        public void consoleClosed() {
+//            text = getText();
+//        }
+//        String getText() {
+//            if (console == null) return text;
+//            return "out: " + console.getProcess().getStreamsProxy().getOutputStreamMonitor().getContents() + '\n' +
+//                    "err: " + console.getProcess().getStreamsProxy().getErrorStreamMonitor().getContents();
+//        }
+//        public void dispose() {
+//            if (console == null) {
+//                return;
+//            }
+//            IProcess process = console.getProcess();
+//            try {
+//                exitValue = process.isTerminated() ? process.getExitValue() : Integer.MIN_VALUE;
+//            } catch (DebugException e) {
+//                exitValue = Integer.MIN_VALUE;
+//            }
+//            text = getText();
+//        }
+//        public void init(IConsole console) {
+//            this.console = console;
+//        }
+//        
+//        void close() {
+//            this.console = null;
+//        }
+//        
+//
+//        public void lineAppended(IRegion line) {
+////            try {
+////                if (console != null) {
+////                    System.out.println("from process: " + console.getDocument().get(line.getOffset(), line.getLength()));
+////                } else {
+////                    System.out.println("Line appended, but console wasn't there");
+////                }
+////            } catch (BadLocationException e) {
+////                throw new RuntimeException(e);
+////            }
+//        }
+//
+//        int getExitValue() throws DebugException {
+//            if (console != null) {
+//                IProcess process = console.getProcess();
+//                return process.isTerminated() ? process.getExitValue() : Integer.MIN_VALUE;
+//            } else {
+//                return exitValue;
+//            }
+//        }
+//
+//        public IConsole getConsole() {
+//            return console;
+//        }
+//
+//        boolean isTerminated() {
+//            return console != null && console.getProcess().isTerminated();
+//        }
+//    }
 
     @Override
     protected void setUp() throws Exception {
@@ -362,21 +383,29 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
                     MockGroovyScriptLaunchShortcut shortcut = new MockGroovyScriptLaunchShortcut();
                     ILaunchConfiguration config = shortcut.findOrCreateLaunchConfig(shortcut.createLaunchProperties(launchType,
                             launchType.getJavaProject()), launchType.getFullyQualifiedName());
-                    ConsoleListener listener = new ConsoleListener();
-                    ConsoleLineTracker.setDelegate(listener);
                     assertTrue(launchType.exists());
-                    DebugUIPlugin.launchInForeground(config, "run");
-                    synchronized (listener) {
+                    ILaunch launch = config.launch("run", new NullProgressMonitor());
+                    synchronized (launch) {
                         int i = 0;
-                        while (!listener.isTerminated() && i < timeoutSeconds) {
+                        System.out.println("Waiting for launch to complete " + i + " sec...");
+                        while (!launch.isTerminated() && i < timeoutSeconds) {
                             i++;
                             System.out.println("Waiting for launch to complete " + i + " sec...");
-                            listener.wait(1000);
+                            launch.wait(1000);
                         }
                     }
-
-                    assertTrue("Process not terminated after timeout has been reached", listener.isTerminated());
-                    assertEquals("Expecting normal exit, but found invalid exit value", 0, listener.getExitValue());
+                    if (launch.isTerminated()) {
+                        System.out.println("Process output:");
+                        System.out.println("==================");
+                        System.out.println(launch.getProcesses()[0].getStreamsProxy().getOutputStreamMonitor().getContents());
+                        System.out.println("==================");
+                        System.out.println("Process err:");
+                        System.out.println("==================");
+                        System.out.println(launch.getProcesses()[0].getStreamsProxy().getErrorStreamMonitor().getContents());
+                        System.out.println("==================");
+                    }
+                    assertTrue("Process not terminated after timeout has been reached", launch.isTerminated());
+                    assertEquals("Expecting normal exit, but found invalid exit value", 0, launch.getProcesses()[0].getExitValue());
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
