@@ -3,7 +3,7 @@
 
 	<groupId>org.codehaus.groovy</groupId>
 	<artifactId>groovy-eclipse-compiler</artifactId>
-	<version>2.6.1-01-SNAPSHOT</version>
+	<version>2.7.0-01-SNAPSHOT</version>
 
 	<packaging>maven-plugin</packaging>
 	<name>Groovy-Eclipse compiler</name>
@@ -41,9 +41,9 @@
 		<url>http://jira.codehaus.org/browse/GRECLIPSE</url>
 	</issueManagement>
 	<scm>
-		<connection>scm:svn:http://svn.codehaus.org/groovy/eclipse/trunk/extras/groovy-eclipse-compiler</connection>
-		<developerConnection>scm:svn:https://svn.codehaus.org/groovy/eclipse/trunk/extras/groovy-eclipse-compiler</developerConnection>
-		<url>http://svn.codehaus.org/groovy/eclipse/trunk/extras/groovy-eclipse-compiler</url>
+		<connection>scm:git://github.com/groovy/groovy-eclipse.git</connection>
+		<developerConnection>scm:git:git@github.com:groovy/groovy-eclipse.git</developerConnection>
+		<url>http://github.com/groovy/groovy-eclipse.git</url>
 	</scm>
 	<organization>
 		<name>The Codehuas</name>
@@ -53,7 +53,7 @@
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-eclipse-batch</artifactId>
- 		 <version>[1.7.10-02,1.7.10-99],[1.8.2-01,1.9.0)</version> 
+ 		 <version>[1.7.10-02,1.7.10-99],[1.8.2-01,9.9.9)</version> 
 		</dependency> 
 		<dependency>
 			<groupId>org.codehaus.plexus</groupId>
@@ -94,5 +94,23 @@
 				<version>1.0-beta-2</version>
 			</extension>
 		</extensions>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.2.1</version>
+				<executions>
+					<execution>
+						<id>default</id>
+						<goals>
+							<goal>perform</goal>
+						</goals>
+						<configuration>
+							<pomFileName>extras/groovy-eclipse-compiler/pom.xml</pomFileName>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 </project>

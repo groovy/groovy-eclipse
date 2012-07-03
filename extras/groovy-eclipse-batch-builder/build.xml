@@ -57,7 +57,7 @@
           target: extract-create-install
          installs into the local repo                     
          =================================  -->
-	<target name="extract-create-install" depends="-mavenInit,extract-create">
+	<target name="extract-create-install" depends="-init,-mavenInit,extract-create">
 		<mavenInstall version="${version}" prefix="${jar.prefix}"/>
 	</target>
 
@@ -86,14 +86,6 @@
 		<!-- now unzip the jdt compiler adapter jar.  It is a jar within a jar -->
 		<unzip dest="${extract.loc}" src="${workspace.loc}/org.eclipse.jdt.core/jdtCompilerAdapter.jar" />
 
-		<!--
-		These files need to stick around
-		<delete dir="${extract.loc}/META-INF">
-			<exclude name="dgminfo"/>
-			<exclude name="services"/>
-			<exclude name="*.properties"/>
-		</delete>
-		-->
 	</target>
 	
 	
@@ -121,7 +113,7 @@
           target: -init   
           create properties and filesets                   
          - - - - - - - - - - - - - - - - - -->
-	<target name="-init" depends="-fail-if-no-version-specified,-init17,-init18">
+	<target name="-init" depends="-fail-if-no-version-specified,-init17,-init18,-init20">
 		<property file="build.properties"/>
 		<property name="jar.prefix" value="groovy-eclipse-batch"/>
 
@@ -142,15 +134,18 @@
 
 		<fileset dir="${workspace.loc}" id="orig.groovy.jars">
 
-			<include name="${groovy.folder}/lib/groovy-1*.jar"/>
+			<!-- includes all the groovy modules already inside greclipse, and the groovy sources -->
+			<!-- FIXADE Do we need to include all modules or just the core?  -->
+			<include name="${groovy.folder}/lib/groovy-*.jar"/>
 			<include name="${groovy.folder}/lib/antlr-*.jar"/>
-			<include name="${groovy.folder}/lib/asm-3*.jar"/>
-			<include name="${groovy.folder}/lib/asm-tree-3*.jar"/>
-
-			<exclude name="${groovy.folder}/lib/*sources*"/>
+			<!-- Captures ASM and ASM tree-->
+			<include name="${groovy.folder}/lib/asm-*.jar"/>
 
 			<!-- Also include the non-locking classloader with sources -->
 			<include name="org.eclipse.jdt.groovy.core/nlcl*.jar"/>
+			
+			<!-- -->
+			<exclude name="${groovy.folder}/lib/groovy-all*.jar"/>
 		</fileset>
 
 
@@ -186,7 +181,14 @@
     <target name="-init18" if="do-18-build">
        <property name="version" value="${version1.8}"/>
     	 <property name="groovy.folder" value="org.codehaus.groovy18"/>
-
+    </target>
+	
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: -init20
+         - - - - - - - - - - - - - - - - - -->
+    <target name="-init20" if="do-20-build">
+       <property name="version" value="${version2.0}"/>
+    	 <property name="groovy.folder" value="org.codehaus.groovy20"/>
     </target>
 	
 	<target name="-check-build-version">
@@ -196,13 +198,14 @@
 			<or>
 				<isset property="do-17-build"/>
 				<isset property="do-18-build"/>
+				<isset property="do-20-build"/>
 			</or>
 			</not>
 		</condition>
 	</target>
 
 	<target name="-fail-if-no-version-specified" depends="-check-build-version" if="no-version-specified">
-		<fail message="You must set either do-17-build or do-18-build to specify a groovy version to build"/>
+		<fail message="You must set exactly one of do-17-build, do-18-build, or do-20-build to specify a groovy version to build"/>
 	</target>
 	
 	

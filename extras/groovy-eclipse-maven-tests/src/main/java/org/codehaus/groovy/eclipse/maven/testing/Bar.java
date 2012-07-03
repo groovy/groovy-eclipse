@@ -21,7 +21,8 @@ package org.codehaus.groovy.eclipse.maven.testing;
  * @created Sep 26, 2011
  */
 public class Bar {
-private void meth() {
-    Foo.getInstance();
-}
+    public void meth() {
+        // this should not be a compile error since Foo is a singleton
+        Foo.getInstance();
+    }
 }
