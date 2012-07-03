@@ -767,6 +767,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public boolean equals(Object o) {
+    	// GRECLIPSE: start
+    	if (o==null) {
+    		return false;
+    	}
+    	// GRECLIPSE: end
         if (redirect!=null) return redirect().equals(o);
         if (!(o instanceof ClassNode)) return false;
         ClassNode cn = (ClassNode) o;
