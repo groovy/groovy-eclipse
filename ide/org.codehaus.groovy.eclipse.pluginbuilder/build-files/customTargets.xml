@@ -106,6 +106,7 @@
 	<!-- ===================================================================== -->
 	<target name="postBuild" unless="no.postBuild">
 		<antcall target="createUpdateSite"/>
+		<antcall target="zipUpdateSite"/>
 		<antcall target="runTests"/>
 	</target>
 	<!-- ===================================================================== -->
@@ -200,8 +201,50 @@
   	<echo message="Replace in file ${updateSiteDir}/content.xml attempted on tokens:"/>
   	<echo message="orig.jdt.feature.version.range=${orig.jdt.feature.version.range}"/>
   	<echo message="new.jdt.feature.version.range=${new.jdt.feature.version.range}"/>
-  	
-  	<!-- Zip up the update site -->
+	</target>  	
+  
+	
+	<target name="signUpdateSite" description="Digitally signs the update site">
+
+		<taskdef resource="net/sf/antcontrib/antcontrib.properties" >
+			<classpath>
+				<pathelement path="ant-contrib.jar" />
+			</classpath>
+		</taskdef>
+
+		<if>
+			<equals arg1="${p2.sign}" arg2="true" />
+
+			<then>
+				<delete file="${updateSiteDir}/content.xml" />
+				<delete file="${updateSiteDir}/artifacts.xml" />
+
+				<java classname="org.eclipse.equinox.internal.p2.jarprocessor.Main" fork="true" 
+						classpathref="jarprocessor.classpath" failonerror="true" maxmemory="256m" dir="${updateSiteDir}">
+					<arg line="-verbose -processAll -repack -pack -sign ${signer}" />
+					<arg line="-outputDir ${updateSiteDir} ${updateSiteDir}" />
+				</java>
+
+				<java classname="org.eclipse.equinox.launcher.Main" fork="true" classpathref="eclipse.classpath" 
+						failonerror="true" maxmemory="256m" dir="${updateSiteDir}">
+					<arg line="-application org.eclipse.equinox.p2.publisher.FeaturesAndBundlesPublisher" />
+					<arg line="-source ${updateSiteDir} -metadataRepository file:${updateSiteDir}" />
+					<arg line="-artifactRepository file:${updateSiteDir} -metadataRepositoryName '${p2.repository.name}'" />
+					<arg line="-artifactRepositoryName '${p2.repository.name}' -compress -reusePackedFiles -reusePack200Files -publishArtifacts" />
+				</java>
+
+				<java classname="org.eclipse.equinox.launcher.Main" fork="true" classpathref="eclipse.classpath" 
+						failonerror="true" maxmemory="256m" dir="${updateSiteDir}">
+					<arg line="-application org.eclipse.equinox.p2.publisher.CategoryPublisher" />
+					<arg line="-metadataRepository file:${updateSiteDir}" />
+					<arg line="-categoryDefinition file:${updateSiteDir}/../Site\ Groovy/site.xml" />
+					<arg line="-categoryQualifier org.codehaus.groovy" />
+				</java>
+			</then>
+		</if>
+	</target>
+
+	<target name="zipUpdateSite">
 		<zip destfile="${updateSiteDir}/../groovy-update-site-${org.codehaus.groovy.eclipse.feature}.zip">
 			<fileset dir="${updateSiteDir}">
 			</fileset>
