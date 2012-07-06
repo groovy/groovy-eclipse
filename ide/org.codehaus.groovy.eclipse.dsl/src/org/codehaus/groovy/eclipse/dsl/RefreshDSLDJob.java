@@ -41,14 +41,13 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.core.runtime.jobs.MultiRule;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ExternalPackageFragmentRoot;
-import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 public class RefreshDSLDJob extends Job {
@@ -111,7 +110,9 @@ public class RefreshDSLDJob extends Job {
                     throw new OperationCanceledException();
                 }
                 
-                if (root.getKind() == IPackageFragmentRoot.K_BINARY) {
+                if (root.getKind() == IPackageFragmentRoot.K_BINARY ||
+                        // GRECLIPSE-1458 must check source folders, but avoid source folders from same project
+                        isSourceFolderFromOtherProject(root)) {
                     IPackageFragment frag = root.getPackageFragment("dsld");
                     if (frag.exists() || root.getElementName().equals(GLOBAL_DSLD_SUPPORT) || root.getElementName().equals(PLUGIN_DSLD_SUPPORT)) {
                         
@@ -183,6 +184,22 @@ public class RefreshDSLDJob extends Job {
             }
         }
 
+        private boolean isSourceFolderFromOtherProject(IPackageFragmentRoot root) {
+            if (root.isReadOnly()) {
+                // not source folder
+                return false;
+            }
+            IResource resource = root.getResource();
+            if (resource == null) {
+                return false;
+            }
+            
+            if (resource.getProject().equals(project)) {
+                return false;
+            }
+            return true;
+        }
+
         /**
          * Get all package fragment roots in a safe way so that concurrent modifications aren't thrown
          * See http://jira.codehaus.org/browse/GRECLIPSE-1284
@@ -196,7 +213,7 @@ public class RefreshDSLDJob extends Job {
             try {
                 ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
                     public void run(IProgressMonitor monitor) throws CoreException {
-                        roots[0] = javaProject.getPackageFragmentRoots();
+                        roots[0] = javaProject.getAllPackageFragmentRoots();
                     }
                 }, getSchedulingRule(), IWorkspace.AVOID_UPDATE, monitor);
             } catch (CoreException e) {

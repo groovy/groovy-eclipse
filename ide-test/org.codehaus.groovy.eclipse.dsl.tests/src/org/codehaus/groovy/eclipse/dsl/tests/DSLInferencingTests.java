@@ -12,6 +12,12 @@ package org.codehaus.groovy.eclipse.dsl.tests;
 
 import java.io.IOException;
 
+import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
+import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -820,6 +826,25 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         assertUnknownConfidence(contents, start, end, "Search", true);
     }
     
+    // GRECLIPSE-1458
+    public void testMultiProject() throws Exception {
+        IPath otherPath = env.addProject("Other", "1.6");
+        env.removePackageFragmentRoot(otherPath, "");
+        IPath root = env.addPackageFragmentRoot(otherPath, "src", null, null, "bin");
+        env.addFile(env.addFolder(root, "dsld"), "otherdsld.dsld", "contribute(currentType(String)) { property name: 'other', type: Integer }");
+        env.fullBuild("Other");
+        env.addRequiredProject(project.getFullPath(), otherPath);
+        
+        RefreshDSLDJob job = new RefreshDSLDJob(project);
+        job.run(new NullProgressMonitor());
+        
+        String contents = "''.other";
+        int start = contents.lastIndexOf("other");
+        int end = start + "other".length();
+    
+        assertType(contents, start, end, "java.lang.Integer", true);
+    }
+
     private void createDSL() throws IOException {
         defaultFileExtension = "dsld";
         createUnit("SomeInterestingExamples", GroovyDSLDTestsActivator.getDefault().getTestResourceContents("SomeInterestingExamples.dsld"));
