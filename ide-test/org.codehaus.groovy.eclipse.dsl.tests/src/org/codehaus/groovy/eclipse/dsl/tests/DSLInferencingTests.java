@@ -844,6 +844,22 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     
         assertType(contents, start, end, "java.lang.Integer", true);
     }
+    
+    // GRECLIPSE-1459
+    public void testNullType() throws Exception {
+        createDsls("contribute(enclosingCall(hasArgument(type()))) {\n" + 
+        		"    property name:'foo', type:Integer\n" + 
+        		"}");
+        String contents = "String flart(val, closure) { }\n" + 
+        		"\n" + 
+        		"flart '', {\n" + 
+        		"    foo\n" + 
+        		"}";
+        int start = contents.lastIndexOf("fo");
+        int end = start + "foo".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+
 
     private void createDSL() throws IOException {
         defaultFileExtension = "dsld";
