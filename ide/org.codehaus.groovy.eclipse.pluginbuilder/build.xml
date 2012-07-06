@@ -15,7 +15,7 @@
  -->
 <project name="Build Facade" default="groovy-main" basedir=".">
   
-	<target name="-find.pdebuild.home" description="Locate the precise version of pde being used">
+	<target name="-find.pdebuild.home" description="Locate the precise version of pde being used" depends="-properties">
 		<files includes="${eclipseDir}/plugins/org.eclipse.pde.build_*/scripts" id="pdebuild.folder" />
 		<property name="pdebuild.home" value="${toString:pdebuild.folder}" />
 		<echo message="pdebuild.home=${pdebuild.home}" />
@@ -24,7 +24,7 @@
   <target name="groovy-main" depends="-properties,-clean,unpack.eclipse,-find.pdebuild.home,-build" description="Runs the build.  This is the main entry point for the script">
   </target>
 	
-	<target name="-build">
+	<target name="-build" depends="-properties">
 		<property name="buildResultsDirectory" value="${buildDirectory}/results" />
 
 		<java classname="org.eclipse.equinox.launcher.Main" fork="true"
