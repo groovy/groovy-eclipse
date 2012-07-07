@@ -106,6 +106,7 @@
 	<!-- ===================================================================== -->
 	<target name="postBuild" unless="no.postBuild">
 		<antcall target="createUpdateSite"/>
+		<antcall target="signUpdateSite"/>
 		<antcall target="zipUpdateSite"/>
 		<antcall target="runTests"/>
 	</target>
