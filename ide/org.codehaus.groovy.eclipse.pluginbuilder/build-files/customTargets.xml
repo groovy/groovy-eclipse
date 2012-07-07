@@ -206,6 +206,7 @@
   
 	
 	<target name="signUpdateSite" description="Digitally signs the update site">
+  	<property name="signer" location="${builder}/provisioning_support/sign.sh"/>
 
 		<taskdef resource="net/sf/antcontrib/antcontrib.properties" >
 			<classpath>
