@@ -15,7 +15,6 @@ we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Ecl
 -->
 <project name="Run automated Tests" default="run" basedir=".">
 
-	<import file="../build_shared.xml" />
 	<import file="../get-dependencies.xml" />
 
 	<target name="-init">

@@ -186,7 +186,7 @@
         <arg value="-noDefaultIUs"/>
         <jvmarg value="-Xmx128M"/>
   		 	<classpath>
-	    		<fileset dir="${eclipseDir}/plugins">
+	    		<fileset dir="${build.eclipse.dir}/plugins">
     	   		<include name="org.eclipse.equinox.launcher_*.jar"/>
     	    </fileset>
     	  </classpath>
