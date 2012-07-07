@@ -67,7 +67,7 @@
 			<jvmarg value="-XX:PermSize=96M" />
 			<!--<jvmarg value="-XX:MaxPermSize=256M "/>-->
 			<classpath>
-				<fileset dir="${build.eclipse.dir}/plugins">
+				<fileset dir="${build.eclipse.dir}/eclipse/plugins">
 					<include name="org.eclipse.equinox.launcher_*.jar" />
 				</fileset>
 			</classpath>
