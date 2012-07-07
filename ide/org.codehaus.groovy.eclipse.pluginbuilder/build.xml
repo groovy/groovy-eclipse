@@ -17,7 +17,9 @@
 
 	<target name="find.pdebuild.home" description="Locate the precise version of pde being used" depends="-properties">
 		<path id="pdebuild.folder">
-			<files includes="${eclipseDir}/plugins/org.eclipse.pde.build_*/scripts" />
+			<dirset dir="${eclipseDir}/plugins">
+				<include name="org.eclipse.pde.build_*/scripts" />
+			</dirset>
 		</path>
 		<property name="pdebuild.home" value="${toString:pdebuild.folder}" />
 		<echo message="pdebuild.home=${pdebuild.home}" />
