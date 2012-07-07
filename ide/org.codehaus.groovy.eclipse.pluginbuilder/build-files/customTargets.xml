@@ -152,7 +152,7 @@
   	
   	<!-- need the site.xml file before we can generate -->
 		<copy todir="${updateSiteDir}">
-			<fileset dir="${buildDirectory}/features/Site Groovy">
+			<fileset dir="${buildHome}">
 				 <filename name="site.xml"/>
 			</fileset>
 		</copy>
@@ -186,7 +186,7 @@
         <arg value="-noDefaultIUs"/>
         <jvmarg value="-Xmx128M"/>
   		 	<classpath>
-	    		<fileset dir="${build.eclipse.dir}/plugins">
+	    		<fileset dir="${build.eclipse.dir}/eclipse/plugins">
     	   		<include name="org.eclipse.equinox.launcher_*.jar"/>
     	    </fileset>
     	  </classpath>
@@ -237,7 +237,7 @@
 						failonerror="true" maxmemory="256m" dir="${updateSiteDir}">
 					<arg line="-application org.eclipse.equinox.p2.publisher.CategoryPublisher" />
 					<arg line="-metadataRepository file:${updateSiteDir}" />
-					<arg line="-categoryDefinition file:${updateSiteDir}/../Site\ Groovy/site.xml" />
+					<arg line="-categoryDefinition file:${updateSiteDir}/site.xml" />
 					<arg line="-categoryQualifier org.codehaus.groovy" />
 				</java>
 			</then>
