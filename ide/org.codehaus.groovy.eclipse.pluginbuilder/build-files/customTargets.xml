@@ -213,6 +213,11 @@
 				<pathelement path="${buildHome}/build-files/ant-contrib.jar" />
 			</classpath>
 		</taskdef>
+		<path id="jarprocessor.classpath">
+			<fileset dir="${build.dest}/eclipse/plugins">
+				<include name="org.eclipse.equinox.p2.jarprocessor_*.jar" />
+			</fileset>
+		</path>
 
 		<if>
 			<equals arg1="${p2.sign}" arg2="true" />
