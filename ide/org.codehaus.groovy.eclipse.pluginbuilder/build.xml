@@ -110,6 +110,20 @@
 			</not>
 		</condition>
 	</target>
+	
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: provision.target.eclipse                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="provision.target.eclipse">
+  		<!-- now install m2eclipse -->
+  		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.wst.xml_core.feature" updatesite.url="${eclipse.update.site}"/>
+  		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.wst.xml_ui.feature" updatesite.url="${eclipse.update.site}"/>
+  		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.equinox.p2.discovery.feature" updatesite.url="${eclipse.update.site}"/>
+  		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.epp.usagedata.feature" updatesite.url="http://download.eclipse.org/technology/epp/updates/1.0"/>
+  		<install-bundle eclipse.loc="${eclipse.installation.dir}/eclipse" feature.id="org.eclipse.m2e.feature" updatesite.url="${m2e-update-site}"/>
+
+    </target>
+
 
 	<target name="-clean" if="is.clean" description="Cleans the build directory if is.clean is set to true">
 		<echo level="info" message="Cleaning directory ${buildDirectory}"/>
