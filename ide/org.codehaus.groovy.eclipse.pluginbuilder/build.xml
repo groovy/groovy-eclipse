@@ -123,7 +123,7 @@
   			<param name="theFile" value="${build.eclipse.zip}" />
   			<param name="theDir" value="${build.eclipse.dir}" />
   		</antcall>
-  		<install-bundle eclipse.loc="${build.eclipse.dir}" feature.id="org.codehause.groovy.headless.feature" updatesite.url="http://dist.codehaus.org/groovy/distributions/greclipse/snapshot/e4.2/" />
+  		<install-bundle eclipse.loc="${build.eclipse.dir}/eclipse" feature.id="org.codehause.groovy.headless.feature" updatesite.url="http://dist.codehaus.org/groovy/distributions/greclipse/snapshot/e4.2/" />
     </target>
 
 	
