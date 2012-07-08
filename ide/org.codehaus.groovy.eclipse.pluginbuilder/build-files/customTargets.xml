@@ -214,7 +214,7 @@
 			</classpath>
 		</taskdef>
 		<path id="jarprocessor.classpath">
-			<fileset dir="${build.dest}/eclipse/plugins">
+			<fileset dir="${build.eclipse.dir}/eclipse/plugins">
 				<include name="org.eclipse.equinox.p2.jarprocessor_*.jar" />
 			</fileset>
 		</path>
