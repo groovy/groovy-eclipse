@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -308,7 +307,7 @@ public class VariableScope {
 			}
 			return categories;
 		} else {
-			return new HashSet<ClassNode>(ALL_DEFAULT_CATEGORIES);
+			return new LinkedHashSet<ClassNode>(ALL_DEFAULT_CATEGORIES);
 		}
 	}
 
