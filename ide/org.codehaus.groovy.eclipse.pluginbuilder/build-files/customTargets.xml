@@ -20,6 +20,8 @@
 	
 	<import file="copyAllProjects.xml"/>
 	<import file="allElements.xml" />
+  <property name="updateSiteDir" value="${buildDirectory}/updateSite"/>
+	<property file="${buildHome}/build_local_${eclipse.target.version}.properties"/>
 	
 	<target name="allElements">
 		<antcall target="allElementsDelegator" />
@@ -128,10 +130,7 @@
           target: init.classpath                      
          - - - - - - - - - - - - - - - - - -->
     <target name="init.classpath">
-      <property name="updateSiteDir" value="${buildDirectory}/updateSite"/>
-    	<property file="${buildHome}/build_local_${eclipse.target.version}.properties"/>
     	<property name="signer" location="${buildHome}/build-files/sign.sh"/>
-
   		<taskdef resource="net/sf/antcontrib/antcontrib.properties" >
   			<classpath>
   				<pathelement path="${buildHome}/build-files/ant-contrib.jar" />
