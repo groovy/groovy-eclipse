@@ -19,8 +19,8 @@
 	
 	
 	<import file="copyAllProjects.xml"/>
-	
 	<import file="allElements.xml" />
+	
 	<target name="allElements">
 		<antcall target="allElementsDelegator" />
 	</target>
@@ -37,7 +37,7 @@
 	<!-- ===================================================================== -->
 	<!-- Steps to do before setup -->
 	<!-- ===================================================================== -->
-	<target name="preSetup">	
+	<target name="preSetup" depends="init.classpath">	
 		<antcall target="copyToBuildDirectory"/>
 	</target>
 	<!-- ===================================================================== -->
@@ -70,7 +70,7 @@
 	<!-- Steps to do before running the build.xmls for the elements being built. -->
 	<!-- Add the correct version number to about.mappings -->	
 	<!-- ===================================================================== -->
-	<target name="preProcess">
+	<target name="preProcess" depends="init.classpath">
 		<echo message="Setting groovy mapping property"></echo>
 		<property file="${buildDirectory}/finalPluginsVersions.properties"/>
 		<replace file="${buildDirectory}/plugins/org.codehaus.groovy.eclipse/about.mappings"
@@ -104,7 +104,7 @@
 	<!-- ===================================================================== -->
 	<!-- Steps to do after the build is done. -->
 	<!-- ===================================================================== -->
-	<target name="postBuild" unless="no.postBuild">
+	<target name="postBuild" unless="no.postBuild" depends="init.classpath">
 		<antcall target="createUpdateSite"/>
 		<antcall target="signUpdateSite"/>
 		<antcall target="zipUpdateSite"/>
@@ -113,7 +113,7 @@
 	<!-- ===================================================================== -->
 	<!-- Run tests. -->
 	<!-- ===================================================================== -->
-	<target name="runTests"> <!--if="isRunTests">-->
+	<target name="runTests" depends="init.classpath"> <!--if="isRunTests">-->
 		<echo message="isRunTests = ${isRunTests}"/>
 		<property name="automatedTestsHome" location="${buildHome}/build-files/automatedTests"/>
 
