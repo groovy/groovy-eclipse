@@ -23,7 +23,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -106,15 +106,50 @@ public class VariableScope {
 	public static final ClassNode DGSM_CLASS_NODE = ClassHelper.make(DefaultGroovyStaticMethods.class);
 	public static final ClassNode DATE_GM_CLASS_NODE = ClassHelper.make(DateGroovyMethods.class);
 
+	// only exists on Groovy 2.0
+	public static ClassNode RESOURCE_GROOVY_METHODS;
+	public static ClassNode STRING_GROOVY_METHODS;
+	public static ClassNode IO_GROOVY_METHODS;
+	static {
+		try {
+			RESOURCE_GROOVY_METHODS = ClassHelper.make(Class.forName("org.codehaus.groovy.runtime.ResourceGroovyMethods"));
+			STRING_GROOVY_METHODS = ClassHelper.make(Class.forName("org.codehaus.groovy.runtime.StringGroovyMethods"));
+			IO_GROOVY_METHODS = ClassHelper.make(Class.forName("org.codehaus.groovy.runtime.IOGroovyMethods"));
+		} catch (ClassNotFoundException e) {
+			RESOURCE_GROOVY_METHODS = null;
+			STRING_GROOVY_METHODS = null;
+			IO_GROOVY_METHODS = null;
+		}
+	}
 	// not available on all platforms
 	// public static final ClassNode PLUGIN5_GM_CLASS_NODE = ClassHelper
 	// .make(org.codehaus.groovy.vmplugin.v5.PluginDefaultGroovyMethods.class);
 	// public static final ClassNode PLUGIN6_GM_CLASS_NODE = ClassHelper
 	// .make(org.codehaus.groovy.vmplugin.v6.PluginDefaultGroovyMethods.class);
 
-	public static final Set<ClassNode> ALL_DEFAULT_CATEGORIES = Collections.unmodifiableSet(new LinkedHashSet<ClassNode>(Arrays
-			.asList(DGM_CLASS_NODE, DGSM_CLASS_NODE, EGM_CLASS_NODE, PGM_CLASS_NODE, SGM_CLASS_NODE, XGM_CLASS_NODE,
-					DATE_GM_CLASS_NODE/* , PLUGIN5_GM_CLASS_NODE, PLUGIN6_GM_CLASS_NODE */)));
+	public static Set<ClassNode> ALL_DEFAULT_CATEGORIES;
+	static {
+		// add all of the known DGM classes. Order counts since we look up earlier in the list before later and need to
+		// ensure we don't accidentally place deprecated elements early in the list
+		List<ClassNode> dgm_classes = new ArrayList<ClassNode>(10);
+		if (STRING_GROOVY_METHODS != null) {
+			dgm_classes.add(STRING_GROOVY_METHODS);
+		}
+		if (RESOURCE_GROOVY_METHODS != null) {
+			dgm_classes.add(RESOURCE_GROOVY_METHODS);
+		}
+		if (IO_GROOVY_METHODS != null) {
+			dgm_classes.add(IO_GROOVY_METHODS);
+		}
+		dgm_classes.add(EGM_CLASS_NODE);
+		dgm_classes.add(PGM_CLASS_NODE);
+		dgm_classes.add(SGM_CLASS_NODE);
+		dgm_classes.add(XGM_CLASS_NODE);
+		dgm_classes.add(DATE_GM_CLASS_NODE);
+		dgm_classes.add(DGSM_CLASS_NODE);
+		dgm_classes.add(DGM_CLASS_NODE);
+		ALL_DEFAULT_CATEGORIES = Collections.unmodifiableSet(new LinkedHashSet<ClassNode>(dgm_classes));
+	}
 
 	// don't cache because we have to add properties
 	public static final ClassNode CLASS_CLASS_NODE = ClassHelper.makeWithoutCaching(Class.class);

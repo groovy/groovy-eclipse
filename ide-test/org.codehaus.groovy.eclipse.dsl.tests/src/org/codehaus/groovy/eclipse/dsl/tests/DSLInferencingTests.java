@@ -828,7 +828,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
     
     // GRECLIPSE-1458
     public void testMultiProject() throws Exception {
-        IPath otherPath = env.addProject("Other", "1.6");
+        IPath otherPath = env.addProject("Other", "1.5");
         env.removePackageFragmentRoot(otherPath, "");
         IPath root = env.addPackageFragmentRoot(otherPath, "src", null, null, "bin");
         env.addFile(env.addFolder(root, "dsld"), "otherdsld.dsld", "contribute(currentType(String)) { property name: 'other', type: Integer }");
