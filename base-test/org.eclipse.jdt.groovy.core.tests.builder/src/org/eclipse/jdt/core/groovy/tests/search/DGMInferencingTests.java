@@ -339,6 +339,7 @@ public class DGMInferencingTests extends AbstractInferencingTest {
         int end = start + str.length();
         assertType(contents, start, end, "java.lang.String");
     }
+<<<<<<< HEAD
     // with groovy 2.0, there are some new DGM classes.  need to ensure that we are using those classes as the declaring type, but only for 2.0 or later
     public void testDGMDeclaring1() throws Exception {
         String contents = "\"\".eachLine";
@@ -373,4 +374,16 @@ public class DGMInferencingTests extends AbstractInferencingTest {
             assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
         }
     }
+=======
+    
+    // with groovy 2.0, there are some new DGM classes.  need to ensure that we are using those classes as the declaring type, but only for 2.0 or later
+    public void testDGMDeclaring1() throws Exception {
+        String contents = "\"\".eachMatch(\"\") { it.toLowerCase() }";
+        String str = "it";
+        int start = contents.lastIndexOf(str);
+        int end = start + str.length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
+>>>>>>> a bit more futzing with proeprties
 }

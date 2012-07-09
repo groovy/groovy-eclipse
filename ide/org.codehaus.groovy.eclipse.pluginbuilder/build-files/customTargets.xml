@@ -124,13 +124,37 @@
 	
 	
 	
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: init.classpath                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="init.classpath">
+      <property name="updateSiteDir" value="${buildDirectory}/updateSite"/>
+    	<property file="${buildHome}/build_local_${eclipse.target.version}.properties"/>
+    	<property name="signer" location="${buildHome}/build-files/sign.sh"/>
+
+  		<taskdef resource="net/sf/antcontrib/antcontrib.properties" >
+  			<classpath>
+  				<pathelement path="${buildHome}/build-files/ant-contrib.jar" />
+  			</classpath>
+  		</taskdef>
+  		<path id="jarprocessor.classpath">
+  			<fileset dir="${build.eclipse.dir}/eclipse/plugins">
+  				<include name="org.eclipse.equinox.p2.jarprocessor_*.jar" />
+  			</fileset>
+  		</path>
+  		<path id="eclipse.classpath">
+    		<fileset dir="${build.eclipse.dir}/eclipse/plugins">
+  	   		<include name="org.eclipse.equinox.launcher_*.jar"/>
+  	    </fileset>
+  		</path>
+    </target>
+
 	
 	<!--======================================================-->
 	<!-- Create update site  -->
 	<!-- ==================================================== -->
-  <property name="updateSiteDir" value="${buildDirectory}/updateSite"/>
-	<property file="${buildHome}/build_local_${eclipse.target.version}.properties"/>
-  <target name="createUpdateSite">
+	
+  <target name="createUpdateSite" depends="init.classpath">
 
 	  <!-- Create the directory structure -->
 	  <mkdir dir="${updateSiteDir}/features"/>
@@ -164,7 +188,7 @@
 	    token="0.0.0.qualifier" value="${org.codehaus.groovy.eclipse.feature}"/>
     	
   	<!-- Generate metadata -->
-    <java fork="true" dir="${updateSiteDir}" classname="org.eclipse.equinox.launcher.Main" maxmemory="256m">
+    <java fork="true" dir="${updateSiteDir}" classname="org.eclipse.equinox.launcher.Main" maxmemory="256m" classpathref="eclipse.classpath">
         <arg value="-application"/>
         <arg value="org.eclipse.equinox.p2.publisher.EclipseGenerator"/>
         <arg value="-updateSite"/>
@@ -186,11 +210,6 @@
         <arg value="-append"/>
         <arg value="-noDefaultIUs"/>
         <jvmarg value="-Xmx128M"/>
-  		 	<classpath>
-	    		<fileset dir="${build.eclipse.dir}/eclipse/plugins">
-    	   		<include name="org.eclipse.equinox.launcher_*.jar"/>
-    	    </fileset>
-    	  </classpath>
     </java>
   	
   	<!-- fix feature patch version -->
@@ -205,19 +224,7 @@
 	</target>  	
   
 	
-	<target name="signUpdateSite" description="Digitally signs the update site">
-  	<property name="signer" location="${buildHome}/build-files/sign.sh"/>
-
-		<taskdef resource="net/sf/antcontrib/antcontrib.properties" >
-			<classpath>
-				<pathelement path="${buildHome}/build-files/ant-contrib.jar" />
-			</classpath>
-		</taskdef>
-		<path id="jarprocessor.classpath">
-			<fileset dir="${build.eclipse.dir}/eclipse/plugins">
-				<include name="org.eclipse.equinox.p2.jarprocessor_*.jar" />
-			</fileset>
-		</path>
+	<target name="signUpdateSite" description="Digitally signs the update site" depends="init.classpath">
 
 		<if>
 			<equals arg1="${p2.sign}" arg2="true" />
@@ -237,7 +244,7 @@
 					<arg line="-application org.eclipse.equinox.p2.publisher.FeaturesAndBundlesPublisher" />
 					<arg line="-source ${updateSiteDir} -metadataRepository file:${updateSiteDir}" />
 					<arg line="-artifactRepository file:${updateSiteDir} -metadataRepositoryName '${p2.repository.name}'" />
-					<arg line="-artifactRepositoryName '${p2.repository.name}' -compress -reusePackedFiles -reusePack200Files -publishArtifacts" />
+					<arg line="-artifactRepositoryName '${p2.repository.name}' -reusePackedFiles -reusePack200Files -publishArtifacts" />
 				</java>
 
 				<java classname="org.eclipse.equinox.launcher.Main" fork="true" classpathref="eclipse.classpath" 
@@ -251,14 +258,14 @@
 		</if>
 	</target>
 
-	<target name="zipUpdateSite">
+	<target name="zipUpdateSite" depends="init.classpath">
 		<zip destfile="${updateSiteDir}/../groovy-update-site-${org.codehaus.groovy.eclipse.feature}.zip">
 			<fileset dir="${updateSiteDir}">
 			</fileset>
 		</zip>
   </target>
     
-	<target name="updateSiteExport">
+	<target name="updateSiteExport" depends="init.classpath">
 	  <ant antfile="build.xml" dir="${buildDirectory}/features/${id}/" target="build.update.jar">
 	    <property name="feature.destination" value="${updateSiteDir}/features"/>
 	    <property name="plugin.destination" value="${updateSiteDir}/plugins"/>
