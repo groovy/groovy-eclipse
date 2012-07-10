@@ -1,46 +1,49 @@
-<project name="Publish to webdav location" default="publish" basedir=".">
-
+<project name="Publish to webdav location" default="s3.deploy" basedir="." xmlns:antcontrib="antlib:net.sf.antcontrib">
 	<!-- ================================= 
-          target: publish              
+          target: s3.deploy              
        ================================= -->
-  <target name="publish" description="Publishes build files to update site location" depends="-init">
-  	<!--
-  	1. zip the old
-  	2. delete the old 
-  	3. copy the new
-  	-->
-  	
-  	<mkdir dir="${publishLocation}"/>
-  	<mkdir dir="${publishLocation}/old"/>
-  	<zip destfile="${publishLocation}/old/archive-${org.codehaus.groovy.eclipse.ui}.zip">
-  		<zipfileset dir="${buildDirectory}/updateSite">
-  			 <include name="**/*"/>
-  			 <exclude name="old"/>
-		     <exclude name="old/*"/>
-  		</zipfileset>
-  	</zip>
+    <target name="s3.deploy" depends="-init" description="Deploys Groovy-Eclipse to S3">
+    		<echo>Publishing to Amazon S3</echo>
+    		<echo>${env.dist_properties}</echo>
+    		
+    		<path id="s3.classpath"> 
+    		    <fileset dir="${basedir}/s3-libs">
+    		        <include name="**/*.jar" /> 
+    			</fileset> 
+    		</path> 
+    		
+  		<taskdef name="s3" classname="org.springframework.build.aws.ant.SimpleStorageService" classpathref="s3.classpath"/>
 
-  	<delete verbose="true">
-			<fileset dir="${publishLocation}">
-			    <exclude name="old"/>
-			    <exclude name="old/*"/>
-			</fileset>
-		</delete>
+    		<s3 accessKey="${accessKey}" secretKey="${secretKey}">
+    			<!-- need to delete old stuff, too -->
+    			
+    			<upload bucketName="dist.springsource.org" toDir="snapshot/GRECLIPSE/${upload.dir}" publicRead="true">
+    				<fileset dir="${basedir}/target/">
+    					<include name="**" />
+    				</fileset>
+    			</upload>
 
-  	<copy todir="${publishLocation}">
-  		<fileset dir="${buildDirectory}/updateSite">
-  		</fileset>
-  	</copy>
-  	<copy file="${buildDirectory}/finalPluginsVersions.properties" todir="${publishLocation}"/>
-  </target>
-	
-	
+    		</s3>
+    	</target>
+
 	<!-- - - - - - - - - - - - - - - - - - 
           target: -init                      
     - - - - - - - - - - - - - - - - - -->
   <target name="-init">
   	<property file="../build_local_${eclipse.target.version}.properties"/>
   	<property file="${buildDirectory}/finalPluginsVersions.properties"/>
+  	<property environment="env"/>
+  	<property file="${env.dist_properties}"/>
+  	
+  	<condition property="upload.dir" value="e4.2">
+	  	<equals arg1="${eclipse.target.version}" arg2="42"/>
+  	</condition>
+  	<condition property="upload.dir" value="e3.7">
+	  	<equals arg1="${eclipse.target.version}" arg2="37"/>
+  	</condition>
+  	<condition property="upload.dir" value="e3.6">
+	  	<equals arg1="${eclipse.target.version}" arg2="36"/>
+  	</condition>
   </target>
 
 
