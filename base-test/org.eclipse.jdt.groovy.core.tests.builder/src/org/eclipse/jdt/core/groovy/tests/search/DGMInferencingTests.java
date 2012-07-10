@@ -16,6 +16,8 @@
 
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
+
 import junit.framework.Test;
 
 /**
@@ -336,5 +338,39 @@ public class DGMInferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf(str);
         int end = start + str.length();
         assertType(contents, start, end, "java.lang.String");
+    }
+    // with groovy 2.0, there are some new DGM classes.  need to ensure that we are using those classes as the declaring type, but only for 2.0 or later
+    public void testDGMDeclaring1() throws Exception {
+        String contents = "\"\".eachLine";
+        String str = "eachLine";
+        int start = contents.lastIndexOf(str);
+        int end = start + str.length();
+        if (GroovyUtils.GROOVY_LEVEL >= 20) {
+            assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.StringGroovyMethods");
+        } else {
+            assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        }
+    }
+    public void testDGMDeclaring2() throws Exception {
+        String contents = "new File().eachLine";
+        String str = "eachLine";
+        int start = contents.lastIndexOf(str);
+        int end = start + str.length();
+        if (GroovyUtils.GROOVY_LEVEL >= 20) {
+            assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.ResourceGroovyMethods");
+        } else {
+            assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        }
+    }
+    public void testDGMDeclaring3() throws Exception {
+        String contents = "Writer w\nw.leftShift";
+        String str = "leftShift";
+        int start = contents.lastIndexOf(str);
+        int end = start + str.length();
+        if (GroovyUtils.GROOVY_LEVEL >= 20) {
+            assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.IOGroovyMethods");
+        } else {
+            assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        }
     }
 }

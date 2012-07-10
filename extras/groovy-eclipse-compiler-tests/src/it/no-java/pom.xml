@@ -29,7 +29,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
           <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-eclipse-batch</artifactId>
-            <version>@groovy.18.version@</version>
+            <version>@groovy.20.version@</version>
           </dependency>
         </dependencies>
       </plugin>

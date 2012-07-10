@@ -82,14 +82,14 @@
 	<import file="build-files/build_shared.xml"/>
  	<target name="-properties" description="Creates required properties">		
  		<property file="build_local_${eclipse.target.version}.properties" />
-
+		<property file="build-files/build.properties"/>
+ 		
 		<!-- version identifier -->
 		<tstamp>
 			<format property="tstampQual" pattern="yyyyMMdd-HH00" locale="en,US" timezone="America/Vancouver"/>
 		</tstamp>
 		
 		<property name="buildTypePresentation" value=""/>
-		<property name="buildSuffix" value="-RELEASE"/>
 		<echo message="tstampQual=${tstampQual}"/>
     <property name="forceContextQualifier" value="${buildTypePresentationPrefix}${tstampQual}-${buildTypePresentation}${buildSuffix}"/>
 		<echo message="=============================================="/>
@@ -98,12 +98,8 @@
 		<echo message="=============================================="/>
  		<echo message="basedir=${basedir}"/>
 		<echo message="=============================================="/>
-		<echo message="=============================================="/>
- 		<echo message="projectBaseDir=${projectBaseDir}"/>
-		<echo message="=============================================="/>
-		<property name="version.full" value="${forceContextQualifier}"/>
 
-		        
+ 		<property name="version.full" value="${forceContextQualifier}"/>
 
 		<!-- check if clean should be called -->
 		<condition property="is.clean">

@@ -43,7 +43,7 @@ public class EnclosingCallPointcut extends AbstractPointcut {
         }
 
         Object firstArgument = getFirstArgument();
-        if (firstArgument instanceof String) {
+        if (firstArgument == null || firstArgument instanceof String) {
             MethodCallExpression matchingCall = matchesInCalls(enclosing, (String) firstArgument, pattern);
             if (matchingCall != null) {
                 return Collections.singleton(matchingCall);
@@ -66,7 +66,7 @@ public class EnclosingCallPointcut extends AbstractPointcut {
     private MethodCallExpression matchesInCalls(List<CallAndType> enclosing,
             String callName, GroovyDSLDContext pattern) {
         for (CallAndType callAndType : enclosing) {
-            if (callName.equals(callAndType.call.getMethodAsString())) {
+            if (callName == null || callName.equals(callAndType.call.getMethodAsString())) {
                 return callAndType.call;
             }
         }

@@ -116,14 +116,14 @@ public class ConvertToMultiLineStringCompletionProposal extends
         ASTNode node = finder.doVisit(moduleNode);
         
         if ((node instanceof ConstantExpression && ((ConstantExpression) node).getValue() instanceof String) || node instanceof GStringExpression) {
-        	Expression expr = (Expression)node;
+        	Expression expr = (Expression) node;
     		char[] contents = unit.getContents();
     		int start = expr.getStart();
     		int end = expr.getEnd();
             char[] nodeText = new char[end - start];
     		System.arraycopy(contents, start, nodeText, 0, end - start);
     		
-    		if (!isMultiLineString(String.valueOf(nodeText))) {
+    		if (isStringLiteral(nodeText) && !isMultiLineString(String.valueOf(nodeText))) {
     			literal = expr;
     			result = true;
     		}
@@ -132,7 +132,13 @@ public class ConvertToMultiLineStringCompletionProposal extends
         return result;
     }
     
-    private TextEdit findReplacement(IDocument doc) {
+    private boolean isStringLiteral(char[] nodeText) {
+		return nodeText.length > 1 && 
+				(nodeText[0] == '\'' || nodeText[0] == '"') && 
+				(nodeText[nodeText.length-1] == '\'' || nodeText[nodeText.length-1] == '"');
+	}
+
+	private TextEdit findReplacement(IDocument doc) {
         try {
         	int startQuote = literal.getStart();
         	int endQuote = literal.getEnd()-1;
