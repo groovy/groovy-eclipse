@@ -16,6 +16,7 @@
 
 package org.eclipse.jdt.groovy.search;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,7 +49,7 @@ public class CategoryTypeLookup implements ITypeLookup {
 		if (node instanceof ConstantExpression || node instanceof VariableExpression) {
 			Set<ClassNode> categories = scope.getCategoryNames();
 			ClassNode currentType = objectExpressionType != null ? objectExpressionType : scope.getDelegateOrThis();
-			Set<MethodNode> possibleMethods = new HashSet<MethodNode>();
+			List<MethodNode> possibleMethods = new ArrayList<MethodNode>();
 			// go through all categories and look for and look for a method with the given name
 			String text = node.getText();
 			if (text.startsWith("${") && text.endsWith("}")) {
