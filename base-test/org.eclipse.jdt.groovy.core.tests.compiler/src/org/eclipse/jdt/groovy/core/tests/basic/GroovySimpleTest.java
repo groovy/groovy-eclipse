@@ -8766,6 +8766,31 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n"
 		},"");
 	}
+
+	// verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
+	public void testCompileStatic4() {
+		if (GroovyUtils.GROOVY_LEVEL<20) {
+			return;
+		}
+		runConformTest(new String[]{
+			"A.groovy",
+			"class A {\n"+
+			"	public void profile(String name, groovy.lang.Closure<?> callable) {	}\n"+
+			"}\n",
+			
+			"B.groovy",
+			"@groovy.transform.CompileStatic\n"+
+			"class B extends A {\n"+
+			"\n"+
+			"	def foo() {\n"+ 
+			"		profile(\"creating plugin manager with classes\") {\n"+
+			"			System.out.println('abc');\n"+
+			"		}\n"+
+			"	}\n"+
+			"\n"+
+			"}\n"
+		},"");
+	}
 	
 	public void testGroovyAnnotation() {
 		runConformTest(new String[] {
