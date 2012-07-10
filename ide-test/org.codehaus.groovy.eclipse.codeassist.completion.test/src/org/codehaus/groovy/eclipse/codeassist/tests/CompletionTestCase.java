@@ -517,6 +517,16 @@ public abstract class CompletionTestCase extends BuilderTests {
         assertEquals(expectedChoices.length, choices.length);
         for (int i = 0; i < expectedChoices.length; i++) {
             assertEquals(expectedChoices[i].length, choices[i].length);
+            
+            // proposal ordering is arbitrary
+            Comparator<ICompletionProposal> c = new Comparator<ICompletionProposal>() {
+                 public int compare(ICompletionProposal c1,
+                        ICompletionProposal c2) {
+                    return c1.getDisplayString().compareTo(c2.getDisplayString());
+                }
+            };
+            Arrays.sort(choices[i], 0, choices[i].length, c);
+            Arrays.sort(expectedChoices[i], 0, expectedChoices[i].length);
             for (int j = 0; j < expectedChoices[i].length; j++) {
                 assertEquals("unexpected choice", expectedChoices[i][j], choices[i][j].getDisplayString());
             }

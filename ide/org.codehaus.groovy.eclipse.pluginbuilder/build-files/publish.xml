@@ -2,49 +2,65 @@
 	<!-- ================================= 
           target: s3.deploy              
        ================================= -->
-    <target name="s3.deploy" depends="-init" description="Deploys Groovy-Eclipse to S3">
-    		<echo>Publishing to Amazon S3</echo>
-    		<echo>${env.dist_properties}</echo>
-    		
-    		<path id="s3.classpath"> 
-    		    <fileset dir="${basedir}/s3-libs">
-    		        <include name="**/*.jar" /> 
-    			</fileset> 
-    		</path> 
-    		
-  		<taskdef name="s3" classname="org.springframework.build.aws.ant.SimpleStorageService" classpathref="s3.classpath"/>
+	<target name="s3.deploy" depends="-init,zip.updatesite" description="Deploys Groovy-Eclipse to S3">
+		<echo>Publishing to Amazon S3</echo>
+		<echo>${env.dist_properties}</echo>
 
-    		<s3 accessKey="${accessKey}" secretKey="${secretKey}">
-    			<!-- need to delete old stuff, too -->
-    			
-    			<upload bucketName="dist.springsource.org" toDir="snapshot/GRECLIPSE/${upload.dir}" publicRead="true">
-    				<fileset dir="${basedir}/target/">
-    					<include name="**" />
-    				</fileset>
-    			</upload>
+		<path id="s3.classpath">
+			<fileset dir="${basedir}/s3-libs">
+				<include name="**/*.jar" />
+			</fileset>
+		</path>
 
-    		</s3>
-    	</target>
+		<taskdef name="s3" classname="org.springframework.build.aws.ant.SimpleStorageService" classpathref="s3.classpath" />
+
+		<s3 accessKey="${accessKey}" secretKey="${secretKey}">
+			<!-- Delete old update site, but keep archives -->
+			<delete bucketName="dist.springsource.org" file="${upload.dir}/features" />
+			<delete bucketName="dist.springsource.org" file="${upload.dir}/plugins" />
+			<delete bucketName="dist.springsource.org" file="${upload.dir}/content.xml" />
+			<delete bucketName="dist.springsource.org" file="${upload.dir}/artifacts.xml" />
+			<delete bucketName="dist.springsource.org" file="${upload.dir}/site.xml" />
+			<upload bucketName="dist.springsource.org" toDir="${upload.dir}" publicRead="true">
+				<fileset dir="${updateSiteDir}">
+					<include name="**" />
+				</fileset>
+			</upload>
+		</s3>
+	</target>
+
+	<target name="zip.updatesite">
+		<mkdir dir="${updateSiteDir}" />
+		<zip destfile="${updateSiteDir}/groovy-eclipse-${org.codehaus.groovy.eclipse.ui}.zip">
+			<zipfileset dir="${updateSiteDir}">
+				<include name="**/*" />
+				<exclude name="**/*.zip" />
+			</zipfileset>
+		</zip>
+	</target>
 
 	<!-- - - - - - - - - - - - - - - - - - 
           target: -init                      
     - - - - - - - - - - - - - - - - - -->
-  <target name="-init">
-  	<property file="../build_local_${eclipse.target.version}.properties"/>
-  	<property file="${buildDirectory}/finalPluginsVersions.properties"/>
-  	<property environment="env"/>
-  	<property file="${env.dist_properties}"/>
-  	
-  	<condition property="upload.dir" value="e4.2">
-	  	<equals arg1="${eclipse.target.version}" arg2="42"/>
-  	</condition>
-  	<condition property="upload.dir" value="e3.7">
-	  	<equals arg1="${eclipse.target.version}" arg2="37"/>
-  	</condition>
-  	<condition property="upload.dir" value="e3.6">
-	  	<equals arg1="${eclipse.target.version}" arg2="36"/>
-  	</condition>
-  </target>
+	<target name="-init">
+		<property file="../build_local_${eclipse.target.version}.properties" />
+		<property file="${buildDirectory}/finalPluginsVersions.properties" />
+		<property environment="env" />
+		<property file="${env.dist_properties}" />
+		<property name="updateSiteDir" value="${workDir}/build/updateSite" />
+
+		<condition property="partial.upload.dir" value="e4.2">
+			<equals arg1="${eclipse.target.version}" arg2="e42" />
+		</condition>
+		<condition property="partial.upload.dir" value="e3.7">
+			<equals arg1="${eclipse.target.version}" arg2="e37" />
+		</condition>
+		<condition property="partial.upload.dir" value="e3.6">
+			<equals arg1="${eclipse.target.version}" arg2="e36" />
+		</condition>
+
+		<property name="upload.dir" value="snapshot/GRECLIPSETEST/${partial.upload.dir}" />
+	</target>
 
 
 </project>
