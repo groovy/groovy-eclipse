@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import groovy.transform.CompileStatic;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -8748,6 +8750,21 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"	^\n" + 
 		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)\n" + 
 		"----------\n");
+	}
+	
+	public void testCompileStatic3() {
+		if (GroovyUtils.GROOVY_LEVEL<20) {
+			return;
+		}
+		runConformTest(new String[]{
+			"Foo.groovy",
+			"import groovy.transform.CompileStatic;\n"+
+			"\n"+
+			"@CompileStatic void test() {\n"+
+			"	int littleInt = 3\n"+
+			"	Integer objectInt = littleInt\n"+
+			"}\n"
+		},"");
 	}
 	
 	public void testGroovyAnnotation() {
