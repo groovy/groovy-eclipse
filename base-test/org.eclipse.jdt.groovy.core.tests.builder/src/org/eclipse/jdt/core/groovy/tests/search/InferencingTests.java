@@ -1168,7 +1168,11 @@ public class InferencingTests extends AbstractInferencingTest {
         
         int textStart = contents.indexOf("text");
         int textEnd = textStart + "text".length();
-        assertDeclaringType(contents, textStart, textEnd, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        if (GroovyUtils.GROOVY_LEVEL >= 20) {
+            assertDeclaringType(contents, textStart, textEnd, "org.codehaus.groovy.runtime.StringGroovyMethods");
+        } else {
+            assertDeclaringType(contents, textStart, textEnd, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        }
     }
     
     public void testClassReference1() throws Exception {
