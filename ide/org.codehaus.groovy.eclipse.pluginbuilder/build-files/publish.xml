@@ -2,7 +2,7 @@
 	<!-- ================================= 
           target: s3.deploy              
        ================================= -->
-	<target name="s3.deploy" depends="-init,zip.updatesite" description="Deploys Groovy-Eclipse to S3">
+	<target name="s3.deploy" depends="-init,zip.updatesite,create.html" description="Deploys Groovy-Eclipse to S3">
 		<echo>Publishing to Amazon S3</echo>
 		<echo>${env.dist_properties}</echo>
 
@@ -31,15 +31,23 @@
 		</s3>
 	</target>
 
-	<target name="zip.updatesite">
+	<target name="zip.updatesite" depends="-init">
 		<mkdir dir="${updateSiteDir}" />
-		<zip destfile="${updateSiteDir}/groovy-eclipse-${org.codehaus.groovy.eclipse.ui}.zip">
+		<zip destfile="${updateSiteDir}/${archive.name}">
 			<zipfileset dir="${updateSiteDir}">
 				<include name="**/*" />
 				<exclude name="**/*.zip" />
 			</zipfileset>
 		</zip>
 	</target>
+	
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: create.html                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="create.html" depends="-init">
+    	<copy file="index.html" todir="${updateSiteDir}"/>
+    	<replace file="${updateSiteDir}/index.html" summary="yes" token="@GROOVY_ECLIPSE_VERSION@" value="${archive.name}"/>
+    </target>
 
 	<!-- - - - - - - - - - - - - - - - - - 
           target: -init                      
@@ -50,6 +58,7 @@
 		<property environment="env" />
 		<property file="${env.dist_properties}" />
 		<property name="updateSiteDir" value="${workDir}/build/updateSite" />
+  	<property name="archive.name" value="archive-${org.codehaus.groovy.eclipse.ui}.zip"/>
 
 		<condition property="partial.upload.dir" value="e4.2">
 			<equals arg1="${eclipse.target.version}" arg2="e42" />
