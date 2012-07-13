@@ -21,13 +21,11 @@
 			<delete bucketName="dist.springsource.org" file="${upload.dir}/content.xml" />
 			<delete bucketName="dist.springsource.org" file="${upload.dir}/artifacts.xml" />
 			<delete bucketName="dist.springsource.org" file="${upload.dir}/site.xml" />
-<!--
 			<upload bucketName="dist.springsource.org" toDir="${upload.dir}" publicRead="true">
 				<fileset dir="${updateSiteDir}">
 					<include name="**" />
 				</fileset>
 			</upload>
--->
 		</s3>
 	</target>
 
