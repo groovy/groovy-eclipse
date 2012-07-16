@@ -6,11 +6,15 @@ import java.net.URL;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer;
+import org.codehaus.groovy.eclipse.core.compiler.CompilerCheckerParticipant;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ProjectScope;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
@@ -33,6 +37,7 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -54,12 +59,13 @@ import org.eclipse.ui.internal.browser.WorkbenchBrowserSupport;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.eclipse.ui.internal.ide.actions.OpenWorkspaceAction;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
+import org.osgi.service.prefs.BackingStoreException;
 
 public class CompilerPreferencesPage extends PropertyAndPreferencePage implements
 IWorkbenchPreferencePage, IWorkbenchPropertyPage {
-    private static final String PROPERTY_ID = Activator.USING_PROJECT_PROPERTIES;
+    public static final String PROPERTY_ID = Activator.USING_PROJECT_PROPERTIES;
 
-    private static final String PREFERENCES_ID = "org.codehaus.groovy.eclipse.preferences.compiler";
+    public static final String PREFERENCES_ID = "org.codehaus.groovy.eclipse.preferences.compiler";
 
     private static final String PROP_VM = "eclipse.vm"; //$NON-NLS-1$
 
@@ -79,11 +85,17 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
 
     protected final SpecifiedVersion activeGroovyVersion;
 
+    protected SpecifiedVersion currentProjectVersion;
+
     private Button groovyLibButt;
 
     private ScriptFolderSelectorPreferences scriptFolderSelector;
 
     private IEclipsePreferences preferences;
+
+    private Combo compilerCombo;
+
+    private Button doCheckForCompilerMismatch;
 
     public CompilerPreferencesPage() {
         super();
@@ -96,7 +108,7 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
         ScopedPreferenceStore store;
         if (project == null) {
             // workspace settings
-            IScopeContext scope = new InstanceScope();
+            IScopeContext scope = InstanceScope.INSTANCE;
             preferences = scope.getNode(Activator.PLUGIN_ID);
             store = new ScopedPreferenceStore(scope, Activator.PLUGIN_ID);
         } else {
@@ -115,6 +127,25 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
         return preferences;
     }
 
+
+    @Override
+    protected Label createDescriptionLabel(Composite parent) {
+        if (isProjectPreferencePage()) {
+            Composite body = new Composite(parent, SWT.NONE);
+            GridLayout layout= new GridLayout();
+            layout.marginHeight= 0;
+            layout.marginWidth= 0;
+            layout.numColumns = 2;
+            body.setLayout(layout);
+            body.setFont(parent.getFont());
+
+            GridData data = new GridData(GridData.FILL, GridData.FILL, true, true);
+            body.setLayoutData(data);
+            createProjectCompilerSection(body);
+        }
+        return super.createDescriptionLabel(parent);
+    }
+
     @Override
     protected Control createPreferenceContent(Composite parent) {
         final Composite page = new Composite(parent, SWT.NONE);
@@ -126,9 +157,7 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
         page.setFont(parent.getFont());
 
         if (getElement() == null) {
-            // Only for the workspace version
-            // Groovy compiler
-            createCompilerSection(page);
+            createWorkspaceCompilerSection(page);
         }
 
         // Groovy script folder
@@ -193,11 +222,42 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
         classpathLabel2.setLayoutData(gd);
     }
 
-    /**
-     * @param parent
-     * @param page
-     */
-    protected void createCompilerSection(final Composite page) {
+    protected void createProjectCompilerSection(final Composite page) {
+        Label compilerLabel = new Label(page, SWT.WRAP);
+        compilerLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+        compilerLabel.setText("Groovy compiler level for project " + getProject().getName() + ":");
+        compilerLabel.setFont(getBoldFont(page));
+        compilerCombo = new Combo(page, SWT.DROP_DOWN | SWT.READ_ONLY);
+        compilerCombo.add("1.7");
+        compilerCombo.add("1.8");
+        compilerCombo.add("2.0");
+        currentProjectVersion = CompilerUtils.getCompilerLevel(getProject());
+
+        Label explainLabel = new Label(page, SWT.WRAP);
+        explainLabel.setText("If the project compiler level does not match the workspace compiler level,\n" +
+                "there will be a build error placed on the project.");
+        GridData data = new GridData();
+        data.horizontalSpan = 2;
+        data.grabExcessHorizontalSpace = false;
+        explainLabel.setLayoutData(data);
+        setToProjectVersion();
+    }
+
+    private void setToProjectVersion() {
+        switch (currentProjectVersion) {
+            case _17:
+                compilerCombo.select(0);
+                break;
+            case _18:
+                compilerCombo.select(1);
+                break;
+            case _20:
+                compilerCombo.select(2);
+                break;
+        }
+    }
+
+    protected void createWorkspaceCompilerSection(final Composite page) {
         Label compilerLabel = new Label(page, SWT.WRAP);
         compilerLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
         compilerLabel.setText("Groovy Compiler settings:");
@@ -236,6 +296,17 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
                 openUrl(event.text);
             }
         });
+
+        doCheckForCompilerMismatch = new Button(compilerPage, SWT.CHECK);
+        doCheckForCompilerMismatch.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+        doCheckForCompilerMismatch.setText("Enable checking for mismatches between the project and workspace Groovy compiler levels");
+        doCheckForCompilerMismatch.setSelection(getPreferences().getBoolean(Activator.GROOVY_CHECK_FOR_COMPILER_MISMATCH, true));
+        //        doCheckForCompilerMismatch.addSelectionListener(new SelectionAdapter() {
+        //            @Override
+        //            public void widgetSelected(SelectionEvent e) {
+        //                doCheckForCompilerMismatch.setSelection(!doCheckForCompilerMismatch.getSelection());
+        //            }
+        //        });
     }
 
     /**
@@ -429,6 +500,14 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
             enableProjectSpecificSettings(false);
         }
         scriptFolderSelector.restoreDefaultsPressed();
+        if (compilerCombo != null) {
+            setToProjectVersion();
+        }
+
+        if (doCheckForCompilerMismatch != null) {
+            doCheckForCompilerMismatch.setSelection(true);
+            getPreferences().putBoolean(Activator.GROOVY_CHECK_FOR_COMPILER_MISMATCH, true);
+        }
     }
 
     private void applyPreferences() {
@@ -438,6 +517,48 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
             getPreferenceStore().setValue(PROPERTY_ID, useProjectSettings());
         }
         scriptFolderSelector.applyPreferences();
+
+        if (doCheckForCompilerMismatch != null) {
+            boolean isSelected = doCheckForCompilerMismatch.getSelection();
+            boolean currentPref = getPreferences().getBoolean(Activator.GROOVY_CHECK_FOR_COMPILER_MISMATCH, true);
+            if (!isSelected && currentPref) {
+                // delete all markers in the workspace
+                try {
+                    ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(CompilerCheckerParticipant.COMPILER_MISMATCH_PROBLEM, true, IResource.DEPTH_ONE);
+                } catch (CoreException e) {
+                    GroovyCore.logException("Error deleting markers", e);
+                }
+            }
+            if (isSelected != currentPref) {
+                getPreferences().putBoolean(Activator.GROOVY_CHECK_FOR_COMPILER_MISMATCH, isSelected);
+                try {
+                    getPreferences().flush();
+                } catch (BackingStoreException e) {
+                    GroovyCore.logException("Error saving compiler preferences", e);
+                }
+            }
+        }
+
+        if (compilerCombo != null) {
+            int selectedIndex = compilerCombo.getSelectionIndex();
+            SpecifiedVersion selected;
+            switch (selectedIndex) {
+                case 0:
+                    selected = SpecifiedVersion._17;
+                    break;
+                case 1:
+                    selected = SpecifiedVersion._18;
+                    break;
+                case 2:
+                    selected = SpecifiedVersion._20;
+                    break;
+                default:
+                    selected = SpecifiedVersion.UNSPECIFIED;
+            }
+            if (selected != currentProjectVersion && selected != SpecifiedVersion.UNSPECIFIED) {
+                CompilerUtils.setCompilerLevel(getProject(), selected);
+            }
+        }
     }
 
     @Override

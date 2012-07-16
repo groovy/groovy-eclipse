@@ -95,7 +95,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
         // Compile
         store.setDefault(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
-        store.setDefault(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "false");
+        store.setDefault(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+        store.setDefault(Activator.GROOVY_CHECK_FOR_COMPILER_MISMATCH, true);
     }
 
     public void reset() {

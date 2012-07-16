@@ -37,7 +37,6 @@ Export-Package: org.apache.commons.io,
  org.codehaus.groovy.eclipse.core.preferences,
  org.codehaus.groovy.eclipse.core.search,
  org.codehaus.groovy.eclipse.core.templates,
- org.codehaus.groovy.eclipse.core.util,
- org.codehaus.groovy.frameworkadapter.util
+ org.codehaus.groovy.eclipse.core.util
 Bundle-Vendor: The Codehaus
 Bundle-RequiredExecutionEnvironment: J2SE-1.5

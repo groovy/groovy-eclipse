@@ -958,5 +958,12 @@
                 value="org.eclipse.jdt.groovy.core.groovyNature">
           </filter>
        </page>
-    </extension> 
+    </extension>
+    <extension
+          point="org.eclipse.ui.ide.markerResolution">
+       <markerResolutionGenerator
+             class="org.codehaus.groovy.eclipse.actions.CompilerMismatchMarkerResolutionGenerator"
+             markerType="org.codehaus.groovy.eclipse.core.compilerMismatch">
+       </markerResolutionGenerator>
+    </extension>
 </plugin>
