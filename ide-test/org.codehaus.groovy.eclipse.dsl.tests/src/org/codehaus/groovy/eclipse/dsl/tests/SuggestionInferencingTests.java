@@ -10,10 +10,6 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.tests;
 
-import java.io.IOException;
-
-import org.eclipse.core.runtime.Path;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -44,19 +40,19 @@ public class SuggestionInferencingTests extends AbstractDSLInferencingTest {
     
     
     
-    private void doTestForType(String xdslContents, String groovyContents, int exprStart, int exprEnd, String expectedType) throws IOException {
-        createXDSL(xdslContents);
-        assertType(groovyContents, exprStart, exprEnd, expectedType, true);
-    }
-    
-    private void doTestForDeclaringType(String xdslContents, String groovyContents, int exprStart, int exprEnd, String expectedDeclaringType) throws IOException {
-        createXDSL(xdslContents);
-        assertDeclaringType(groovyContents, exprStart, exprEnd, expectedDeclaringType, true);
-    }
-    
-    private void createXDSL(String contents) throws IOException {
-        defaultFileExtension = "xdsl";
-        env.addFile(new Path("Project/.groovy"), "suggestions.xdsl", contents);
-    }
+//    private void doTestForType(String xdslContents, String groovyContents, int exprStart, int exprEnd, String expectedType) throws IOException {
+//        createXDSL(xdslContents);
+//        assertType(groovyContents, exprStart, exprEnd, expectedType, true);
+//    }
+//    
+//    private void doTestForDeclaringType(String xdslContents, String groovyContents, int exprStart, int exprEnd, String expectedDeclaringType) throws IOException {
+//        createXDSL(xdslContents);
+//        assertDeclaringType(groovyContents, exprStart, exprEnd, expectedDeclaringType, true);
+//    }
+//    
+//    private void createXDSL(String contents) throws IOException {
+//        defaultFileExtension = "xdsl";
+//        env.addFile(new Path("Project/.groovy"), "suggestions.xdsl", contents);
+//    }
 
 }

@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.codehaus.groovy.ast.Comment;
-import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;

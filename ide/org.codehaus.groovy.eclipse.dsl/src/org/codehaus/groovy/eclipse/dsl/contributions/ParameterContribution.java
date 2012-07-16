@@ -13,7 +13,6 @@ package org.codehaus.groovy.eclipse.dsl.contributions;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
-import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
  * a parameter of a method contribution

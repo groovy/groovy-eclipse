@@ -19,13 +19,13 @@ package org.codehaus.groovy.eclipse.core.builder;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.ClassFile;
 import org.eclipse.jdt.internal.core.IJavaElementRequestor;
 import org.eclipse.jdt.internal.core.NameLookup;
@@ -48,14 +48,14 @@ public class GroovyNameLookup extends NameLookup {
         this.typesInWorkingCopies = (HashMap) ReflectionUtils.getPrivateField(NameLookup.class, "typesInWorkingCopies", other);
         this.rootToResolvedEntries = (Map) ReflectionUtils.getPrivateField(NameLookup.class, "rootToResolvedEntries", other);
     }
-    
+
     public GroovyNameLookup(IPackageFragmentRoot[] packageFragmentRoots,
             HashtableOfArrayToObject packageFragments,
             ICompilationUnit[] workingCopies, Map rootToResolvedEntries) {
         super(packageFragmentRoots, packageFragments, workingCopies,
                 rootToResolvedEntries);
     }
-    
+
     /**
      * Copied from parent class
      * Changes marked with // GROOVY begin and // GROOVY end
@@ -87,24 +87,24 @@ public class GroovyNameLookup extends NameLookup {
                         IType type = cu.getType(name);
                         if (
                                 // GROOVY begin
-                                type.exists() && 
+                                type.exists() &&
                                 // GROOVY end
                                 acceptType(type, acceptFlags, true/*a source type*/)) { // accept type checks for existence
                             requestor.acceptType(type);
                             break;  // since an exact match was requested, no other matching type can exist
                         }
-                        
+
                         // now look for member types
-                        
+
                         String mainType = cu.getElementName();
                         int dotIndex = mainType.indexOf('.');
                         mainType = mainType.substring(0, dotIndex);
                         type = cu.getType(mainType);
-                        if (type.exists()) {    
+                        if (type.exists()) {
                             type = getMemberType(type, name, firstDot);
                             if (
                                     // GROOVY begin
-                                    type.exists() && 
+                                    type.exists() &&
                                     // GROOVY end
                                     acceptType(type, acceptFlags, true/*a source type*/)) { // accept type checks for existence
                                 requestor.acceptType(type);
@@ -142,15 +142,15 @@ public class GroovyNameLookup extends NameLookup {
             if (VERBOSE)
                 this.timeSpentInSeekTypesInSourcePackage += System.currentTimeMillis()-start;
         }
-    }    
-    
-    
+    }
+
+
     private IType getMemberType(IType type, String name, int dot) {
         type = type.getType(name);
         return type;
     }
 
-    
+
     /**
      * Copied from parent class
      * Changes marked with // GROOVY begin and // GROOVY end
@@ -177,7 +177,7 @@ public class GroovyNameLookup extends NameLookup {
                         requestor.acceptType(type);
                     }
                 }
-                
+
                 // GROOVY begin
                 // class file may still exist as an inner type
                 IJavaElement[] classFiles= null;
@@ -196,7 +196,7 @@ public class GroovyNameLookup extends NameLookup {
                     }
                 }
                 // GROOVY end
-                
+
             } else {
                 IJavaElement[] classFiles= null;
                 try {
