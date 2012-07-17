@@ -538,7 +538,10 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 					String propertyName = convertToPropertyName(methodNode.getName());
 					if (!existing.contains(propertyName)) {
 						existing.add(propertyName);
-						super.addProperty(createPropertyNodeForMethodNode(methodNode, propertyName));
+						// Adding a real field for these accessors can trip up CompileStatic which
+						// will attempt to access it as a real field
+						super.addPropertyWithoutField(createPropertyNodeForMethodNode(methodNode, propertyName));
+						// super.addProperty(createPropertyNodeForMethodNode(methodNode, propertyName));
 					}
 				}
 			}
