@@ -7,3 +7,4 @@ Bundle-Vendor: The Codehaus
 Fragment-Host: org.eclipse.osgi;bundle-version="3.6.0"
 Export-Package: org.codehaus.groovy.frameworkadapter.util
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Eclipse-ExtensibleAPI: true
