@@ -122,7 +122,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 						becomeWorkingCopy(null);
 					}
 					if (!isConsistent()) {
-						reconcile(true, null);
+						makeConsistent(null);
 					}
 					PerWorkingCopyInfo info = getPerWorkingCopyInfo();
 					if (info != null) {

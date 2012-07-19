@@ -204,4 +204,33 @@ public class TypeCompletionTests extends CompletionTestCase {
         // found twice:  once as a type proposal and once as a constructor proposal
         proposalExists(proposals, "MissingPropertyExceptionNoStack", 2, true);
     }
+    
+    public void testAnnotation1() throws Exception {
+        String contents = "@Single class Foo { }";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "@Single"));
+        proposalExists(proposals, "Singleton", 1, true);
+        proposalExists(proposals, "SingletonASTTransformation", 0, true);
+    }
+    
+    public void testAnnotation2() throws Exception {
+        // not exactly right since @Singlton is only allowed on classes, but good enoug for testing
+        String contents = "class Foo { @Single  def foo() {} }";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "@Single"));
+        proposalExists(proposals, "Singleton", 1, true);
+        proposalExists(proposals, "SingletonASTTransformation", 0, true);
+    }
+    public void testAnnotation3() throws Exception {
+        // not exactly right since @Singlton is only allowed on classes, but good enoug for testing
+        String contents = "class Foo { @Single  def foo }";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "@Single"));
+        proposalExists(proposals, "Singleton", 1, true);
+        proposalExists(proposals, "SingletonASTTransformation", 0, true);
+    }
+    public void testAnnotation4() throws Exception {
+        // not exactly right since @Singlton is only allowed on classes, but good enoug for testing
+        String contents = "@Single import java.util.List\nclass Foo { }";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "@Single"));
+        proposalExists(proposals, "Singleton", 1, true);
+        proposalExists(proposals, "SingletonASTTransformation", 0, true);
+    }
 }

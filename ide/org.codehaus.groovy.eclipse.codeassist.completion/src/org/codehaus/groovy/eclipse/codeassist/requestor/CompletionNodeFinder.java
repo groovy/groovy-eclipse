@@ -28,16 +28,19 @@ import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLoca
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
+import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
@@ -69,7 +72,6 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
 import org.codehaus.groovy.runtime.GeneratedClosure;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 
 /**
  * @author Andrew Eisenberg
@@ -177,19 +179,10 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             createContext(null, node, EXTENDS);
         }
 
-        // visit inner classes
-        // getInnerClasses() does not exist in the 1.6 stream, so must access reflectively
-        Iterator<ClassNode> innerClasses;
-        try {
-            innerClasses = (Iterator<ClassNode>)
-                    ReflectionUtils.throwableExecutePrivateMethod(ClassNode.class, "getInnerClasses", new Class<?>[0], node, new Object[0]);
-        } catch (Exception e) {
-            // can ignore.
-            innerClasses = null;
-        }
+        Iterator<InnerClassNode> innerClasses = node.getInnerClasses();
         if (innerClasses != null) {
             while (innerClasses.hasNext()) {
-                ClassNode inner = innerClasses.next();
+                InnerClassNode inner = innerClasses.next();
                 if (!inner.isSynthetic() || inner instanceof GeneratedClosure) {
                     this.visitClass(inner);
                 }
@@ -263,6 +256,26 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         // run method must be visited last
         if (!isRunMethod(node)) {
             internalVisitConstructorOrMethod(node);
+        }
+    }
+
+    @Override
+    public void visitAnnotations(AnnotatedNode node) {
+        List<AnnotationNode> annotations = node.getAnnotations();
+        if (annotations.isEmpty()) {
+            return;
+        }
+        for (AnnotationNode an : annotations) {
+            // skip built-in properties
+            if (an.isBuiltIn()) {
+                continue;
+            }
+            for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
+                member.getValue().visit(this);
+            }
+            if (doTest(an.getClassNode())) {
+                createContext(node, currentDeclaration, ContentAssistLocation.ANNOTATION);
+            }
         }
     }
 

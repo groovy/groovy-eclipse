@@ -73,15 +73,15 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
      * Don't show types if there is a '.'
      * Don't show types when in a class body and there is a type declaration
      * immediately before
-     * 
+     *
      * @param context
      * @param toSearch
      * @return
      */
     private boolean shouldShowTypes(ContentAssistContext context,
             String toSearch) {
-        return (toSearch.length() == 0 && context.location != ContentAssistLocation.IMPORT) ||
- context.fullCompletionExpression.contains(".")
+        return (toSearch.length() == 0 && context.location != ContentAssistLocation.IMPORT)
+                || context.fullCompletionExpression.contains(".")
                 || isBeforeTypeName(context.location, context.unit, context.completionLocation);
     }
 
@@ -113,6 +113,8 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
                 return IJavaSearchConstants.INTERFACE;
             case EXCEPTIONS:
                 return IJavaSearchConstants.CLASS;
+            case ANNOTATION:
+                return IJavaSearchConstants.ANNOTATION_TYPE;
             default:
                 return IJavaSearchConstants.TYPE;
         }
