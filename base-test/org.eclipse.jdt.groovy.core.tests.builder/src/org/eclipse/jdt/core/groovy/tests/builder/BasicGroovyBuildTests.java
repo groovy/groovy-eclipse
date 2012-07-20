@@ -366,6 +366,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
 	}
 	
+	
 	// verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
 	public void testCompileStatic2() throws Exception {
 		if (GroovyUtils.GROOVY_LEVEL < 20) {
@@ -405,6 +406,34 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		expectingCompiledClassesV("B","B$_foo_closure1");
 		expectingNoProblems();
 	}
+	
+	public void testCompileStatic3() throws Exception {
+		if (GroovyUtils.GROOVY_LEVEL < 20) {
+			return;
+		}
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "", "Foo",
+				"class Foo {\n"+
+				"	@groovy.transform.CompileStatic\n"+
+				"	public static void main(String[] args) {\n"+
+				"		((GroovyObject)this);\n"+
+				"	}\n"+
+				"}\n");
+
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+		expectingCompiledClassesV("Foo");
+	}
+	
 
 	public void test1167() throws Exception {
 		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
