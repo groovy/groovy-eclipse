@@ -202,10 +202,11 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             }
 
             // now add the parameters
-            char[][] regularParameterNames = ((GroovyCompletionProposal) fProposal).getRegularParameterNames();
+            // named parameters go first
             char[][] namedParameterNames = ((GroovyCompletionProposal) fProposal).getNamedParameterNames();
-            int argCount = regularParameterNames.length;
+            char[][] regularParameterNames = ((GroovyCompletionProposal) fProposal).getRegularParameterNames();
             int namedCount = namedParameterNames.length;
+            int argCount = regularParameterNames.length;
             int allCount = argCount + namedCount;
 
             fArgumentOffsets = new int[allCount];
@@ -216,16 +217,16 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 // named ones)
                 char[] nextName;
                 char[] nextTypeName;
-                if (i < argCount) {
-                    nextTypeName = regularParameterTypes[i];
-                    nextName = regularParameterNames[i];
-                } else {
+                if (i < namedCount) {
                     // named arg
-                    nextName = namedParameterNames[i - argCount];
-                    nextTypeName = namedParameterNames[i - argCount];
+                    nextName = namedParameterNames[i];
+                    nextTypeName = namedParameterNames[i];
+                } else {
+                    nextTypeName = regularParameterTypes[i - namedCount];
+                    nextName = regularParameterNames[i - namedCount];
                 }
 
-                if (proposalOptions.useNamedArguments || i >= argCount) {
+                if (proposalOptions.useNamedArguments || i <= namedCount) {
                     buffer.append(nextName).append(":");
                 }
 				fArgumentOffsets[i] = buffer.length();
