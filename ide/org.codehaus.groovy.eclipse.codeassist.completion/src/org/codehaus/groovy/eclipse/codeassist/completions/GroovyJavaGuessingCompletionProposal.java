@@ -316,29 +316,29 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         }
 
         // now add the parameters
-        char[][] regularParameterNames = ((GroovyCompletionProposal) fProposal).getRegularParameterNames();
         char[][] namedParameterNames = ((GroovyCompletionProposal) fProposal).getNamedParameterNames();
-        int argCount = regularParameterNames.length;
+        char[][] regularParameterNames = ((GroovyCompletionProposal) fProposal).getRegularParameterNames();
         int namedCount = namedParameterNames.length;
+        int argCount = regularParameterNames.length;
         int allCount = argCount + namedCount;
 
         int replacementOffset = getReplacementOffset();
-        fChoices = guessParameters(regularParameterNames, namedParameterNames);
+        fChoices = guessParameters(namedParameterNames, regularParameterNames);
 
         for (int i = 0; i < allCount; i++) {
             char[] nextName;
             char[] nextTypeName;
-            if (i < argCount) {
-                nextTypeName = regularParameterTypes[i];
-                nextName = regularParameterNames[i];
-            } else {
+            if (i < namedCount) {
                 // named arg
-                nextName = namedParameterNames[i - argCount];
-                nextTypeName = namedParameterNames[i - argCount];
+                nextName = namedParameterNames[i];
+                nextTypeName = namedParameterTypes[i];
+            } else {
+                nextName = regularParameterNames[i - namedCount];
+                nextTypeName = regularParameterTypes[i - namedCount];
             }
 
             // handle the argument name
-            if (proposalOptions.useNamedArguments || i >= argCount) {
+            if (proposalOptions.useNamedArguments || i < namedCount) {
                 buffer.append(nextName).append(":");
             }
 
@@ -418,7 +418,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
             return null;
     }
 
-    private ICompletionProposal[][] guessParameters(char[][] regularParameterNames, char[][] namedParameterNames)
+    private ICompletionProposal[][] guessParameters(char[][] firstParameterNames, char[][] secondParameterNames)
             throws JavaModelException {
         // find matches in reverse order. Do this because people tend to declare
         // the variable meant for the last
@@ -436,12 +436,13 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         // code completion (which avoids
         // "someOtherObject.yourMethod(param1, param1, param1)";
 
-        char[][] parameterNames = new char[regularParameterNames.length + namedParameterNames.length][];
-        System.arraycopy(regularParameterNames, 0, parameterNames, 0, regularParameterNames.length);
-        System.arraycopy(namedParameterNames, 0, parameterNames, regularParameterNames.length, namedParameterNames.length);
+        char[][] parameterNames = new char[firstParameterNames.length + secondParameterNames.length][];
+        System.arraycopy(firstParameterNames, 0, parameterNames, 0, firstParameterNames.length);
+        System.arraycopy(secondParameterNames, 0, parameterNames, firstParameterNames.length, secondParameterNames.length);
 
         int count = parameterNames.length;
         fPositions = new Position[count];
+
         fChoices = new ICompletionProposal[count][];
 
         String[] parameterTypes = getParameterTypes();
