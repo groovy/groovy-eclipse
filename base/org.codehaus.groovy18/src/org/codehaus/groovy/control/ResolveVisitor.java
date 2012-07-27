@@ -244,7 +244,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         fieldTypesChecked.add(node.getField());
     }
 
-    private boolean resolveToInner (ClassNode type) {
+    // GRECLIPSE make protected
+    /*private*/ protected boolean resolveToInner (ClassNode type) {
         // we do not do our name mangling to find an inner class
         // if the type is a ConstructedClassWithPackage, because in this case we
         // are resolving the name at a different place already
@@ -264,7 +265,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return false;
     }
 
-    private boolean resolveToInnerEnum (ClassNode type) {
+    // GRECLIPSE make protected
+    /*private*/ protected boolean resolveToInnerEnum (ClassNode type) {
         // GROOVY-3110: It may be an inner enum defined by this class itself, in which case it does not need to be
         // explicitly qualified by the currentClass name
     	String name = type.getName();

@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +27,7 @@ import java.util.StringTokenizer;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.ResolveVisitor;
@@ -397,6 +399,35 @@ public class JDTResolver extends ResolveVisitor {
 		} else {
 			return ClassHelper.DYNAMIC_TYPE;
 		}
+	}
+
+	@Override
+	protected boolean resolveToInnerEnum(ClassNode type) {
+		if (existsAsInnerClass(type)) {
+			return super.resolveToInnerEnum(type);
+		}
+		return false;
+	}
+
+	@Override
+	protected boolean resolveToInner(ClassNode type) {
+		if (existsAsInnerClass(type)) {
+			return super.resolveToInner(type);
+		}
+		return false;
+	}
+
+	private boolean existsAsInnerClass(ClassNode type) {
+		Iterator<InnerClassNode> innerClasses = currentClass.getInnerClasses();
+		if (innerClasses != null) {
+			while (innerClasses.hasNext()) {
+				InnerClassNode innerClass = innerClasses.next();
+				if (innerClass.getName().equals(type.getName())) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	// FIXASC callers could check if it is a 'funky' type before always recording a depedency
