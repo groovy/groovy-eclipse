@@ -627,7 +627,11 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
 
         // if we get here, then we still want to do the context
         // we are either at a paren, at a comma, or at a start of an expression
-        createContextForCallContext(call, call.isImplicitThis() ? methodExpression : objectExpression,
+        createContextForCallContext(call, methodExpression, // call.isImplicitThis()
+                                                            // ?
+                                                            // methodExpression
+                                                            // :
+                                                            // objectExpression,
         // this is not exactly right since it will
         // fail on funky kinds of method calls, like those that are called by a
         // GString

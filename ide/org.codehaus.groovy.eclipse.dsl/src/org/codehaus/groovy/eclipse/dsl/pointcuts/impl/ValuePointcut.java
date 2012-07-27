@@ -17,6 +17,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.eclipse.core.resources.IStorage;
 
@@ -64,6 +65,9 @@ public class ValuePointcut extends FilteringPointcut<Object> {
             return reify(((MapEntryExpression) result).getValueExpression());
         } else if (result instanceof ConstantExpression) {
             return ((ConstantExpression) result).getValue();
+        } else if (result instanceof PropertyExpression) {
+            PropertyExpression prop = (PropertyExpression) result;
+            return reify(prop.getObjectExpression()).toString() + '.' + reify(prop.getProperty());
         } else {
             return super.asString(result);
         }

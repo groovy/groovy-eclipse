@@ -224,6 +224,63 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         checkProposalChoices(contents, "flar(", "aaa", "aaa: __, ", expectedChoices);
     }
     
+    
+    // tests application of closures with and without named parameters
+    private static final String closuredsld =
+    		"contribute (currentType('Clos')) {\n" + 
+    		"    method name: 'test1', params : [op:Closure]\n" + 
+    		"    method name: 'test2', params : [first: String, op:Closure]\n" + 
+    		"    method name: 'test3', namedParams : [op:Closure]\n" + 
+    		"    method name: 'test4', namedParams : [first: String, op:Closure]\n" + 
+    		"    method name: 'test5', params : [first: String], namedParams: [op:Closure]\n" + 
+    		"    method name: 'test6', namedParams : [first: String], params: [op:Closure]\n" + 
+    		"    method name: 'test7', namedParams : [first: String, other:String], params: [op:Closure]\n" + 
+    		"    method name: 'test8', namedParams : [first: String], params: [other:String, op:Closure]\n" + 
+    		"    method name: 'test9', namedParams : [first: String], params: [other:String, op:Closure, other2:String]\n" + 
+    		"    method name: 'test0', namedParams : [first: String], params: [other:String, op:Closure, other2:String, op2:Closure]\n" + 
+    		"}";
+    private static final String closureContents = "class Clos { }\nnew Clos().test";
+    public void testClostureOp1() throws Exception {
+        createDSL(closuredsld);
+        checkProposalApplicationNonType(closureContents, closureContents +"1 {", closureContents.length(), "test1");
+    }
+    public void testClostureOp2() throws Exception {
+        createDSL(closuredsld);
+        checkProposalApplicationNonType(closureContents, closureContents + "2(\"\") {", closureContents.length(), "test2");
+    }
+    public void testClostureOp3() throws Exception {
+        createDSL(closuredsld);
+        checkProposalApplicationNonType(closureContents, closureContents + "3(op:{  })", closureContents.length(), "test3");
+    }
+    public void testClostureOp4() throws Exception {
+        createDSL(closuredsld);
+        checkProposalApplicationNonType(closureContents, closureContents + "4(first:\"\", op:{  })", closureContents.length(), "test4");
+    }
+    public void testClostureOp5() throws Exception {
+        createDSL(closuredsld);
+        checkProposalApplicationNonType(closureContents, closureContents + "5(\"\", op:{  })", closureContents.length(), "test5");
+    }
+    public void testClostureOp6() throws Exception {
+        createDSL(closuredsld);
+        checkProposalApplicationNonType(closureContents, closureContents + "6(first:\"\") {", closureContents.length(), "test6");
+    }
+    public void testClostureOp7() throws Exception {
+        createDSL(closuredsld);
+        checkProposalApplicationNonType(closureContents, closureContents + "7(first:\"\", other:\"\") {", closureContents.length(), "test7");
+    }
+    public void testClostureOp8() throws Exception {
+        createDSL(closuredsld);
+        checkProposalApplicationNonType(closureContents, closureContents + "8(\"\", first:\"\") {", closureContents.length(), "test8");
+    }
+    public void testClostureOp9() throws Exception {
+        createDSL(closuredsld);
+        checkProposalApplicationNonType(closureContents, closureContents + "9(\"\", {  }, \"\", first:\"\")", closureContents.length(), "test9");
+    }
+    public void testClostureOp0() throws Exception {
+        createDSL(closuredsld);
+        checkProposalApplicationNonType(closureContents, closureContents + "0(\"\", {  }, \"\", first:\"\") {", closureContents.length(), "test0");
+    }
+    
     private void createDSL(String dsldContents) throws Exception {
         defaultFileExtension = "dsld";
         create("MyDsld", dsldContents);
