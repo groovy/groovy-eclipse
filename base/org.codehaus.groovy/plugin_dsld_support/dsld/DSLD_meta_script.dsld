@@ -138,34 +138,48 @@ def insideContribution = { (enclosingCallName("accept") | enclosingCallName("con
                      name : String, 
                      type : Object, 
                      params : Map],
-           optionalParams : [
-                     optionalParams : Map,
-                     namedParams : Map,
-                     isStatic : boolean, 
-                     declaringType : Object, 
-                     provider: String, 
-                     doc : String],
+            optionalParams : [
+                optionalParams : Map,
+                namedParams : Map,
+                isStatic : boolean,
+                declaringType : Object,
+                provider: String,
+                isDeprecated: Boolean,
+                doc : String],
           doc : """
           Specifies a new property contribution.  <b>name</b> is mandatory, but all other parameters are optional.
           Use <code>namedParams</code> to specify parameters that should be named, and use <code>optionalParams</code> 
           to specify parameters that will not appear in content assist.
           """
            
-    method name : "delegatesTo", params : [ type : Object ], doc : """
+//    method name : "delegatesTo", params : [ type : Object ], doc : """
+//            Specify that the currentType delegates to the given type.  The currentType is the type being analyzed.  
+//            And the given type is specified as a parameter (either a String, Class, AnnotatedNode).  All 
+//            methods of the given type will be available from the currentType.
+//            """
+    method name : "delegatesToCategory", isDeprecated:true, params : [ type : Object ], doc : """
             Specify that the currentType delegates to the given type.  The currentType is the type being analyzed.  
             And the given type is specified as a parameter (either a String, Class, AnnotatedNode).  All 
             methods of the given type will be available from the currentType.
             """
-    method name : "delegatesToCategory", params : [ type : Object ], doc : """
-            Specify that the currentType delegates to the given type.  The currentType is the type being analyzed.  
-            And the given type is specified as a parameter (either a String, Class, AnnotatedNode).  All 
-            methods of the given type will be available from the currentType.
-            """
-    method name : "delegatesToUseNamedArgs", params : [ type : Object ], doc : """
+    method name : "delegatesToUseNamedArgs", isDeprecated:true, params : [ type : Object ], doc : """
             Specify that the currentType delegates to the given type.  The currentType is the type being analyzed.  
             And the given type is specified as a parameter (either a String, Class, or ClassNode).  All fields and 
             methods of the given type will be available from the currentType.<br/><br/>
             Named arguments will be used for all methods.
+            """
+    
+    method name : "delegatesTo", namedParams : [type : Object], optionalParams : [useNamed: Boolean, 
+                except: 'java.util.List<java.lang.String>', asCategory:Boolean], doc : """
+            Specify that the currentType delegates to the given type.  The currentType is the type being analyzed.  
+            And the given type is specified as a parameter (either a String, Class, or ClassNode).  All fields and 
+            methods of the given type will be available from the currentType.<br/><br/>
+            This variant allows you to specify options through the optional arguments.
+            @param type (required) type to delegate to
+            @param except (optional) list of method names to exclude from the delegation
+            @param useNamed (optional) boolean and if true named arguments are used
+            @param asCategory  (optional) boolean and if true, this delegation is treated as a category and the 
+            first parameter of each method is used to see if it is applicable for the current caller.
             """
     
     property name : "wormhole", type : Map, doc : """Use the wormhole to stuff in values calculated in one contribution group 
