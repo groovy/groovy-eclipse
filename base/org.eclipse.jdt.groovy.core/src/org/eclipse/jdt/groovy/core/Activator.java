@@ -45,7 +45,7 @@ public class Activator extends Plugin {
 	public static final String GROOVY_SCRIPT_FILTERS_ENABLED = "groovy.script.filters.enabled";
 
 	// default list of regex filters to specify groovy scripts
-	public static final String DEFAULT_GROOVY_SCRIPT_FILTER = "scripts/**/*.groovy,y,src/main/resources/**/*.groovy,y,src/test/resources/**/*.groovy,y";
+	public static final String DEFAULT_GROOVY_SCRIPT_FILTER = "**/*.dsld,y,scripts/**/*.groovy,y,src/main/resources/**/*.groovy,y,src/test/resources/**/*.groovy,y";
 
 	// preference constant that if true means this project uses its own compiler settings
 	public static final String USING_PROJECT_PROPERTIES = "org.codehaus.groovy.eclipse.preferences.compiler.project";
