@@ -384,8 +384,9 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
 
                 // does not check cancellation for every types to avoid
                 // performance loss
-                if ((i % CHECK_CANCEL_FREQUENCY) == 0)
+                if ((i % CHECK_CANCEL_FREQUENCY) == 0) {
                     checkCancel();
+                }
 
                 AcceptedType acceptedType = (AcceptedType) this.acceptedTypes
                         .elementAt(i);
@@ -747,10 +748,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
         return proposals;
     }
 
-    /**
-     * @param typeModifiers
-     * @return
-     */
     private boolean isInterfaceAnnotationAbstractOrEnum(int typeModifiers) {
         return (typeModifiers & (ClassFileConstants.AccInterface
                 | ClassFileConstants.AccEnum | ClassFileConstants.AccAnnotation)) != 0;

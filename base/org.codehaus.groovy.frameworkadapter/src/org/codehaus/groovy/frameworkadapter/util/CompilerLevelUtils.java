@@ -17,6 +17,8 @@
  */
 package org.codehaus.groovy.frameworkadapter.util;
 
+import static org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion.UNSPECIFIED;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -24,15 +26,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import javax.imageio.stream.FileImageInputStream;
-
 import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
-import org.eclipse.osgi.framework.internal.core.PackageAdminImpl;
-import org.eclipse.osgi.internal.resolver.StateHelperImpl;
-import org.eclipse.osgi.service.resolver.PlatformAdmin;
 import org.osgi.framework.BundleContext;
-
-import static org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion.*;
 
 /**
  * 
@@ -52,7 +47,7 @@ public class CompilerLevelUtils {
      * Finds the compiler version that is specified in the system properties
      */
     public static SpecifiedVersion findSysPropVersion() {
-        SpecifiedVersion version = internalFindSysProperVersion(FrameworkProperties.getProperty(GROOVY_COMPILER_LEVEL));
+        SpecifiedVersion version = SpecifiedVersion.findVersionFromString(FrameworkProperties.getProperty(GROOVY_COMPILER_LEVEL));
         if (version == UNSPECIFIED) {
             // now look at the non vmwargs
             version = internalFindCommandLineVersion(FrameworkProperties.getProperty(ECLIPSE_COMMANDS));
@@ -78,7 +73,7 @@ public class CompilerLevelUtils {
                 break;
             }
         }
-        return internalFindSysProperVersion(versionText);
+        return SpecifiedVersion.findVersionFromString(versionText);
     }
 
     /**
@@ -97,7 +92,7 @@ public class CompilerLevelUtils {
         } catch (FileNotFoundException e) {
             return UNSPECIFIED;
         }
-        return internalFindSysProperVersion((String) props.get(GROOVY_COMPILER_LEVEL));
+        return SpecifiedVersion.findVersionFromString((String) props.get(GROOVY_COMPILER_LEVEL));
     }
      
     /**
@@ -126,34 +121,5 @@ public class CompilerLevelUtils {
         }
         props.setProperty(GROOVY_COMPILER_LEVEL, version.versionName);
         props.store(new FileOutputStream(properties), "The Groovy compiler level to load at startup");
-    }
-
-    private static SpecifiedVersion internalFindSysProperVersion(String compilerLevel) {
-        if (compilerLevel == null) {
-            return UNSPECIFIED;
-        }
-        
-        if ("16".equals(compilerLevel) || "1.6".equals(compilerLevel)) {
-            return _16;
-        }
-        if ("17".equals(compilerLevel) || "1.7".equals(compilerLevel)) {
-            return _17;
-        }
-        if ("18".equals(compilerLevel) || "1.8".equals(compilerLevel)) {
-            return _18;
-        }
-        if ("19".equals(compilerLevel) || "1.9".equals(compilerLevel)) {
-            return _19;
-        }
-        if ("20".equals(compilerLevel) || "2.0".equals(compilerLevel)) {
-            return _20;
-        }
-        if ("0".equals(compilerLevel)) {
-            return UNSPECIFIED;
-        }
-        
-        // this is an error prevent startup
-        throw new IllegalArgumentException("Invalid Groovy compiler level specified: " + compilerLevel + 
-                "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, or 2.0");
     }
 }

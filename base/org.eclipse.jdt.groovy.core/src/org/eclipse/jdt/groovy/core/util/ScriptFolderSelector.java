@@ -43,16 +43,21 @@ public class ScriptFolderSelector {
 
 	public ScriptFolderSelector(IProject project) {
 		Activator activator = Activator.getDefault();
-		preferences = activator.getProjectOrWorkspacePreferences(project);
-		// disabled by default
-		boolean isEnabled = activator.getBooleanPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
-		if (!isEnabled) {
+		if (activator == null) {
+			// either in the middle of startup or shutdown
 			this.enabled = false;
-			this.scriptPatterns = null;
 		} else {
-			init(activator.getListStringPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS,
-					Activator.DEFAULT_GROOVY_SCRIPT_FILTER));
-			this.enabled = true;
+			preferences = activator.getProjectOrWorkspacePreferences(project);
+			// disabled by default
+			boolean isEnabled = activator.getBooleanPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+			if (!isEnabled) {
+				this.enabled = false;
+				this.scriptPatterns = null;
+			} else {
+				init(activator.getListStringPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS,
+						Activator.DEFAULT_GROOVY_SCRIPT_FILTER));
+				this.enabled = true;
+			}
 		}
 	}
 

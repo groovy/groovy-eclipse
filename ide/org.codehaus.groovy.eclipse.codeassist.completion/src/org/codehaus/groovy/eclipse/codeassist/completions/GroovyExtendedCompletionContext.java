@@ -18,14 +18,17 @@ package org.codehaus.groovy.eclipse.codeassist.completions;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.jdt.groovy.internal.SimplifiedExtendedCompletionContext;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -130,6 +133,7 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
     private IJavaElement[] computeVisibleElements(String typeSignature) {
         ClassNode targetType = toClassNode(typeSignature);
         boolean isInterface = targetType.isInterface();
+        boolean isEnum = targetType.isEnum();
 
         // look at all local variables in scope
         Map<String, IJavaElement> nameElementMap = new LinkedHashMap<String, IJavaElement>();
@@ -170,6 +174,21 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
                 }
             } catch (JavaModelException e) {
                 GroovyCore.logException("", e);
+            }
+        }
+
+        if (isEnum) {
+            IType targetIType = new GroovyProjectFacade(enclosingElement).groovyClassToJavaType(targetType);
+            List<FieldNode> fields = targetType.getFields();
+            for (FieldNode enumVal : fields) {
+                String name = enumVal.getName();
+                if (name.equals("MIN_VALUE") || name.equals("MAX_VALUE")) {
+                    continue;
+                }
+                if (!enumVal.getType().equals(targetType)) {
+                    continue;
+                }
+                nameElementMap.put(targetIType.getElementName() + "." + name, targetIType.getField(name));
             }
         }
         return nameElementMap.values().toArray(NO_ELEMENTS);

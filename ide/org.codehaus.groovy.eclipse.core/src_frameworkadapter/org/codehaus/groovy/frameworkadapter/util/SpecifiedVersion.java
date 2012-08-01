@@ -1,6 +1,6 @@
 /*
  * Copyright 2011 SpringSource, a division of VMware, Inc
- *
+ * 
  * andrew - Initial API and implementation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,16 +19,6 @@ package org.codehaus.groovy.frameworkadapter.util;
 
 import org.osgi.framework.Version;
 
-/**
- * FIXADE Warning!!! this is copied from the o.c.g.framework adapter fragment
- * because I don't know how to
- * specify a dependency on that fragment. We should remove this code when we
- * figure it out.
- *
- *
- * @author andrew
- * @created Aug 11, 2011
- */
 public enum SpecifiedVersion {
     _16(1, 6, "16"), _17(1, 7, "17"), _18(1, 8, "18"), _19(1, 9, "19"), _20(2, 0, "20"), UNSPECIFIED(-1, -1, "0");
     public final int majorVersion;
@@ -40,9 +30,43 @@ public enum SpecifiedVersion {
         this.minorVersion = minorVersion;
         this.versionName = versionName;
     }
-
+    
     public String toVersionString() {
-        return "[" + majorVersion + "." + minorVersion + "." + 0 + "," + majorVersion + "." + minorVersion + "." + 99 + ")";
+        return "[" + majorVersion + "." + minorVersion + "."  + 0 + "," + majorVersion + "." + minorVersion + "."  + 99 + ")";
+    }
+    
+    public String toReadableVersionString() {
+        return majorVersion + "." + minorVersion + ".X";
+    }
+    
+    
+    public static SpecifiedVersion findVersionFromString(String compilerLevel) {
+        if (compilerLevel == null) {
+            return UNSPECIFIED;
+        }
+        
+        if ("16".equals(compilerLevel) || "1.6".equals(compilerLevel)) {
+            return _16;
+        }
+        if ("17".equals(compilerLevel) || "1.7".equals(compilerLevel)) {
+            return _17;
+        }
+        if ("18".equals(compilerLevel) || "1.8".equals(compilerLevel)) {
+            return _18;
+        }
+        if ("19".equals(compilerLevel) || "1.9".equals(compilerLevel)) {
+            return _19;
+        }
+        if ("20".equals(compilerLevel) || "2.0".equals(compilerLevel)) {
+            return _20;
+        }
+        if ("0".equals(compilerLevel)) {
+            return UNSPECIFIED;
+        }
+        
+        // this is an error prevent startup
+        throw new IllegalArgumentException("Invalid Groovy compiler level specified: " + compilerLevel + 
+                "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, or 2.0");
     }
 
     public static SpecifiedVersion findVersion(Version ver) {

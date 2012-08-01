@@ -110,9 +110,13 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
         Reader r = new FileReader(workloadDefinitionFile);
         BufferedReader br = new BufferedReader(r);
         StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line  = br.readLine()) != null) {
-            sb.append(line + "\n");
+        try {
+            String line;
+            while ((line  = br.readLine()) != null) {
+                sb.append(line + "\n");
+            }
+        } finally {
+            br.close();
         }
         return sb.toString();
     }

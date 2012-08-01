@@ -38,15 +38,19 @@ public class Activator extends Plugin {
 
 	private IEclipsePreferences instanceScope;
 
+	public static final String GROOVY_CHECK_FOR_COMPILER_MISMATCH = "groovy.check.for.compiler.mismatch";
+
 	// comma-separated list of regex filters that specify groovy scripts.
 	public static final String GROOVY_SCRIPT_FILTERS = "groovy.script.filters";
 	public static final String GROOVY_SCRIPT_FILTERS_ENABLED = "groovy.script.filters.enabled";
 
 	// default list of regex filters to specify groovy scripts
-	public static final String DEFAULT_GROOVY_SCRIPT_FILTER = "scripts/**/*.groovy,y,src/main/resources/**/*.groovy,y,src/test/resources/**/*.groovy,y";
+	public static final String DEFAULT_GROOVY_SCRIPT_FILTER = "**/*.dsld,y,scripts/**/*.groovy,y,src/main/resources/**/*.groovy,y,src/test/resources/**/*.groovy,y";
 
 	// preference constant that if true means this project uses its own compiler settings
 	public static final String USING_PROJECT_PROPERTIES = "org.codehaus.groovy.eclipse.preferences.compiler.project";
+
+	public static final String GROOVY_COMPILER_LEVEL = "groovy.compiler.level";
 
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
@@ -124,28 +128,45 @@ public class Activator extends Plugin {
 	}
 
 	public IEclipsePreferences getProjectOrWorkspacePreferences(IProject project) {
-		IEclipsePreferences projectPreferences = projectIsUsingProjectCompilerPreferences(project);
+		IEclipsePreferences projectPreferences = getProjectScope(project);
 		if (projectPreferences != null && projectPreferences.getBoolean(USING_PROJECT_PROPERTIES, false)) {
 			return projectPreferences;
 		} else {
 			if (instanceScope == null) {
-				instanceScope = new InstanceScope().getNode(Activator.PLUGIN_ID);
+				instanceScope = InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID);
 			}
 			return instanceScope;
 		}
 	}
 
-	/**
-	 * @param project
-	 * @return
-	 */
-	private IEclipsePreferences projectIsUsingProjectCompilerPreferences(IProject project) {
+	private IEclipsePreferences getProjectScope(IProject project) {
 		if (project == null) {
 			return null;
 		}
 
 		IScopeContext projectScope = new ProjectScope(project);
 		return projectScope.getNode(PLUGIN_ID);
+	}
+
+	public String getGroovyCompilerLevel(IProject project) {
+		IEclipsePreferences projectPreferences = getProjectScope(project);
+		if (projectPreferences != null) {
+			return projectPreferences.get(GROOVY_COMPILER_LEVEL, null);
+		} else {
+			return null;
+		}
+	}
+
+	public void setGroovyCompilerLevel(IProject project, String level) {
+		IEclipsePreferences projectPreferences = getProjectScope(project);
+		if (projectPreferences != null) {
+			projectPreferences.put(GROOVY_COMPILER_LEVEL, level);
+			try {
+				projectPreferences.flush();
+			} catch (BackingStoreException e) {
+				Util.log(e);
+			}
+		}
 	}
 
 	/**

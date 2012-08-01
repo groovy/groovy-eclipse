@@ -50,7 +50,7 @@ public class PointcutScriptExecutor {
         }
         
         @Override
-        public Object call(Object[] arguments) {
+        public Object call(Object... arguments) {
             return tryRegister(arguments);
         }
     }

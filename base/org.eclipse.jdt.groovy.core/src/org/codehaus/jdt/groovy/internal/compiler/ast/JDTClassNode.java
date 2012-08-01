@@ -94,14 +94,23 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
 	static final ClassNode unboundWildcard; // represents plain old '?'
 
+	static final GenericsType genericsTypeUnboundWildcard;
+
 	static {
 		ClassNode base = ClassHelper.makeWithoutCaching("?");
-		ClassNode[] allUppers = new ClassNode[] { ClassHelper.OBJECT_TYPE };
-		GenericsType t = new GenericsType(base, allUppers, null);
+		base.setRedirect(ClassHelper.OBJECT_TYPE);
+		// ClassNode[] allUppers = new ClassNode[] { ClassHelper.OBJECT_TYPE };
+		GenericsType t = new GenericsType(base, null, null);
+		t.setName("?");
 		t.setWildcard(true);
 		// Can't use the constant ClassHelper.OBJECT_TYPE here as we are about to setGenericTypes on it.
-		unboundWildcard = new ClassNode(Object.class);// ClassHelper.makeWithoutCaching(Object.class, false);
-		unboundWildcard.setGenericsTypes(new GenericsType[] { t });
+		unboundWildcard = ClassHelper.makeWithoutCaching("?");
+		unboundWildcard.setRedirect(ClassHelper.OBJECT_TYPE);
+
+		genericsTypeUnboundWildcard = t;
+		// unboundWildcard = ClassHelper.make(name);//new ClassNode(Object.class);// ClassHelper.makeWithoutCaching(Object.class,
+		// false);
+		// unboundWildcard.setGenericsTypes(new GenericsType[] { t });
 	}
 
 	@Override
@@ -172,7 +181,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 					} else {
 						// minor optimization for the case of the unbound wildcard '?'
 						if (typeBinding instanceof WildcardBinding && ((WildcardBinding) typeBinding).boundKind == Wildcard.UNBOUND) {
-							generics[g] = new GenericsType(JDTClassNode.unboundWildcard);
+							generics[g] = genericsTypeUnboundWildcard;
 						} else {
 							generics[g] = new GenericsType(resolver.convertToClassNode(typeBinding));
 						}
@@ -225,6 +234,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			}
 
 			ReferenceBinding[] superInterfaceBindings = jdtBinding.superInterfaces();
+			superInterfaceBindings = superInterfaceBindings == null ? ReferenceBinding.NO_SUPERINTERFACES : superInterfaceBindings;
 			ClassNode[] interfaces = new ClassNode[superInterfaceBindings.length];
 			for (int i = 0; i < superInterfaceBindings.length; i++) {
 				interfaces[i] = resolver.convertToClassNode(superInterfaceBindings[i]);

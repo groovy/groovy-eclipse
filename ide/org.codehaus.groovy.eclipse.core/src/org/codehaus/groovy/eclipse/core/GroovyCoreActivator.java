@@ -57,7 +57,7 @@ public class GroovyCoreActivator extends Plugin {
 
     public IEclipsePreferences getPreferences() {
         if (instanceScope == null) {
-            instanceScope = ((IScopeContext) new InstanceScope()).getNode(GroovyCoreActivator.PLUGIN_ID);
+            instanceScope = ((IScopeContext) InstanceScope.INSTANCE).getNode(GroovyCoreActivator.PLUGIN_ID);
         }
         return instanceScope;
     }

@@ -362,18 +362,33 @@ public class ClassHelper {
     }
 
     public static boolean isNumberType(ClassNode cn) {
-        return  cn == Byte_TYPE ||
-                cn == Short_TYPE ||
-                cn == Integer_TYPE ||
-                cn == Long_TYPE ||
-                cn == Float_TYPE ||
-                cn == Double_TYPE ||
+    	// GRECLIPSE: start
+    	return  cn.equals(Byte_TYPE) ||
+                cn.equals(Short_TYPE) ||
+                cn.equals(Integer_TYPE) ||
+                cn.equals(Long_TYPE) ||
+                cn.equals(Float_TYPE) ||
+                cn.equals(Double_TYPE) ||
                 cn == byte_TYPE ||
                 cn == short_TYPE ||
                 cn == int_TYPE ||
                 cn == long_TYPE ||
                 cn == float_TYPE ||
                 cn == double_TYPE;
+    	// old:
+//        return  cn == Byte_TYPE ||
+//                cn == Short_TYPE ||
+//                cn == Integer_TYPE ||
+//                cn == Long_TYPE ||
+//                cn == Float_TYPE ||
+//                cn == Double_TYPE ||
+//                cn == byte_TYPE ||
+//                cn == short_TYPE ||
+//                cn == int_TYPE ||
+//                cn == long_TYPE ||
+//                cn == float_TYPE ||
+//                cn == double_TYPE;
+    	// GRECLIPSE: end
     }
 
     public static ClassNode makeReference() {

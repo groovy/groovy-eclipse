@@ -31,7 +31,7 @@ import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
  * @author Kris De Volder
  */
 public class GroovyTokenTypeBridge {
-
+ 
     // Only the GroovyTokenTypes that we use inside Greclipse are represented here.
     // More can be added on an as needed basis.
 

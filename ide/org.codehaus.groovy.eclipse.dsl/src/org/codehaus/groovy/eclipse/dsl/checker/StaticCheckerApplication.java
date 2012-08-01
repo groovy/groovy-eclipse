@@ -206,6 +206,11 @@ public class StaticCheckerApplication implements IApplication {
         boolean doHelp = false;
         String excludes = null;
         String includes = null;
+        if (args.length < 1) {
+            printUsage(true);
+            Workbench.getInstance().close();
+            return;
+        }
         projectName = args[args.length - 1];
 
         for (int i = 0; i < args.length; i++) {

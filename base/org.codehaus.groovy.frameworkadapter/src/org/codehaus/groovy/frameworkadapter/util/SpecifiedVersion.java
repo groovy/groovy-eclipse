@@ -35,6 +35,40 @@ public enum SpecifiedVersion {
         return "[" + majorVersion + "." + minorVersion + "."  + 0 + "," + majorVersion + "." + minorVersion + "."  + 99 + ")";
     }
     
+    public String toReadableVersionString() {
+        return majorVersion + "." + minorVersion + ".X";
+    }
+    
+    
+    public static SpecifiedVersion findVersionFromString(String compilerLevel) {
+        if (compilerLevel == null) {
+            return UNSPECIFIED;
+        }
+        
+        if ("16".equals(compilerLevel) || "1.6".equals(compilerLevel)) {
+            return _16;
+        }
+        if ("17".equals(compilerLevel) || "1.7".equals(compilerLevel)) {
+            return _17;
+        }
+        if ("18".equals(compilerLevel) || "1.8".equals(compilerLevel)) {
+            return _18;
+        }
+        if ("19".equals(compilerLevel) || "1.9".equals(compilerLevel)) {
+            return _19;
+        }
+        if ("20".equals(compilerLevel) || "2.0".equals(compilerLevel)) {
+            return _20;
+        }
+        if ("0".equals(compilerLevel)) {
+            return UNSPECIFIED;
+        }
+        
+        // this is an error prevent startup
+        throw new IllegalArgumentException("Invalid Groovy compiler level specified: " + compilerLevel + 
+                "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, or 2.0");
+    }
+
     public static SpecifiedVersion findVersion(Version ver) {
         if (ver.getMajor() == 2) {
             if (ver.getMinor() == 0) {

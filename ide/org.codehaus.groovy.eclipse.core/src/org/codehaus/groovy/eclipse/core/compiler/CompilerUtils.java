@@ -15,7 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.core.compiler;
 
+import static org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion.UNSPECIFIED;
 import static org.eclipse.core.runtime.FileLocator.resolve;
+import groovy.lang.GroovySystem;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -31,9 +33,12 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.frameworkadapter.util.CompilerLevelUtils;
 import org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion;
+import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.eclipse.osgi.internal.baseadaptor.StateManager;
 import org.eclipse.osgi.service.resolver.BundleDescription;
@@ -341,4 +346,40 @@ public class CompilerUtils {
         }
         return home;
     }
+
+    public static SpecifiedVersion getCompilerLevel(IProject project) {
+        SpecifiedVersion version = UNSPECIFIED;
+        if (GroovyNature.hasGroovyNature(project)) {
+            String groovyCompilerLevelStr = Activator.getDefault().getGroovyCompilerLevel(project);
+            if (groovyCompilerLevelStr != null) {
+                version = SpecifiedVersion.findVersionFromString(groovyCompilerLevelStr);
+            }
+        }
+        return version;
+    }
+
+    public static void setCompilerLevel(IProject project, SpecifiedVersion version) {
+        Activator.getDefault().setGroovyCompilerLevel(project, version.versionName);
+    }
+
+    public static boolean projectVersionMatchesWorkspaceVersion(SpecifiedVersion version) {
+        if (version == UNSPECIFIED) {
+            return true;
+        } else {
+            SpecifiedVersion workspaceCompilerLevel = getWorkspaceCompilerLevel();
+            return version == workspaceCompilerLevel;
+        }
+
+    }
+
+    static SpecifiedVersion getWorkspaceCompilerLevel() {
+        String groovyVersion = GroovySystem.getVersion();
+        // convert from major.minor.micro to major.minor
+        int dotIndex = groovyVersion.lastIndexOf('.');
+        if (dotIndex > 0) {
+            groovyVersion = groovyVersion.substring(0, dotIndex);
+        }
+        return SpecifiedVersion.findVersionFromString(groovyVersion);
+    }
+
 }

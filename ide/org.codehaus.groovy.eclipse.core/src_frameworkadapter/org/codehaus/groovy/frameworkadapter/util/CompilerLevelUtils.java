@@ -1,6 +1,6 @@
 /*
  * Copyright 2011 SpringSource, a division of VMware, Inc
- *
+ * 
  * andrew - Initial API and implementation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,11 +18,6 @@
 package org.codehaus.groovy.frameworkadapter.util;
 
 import static org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion.UNSPECIFIED;
-import static org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion._16;
-import static org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion._17;
-import static org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion._18;
-import static org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion._19;
-import static org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion._20;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,47 +30,71 @@ import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.osgi.framework.BundleContext;
 
 /**
- * FIXADE Warning!!! this is copied from the o.c.g.framework adapter fragment
- * because I don't know how to
- * specify a dependency on that fragment. We should remove this code when we
- * figure it out.
- *
+ * 
  * @author Andrew Eisenberg
  * @created Aug 10, 2011
  */
 public class CompilerLevelUtils {
     private static final String GROOVY_COMPILER_LEVEL = "groovy.compiler.level";
+    private static final String DASH_GROOVY_COMPILER_LEVEL = "-groovy.compiler.level";
+    private static final String ECLIPSE_COMMANDS = "eclipse.commands";
 
     private CompilerLevelUtils() {
         // uninstantiable
     }
-
+    
     /**
      * Finds the compiler version that is specified in the system properties
      */
     public static SpecifiedVersion findSysPropVersion() {
-        return internalFindVersion(FrameworkProperties.getProperty(GROOVY_COMPILER_LEVEL));
+        SpecifiedVersion version = SpecifiedVersion.findVersionFromString(FrameworkProperties.getProperty(GROOVY_COMPILER_LEVEL));
+        if (version == UNSPECIFIED) {
+            // now look at the non vmwargs
+            version = internalFindCommandLineVersion(FrameworkProperties.getProperty(ECLIPSE_COMMANDS));
+        }
+        return version;
+    }
+
+    /**
+     * @param property
+     * @return
+     */
+    private static SpecifiedVersion internalFindCommandLineVersion(
+            String property) {
+        if (property == null) {
+            return UNSPECIFIED;
+        }
+        
+        String[] split = property.split("\\\n");
+        String versionText = null;
+        for (int i = 0; i < split.length; i++) {
+            if (DASH_GROOVY_COMPILER_LEVEL.equals(split[i]) && i < split.length-1) {
+                versionText = split[i+1];
+                break;
+            }
+        }
+        return SpecifiedVersion.findVersionFromString(versionText);
     }
 
     /**
      * Finds the compiler version that is specified in this plugin's configuration area, if it exists
-     * @throws IOException
+     * @throws IOException 
      */
     public static SpecifiedVersion findConfigurationVersion(BundleContext context) throws IOException {
         File properties = context.getDataFile("groovy_compiler.properties");
         if (properties == null || !properties.exists()) {
             return UNSPECIFIED;
         }
-
+        
         Properties props = new Properties();
         try {
             props.load(new FileInputStream(properties));
         } catch (FileNotFoundException e) {
             return UNSPECIFIED;
         }
-        return internalFindVersion((String) props.get(GROOVY_COMPILER_LEVEL));
+        return SpecifiedVersion.findVersionFromString((String) props.get(GROOVY_COMPILER_LEVEL));
     }
-
+     
     /**
      * @param version the version to switch to
      * @param context  must be the {@link BundleContext} of the system bundle
@@ -94,7 +113,7 @@ public class CompilerLevelUtils {
             // couldn't create file
             throw new IOException("Could not create file " + properties.getPath());
         }
-
+        
         Properties props = new Properties();
         try {
             props.load(new FileInputStream(properties));
@@ -102,34 +121,5 @@ public class CompilerLevelUtils {
         }
         props.setProperty(GROOVY_COMPILER_LEVEL, version.versionName);
         props.store(new FileOutputStream(properties), "The Groovy compiler level to load at startup");
-    }
-
-    private static SpecifiedVersion internalFindVersion(String compilerLevel) {
-        if (compilerLevel == null) {
-            return UNSPECIFIED;
-        }
-
-        if ("16".equals(compilerLevel) || "1.6".equals(compilerLevel)) {
-            return _16;
-        }
-        if ("17".equals(compilerLevel) || "1.7".equals(compilerLevel)) {
-            return _17;
-        }
-        if ("18".equals(compilerLevel) || "1.8".equals(compilerLevel)) {
-            return _18;
-        }
-        if ("19".equals(compilerLevel) || "1.9".equals(compilerLevel)) {
-            return _19;
-        }
-        if ("20".equals(compilerLevel) || "2.0".equals(compilerLevel)) {
-            return _20;
-        }
-        if ("0".equals(compilerLevel)) {
-            return UNSPECIFIED;
-        }
-
-        // this is an error prevent startup
-        throw new IllegalArgumentException("Invalid Groovy compiler level specified: " + compilerLevel +
-                "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, or 2.0");
     }
 }

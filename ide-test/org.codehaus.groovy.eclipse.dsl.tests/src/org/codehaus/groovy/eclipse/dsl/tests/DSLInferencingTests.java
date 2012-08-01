@@ -12,14 +12,12 @@ package org.codehaus.groovy.eclipse.dsl.tests;
 
 import java.io.IOException;
 
-import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
-import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.NullProgressMonitor;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
+
+import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 
 /**
  * Tests type inferencing that involve dsls

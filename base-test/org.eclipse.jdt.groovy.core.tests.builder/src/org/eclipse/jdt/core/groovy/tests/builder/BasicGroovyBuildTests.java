@@ -365,6 +365,46 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		// expectingCompiledClassesV("Client");
 
 	}
+	
+	// verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
+	public void testCompileStatic2() throws Exception {
+		if (GroovyUtils.GROOVY_LEVEL < 20) {
+			return;
+		}
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "", "A",
+				"class A {\n"+
+				"	public void profile(String name, groovy.lang.Closure<?> callable) {	}\n"+
+				"}\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("A");
+		expectingNoProblems();
+		
+		env.addGroovyClass(root, "", "B",
+				"@groovy.transform.CompileStatic\n"+
+				"class B extends A {\n"+
+				"\n"+
+				"	def foo() {\n"+ 
+				"		profile(\"creating plugin manager with classes\") {\n"+
+				"			System.out.println('abc');\n"+
+				"		}\n"+
+				"	}\n"+
+				"\n"+
+				"}\n");
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("B","B$_foo_closure1");
+		expectingNoProblems();
+	}
 
 	public void test1167() throws Exception {
 		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$

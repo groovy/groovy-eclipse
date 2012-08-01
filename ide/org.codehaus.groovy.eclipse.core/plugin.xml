@@ -62,6 +62,25 @@
           id="GROOVY_SUPPORT"
           class="org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer"/>
    </extension>
+   <extension
+         point="org.eclipse.jdt.core.compilationParticipant">
+      <compilationParticipant
+            class="org.codehaus.groovy.eclipse.core.compiler.CompilerCheckerParticipant"
+            createsProblems="true"
+            id="org.codehaus.groovy.eclipse.core.compilerCheckerParticipant">
+      </compilationParticipant>
+   </extension>
+   <extension
+         id="compilerMismatch"
+         name="Groovy compiler mismatch problem"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="org.eclipse.jdt.core.buildpath_problem">
+      </super>
+      <persistent
+            value="true">
+      </persistent>
+   </extension>
    <!--
    Disabled now...to be overriden by DSLDs
    <extension
