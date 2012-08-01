@@ -599,9 +599,17 @@ public abstract class StaticTypeCheckingSupport {
         if (WideningCategories.isFloatingCategory(leftRedirect) && BigDecimal_TYPE.equals(rightRedirect)) {
             return true;
         }
+        
+        if (GROOVY_OBJECT_TYPE.equals(leftRedirect) && isBeingCompiled(right)) {
+        		return true;
+        }
 
         return false;
     }
+    
+    public static boolean isBeingCompiled(ClassNode node) {
+    	       return node.getCompileUnit() != null;
+    	}
 
     static boolean checkPossibleLooseOfPrecision(ClassNode left, ClassNode right, Expression rightExpr) {
         if (left == right || left.equals(right)) return false; // identical types
@@ -712,6 +720,9 @@ public abstract class StaticTypeCheckingSupport {
         if (type.isArray() && superOrInterface.isArray()) {
             return implementsInterfaceOrIsSubclassOf(type.getComponentType(), superOrInterface.getComponentType());
         }
+        if (GROOVY_OBJECT_TYPE.equals(superOrInterface) && !type.isInterface() && isBeingCompiled(type)) {
+            return true;
+        	}
         return false;
     }
 

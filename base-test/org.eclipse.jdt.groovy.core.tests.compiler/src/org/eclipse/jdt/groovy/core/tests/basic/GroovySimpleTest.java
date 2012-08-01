@@ -10,8 +10,6 @@
  *******************************************************************************/
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import groovy.transform.CompileStatic;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -8614,6 +8612,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	// http://groovy.codehaus.org/PackageScope+transformation
 	// Adjust the visibility of a property so instead of private it is package default
 	public void testBuiltInTransforms_PackageScope() {
+		if (GroovyUtils.GROOVY_LEVEL<18) { // in a different place on 1.7
+			return;
+		}
 		this.runConformTest(new String[] {
 			"Goo.groovy",
 			"class Goo {\n"+

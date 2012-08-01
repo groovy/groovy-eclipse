@@ -609,6 +609,20 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         r.fieldIndex.put(node.getName(), node);
     }
 
+    public boolean isRedirectNode() {
+        return redirect!=null;
+    }
+
+    public void addPropertyWithoutField(PropertyNode node) {
+        node.setDeclaringClass(redirect());
+//        FieldNode field = node.getField();
+//        addField(field);
+        final ClassNode r = redirect();
+        if (r.properties == null)
+            r.properties = new ArrayList<PropertyNode> ();
+        r.properties.add(node);
+    }
+
     public void addProperty(PropertyNode node) {
         node.setDeclaringClass(redirect());
         FieldNode field = node.getField();
