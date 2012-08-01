@@ -234,6 +234,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			}
 
 			ReferenceBinding[] superInterfaceBindings = jdtBinding.superInterfaces();
+			superInterfaceBindings = superInterfaceBindings == null ? ReferenceBinding.NO_SUPERINTERFACES : superInterfaceBindings;
 			ClassNode[] interfaces = new ClassNode[superInterfaceBindings.length];
 			for (int i = 0; i < superInterfaceBindings.length; i++) {
 				interfaces[i] = resolver.convertToClassNode(superInterfaceBindings[i]);
