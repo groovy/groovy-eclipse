@@ -226,7 +226,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     nextName = regularParameterNames[i - namedCount];
                 }
 
-                if (proposalOptions.useNamedArguments || i <= namedCount) {
+                if (proposalOptions.useNamedArguments || i < namedCount) {
                     buffer.append(nextName).append(":");
                 }
 				fArgumentOffsets[i] = buffer.length();
