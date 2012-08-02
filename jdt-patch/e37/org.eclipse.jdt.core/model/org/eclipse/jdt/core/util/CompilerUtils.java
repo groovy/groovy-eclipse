@@ -191,7 +191,10 @@ public class CompilerUtils {
 					realLocation =  project.getRawLocation().toOSString();
 					}
 				} else {
-					realLocation =  project.getFile(path.removeFirstSegments(1)).getRawLocation().toOSString();
+					IPath rawLocation = project.getFile(path.removeFirstSegments(1)).getRawLocation();
+					if (rawLocation != null) {
+						realLocation =  rawLocation.toOSString();
+					}
 				}
 			} else {
 				realLocation = path.toOSString();
