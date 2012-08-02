@@ -47,7 +47,7 @@
 			<jvmarg value="-DbuildDirectory=${buildDirectory}"/>
 			<jvmarg value="-DbuildResultsDirectory=${buildDirectory}/results"/>
 			<jvmarg value="-DpluginPath=${eclipse.installation.dir}/eclipse/plugins"/>
-			<jvmarg value="-DbaseLocation=${buildDirectory}"/>
+			<jvmarg value="-DbaseLocation=${target.eclipse.dir}"/>
 			<jvmarg value="-DbuildType=N"/>
 			<jvmarg value="-DbuildProperties=${buildHome}/build-files/build.properties"/>
 			<jvmarg value="-DworkspaceDirBase=${workspaceDirBase}"/>
