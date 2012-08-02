@@ -58,7 +58,6 @@
 			<jvmarg value="-Declipse.target.version=${eclipse.target.version}"/>
 			<jvmarg value="-DskipFetch=true"/>
 			<jvmarg value="-DallowBinaryCycles=true"/>
-			<jvmarg value="-DflattenDependencies=true"/>
 			<!-- uncomment to enable debug messages for pde core -->
 			<!--<jvmarg value="-Dosgi.debug=${buildHome}/build-files/debug_options.properties"/>-->
 			<jvmarg value="-Dversion.full=${version.full}" />
