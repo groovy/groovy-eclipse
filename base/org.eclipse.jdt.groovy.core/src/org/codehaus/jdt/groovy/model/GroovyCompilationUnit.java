@@ -112,17 +112,17 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	 *         working copy. Also will be null if a problem occurs
 	 */
 	public ModuleNodeInfo getModuleInfo(boolean force) {
-		synchronized (ModuleNodeMapper.getInstance()) {
-			try {
+		try {
+			if (!isConsistent()) {
+				makeConsistent(null);
+			}
+			synchronized (ModuleNodeMapper.getInstance()) {
 				// discard the working copy after finishing
 				// if there was no working copy to begin with
 				boolean becameWorkingCopy = false;
 				try {
 					if (becameWorkingCopy = (force && !isWorkingCopy())) {
 						becomeWorkingCopy(null);
-					}
-					if (!isConsistent()) {
-						reconcile(true, null);
 					}
 					PerWorkingCopyInfo info = getPerWorkingCopyInfo();
 					if (info != null) {
@@ -133,12 +133,12 @@ public class GroovyCompilationUnit extends CompilationUnit {
 						discardWorkingCopy();
 					}
 				}
-			} catch (JavaModelException e) {
-				Util.log(e, "Exception thrown when trying to get Groovy module node for " + this.getElementName()); //$NON-NLS-1$
 			}
-			// return null if not found. Means that there was a problem with build structure
-			return null;
+		} catch (JavaModelException e) {
+			Util.log(e, "Exception thrown when trying to get Groovy module node for " + this.getElementName()); //$NON-NLS-1$
 		}
+		// return null if not found. Means that there was a problem with build structure
+		return null;
 	}
 
 	/**
