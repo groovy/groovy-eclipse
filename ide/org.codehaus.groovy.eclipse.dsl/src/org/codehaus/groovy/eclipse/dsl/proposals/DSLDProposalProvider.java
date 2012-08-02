@@ -11,6 +11,7 @@
 package org.codehaus.groovy.eclipse.dsl.proposals;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -49,6 +50,14 @@ public class DSLDProposalProvider implements IProposalProvider {
         try {
             DSLDStore store = GroovyDSLCoreActivator.getDefault().getContextStoreManager().getDSLDStore(context.unit.getJavaProject());
             ModuleNodeInfo info = context.unit.getModuleInfo(true);
+            if (info == null) {
+                if (GroovyLogManager.manager.hasLoggers()) {
+                    GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST,
+                            "Null module node for " + context.unit.getElementName());
+                }
+                return Collections.EMPTY_LIST;
+            }
+
             GroovyDSLDContext pattern = new GroovyDSLDContext(context.unit, info.module, info.resolver);
             pattern.setCurrentScope(context.currentScope);
             pattern.setTargetType(completionType);
