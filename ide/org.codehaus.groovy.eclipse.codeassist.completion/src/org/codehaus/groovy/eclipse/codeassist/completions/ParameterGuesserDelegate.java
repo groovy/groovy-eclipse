@@ -38,7 +38,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  * @created Nov 24, 2011
  */
 public class ParameterGuesserDelegate {
-    private static final String CLOSURE_TEXT = "{  }";
+    private static final String CLOSURE_TEXT = "{";
 
     private static final String EMPTY_STRING = "\"\"";
 
