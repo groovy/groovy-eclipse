@@ -389,7 +389,7 @@ public class ConstructorCompletionTests extends CompletionTestCase {
                 "int yyy\n" +
                 "boolean zzz\n" +
                 "new Flar()";
-        String[] expectedChoices = new String[] { "xxx", "{" };
+        String[] expectedChoices = new String[] { "xxx", "{  }" };
         checkProposalChoices(contents, "Flar(", "aaa", "aaa: __, ", expectedChoices);
     }
 }
