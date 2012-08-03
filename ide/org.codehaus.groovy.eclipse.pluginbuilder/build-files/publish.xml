@@ -25,6 +25,7 @@
 				<fileset dir="${updateSiteDir}">
 					<include name="**" />
 				</fileset>
+				<metadata name="Content-Type" value="text/html" />
 			</upload>
 		</s3>
 	</target>
