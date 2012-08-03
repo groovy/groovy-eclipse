@@ -20,6 +20,8 @@ import java.lang.reflect.Method;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.ui.text.java.ParameterGuesser;
 import org.eclipse.jdt.internal.ui.text.template.contentassist.PositionBasedCompletionProposal;
@@ -36,7 +38,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  * @created Nov 24, 2011
  */
 public class ParameterGuesserDelegate {
-    private static final String CLOSURE_TEXT = "{";
+    private static final String CLOSURE_TEXT = "{  }";
 
     private static final String EMPTY_STRING = "\"\"";
 
@@ -66,6 +68,23 @@ public class ParameterGuesserDelegate {
                 // 3.7
                 allCompletions = (ICompletionProposal[]) method.invoke(guesser, parameterType, paramName, position, assignable,
                         fillBestGuess, false);
+            }
+
+            // ensure enum proposals insert the declaring type as part of the
+            // name.
+            if (allCompletions != null && allCompletions.length > 0 && assignable != null && assignable.length > 0) {
+                IType declaring = (IType) assignable[0].getAncestor(IJavaElement.TYPE);
+                if (declaring != null && declaring.isEnum()) {
+                    for (int i = 0; i < assignable.length && i < allCompletions.length; i++) {
+                        if (assignable[i].getElementType() == IJavaElement.FIELD) {
+                            String newReplacement = declaring.getElementName() + '.' + assignable[i].getElementName();
+                            ReflectionUtils.setPrivateField(PositionBasedCompletionProposal.class, "fReplacementString",
+                                    allCompletions[i], newReplacement);
+                            ReflectionUtils.setPrivateField(PositionBasedCompletionProposal.class, "fDisplayString",
+                                    allCompletions[i], newReplacement);
+                        }
+                    }
+                }
             }
             return addExtras(allCompletions, parameterType, position);
         } catch (Exception e) {

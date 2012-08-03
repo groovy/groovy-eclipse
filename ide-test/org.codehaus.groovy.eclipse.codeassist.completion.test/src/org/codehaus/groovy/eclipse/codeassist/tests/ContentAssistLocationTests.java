@@ -408,7 +408,60 @@ public class ContentAssistLocationTests extends CompletionTestCase {
         assertLocation(contents, loc, ContentAssistLocation.EXCEPTIONS);
     }
     
-    
+    // parser broken, commented out
+    public void _testAnnotation1() throws Exception {
+        String contents = "@ class A { void t(v y = hh) {} }";
+        int loc = contents.indexOf("@") +1;
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
+    }
+    public void testAnnotation2() throws Exception {
+        String contents = "@A class A { void t(v y = hh) {} }";
+        int loc = contents.indexOf("@A") +2;
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
+    }
+    public void testAnnotation2a() throws Exception {
+        String contents = "@B @A class A { void t(v y = hh) {} }";
+        int loc = contents.indexOf("@A") +2;
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
+    }
+    public void testAnnotation2b() throws Exception {
+        String contents = "@B @A @C class A { void t(v y = hh) {} }";
+        int loc = contents.indexOf("@A") +2;
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
+    }
+    // parser broken, commented out
+    public void _testAnnotation2d() throws Exception {
+        String contents = "@B @ @C class A { void t(v y = hh) {} }";
+        int loc = contents.indexOf("@") +1;
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
+    }
+    // parser broken, commented out
+    public void _testAnnotation3() throws Exception {
+        String contents = " class A { @ void t(v y = hh) {} }";
+        int loc = contents.indexOf("@") +1;
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
+    }
+    public void testAnnotation4() throws Exception {
+        String contents = " class A { @A void t(v y = hh) {} }";
+        int loc = contents.indexOf("@A") +2;
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
+    }
+    // parser broken, commented out
+    public void _testAnnotation5() throws Exception {
+        String contents = " class A { @ def t }";
+        int loc = contents.indexOf("@") +1;
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
+    }
+    public void testAnnotation6() throws Exception {
+        String contents = " class A { @A void t }";
+        int loc = contents.indexOf("@A") +2;
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
+    }
+    public void testAnnotation7() throws Exception {
+        String contents = "@A import java.util.List\n class A { }";
+        int loc = contents.indexOf("@A") +2;
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION);
+    }
     
     void assertLocation(String contents, int offset, ContentAssistLocation location) throws Exception {
         ICompilationUnit unit = create(contents);

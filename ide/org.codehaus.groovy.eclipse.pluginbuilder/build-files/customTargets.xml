@@ -19,8 +19,10 @@
 	
 	
 	<import file="copyAllProjects.xml"/>
-	
 	<import file="allElements.xml" />
+  <property name="updateSiteDir" value="${buildDirectory}/updateSite"/>
+	<property file="${buildHome}/build_local_${eclipse.target.version}.properties"/>
+	
 	<target name="allElements">
 		<antcall target="allElementsDelegator" />
 	</target>
@@ -37,7 +39,7 @@
 	<!-- ===================================================================== -->
 	<!-- Steps to do before setup -->
 	<!-- ===================================================================== -->
-	<target name="preSetup">	
+	<target name="preSetup" depends="init.classpath">	
 		<antcall target="copyToBuildDirectory"/>
 	</target>
 	<!-- ===================================================================== -->
@@ -70,7 +72,7 @@
 	<!-- Steps to do before running the build.xmls for the elements being built. -->
 	<!-- Add the correct version number to about.mappings -->	
 	<!-- ===================================================================== -->
-	<target name="preProcess">
+	<target name="preProcess" depends="init.classpath">
 		<echo message="Setting groovy mapping property"></echo>
 		<property file="${buildDirectory}/finalPluginsVersions.properties"/>
 		<replace file="${buildDirectory}/plugins/org.codehaus.groovy.eclipse/about.mappings"
@@ -104,14 +106,16 @@
 	<!-- ===================================================================== -->
 	<!-- Steps to do after the build is done. -->
 	<!-- ===================================================================== -->
-	<target name="postBuild" unless="no.postBuild">
+	<target name="postBuild" unless="no.postBuild" depends="init.classpath">
 		<antcall target="createUpdateSite"/>
+		<antcall target="zipUpdateSite"/>
+		<antcall target="signUpdateSite"/>
 		<antcall target="runTests"/>
 	</target>
 	<!-- ===================================================================== -->
 	<!-- Run tests. -->
 	<!-- ===================================================================== -->
-	<target name="runTests"> <!--if="isRunTests">-->
+	<target name="runTests" depends="init.classpath"> <!--if="isRunTests">-->
 		<echo message="isRunTests = ${isRunTests}"/>
 		<property name="automatedTestsHome" location="${buildHome}/build-files/automatedTests"/>
 
@@ -122,13 +126,34 @@
 	
 	
 	
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: init.classpath                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="init.classpath">
+    	<property name="signer" location="${buildHome}/build-files/sign.sh"/>
+  		<taskdef resource="net/sf/antcontrib/antcontrib.properties" >
+  			<classpath>
+  				<pathelement path="${buildHome}/build-files/ant-contrib.jar" />
+  			</classpath>
+  		</taskdef>
+  		<path id="jarprocessor.classpath">
+  			<fileset dir="${build.eclipse.dir}/eclipse/plugins">
+  				<include name="org.eclipse.equinox.p2.jarprocessor_*.jar" />
+  			</fileset>
+  		</path>
+  		<path id="eclipse.classpath">
+    		<fileset dir="${build.eclipse.dir}/eclipse/plugins">
+  	   		<include name="org.eclipse.equinox.launcher_*.jar"/>
+  	    </fileset>
+  		</path>
+    </target>
+
 	
 	<!--======================================================-->
 	<!-- Create update site  -->
 	<!-- ==================================================== -->
-  <property name="updateSiteDir" value="${buildDirectory}/updateSite"/>
-	<property file="${buildHome}/build_local_${eclipse.target.version}.properties"/>
-  <target name="createUpdateSite">
+	
+  <target name="createUpdateSite" depends="init.classpath">
 
 	  <!-- Create the directory structure -->
 	  <mkdir dir="${updateSiteDir}/features"/>
@@ -151,7 +176,7 @@
   	
   	<!-- need the site.xml file before we can generate -->
 		<copy todir="${updateSiteDir}">
-			<fileset dir="${buildDirectory}/features/Site Groovy">
+			<fileset dir="${buildHome}">
 				 <filename name="site.xml"/>
 			</fileset>
 		</copy>
@@ -162,7 +187,7 @@
 	    token="0.0.0.qualifier" value="${org.codehaus.groovy.eclipse.feature}"/>
     	
   	<!-- Generate metadata -->
-    <java fork="true" dir="${updateSiteDir}" classname="org.eclipse.equinox.launcher.Main" maxmemory="256m">
+    <java fork="true" dir="${updateSiteDir}" classname="org.eclipse.equinox.launcher.Main" maxmemory="256m" classpathref="eclipse.classpath">
         <arg value="-application"/>
         <arg value="org.eclipse.equinox.p2.publisher.EclipseGenerator"/>
         <arg value="-updateSite"/>
@@ -184,11 +209,6 @@
         <arg value="-append"/>
         <arg value="-noDefaultIUs"/>
         <jvmarg value="-Xmx128M"/>
-  		 	<classpath>
-	    		<fileset dir="${eclipseDir}/plugins">
-    	   		<include name="org.eclipse.equinox.launcher_*.jar"/>
-    	    </fileset>
-    	  </classpath>
     </java>
   	
   	<!-- fix feature patch version -->
@@ -200,15 +220,51 @@
   	<echo message="Replace in file ${updateSiteDir}/content.xml attempted on tokens:"/>
   	<echo message="orig.jdt.feature.version.range=${orig.jdt.feature.version.range}"/>
   	<echo message="new.jdt.feature.version.range=${new.jdt.feature.version.range}"/>
-  	
-  	<!-- Zip up the update site -->
+	</target>  	
+  
+	
+	<target name="signUpdateSite" description="Digitally signs the update site" depends="init.classpath">
+
+		<if>
+			<equals arg1="${p2.sign}" arg2="true" />
+
+			<then>
+				<delete file="${updateSiteDir}/content.xml" />
+				<delete file="${updateSiteDir}/artifacts.xml" />
+
+				<java classname="org.eclipse.equinox.internal.p2.jarprocessor.Main" fork="true" 
+						classpathref="jarprocessor.classpath" failonerror="true" maxmemory="256m" dir="${updateSiteDir}">
+					<arg line="-verbose -processAll -repack -pack -sign ${signer}" />
+					<arg line="-outputDir ${updateSiteDir} ${updateSiteDir}" />
+				</java>
+
+				<java classname="org.eclipse.equinox.launcher.Main" fork="true" classpathref="eclipse.classpath" 
+						failonerror="true" maxmemory="256m" dir="${updateSiteDir}">
+					<arg line="-application org.eclipse.equinox.p2.publisher.FeaturesAndBundlesPublisher" />
+					<arg line="-source ${updateSiteDir} -metadataRepository file:${updateSiteDir}" />
+					<arg line="-artifactRepository file:${updateSiteDir} -metadataRepositoryName '${p2.repository.name}'" />
+					<arg line="-artifactRepositoryName '${p2.repository.name}' -reusePackedFiles -reusePack200Files -publishArtifacts" />
+				</java>
+
+				<java classname="org.eclipse.equinox.launcher.Main" fork="true" classpathref="eclipse.classpath" 
+						failonerror="true" maxmemory="256m" dir="${updateSiteDir}">
+					<arg line="-application org.eclipse.equinox.p2.publisher.CategoryPublisher" />
+					<arg line="-metadataRepository file:${updateSiteDir}" />
+					<arg line="-categoryDefinition file:${updateSiteDir}/site.xml" />
+					<arg line="-categoryQualifier org.codehaus.groovy" />
+				</java>
+			</then>
+		</if>
+	</target>
+
+	<target name="zipUpdateSite" depends="init.classpath">
 		<zip destfile="${updateSiteDir}/../groovy-update-site-${org.codehaus.groovy.eclipse.feature}.zip">
 			<fileset dir="${updateSiteDir}">
 			</fileset>
 		</zip>
   </target>
     
-	<target name="updateSiteExport">
+	<target name="updateSiteExport" depends="init.classpath">
 	  <ant antfile="build.xml" dir="${buildDirectory}/features/${id}/" target="build.update.jar">
 	    <property name="feature.destination" value="${updateSiteDir}/features"/>
 	    <property name="plugin.destination" value="${updateSiteDir}/plugins"/>

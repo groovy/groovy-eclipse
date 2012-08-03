@@ -82,6 +82,8 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
     /** Tells whether this class is in debug mode. */
     private static final boolean DEBUG = "true".equalsIgnoreCase(Platform.getDebugOption("org.eclipse.jdt.ui/debug/ResultCollector")); //$NON-NLS-1$//$NON-NLS-2$
 
+    private static final String LAST_CLOSURE_TEXT = "{";
+
     private ICompletionProposal[][] fChoices; // initialized by
                                               // guessParameters()
 
@@ -288,17 +290,24 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         // groovy doesn't require parens around closures if it is the last
         // argument
         // If the option is set, then we follow that heuristic
-        int indexOfLastClosure = -1;
         char[][] regularParameterTypes = ((GroovyCompletionProposal) fProposal).getRegularParameterTypeNames();
-        char[][] namedParameterTypes = ((GroovyCompletionProposal) fProposal).getNamedParameterTypeNames();
+
+        // check if the last regular parameter is a closure. If so, it must be
+        // moved to the end
+        boolean lastArgIsClosure = lastArgIsClosure(regularParameterTypes);
+        int indexOfLastClosure = lastArgIsClosure ? regularParameterTypes.length - 1 : -1;
+
+        char[][] namedParameterNames = ((GroovyCompletionProposal) fProposal).getNamedParameterNames();
+        char[][] regularParameterNames = ((GroovyCompletionProposal) fProposal).getRegularParameterNames();
+        int namedCount = namedParameterNames.length;
+        int argCount = regularParameterNames.length;
+        int allCount = argCount + namedCount;
+
         if (proposalOptions.noParensAroundClosures) {
-            if (lastArgIsClosure(regularParameterTypes, namedParameterTypes)) {
-                indexOfLastClosure = regularParameterTypes.length + namedParameterTypes.length - 1;
-            }
 
             // remove the opening paren only if there is a single closure
             // parameter
-            if (indexOfLastClosure == 0) {
+            if (indexOfLastClosure == 0 && namedCount == 0) {
                 buffer.replace(buffer.length() - 1, buffer.length(), "");
 
                 // add space if not already there
@@ -316,65 +325,46 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         }
 
         // now add the parameters
-        char[][] regularParameterNames = ((GroovyCompletionProposal) fProposal).getRegularParameterNames();
-        char[][] namedParameterNames = ((GroovyCompletionProposal) fProposal).getNamedParameterNames();
-        int argCount = regularParameterNames.length;
-        int namedCount = namedParameterNames.length;
-        int allCount = argCount + namedCount;
-
         int replacementOffset = getReplacementOffset();
-        fChoices = guessParameters(regularParameterNames, namedParameterNames);
+        fChoices = guessParameters(namedParameterNames, regularParameterNames);
 
         for (int i = 0; i < allCount; i++) {
-            char[] nextName;
-            char[] nextTypeName;
-            if (i < argCount) {
-                nextTypeName = regularParameterTypes[i];
-                nextName = regularParameterNames[i];
-            } else {
-                // named arg
-                nextName = namedParameterNames[i - argCount];
-                nextTypeName = namedParameterNames[i - argCount];
+            if (i == indexOfLastClosure) {
+                // handle the last closure separately
+                continue;
             }
 
-            // handle the argument name
-            if (proposalOptions.useNamedArguments || i >= argCount) {
+            char[] nextName;
+            if (i < argCount) {
+                nextName = regularParameterNames[i];
+            } else {
+                nextName = namedParameterNames[i - argCount];
+            }
+            if (i >= argCount || proposalOptions.useNamedArguments) {
                 buffer.append(nextName).append(":");
             }
 
+
             // handle the value
-            if (proposalOptions.useBracketsForClosures && Signature.getSimpleName(nextTypeName).equals("Closure")) {
-                // closure
-                Position position = fPositions[i];
-//                position.setOffset(CLOSURE_TEXT.length() - 2 + buffer.length());
-//                buffer.append(CLOSURE_TEXT);
-                position.setOffset(1 + buffer.length());
-                buffer.append("{");
-                position.setLength(0);
+            ICompletionProposal proposal = fChoices[i][0];
+            String argument = proposal.getDisplayString();
 
-            } else {
-                // regular argument
-                ICompletionProposal proposal = fChoices[i][0];
-                String argument = proposal.getDisplayString();
+            Position position = fPositions[i];
+            position.setOffset(replacementOffset + buffer.length());
+            position.setLength(argument.length());
 
-                Position position = fPositions[i];
-                position.setOffset(replacementOffset + buffer.length());
-                position.setLength(argument.length());
-
-                // handle the "unknown" case where we only insert a proposal.
-                if (proposal instanceof JavaCompletionProposal)
-                    ((JavaCompletionProposal) proposal).setReplacementOffset(replacementOffset + buffer.length());
-                buffer.append(argument);
+            // handle the "unknown" case where we only insert a proposal.
+            if (proposal instanceof JavaCompletionProposal) {
+                ((JavaCompletionProposal) proposal).setReplacementOffset(replacementOffset + buffer.length());
             }
+            buffer.append(argument);
 
-            if (i == indexOfLastClosure - 1 || (i != indexOfLastClosure && i == allCount - 1)) {
+            // check what to add after argument
+            if (i == allCount - 1 || (i == allCount - 2 && i == indexOfLastClosure - 1)) {
                 if (prefs.beforeClosingParen) {
                     buffer.append(SPACE);
                 }
                 buffer.append(RPAREN);
-                if (i == indexOfLastClosure - 1) {
-                    buffer.append(SPACE);
-                }
             } else if (i < allCount - 1) {
                 if (prefs.beforeComma)
                     buffer.append(SPACE);
@@ -382,26 +372,42 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
                 if (prefs.afterComma)
                     buffer.append(SPACE);
             }
+        }
 
+        // closures at the end are added in an idiomatic groovy way
+        if (indexOfLastClosure >= 0) {
+            if (allCount > 1) {
+                if (!proposalOptions.noParensAroundClosures) {
+                    buffer.append(COMMA);
+                }
+                buffer.append(SPACE);
+            }
+            Position position = fPositions[indexOfLastClosure];
+            position.setOffset(replacementOffset + buffer.length());
+            position.setLength(LAST_CLOSURE_TEXT.length());
+            buffer.append(LAST_CLOSURE_TEXT);
+
+            if (!proposalOptions.noParensAroundClosures) {
+                buffer.append(" }");
+                buffer.append(RPAREN);
+            }
         }
 
         return buffer.toString();
     }
 
-    private boolean lastArgIsClosure(char[][] regularParameterTypes, char[][] namedParameterTypes) {
-        char[] lastArgType;
-        if (namedParameterTypes != null && namedParameterTypes.length > 0) {
-            lastArgType = namedParameterTypes[namedParameterTypes.length - 1];
-        } else if (regularParameterTypes != null && regularParameterTypes.length > 0) {
-            lastArgType = regularParameterTypes[regularParameterTypes.length - 1];
+    private boolean lastArgIsClosure(char[][] regularParameterTypes) {
+        if (regularParameterTypes != null && regularParameterTypes.length > 0) {
+            char[] lastArgType = regularParameterTypes[regularParameterTypes.length - 1];
+            // we should be comparing against a fully qualified type name, but
+            // it is not always available
+            // so a simple name is close enough
+            return CharOperation.equals("Closure".toCharArray(), lastArgType);
         } else {
             // no args
             return false;
         }
 
-        // we should be comparing against a fully qualified type name, but it is not always available
-        // so a simple name is close enough
-        return CharOperation.equals("Closure".toCharArray(), lastArgType);
     }
 
     /**
@@ -418,7 +424,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
             return null;
     }
 
-    private ICompletionProposal[][] guessParameters(char[][] regularParameterNames, char[][] namedParameterNames)
+    private ICompletionProposal[][] guessParameters(char[][] firstParameterNames, char[][] secondParameterNames)
             throws JavaModelException {
         // find matches in reverse order. Do this because people tend to declare
         // the variable meant for the last
@@ -436,12 +442,13 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         // code completion (which avoids
         // "someOtherObject.yourMethod(param1, param1, param1)";
 
-        char[][] parameterNames = new char[regularParameterNames.length + namedParameterNames.length][];
-        System.arraycopy(regularParameterNames, 0, parameterNames, 0, regularParameterNames.length);
-        System.arraycopy(namedParameterNames, 0, parameterNames, regularParameterNames.length, namedParameterNames.length);
+        char[][] parameterNames = new char[firstParameterNames.length + secondParameterNames.length][];
+        System.arraycopy(firstParameterNames, 0, parameterNames, 0, firstParameterNames.length);
+        System.arraycopy(secondParameterNames, 0, parameterNames, firstParameterNames.length, secondParameterNames.length);
 
         int count = parameterNames.length;
         fPositions = new Position[count];
+
         fChoices = new ICompletionProposal[count][];
 
         String[] parameterTypes = getParameterTypes();

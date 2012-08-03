@@ -79,71 +79,6 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         }
     }
 
-    // FIXADE probably not needed.  can delete
-//    class ConsoleListener implements IConsoleLineTrackerExtension {
-//        private IConsole console;
-//        String text = null;
-//        private int exitValue;
-//
-//        public void consoleClosed() {
-//            text = getText();
-//        }
-//        String getText() {
-//            if (console == null) return text;
-//            return "out: " + console.getProcess().getStreamsProxy().getOutputStreamMonitor().getContents() + '\n' +
-//                    "err: " + console.getProcess().getStreamsProxy().getErrorStreamMonitor().getContents();
-//        }
-//        public void dispose() {
-//            if (console == null) {
-//                return;
-//            }
-//            IProcess process = console.getProcess();
-//            try {
-//                exitValue = process.isTerminated() ? process.getExitValue() : Integer.MIN_VALUE;
-//            } catch (DebugException e) {
-//                exitValue = Integer.MIN_VALUE;
-//            }
-//            text = getText();
-//        }
-//        public void init(IConsole console) {
-//            this.console = console;
-//        }
-//        
-//        void close() {
-//            this.console = null;
-//        }
-//        
-//
-//        public void lineAppended(IRegion line) {
-////            try {
-////                if (console != null) {
-////                    System.out.println("from process: " + console.getDocument().get(line.getOffset(), line.getLength()));
-////                } else {
-////                    System.out.println("Line appended, but console wasn't there");
-////                }
-////            } catch (BadLocationException e) {
-////                throw new RuntimeException(e);
-////            }
-//        }
-//
-//        int getExitValue() throws DebugException {
-//            if (console != null) {
-//                IProcess process = console.getProcess();
-//                return process.isTerminated() ? process.getExitValue() : Integer.MIN_VALUE;
-//            } else {
-//                return exitValue;
-//            }
-//        }
-//
-//        public IConsole getConsole() {
-//            return console;
-//        }
-//
-//        boolean isTerminated() {
-//            return console != null && console.getProcess().isTerminated();
-//        }
-//    }
-
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -406,14 +341,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
                         System.out.println("==================");
                     }
                     assertTrue("Process not terminated after timeout has been reached", launch.isTerminated());
-
-                    if (System.getProperty("os.name").toLowerCase().equals("linux") && GroovyUtils.GROOVY_LEVEL == 20) {
-                        // FIXADE this is actually wrong.  failing on build server
-                        // should be returning a 0 exit code.  not sure why failing.
-                        assertEquals("Expecting normal exit, but found invalid exit value", 1, launch.getProcesses()[0].getExitValue());
-                    } else {
-                        assertEquals("Expecting normal exit, but found invalid exit value", 0, launch.getProcesses()[0].getExitValue());
-                    }
+                    assertEquals("Expecting normal exit, but found invalid exit value", 0, launch.getProcesses()[0].getExitValue());
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

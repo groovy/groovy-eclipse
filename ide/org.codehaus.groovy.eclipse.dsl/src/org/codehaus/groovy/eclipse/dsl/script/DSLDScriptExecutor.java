@@ -367,7 +367,7 @@ public class DSLDScriptExecutor {
      */
     public Object contribution(Object args) {
         Object[] contributionArgs = extractArgsContribution(args);
-        if (args == null) {
+        if (args == null || contributionArgs.length == 0) {
             return null;
         }
         IPointcut p = (IPointcut) contributionArgs[0];

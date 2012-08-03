@@ -1,47 +1,91 @@
-<project name="Publish to webdav location" default="publish" basedir=".">
-
+<project name="Publish to webdav location" default="s3.deploy" basedir="." xmlns:antcontrib="antlib:net.sf.antcontrib">
 	<!-- ================================= 
-          target: publish              
+          target: s3.deploy              
        ================================= -->
-  <target name="publish" description="Publishes build files to update site location" depends="-init">
-  	<!--
-  	1. zip the old
-  	2. delete the old 
-  	3. copy the new
-  	-->
-  	
-  	<mkdir dir="${publishLocation}"/>
-  	<mkdir dir="${publishLocation}/old"/>
-  	<zip destfile="${publishLocation}/old/archive-${org.codehaus.groovy.eclipse.ui}.zip">
-  		<zipfileset dir="${buildDirectory}/updateSite">
-  			 <include name="**/*"/>
-  			 <exclude name="old"/>
-		     <exclude name="old/*"/>
-  		</zipfileset>
-  	</zip>
+	<target name="s3.deploy" depends="-init,zip.updatesite,create.html" description="Deploys Groovy-Eclipse to S3">
+		<echo>Publishing to Amazon S3</echo>
+		<echo>${env.dist_properties}</echo>
 
-  	<delete verbose="true">
-			<fileset dir="${publishLocation}">
-			    <exclude name="old"/>
-			    <exclude name="old/*"/>
+		<path id="s3.classpath">
+			<fileset dir="${basedir}/s3-libs">
+				<include name="**/*.jar" />
 			</fileset>
-		</delete>
+		</path>
 
-  	<copy todir="${publishLocation}">
-  		<fileset dir="${buildDirectory}/updateSite">
-  		</fileset>
-  	</copy>
-  	<copy file="${buildDirectory}/finalPluginsVersions.properties" todir="${publishLocation}"/>
-  </target>
+		<taskdef name="s3" classname="org.springframework.build.aws.ant.SimpleStorageService" classpathref="s3.classpath" />
+
+		<s3 accessKey="${accessKey}" secretKey="${secretKey}">
+			<!-- Delete old update site, but keep archives -->
+			<delete bucketName="${upload.bucket}" file="${upload.dir}/features" />
+			<delete bucketName="${upload.bucket}" file="${upload.dir}/plugins" />
+			<delete bucketName="${upload.bucket}" file="${upload.dir}/content.xml" />
+			<delete bucketName="${upload.bucket}" file="${upload.dir}/artifacts.xml" />
+			<delete bucketName="${upload.bucket}" file="${upload.dir}/site.xml" />
+			<upload bucketName="${upload.bucket}" toDir="${upload.dir}" publicRead="true">
+				<fileset dir="${updateSiteDir}">
+					<include name="*.html" />
+				</fileset>
+				<metadata name="Content-Type" value="text/htmltext/xml" />
+			</upload>
+			<upload bucketName="${upload.bucket}" toDir="${upload.dir}" publicRead="true">
+				<fileset dir="${updateSiteDir}">
+					<include name="*.xml" />
+				</fileset>
+				<metadata name="Content-Type" value="text/xml" />
+			</upload>
+			<upload bucketName="${upload.bucket}" toDir="${upload.dir}" publicRead="true">
+				<fileset dir="${updateSiteDir}">
+					<include name="*.zip" />
+					<include name="plugins/*.jar" />
+					<include name="features/*.jar" />
+				</fileset>
+			</upload>
+		</s3>
+	</target>
+
+	<target name="zip.updatesite" depends="-init">
+		<mkdir dir="${updateSiteDir}" />
+		<zip destfile="${updateSiteDir}/${archive.name}">
+			<zipfileset dir="${updateSiteDir}">
+				<include name="**/*" />
+				<exclude name="**/*.zip" />
+			</zipfileset>
+		</zip>
+	</target>
 	
-	
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: create.html                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="create.html" depends="-init">
+    	<copy file="index.html" todir="${updateSiteDir}"/>
+    	<replace file="${updateSiteDir}/index.html" summary="yes" token="@GROOVY_ECLIPSE_VERSION@" value="${archive.name}"/>
+    </target>
+
 	<!-- - - - - - - - - - - - - - - - - - 
           target: -init                      
     - - - - - - - - - - - - - - - - - -->
-  <target name="-init">
-  	<property file="../build_local_${eclipse.target.version}.properties"/>
-  	<property file="${buildDirectory}/finalPluginsVersions.properties"/>
-  </target>
+	<target name="-init">
+		<property file="../build_local_${eclipse.target.version}.properties" />
+		<property file="${buildDirectory}/finalPluginsVersions.properties" />
+		<property environment="env" />
+		<property file="${env.dist_properties}" />
+		<property name="updateSiteDir" value="${workDir}/build/updateSite" />
+  	<property name="archive.name" value="archive-${org.codehaus.groovy.eclipse.ui}.zip"/>
+
+		<condition property="upload.dir.postfix" value="e4.2">
+			<equals arg1="${eclipse.target.version}" arg2="e42" />
+		</condition>
+		<condition property="upload.dir.postfix" value="e3.7">
+			<equals arg1="${eclipse.target.version}" arg2="e37" />
+		</condition>
+		<condition property="upload.dir.postfix" value="e3.6">
+			<equals arg1="${eclipse.target.version}" arg2="e36" />
+		</condition>
+
+		<property name="upload.bucket" value="dist.springsource.org" />
+		<property name="upload.dir.prefix" value="snapshot/GRECLIPSE" />
+		<property name="upload.dir" value="${upload.dir.prefix}/${upload.dir.postfix}" />
+	</target>
 
 
 </project>

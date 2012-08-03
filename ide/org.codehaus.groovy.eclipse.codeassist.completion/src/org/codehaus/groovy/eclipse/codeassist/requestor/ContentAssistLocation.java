@@ -23,7 +23,15 @@ package org.codehaus.groovy.eclipse.codeassist.requestor;
  */
 public enum ContentAssistLocation {
     /**
-     * import statements.  Type proposals are available.  They do not cause an additional import statement, and filter out proposals of types already imported
+     * Annotations. Type proposals are available and these proposals are
+     * restricted to annotations
+     */
+    ANNOTATION,
+
+    /**
+     * import statements. Type proposals are available. They do not cause an
+     * additional import statement, and filter out proposals of types already
+     * imported
      */
     IMPORT,
 
@@ -61,7 +69,7 @@ public enum ContentAssistLocation {
      * start of a new statement. So, everything from expressions are available,
      * but also local variables and types should be included
      * Eg- all cases of 'A' fall into the STATEMENT location
-     * 
+     *
      * <code>
      * A
      * foo.bar(A)

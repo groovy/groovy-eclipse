@@ -225,13 +225,5 @@
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
-  	
-		<!-- Update site -->
-		<copy todir="${featuresDestDir}/Site Groovy">
-			<fileset dir="${workspaceDirIde}/Site Groovy">
-					<exclude name="**/bin"/>
-			</fileset>
-		</copy>
-  	
   </target>
 </project>

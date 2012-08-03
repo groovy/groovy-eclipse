@@ -38,7 +38,34 @@
 				</classpath>
 			</java>
 		</sequential>
-
 	</macrodef>
 
+	<target name="checkExists">
+		<available file="${theFile}" property="theZipExists" />
+	</target>
+
+
+	<target name="downloadFile" depends="checkExists" unless="theZipExists" 
+         	description="Downloads a file if it doesn't already exist">
+		<get verbose="true" src="${theURL}" dest="${downloadsDir}/${theFile}" usetimestamp="true" />
+		<touch file="${downloadsDir}/${theFile}" />
+	</target>
+
+	<target name="unpack-archive" description="Unpacks a file that is either .zip or .tar.gz">
+		<condition property="isAZip">
+			<contains string="${theFile}" substring=".zip" />
+		</condition>
+		<condition property="isATar">
+			<contains string="${theFile}" substring=".tar.gz" />
+		</condition>
+		<antcall target="unzipFile"/>
+		<antcall target="untarFile"/>
+	</target>
+
+	<target name="unzipFile" if="isAZip">
+		<unzip src="${theFile}" dest="${theDir}" overwrite="true" />
+	</target>
+	<target name="untarFile" if="isATar">
+		<untar src="${theFile}" dest="${theDir}" overwrite="true" compression="gzip" />
+	</target>
 </project>
