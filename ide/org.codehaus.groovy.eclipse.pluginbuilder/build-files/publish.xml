@@ -23,9 +23,22 @@
 			<delete bucketName="${upload.bucket}" file="${upload.dir}/site.xml" />
 			<upload bucketName="${upload.bucket}" toDir="${upload.dir}" publicRead="true">
 				<fileset dir="${updateSiteDir}">
-					<include name="**" />
+					<include name="*.html" />
 				</fileset>
-				<metadata name="Content-Type" value="text/html" />
+				<metadata name="Content-Type" value="text/htmltext/xml" />
+			</upload>
+			<upload bucketName="${upload.bucket}" toDir="${upload.dir}" publicRead="true">
+				<fileset dir="${updateSiteDir}">
+					<include name="*.xml" />
+				</fileset>
+				<metadata name="Content-Type" value="text/xml" />
+			</upload>
+			<upload bucketName="${upload.bucket}" toDir="${upload.dir}" publicRead="true">
+				<fileset dir="${updateSiteDir}">
+					<include name="*.zip" />
+					<include name="plugins/*.jar" />
+					<include name="features/*.jar" />
+				</fileset>
 			</upload>
 		</s3>
 	</target>
