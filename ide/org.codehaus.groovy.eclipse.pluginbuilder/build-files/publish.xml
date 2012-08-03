@@ -21,11 +21,12 @@
 			<delete bucketName="${upload.bucket}" file="${upload.dir}/content.xml" />
 			<delete bucketName="${upload.bucket}" file="${upload.dir}/artifacts.xml" />
 			<delete bucketName="${upload.bucket}" file="${upload.dir}/site.xml" />
+			<delete bucketName="${upload.bucket}" file="${upload.dir}/index.html" />
 			<upload bucketName="${upload.bucket}" toDir="${upload.dir}" publicRead="true">
 				<fileset dir="${updateSiteDir}">
 					<include name="*.html" />
 				</fileset>
-				<metadata name="Content-Type" value="text/htmltext/xml" />
+				<metadata name="Content-Type" value="text/html" />
 			</upload>
 			<upload bucketName="${upload.bucket}" toDir="${upload.dir}" publicRead="true">
 				<fileset dir="${updateSiteDir}">
