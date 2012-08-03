@@ -62,7 +62,7 @@ public class GuessingCompletionTests extends CompletionTestCase {
                 "def zzz = { }\n" +
                 "def xxx(Closure c) { }\n" +
                 "xxx";
-        String[][] expectedChoices = new String[][] { new String[] { "zzz", "yyy", "{" } };
+        String[][] expectedChoices = new String[][] { new String[] { "zzz", "yyy", "{  }" } };
         
         
         try {
