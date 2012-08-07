@@ -41,6 +41,8 @@
 			<arg value="-f" />
 			<arg value="${pdebuild.home}/build.xml" />
 			<!--<arg value="-verbose"/>-->
+			<!-- Must always compile against lowest groovy version that we support because groovy classes compiled against later compilers cannot use earlier runtimes. -->
+			<jvmarg value="-Dgroovy.compiler.level=17"/>
 			<jvmarg value="-DworkDir=${workDir}"/>
 			<jvmarg value="-DbuildHome=${buildHome}"/>
 			<jvmarg value="-Dbuilder=${buildHome}/build-files"/>
