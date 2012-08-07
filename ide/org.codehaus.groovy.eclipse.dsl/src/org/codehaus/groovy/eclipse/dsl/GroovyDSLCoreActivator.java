@@ -100,7 +100,11 @@ public class GroovyDSLCoreActivator extends AbstractUIPlugin {
 	
     private static void log(int severity, String message, Throwable throwable) {
         final IStatus status = new Status(severity, PLUGIN_ID, 0, message, throwable);
-        getDefault().getLog().log(status);
+        try {
+            getDefault().getLog().log(status);
+        } catch (NullPointerException e) {
+            // plugin starting up or shutting down.  can ignore
+        }
         if (GroovyLogManager.manager.hasLoggers()) {
             if (throwable != null) {
                 GroovyLogManager.manager.log(TraceCategory.DSL, "Exception caught.  See error log.  Message: " + throwable.getLocalizedMessage());
