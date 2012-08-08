@@ -56,26 +56,6 @@ import org.objectweb.asm.Opcodes;
  */
 public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProcessor {
 
-    // FIXADE not used, consider deleting
-    // class GroovyOverrideCompletionProposal extends OverrideCompletionProposal
-    // {
-    //
-    // public GroovyOverrideCompletionProposal(IJavaProject jproject,
-    // ICompilationUnit cu, String methodName, String[] paramTypes,
-    // int start, int length, StyledString displayName,
-    // String completionProposal) {
-    // super(jproject, cu, methodName, paramTypes, start, length, displayName,
-    // completionProposal);
-    //
-    // String repl = completionProposal +
-    // " {\n\t\t// TODO Groovy Auto-generated method stub\n" +
-    // "\t\t// Only partially implemented. Perform organize imports\n" +
-    // "\t\t// to properly import parameter and return types\n\t}";
-    // setReplacementString(repl);
-    // }
-    // }
-
-
     public NewMethodCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
     }
@@ -108,9 +88,6 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         return proposals;
     }
 
-    /**
-     * @return
-     */
     private ClassNode getClassNode() {
         // if the current completion is inside a script, then the containing code block will be a Block object, not a ClassNode
         // Must get class node in a different way.
@@ -119,9 +96,6 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
                     getScript();
     }
 
-    /**
-     *
-     */
     private ClassNode getScript() {
         ModuleNode module = getContext().unit.getModuleNode();
         for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
