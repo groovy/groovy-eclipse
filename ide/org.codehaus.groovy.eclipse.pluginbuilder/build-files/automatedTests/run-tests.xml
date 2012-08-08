@@ -29,18 +29,18 @@ we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Ecl
 		</unzip>
 
 		<!-- Install Eclipse Test Framework -->
-		<install-bundle 
+		<install-feature 
 			eclipse.loc="${test.eclipse.base}/eclipse" 
 			updatesite.url="file:${buildDirectory}/eclipse-test-framework" 
 			feature.id="org.eclipse.test" />
 
 		<echo message="Update site url = ${updateSiteURL}"/>
 		<!-- Install Groovy Eclipse -->
-		<install-bundle 
+		<install-feature 
 			eclipse.loc="${test.eclipse.base}/eclipse" 
 			updatesite.url="${updateSiteURL}" 
 			feature.id="org.codehaus.groovy.eclipse.feature" />
-		<install-bundle 
+		<install-feature 
 			eclipse.loc="${test.eclipse.base}/eclipse" 
 			updatesite.url="${updateSiteURL}" 
 			feature.id="org.codehaus.groovy.alltests.feature" />
@@ -51,7 +51,7 @@ we are running Groovy 1.7 tests on Eclipse 3.6 build and Groovy 1.8 tests on Ecl
           only install groovy 2.0 on E4.2                
          - - - - - - - - - - - - - - - - - -->
 	<target name="-install.groovy.20" depends="-initCompilerLevel" if="compiler.level.is.20">
-		<install-bundle 
+		<install-feature 
 			eclipse.loc="${test.eclipse.base}/eclipse" 
 			updatesite.url="${updateSiteURL}" 
 			feature.id="org.codehaus.groovy20.feature" />

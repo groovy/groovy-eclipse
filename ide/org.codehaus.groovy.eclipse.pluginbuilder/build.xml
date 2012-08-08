@@ -126,8 +126,9 @@
   			<param name="theDir" value="${build.eclipse.dir}" />
   		</antcall>
     	<!-- force building with 1.7 -->
-			<install-bundle eclipse.loc="${build.eclipse.dir}/eclipse" feature.id="org.codehaus.groovy17.feature" updatesite.url="http://dist.springsource.org/release/GRECLIPSE/e4.2/" />
-  		<install-bundle eclipse.loc="${build.eclipse.dir}/eclipse" feature.id="org.codehaus.groovy.headless.feature" updatesite.url="http://dist.springsource.org/release/GRECLIPSE/e4.2/" />
+			<install-feature eclipse.loc="${build.eclipse.dir}/eclipse" feature.id="org.codehaus.groovy17.feature" updatesite.url="http://dist.springsource.org/release/GRECLIPSE/e4.2/" />
+  		<install-feature eclipse.loc="${build.eclipse.dir}/eclipse" feature.id="org.codehaus.groovy.headless.feature" updatesite.url="http://dist.springsource.org/release/GRECLIPSE/e4.2/" />
+  		<install-bundle eclipse.loc="${build.eclipse.dir}/eclipse" bundle.id="org.codehaus.groovy.eclipse.ant" updatesite.url="http://dist.springsource.org/release/GRECLIPSE/e4.2/" />
    	</target>
 
 	
@@ -145,11 +146,11 @@
 
 		
 		<!-- now install m2eclipse -->
-		<install-bundle eclipse.loc="${target.eclipse.dir}/eclipse" feature.id="org.eclipse.wst.xml_core.feature" updatesite.url="${eclipse.update.site}" />
-		<install-bundle eclipse.loc="${target.eclipse.dir}/eclipse" feature.id="org.eclipse.wst.xml_ui.feature" updatesite.url="${eclipse.update.site}" />
-		<install-bundle eclipse.loc="${target.eclipse.dir}/eclipse" feature.id="org.eclipse.equinox.p2.discovery.feature" updatesite.url="${eclipse.update.site}" />
-		<install-bundle eclipse.loc="${target.eclipse.dir}/eclipse" feature.id="org.eclipse.epp.usagedata.feature" updatesite.url="http://download.eclipse.org/technology/epp/updates/1.0" />
-		<install-bundle eclipse.loc="${target.eclipse.dir}/eclipse" feature.id="org.eclipse.m2e.feature" updatesite.url="${m2e-update-site}" />
+		<install-feature eclipse.loc="${target.eclipse.dir}/eclipse" feature.id="org.eclipse.wst.xml_core.feature" updatesite.url="${eclipse.update.site}" />
+		<install-feature eclipse.loc="${target.eclipse.dir}/eclipse" feature.id="org.eclipse.wst.xml_ui.feature" updatesite.url="${eclipse.update.site}" />
+		<install-feature eclipse.loc="${target.eclipse.dir}/eclipse" feature.id="org.eclipse.equinox.p2.discovery.feature" updatesite.url="${eclipse.update.site}" />
+		<install-feature eclipse.loc="${target.eclipse.dir}/eclipse" feature.id="org.eclipse.epp.usagedata.feature" updatesite.url="http://download.eclipse.org/technology/epp/updates/1.0" />
+		<install-feature eclipse.loc="${target.eclipse.dir}/eclipse" feature.id="org.eclipse.m2e.feature" updatesite.url="${m2e-update-site}" />
 	</target>
 
 

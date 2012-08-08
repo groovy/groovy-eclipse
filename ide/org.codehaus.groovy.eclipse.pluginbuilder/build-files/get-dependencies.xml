@@ -7,13 +7,13 @@
    
     Contributors:
          Tasktop Technologies - initial API and implementation
-         Andrew Eisenberg     - install-bundle macro
+         Andrew Eisenberg     - install-feature macro
  -->
 <project name="Download files and provide provisioning for existing eclipse installatins">
 	
 	<property name="m2e-update-site" value="http://download.eclipse.org/releases/indigo"/>
 
-	<macrodef name="install-bundle" description="Install a bundle into a given Eclipse">
+	<macrodef name="install-feature" description="Install a feature into a given Eclipse">
 		<attribute name="eclipse.loc" />
 		<attribute name="updatesite.url" />
 		<attribute name="feature.id" />
@@ -29,6 +29,33 @@
 				<arg line= "-metadataRepository @{updatesite.url}" />
 				<arg line= "-artifactRepository @{updatesite.url}" />
 				<arg line= "-installIU @{feature.id}.feature.group" />
+				<arg value="-nosplash" />
+
+				<classpath>
+					<fileset dir="@{eclipse.loc}/plugins">
+						<include name="org.eclipse.equinox.launcher_*.jar"/>
+					</fileset>
+				</classpath>
+			</java>
+		</sequential>
+	</macrodef>
+	
+	<macrodef name="install-bundle" description="Install a feature into a given Eclipse">
+		<attribute name="eclipse.loc" />
+		<attribute name="updatesite.url" />
+		<attribute name="bundle.id" />
+
+		<sequential>
+			<echo message="Installing: @{feature.id}" />
+			<echo message="into: @{eclipse.loc}" />
+			<echo message="from update site: @{updatesite.url}" />
+			<java fork="true" failonerror="true"
+			  classname="org.eclipse.core.launcher.Main">
+
+				<arg line= "-application org.eclipse.equinox.p2.director" />
+				<arg line= "-metadataRepository @{updatesite.url}" />
+				<arg line= "-artifactRepository @{updatesite.url}" />
+				<arg line= "-installIU @{bundle.id}" />
 				<arg value="-nosplash" />
 
 				<classpath>
