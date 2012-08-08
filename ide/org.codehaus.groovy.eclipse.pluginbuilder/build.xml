@@ -125,8 +125,10 @@
   			<param name="theFile" value="${build.eclipse.zip}" />
   			<param name="theDir" value="${build.eclipse.dir}" />
   		</antcall>
-  		<install-bundle eclipse.loc="${build.eclipse.dir}/eclipse" feature.id="	org.codehaus.groovy.eclipse.feature" updatesite.url="http://dist.springsource.org/release/GRECLIPSE/e4.2/" />
-    </target>
+    	<!-- force building with 1.7 -->
+			<install-bundle eclipse.loc="${build.eclipse.dir}/eclipse" feature.id="org.codehaus.groovy17.feature" updatesite.url="http://dist.springsource.org/release/GRECLIPSE/e4.2/" />
+  		<install-bundle eclipse.loc="${build.eclipse.dir}/eclipse" feature.id="org.codehaus.groovy.headless.feature" updatesite.url="http://dist.springsource.org/release/GRECLIPSE/e4.2/" />
+   	</target>
 
 	
 
