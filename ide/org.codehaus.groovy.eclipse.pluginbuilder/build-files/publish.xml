@@ -16,8 +16,10 @@
 
 		<s3 accessKey="${accessKey}" secretKey="${secretKey}">
 			<!-- Delete old update site, but keep archives -->
-			<delete bucketName="${upload.bucket}" file="${upload.dir}/features/*" />
-			<delete bucketName="${upload.bucket}" file="${upload.dir}/plugins/*" />
+			<delete bucketName="${upload.bucket}">
+				<fileset dir="${upload.bucket}/plugins" />
+				<fileset dir="${upload.bucket}/features" />
+			</delete>
 			<delete bucketName="${upload.bucket}" file="${upload.dir}/content.xml" />
 			<delete bucketName="${upload.bucket}" file="${upload.dir}/artifacts.xml" />
 			<delete bucketName="${upload.bucket}" file="${upload.dir}/site.xml" />
