@@ -729,6 +729,81 @@ def xxx() {
 }
 """
 	}
+    
+    // GRECLIPSE-1475
+    void testAutoIndentCurly1() {
+        def initText =
+        """
+def xxx() {
+    def x = { yyy -><***>}
+}
+"""
+               makeEditor(initText)
+               send('\n')
+               assertEditorContents """
+def xxx() {
+    def x = { yyy ->
+        <***>
+    }
+}
+"""
+    }
+
+    // GRECLIPSE-1475
+    void testAutoIndentCurly2() {
+        def initText =
+        """
+def xxx() {
+    def x = { yyy -><***>  }
+}
+"""
+               makeEditor(initText)
+               send('\n')
+               assertEditorContents """
+def xxx() {
+    def x = { yyy ->
+        <***>
+    }
+}
+"""
+    }
+
+    // GRECLIPSE-1475
+    void testAutoIndentCurly3() {
+        def initText =
+        """
+def xxx() {
+    def x = { yyy -><***>  } def foo
+}
+"""
+               makeEditor(initText)
+               send('\n')
+               assertEditorContents """
+def xxx() {
+    def x = { yyy ->
+        <***>
+    } def foo
+}
+"""
+    }
+
+    // GRECLIPSE-1475
+    void testAutoIndentCurly4() {
+        def initText =
+        """
+def xxx() {
+    def x = { yyy -><***>  )
+}
+"""
+               makeEditor(initText)
+               send('\n')
+               assertEditorContents """
+def xxx() {
+    def x = { yyy ->
+        <***>  )
+}
+"""
+    }
 
 	void testMuliLineCommentPaste1() {
 		makeEditor("""

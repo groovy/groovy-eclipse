@@ -559,13 +559,25 @@ public class GroovyIndentationService {
     	return gap.toString();
     }
 
-    /**
-     * @param d
-     * @param enterPos
-     * @return
-     */
     public boolean moreOpenThanCloseBefore(IDocument d, int offset) {
         return getOpenVersusCloseBalance(getLineTokensUpto(d, offset)) > 0;
     }
 
+    /**
+     *
+     * @param d
+     * @param offset offset into document
+     * @return the length from the insert location to the start of the curly
+     *         else 0 if the next token is not a close curly
+     * @throws BadLocationException
+     */
+    public int lengthToNextCurly(IDocument d, int offset) throws BadLocationException {
+        Token token = getTokenFrom(d, offset);
+        // must make sure there is no newline
+        if (!isEndOfLine(d, offset) && RCURLY == token.getType()) {
+            return token.getColumn() - offset + d.getLineOffset(d.getLineOfOffset(offset));
+        } else {
+            return 0;
+        }
+    }
 }

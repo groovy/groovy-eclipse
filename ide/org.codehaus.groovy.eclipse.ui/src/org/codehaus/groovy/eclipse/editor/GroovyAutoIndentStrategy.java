@@ -177,11 +177,16 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
             c.text = c.text + indentation;
 
             // Add closing brace
-            if (closeBraces && shouldInsertBrace(d, c.offset)) {
-                int newCaret = c.offset + c.text.length();
-                c.text = c.text + indentor.newline(d) + indentor.createIndentation(orgIndentLevel) + "}";
-                c.caretOffset = newCaret;
-                c.shiftsCaret = false;
+            if (closeBraces) {
+                int lengthToCurly = indentor.lengthToNextCurly(d, c.offset);
+                if (shouldInsertBrace(d, c.offset, lengthToCurly > 0)) {
+                    // munch all chars from the insertion point to the curly brace (if one already exists)
+                    c.length = lengthToCurly;
+                    int newCaret = c.offset + c.text.length();
+                    c.text = c.text + indentor.newline(d) + indentor.createIndentation(orgIndentLevel) + "}";
+                    c.caretOffset = newCaret;
+                    c.shiftsCaret = false;
+                }
             }
 
         } catch (Throwable e) {
@@ -197,29 +202,30 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
      * Determine whether an offset in a document would be a good one
      * to insert an automatic closing brace for on the next line.
      */
-    private boolean shouldInsertBrace(IDocument d, int enterPos) {
+    private boolean shouldInsertBrace(IDocument d, int enterPos, boolean nextTokenIsCloseBrace) {
         if (!indentor.moreOpenThanCloseBefore(d, enterPos)) {
             return false;
         }
-        if (!indentor.isEndOfLine(d, enterPos)) {
-            return false;
-        }
-        try {
-            int lineNum = d.getLineOfOffset(enterPos);
-            int indentLevel = indentor.getLineIndentLevel(d, lineNum);
-            String line;
-            do {
-                line = GroovyIndentationService.getLine(d, ++lineNum);
-                line = line.trim();
-            } while (line.equals("") && lineNum < d.getNumberOfLines());
-            int nextIndentLevel = indentor.getLineIndentLevel(d, lineNum);
-            if (nextIndentLevel > indentLevel)
+        if (nextTokenIsCloseBrace || indentor.isEndOfLine(d, enterPos)) {
+            try {
+                int lineNum = d.getLineOfOffset(enterPos);
+                int indentLevel = indentor.getLineIndentLevel(d, lineNum);
+                String line;
+                do {
+                    line = GroovyIndentationService.getLine(d, ++lineNum);
+                    line = line.trim();
+                } while (line.equals("") && lineNum < d.getNumberOfLines());
+                int nextIndentLevel = indentor.getLineIndentLevel(d, lineNum);
+                if (nextIndentLevel > indentLevel)
+                    return false;
+                if (nextIndentLevel < indentLevel)
+                    return true;
+                return !line.startsWith("}");
+            } catch (BadLocationException e) {
+                GroovyCore.logException("internal error", e);
                 return false;
-            if (nextIndentLevel < indentLevel)
-                return true;
-            return !line.startsWith("}");
-        } catch (BadLocationException e) {
-            GroovyCore.logException("internal error", e);
+            }
+        } else {
             return false;
         }
     }
