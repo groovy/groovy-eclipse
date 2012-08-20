@@ -171,7 +171,7 @@ implements IWorkbenchPreferencePage {
                 "org.eclipse.jdt.ui.preferences.JavaEditorColoringPreferencePage",
                 " \n\n"
                         + "Semantic highlighting colors for fields and methods are inherited from Java and can be edited here: "
-                        + "\n<a>Java -> Editor -> Syntax Coloring</a> page. And go to the <i>Java</i> section.",
+                        + "\n<a>Java -> Editor -> Syntax Coloring</a> page. And go to the Java section.",
                         (IWorkbenchPreferenceContainer) getContainer(), null);
         area.getControl().setLayoutData(gd);
 
