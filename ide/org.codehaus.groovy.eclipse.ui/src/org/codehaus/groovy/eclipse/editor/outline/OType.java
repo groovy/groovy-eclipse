@@ -135,9 +135,10 @@ public class OType extends SourceType implements IOJavaElement {
 
     @Override
     public String[] getCategories() throws JavaModelException {
-        if (exists()) {
-            return super.getCategories();
-        }
+        // categories not supported
+        //      if (exists()) {
+        //          return super.getCategories();
+        //      }
         return NO_CATEGORIES;
     }
 
@@ -154,17 +155,17 @@ public class OType extends SourceType implements IOJavaElement {
 
         @Override
         public int getNameSourceEnd() {
-          return getElementNameNode().getEnd();
+            return getElementNameNode().getEnd();
         }
 
         @Override
         public int getDeclarationSourceStart() {
-          return node.getStart();
+            return node.getStart();
         }
 
         @Override
         public int getDeclarationSourceEnd() {
-          return node.getEnd();
+            return node.getEnd();
         }
 
         @Override

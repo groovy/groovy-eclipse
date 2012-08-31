@@ -94,9 +94,10 @@ public abstract class OMethod extends SourceMethod implements IOJavaElement {
 
     @Override
     public String[] getCategories() throws JavaModelException {
-        if (exists()) {
-            return super.getCategories();
-        }
+        // categories not supported
+        //        if (exists()) {
+        //            return super.getCategories();
+        //        }
         return NO_CATEGORIES;
     }
 

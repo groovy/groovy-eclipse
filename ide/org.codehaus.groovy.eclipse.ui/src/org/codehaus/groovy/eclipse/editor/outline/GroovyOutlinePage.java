@@ -26,7 +26,9 @@ import org.eclipse.jdt.ui.JavaElementComparator;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.custom.BusyIndicator;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.IPageSite;
@@ -84,6 +86,22 @@ public class GroovyOutlinePage extends JavaOutlinePage {
         }
 
         isInitialized = true;
+    }
+
+    @Override
+    public void createControl(Composite parent) {
+        super.createControl(parent);
+
+        // categories are not supported by the groovy parser.
+        // and the CategoryFilter filter is causing NotPresentExceptions when the
+        // top level type goes away, so disable it.
+        ViewerFilter[] filters = getOutlineViewer().getFilters();
+        for (ViewerFilter filter : filters) {
+            if (filter.getClass().getName().contains("CategoryFilter")) {
+                getOutlineViewer().removeFilter(filter);
+
+            }
+        }
     }
 
     /**
