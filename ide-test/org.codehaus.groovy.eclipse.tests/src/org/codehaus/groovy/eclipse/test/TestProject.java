@@ -40,6 +40,8 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.IWorkspaceDescription;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -62,6 +64,7 @@ import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 import org.eclipse.jdt.internal.core.JavaModelManager;
+import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.launching.JavaRuntime;
 
 public class TestProject {
@@ -76,8 +79,10 @@ public class TestProject {
     public TestProject(String name) throws CoreException {
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
         project = root.getProject(name);
-        project.create(null);
-        project.open(null);
+        if (!project.exists()) {
+            project.create(null);
+            project.open(null);
+        }
         javaProject = JavaCore.create(project);
 
         IFolder binFolder = createBinFolder();
@@ -478,5 +483,55 @@ public class TestProject {
             units[i] = createUnit(packages[i], cuNames[i], cuContents[i]);
         }
         return units;
+    }
+    
+    public static void addEntry(IProject project, IClasspathEntry entryPath) throws JavaModelException {
+        IClasspathEntry[] classpath = getClasspath(project);
+        IClasspathEntry[] newClaspath = new IClasspathEntry[classpath.length + 1];
+        System.arraycopy(classpath, 0, newClaspath, 0, classpath.length);
+        newClaspath[classpath.length] = entryPath;
+        setClasspath(project, newClaspath);
+    }
+    
+    public static IClasspathEntry[] getClasspath(IProject project) {
+        try {
+            JavaProject javaProject = (JavaProject) JavaCore.create(project);
+            return javaProject.getExpandedClasspath();
+        } catch (JavaModelException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void addExternalLibrary(IProject project, String jar) throws JavaModelException {
+        addExternalLibrary(project, jar, false);
+    }
+    
+
+    public static void addExternalLibrary(IProject project, String jar, boolean isExported) throws JavaModelException {
+        addEntry(project, JavaCore.newLibraryEntry(new Path(jar), null, null, isExported));
+    }
+    
+    public static void setClasspath(IProject project, IClasspathEntry[] entries) throws JavaModelException {
+        IJavaProject javaProject = JavaCore.create(project);
+        javaProject.setRawClasspath(entries, null);
+    }
+    
+    public static void setAutoBuilding(boolean value) {
+        try {
+            IWorkspace w = ResourcesPlugin.getWorkspace();
+            IWorkspaceDescription d = w.getDescription();
+            d.setAutoBuilding(value);
+            w.setDescription(d);
+        } catch (CoreException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public static boolean isAutoBuilding() {
+        IWorkspace w = ResourcesPlugin.getWorkspace();
+        IWorkspaceDescription d = w.getDescription();
+        return d.isAutoBuilding();
     }
 }
