@@ -42,3 +42,4 @@ Require-Bundle: org.eclipse.jdt.core,
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Import-Package: org.codehaus.groovy.eclipse.codebrowsing.requestor
+Eclipse-BundleShape: dir
