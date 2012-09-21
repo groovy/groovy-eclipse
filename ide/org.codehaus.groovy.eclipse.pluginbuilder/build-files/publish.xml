@@ -4,7 +4,6 @@
        ================================= -->
 	<target name="s3.deploy" depends="-init,zip.updatesite,create.html" description="Deploys Groovy-Eclipse to S3">
 		<echo>Publishing to Amazon S3</echo>
-		<echo>${env.dist_properties}</echo>
 
 		<path id="s3.classpath">
 			<fileset dir="${basedir}/s3-libs">
@@ -17,10 +16,10 @@
 		<s3 accessKey="${accessKey}" secretKey="${secretKey}">
 			<!-- Delete old update site, but keep archives -->
 			<delete bucketName="${upload.bucket}">
-				<fileset dir="${upload.bucket}/plugins/">
+				<fileset dir="${upload.dir}/plugins/">
 					<include name="**"/>
 				</fileset>
-				<fileset dir="${upload.bucket}/features/">
+				<fileset dir="${upload.dir}/features/">
 					<include name="**"/>
 				</fileset>
 			</delete>

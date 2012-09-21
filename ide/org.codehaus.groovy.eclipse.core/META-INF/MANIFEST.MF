@@ -3,9 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Groovy Core
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.core;singleton:=true
 Bundle-Version: 2.7.1.qualifier
-Bundle-ClassPath: lib/commons-lang-2.3.jar,
- lib/commons-io-1.3.1.jar,
- .
+Bundle-ClassPath: .
 Bundle-Activator: org.codehaus.groovy.eclipse.core.GroovyCoreActivator
 Require-Bundle: org.codehaus.groovy,
  org.eclipse.core.runtime,
@@ -15,19 +13,7 @@ Require-Bundle: org.codehaus.groovy,
  org.eclipse.jdt.launching;bundle-version="3.5.0",
  org.eclipse.osgi
 Bundle-ActivationPolicy: lazy
-Export-Package: org.apache.commons.io,
- org.apache.commons.io.filefilter,
- org.apache.commons.io.input,
- org.apache.commons.io.output,
- org.apache.commons.lang,
- org.apache.commons.lang.builder,
- org.apache.commons.lang.enums,
- org.apache.commons.lang.exception,
- org.apache.commons.lang.math,
- org.apache.commons.lang.mutable,
- org.apache.commons.lang.text,
- org.apache.commons.lang.time,
- org.codehaus.groovy.eclipse.core,
+Export-Package: org.codehaus.groovy.eclipse.core,
  org.codehaus.groovy.eclipse.core.adapters,
  org.codehaus.groovy.eclipse.core.builder,
  org.codehaus.groovy.eclipse.core.compiler,

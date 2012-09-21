@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +17,11 @@
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener;
 import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.SaveParticipantDescriptor;
@@ -115,7 +115,7 @@ public class DelegatingCleanUpPostSaveListener implements IPostSaveListener {
 
     public void saved(ICompilationUnit compilationUnit,
             IRegion[] changedRegions, IProgressMonitor monitor)
-            throws CoreException {
+                    throws CoreException {
         if (ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getElementName())) {
             groovyCleanUp.saved(compilationUnit, changedRegions, monitor);
         } else {

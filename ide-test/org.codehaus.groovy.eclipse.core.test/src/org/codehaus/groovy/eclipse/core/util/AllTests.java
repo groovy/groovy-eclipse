@@ -7,10 +7,9 @@ public class AllTests {
     public static Test suite() {
         final TestSuite suite = new TestSuite("Test for "
                 + AllTests.class.getPackage().getName());
-        // $JUnit-BEGIN$
         suite.addTestSuite(TokenStreamTests.class);
         suite.addTestSuite(ExpressionFinderTests.class);
-        // $JUnit-END$
+        suite.addTestSuite(ArrayUtilsTests.class);
         return suite;
     }
 }
