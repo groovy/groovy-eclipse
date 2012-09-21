@@ -39,13 +39,11 @@ import org.objectweb.asm.Opcodes;
  *
  * @author Cedric Champeau
  */
-//GRECLIPSE extends BinaryExpression, not Expression
 public class CompareIdentityExpression extends BinaryExpression implements Opcodes {
     private final Expression leftExpression;
     private final Expression rightExpression;
 
     public CompareIdentityExpression(final Expression leftExpression, final Expression rightExpression) {
-        // GRECLIPSE: call to super
         super(leftExpression, new Token(Types.COMPARE_TO, "==", -1, -1), rightExpression);
         this.leftExpression = leftExpression;
         this.rightExpression = rightExpression;
@@ -78,10 +76,8 @@ public class CompareIdentityExpression extends BinaryExpression implements Opcod
             mv.visitInsn(ICONST_0);
             mv.visitLabel(l2);
             controller.getOperandStack().replace(ClassHelper.boolean_TYPE, 2);
-        // GRECLIPSE: start
         } else {
             super.visit(visitor);
         }
-        // GRECLIPSE: end
     }
 }

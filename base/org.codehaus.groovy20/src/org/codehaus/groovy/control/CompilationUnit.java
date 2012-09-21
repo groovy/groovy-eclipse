@@ -1,5 +1,5 @@
 	/*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2003-2012 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,6 +82,7 @@ public class CompilationUnit extends ProcessingUnit {
     protected ResolveVisitor resolveVisitor;
     protected StaticImportVisitor staticImportVisitor;
     protected OptimizerVisitor optimizer;
+    protected ClassNodeResolver classNodeResolver;
 
     LinkedList[] phaseOperations;
     LinkedList[] newPhaseOperations;
@@ -238,6 +239,7 @@ public class CompilationUnit extends ProcessingUnit {
             }
         }
         this.classgenCallback = null;
+        this.classNodeResolver = new ClassNodeResolver();
     }
     
     // GRECLIPSE: new method: force the phase on
@@ -685,6 +687,7 @@ public class CompilationUnit extends ProcessingUnit {
                 VariableScopeVisitor scopeVisitor = new VariableScopeVisitor(source);
                 scopeVisitor.visitClass(node);
 
+                resolveVisitor.setClassNodeResolver(classNodeResolver);
                 resolveVisitor.startResolving(node, source);
             }
 
@@ -814,7 +817,7 @@ public class CompilationUnit extends ProcessingUnit {
             } catch (GroovyRuntimeException rpe) {
                 ASTNode node = rpe.getNode();
                 getErrorCollector().addError(
-                        new SyntaxException(rpe.getMessage(), null, node.getLineNumber(), node.getColumnNumber()),
+                        new SyntaxException(rpe.getMessage(), node.getLineNumber(), node.getColumnNumber(), node.getLastLineNumber(), node.getLastColumnNumber()),
                         source
                 );
             }
@@ -1253,6 +1256,16 @@ public class CompilationUnit extends ProcessingUnit {
     private void changeBugText(GroovyBugError e, SourceUnit context) {
         e.setBugText("exception in phase '" + getPhaseDescription() + "' in source unit '" + ((context != null) ? context.getName() : "?") + "' " + e.getBugText());
     }
+    
+    public ClassNodeResolver getClassNodeResolver() {
+        return classNodeResolver;
+    }
+
+
+    public void setClassNodeResolver(ClassNodeResolver classNodeResolver) {
+        this.classNodeResolver = classNodeResolver;
+    }
+    
     // GRECLIPSE: start
     public void setResolveVisitor(ResolveVisitor resolveVisitor2) {
 		this.resolveVisitor = resolveVisitor2; 

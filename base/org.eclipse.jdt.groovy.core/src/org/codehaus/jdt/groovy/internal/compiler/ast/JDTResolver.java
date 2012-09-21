@@ -310,10 +310,13 @@ public class JDTResolver extends ResolveVisitor {
 		return false;
 	}
 
+	protected boolean resolveToOuter(ClassNode type) {
+		return resolveToClass(type);
+	}
+
 	/**
-	 * resolveToClass() - this would normally ask the groovy class loader, but we don't want to do that - let JDT find everything.
+	 * resolveToOuter() - this would normally ask the groovy class loader, but we don't want to do that - let JDT find everything.
 	 */
-	@Override
 	protected boolean resolveToClass(ClassNode type) {
 		String typename = type.getName();
 		ClassNode node = getScope().lookupClassNodeForBinary(typename, this);

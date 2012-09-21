@@ -62,6 +62,11 @@ public abstract class StaticTypeCheckingSupport {
                 put(ClassHelper.Double_TYPE, 5);
             }});
 
+    final static ClassNode GSTRING_STRING_CLASSNODE = WideningCategories.lowestUpperBound(
+            ClassHelper.STRING_TYPE,
+            ClassHelper.GSTRING_TYPE
+    );
+
     /**
      * This is for internal use only. When an argument method is null, we cannot determine its type, so
      * we use this one as a wildcard.
@@ -181,14 +186,18 @@ public abstract class StaticTypeCheckingSupport {
      * not of the exact type but still match
      */
     public static int allParametersAndArgumentsMatch(Parameter[] params, ClassNode[] args) {
-        if (params==null) return args.length==0?0:-1;
+        if (params==null) {
+            params = Parameter.EMPTY_ARRAY;
+        }
         int dist = 0;
+        if (args.length<params.length) return -1;
         // we already know the lengths are equal
         for (int i = 0; i < params.length; i++) {
             ClassNode paramType = params[i].getType();
-            if (!isAssignableTo(args[i], paramType)) return -1;
+            ClassNode argType = args[i];
+            if (!isAssignableTo(argType, paramType)) return -1;
             else {
-                if (!paramType.equals(args[i])) dist+=getDistance(args[i], paramType);
+                if (!paramType.equals(argType)) dist+=getDistance(argType, paramType);
             }
         }
         return dist;
@@ -244,7 +253,7 @@ public abstract class StaticTypeCheckingSupport {
         ClassNode vargsBase = params[params.length - 1].getType().getComponentType();
         for (int i = params.length; i < args.length; i++) {
             if (!isAssignableTo(args[i],vargsBase)) return -1;
-            else if (!args[i].equals(vargsBase)) dist++;
+            else if (!args[i].equals(vargsBase)) dist+=getDistance(args[i], vargsBase);
         }
         return dist;
     }
@@ -265,7 +274,7 @@ public abstract class StaticTypeCheckingSupport {
         ClassNode ptype = params[params.length - 1].getType().getComponentType();
         ClassNode arg = args[args.length - 1];
         if (isNumberType(ptype) && isNumberType(arg) && !ptype.equals(arg)) return -1;
-        return isAssignableTo(arg, ptype)?(ptype.equals(arg)?0:1):-1;
+        return isAssignableTo(arg, ptype)?getDistance(arg,ptype):-1;
     }
 
     /**
@@ -521,7 +530,7 @@ public abstract class StaticTypeCheckingSupport {
                return true;
            }
             if (BigInteger_TYPE==leftRedirect) {
-                return WideningCategories.isBigIntCategory(rightRedirect);
+                return WideningCategories.isBigIntCategory(getUnwrapper(rightRedirect));
             }
         }
 
@@ -685,12 +694,19 @@ public abstract class StaticTypeCheckingSupport {
         if (parameters != null) {
             for (int i = 0, parametersLength = parameters.length; i < parametersLength; i++) {
                 final ClassNode parameter = parameters[i];
-                sb.append(parameter.toString(false));
+                sb.append(prettyPrintType(parameter));
                 if (i < parametersLength - 1) sb.append(", ");
             }
         }
         sb.append(")");
         return sb.toString();
+    }
+
+    static String prettyPrintType(ClassNode type) {
+        if (type.isArray()) {
+            return prettyPrintType(type.getComponentType())+"[]";
+        }
+        return type.toString(false);
     }
 
     public static boolean implementsInterfaceOrIsSubclassOf(ClassNode type, ClassNode superOrInterface) {
@@ -742,6 +758,7 @@ public abstract class StaticTypeCheckingSupport {
         if (isPrimitiveType(receiver) && !isPrimitiveType(compare)) {
             dist = (dist+1)<<1;
         }
+        if (unwrapCompare.equals(unwrapReceiver)) return dist;
         if (receiver.isArray() && !compare.isArray()) {
             // Object[] vs Object
             dist += 256;
@@ -940,7 +957,9 @@ public abstract class StaticTypeCheckingSupport {
                     firstParamMatches = allParametersAndArgumentsMatch(firstParams, args) >= 0;
                 }
                 int lastArgMatch = isVargs(params) && firstParamMatches?lastArgMatchesVarg(params, args):-1;
-                if (lastArgMatch>=0) lastArgMatch++; // ensure exact matches are preferred over vargs
+                if (lastArgMatch>=0) {
+                    lastArgMatch += 256-params.length; // ensure exact matches are preferred over vargs
+                }
                 int dist = allPMatch>=0?Math.max(allPMatch, lastArgMatch):lastArgMatch;
                 if (dist>=0 && !actualReceiver.equals(declaringClass)) dist+=getDistance(actualReceiver, declaringClass);
                 if (dist>=0 && dist<bestDist) {
@@ -972,11 +991,11 @@ public abstract class StaticTypeCheckingSupport {
                         //      that case is handled above already
                         // (3) there is more than one argument for the vargs array
                         int dist = excessArgumentsMatchesVargsParameter(params, args);
-                        if (dist >= 0 && !actualReceiver.equals(declaringClass)) dist++;
+                        if (dist >= 0 && !actualReceiver.equals(declaringClass)) dist+=getDistance(actualReceiver, declaringClass);
                         // varargs methods must not be preferred to methods without varargs
                         // for example :
                         // int sum(int x) should be preferred to int sum(int x, int... y)
-                        dist++;
+                        dist+=256-params.length;
                         if (params.length < args.length && dist >= 0) {
                             if (dist >= 0 && dist < bestDist) {
                                 bestChoices.clear();
@@ -1230,5 +1249,59 @@ public abstract class StaticTypeCheckingSupport {
             return methods;
         }
 
+    }
+
+    /**
+     * @return true if the class node is either a GString or the LUB of String and GString.
+     */
+    public static boolean isGStringOrGStringStringLUB(ClassNode node) {
+        return ClassHelper.GSTRING_TYPE.equals(node)
+                || GSTRING_STRING_CLASSNODE.equals(node);
+    }
+
+    /**
+     * @param node the node to be tested
+     * @return true if the node is using generics types and one of those types is a gstring or string/gstring lub
+     */
+    public static boolean isParameterizedWithGStringOrGStringString(ClassNode node) {
+        if (node.isArray()) return isParameterizedWithGStringOrGStringString(node.getComponentType());
+        if (node.isUsingGenerics()) {
+            GenericsType[] genericsTypes = node.getGenericsTypes();
+            if (genericsTypes!=null) {
+                for (GenericsType genericsType : genericsTypes) {
+                    if (isGStringOrGStringStringLUB(genericsType.getType())) return true;
+                }
+            }
+        }
+        return node.getSuperClass() != null && isParameterizedWithGStringOrGStringString(node.getUnresolvedSuperClass());
+    }
+
+    /**
+     * @param node the node to be tested
+     * @return true if the node is using generics types and one of those types is a string
+     */
+    public static boolean isParameterizedWithString(ClassNode node) {
+        if (node.isArray()) return isParameterizedWithString(node.getComponentType());
+        if (node.isUsingGenerics()) {
+            GenericsType[] genericsTypes = node.getGenericsTypes();
+            if (genericsTypes!=null) {
+                for (GenericsType genericsType : genericsTypes) {
+                    if (STRING_TYPE.equals(genericsType.getType())) return true;
+                }
+            }
+        }
+        return node.getSuperClass() != null && isParameterizedWithString(node.getUnresolvedSuperClass());
+    }
+
+    public static boolean missesGenericsTypes(ClassNode cn) {
+        if (cn.isArray()) return missesGenericsTypes(cn.getComponentType());
+        if (cn.redirect().isUsingGenerics() && !cn.isUsingGenerics()) return true;
+        if (cn.isUsingGenerics()) {
+            if (cn.getGenericsTypes()==null) return true;
+            for (GenericsType genericsType : cn.getGenericsTypes()) {
+                if (genericsType.isPlaceholder()) return true;
+            }
+        }
+        return false;
     }
 }

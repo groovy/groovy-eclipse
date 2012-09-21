@@ -101,7 +101,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
             URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry(
-                    "lib/groovy-2.0.0.jar");
+                    "lib/groovy-2.0.4.jar");
             if (groovyJar==null) {
 				groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.6.jar");
 	        	if (groovyJar==null) {
@@ -560,7 +560,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"----------\n" + 
     			"1. ERROR in A.groovy (at line 2)\n" + 
     			"	class Foo {}\n" + 
-    			"	^\n" + 
+    			"	^"+(isGE20()?"^^^^^^^^^^^":"")+"\n" + 
     			"Groovy:Invalid duplicate class definition of class Foo : The source A.groovy contains at least two definitions of the class Foo.\n" + 
     			"----------\n" + 
     			"2. ERROR in A.groovy (at line 2)\n" + 
@@ -703,7 +703,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"----------\n" + 
     			"1. ERROR in Foo.groovy (at line 1)\n" + 
     			"	class Foo {}\n" + 
-    			"	 ^\n" + 
+    			"	 ^"+(isGE20()?"^^^^^^^^^^":"")+"\n" + 
     			"Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy are containing both a class of the name Foo.\n" + 
     			"----------\n" + 
     			"2. ERROR in Foo.groovy (at line 1)\n" + 
@@ -1163,6 +1163,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     
 
     public void testGRE830() {
+    	
+    	
 	    	this.runNegativeTest(new String[]{
 	    			"AnnotationDouble.groovy",
 	    			"import static java.lang.annotation.ElementType.FIELD;\n"+
@@ -1183,9 +1185,14 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	    	},"----------\n" + 
 			"1. ERROR in AnnotationDoubleTest.groovy (at line 3)\n" + 
 			"	class FooWithAnnotation { @AnnotationDouble(value=\"test\", width=1.0) double value; }\n" + 
-			"	                                                                ^\n" + 
+			"	                                                                ^"+(isGE20()?"^^":"")+"\n" + 
 			"Groovy:Attribute \'width\' should have type \'java.lang.Double\'; but found type \'java.math.BigDecimal\' in @AnnotationDouble\n" + 
 			"----------\n");
+    }
+    
+    // is greater than or equal to 20
+    private boolean isGE20() {
+    		return GroovyUtils.GROOVY_LEVEL>=20;
     }
 
     public void testGRE830_2() {
@@ -1209,7 +1216,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     	},"----------\n" + 
 		"1. ERROR in AnnotationDoubleTest.groovy (at line 3)\n" + 
 		"	class FooWithAnnotation { @AnnotationDouble(value=\"test\", width=1.0) double value; }\n" + 
-		"	                                                                ^\n" + 
+		"	                                                                ^"+(isGE20()?"^^":"")+"\n" + 
 		"Groovy:Attribute \'width\' should have type \'java.lang.Double\'; but found type \'java.math.BigDecimal\' in @AnnotationDouble\n" + 
 		"----------\n");
     }
@@ -6028,7 +6035,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"----------\n" +
 			"2. ERROR in p\\X.groovy (at line 3)\n" +
 			"	@Anno(IDontExist.class)\n" +
-			"	      ^\n" +
+			"	      ^"+(isGE20()?"^^^^^^^^^^^^^^^":"")+"\n" +
 			(GroovyUtils.GROOVY_LEVEL<18?
 			"Groovy:Only classes can be used for attribute 'value' in @p.Anno\n":
 			"Groovy:Only classes and closures can be used for attribute 'value' in @p.Anno\n"
@@ -7961,7 +7968,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n" + 
 		"1. ERROR in p\\Code.groovy (at line 5)\n" + 
 		"	public void m(String s, Integer i =3) {}\n" + 
-		"	^\n" + 
+		"	^"+(isGE20()?"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^":"")+"\n" + 
 		"Groovy:The method with default parameters \"void m(java.lang.String, java.lang.Integer)\" defines a method \"void m(java.lang.String)\" that is already defined.\n"+ 
 		"----------\n"
 		);
@@ -8660,13 +8667,13 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n" + 
 		"1. ERROR in Foo.groovy (at line 4)\n" + 
 		"	if (rareCondition) {\n" + 
-		"	    ^\n" + 
+		"	    ^"+(isGE20()?"^^^^^^^^^^^^":"")+"\n" + 
 		"Groovy:[Static type checking] - The variable [rareCondition] is undeclared.\n" + 
 		"----------\n" + 
 		"2. ERROR in Foo.groovy (at line 5)\n" + 
 		"	println \"Did you spot the error in this ${message.toUppercase()}?\"\n" + 
-		"	                                         ^\n" + 
-		"Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase()\n" + 
+		"	                                         ^"+(isGE20()?"^^^^^^^^^^^^^^^^^^^^^^":"")+"\n" + 
+		"Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase()"+(isGE20()?". Please check if the declared type is right and if the method exists.":"")+"\n" + 
 		"----------\n");
 	}
 	
@@ -8687,8 +8694,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n" + 
 		"1. ERROR in Foo.groovy (at line 6)\n" + 
 		"	ls.add(\'abc\');\n" + 
-		"	^\n" + 
-		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)\n" + 
+		"	^"+(isGE20()?"^^^^^^^^^^^^":"")+"\n" + 
+		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isGE20()?". Please check if the declared type is right and if the method exists.":"")+"\n" + 
 		"----------\n");
 	}
 	
@@ -8748,8 +8755,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"----------\n" + 
 		"1. ERROR in Foo.groovy (at line 6)\n" + 
 		"	ls.add(\'abc\');\n" + 
-		"	^\n" + 
-		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)\n" + 
+		"	^"+(isGE20()?"^^^^^^^^^^^^":"")+"\n" + 
+		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isGE20()?". Please check if the declared type is right and if the method exists.":"")+"\n" + 
 		"----------\n");
 	}
 	

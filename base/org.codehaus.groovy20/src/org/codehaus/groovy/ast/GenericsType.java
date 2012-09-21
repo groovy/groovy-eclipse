@@ -111,27 +111,47 @@ public class GenericsType extends ASTNode {
     }
 
     private String genericsBounds(ClassNode theType, Set<String> visited) {
-        String ret = theType.isArray()?theType.getComponentType().getName()+"[]":theType.getName();
+
+        StringBuilder ret = new StringBuilder();
+
+        if (theType.isArray()) {
+            ret.append(theType.getComponentType().getName());
+            ret.append("[]");
+        } else if (theType.redirect() instanceof InnerClassNode) {
+            InnerClassNode innerClassNode = (InnerClassNode) theType.redirect();
+            String parentClassNodeName = innerClassNode.getOuterClass().getName();
+            ret.append(genericsBounds(innerClassNode.getOuterClass(), new HashSet<String>()));
+            ret.append(".");
+            String typeName = theType.getName();
+            ret.append(typeName.substring(parentClassNodeName.length() + 1));
+        } else {
+            ret.append(theType.getName());
+        }
+
         GenericsType[] genericsTypes = theType.getGenericsTypes();
-        if (genericsTypes == null || genericsTypes.length == 0) return ret;
+        if (genericsTypes == null || genericsTypes.length == 0)
+            return ret.toString();
+
         // TODO instead of catching Object<T> here stop it from being placed into type in first place
         if (genericsTypes.length == 1 && genericsTypes[0].isPlaceholder() && theType.getName().equals("java.lang.Object")) {
             return genericsTypes[0].getName();
         }
-        ret += "<";
+
+        ret.append("<");
         for (int i = 0; i < genericsTypes.length; i++) {
-            if (i != 0) ret += ", ";
+            if (i != 0) ret.append(", ");
 
             GenericsType type = genericsTypes[i];
             if (type.isPlaceholder() && visited.contains(type.getName())) {
-                ret += type.getName();
+                ret.append(type.getName());
         }
             else {
-                ret += type.toString(visited);
+                ret.append(type.toString(visited));
             }
         }
-        ret += ">";
-        return ret;
+       ret.append(">");
+
+        return ret.toString();
     }
     /* GRECLIPSE delete these on 1.8.6 upgrade if the 1.8.5 tostring is behaving
     public String toString() {
@@ -347,7 +367,7 @@ public class GenericsType extends ASTNode {
                             // class node are not parameterized. This means that we must create a
                             // new class node with the parameterized types that the current class node
                             // has defined.
-                            ClassNode node = GenericsUtils.parameterizeInterfaceGenerics(classNode, anInterface);
+                            ClassNode node = GenericsUtils.parameterizeType(classNode, anInterface);
                             return compareGenericsWithBound(node, bound);
                         }
                     }
@@ -376,7 +396,7 @@ public class GenericsType extends ASTNode {
             Map<String, GenericsType> classNodePlaceholders = GenericsUtils.extractPlaceholders(classNode);
             Map<String, GenericsType> boundPlaceHolders = GenericsUtils.extractPlaceholders(bound);
             boolean match = true;
-            for (int i = 0; i < redirectBoundGenericTypes.length && match; i++) {
+            for (int i = 0; redirectBoundGenericTypes!=null && i < redirectBoundGenericTypes.length && match; i++) {
                 GenericsType redirectBoundType = redirectBoundGenericTypes[i];
                 GenericsType classNodeType = cnTypes[i];
                 // The following code has been commented out because it causes GROOVY-5415
@@ -464,7 +484,11 @@ public class GenericsType extends ASTNode {
      * @return the parameterized superclass
      */
     private static ClassNode getParameterizedSuperClass(ClassNode classNode) {
+        if (ClassHelper.OBJECT_TYPE.equals(classNode)) return null;
         ClassNode superClass = classNode.getUnresolvedSuperClass();
+        if (superClass==null) {
+            return ClassHelper.OBJECT_TYPE;
+        }
         if (!classNode.isUsingGenerics() || !superClass.isUsingGenerics()) return superClass;
         GenericsType[] genericsTypes = classNode.getGenericsTypes();
         GenericsType[] redirectGenericTypes = classNode.redirect().getGenericsTypes();

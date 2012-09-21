@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.control.ClassNodeResolver.LookupResult;
 import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.control.messages.ExceptionMessage;
 import org.codehaus.groovy.syntax.Types;
@@ -71,6 +72,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private boolean checkingVariableTypeInDeclaration = false;
     private ImportNode currImportNode = null;
     private MethodNode currentMethod;
+    private ClassNodeResolver classNodeResolver;
 
     /**
      * we use ConstructedClassWithPackage to limit the resolving the compiler
@@ -142,6 +144,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     public ResolveVisitor(CompilationUnit cu) {
         compilationUnit = cu;
+        this.classNodeResolver = new ClassNodeResolver();
     }
 
     public void startResolving(ClassNode node, SourceUnit source) {
@@ -327,7 +330,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 resolveFromCompileUnit(type) ||
                 resolveFromDefaultImports(type, testDefaultImports) ||
                 resolveFromStaticInnerClasses(type, testStaticInnerClasses) ||
-                resolveToClass(type);
+                resolveToOuter(type);
     }
 
     private boolean resolveNestedClass(ClassNode type) {
@@ -768,26 +771,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 	// end
 
     // GRECLIPSE: from private to protected
-    protected boolean resolveToClass(ClassNode type) {
+    protected boolean resolveToOuter(ClassNode type) {
         String name = type.getName();
-
-        // We use here the class cache cachedClasses to prevent
-        // calls to ClassLoader#loadClass. disabling this cache will
-        // cause a major performance hit. Unlike at the end of this
-        // method we do not return true or false depending on if we
-        // want to recompile or not. If the class was cached, then
-        // we do not want to recompile, recompilation is already
-        // scheduled then
-        Object cached = cachedClasses.get(name);
-        if (cached == NO_CLASS)
-            return false;
-
-        if (cached != null) {
-        // cached == SCRIPT should not happen here!
-            type.setRedirect((ClassNode) cached);
-            return true;
-        }
-
 
         // We do not need to check instances of LowerCaseClass
         // to be a Class, because unless there was an import for
@@ -795,42 +780,23 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // made on the mailing list. To ensure we will not visit this
         // method again we set a NO_CLASS for this name
         if (type instanceof LowerCaseClass) {
-            cachedClasses.put(name,NO_CLASS);
+            classNodeResolver.cacheClass(name, ClassNodeResolver.NO_CLASS);
             return false;
         }
 
         if (currentClass.getModule().hasPackageName() && name.indexOf('.') == -1) return false;
-        GroovyClassLoader loader = compilationUnit.getClassLoader();
-        Class cls;
-        try {
-            // NOTE: it's important to do no lookup against script files
-            // here since the GroovyClassLoader would create a new CompilationUnit
-            cls = loader.loadClass(name, false, true);
-        } catch (ClassNotFoundException cnfe) {
-            cachedClasses.put(name, NO_CLASS);
-            return resolveToScript(type);
-        } catch (CompilationFailedException cfe) {
-            compilationUnit.getErrorCollector().addErrorAndContinue(new ExceptionMessage(cfe, true, source));
-            return resolveToScript(type);
+        LookupResult lr = null;
+        lr = classNodeResolver.resolveName(name, compilationUnit);
+        if (lr!=null) {
+            if (lr.isSourceUnit()) {
+                SourceUnit su = lr.getSourceUnit();
+                currentClass.getCompileUnit().addClassNodeToCompile(type, su);
+            } else {
+                type.setRedirect(lr.getClassNode());
         }
-        //TODO: the case of a NoClassDefFoundError needs a bit more research
-        // a simple recompilation is not possible it seems. The current class
-        // we are searching for is there, so we should mark that somehow.
-        // Basically the missing class needs to be completely compiled before
-        // we can again search for the current name.
-        /*catch (NoClassDefFoundError ncdfe) {
-            cachedClasses.put(name,SCRIPT);
-            return false;
-        }*/
-        if (cls == null) return false;
-        ClassNode cn = ClassHelper.make(cls);
-        cachedClasses.put(name, cn);
-        type.setRedirect(cn);
-        //NOTE: we might return false here even if we found a class,
-        //      because  we want to give a possible script a chance to
-        //      recompile. This can only be done if the loader was not
-        //      the instance defining the class.
-        return cls.getClassLoader() == loader || resolveToScript(type);
+            return true;
+        }
+        return false;
     }
 
 
@@ -1546,5 +1512,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         resolveGenericsTypes(type.getGenericsTypes());
         genericsType.setResolved(genericsType.getType().isResolved());
+    }
+
+    public void setClassNodeResolver(ClassNodeResolver classNodeResolver) {
+        this.classNodeResolver = classNodeResolver;
     }
 }

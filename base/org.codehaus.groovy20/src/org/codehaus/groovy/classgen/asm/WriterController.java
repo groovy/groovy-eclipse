@@ -70,6 +70,7 @@ public class WriterController {
     private boolean fastPath = false;
     private TypeChooser typeChooser;
     private int bytecodeVersion = Opcodes.V1_5; 
+    private int lineNumber = -1;
 
     public void init(AsmClassGenerator asmClassGenerator, GeneratorContext gcon, ClassVisitor cv, ClassNode cn) {
         Map<String,Boolean> optOptions = cn.getCompileUnit().getConfig().getOptimizationOptions();
@@ -82,6 +83,7 @@ public class WriterController {
         } else {
             if (Boolean.TRUE.equals(optOptions.get("indy"))) invokedynamic=true;
             if (Boolean.FALSE.equals(optOptions.get("int"))) optimizeForInt=false;
+            if (invokedynamic) optimizeForInt=false;
             // set other optimizations options to false here
         }
         this.classNode = cn;
@@ -335,10 +337,12 @@ public class WriterController {
 
     public void switchToFastPath() {
         fastPath = true;
+        resetLineNumber();
     }
 
     public void switchToSlowPath() {
         fastPath = false;
+        resetLineNumber();
     }
 
     public boolean isFastPath() {
@@ -348,4 +352,16 @@ public class WriterController {
     public int getBytecodeVersion() {
         return bytecodeVersion;
     }
+    
+    public int getLineNumber() {
+        return lineNumber;
+    }
+    
+    public void setLineNumber(int n) {
+    	lineNumber = n;
+    }
+
+	public void resetLineNumber() {
+		setLineNumber(-1);
+	}
 }

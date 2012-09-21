@@ -37,7 +37,7 @@ public class CompareToNullExpression extends BinaryExpression implements Opcodes
 
     public CompareToNullExpression(final Expression objectExpression, final boolean compareToNull) {
         // GRECLIPSE: call to super
-        super(objectExpression, new Token(Types.EQUALS, compareToNull ? "==" : "!=", -1, -1), ConstantExpression.NULL);
+        super(objectExpression, new Token(Types.COMPARE_TO, compareToNull ? "==" : "!=", -1, -1), ConstantExpression.NULL);
         this.objectExpression = objectExpression;
         this.equalsNull = compareToNull;
     }
@@ -74,10 +74,8 @@ public class CompareToNullExpression extends BinaryExpression implements Opcodes
                 mv.visitLabel(end);
                 controller.getOperandStack().replace(ClassHelper.boolean_TYPE);
             }
-            // GRECLIPSE: start
         } else {
             super.visit(visitor);
-            // GRECLIPSE: end
         }
     }
 }

@@ -88,12 +88,14 @@ public class BinaryExpressionTransformer {
                         Expression left = staticCompilationTransformer.transform(bin.getLeftExpression());
                         Expression right = staticCompilationTransformer.transform(bin.getRightExpression());
                         MethodCallExpression call = new MethodCallExpression(left, "compareTo", new ArgumentListExpression(right));
+                        call.setImplicitThis(false);
                         call.setMethodTarget(COMPARE_TO_METHOD);
 
                         CompareIdentityExpression compareIdentity = new CompareIdentityExpression(
                                 left, right
                         );
-                        compareIdentity.setSourcePosition(bin);
+                        compareIdentity.setSourcePosition(bin); //was this one of our greclipse changes?
+                        
                         compareIdentity.putNodeMetaData(StaticTypesMarker.INFERRED_RETURN_TYPE, ClassHelper.boolean_TYPE);
                         TernaryExpression result = new TernaryExpression(
                                 new BooleanExpression(compareIdentity), // a==b
@@ -128,6 +130,7 @@ public class BinaryExpressionTransformer {
                     name,
                     new ArgumentListExpression(right)
             );
+            call.setImplicitThis(false);
             call.setMethodTarget(node);
             MethodNode adapter = StaticCompilationTransformer.BYTECODE_BINARY_ADAPTERS.get(operationType);
             if (adapter != null) {
@@ -137,6 +140,7 @@ public class BinaryExpressionTransformer {
                         "compareEquals",
                         new ArgumentListExpression(left, right));
                 call.setMethodTarget(adapter);
+                call.setImplicitThis(false);
             }
             if (!isAssignment) return call;
             // case of +=, -=, /=, ...
