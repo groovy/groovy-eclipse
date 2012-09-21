@@ -176,10 +176,10 @@
 			</fileset>
 		</delete>
   	
-  	<!-- need the site.xml file before we can generate -->
+  	<!-- need the site.xml and legal files before we can generate -->
 		<copy todir="${updateSiteDir}">
-			<fileset dir="${buildHome}">
-				 <filename name="site.xml"/>
+			<fileset dir="${buildHome}/legal">
+				 <include name="*"/>
 			</fileset>
 		</copy>
   	

@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,13 +20,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.codehaus.groovy.eclipse.core.util.ReflectionUtils;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.corext.fix.CleanUpConstants;
 import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
@@ -68,14 +68,14 @@ public class FormatAllGroovyAction extends FormatAllAction {
 
         // Copied from super, but comment out section to test if on classpath
         private void run(ICompilationUnit cu) {
-//            if (!ActionUtil.isEditable(fEditor, getShell(), cu))
-//                return;
+            //            if (!ActionUtil.isEditable(fEditor, getShell(), cu))
+            //                return;
             if (cu.isReadOnly()) {
                 return;
             }
 
             ICleanUp[] cleanUps= getCleanUps(new ICompilationUnit[] {
-                cu
+                    cu
             });
             if (cleanUps == null)
                 return;
@@ -85,7 +85,7 @@ public class FormatAllGroovyAction extends FormatAllAction {
 
             try {
                 performRefactoring(new ICompilationUnit[] {
-                    cu
+                        cu
                 }, cleanUps);
             } catch (InvocationTargetException e) {
                 JavaPlugin.log(e);

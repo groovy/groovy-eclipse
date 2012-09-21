@@ -15,10 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.core.model;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.ObjectUtils;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
+import org.codehaus.groovy.eclipse.core.util.ArrayUtils;
+import org.codehaus.groovy.eclipse.core.util.ObjectUtils;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -251,7 +251,7 @@ public class GroovyRuntime {
 
     /**
      * Adds a classpath entry to the end of a project's the classpath
-     * 
+     *
      * @param project
      *            The project to add the entry to.
      * @param newEntry
@@ -267,7 +267,7 @@ public class GroovyRuntime {
 
     /**
      * Adds a classpath entry to the front of a project's the classpath
-     * 
+     *
      * @param project
      *            The project to add the entry to.
      * @param newEntry

@@ -22,14 +22,6 @@ import org.codehaus.groovy.eclipse.editor.GroovyTagScanner;
 import org.codehaus.groovy.eclipse.editor.GroovyTextTools;
 import org.codehaus.groovy.eclipse.preferences.PreferenceInitializer;
 import org.eclipse.jdt.ui.text.IColorManager;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.preference.PreferenceConverter;
-import org.eclipse.jface.text.Document;
-import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.TextAttribute;
-import org.eclipse.jface.text.rules.IToken;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.RGB;
 
 /**
  * @author Andrew Eisenberg
@@ -39,8 +31,6 @@ import org.eclipse.swt.graphics.RGB;
  */
 public class GroovyTagScannerTests extends TestCase {
     
-    private final static String BLACK = "black";
-
     GroovyTagScanner scanner;
     
     
@@ -79,34 +69,37 @@ public class GroovyTagScannerTests extends TestCase {
         System.out.println("Test is failing on build server, so commented out");
         //tryString("/fafdsads adsfds/", PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
     }
-
-    private void tryString(String string, String foregroundColorPreference) {
-        IDocument doc = new Document(string);
-        scanner.setRange(doc, 0, string.length());
-        IToken token = scanner.nextToken();
-        
-        assertTrue("Token data should be a TextAttribute, but instead is " + token.getData().getClass(), token.getData() instanceof TextAttribute);
-        RGB actual = getActualColor(token);
-        RGB expected = getExpectedColor(foregroundColorPreference);
-        assertEquals(expected, actual);
-        
-    }
-
-    private RGB getExpectedColor(String foregroundColorPreference) {
-        if (foregroundColorPreference.equals(BLACK)) {
-            return new RGB(0,0,0);
-        }
-        return PreferenceConverter.getColor(getPreferenceStore(), foregroundColorPreference);
-    }
-
-    private RGB getActualColor(IToken token) {
-        Color c = ((TextAttribute) token.getData()).getForeground();
-        RGB actual = c == null ? new RGB(0,0,0) : c.getRGB();
-        return actual;
-    }
     
-    private IPreferenceStore getPreferenceStore() {
-        return GroovyPlugin.getDefault().getPreferenceStore();
-    }
+    
+// Unused...consider deleting
+//    private void tryString(String string, String foregroundColorPreference) {
+//        IDocument doc = new Document(string);
+//        scanner.setRange(doc, 0, string.length());
+//        IToken token = scanner.nextToken();
+//        
+//        assertTrue("Token data should be a TextAttribute, but instead is " + token.getData().getClass(), token.getData() instanceof TextAttribute);
+//        RGB actual = getActualColor(token);
+//        RGB expected = getExpectedColor(foregroundColorPreference);
+//        assertEquals(expected, actual);
+//        
+//    }
+//
+//    private RGB getExpectedColor(String foregroundColorPreference) {
+//        if (foregroundColorPreference.equals(BLACK)) {
+//            return new RGB(0,0,0);
+//        }
+//        return PreferenceConverter.getColor(getPreferenceStore(), foregroundColorPreference);
+//    }
+//
+//    private RGB getActualColor(IToken token) {
+//        Color c = ((TextAttribute) token.getData()).getForeground();
+//        RGB actual = c == null ? new RGB(0,0,0) : c.getRGB();
+//        return actual;
+//    }
+//    
+//    private IPreferenceStore getPreferenceStore() {
+//        return GroovyPlugin.getDefault().getPreferenceStore();
+//    }
+//  private final static String BLACK = "black";
 
 }
