@@ -1,10 +1,15 @@
 package org.codehaus.groovy.eclipse.actions;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.preferences.CompilerPreferencesPage;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.swt.graphics.Image;
@@ -13,22 +18,48 @@ import org.eclipse.ui.IMarkerResolution2;
 import org.eclipse.ui.IMarkerResolutionGenerator;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.PreferencesUtil;
+import org.eclipse.ui.views.markers.WorkbenchMarkerResolution;
 
 public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolutionGenerator {
     private static final IMarkerResolution[] NO_RESOLUTIONS = new IMarkerResolution[0];
+    private static final String COMPILER_MISMATCH_MARKER = "org.codehaus.groovy.eclipse.core.compilerMismatch";
 
-    private static class ConfigureCompilerLevelResolution implements IMarkerResolution2 {
+    private static abstract class AbstractCompilerConfigurator extends WorkbenchMarkerResolution implements IMarkerResolution2 {
+        private final IMarker thisMarker;
 
-        private IProject project;
+        public AbstractCompilerConfigurator(IMarker thisMarker) {
+            this.thisMarker = thisMarker;
+        }
 
-        ConfigureCompilerLevelResolution(IProject project) {
-            this.project = project;
+        @Override
+        public IMarker[] findOtherMarkers(IMarker[] markers) {
+            List<IMarker> markerList = new ArrayList<IMarker>(markers.length);
+            for (IMarker marker : markers) {
+                try {
+                    if (marker != thisMarker && marker.getType().equals(COMPILER_MISMATCH_MARKER)) {
+                        markerList.add(marker);
+                    }
+                } catch (CoreException e) {
+                    GroovyCore.logException("Error accessing marker", e);
+                }
+            }
+            return markerList.toArray(new IMarker[0]);
+        }
+
+    }
+
+    private static class ConfigureCompilerLevelResolution extends AbstractCompilerConfigurator {
+
+
+        ConfigureCompilerLevelResolution(IMarker thisMarker) {
+            super(thisMarker);
         }
         public String getLabel() {
-            return "Configure Groovy compiler level for " + project.getName();
+            return "Configure Groovy compiler level for project";
         }
 
         public void run(IMarker marker) {
+            IProject project = marker.getResource().getProject();
             PreferenceDialog propertyDialog = PreferencesUtil.createPropertyDialogOn(PlatformUI.getWorkbench()
                     .getActiveWorkbenchWindow().getShell(), project, CompilerPreferencesPage.PROPERTY_ID,
                     new String[] { CompilerPreferencesPage.PROPERTY_ID }, null);
@@ -44,7 +75,10 @@ public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolut
         }
     }
 
-    private static class ConfigureWorksaceCompilerLevelResolution implements IMarkerResolution2 {
+    private static class ConfigureWorksaceCompilerLevelResolution extends AbstractCompilerConfigurator {
+        public ConfigureWorksaceCompilerLevelResolution(IMarker thisMarker) {
+            super(thisMarker);
+        }
 
         public String getLabel() {
             return "Configure the Groovy compiler level for the entire workspace";
@@ -65,18 +99,17 @@ public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolut
         }
     }
 
-    private static class SetToWorkspaceCompilerLevelResolution implements IMarkerResolution2 {
+    private static class SetToWorkspaceCompilerLevelResolution extends AbstractCompilerConfigurator {
 
-        private IProject project;
-
-        SetToWorkspaceCompilerLevelResolution(IProject project) {
-            this.project = project;
+        public SetToWorkspaceCompilerLevelResolution(IMarker thisMarker) {
+            super(thisMarker);
         }
         public String getLabel() {
-            return "Set the Groovy compiler level " + project.getName() + " to match the workspace level";
+            return "Set the Groovy compiler level for project to match the workspace level";
         }
 
         public void run(IMarker marker) {
+            IProject project = marker.getResource().getProject();
             CompilerUtils.setCompilerLevel(project, CompilerUtils.getActiveGroovyVersion());
         }
 
@@ -91,9 +124,8 @@ public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolut
 
     public IMarkerResolution[] getResolutions(IMarker marker) {
         if (marker.getResource().getType() == IResource.PROJECT) {
-            IProject project = (IProject) marker.getResource();
-            return new IMarkerResolution[] { new ConfigureCompilerLevelResolution(project),
-                    new SetToWorkspaceCompilerLevelResolution(project), new ConfigureWorksaceCompilerLevelResolution() };
+            return new IMarkerResolution[] { new ConfigureCompilerLevelResolution(marker),
+                    new SetToWorkspaceCompilerLevelResolution(marker), new ConfigureWorksaceCompilerLevelResolution(marker) };
         }
         return NO_RESOLUTIONS;
     }
