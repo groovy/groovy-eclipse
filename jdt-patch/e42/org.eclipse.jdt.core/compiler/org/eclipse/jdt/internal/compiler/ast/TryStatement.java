@@ -670,7 +670,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 					codeStream.goto_(this.subRoutineStartLabel);
 					break;
 			}
-			codeStream.updateLastRecordedEndPC(this.tryBlock.scope, position);
+			codeStream.recordPositionsFrom(position, this.tryBlock.sourceEnd);
 			//goto is tagged as part of the try block
 		}
 		/* generate sequence of handler, all starting by storing the TOS (exception

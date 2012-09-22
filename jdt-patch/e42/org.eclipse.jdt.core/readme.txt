@@ -8,3 +8,4 @@
 31-Jan-2012: ported to org.eclipse.jdt.core tag v20120125-1544 (e42m5)  (from messages.properties appears to be "0.C33, 3.8.0 M5")
 this then dumped into e42 branch
 27-Jun-2012: ported to C58 (v20120531-0637)
+21-Sep-2012: ported to (3.8.1 contains org.eclipse.jdt.core_3.8.2.v20120814-155456.jar, yes yes, 3.8.2)

@@ -704,8 +704,7 @@ public void generateOptimizedBoolean(BlockScope currentScope, CodeStream codeStr
 			}
 		}
 	}
-	// reposition the endPC
-	codeStream.updateLastRecordedEndPC(currentScope, position);
+	codeStream.recordPositionsFrom(position, this.sourceEnd);
 }
 
 /* Optimized (java) code generation for string concatenations that involve StringBuffer

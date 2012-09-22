@@ -3,7 +3,7 @@ Main-Class: org.eclipse.jdt.internal.compiler.batch.Main
 Bundle-ManifestVersion: 2
 Bundle-Name: Eclipse Compiler for Java(TM)
 Bundle-SymbolicName: org.eclipse.jdt.core.compiler.batch
-Bundle-Version: 3.8.0.qualifier
+Bundle-Version: 3.8.2.qualifier
 Bundle-ClassPath: .
 Bundle-Vendor: Eclipse.org
 Export-Package: org.eclipse.jdt.core,

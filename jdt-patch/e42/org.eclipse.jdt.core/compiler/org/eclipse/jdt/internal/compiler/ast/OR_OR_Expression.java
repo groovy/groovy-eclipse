@@ -108,7 +108,6 @@ public class OR_OR_Expression extends BinaryExpression {
 				codeStream.removeNotDefinitelyAssignedVariables(currentScope, this.mergedInitStateIndex);
 			}
 			codeStream.generateImplicitConversion(this.implicitConversion);
-			codeStream.updateLastRecordedEndPC(currentScope, codeStream.position);
 			codeStream.recordPositionsFrom(pc, this.sourceStart);
 			return;
 		}
@@ -152,11 +151,11 @@ public class OR_OR_Expression extends BinaryExpression {
 		if (valueRequired) {
 			if (leftIsConst && leftIsTrue) {
 				codeStream.iconst_1();
-				codeStream.updateLastRecordedEndPC(currentScope, codeStream.position);
+				codeStream.recordPositionsFrom(codeStream.position, this.left.sourceEnd);
 			} else {
 				if (rightIsConst && rightIsTrue) {
 					codeStream.iconst_1();
-					codeStream.updateLastRecordedEndPC(currentScope, codeStream.position);
+					codeStream.recordPositionsFrom(codeStream.position, this.left.sourceEnd);
 				} else {
 					codeStream.iconst_0();
 				}
@@ -178,7 +177,7 @@ public class OR_OR_Expression extends BinaryExpression {
 				}
 			}
 			codeStream.generateImplicitConversion(this.implicitConversion);
-			codeStream.updateLastRecordedEndPC(currentScope, codeStream.position);
+			codeStream.recordPositionsFrom(codeStream.position, this.sourceEnd);
 		} else {
 			trueLabel.place();
 		}
@@ -222,7 +221,7 @@ public class OR_OR_Expression extends BinaryExpression {
 					// need value, e.g. if (a == 1 || ((b = 2) > 0)) {} -> shouldn't initialize 'b' if a==1
 					if (leftIsTrue) {
 						if (valueRequired) codeStream.goto_(trueLabel);
-						codeStream.updateLastRecordedEndPC(currentScope, codeStream.position);
+						codeStream.recordPositionsFrom(codeStream.position, this.left.sourceEnd);
 						break generateOperands; // no need to generate right operand
 					}
 					if (this.rightInitStateIndex != -1) {
@@ -231,7 +230,7 @@ public class OR_OR_Expression extends BinaryExpression {
 					this.right.generateOptimizedBoolean(currentScope, codeStream, trueLabel, null, valueRequired && !rightIsConst);
 					if (valueRequired && rightIsTrue) {
 						codeStream.goto_(trueLabel);
-						codeStream.updateLastRecordedEndPC(currentScope, codeStream.position);
+						codeStream.recordPositionsFrom(codeStream.position, this.sourceEnd);
 					}
 				}
 			} else {
@@ -249,9 +248,10 @@ public class OR_OR_Expression extends BinaryExpression {
 								.addDefinitelyAssignedVariables(currentScope, this.rightInitStateIndex);
 					}
 					this.right.generateOptimizedBoolean(currentScope, codeStream, null, falseLabel, valueRequired && !rightIsConst);
+					int pc = codeStream.position;
 					if (valueRequired && rightIsConst && !rightIsTrue) {
 						codeStream.goto_(falseLabel);
-						codeStream.updateLastRecordedEndPC(currentScope, codeStream.position);
+						codeStream.recordPositionsFrom(pc, this.sourceEnd);
 					}
 					internalTrueLabel.place();
 				} else {

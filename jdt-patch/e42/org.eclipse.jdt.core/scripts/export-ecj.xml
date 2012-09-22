@@ -15,6 +15,21 @@
 <project name="Eclipse Batch Compiler" default="export-all" basedir="..">
 	<target name="init">
 		<tstamp/>
+		<property name="bundleVersion" value="3.8.2.qualifier"/>
+		<fail unless="bundleVersion" message="Property 'bundleVersion' must be provided by caller"/>
+		<condition property="bundleVersionOK">
+		<matches pattern="\d\.\d\.\d.*" string="${bundleVersion}"/>
+		</condition>
+		<fail message="bundleVersion variable had unexpected format. Should be digit.digit.digit,ANY but was ${bundleVersion}" unless="bundleVersionOK"/>
+		<script language="javascript">
+			var bundleVersion = project.getProperty("bundleVersion");
+			var pattern = new RegExp(/^(\d+)\.(\d+)\.(\d+)\.(.*)$/);
+			var sArray = pattern.exec(bundleVersion); // sArray 0 is "whole match"
+			project.setProperty("bundleVersionMajor", sArray[1]);
+			project.setProperty("bundleVersionMinor", sArray[2]);
+			project.setProperty("bundleVersionService", sArray[3]);
+			project.setProperty("bundleVersionQualifer", sArray[4])
+		</script>
 		<property name="ecj-temp-folder" value="${basedir}/ecj-temp-folder" />
 		<property name="ecj-temp-src-folder" value="${basedir}/ecj-temp-src-folder" />
 		<mkdir dir="${ecj-temp-src-folder}" />
@@ -43,6 +58,7 @@
 				<exclude name="org/eclipse/jdt/internal/compiler/parser/SourceTypeConverter*.class"/>
 			</fileset>
 		</copy>
+		<replace file="${ecj-temp-folder}/org/eclipse/jdt/internal/compiler/batch/messages.properties" token="bundle_qualifier" value="${bundleVersionQualifer}"/>
 	</target>
 
 	<target name="extract-_jsr199" depends="init">
@@ -83,7 +99,7 @@
 		<copy todir="${ecj-temp-folder}">
 			<fileset dir="scripts/binary" />
 		</copy>
-		<replace file="${ecj-temp-folder}/META-INF/MANIFEST.MF" token="qualifier" value="${buildLabel}"/>
+		<replace file="${ecj-temp-folder}/META-INF/MANIFEST.MF" token="qualifier" value="${bundleVersionQualifer}"/>
 		<zip zipfile="${dest}/ecj-${buildLabel}.jar">
 			<fileset dir="${ecj-temp-folder}">
 				<include name="**/*"/>
@@ -99,10 +115,15 @@
 		<copy todir="${ecj-temp-src-folder}">
 			<fileset dir="scripts/source" />
 		</copy>
-		<replace file="${ecj-temp-src-folder}/META-INF/MANIFEST.MF" token="qualifier" value="${buildLabel}"/>
+		<replace file="${ecj-temp-src-folder}/META-INF/MANIFEST.MF" token="qualifier" value="${bundleVersionQualifer}"/>
 		<zip zipfile="${dest}/ecjsrc-${buildLabel}.jar">
 			<zipfileset dir="ecj-temp-src-folder" />
-			<zipfileset dir="batch" />
+			<zipfileset dir="batch">
+				<exclude name="org/eclipse/jdt/internal/compiler/batch/messages.properties"/>
+			</zipfileset>
+			<fileset dir="${ecj-temp-folder}">
+							<include name="**/messages.properties"/>
+			</fileset>
 			<zipfileset dir="compiler" />
 			<zipfileset dir="antadapter">
 				<exclude name="org/eclipse/jdt/core/CheckDebugAttributes.java"/>
@@ -117,7 +138,6 @@
 	</target>
 
 	<target name="export_src_bin">
-		<property name="buildLabel" value="head" />
 		<property name="dest" value="../../ecj-export" />
 		<mkdir dir="${dest}" />
 		<echo message="UPDATE ecj_all.jar" />
@@ -126,7 +146,7 @@
 		<copy todir="${ecj-temp-folder}">
 			<fileset dir="scripts/binary" />
 		</copy>
-		<replace file="${ecj-temp-folder}/META-INF/MANIFEST.MF" token="qualifier" value="${buildLabel}"/>
+		<replace file="${ecj-temp-folder}/META-INF/MANIFEST.MF" token="qualifier" value="${bundleVersionQualifer}"/>
 
 		<copy todir="${ecj-temp-src-folder}/src">
 			<fileset dir="batch" />

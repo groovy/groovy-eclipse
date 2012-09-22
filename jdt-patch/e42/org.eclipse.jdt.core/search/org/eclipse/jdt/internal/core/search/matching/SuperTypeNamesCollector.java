@@ -126,7 +126,7 @@ protected void addToResult(char[][] compoundName) {
 }
 
 /*
- * Parse the given compiation unit and build its type bindings.
+ * Parse the given compilation unit and build its type bindings.
  */
 protected CompilationUnitDeclaration buildBindings(ICompilationUnit compilationUnit, boolean isTopLevelOrMember) throws JavaModelException {
 	// source unit
@@ -172,7 +172,7 @@ public char[][][] collect() throws JavaModelException {
 				}
 			}
 		} catch (AbortCompilation e) {
-			// problem with classpath: report inacurrate matches
+			// problem with classpath: report inaccurate matches
 			return null;
 		}
 		if (this.result.length > this.resultIndex)
@@ -227,13 +227,13 @@ public char[][][] collect() throws JavaModelException {
  */
 protected void collectSuperTypeNames(ReferenceBinding binding, char[][] path) {
 	ReferenceBinding superclass = binding.superclass();
-	if (path != null) {
+	if (path != null && superclass != null) {
 		boolean samePackage = addIfSamePackage(superclass.compoundName, path);
 		if (!samePackage) path = null;
 	}
 	if (superclass != null) {
 		addToResult(superclass.compoundName);
-		collectSuperTypeNames(superclass, null);
+		collectSuperTypeNames(superclass, path);
 	}
 
 	ReferenceBinding[] interfaces = binding.superInterfaces();
@@ -241,7 +241,7 @@ protected void collectSuperTypeNames(ReferenceBinding binding, char[][] path) {
 		for (int i = 0; i < interfaces.length; i++) {
 			ReferenceBinding interfaceBinding = interfaces[i];
 			addToResult(interfaceBinding.compoundName);
-			collectSuperTypeNames(interfaceBinding, null);
+			collectSuperTypeNames(interfaceBinding, path);
 		}
 	}
 }

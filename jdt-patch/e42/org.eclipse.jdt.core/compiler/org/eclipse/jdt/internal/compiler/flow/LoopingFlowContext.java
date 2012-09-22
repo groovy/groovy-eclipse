@@ -13,6 +13,7 @@
  *								bug 365519 - editorial cleanup after bug 186342 and bug 365387
  *								bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
  *								bug 365859 - [compiler][null] distinguish warnings based on flow analysis vs. null annotations
+ *								bug 385626 - @NonNull fails across loop boundaries
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.flow;
 
@@ -251,7 +252,10 @@ public void complainOnDeferredNullChecks(BlockScope scope, FlowInfo callerFlowIn
 					}
 					break;
 				case ASSIGN_TO_NONNULL:
-					this.parent.recordNullityMismatch(scope, (Expression)location, this.providedExpectedTypes[i][0], this.providedExpectedTypes[i][1], flowInfo.nullStatus(local));
+					int nullStatus = flowInfo.nullStatus(local);
+					if (nullStatus != FlowInfo.NON_NULL) {
+						this.parent.recordNullityMismatch(scope, (Expression)location, this.providedExpectedTypes[i][0], this.providedExpectedTypes[i][1], nullStatus);
+					}
 					break;
 				case EXIT_RESOURCE:
 						FakedTrackingVariable trackingVar = local.closeTracker;

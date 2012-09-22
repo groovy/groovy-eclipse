@@ -381,7 +381,7 @@ public class SwitchStatement extends Statement {
 				} else {
 					codeStream.lookupswitch(defaultLabel, this.constants, sortedIndexes, caseLabels);
 				}
-				codeStream.updateLastRecordedEndPC(this.scope, codeStream.position);
+				codeStream.recordPositionsFrom(codeStream.position, this.expression.sourceEnd);
 			} else if (valueRequired) {
 				codeStream.pop();
 			}

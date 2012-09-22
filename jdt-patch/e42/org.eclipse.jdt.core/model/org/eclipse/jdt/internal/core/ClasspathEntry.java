@@ -1582,7 +1582,7 @@ public class ClasspathEntry implements IClasspathEntry {
 	 *   <li> The project output location path cannot be null, must be absolute and located inside the project.
 	 *   <li> Specific output locations (specified on source entries) can be null, if not they must be located inside the project,
 	 *   <li> A project entry cannot refer to itself directly (that is, a project cannot prerequisite itself).
-	 *   <li> Classpath entries or output locations cannot coincidate or be nested in each other, except for the following scenarii listed below:
+	 *   <li> Classpath entries or output locations cannot coincidate or be nested in each other, except for the following scenario listed below:
 	 *      <ul><li> A source folder can coincidate with its own output location, in which case this output can then contain library archives.
 	 *                     However, a specific output location cannot coincidate with any library or a distinct source folder than the one referring to it. </li>
 	 *              <li> A source/library folder can be nested in any source folder as long as the nested folder is excluded from the enclosing one. </li>

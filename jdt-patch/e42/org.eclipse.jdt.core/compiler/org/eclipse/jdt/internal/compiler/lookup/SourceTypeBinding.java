@@ -16,6 +16,8 @@
  *								bug 365662 - [compiler][null] warn on contradictory and redundant null annotations
  *								bug 365531 - [compiler][null] investigate alternative strategy for internally encoding nullness defaults
  *								bug 366063 - Compiler should not add synthetic @NonNull annotations
+ *								bug 384663 - Package Based Annotation Compilation Error in JDT 3.8/4.2 (works in 3.7.2)
+ *								bug 386356 - Type mismatch error with annotations and generics
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 // GROOVY PATCHED
@@ -1107,8 +1109,6 @@ public void initializeDeprecatedAnnotationTagBits() {
 			this.modifiers |= ClassFileConstants.AccDeprecated;
 		}
 	}
-	if (CharOperation.equals(this.sourceName, TypeConstants.PACKAGE_INFO_NAME))
-		getAnnotationTagBits(); // initialize
 }
 
 // ensure the receiver knows its hierarchy & fields/methods so static imports can be resolved correctly
@@ -1187,6 +1187,10 @@ public boolean hasMemberTypes() {
 public MethodBinding[] methods() {
 	if ((this.tagBits & TagBits.AreMethodsComplete) != 0)
 		return this.methods;
+
+	if (!areMethodsInitialized()) { // https://bugs.eclipse.org/384663
+		this.scope.buildMethods();
+	}
 
 	// lazily sort methods
 	if ((this.tagBits & TagBits.AreMethodsSorted) == 0) {

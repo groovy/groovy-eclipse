@@ -193,8 +193,8 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 				this.thenStatement.branchChainTo(endifLabel);
 				int position = codeStream.position;
 				codeStream.goto_(endifLabel);
-				//goto is tagged as part of the thenAction block
-				codeStream.updateLastRecordedEndPC((this.thenStatement instanceof Block) ? ((Block) this.thenStatement).scope : currentScope, position);
+				//goto is pointing to the last line of the thenStatement
+				codeStream.recordPositionsFrom(position, this.thenStatement.sourceEnd);
 				// generate else statement
 			}
 			// May loose some local variable initializations : affecting the local variable attributes
