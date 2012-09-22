@@ -23,6 +23,7 @@ import java.util.Set;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.IGroovyLogger;
 import org.codehaus.groovy.eclipse.TraceCategory;
+import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLDStoreManager;
@@ -132,6 +133,19 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
     protected void addJarToProject(String jarName) throws JavaModelException, IOException {
         String externalFilePath = findExternalFilePath(jarName);
         env.addExternalJar(project.getFullPath(), externalFilePath);
+    }
+    
+    protected void addGroovyJarToProject(String jarName) throws JavaModelException, IOException {
+        addGroovyJarToProject(jarName, project);
+    }
+    static protected void addGroovyJarToProject(String jarName, IProject project) throws JavaModelException, IOException {
+        URL url = CompilerUtils.getJarInGroovyLib(jarName);
+        if (url != null) {
+            env.addExternalJar(project.getFullPath(), url.getFile());
+        } else {
+            fail("Could not find file " + jarName + " in org.codehaus.groovy bundle");
+        }
+        
     }
 
     protected String findExternalFilePath(String jarName)

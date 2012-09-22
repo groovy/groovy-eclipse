@@ -41,9 +41,6 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  */
 public class DSLContentAssistTests extends CompletionTestCase {
 
-    /**
-     * 
-     */
     private static final String SET_DELEGATE_ON_INT = "contribute(currentType(Integer) & enclosingCallName(\"foo\")) {\n" + 
     "    setDelegateType(String)\n" + 
     "}";
@@ -78,7 +75,7 @@ public class DSLContentAssistTests extends CompletionTestCase {
     
     public void testDSLProposalFirstMethod1() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL >= 20) {
-            addJarToProject("groovy-swing-2.0.4.jar");
+            AbstractDSLInferencingTest.addGroovyJarToProject("groovy-swing-2.0.4.jar", getDefaultProject());
         }
         String contents = "import groovy.swing.SwingBuilder\n" +
                 "new SwingBuilder().edt {\n" +
@@ -89,7 +86,7 @@ public class DSLContentAssistTests extends CompletionTestCase {
     }
     public void testDSLProposalFirstMethod2() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL >= 20) {
-            addJarToProject("groovy-swing-2.0.4.jar");
+            AbstractDSLInferencingTest.addGroovyJarToProject("groovy-swing-2.0.4.jar", getDefaultProject());
         }
         String contents = "import groovy.swing.SwingBuilder\n" +
                 "new SwingBuilder().edt {\n" +
@@ -102,7 +99,7 @@ public class DSLContentAssistTests extends CompletionTestCase {
     // proposals should not exist since not applied to 'this'
     public void testDSLProposalFirstMethod3() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL >= 20) {
-            addJarToProject("groovy-swing-2.0.4.jar");
+            AbstractDSLInferencingTest.addGroovyJarToProject("groovy-swing-2.0.4.jar", getDefaultProject());
         }
         String contents = "import groovy.swing.SwingBuilder\n" +
                 "new SwingBuilder().edt {\n" +

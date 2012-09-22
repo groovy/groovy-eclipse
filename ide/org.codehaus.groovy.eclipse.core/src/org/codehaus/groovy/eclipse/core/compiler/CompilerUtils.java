@@ -210,6 +210,29 @@ public class CompilerUtils {
         }
     }
 
+    /**
+     * Finds a specific jar in the groovy lib folder, or null if not found
+     * 
+     * @param jarName the name of the jar
+     * @return the full, resolved url to the jar
+     * @throws IOException
+     */
+    public static URL getJarInGroovyLib(String jarName) throws IOException {
+        Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
+        Enumeration<URL> enu = groovyBundle.findEntries("lib", jarName, false);
+        if (enu == null) {
+            // in some versions of the plugin, the groovy-all jar is in the
+            // base directory of the plugins
+            enu = groovyBundle.findEntries("", jarName, false);
+        }
+        if (enu.hasMoreElements()) {
+            URL jar = enu.nextElement();
+            jar = resolve(jar);
+            return jar;
+        }
+        return null;
+    }
+
     public static URL findDSLDFolder() {
         Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
         Enumeration<URL> enu = groovyBundle.findEntries(".", "plugin_dsld_support", false);
