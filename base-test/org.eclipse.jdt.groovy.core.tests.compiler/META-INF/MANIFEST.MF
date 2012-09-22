@@ -22,3 +22,4 @@ Require-Bundle: org.junit;bundle-version="3.8.2",
  org.eclipse.jdt.groovy.core;bundle-version="1.0.0",
  org.codehaus.groovy;bundle-version="1.6.7"
 Bundle-RequiredExecutionEnvironment: J2SE-1.4
+Eclipse-BundleShape: dir

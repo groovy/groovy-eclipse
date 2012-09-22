@@ -30,3 +30,4 @@ Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestPlugin
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-ClassPath: .
+Eclipse-BundleShape: dir
