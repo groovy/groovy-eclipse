@@ -109,9 +109,7 @@
 	<target name="postBuild" unless="no.postBuild" depends="init.classpath">
 		<antcall target="createUpdateSite"/>
 		<antcall target="zipUpdateSite"/>
-		<!-- disable signing for now
 		<antcall target="signUpdateSite"/>
-		-->
 		<antcall target="runTests"/>
 	</target>
 	<!-- ===================================================================== -->
