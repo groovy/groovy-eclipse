@@ -28,7 +28,9 @@
    <feature url="features/org.codehaus.groovy.alltests.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy.alltests.feature" version="0.0.0.qualifier">
       <category name="org.codehaus.groovy.sdk"/>
    </feature>
-   <feature url="features/org.codehaus.groovy17.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy17.feature" version="0.0.0.qualifier"/>
+   <feature url="features/org.codehaus.groovy17.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy17.feature" version="0.0.0.qualifier">
+      <category name="org.codehaus.groovy.compilers"/>
+   </feature>
    <category-def name="org.codehaus.groovy.eclipse.sdk" label="Groovy Eclipse SDK (Optional)">
       <description>
          Optional feature that provides source code for the Groovy-Eclipse plugin
