@@ -2,25 +2,25 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Groovy DSLD Tests
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.dsl.tests;singleton:=true
-Bundle-Version: 2.7.1.qualifier
+Bundle-Version: 2.7.2.qualifier
 Bundle-Activator: org.codehaus.groovy.eclipse.dsl.tests.GroovyDSLDTestsActivator
 Bundle-Vendor: Codehaus.org
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.junit;bundle-version="3.8.2",
  org.codehaus.groovy;bundle-version="1.7.5",
- org.codehaus.groovy.eclipse.core;bundle-version="2.7.1",
- org.codehaus.groovy.eclipse.dsl;bundle-version="2.7.1",
- org.codehaus.groovy.eclipse.tests;bundle-version="2.7.1",
- org.codehaus.groovy.eclipse.ui;bundle-version="2.7.1",
+ org.codehaus.groovy.eclipse.core;bundle-version="2.7.2",
+ org.codehaus.groovy.eclipse.dsl;bundle-version="2.7.2",
+ org.codehaus.groovy.eclipse.tests;bundle-version="2.7.2",
+ org.codehaus.groovy.eclipse.ui;bundle-version="2.7.2",
  org.eclipse.jdt.groovy.core.tests.builder,
  org.eclipse.jdt.groovy.core.tests.compiler,
- org.eclipse.jdt.groovy.core;bundle-version="2.7.1",
+ org.eclipse.jdt.groovy.core;bundle-version="2.7.2",
  org.eclipse.jdt.core,
  org.eclipse.core.resources,
- org.codehaus.groovy.eclipse.codeassist.completion.test;bundle-version="2.7.1",
+ org.codehaus.groovy.eclipse.codeassist.completion.test;bundle-version="2.7.2",
  org.eclipse.jface.text;bundle-version="3.6.0",
- org.codehaus.groovy.eclipse.codeassist.completion;bundle-version="2.7.1",
+ org.codehaus.groovy.eclipse.codeassist.completion;bundle-version="2.7.2",
  org.eclipse.core.filesystem
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-ActivationPolicy: lazy
