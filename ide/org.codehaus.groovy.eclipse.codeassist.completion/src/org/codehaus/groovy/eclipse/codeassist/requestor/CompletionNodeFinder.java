@@ -241,7 +241,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         // do the run method last since it can wrap around other methods
         if (node.isScript()) {
             MethodNode run = node.getMethod("run", new Parameter[0]);
-            if (run != null) {
+            if (run != null && run.getDeclaringClass().equals(node)) {
                 internalVisitConstructorOrMethod(run);
             }
         }
