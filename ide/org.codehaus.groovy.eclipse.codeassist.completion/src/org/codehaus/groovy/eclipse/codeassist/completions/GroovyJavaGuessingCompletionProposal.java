@@ -236,8 +236,27 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
     @Override
     protected String computeReplacementString() {
 
-        if (!hasParameters() || !hasArgumentList())
-            return super.computeReplacementString();
+        if (!hasParameters() || !hasArgumentList()) {
+            if (proposalOptions.noParens) {
+                // command chain expression with no known arguments
+                char[] proposalName = fProposal.getName();
+                boolean hasWhitespace = false;
+                for (int i = 0; i < proposalName.length; i++) {
+                    if (CharOperation.isWhitespace(proposalName[i])) {
+                        hasWhitespace = true;
+                    }
+                }
+                String newProposalName;
+                if (hasWhitespace) {
+                    newProposalName = "\"" + String.valueOf(proposalName) + "\"";
+                } else {
+                    newProposalName = String.valueOf(proposalName);
+                }
+                return newProposalName;
+            } else {
+                return super.computeReplacementString();
+            }
+        }
 
         long millis = DEBUG ? System.currentTimeMillis() : 0;
         String replacement;
@@ -284,6 +303,12 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         fProposal.setName(proposalName);
 
         FormatterPrefs prefs = getFormatterPrefs();
+        if (proposalOptions.noParens) {
+            // eat the opening paren replace with a space if there isn't one
+            // already
+            buffer.replace(buffer.length() - 1, buffer.length(), prefs.beforeOpeningParen ? "" : " ");
+        }
+
 
         setCursorPosition(buffer.length());
 
@@ -361,10 +386,12 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
 
             // check what to add after argument
             if (i == allCount - 1 || (i == allCount - 2 && i == indexOfLastClosure - 1)) {
-                if (prefs.beforeClosingParen) {
+                if (prefs.beforeClosingParen || proposalOptions.noParens) {
                     buffer.append(SPACE);
                 }
-                buffer.append(RPAREN);
+                if (!proposalOptions.noParens) {
+                    buffer.append(RPAREN);
+                }
             } else if (i < allCount - 1) {
                 if (prefs.beforeComma)
                     buffer.append(SPACE);

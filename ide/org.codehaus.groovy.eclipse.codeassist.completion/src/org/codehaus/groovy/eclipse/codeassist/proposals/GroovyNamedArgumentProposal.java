@@ -86,7 +86,7 @@ public class GroovyNamedArgumentProposal extends AbstractGroovyProposal {
         if (options == null) {
             options = ProposalFormattingOptions.newFromOptions();
         }
-        return options.newFromExisting(true, null);
+        return options.newFromExisting(true, false, null);
     }
 
     protected StyledString createDisplayString() {

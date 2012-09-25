@@ -72,12 +72,15 @@ public class MethodContributionElement implements IContributionElement {
     private ProposalFormattingOptions options = ProposalFormattingOptions.newFromOptions();
     private final int relevanceMultiplier;
     private final boolean isDeprecated;
+    private final boolean noParens;
 
     public MethodContributionElement(String methodName, ParameterContribution[] params, String returnType, String declaringType, boolean isStatic, String provider, String doc, boolean useNamedArgs, boolean isDeprecated, int relevanceMultiplier) {
-        this(methodName, params, NO_PARAMETER_CONTRIBUTION, NO_PARAMETER_CONTRIBUTION, returnType, declaringType, isStatic, provider, doc, useNamedArgs, isDeprecated, relevanceMultiplier);
+        this(methodName, params, NO_PARAMETER_CONTRIBUTION, NO_PARAMETER_CONTRIBUTION, returnType, declaringType, isStatic, provider, doc, useNamedArgs, false, isDeprecated, relevanceMultiplier);
     }
     
-    public MethodContributionElement(String methodName, ParameterContribution[] params, ParameterContribution[] namedParams, ParameterContribution[] optionalParams, String returnType, String declaringType, boolean isStatic, String provider, String doc, boolean useNamedArgs, boolean isDeprecated, int relevanceMultiplier) {
+    public MethodContributionElement(String methodName, ParameterContribution[] params, ParameterContribution[] namedParams,
+            ParameterContribution[] optionalParams, String returnType, String declaringType, boolean isStatic, String provider,
+            String doc, boolean useNamedArgs, boolean noParens, boolean isDeprecated, int relevanceMultiplier) {
         this.methodName = methodName;
         this.params = params;
         this.namedParams = namedParams;
@@ -86,6 +89,7 @@ public class MethodContributionElement implements IContributionElement {
         this.isStatic = isStatic;
         this.declaringType = declaringType;
         this.useNamedArgs = useNamedArgs;
+        this.noParens = noParens;
         this.isDeprecated = isDeprecated;
         this.relevanceMultiplier = relevanceMultiplier;
         
@@ -105,6 +109,7 @@ public class MethodContributionElement implements IContributionElement {
     public IGroovyProposal toProposal(ClassNode declaringType, ResolverCache resolver) {
         GroovyMethodProposal groovyMethodProposal = new GroovyMethodProposal(toMethod(declaringType.redirect(), resolver), provider, options);
         groovyMethodProposal.setUseNamedArguments(useNamedArgs);
+        groovyMethodProposal.setNoParens(noParens);
         groovyMethodProposal.setRelevanceMultiplier(relevanceMultiplier);
         return groovyMethodProposal;
     }

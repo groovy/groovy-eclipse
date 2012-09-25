@@ -188,6 +188,7 @@ public class DSLContributionGroup extends ContributionGroup {
         String doc = value == null ? null : asString(value); // might be null
 
         boolean useNamedArgs = asBoolean(args.get("useNamedArgs"));
+        boolean noParens = asBoolean(args.get("noParens"));
         
         ParameterContribution[] params = extractParams(args, "params");
         ParameterContribution[] namedParams = extractParams(args, "namedParams");
@@ -197,7 +198,7 @@ public class DSLContributionGroup extends ContributionGroup {
         boolean isDeprecated = isDeprecated(args);
         if (!staticScope || (staticScope && isStatic)) {
             contributions.add(new MethodContributionElement(name == null ? NO_NAME : name, params, namedParams, optionalParams, returnType == null ? NO_TYPE
-                    : returnType, declaringType, isStatic, provider == null ? this.provider : provider, doc, useNamedArgs, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
+                    : returnType, declaringType, isStatic, provider == null ? this.provider : provider, doc, useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         }
     }
 

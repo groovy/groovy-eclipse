@@ -28,7 +28,7 @@ public class ProposalFormattingOptions {
         return new ProposalFormattingOptions(prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS),
                 prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS),
                 prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS),
-                prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING));
+                prefs.getBoolean(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING), false);
     }
 
     public final boolean noParensAroundClosures;
@@ -39,22 +39,29 @@ public class ProposalFormattingOptions {
 
     public final boolean doParameterGuessing;
 
+    // used for DSL command expressions
+    public final boolean noParens;
+
     public ProposalFormattingOptions(boolean noParensAroundArgs,
  boolean useBracketsForClosures, boolean useNamedArguments,
-            boolean doParameterGuessing) {
+            boolean doParameterGuessing, boolean noParens) {
         this.noParensAroundClosures = noParensAroundArgs;
         this.useBracketsForClosures = useBracketsForClosures;
         this.useNamedArguments = useNamedArguments;
         this.doParameterGuessing = doParameterGuessing;
+        this.noParens = noParens;
     }
 
-    public ProposalFormattingOptions newFromExisting(boolean overrideUseNamedArgs, MethodNode method) {
-        // if overridden, always use named args
+    public ProposalFormattingOptions newFromExisting(boolean overrideUseNamedArgs, boolean overrideNoParens, MethodNode method) {
+        // For named args if overridden, always use named args
         // if not a constructor and not overridden, never use named args
-        if (overrideUseNamedArgs) {
-            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, true, doParameterGuessing);
+        if (overrideUseNamedArgs || overrideNoParens) {
+            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, overrideUseNamedArgs,
+                    doParameterGuessing,
+                    overrideNoParens);
         } else if (useNamedArguments && !(method instanceof ConstructorNode)) {
-            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, false, doParameterGuessing);
+            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, false, doParameterGuessing,
+                    overrideNoParens);
         } else {
             return this;
         }

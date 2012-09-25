@@ -65,11 +65,14 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
 
     private IType cachedDeclaringType;
 
+    private boolean noParens;
+
     public GroovyMethodProposal(MethodNode method) {
         super();
         this.method = method;
         contributor = "Groovy";
         useNamedArguments = false;
+        noParens = false;
     }
     public GroovyMethodProposal(MethodNode method, String contributor) {
         this(method);
@@ -83,6 +86,10 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
 
     public void setUseNamedArguments(boolean useNamedArguments) {
         this.useNamedArguments = useNamedArguments;
+    }
+
+    public void setNoParens(boolean noParens) {
+        this.noParens = noParens;
     }
 
     @Override
@@ -174,7 +181,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         if (options == null) {
             options = ProposalFormattingOptions.newFromOptions();
         }
-        return options.newFromExisting(useNamedArguments, method);
+        return options.newFromExisting(useNamedArguments, noParens, method);
     }
 
     /**

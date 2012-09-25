@@ -32,6 +32,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
+import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
@@ -41,6 +42,19 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  */
 public class DSLContentAssistTests extends CompletionTestCase {
 
+    private static final String COMMAND_CHAIN_NO_ARGS = 
+            "contribute (currentType('Inner')) {\n" + 
+    		"  method name:'flart', noParens:true, type: 'Inner'\n" + 
+    		"}";
+    private static final String COMMAND_CHAIN_ONE_ARG =
+            "contribute (currentType('Inner')) {\n" + 
+            "  method name:'flart', noParens:true, type: 'Inner', params:[a:Integer]\n" + 
+            "}";
+
+    private static final String COMMAND_CHAIN_TWO_ARGS =
+            "contribute (currentType('Inner')) {\n" + 
+            "  method name:'flart', noParens:true, type: 'Inner', params:[a:Integer, b:String]\n" + 
+            "}";
     private static final String SET_DELEGATE_ON_INT = "contribute(currentType(Integer) & enclosingCallName(\"foo\")) {\n" + 
     "    setDelegateType(String)\n" + 
     "}";
@@ -141,6 +155,76 @@ public class DSLContentAssistTests extends CompletionTestCase {
         // should see proposals from String, not Integer
         proposalExists(proposals, "toUpperCase()", 1);
         proposalExists(proposals, "toHexString()", 0);
+    }
+    
+    public void testCommandChain1() throws Exception {
+        createDsls(COMMAND_CHAIN_NO_ARGS);
+        String contents = 
+                "class Inner { }\n" +
+        		"def val = new Inner()\n" +
+        		"val.fla";
+        
+        Document doc = new Document(contents);
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ".fla"));
+        proposalExists(proposals, "flart", 1);
+        ICompletionProposal proposal = findFirstProposal(proposals, "flart", false);
+        applyProposalAndCheck(doc, proposal, contents.replace("val.fla", "val.flart"));
+    }
+    
+    public void testCommandChain2() throws Exception {
+        createDsls(COMMAND_CHAIN_NO_ARGS);
+        String contents = 
+                "class Inner { }\n" +
+                "def val = new Inner()\n" +
+                "val.flart foo fl";
+        
+        Document doc = new Document(contents);
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, " fl"));
+        proposalExists(proposals, "flart", 1);
+        ICompletionProposal proposal = findFirstProposal(proposals, "flart", false);
+        applyProposalAndCheck(doc, proposal, contents.replace(" fl", " flart"));
+    }
+    
+    public void testCommandChain3() throws Exception {
+        createDsls(COMMAND_CHAIN_NO_ARGS);
+        String contents = 
+                "class Inner { }\n" +
+                "def val = new Inner()\n" +
+                "val.flart foo, baz fl";
+        
+        Document doc = new Document(contents);
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, " fl"));
+        proposalExists(proposals, "flart", 1);
+        ICompletionProposal proposal = findFirstProposal(proposals, "flart", false);
+        applyProposalAndCheck(doc, proposal, contents.replace(" fl", " flart"));
+    }
+    
+    public void testCommandChain4() throws Exception {
+        createDsls(COMMAND_CHAIN_ONE_ARG);
+        String contents = 
+                "class Inner { }\n" +
+                "def val = new Inner()\n" +
+                "val.flart foo, baz fl";
+        
+        Document doc = new Document(contents);
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, " fl"));
+        proposalExists(proposals, "flart", 1);
+        ICompletionProposal proposal = findFirstProposal(proposals, "flart", false);
+        applyProposalAndCheck(doc, proposal, contents.replace(" fl", " flart 0 "));
+    }
+    
+    public void testCommandChain5() throws Exception {
+        createDsls(COMMAND_CHAIN_TWO_ARGS);
+        String contents = 
+                "class Inner { }\n" +
+                "def val = new Inner()\n" +
+                "val.flart foo, baz fl";
+        
+        Document doc = new Document(contents);
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, " fl"));
+        proposalExists(proposals, "flart", 1);
+        ICompletionProposal proposal = findFirstProposal(proposals, "flart", false);
+        applyProposalAndCheck(doc, proposal, contents.replace(" fl", " flart 0, \"\" "));
     }
     
     protected void addJarToProject(String jarName) throws JavaModelException, IOException {
