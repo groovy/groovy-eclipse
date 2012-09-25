@@ -44,6 +44,7 @@ public class AllCompletionTests {
         suite.addTestSuite(ContextInformationTests.class);
         suite.addTestSuite(GuessingCompletionTests.class);
         suite.addTestSuite(DefaultMethodContentAssistTests.class);
+        suite.addTestSuite(CommandChainCompletionTests.class);
         
         return suite;
     }

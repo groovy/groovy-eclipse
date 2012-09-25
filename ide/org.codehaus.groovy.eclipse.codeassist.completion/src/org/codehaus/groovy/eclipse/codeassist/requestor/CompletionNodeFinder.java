@@ -592,7 +592,52 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             // expression
             createContext(objectExpression, blockStack.peek(), EXPRESSION);
         }
+
+        // check for the special case of groovy command expressions
+        checkForCommandExpression(objectExpression, propertyExpression);
+
         super.visitPropertyExpression(expression);
+    }
+
+    void checkForCommandExpression(Expression leftExpression, Expression rightExpression) {
+        // see
+        // http://docs.codehaus.org/display/GROOVY/Groovy+1.8+release+notes#Groovy18releasenotes-CommandchainsfornicerDomain-SpecificLanguages
+        // if all of these are true, then we have a command expression:
+        // if objectExpr is a method call with >1 arguments
+        // if property is a constant expression
+        // if there are no parens (note that we don't actually have to test for
+        // this since if there are parens, then the result would still be the
+        // same)
+        // if doTest(expression.getProperty())
+
+        Expression leftMost = leftMost(rightExpression);
+        if (methodCallWithOneArgument(leftExpression) && leftMost instanceof ConstantExpression && doTest(leftMost)) {
+            createContext(leftExpression, blockStack.peek(), EXPRESSION);
+        }
+    }
+
+    boolean methodCallWithOneArgument(Expression objectExpression) {
+        if (objectExpression instanceof MethodCallExpression) {
+            Expression arguments = ((MethodCallExpression) objectExpression).getArguments();
+            return arguments instanceof TupleExpression && ((TupleExpression) arguments).getExpressions() != null
+                    && ((TupleExpression) arguments).getExpressions().size() > 0;
+        } else {
+            return false;
+        }
+    }
+
+    private Expression leftMost(Expression expr) {
+        if (expr instanceof ConstantExpression) {
+            return expr;
+        } else if (expr instanceof PropertyExpression) {
+            return leftMost(((PropertyExpression) expr).getObjectExpression());
+        } else if (expr instanceof MethodCallExpression) {
+            return leftMost(((MethodCallExpression) expr).getObjectExpression());
+        } else if (expr instanceof BinaryExpression) {
+            return leftMost(((BinaryExpression) expr).getLeftExpression());
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -603,6 +648,9 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         Expression objectExpression = call.getObjectExpression();
         Expression methodExpression = call.getMethod();
         Expression arguments = call.getArguments();
+
+        // Could be a groovy 1.8 style command expression
+        checkForCommandExpression(objectExpression, methodExpression);
 
         // here, we check to see if we are after the closing paren or before it.
         // not quite as easy as I would have hoped since the AST doesn't track

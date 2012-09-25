@@ -356,6 +356,7 @@ public class ExpressionFinder {
 					Token next = stream.next();
 					return new Token(Token.EOF, next.startOffset, next.endOffset, null);
 				}
+                // fall through
 			default:
 				return new Token(Token.EOF, last.startOffset, last.endOffset, null);
 		}
