@@ -189,6 +189,7 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
                     continue;
                 }
                 nameElementMap.put(targetIType.getElementName() + "." + name, targetIType.getField(name));
+                nameElementMap.put(name, targetIType.getField(name));
             }
         }
         return nameElementMap.values().toArray(NO_ELEMENTS);

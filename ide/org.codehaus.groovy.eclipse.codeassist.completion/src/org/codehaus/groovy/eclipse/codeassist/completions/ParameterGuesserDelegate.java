@@ -65,7 +65,7 @@ public class ParameterGuesserDelegate {
                 allCompletions = (ICompletionProposal[]) method
                         .invoke(guesser, parameterType, paramName, position, assignable, fillBestGuess);
             } else {
-                // 3.7
+                // 3.7 and later
                 allCompletions = (ICompletionProposal[]) method.invoke(guesser, parameterType, paramName, position, assignable,
                         fillBestGuess, false);
             }
@@ -75,13 +75,21 @@ public class ParameterGuesserDelegate {
             if (allCompletions != null && allCompletions.length > 0 && assignable != null && assignable.length > 0) {
                 IType declaring = (IType) assignable[0].getAncestor(IJavaElement.TYPE);
                 if (declaring != null && declaring.isEnum()) {
+                    // each enum is proposed twice. The first time, use the
+                    // qualified name and the second keep with the simple name
+                    boolean useFull = true;
                     for (int i = 0; i < assignable.length && i < allCompletions.length; i++) {
                         if (assignable[i].getElementType() == IJavaElement.FIELD) {
-                            String newReplacement = declaring.getElementName() + '.' + assignable[i].getElementName();
-                            ReflectionUtils.setPrivateField(PositionBasedCompletionProposal.class, "fReplacementString",
-                                    allCompletions[i], newReplacement);
-                            ReflectionUtils.setPrivateField(PositionBasedCompletionProposal.class, "fDisplayString",
-                                    allCompletions[i], newReplacement);
+                            if (useFull) {
+                                String newReplacement = declaring.getElementName() + '.' + assignable[i].getElementName();
+                                ReflectionUtils.setPrivateField(PositionBasedCompletionProposal.class, "fReplacementString",
+                                        allCompletions[i], newReplacement);
+                                ReflectionUtils.setPrivateField(PositionBasedCompletionProposal.class, "fDisplayString",
+                                        allCompletions[i], newReplacement);
+                                useFull = false;
+                            } else {
+                                useFull = true;
+                            }
                         }
                     }
                 }
