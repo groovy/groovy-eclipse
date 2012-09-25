@@ -132,7 +132,6 @@ public class GroovyCompletionProposalComputer implements
         }
 
         GroovyCompilationUnit gunit = (GroovyCompilationUnit) unit;
-        System.out.println("Consistent: " + gunit.isConsistent());
 
         ModuleNodeInfo moduleInfo = gunit.getModuleInfo(true);
         if (moduleInfo == null) {

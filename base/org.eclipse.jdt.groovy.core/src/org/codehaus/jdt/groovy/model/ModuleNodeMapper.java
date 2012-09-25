@@ -129,7 +129,6 @@ public class ModuleNodeMapper {
 			return;
 		}
 
-		System.out.println("ModuleNodeMap.size(): " + infoToModuleMap.size());
 		List<PerWorkingCopyInfo> toPurge = new ArrayList<PerWorkingCopyInfo>();
 		for (PerWorkingCopyInfo info : infoToModuleMap.keySet()) {
 			int useCount = ((Integer) ReflectionUtils.getPrivateField(PerWorkingCopyInfo.class, "useCount", info)).intValue();
@@ -144,7 +143,6 @@ public class ModuleNodeMapper {
 		}
 
 		if (toPurge.size() > 0) {
-			System.out.println("ModuleNodeMap: Purging old working copies.");
 			for (PerWorkingCopyInfo info : toPurge) {
 				infoToModuleMap.remove(info);
 			}
