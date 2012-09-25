@@ -2901,6 +2901,18 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         if (implicitThis && "this".equals(expression.getMethodAsString())) {
             ret = new ConstructorCallExpression(this.classNode, arguments);
         }
+        
+        // GRECLIPSE start
+        // in the case of Groovy 1.8 command expressions, the slocs are incorrect for the start of the method
+        if (!implicitThis && methodCallNode.getText().equals("<command>")) {
+            ret.setStart(objectExpression.getStart());
+            ret.setLineNumber(objectExpression.getLineNumber());
+            ret.setColumnNumber(objectExpression.getColumnNumber());
+            ret.setEnd(arguments.getEnd());
+            ret.setLastLineNumber(arguments.getLastLineNumber());
+            ret.setLastColumnNumber(arguments.getLastColumnNumber());
+        }
+        //GRECLIPSE end
         configureAST(ret, methodCallNode);
         return ret;
     }
@@ -3538,7 +3550,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             if ((node instanceof BinaryExpression ||
             		node instanceof MapEntryExpression ||
             		node instanceof MapExpression ||
-            		node instanceof CastExpression) && 
+            		node instanceof CastExpression ||
+            		node instanceof MethodCallExpression) && 
             		(node.getStart() <= startoffset && node.getEnd() >= endoffset)) {
             	// sloc has already been set and it is larger than this one
             	// ignore.
