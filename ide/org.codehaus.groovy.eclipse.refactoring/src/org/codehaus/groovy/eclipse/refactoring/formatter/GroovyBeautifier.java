@@ -70,6 +70,7 @@ public class GroovyBeautifier {
 		correctBraces(edits);
         removeUnnecessarySemicolons(edits);
 
+        formatter.getTokens().dispose();
         return edits;
 	}
 
@@ -131,8 +132,6 @@ public class GroovyBeautifier {
                 replaceWhiteSpaceAfter(edits, lastToken,
                         lastToken.getType() == GroovyTokenTypeBridge.SL_COMMENT ? formatter.getNewLine() : "");
             }
-
-            tokens.dispose();
         }
     }
 
@@ -155,8 +154,6 @@ public class GroovyBeautifier {
             replaceFromTo(editStart, tokens.getOffset(last), replaceWith, edits);
         } catch (BadLocationException e) {
             Util.log(e);
-        } finally {
-            tokens.dispose();
         }
     }
 
@@ -290,13 +287,13 @@ public class GroovyBeautifier {
     private void correctBraces(MultiTextEdit edits) throws BadLocationException {
 		CorrectLineWrap lCurlyCorrector = null;
 		CorrectLineWrap rCurlyCorrector = null;
-		if(preferences.getBracesStart() == FormatterPreferences.SAME_LINE)
+        if (preferences.getBracesStart() == PreferenceConstants.SAME_LINE)
 			lCurlyCorrector = new SameLine(this);
-		if(preferences.getBracesStart() == FormatterPreferences.NEXT_LINE)
+        if (preferences.getBracesStart() == PreferenceConstants.NEXT_LINE)
 			lCurlyCorrector = new NextLine(this);
-		if(preferences.getBracesEnd() == FormatterPreferences.SAME_LINE)
+        if (preferences.getBracesEnd() == PreferenceConstants.SAME_LINE)
 			rCurlyCorrector = new SameLine(this);
-		if(preferences.getBracesEnd() == FormatterPreferences.NEXT_LINE)
+        if (preferences.getBracesEnd() == PreferenceConstants.NEXT_LINE)
 			rCurlyCorrector = new NextLine(this);
 
 		assert lCurlyCorrector != null;
