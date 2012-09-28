@@ -29,6 +29,7 @@ import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.eclipse.refactoring.PreferenceConstants;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTScanner;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.ClosuresInCodePredicate;
 import org.codehaus.groovy.eclipse.refactoring.formatter.lineWrap.CorrectLineWrap;
@@ -97,7 +98,7 @@ public class GroovyBeautifier {
             int nodeStart = node.getStart();
             int nodeEnd = node.getEnd();
             int nodeLen = nodeEnd - nodeStart;
-            boolean isLong = nodeLen > 30;
+            boolean isLong = nodeLen > preferences.getLongListLength();
             List<Expression> exps = node.getExpressions();
             if (isLong || (hasClosureElement(node) && node.getExpressions().size() > 1)) {
                 //Split the list

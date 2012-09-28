@@ -37,12 +37,13 @@ public class FormatterPreferenceInitializer extends AbstractPreferenceInitialize
     public void initializeDefaultPreferences() {
         IPreferenceStore store = GroovyPlugin.getDefault().getPreferenceStore();
 
-        store.setDefault(PreferenceConstants.GROOVY_FORMATTER_MULTILINE_INDENTATION, 2);
+        store.setDefault(PreferenceConstants.GROOVY_FORMATTER_MULTILINE_INDENTATION, PreferenceConstants.DEFAULT_INDENT_MULTILINE);
 
-        store.setDefault(PreferenceConstants.GROOVY_FORMATTER_BRACES_START, "same");
-        store.setDefault(PreferenceConstants.GROOVY_FORMATTER_BRACES_END, "next");
+        store.setDefault(PreferenceConstants.GROOVY_FORMATTER_BRACES_START, PreferenceConstants.SAME);
+        store.setDefault(PreferenceConstants.GROOVY_FORMATTER_BRACES_END, PreferenceConstants.NEXT);
 
-        store.setDefault(PreferenceConstants.GROOVY_FORMATTER_MAX_LINELENGTH, 80);
+        store.setDefault(PreferenceConstants.GROOVY_FORMATTER_MAX_LINELENGTH, PreferenceConstants.DEFAULT_MAX_LINE_LEN);
+        store.setDefault(PreferenceConstants.GROOVY_FORMATTER_LONG_LIST_LENGTH, PreferenceConstants.DEFAULT_LONG_LIST_LENGTH);
 
         store.setDefault(PreferenceConstants.GROOVY_FORMATTER_REMOVE_UNNECESSARY_SEMICOLONS, false);
     }

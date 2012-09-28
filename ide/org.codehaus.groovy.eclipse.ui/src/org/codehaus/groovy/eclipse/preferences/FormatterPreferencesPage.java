@@ -43,13 +43,13 @@ public class FormatterPreferencesPage extends FieldEditorOverlayPage implements 
         addField(new RadioGroupFieldEditor(PreferenceConstants.GROOVY_FORMATTER_BRACES_START,
                 "Position of the opening braces {: ",
                 2,
-                new String[][] { { "On the same line: ", "same" }, { "On the next line: ", "next" } },
+                new String[][] { { "On the same line: ", PreferenceConstants.SAME }, { "On the next line: ", PreferenceConstants.NEXT } },
                 getFieldEditorParent()));
 
         addField(new RadioGroupFieldEditor(PreferenceConstants.GROOVY_FORMATTER_BRACES_END,
                 "Position of the closing braces }: ",
                 2,
-                new String[][] { { "On the same line: ", "same" }, { "On the next line: ", "next" } },
+                new String[][] { { "On the same line: ", PreferenceConstants.SAME }, { "On the next line: ", PreferenceConstants.NEXT } },
                 getFieldEditorParent()));
 
         IntegerFieldEditor multiInd = new IntegerFieldEditor(PreferenceConstants.GROOVY_FORMATTER_MULTILINE_INDENTATION,
@@ -58,6 +58,15 @@ public class FormatterPreferencesPage extends FieldEditorOverlayPage implements 
                 2);
         multiInd.setValidRange(0, 10);
         addField(multiInd);
+
+        IntegerFieldEditor listLenInt = new IntegerFieldEditor(PreferenceConstants.GROOVY_FORMATTER_LONG_LIST_LENGTH,
+                "Length after which list are 'long' (long lists are wrapped): ",
+                getFieldEditorParent(),
+                PreferenceConstants.DEFAULT_LONG_LIST_LENGTH);
+        listLenInt.setValidRange(0, 200);
+        addField(listLenInt);
+
+
 
         addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_FORMATTER_REMOVE_UNNECESSARY_SEMICOLONS,
                 "Remove unnecessary semicolons", getFieldEditorParent()));

@@ -55,8 +55,9 @@ public class FormatterTestCase extends BaseTestCase {
             try {
                 pref = TestPrefInitializer.initializePreferences(properties);
                 String indOnly = properties.get("indentendOnly");
-                if (indOnly != null && indOnly.equals("true"))
+                if (indOnly != null && indOnly.equals("true")) {
                     indentendOnly = true;
+                }
 
             } catch (Exception e) {
                 e.printStackTrace();

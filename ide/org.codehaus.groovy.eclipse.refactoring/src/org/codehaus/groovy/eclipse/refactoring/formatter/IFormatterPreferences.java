@@ -30,4 +30,6 @@ public interface IFormatterPreferences {
     boolean isSmartPaste();
     boolean isIndentEmptyLines();
     boolean isRemoveUnnecessarySemicolons();
+
+    int getLongListLength();
 }

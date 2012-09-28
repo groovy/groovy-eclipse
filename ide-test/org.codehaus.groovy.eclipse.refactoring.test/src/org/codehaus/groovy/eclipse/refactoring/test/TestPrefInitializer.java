@@ -35,8 +35,9 @@ public class TestPrefInitializer {
         IPreferenceStore pref = new PreferenceStore();
 
         String indentation = properties.get("indentation");
-        if (indentation != null)
+        if (indentation != null) {
             pref.setValue(PreferenceConstants.GROOVY_FORMATTER_INDENTATION, indentation);
+        }
 
         String tabsize = properties.get("tabsize");
         // Older tests will use tabsize assuming its the same as indentsize, so
@@ -49,26 +50,41 @@ public class TestPrefInitializer {
         String indentsize = properties.get("indentsize");
         if (indentsize != null) {
             // GRECLIPSE-1137  This is strange, but it looks like the JDT preferences are switched for spaces mode
-            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_TAB_SIZE, Integer.parseInt(indentsize));
-//            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE, Integer.parseInt(indentsize));
+            if ("space".equals(indentation)) {
+                pref.setValue(PreferenceConstants.GROOVY_FORMATTER_TAB_SIZE,
+                        Integer.parseInt(indentsize));
+            } else {
+                pref.setValue(
+                        PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE,
+                        Integer.parseInt(indentsize));
+            }
         }
 
         String multiInd = properties.get("multilineIndentation");
-        if (multiInd != null)
+        if (multiInd != null) {
             pref.setValue(PreferenceConstants.GROOVY_FORMATTER_MULTILINE_INDENTATION, Integer.parseInt(multiInd));
-
+        }
+        
         String bracesStart = properties.get("bracesStart");
-        if (bracesStart != null)
+        if (bracesStart != null) {
             pref.setValue(PreferenceConstants.GROOVY_FORMATTER_BRACES_START, bracesStart);
+        }
 
         String bracesEnd = properties.get("bracesEnd");
-        if (bracesEnd != null)
+        if (bracesEnd != null) {
             pref.setValue(PreferenceConstants.GROOVY_FORMATTER_BRACES_END, bracesEnd);
+        }
 
         String maxLineLength = properties.get("maxLineLegth");
-        if (maxLineLength != null)
+        if (maxLineLength != null) {
             pref.setValue(PreferenceConstants.GROOVY_FORMATTER_MAX_LINELENGTH, Integer.parseInt(maxLineLength));
+        }
 
+        String longListLength = properties.get("longListLength");
+        if (longListLength != null) {
+            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_LONG_LIST_LENGTH, Integer.parseInt(longListLength));
+        }
+        
         String indentEmptyLines = properties.get("indentEmptyLines");
         if (indentEmptyLines != null) {
             pref.setValue(DefaultCodeFormatterConstants.FORMATTER_INDENT_EMPTY_LINES, indentEmptyLines);

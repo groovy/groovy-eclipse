@@ -85,21 +85,21 @@ public class TestFormatterPreferences extends EclipseTestCase {
         assertTrue("Using the wrong preferences store?", groovyPrefs.contains(BRACES_START));
         assertTrue("Using the wrong preferences store?", groovyPrefs.contains(BRACES_END));
 
-        groovyPrefs.setValue(BRACES_START, "next");
+        groovyPrefs.setValue(BRACES_START, PreferenceConstants.NEXT);
         FormatterPreferences formatPrefs = new FormatterPreferences(gunit);
-        assertTrue(formatPrefs.getBracesStart() == FormatterPreferences.NEXT_LINE);
+        assertTrue(formatPrefs.getBracesStart() == PreferenceConstants.NEXT_LINE);
 
-        groovyPrefs.setValue(BRACES_START, "same");
+        groovyPrefs.setValue(BRACES_START, PreferenceConstants.SAME);
         formatPrefs = new FormatterPreferences(gunit);
-        assertTrue(formatPrefs.getBracesStart() == FormatterPreferences.SAME_LINE);
+        assertTrue(formatPrefs.getBracesStart() == PreferenceConstants.SAME_LINE);
 
-        groovyPrefs.setValue(BRACES_END, "next");
+        groovyPrefs.setValue(BRACES_END, PreferenceConstants.NEXT);
         formatPrefs = new FormatterPreferences(gunit);
-        assertTrue(formatPrefs.getBracesEnd() == FormatterPreferences.NEXT_LINE);
+        assertTrue(formatPrefs.getBracesEnd() == PreferenceConstants.NEXT_LINE);
 
-        groovyPrefs.setValue(BRACES_END, "same");
+        groovyPrefs.setValue(BRACES_END, PreferenceConstants.SAME);
         formatPrefs = new FormatterPreferences(gunit);
-        assertTrue(formatPrefs.getBracesEnd() == FormatterPreferences.SAME_LINE);
+        assertTrue(formatPrefs.getBracesEnd() == PreferenceConstants.SAME_LINE);
     }
 
     /**

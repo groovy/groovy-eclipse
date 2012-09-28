@@ -18,6 +18,20 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
+import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_BRACES_END;
+import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_BRACES_START;
+import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_INDENT_EMPTY_LINES;
+import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_INDENT_MULTILINE;
+import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_INDENT_SIZE;
+import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_LONG_LIST_LENGTH;
+import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_MAX_LINE_LEN;
+import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_REMOVE_UNNECESSARY_SEMICOLONS;
+import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_SMART_PASTE;
+import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_TAB_SIZE;
+import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_USE_TABS;
+import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.NEXT_LINE;
+import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.SAME_LINE;
+
 import org.codehaus.groovy.eclipse.refactoring.PreferenceConstants;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
@@ -43,23 +57,13 @@ import org.eclipse.jface.preference.PreferenceStore;
  */
 public class FormatterPreferencesOnStore implements IFormatterPreferences {
 
-    public static final int SAME_LINE = 0;
-    public static final int NEXT_LINE = 1;
+
 
     ///////////////////////////////////////////////////////////////////////
     //// Default values used for preferences if there are problems getting
     //// proper values from a preferences store.
 
-    private static final int DEFAULT_MAX_LINE_LEN = 80;
-    private static final int DEFAULT_BRACES_START = SAME_LINE;
-    private static final int DEFAULT_BRACES_END = NEXT_LINE;
-    private static final boolean DEFAULT_USE_TABS = true;
-    private static final int DEFAULT_TAB_SIZE = 4;
-    private static final int DEFAULT_INDENT_SIZE = 4;
-    private static final int DEFAULT_INDENT_MULTILINE = 2;
-    private static final boolean DEFAULT_SMART_PASTE = true;
-    private static final boolean DEFAULT_INDENT_EMPTY_LINES = false;
-    private static final boolean DEFAULT_REMOVE_UNNECESSARY_SEMICOLONS = false;
+
 
     // //// preferences cached in fields below //////////
 
@@ -73,6 +77,7 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
     private boolean smartPaste;
     private boolean indentEmptyLines;
     private boolean removeUnnecessarySemicolons;
+    private int longListLength;
 
 	////////////////////////////////////////////////////
 
@@ -102,7 +107,7 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
 
         bracesStart = DEFAULT_BRACES_START;
         String pBracesStart = preferences.getString(PreferenceConstants.GROOVY_FORMATTER_BRACES_START);
-        if (pBracesStart != null && pBracesStart.equals("next"))
+        if (pBracesStart != null && pBracesStart.equals(PreferenceConstants.NEXT))
             bracesStart = NEXT_LINE;
 
         bracesEnd = DEFAULT_BRACES_END;
@@ -160,6 +165,11 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
         if (pRemoveUnnecessarySemicolons != null) {
             removeUnnecessarySemicolons = pRemoveUnnecessarySemicolons.equals("true");
         }
+        longListLength = DEFAULT_LONG_LIST_LENGTH;
+        int pLongListLength = preferences.getInt(PreferenceConstants.GROOVY_FORMATTER_LONG_LIST_LENGTH);
+        if (pLongListLength > 0) {
+            longListLength = pLongListLength;
+        }
     }
 
     public int getIndentationMultiline() {
@@ -200,5 +210,9 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
 
     public boolean isRemoveUnnecessarySemicolons() {
         return removeUnnecessarySemicolons;
+    }
+
+    public int getLongListLength() {
+        return longListLength;
     }
 }
