@@ -12,11 +12,11 @@
 
 <!--
 	To use this scrupt:
-	  1) Make sure that you have an eclipse 3.7 installation available.
-	  2) Check out Groovy-Eclipse from SVN and start up a workspace with all of these projects
+	  1) Make sure that you have an eclipse 4.2 installation available.
+	  2) Clone Groovy-Eclipse from git and start up a workspace with all of these projects
 	  3) Update build.properties to point to the appropriate locations
-	  4) Comment/uncomment do-17-build or do-18-build (exactly one of these must be uncommented at once)
-	  5) Update version1.7 or version1.8 to the correct, new version number
+	  4) Comment/uncomment do-17-build, do-18-build, or  do-20-build (exactly one of these must be uncommented at once)
+	  5) Update version1.7, version1.8, or version20 to the correct, new version number
 	  6) run `ant extract-create-install` to build the groovy-eclipse-batch artifact and install it locally
 	  7) OR run `ant extract-create-publish` to publish to codehaus and mirror it on maven central
 	  
@@ -40,7 +40,7 @@
           target: extract-create
           Do all work except install and deployment to repo
        ================================= -->
-	<target name="extract-create" depends="-init,-extract,-create.jar,-copy-pom"/>
+	<target name="extract-create" depends="-init,-extract,-create.jar,-copy-pom,-mavenInit"/>
 
 	
 	<!--  ================================= 
@@ -57,7 +57,7 @@
           target: extract-create-install
          installs into the local repo                     
          =================================  -->
-	<target name="extract-create-install" depends="-init,-mavenInit,extract-create">
+	<target name="extract-create-install" depends="-init,extract-create">
 		<mavenInstall version="${version}" prefix="${jar.prefix}"/>
 	</target>
 
@@ -84,7 +84,7 @@
 		</copy>
 
 		<!-- now unzip the jdt compiler adapter jar.  It is a jar within a jar -->
-		<unzip dest="${extract.loc}" src="${workspace.loc}/org.eclipse.jdt.core/jdtCompilerAdapter.jar" />
+		<unzip dest="${extract.loc}" src="${git.repo.loc}/jdt-patch/e42/org.eclipse.jdt.core/jdtCompilerAdapter.jar" />
 
 	</target>
 	
@@ -101,6 +101,7 @@
 			<fileset dir="${extract.loc}">
 				<include name="**/*.class"/>
 				<include name="**/*.properties"/>
+				<include name="**/*.props"/>
 				<include name="**/*.rsc"/>
 				<include name="**/dgminfo"/>
 				<include name="**/*.profile"/>
@@ -132,7 +133,7 @@
 			<include name="org.eclipse.jdt.compiler.apt_*.jar" />
 		</fileset>
 
-		<fileset dir="${workspace.loc}" id="orig.groovy.jars">
+		<fileset dir="${git.repo.loc}/base" id="orig.groovy.jars">
 
 			<!-- includes all the groovy modules already inside greclipse, and the groovy sources -->
 			<!-- FIXADE Do we need to include all modules or just the core?  -->
@@ -149,20 +150,20 @@
 		</fileset>
 
 
-		<!-- Ensure that this comes later because the groovy-eclipse.jar must overwrite the groovy jar -->
-		<fileset dir="${workspace.loc}/org.eclipse.jdt.groovy.core/bin" id="jdt.groovy.core.class.files">
+		<fileset dir="${git.repo.loc}/base/org.eclipse.jdt.groovy.core/bin" id="jdt.groovy.core.class.files">
 			<include name="**/*.*" />
 		</fileset>
-		<fileset dir="${workspace.loc}/org.eclipse.jdt.core/bin" id="jdt.core.class.files">
+		<fileset dir="${git.repo.loc}/jdt-patch/e42/org.eclipse.jdt.core/bin" id="jdt.core.class.files">
 			<include name="**/*.*" />
 		</fileset>
-		<fileset dir="${workspace.loc}/${groovy.folder}/bin" id="groovy.core.class.files">
+		<!-- Ensure that this comes after the core groocy compiler files because the groovy-eclipse.jar must overwrite the groovy jar -->
+		<fileset dir="${git.repo.loc}/base/${groovy.folder}/bin" id="groovy.core.class.files">
 			<include name="**/*.*" />
 		</fileset>
-		<fileset dir="${workspace.loc}/${groovy.folder}/bin-trace" id="groovy.trace.class.files">
+		<fileset dir="${git.repo.loc}/base/${groovy.folder}/bin-trace" id="groovy.trace.class.files">
 			<include name="**/*.*" />
 		</fileset>
-		<fileset dir="${workspace.loc}/org.codehaus.groovy.eclipse.ant/bin" id="ant.groovy.class.files">
+		<fileset dir="${git.repo.loc}/ide/org.codehaus.groovy.eclipse.ant/bin" id="ant.groovy.class.files">
 			<include name="**/*.*" />
 		</fileset>
 	</target>

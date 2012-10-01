@@ -38,9 +38,9 @@
 		<url>http://jira.codehaus.org/browse/GRECLIPSE</url>
 	</issueManagement>
 	<scm>
-		<connection>scm:svn:http://svn.codehaus.org/groovy/eclipse</connection>
-		<developerConnection>scm:svn:https://svn.codehaus.org/groovy/eclipse</developerConnection>
-		<url>http://svn.codehaus.org/groovy/eclipse</url>
+		<connection>git://github.com/groovy/groovy-eclipse.git</connection>
+		<developerConnection>git@github.com:groovy/groovy-eclipse.git</developerConnection>
+		<url>https://github.com/groovy/groovy-eclipse</url>
 	</scm>
 	<organization>
 		<name>SpringSource, a division of VMWare</name>
