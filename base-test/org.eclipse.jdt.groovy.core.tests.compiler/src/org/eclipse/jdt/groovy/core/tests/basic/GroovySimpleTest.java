@@ -9297,6 +9297,54 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		null);
 	}
 	
+	// See
+	// https://jira.codehaus.org/browse/GRECLIPSE-1503
+	// https://jira.codehaus.org/browse/GROOVY-5736
+	   public void testTransforms_AtLog() throws IOException {
+	        runConformTest(new String[] {
+	            "examples/local/Log4jExample.groovy",
+	            "package examples.local\n" +
+	            "import groovy.util.logging.*\n" +
+	            "@Log4j\n" +
+	            "class Log4jExample {\n" +
+	            "  def meth() {\n" +
+	            "    logger.info('yay!')\n" +
+	            "  }\n" +
+	            "}",
+
+	            "examples/local/Slf4JExample.groovy",
+	            "package examples.local\n" +
+	                    "import groovy.util.logging.*\n" +
+	                    "@Slf4j\n" +
+	                    "class Slf4jExample {\n" +
+	                    "  def meth() {\n" +
+	                    "    logger.info('yay!')\n" +
+	                    "  }\n" +
+	                    "}",
+	                    
+                "examples/local/LoggingExample.groovy",
+                "package examples.local\n" +
+                        "import groovy.util.logging.*\n" +
+                        "@Log\n" +
+                        "class LoggingExample {\n" +
+                        "  def meth() {\n" +
+                        "    logger.info('yay!')\n" +
+                        "  }\n" +
+                        "}",
+                        
+                "examples/local/CommonsExample.groovy",
+                "package examples.local\n" +
+                        "import groovy.util.logging.*\n" +
+                        "@Commons\n" +
+                        "class CommonsExample {\n" +
+                        "  def meth() {\n" +
+                        "    logger.info('yay!')\n" +
+                        "  }\n" +
+                        "}",
+                        
+	        });
+	    }
+
 	
 
 	// Testcode based on article: http://www.infoq.com/articles/groovy-1.5-new
