@@ -2,5 +2,5 @@ target
 bin
 bin-trace
 antbin
-ide-test/org.codehaus.groovy.eclipse.refactoring.test/.buildpath
-ide-test/org.codehaus.groovy.eclipse.refactoring.test/.settings/org.ebayopensource.vjet.eclipse.core.prefs
+.buildpath
+.settings/org.ebayopensource.vjet.eclipse.core.prefs
