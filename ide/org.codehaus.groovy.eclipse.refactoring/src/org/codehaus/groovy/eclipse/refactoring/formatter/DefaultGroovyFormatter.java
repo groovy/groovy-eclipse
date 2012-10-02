@@ -27,6 +27,7 @@ import org.codehaus.greclipse.GroovyTokenTypeBridge;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
@@ -174,14 +175,11 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
                 System.out.println("<<<NODE");
             }
             if (isMultilineNodeType(node)) {
-                boolean closureTest = false;
-                IncludesClosureOrListPredicate cltest = new IncludesClosureOrListPredicate(
-                        closureTest, t.getLine());
+                IncludesClosureOrListPredicate cltest = new IncludesClosureOrListPredicate(false, t.getLine());
                 node.visit(cltest);
                 if (!cltest.getContainer()) {
                     String text = ASTTools.getTextofNode(node, formattedDocument);
-                    Matcher m = Pattern.compile(".*(\n|\r\n|\r).*",
-                            Pattern.DOTALL).matcher(trimEnd(text));
+                    Matcher m = Pattern.compile(".*(\n|\r\n|\r).*", Pattern.DOTALL).matcher(trimEnd(text));
                     return m.matches();
                 }
             }
@@ -268,6 +266,26 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
         }
     }
 
+    /**
+     * Like {@link #findCorrespondingClosure(Token)}, but only returns
+     * {@link ClosureExpression}s
+     *
+     * @param t
+     * @return
+     */
+    public ClosureExpression findCorrespondingClosure(Token t) {
+        ASTScanner scanner = new ASTScanner(rootNode, new SourceCodePredicate(t.getLine(), t.getColumn()), formattedDocument);
+        scanner.startASTscan();
+        ClosureExpression found = null;
+        if (scanner.hasMatches()) {
+            for (Entry<ASTNode, ASTNodeInfo> e : scanner.getMatchedNodes().entrySet()) {
+                if (e.getKey() instanceof ClosureExpression) {
+                    found = (ClosureExpression) e.getKey();
+                }
+            }
+        }
+        return found;
+    }
     /**
      * Return a token after many () if there is no opening {
      *

@@ -20,6 +20,7 @@ package org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates
 
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTVisitorDecorator;
 
 public class IncludesClosureOrListPredicate extends ASTVisitorDecorator<Boolean> {
@@ -39,6 +40,13 @@ public class IncludesClosureOrListPredicate extends ASTVisitorDecorator<Boolean>
 
     @Override
     public void visitListExpression(ListExpression expression) {
+        if (expression.getLineNumber() == line) {
+            container = true;
+        }
+    }
+
+    @Override
+    public void visitMapExpression(MapExpression expression) {
         if (expression.getLineNumber() == line) {
             container = true;
         }

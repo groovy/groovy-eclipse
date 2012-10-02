@@ -1,0 +1,12 @@
+###prop
+setPreferences=true
+###src
+a = { 0 } as List
+
+a = {
+	0 } as List
+###exp
+a = { 0 } as List
+
+a = { 0 } as List
+###end
