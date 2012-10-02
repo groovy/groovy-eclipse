@@ -1,0 +1,13 @@
+###prop
+setPreferences=true
+###src
+[
+			a:1,
+			b:2
+		]
+###exp
+[
+	a:1,
+	b:2
+]
+###end

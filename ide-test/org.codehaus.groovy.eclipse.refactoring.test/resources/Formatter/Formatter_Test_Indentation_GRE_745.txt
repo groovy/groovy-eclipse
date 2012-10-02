@@ -19,8 +19,8 @@ public class SwingIt
     def swingit() {
         swing.actions() {
             echoAction= swing.action(name: 'Echo back',
-                    enabled: bind(source: model, sourceProperty: 'loggedin'),
-                    closure: { controller.setEchoBack(it.source.selected) })
+            enabled: bind(source: model, sourceProperty: 'loggedin'),
+            closure: { controller.setEchoBack(it.source.selected) })
         }
     }
 ###end

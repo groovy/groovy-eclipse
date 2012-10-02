@@ -196,10 +196,13 @@ public class GroovyBeautifier {
 
             int posClStart = formatter.getPosOfToken(GroovyTokenTypeBridge.LCURLY, clExp.getLineNumber(), clExp.getColumnNumber(),
                     "{");
-            if (posClStart == -1) // Skip... invalid (likely the closure is
-                                  // inside a GString so can't find tokens in
-                                  // there.
+            if (posClStart == -1) {
+                // Skip... invalid (likely the closure is
+                // inside a GString so can't find tokens in
+                // there.
                 continue;
+            }
+
             int posCLEnd = formatter.getPosOfToken(GroovyTokenTypeBridge.RCURLY, clExp.getLastLineNumber(),
                     clExp.getLastColumnNumber() - 1, "}");
 
@@ -304,14 +307,16 @@ public class GroovyBeautifier {
     private void correctBraces(MultiTextEdit edits) throws BadLocationException {
 		CorrectLineWrap lCurlyCorrector = null;
 		CorrectLineWrap rCurlyCorrector = null;
-        if (preferences.getBracesStart() == PreferenceConstants.SAME_LINE)
-			lCurlyCorrector = new SameLine(this);
-        if (preferences.getBracesStart() == PreferenceConstants.NEXT_LINE)
-			lCurlyCorrector = new NextLine(this);
-        if (preferences.getBracesEnd() == PreferenceConstants.SAME_LINE)
-			rCurlyCorrector = new SameLine(this);
-        if (preferences.getBracesEnd() == PreferenceConstants.NEXT_LINE)
-			rCurlyCorrector = new NextLine(this);
+        if (preferences.getBracesStart() == PreferenceConstants.SAME_LINE) {
+            lCurlyCorrector = new SameLine(this);
+        } else if (preferences.getBracesStart() == PreferenceConstants.NEXT_LINE) {
+            lCurlyCorrector = new NextLine(this);
+        }
+        if (preferences.getBracesEnd() == PreferenceConstants.SAME_LINE) {
+            rCurlyCorrector = new SameLine(this);
+        } else if (preferences.getBracesEnd() == PreferenceConstants.NEXT_LINE) {
+            rCurlyCorrector = new NextLine(this);
+        }
 
 		assert lCurlyCorrector != null;
 		assert rCurlyCorrector != null;
@@ -326,9 +331,17 @@ public class GroovyBeautifier {
 
             int ttype = formatter.getTokens().get(i).getType();
             if (ttype == GroovyTokenTypeBridge.LCURLY) {
-                    KlenkDocumentScanner tokens = formatter.getTokens();
-					if(skipNextNLS){skipNextNLS = false; break;}
-					addEdit(lCurlyCorrector.correctLineWrap(i,token),edits);
+                KlenkDocumentScanner tokens = formatter.getTokens();
+                if (skipNextNLS) {
+                    skipNextNLS = false;
+                    break;
+                }
+
+                // single line closures should not be reformatted like this
+                ClosureExpression maybeClosure = formatter.findCorrespondingClosure(token);
+                if (maybeClosure ==  null
+                        || maybeClosure.getLineNumber() != maybeClosure.getLastLineNumber()) {
+                    addEdit(lCurlyCorrector.correctLineWrap(i, token), edits);
 
                     // Ensure a newline exists after the "{" token...
                     ASTNode node = formatter.findCorrespondingNode(token);
@@ -350,6 +363,8 @@ public class GroovyBeautifier {
                             }
                         }
                     }
+                }
+
             } else if (ttype == GroovyTokenTypeBridge.RCURLY) {
                 if (skipNextNLS) {
                     skipNextNLS = false;
