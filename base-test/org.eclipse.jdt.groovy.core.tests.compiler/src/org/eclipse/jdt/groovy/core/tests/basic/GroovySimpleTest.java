@@ -8774,7 +8774,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n"
 		},"");
 	}
-	/*
+
 	public void testCompileStatic_1505() {
 		if (GroovyUtils.GROOVY_LEVEL<20) {
 			return;
@@ -8795,7 +8795,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n"
 		},"abc");
 	}
-	
+	/*
 	public void testCompileStatic_1506() {
 		if (GroovyUtils.GROOVY_LEVEL<20) {
 			return;
