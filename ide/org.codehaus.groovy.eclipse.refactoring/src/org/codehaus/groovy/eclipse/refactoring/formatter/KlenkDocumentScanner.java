@@ -155,10 +155,11 @@ public class KlenkDocumentScanner extends GroovyDocumentScanner {
     @Deprecated()
     public Token get(int i) {
         ensureScanned(Integer.MAX_VALUE);
-        if (i < tokens.size())
+        if (i < tokens.size()) {
             return tokens.get(i);
-        else
+        } else {
             return null;
+        }
     }
 
     /**

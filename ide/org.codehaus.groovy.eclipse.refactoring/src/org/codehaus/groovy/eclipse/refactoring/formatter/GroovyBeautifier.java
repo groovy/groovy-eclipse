@@ -29,6 +29,7 @@ import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.PreferenceConstants;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTScanner;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.ClosuresInCodePredicate;
@@ -100,6 +101,18 @@ public class GroovyBeautifier {
             int nodeLen = nodeEnd - nodeStart;
             boolean isLong = nodeLen > preferences.getLongListLength();
             List<Expression> exps = node.getExpressions();
+
+            // GRECLIPSE-1427 if the next token is 'as', then don't add a
+            // newline or remove whitespace
+            Token maybeAs;
+            try {
+                maybeAs = tokens.getNextToken(lastToken);
+            } catch (BadLocationException e) {
+                GroovyCore.logException("Trouble getting next token", e);
+                maybeAs = null;
+            }
+            boolean nextTokenAs = maybeAs != null && maybeAs.getType() == GroovyTokenTypeBridge.LITERAL_as;
+
             if (isLong || (hasClosureElement(node) && node.getExpressions().size() > 1)) {
                 //Split the list
                 for (int i = 0; i < exps.size(); i++) {
@@ -111,10 +124,12 @@ public class GroovyBeautifier {
                         }
                         replaceWhiteSpaceAfter(edits, before, formatter.getNewLine());
                     } catch (BadLocationException e) {
-                        Util.log(e);
+                        GroovyCore.logException("Trouble formatting list", e);
                     }
                 }
-                replaceWhiteSpaceAfter(edits, lastToken, formatter.getNewLine());
+                if (!nextTokenAs) {
+                    replaceWhiteSpaceAfter(edits, lastToken, formatter.getNewLine());
+                }
             }
             else {
                 //Compact the list
@@ -130,8 +145,10 @@ public class GroovyBeautifier {
                         Util.log(e);
                     }
                 }
-                replaceWhiteSpaceAfter(edits, lastToken,
-                        lastToken.getType() == GroovyTokenTypeBridge.SL_COMMENT ? formatter.getNewLine() : "");
+                if (!nextTokenAs) {
+                    replaceWhiteSpaceAfter(edits, lastToken,
+                            lastToken.getType() == GroovyTokenTypeBridge.SL_COMMENT ? formatter.getNewLine() : "");
+                }
             }
         }
     }
@@ -234,7 +251,6 @@ public class GroovyBeautifier {
 
 	private void replaceNLSWithSpace(MultiTextEdit container, int startPos,
 			int endPos) throws BadLocationException {
-        ReplaceEdit edit = null;
         Token fromToken = null; // remember first NLS token in a string of NLS
                                 // tokens
         int p = startPos + 1;

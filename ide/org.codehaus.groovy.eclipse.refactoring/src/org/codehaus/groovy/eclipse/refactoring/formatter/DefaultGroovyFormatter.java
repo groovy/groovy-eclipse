@@ -115,7 +115,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
         rootNode = ASTTools.getASTNodeFromSource(formattedDocument.get());
         if (rootNode == null) {
             // caused by unparseable file
-            throw new Exception("Problem parsing Compilation unit.  Fix all syntax errors and try again.");
+            throw new Exception("Could not format.  Problem parsing Compilation unit.  Fix all syntax errors and try again.");
         }
     }
 
@@ -144,8 +144,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 //              formatLength += undo3.getLength();
 //          }
         } catch (Exception e) {
-            // swallow exception. Caused by unparseable code
-            e.printStackTrace();
+            GroovyCore.logWarning("Cannot format, probably due to compilation errors.  Please fix and try again.", e);
         }
 
         if (formattedDocument.get().equals(document.get())) {
@@ -201,10 +200,11 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
 
         while (len > 0) {
             String w = s.substring(len - 1, len);
-            if (w.matches("\\s"))
+            if (w.matches("\\s")) {
                 len--;
-            else
+            } else {
                 break;
+            }
         }
         return s.substring(0, len);
     }
@@ -212,28 +212,35 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
     /**
      * Tests if the ASTNode is a valid MultiNodeType an has multiple lines
      * Statements, ClassNodes, MethodNodes and Variable Expressions are ignored
+     *
      * @param node
      * @return
      */
     private boolean isMultilineNodeType(ASTNode node) {
         if (node != null && node.getLineNumber() < node.getLastLineNumber()) {
-            if (node instanceof ExpressionStatement)
+            if (node instanceof ExpressionStatement) {
                 return true;
-            if (node instanceof Statement)
+            } else if (node instanceof Statement) {
                 return false;
-            if (node instanceof VariableExpression)
+            } else if (node instanceof VariableExpression) {
                 return false;
-            if (node instanceof AnnotatedNode)
+            } else if (node instanceof AnnotatedNode) {
                 return false;
-
-            return true;
+            } else {
+                return true;
+            }
         }
         return false;
     }
 
     /**
      * Finding a AST Node corresponding to a Token ! Warning ! there can be
-     * found the wrong node if two nodes have the same line / col infos
+     * found the wrong node if two nodes have the same line / col infos.
+     *
+     * A node is considered corresponding if it has the same start line and col
+     * as the token.
+     * If multiple matches are made, then the match with the longest lenght is
+     * returned.
      *
      * @param t
      *            Token for which the AST Node should be found.
@@ -241,6 +248,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
      *         length
      */
     public ASTNode findCorrespondingNode(Token t) {
+
         ASTScanner scanner = new ASTScanner(rootNode,
                                             new SourceCodePredicate(t.getLine(), t.getColumn()),
                                             formattedDocument);
@@ -252,15 +260,18 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
                     found = e;
             }
         }
-        if (found != null)
+
+        if (found != null) {
             return found.getKey();
-        return null;
+        } else {
+            return null;
+        }
     }
 
     /**
      * Return a token after many () if there is no opening {
      *
-     * @param i
+     * @param index
      *            position of the current token
      * @return the token after the last closing )
      */

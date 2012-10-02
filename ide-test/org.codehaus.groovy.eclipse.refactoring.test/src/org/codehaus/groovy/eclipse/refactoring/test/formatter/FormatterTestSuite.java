@@ -31,6 +31,7 @@ public class FormatterTestSuite extends BaseTestSuite {
         TestSuite ts = new TestSuite("Formatter Suite");
         List<File> files = getFileList("/Formatter", "Formatter_Test_");
         for (File file : files) {
+//            if (file.getName().contains("GRE_745"))
             ts.addTest(new FormatterTestCase(file.getName(),file));
         }
         ts.addTestSuite(FindIndentsTests.class);

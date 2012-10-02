@@ -32,13 +32,15 @@ public class IncludesClosureOrListPredicate extends ASTVisitorDecorator<Boolean>
 
 	@Override
     public void visitClosureExpression(ClosureExpression expression) {
-		if(expression.getLineNumber() == line)
-			container = true;
+        if (expression.getLineNumber() == line) {
+            container = true;
+        }
 	}
 
     @Override
     public void visitListExpression(ListExpression expression) {
-        if (expression.getLineNumber() == line)
+        if (expression.getLineNumber() == line) {
             container = true;
+        }
     }
 }

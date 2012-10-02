@@ -1,0 +1,18 @@
+###prop
+setPreferences=true
+indentendOnly=false
+longListLength=1
+###src
+// GRECLIPSE-1427
+def test() {
+[1,2,3] as Object[]
+}
+###exp
+// GRECLIPSE-1427
+def test() {
+	[
+		1,
+		2,
+		3] as Object[]
+}
+###end

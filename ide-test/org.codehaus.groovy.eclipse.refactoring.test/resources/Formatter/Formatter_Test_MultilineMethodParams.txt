@@ -1,0 +1,102 @@
+###prop
+setPreferences=true
+indentendOnly=true
+###src
+class A {
+def method0(
+def arg1,
+def arg2
+) {
+// method body
+}
+def method1(
+def arg1,
+def arg2)
+{
+// method body
+}
+def method2(
+def arg1,
+def arg2) {
+// method body
+}
+def method3(def arg1,
+def arg2) {
+// method body
+}
+def method4(def arg1, def arg2) {
+// method body
+}
+def method5(
+def arg1, def arg2) {
+// method body
+}
+def method6(
+def arg1, def
+arg2) {
+// method body
+}
+def method7(
+def arg1, def
+arg2)
+{
+// method body
+}
+def method8(
+def arg1, def
+arg2
+)
+{
+// method body
+}
+}
+###exp
+class A {
+	def method0(
+			def arg1,
+			def arg2
+	) {
+		// method body
+	}
+	def method1(
+			def arg1,
+			def arg2)
+	{
+		// method body
+	}
+	def method2(
+			def arg1,
+			def arg2) {
+		// method body
+	}
+	def method3(def arg1,
+			def arg2) {
+		// method body
+	}
+	def method4(def arg1, def arg2) {
+		// method body
+	}
+	def method5(
+			def arg1, def arg2) {
+		// method body
+	}
+	def method6(
+			def arg1, def
+			arg2) {
+		// method body
+	}
+	def method7(
+			def arg1, def
+			arg2)
+	{
+		// method body
+	}
+	def method8(
+			def arg1, def
+			arg2
+			)
+	{
+		// method body
+	}
+}
+###end

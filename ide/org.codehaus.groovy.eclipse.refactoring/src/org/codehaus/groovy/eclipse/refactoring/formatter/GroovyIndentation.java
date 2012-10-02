@@ -24,6 +24,10 @@ import java.util.regex.Pattern;
 
 import org.codehaus.greclipse.GroovyTokenTypeBridge;
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CaseStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
@@ -32,6 +36,7 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.DeleteEdit;
+import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
@@ -79,8 +84,10 @@ public class GroovyIndentation {
 	public TextEdit getIndentationEdits() {
 		indentationEdits = new MultiTextEdit();
 
-		try {
+        // GRECLIPSE-1478
+        handleMultilineMethodParameters();
 
+		try {
 			if (formatter.isMultilineStatement(tokens.get(0))) {
 				setAdditionalIndentation(tokens.get(0),
 						pref.getIndentationMultiline(), false);
@@ -96,34 +103,31 @@ public class GroovyIndentation {
 
 
                 int ttype = token.getType();
-                if (ttype == GroovyTokenTypeBridge.LITERAL_if) {
-						setAdditionalIndentation(formatter
-								.getTokenAfterParenthesis(i));
-                } else if (ttype == GroovyTokenTypeBridge.LITERAL_while) {
-						setAdditionalIndentation(formatter
-								.getTokenAfterParenthesis(i));
-                } else if (ttype == GroovyTokenTypeBridge.LITERAL_for) {
-						setAdditionalIndentation(formatter
-								.getTokenAfterParenthesis(i));
+                // can't use a switch here since the values are not constants
+                if (ttype == GroovyTokenTypeBridge.LITERAL_if || ttype == GroovyTokenTypeBridge.LITERAL_while
+                        || ttype == GroovyTokenTypeBridge.LITERAL_for) {
+                    setAdditionalIndentation(formatter.getTokenAfterParenthesis(i));
                 } else if (ttype == GroovyTokenTypeBridge.LCURLY || ttype == GroovyTokenTypeBridge.LBRACK) {
-						indentation++;
+                    indentation++;
                 } else if (ttype == GroovyTokenTypeBridge.LITERAL_switch) {
-						indentendSwitchStatement(token);
+                    indentendSwitchStatement(token);
                 } else if (ttype == GroovyTokenTypeBridge.RCURLY || ttype == GroovyTokenTypeBridge.RBRACK) {
-						indentation--;
+                    indentation--;
                 } else if (ttype == GroovyTokenTypeBridge.LITERAL_else) {
-						int nextToken = formatter.getNextToken(i).getType();
-						// adding indentation when there is no opening and it is
-						// not an "else if" construct
-                        if (nextToken != GroovyTokenTypeBridge.LCURLY && nextToken != GroovyTokenTypeBridge.LITERAL_if)
-							setAdditionalIndentation(formatter.getNextToken(i));
-						;
+                    int nextToken = formatter.getNextToken(i).getType();
+                    // adding indentation when there is no opening and it is
+                    // not an "else if" construct
+                    if (nextToken != GroovyTokenTypeBridge.LCURLY && nextToken != GroovyTokenTypeBridge.LITERAL_if) {
+                        setAdditionalIndentation(formatter.getNextToken(i));
+                    }
                 } else if (ttype == GroovyTokenTypeBridge.EOF || ttype == GroovyTokenTypeBridge.NLS) {
                     int nextTokenType = formatter.getNextTokenIncludingNLS(i).getType();
-                    if (nextTokenType == GroovyTokenTypeBridge.RCURLY || nextTokenType == GroovyTokenTypeBridge.RBRACK)
+                    if (nextTokenType == GroovyTokenTypeBridge.RCURLY || nextTokenType == GroovyTokenTypeBridge.RBRACK) {
                         tempIndentation[token.getLine()]--;
+                    }
                     deleteWhiteSpaceBefore(token);
-                    if (token.getType() != GroovyTokenTypeBridge.EOF) {
+                    if (ttype != GroovyTokenTypeBridge.EOF) {
+                        Token nextMultiToken = formatter.getNextTokenIncludingNLS(i);
                         int offsetAfterNLS = offsetToken
                                 + formatter.getProgressDocument().getLineDelimiter(token.getLine() - 1).length();
                         if (!isEmptyLine(token.getLine()) || formatter.pref.isIndentEmptyLines()) {
@@ -132,8 +136,6 @@ public class GroovyIndentation {
                         }
                         lineInd.setLineIndentation(token.getLine() + 1, indentation + tempIndentation[token.getLine()]);
 
-				        // check if the next token is a multiline Statement
-                        Token nextMultiToken = formatter.getNextTokenIncludingNLS(i);
                         if (formatter.isMultilineStatement(nextMultiToken)) {
                             setAdditionalIndentation(nextMultiToken, pref.getIndentationMultiline(), false);
                             lineInd.setMultilineToken(token.getLine(), token);
@@ -142,14 +144,64 @@ public class GroovyIndentation {
                 } else if (ttype == GroovyTokenTypeBridge.ML_COMMENT) {
                     addEdit(new ReplaceEdit(offsetToken, (offsetNextToken - offsetToken), formatMultilineComment(formatter
                             .getProgressDocument().get(offsetToken, (offsetNextToken - offsetToken)), indentation)));
-				}
-			}
+                }
+            }
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+            GroovyCore.logException("Exception thrown while determining indentation", e);
 		}
 		return indentationEdits;
 	}
+
+    // GRECLIPSE-1478 add proper indentation for methods with multiline
+    // parameters
+    private void handleMultilineMethodParameters() {
+        // for each real method node, add indentation for lines that contain
+        // method parameters
+        // that are not on the same line as the method start.
+        ModuleNode rootNode = formatter.getProgressRootNode();
+        List<ClassNode> classes = rootNode.getClasses();
+        int indentationMultiline = pref.getIndentationMultiline();
+        for (ClassNode classNode : classes) {
+            List<MethodNode> methods = classNode.getMethods();
+            for (MethodNode method : methods) {
+                if (method.getEnd() > 1 && method.getParameters() != null && method.getParameters().length > 0) {
+                    Parameter[] ps = method.getParameters();
+                    Statement code = method.getCode();
+                    Parameter lastP = ps[ps.length - 1];
+                    int lineStart = method.getLineNumber();
+                    int lineEnd = code != null ? code.getLineNumber() : lastP.getLastLineNumber();
+                    if (lineStart != lineEnd) {
+                        // now determine if we need to also indent the last line
+                        // it might just be an lparen or an rcurly. In that
+                        // case, don't indent
+                        // if there is real text on it, do indent
+                        // can't compare AST nodes directly since the last
+                        // parameter will
+                        // include trailing newline if the last paren is on a
+                        // separate line
+                        // instead find the closing paren after the last param
+                        // and see if on same line
+                        int tokenIndex = tokens.findTokenFrom(lastP.getEnd());
+                        Token lastParamToken = tokens.get(tokenIndex - 1);
+                        Token openingBracket = null;
+                        while (++tokenIndex < tokens.size()) {
+                            openingBracket = tokens.get(tokenIndex);
+                            if (openingBracket.getType() == GroovyTokenTypeBridge.LCURLY) {
+                                break;
+                            }
+                        }
+                        boolean doLastLineIndent = openingBracket != null && lastParamToken.getLine() == openingBracket.getLine();
+                        for (int i = lineStart + 1; i < lineEnd; i++) {
+                            tempIndentation[i - 1] += indentationMultiline;
+                        }
+                        if (doLastLineIndent) {
+                            tempIndentation[lineEnd - 1] += indentationMultiline;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * @param Zero-based line number in the formattedDocument
@@ -230,6 +282,15 @@ public class GroovyIndentation {
 	}
 
     private void addEdit(TextEdit edit) {
+        if (edit instanceof DeleteEdit && edit.getLength() == 0) {
+            return;
+        }
+        if (edit instanceof ReplaceEdit && edit.getLength() == 0 && ((ReplaceEdit) edit).getText().isEmpty()) {
+            return;
+        }
+        if (edit instanceof InsertEdit && ((InsertEdit) edit).getText().isEmpty()) {
+            return;
+        }
 		if(edit != null && edit.getOffset() >= formatter.formatOffset &&
 				edit.getOffset() + edit.getLength() <= formatter.formatOffset + formatter.formatLength) {
             if (edit instanceof DeleteEdit) {
@@ -256,23 +317,23 @@ public class GroovyIndentation {
 
 	private void setAdditionalIndentation(Token t, int i,
 			boolean firstLineInlcuded) {
-		if (t != null) {
+        if (t != null) {
             if (t.getType() != GroovyTokenTypeBridge.LCURLY) {
-			ASTNode node = formatter.findCorrespondingNode(t);
-			if (node != null) {
-				int r = node.getLineNumber();
-				if (!firstLineInlcuded) {
-					r++;
-				}
-				for (; r <= node.getLastLineNumber(); r++) {
+                ASTNode node = formatter.findCorrespondingNode(t);
+                if (node != null) {
+                    int r = node.getLineNumber();
+                    if (!firstLineInlcuded) {
+                        r++;
+                    }
+                    for (; r <= node.getLastLineNumber(); r++) {
                         if (isLastClosureArg(r - 1, node))
                             break;
                         tempIndentation[r - 1] += i;
                         lineInd.setMultilineIndentation(r, true);
-				}
-			}
-			}
-		}
+                    }
+                }
+            }
+        }
 	}
 
     /**

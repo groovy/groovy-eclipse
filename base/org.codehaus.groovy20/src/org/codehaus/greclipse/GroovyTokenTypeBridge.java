@@ -57,4 +57,6 @@ public class GroovyTokenTypeBridge {
     public static int RBRACK            = GroovyTokenTypes.RBRACK;
     public static int ML_COMMENT        = GroovyTokenTypes.ML_COMMENT;
     public static int STRING_CTOR_END   = GroovyTokenTypes.STRING_CTOR_END;
+    public static int LITERAL_as          = GroovyTokenTypes.LITERAL_as;
+    
 }
