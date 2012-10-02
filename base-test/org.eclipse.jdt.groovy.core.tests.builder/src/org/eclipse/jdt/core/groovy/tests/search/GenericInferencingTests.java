@@ -145,7 +145,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
     }
     
     public void testMap3a() throws Exception {
-        String contents = "Map<String,Integer> x\nx.entrySet().iterator().next().value()";
+        String contents = "Map<String,Integer> x\nx.entrySet().iterator().next().value";
         String toFind = "entrySet";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -153,7 +153,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
     }
     
     public void testMap4() throws Exception {
-        String contents = "def x = new HashMap<String,Integer>()\nx.entrySet().iterator().next().key()";
+        String contents = "def x = new HashMap<String,Integer>()\nx.entrySet().iterator().next().key";
         String toFind = "key";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -161,7 +161,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
     }
     
     public void testMap5() throws Exception {
-        String contents = "def x = new HashMap<String,Integer>()\nx.entrySet().iterator().next().value()";
+        String contents = "def x = new HashMap<String,Integer>()\nx.entrySet().iterator().next().value";
         String toFind = "value";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -169,7 +169,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
     }
     
     public void testMap6() throws Exception {
-        String contents = "Map<String,Integer> x\nx.entrySet().iterator().next().value()";
+        String contents = "Map<String,Integer> x\nx.entrySet().iterator().next().value";
         String toFind = "value";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -206,7 +206,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
 
     
     public void testMapOfList() throws Exception {
-        String contents = "Map<String,List<Integer>> x\nx.entrySet().iterator().next().value()";
+        String contents = "Map<String,List<Integer>> x\nx.entrySet().iterator().next().value";
         String toFind = "value";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
@@ -214,7 +214,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
     }
     
     public void testMapOfList2() throws Exception {
-        String contents = "Map<String,List<Integer>> x\nx.entrySet().iterator().next().value().iterator().next()";
+        String contents = "Map<String,List<Integer>> x\nx.entrySet().iterator().next().value.iterator().next()";
         String toFind = "next";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
