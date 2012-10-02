@@ -8774,6 +8774,48 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n"
 		},"");
 	}
+	/*
+	public void testCompileStatic_1505() {
+		if (GroovyUtils.GROOVY_LEVEL<20) {
+			return;
+		}
+		runConformTest(new String[]{
+			"DynamicQuery.groovy",
+			"import groovy.transform.TypeChecked\n"+
+			"@TypeChecked\n"+
+			"class DynamicQuery {\n"+
+			"   public static void main(String[]argv) {\n"+
+			"     new DynamicQuery().foo(null);\n"+
+			"	}\n"+
+			"	private foo(Map sumpin){\n"+
+			"		Map foo\n"+
+			"		foo.collect{ Map.Entry it ->it.key}\n"+
+			"		print 'abc';\n"+
+			"	}\n"+
+			"}\n"
+		},"abc");
+	}
+	
+	public void testCompileStatic_1506() {
+		if (GroovyUtils.GROOVY_LEVEL<20) {
+			return;
+		}
+		runConformTest(new String[]{
+			"LoggerTest.groovy",
+			"import groovy.transform.TypeChecked\n"+
+			"import groovy.util.logging.*\n"+
+			"@Slf4j\n"+
+			"@TypeChecked\n"+
+			"	public class LoggerTest {\n"+
+			" 		public static void main(String... args) {\n"+
+			"			println \"println\"\n"+
+			"			LoggerTest.log.info(\"Logged\");\n"+
+			"			log.info(\"foo\")\n"+
+			"		}\n"+
+			"	}\n"
+		},"");
+	}
+	*/
 
 	// verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
 	public void testCompileStatic4() {
