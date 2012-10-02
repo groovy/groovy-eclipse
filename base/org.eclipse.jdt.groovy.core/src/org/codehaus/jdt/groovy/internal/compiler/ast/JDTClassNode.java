@@ -91,6 +91,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 	private int bits = 0;
 	private static final int ANNOTATIONS_INITIALIZED = 0x0001;
 	private static final int PROPERTIES_INITIALIZED = 0x0002;
+	private TypeDeclaration groovyDecl = null;
 
 	static final ClassNode unboundWildcard; // represents plain old '?'
 
@@ -248,7 +249,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 	}
 
 	private void initializeMembers() {
-		TypeDeclaration groovyDecl = null;
 		if (jdtBinding instanceof SourceTypeBinding) {
 			SourceTypeBinding sourceType = (SourceTypeBinding) jdtBinding;
 			if (sourceType.scope != null) {
@@ -532,25 +532,27 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		if ((bits & PROPERTIES_INITIALIZED) == 0) {
 			lazyClassInit();
 			// getX methods
-			Set<String> existing = new HashSet<String>();
-			for (MethodNode methodNode : getMethods()) {
-				if (isGetter(methodNode)) {
-					// STS-2628 be careful not to double-add properties if there is a getter and an isser variant
-					String propertyName = convertToPropertyName(methodNode.getName());
-					if (!existing.contains(propertyName)) {
-						existing.add(propertyName);
-						// Adding a real field for these accessors can trip up CompileStatic which
-						// will attempt to access it as a real field
-						super.addPropertyWithoutField(createPropertyNodeForMethodNode(methodNode, propertyName));
-						// super.addProperty(createPropertyNodeForMethodNode(methodNode, propertyName));
+			// make it behave like groovy - no property nodes unless it is groovy source
+			if (groovyDecl != null) {
+				Set<String> existing = new HashSet<String>();
+				for (MethodNode methodNode : getMethods()) {
+					if (isGetter(methodNode)) {
+						// STS-2628 be careful not to double-add properties if there is a getter and an isser variant
+						String propertyName = convertToPropertyName(methodNode.getName());
+						if (!existing.contains(propertyName)) {
+							existing.add(propertyName);
+							// Adding a real field for these accessors can trip up CompileStatic which
+							// will attempt to access it as a real field
+							super.addPropertyWithoutField(createPropertyNodeForMethodNode(methodNode, propertyName));
+							// super.addProperty(createPropertyNodeForMethodNode(methodNode, propertyName));
+						}
 					}
 				}
+				// fields - FIXASC nyi for fields
+				// for (FieldNode fieldNode : getFields()) {
+				// super.addProperty(createPropertyNodeFromFieldNode(fieldNode));
+				// }
 			}
-			// fields - FIXASC nyi for fields
-			// for (FieldNode fieldNode : getFields()) {
-			// super.addProperty(createPropertyNodeFromFieldNode(fieldNode));
-			// }
-
 			bits |= PROPERTIES_INITIALIZED;
 		}
 	}
