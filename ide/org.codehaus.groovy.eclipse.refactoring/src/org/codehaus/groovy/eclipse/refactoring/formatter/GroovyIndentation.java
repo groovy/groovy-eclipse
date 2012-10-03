@@ -152,8 +152,8 @@ public class GroovyIndentation {
 		return indentationEdits;
 	}
 
-    // GRECLIPSE-1478 add proper indentation for methods with multiline
-    // parameters
+    // GRECLIPSE-1478 and GRECLIPSE-1508 add proper indentation for methods with
+    // multiline parameters
     private void handleMultilineMethodParameters() {
         // for each real method node, add indentation for lines that contain
         // method parameters
@@ -168,7 +168,24 @@ public class GroovyIndentation {
                     Parameter[] ps = method.getParameters();
                     Statement code = method.getCode();
                     Parameter lastP = ps[ps.length - 1];
+
+                    // the line start is the line that contains the opening
+                    // paren of the parameters
+                    // This is not directly in the ast, must search
+                    int maybeMethodStart = (method.getAnnotations() != null && method.getAnnotations().size() > 0) ? method
+                            .getAnnotations().get(method.getAnnotations().size() - 1).getEnd() : method.getStart();
+
+                    List<Token> methodTokens = tokens.getTokens(maybeMethodStart, method.getParameters()[0].getStart());
+
                     int lineStart = method.getLineNumber();
+                    for (int i = methodTokens.size() - 1; i >= 0; i--) {
+                        Token token = methodTokens.get(i);
+                        if (token.getType() == GroovyTokenTypeBridge.LPAREN) {
+                            lineStart = token.getLine();
+                            break;
+                        }
+                    }
+
                     int lineEnd = code != null ? code.getLineNumber() : lastP.getLastLineNumber();
                     if (lineStart != lineEnd) {
                         // now determine if we need to also indent the last line

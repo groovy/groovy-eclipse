@@ -1,0 +1,52 @@
+###prop
+setPreferences=true
+indentendOnly=true
+###src
+@interface Blart {
+	String value1();
+	String value2();
+	String value3();
+}
+
+class SomeClass {
+@Blart(
+value1='',
+value2='',
+value3=''
+)
+def foo (
+s,j,
+k) {
+}
+
+@Deprecated
+def sumpin (
+a,
+b) {
+}
+}
+###exp
+@interface Blart {
+	String value1();
+	String value2();
+	String value3();
+}
+
+class SomeClass {
+	@Blart(
+	value1='',
+	value2='',
+	value3=''
+	)
+	def foo (
+			s,j,
+			k) {
+	}
+
+	@Deprecated
+	def sumpin (
+			a,
+			b) {
+	}
+}
+###end
