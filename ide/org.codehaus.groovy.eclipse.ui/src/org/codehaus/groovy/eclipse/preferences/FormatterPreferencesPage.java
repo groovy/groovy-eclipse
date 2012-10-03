@@ -64,6 +64,10 @@ public class FormatterPreferencesPage extends FieldEditorOverlayPage implements 
                 getFieldEditorParent(),
                 PreferenceConstants.DEFAULT_LONG_LIST_LENGTH);
         listLenInt.setValidRange(0, 200);
+        listLenInt.getLabelControl(getFieldEditorParent()).setToolTipText(
+                "This value corresponds to the number of characters inside of the [ ], " +
+                        "excluding leading/trailing whitespace.  All lists larger than this value " +
+                "will be wrapped.");
         addField(listLenInt);
 
 
