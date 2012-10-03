@@ -3,8 +3,4 @@ bin
 bin-trace
 antbin
 .buildpath
-.settings/org.ebayopensource.vjet.eclipse.core.prefs
-extras/groovy-eclipse-compiler/.settings/org.ebayopensource.vjet.eclipse.core.prefs
-ide-test/org.codehaus.groovy.eclipse.refactoring.test/.settings/org.ebayopensource.vjet.eclipse.core.prefs
-extras/groovy-eclipse-maven-tests/src/main/java/com/any/DynamicQuery.groovy
-extras/groovy-eclipse-maven-tests/src/test/java/com/any/DynamicQueryTest.groovy
+org.ebayopensource.vjet.eclipse.core.prefs
