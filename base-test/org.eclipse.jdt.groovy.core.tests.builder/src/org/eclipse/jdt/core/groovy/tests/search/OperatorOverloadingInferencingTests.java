@@ -101,7 +101,7 @@ public class OperatorOverloadingInferencingTests extends AbstractInferencingTest
         String contents = 
                 "class Foo { }\n" +
                 "class Bar {\n" +
-                "  Foo divide() { }\n" +
+                "  Foo div() { }\n" +
                 "}\n" +
                 "def xxx = new Bar() / nuthin\n" +
                 "xxx";

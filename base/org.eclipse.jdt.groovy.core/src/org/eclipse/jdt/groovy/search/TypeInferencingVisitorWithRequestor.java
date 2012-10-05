@@ -1061,7 +1061,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 				return "multiply";
 			case '/':
-				return "divide";
+				return "div";
 			case '%':
 				return "mod";
 			case '&':
