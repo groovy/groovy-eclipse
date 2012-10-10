@@ -278,9 +278,10 @@ public class DSLContributionGroup extends ContributionGroup {
         boolean isDeprecated = isDeprecated(args);
         boolean asCategory = getBoolean("asCategory", args);
         boolean useNamed = getBoolean("useNamed", args);
+        boolean noParens = getBoolean("noParens", args);
         List<String> except = (List<String>) args.get("except");
         ClassNode type = this.resolver.resolve(name);
-        internalDelegatesTo(type, useNamed, isStatic, asCategory, isDeprecated, except);
+        internalDelegatesTo(type, useNamed, isStatic, asCategory, isDeprecated, except, noParens);
     }
 
     void delegatesTo(String className) {
@@ -306,7 +307,7 @@ public class DSLContributionGroup extends ContributionGroup {
      * class reference.
      */
     void delegatesTo(AnnotatedNode expr) {
-        internalDelegatesTo(expr, false, false, false, false, null);
+        internalDelegatesTo(expr, false, false, false, false, null, false);
     }
 
     void delegatesToUseNamedArgs(String className) {
@@ -323,7 +324,7 @@ public class DSLContributionGroup extends ContributionGroup {
      * class reference.
      */
     void delegatesToUseNamedArgs(AnnotatedNode expr) {
-        internalDelegatesTo(expr, true, false, false, false, null);
+        internalDelegatesTo(expr, true, false, false, false, null, false);
     }
     
     void delegatesToCategory(String className) {
@@ -340,7 +341,7 @@ public class DSLContributionGroup extends ContributionGroup {
      * class reference.
      */
     void delegatesToCategory(AnnotatedNode expr) {
-        internalDelegatesTo(expr, false, false, true, false, null);
+        internalDelegatesTo(expr, false, false, true, false, null, false);
     }
 
     /**
@@ -362,7 +363,7 @@ public class DSLContributionGroup extends ContributionGroup {
         return sb.toString();
     }
 
-    private void internalDelegatesTo(AnnotatedNode expr, boolean useNamedArgs, boolean isStatic, boolean asCategory, boolean isDeprecated, List<String> exceptions) {
+    private void internalDelegatesTo(AnnotatedNode expr, boolean useNamedArgs, boolean isStatic, boolean asCategory, boolean isDeprecated, List<String> exceptions, boolean noParens) {
         if (staticScope && !isStatic && !currentType.getName().equals(VariableScope.CLASS_CLASS_NODE)) {
             return;
         }
@@ -394,9 +395,9 @@ public class DSLContributionGroup extends ContributionGroup {
                 if ((exceptions == null || !exceptions.contains(method.getName())) && !(method instanceof ConstructorNode) && ! method.getName().contains("$")) {
                     ClassNode resolvedReturnType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(method.getReturnType()));
                     if (asCategory) {
-                        delegateToCategoryMethod(useNamedArgs, isStatic, type, method, resolvedReturnType, isDeprecated, accessorContribs);
+                        delegateToCategoryMethod(useNamedArgs, isStatic, type, method, resolvedReturnType, isDeprecated, accessorContribs, noParens);
                     } else {
-                        delegateToNonCategoryMethod(useNamedArgs, isStatic, type, method, resolvedReturnType, isDeprecated, accessorContribs);
+                        delegateToNonCategoryMethod(useNamedArgs, isStatic, type, method, resolvedReturnType, isDeprecated, accessorContribs, noParens);
                     }
                 }
             }
@@ -404,13 +405,14 @@ public class DSLContributionGroup extends ContributionGroup {
         }
     }
 
+    // FIXADE TODO combine with #delegateToCategoryMethod
     private void delegateToNonCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method, ClassNode resolvedReturnType, boolean isDeprecated, 
-            List<IContributionElement> accessorContribs) {
+            List<IContributionElement> accessorContribs, boolean noParens) {
         String name = method.getName();
-        contributions.add(new MethodContributionElement(name, toParameterContribution(method
-                .getParameters()), getTypeName(resolvedReturnType),
-                getTypeName(type), (method.isStatic() || isStatic), provider,
-                null, useNamedArgs, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
+        
+        contributions.add(new MethodContributionElement(name, toParameterContribution(method.getParameters()), NO_PARAMS,
+                NO_PARAMS, getTypeName(resolvedReturnType), getTypeName(type), (method.isStatic() || isStatic), provider, null,
+                useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         
         // also add the associated property if applicable
         String prefix;
@@ -421,15 +423,15 @@ public class DSLContributionGroup extends ContributionGroup {
     }
 
     private void delegateToCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method, ClassNode resolvedReturnType, boolean isDeprecated, 
-            List<IContributionElement> accessorContribs) {
+            List<IContributionElement> accessorContribs, boolean noParens) {
         String name = method.getName();
         if (method.getParameters() != null && method.getParameters().length > 0) {
             ClassNode firstType = method.getParameters()[0].getType();
             if ((firstType.isInterface() && currentType.implementsInterface(firstType)) ||
                     currentType.isDerivedFrom(firstType)) {
-                contributions.add(new MethodContributionElement(name, toParameterContributionRemoveFirst(method
-                        .getParameters()), getTypeName(resolvedReturnType), getTypeName(type), isStatic, provider,
-                        null, useNamedArgs, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
+                contributions.add(new MethodContributionElement(name, toParameterContributionRemoveFirst(method.getParameters()),
+                        NO_PARAMS, NO_PARAMS, getTypeName(resolvedReturnType), getTypeName(type), isStatic, provider, null,
+                        useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
                 // also add the associated property if applicable
                 String prefix;
                 if ((prefix = isAccessor(method, name, true)) != null) {

@@ -55,6 +55,10 @@ public class DSLContentAssistTests extends CompletionTestCase {
             "contribute (currentType('Inner')) {\n" + 
             "  method name:'flart', noParens:true, type: 'Inner', params:[a:Integer, b:String]\n" + 
             "}";
+    private static final String NO_PARENS_FOR_DELEGATE =
+            "contribute (currentType('Inner')) {\n" + 
+            "  delegatesTo type: 'Other', noParens: true\n" + 
+            "}";
     private static final String SET_DELEGATE_ON_INT = "contribute(currentType(Integer) & enclosingCallName(\"foo\")) {\n" + 
     "    setDelegateType(String)\n" + 
     "}";
@@ -225,6 +229,40 @@ public class DSLContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "flart", 1);
         ICompletionProposal proposal = findFirstProposal(proposals, "flart", false);
         applyProposalAndCheck(doc, proposal, contents.replace(" fl", " flart 0, \"\" "));
+    }
+    
+    public void testDelegatesToNoParens1() throws Exception {
+        createDsls(NO_PARENS_FOR_DELEGATE);
+        String contents = 
+                "class Other {\n" +
+                "  def blart(a, b, c) { }\n" +
+                "  def flart(a) { }\n" +
+                "}\n" +
+                "class Inner { }\n" +
+                "def val = new Inner()\n" +
+                "val.bl";
+
+        Document doc = new Document(contents);
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "val.bl"));
+        ICompletionProposal proposal = findFirstProposal(proposals, "blart", false);
+        applyProposalAndCheck(doc, proposal, contents.replace("val.bl", "val.blart val, val, val "));
+    }
+    
+    public void testDelegatesToNoParens2() throws Exception {
+        createDsls(NO_PARENS_FOR_DELEGATE);
+        String contents = 
+                "class Other {\n" +
+                        "  def blart(a, b, c) { }\n" +
+                        "  def flart(a) { }\n" +
+                        "}\n" +
+                        "class Inner { }\n" +
+                        "def val = new Inner()\n" +
+                        "val.fl";
+        
+        Document doc = new Document(contents);
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "val.fl"));
+        ICompletionProposal proposal = findFirstProposal(proposals, "flart", false);
+        applyProposalAndCheck(doc, proposal, contents.replace("val.fl", "val.flart val "));
     }
     
     protected void addJarToProject(String jarName) throws JavaModelException, IOException {
