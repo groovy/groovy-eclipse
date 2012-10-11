@@ -70,18 +70,20 @@ public class GroovyClassScope extends ClassScope {
 	@Override
 	protected MethodBinding[] augmentMethodBindings(MethodBinding[] methodBindings) {
 		// Don't add these methods to annotations
-		if (this.referenceContext.binding != null
-				&& (this.referenceContext.binding.isAnnotationType() || this.referenceContext.binding.isInterface())) {
+		SourceTypeBinding binding = this.referenceContext.binding;
+		if (binding != null && (binding.isAnnotationType() || binding.isInterface())) {
 			return methodBindings;
 		}
 		boolean implementsGroovyLangObject = false;
 
-		ReferenceBinding[] superInterfaces = this.referenceContext.binding.superInterfaces;
-		for (int i = 0, max = superInterfaces.length; i < max; i++) {
-			char[][] interfaceName = superInterfaces[i].compoundName;
-			if (CharOperation.equals(interfaceName, GROOVY_LANG_GROOVYOBJECT)) {
-				implementsGroovyLangObject = true;
-				break;
+		ReferenceBinding[] superInterfaces = binding.superInterfaces;
+		if (superInterfaces != null) {
+			for (int i = 0, max = superInterfaces.length; i < max; i++) {
+				char[][] interfaceName = superInterfaces[i].compoundName;
+				if (CharOperation.equals(interfaceName, GROOVY_LANG_GROOVYOBJECT)) {
+					implementsGroovyLangObject = true;
+					break;
+				}
 			}
 		}
 
@@ -146,7 +148,7 @@ public class GroovyClassScope extends ClassScope {
 						}
 						if (fBinding.type == TypeBinding.BOOLEAN) {
 							createMethod("is" + MetaClassHelper.capitalize(name), property.isStatic(), "", /* TypeBinding.NO_TYPES, */
-							null, fBinding.type, groovyMethods, methodBindings, typeDeclaration);
+									null, fBinding.type, groovyMethods, methodBindings, typeDeclaration);
 						}
 					}
 				}
