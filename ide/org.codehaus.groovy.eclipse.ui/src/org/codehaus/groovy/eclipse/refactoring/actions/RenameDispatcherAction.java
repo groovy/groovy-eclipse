@@ -83,7 +83,7 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
         // need to expand the selection so that it covers an entire word
         int start = selection.getOffset();
         int end = start + selection.getLength();
-        while (start == contents.length || (start >= 0 && Character.isJavaIdentifierPart(contents[start]))) {
+        while (start >= contents.length || (start >= 0 && Character.isJavaIdentifierPart(contents[start]))) {
             start --;
         }
         if (start != 0 || !Character.isJavaIdentifierPart(contents[start])) {
@@ -96,7 +96,7 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
             end --;
         }
         char[] selectedText = CharOperation.subarray(contents, start, end);
-        return elementName.equals(String.valueOf(selectedText));
+        return selectedText != null && elementName.equals(String.valueOf(selectedText));
     }
 
     private boolean runViaAdapter(ISourceReference _target, boolean lightweight) {
