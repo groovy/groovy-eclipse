@@ -112,7 +112,7 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
     }
 
     /**
-     * Determine if this mavan project uses src/main/groovy and/or src/test/groovy.  Only 
+     * Determine if this maven project uses src/main/groovy and/or src/test/groovy.  Only 
      * applicable for gmaven.  With groovy-eclipse-compiler, this is configured by the build-helper-maven-plugin
      * @param mavenProject
      * @return
@@ -126,8 +126,17 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
         
         // look to see if there is the maven-compiler-plugin
         // with a compilerId of the groovy eclipse compiler
-        if (compilerPluginUsesGroovyEclipseAdapter(mavenProject)) {
+        if (compilerPluginUsesGroovyEclipseAdapter(mavenProject, "org.apache.maven.plugins", "maven-compiler-plugin")) {
             return getSourceTypeInGECProject(facade);
+        } 
+    
+        // For eclipse plugins written in groovy : 
+        // look to see if there is the tycho-compiler-plugin
+        // with a compilerId of the groovy eclipse compiler
+        // /!\ Requires m2e-tycho >= 0.6.0.201210231015  
+        if (compilerPluginUsesGroovyEclipseAdapter(mavenProject, "org.eclipse.tycho", "tycho-compiler-plugin")) {
+        	//Assume configuration is controlled in the MANIFEST.MF, hence returning SourceType.NONE here  
+        	return SourceType.NONE;
         }
         
         // not a groovy project
@@ -194,10 +203,10 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
         }
         return p;
     }
-    
-    private boolean compilerPluginUsesGroovyEclipseAdapter(MavenProject mavenProject) {
+
+    private boolean compilerPluginUsesGroovyEclipseAdapter(MavenProject mavenProject, String pluginGroupId, String pluginArtifactId) {
         for (Plugin buildPlugin : mavenProject.getBuildPlugins()) {
-            if ("maven-compiler-plugin".equals(buildPlugin.getArtifactId()) && "org.apache.maven.plugins".equals(buildPlugin.getGroupId())) {
+            if (pluginArtifactId.equals(buildPlugin.getArtifactId()) && pluginGroupId.equals(buildPlugin.getGroupId())) {
                 for (Dependency dependency : buildPlugin.getDependencies()) {
                     if ("groovy-eclipse-compiler".equals(dependency.getArtifactId()) && "org.codehaus.groovy".equals(dependency.getGroupId())) {
                         return true;
@@ -207,7 +216,7 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
         }
         return false;
     }
-    
+
     private static final String COMPILE = "compile";
     private static final String TEST_COMPILE = "testCompile";
     
