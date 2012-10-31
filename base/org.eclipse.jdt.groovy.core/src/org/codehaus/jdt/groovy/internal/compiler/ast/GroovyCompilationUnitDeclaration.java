@@ -699,7 +699,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum);
 			configureSuperInterfaces(typeDeclaration, classNode);
 			typeDeclaration.methods = createMethodAndConstructorDeclarations(classNode, isEnum, compilationResult);
-			typeDeclaration.fields = createFieldDeclarations(classNode);
+			typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
 			typeDeclaration.properties = classNode.getProperties();
 			if (classNode instanceof InnerClassNode) {
 				InnerClassNode innerClassNode = (InnerClassNode) classNode;
@@ -789,12 +789,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * building declarations, if you want the SourceTypeBinding to correctly build an enum field binding (in
 	 * SourceTypeBinding.resolveTypeFor(FieldBinding)) then you need to: (1) avoid setting modifiers, the enum fields are not
 	 * expected to have any modifiers (2) leave the type as null, that is how these things are identified by JDT.
+	 * 
+	 * @param isEnum
 	 */
-	private FieldDeclaration[] createFieldDeclarations(ClassNode classNode) {
+	private FieldDeclaration[] createFieldDeclarations(ClassNode classNode, boolean isEnum) {
 		List<FieldDeclaration> fieldDeclarations = new ArrayList<FieldDeclaration>();
 		List<FieldNode> fieldNodes = classNode.getFields();
 		if (fieldNodes != null) {
 			for (FieldNode fieldNode : fieldNodes) {
+				if (isEnum && (fieldNode.getName().equals("MAX_VALUE") || fieldNode.getName().equals("MIN_VALUE"))) {
+					continue;
+				}
 				boolean isEnumField = (fieldNode.getModifiers() & Opcodes.ACC_ENUM) != 0;
 				boolean isSynthetic = (fieldNode.getModifiers() & Opcodes.ACC_SYNTHETIC) != 0;
 				if (!isSynthetic) {
@@ -953,15 +958,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		for (MethodNode methodNode : methods) {
 			if (isEnum && methodNode.isSynthetic()) {
-				// skip values() method and valueOf(String)
-				String name = methodNode.getName();
-				Parameter[] params = methodNode.getParameters();
-				if (name.equals("values") && params.length == 0) {
-					continue;
-				}
-				if (name.equals("valueOf") && params.length == 1 && params[0].getType().equals(ClassHelper.STRING_TYPE)) {
-					continue;
-				}
+				// skip synthetic methods in enums
+				continue;
+				// String name = methodNode.getName();
+				// Parameter[] params = methodNode.getParameters();
+				// if (name.equals("values") && params.length == 0) {
+				// continue;
+				// }
+				// if (name.equals("valueOf") && params.length == 1 && params[0].getType().equals(ClassHelper.STRING_TYPE)) {
+				// continue;
+				// }
 			}
 			MethodDeclaration methodDeclaration = createMethodDeclaration(classNode, methodNode, isEnum, compilationResult);
 			// methodDeclaration.javadoc = new Javadoc(0, 20);
