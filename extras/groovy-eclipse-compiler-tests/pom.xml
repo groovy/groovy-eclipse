@@ -12,6 +12,7 @@
 		<groovy.20.version>2.0.4-03</groovy.20.version>
 		<groovy.18.version>1.8.4-01</groovy.18.version>
 		<groovy.17.version>1.7.10-06</groovy.17.version>
+		<maven-compiler-plugin.version>3.0-SNAPSHOT</maven-compiler-plugin.version>
 	</properties>
 
 	<licenses>
