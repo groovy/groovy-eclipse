@@ -904,21 +904,23 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			// TODO Should check against existing ones before creating a duplicate but quite ugly, and
 			// groovy will be checking anyway...
 			List<FieldNode> fields = classNode.getFields();
-			Argument[] arguments = new Argument[fields.size()];
-			for (int i = 0; i < fields.size(); i++) {
-				FieldNode field = fields.get(i);
-				TypeReference parameterTypeReference = createTypeReferenceForClassNode(field.getType());
-				// TODO should set type reference position
-				arguments[i] = new Argument(fields.get(i).getName().toCharArray(), toPos(field.getStart(), field.getEnd() - 1),
-						parameterTypeReference, ClassFileConstants.AccPublic);
-				arguments[i].declarationSourceStart = fields.get(i).getStart();
+			if (fields.size() > 0) {
+				// only add constructor if one or more methods
+				Argument[] arguments = new Argument[fields.size()];
+				for (int i = 0; i < fields.size(); i++) {
+					FieldNode field = fields.get(i);
+					TypeReference parameterTypeReference = createTypeReferenceForClassNode(field.getType());
+					// TODO should set type reference position
+					arguments[i] = new Argument(fields.get(i).getName().toCharArray(), toPos(field.getStart(), field.getEnd() - 1),
+							parameterTypeReference, ClassFileConstants.AccPublic);
+					arguments[i].declarationSourceStart = fields.get(i).getStart();
+				}
+				ConstructorDeclaration constructor = new ConstructorDeclaration(compilationResult);
+				constructor.selector = ctorName;
+				constructor.modifiers = ClassFileConstants.AccPublic;
+				constructor.arguments = arguments;
+				accumulatedMethodDeclarations.add(constructor);
 			}
-
-			ConstructorDeclaration constructor = new ConstructorDeclaration(compilationResult);
-			constructor.selector = ctorName;
-			constructor.modifiers = ClassFileConstants.AccPublic;
-			constructor.arguments = arguments;
-			accumulatedMethodDeclarations.add(constructor);
 		}
 	}
 
