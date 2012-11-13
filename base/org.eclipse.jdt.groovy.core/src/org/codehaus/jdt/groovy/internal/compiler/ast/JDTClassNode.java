@@ -335,6 +335,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		String name = new String(methodBinding.selector);
 
 		TypeVariableBinding[] typeVariables = methodBinding.typeVariables();
+
 		GenericsType[] generics = createGenericsTypeInfoForTypeVariableBindings(typeVariables);
 		MethodNode mNode = null;
 		try {

@@ -38,12 +38,8 @@ import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BaseTypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
-import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
-import org.eclipse.jdt.internal.compiler.lookup.ParameterizedMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
-import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
@@ -504,69 +500,78 @@ public class JDTResolver extends ResolveVisitor {
 			return createClassNodeForArrayBinding((ArrayBinding) jdtTypeBinding);
 		} else if (jdtTypeBinding instanceof TypeVariableBinding) {
 			String typeVariableName = new String(jdtTypeBinding.sourceName());
+			// from Java5.configureTypeVariableReference:
+			ClassNode cn = ClassHelper.makeWithoutCaching(typeVariableName);
+			cn.setGenericsPlaceHolder(true);
+			ClassNode cn2 = ClassHelper.makeWithoutCaching(typeVariableName);
+			cn2.setGenericsPlaceHolder(true);
+			GenericsType[] gts = new GenericsType[] { new GenericsType(cn2) };
+			cn.setGenericsTypes(gts);
+			cn.setRedirect(ClassHelper.OBJECT_TYPE);
+			return cn;
 
-			TypeVariableBinding typeVariableBinding = (TypeVariableBinding) jdtTypeBinding;
-			if (typeVariableBinding.declaringElement instanceof SourceTypeBinding) {
-				GenericsType[] genericTypes = typeGenericsCurrentlyActive.peek();
-				GenericsType matchingGenericType = findMatchingGenericType(genericTypes, typeVariableName);
-				if (matchingGenericType != null) {
-					ClassNode newNode = ClassHelper.makeWithoutCaching(typeVariableName);
-					newNode.setRedirect(matchingGenericType.getType());
-					newNode.setGenericsTypes(new GenericsType[] { matchingGenericType });
-					newNode.setGenericsPlaceHolder(true);
-					return newNode;
-				}
-
-				// What does it means if we are here?
-				// it means we've encountered a type variable but this class doesn't declare it.
-				// So far this has been seen in the case where a synthetic binding is created for
-				// a bridge method from a supertype. It appears what we can do here is collapse
-				// that type variable to its bound (as this is meant to be a bridge method)
-				// But what if it was bound by something a little higher up?
-				// What other cases are there to worry about?
-
-				if (typeVariableBinding.firstBound == null) {
-					return ClassHelper.OBJECT_TYPE;
-				} else {
-					// c'est vrai?
-					return convertToClassNode(typeVariableBinding.firstBound);
-				}
-				// throw new GroovyEclipseBug("Cannot find type variable on source type declaring element "
-				// + typeVariableBinding.declaringElement);
-			} else if (typeVariableBinding.declaringElement instanceof BinaryTypeBinding) {
-				GenericsType[] genericTypes = convertToClassNode(((BinaryTypeBinding) typeVariableBinding.declaringElement))
-						.getGenericsTypes();
-				GenericsType matchingGenericType = findMatchingGenericType(genericTypes, typeVariableName);
-				if (matchingGenericType != null) {
-					ClassNode newNode = ClassHelper.makeWithoutCaching(typeVariableName);
-					ClassNode[] upper = matchingGenericType.getUpperBounds();
-					if (upper != null && upper.length > 0) {
-						newNode.setRedirect(upper[0]);
-					} else {
-						newNode.setRedirect(matchingGenericType.getType());
-					}
-					newNode.setGenericsTypes(new GenericsType[] { matchingGenericType });
-					newNode.setGenericsPlaceHolder(true);
-					return newNode;
-				}
-				throw new GroovyEclipseBug("Cannot find type variable on type declaring element "
-						+ typeVariableBinding.declaringElement);
-			} else if (typeVariableBinding.declaringElement instanceof ParameterizedMethodBinding
-					|| typeVariableBinding.declaringElement instanceof MethodBinding) {
-				GenericsType[] genericTypes = memberGenericsCurrentlyActive.peek();
-				GenericsType matchingGenericType = findMatchingGenericType(genericTypes, typeVariableName);
-				if (matchingGenericType != null) {
-					ClassNode newNode = ClassHelper.makeWithoutCaching(typeVariableName);
-					newNode.setRedirect(matchingGenericType.getType());
-					newNode.setGenericsTypes(new GenericsType[] { matchingGenericType });
-					newNode.setGenericsPlaceHolder(true);
-					return newNode;
-				}
-				throw new GroovyEclipseBug("Cannot find type variable on method declaring element "
-						+ typeVariableBinding.declaringElement);
-			}
-			throw new GroovyEclipseBug("Unexpected type variable reference.  Declaring element is "
-					+ typeVariableBinding.declaringElement);
+			// TypeVariableBinding typeVariableBinding = (TypeVariableBinding) jdtTypeBinding;
+			// if (typeVariableBinding.declaringElement instanceof SourceTypeBinding) {
+			// GenericsType[] genericTypes = typeGenericsCurrentlyActive.peek();
+			// GenericsType matchingGenericType = findMatchingGenericType(genericTypes, typeVariableName);
+			// if (matchingGenericType != null) {
+			// ClassNode newNode = ClassHelper.makeWithoutCaching(typeVariableName);
+			// newNode.setRedirect(matchingGenericType.getType());
+			// newNode.setGenericsTypes(new GenericsType[] { matchingGenericType });
+			// newNode.setGenericsPlaceHolder(true);
+			// return newNode;
+			// }
+			//
+			// // What does it means if we are here?
+			// // it means we've encountered a type variable but this class doesn't declare it.
+			// // So far this has been seen in the case where a synthetic binding is created for
+			// // a bridge method from a supertype. It appears what we can do here is collapse
+			// // that type variable to its bound (as this is meant to be a bridge method)
+			// // But what if it was bound by something a little higher up?
+			// // What other cases are there to worry about?
+			//
+			// if (typeVariableBinding.firstBound == null) {
+			// return ClassHelper.OBJECT_TYPE;
+			// } else {
+			// // c'est vrai?
+			// return convertToClassNode(typeVariableBinding.firstBound);
+			// }
+			// throw new GroovyEclipseBug("Cannot find type variable on source type declaring element "
+			// + typeVariableBinding.declaringElement);
+			// } else if (typeVariableBinding.declaringElement instanceof BinaryTypeBinding) {
+			// GenericsType[] genericTypes = convertToClassNode(((BinaryTypeBinding) typeVariableBinding.declaringElement))
+			// .getGenericsTypes();
+			// GenericsType matchingGenericType = findMatchingGenericType(genericTypes, typeVariableName);
+			// if (matchingGenericType != null) {
+			// ClassNode newNode = ClassHelper.makeWithoutCaching(typeVariableName);
+			// ClassNode[] upper = matchingGenericType.getUpperBounds();
+			// if (upper != null && upper.length > 0) {
+			// newNode.setRedirect(upper[0]);
+			// } else {
+			// newNode.setRedirect(matchingGenericType.getType());
+			// }
+			// newNode.setGenericsTypes(new GenericsType[] { matchingGenericType });
+			// newNode.setGenericsPlaceHolder(true);
+			// return newNode;
+			// }
+			// throw new GroovyEclipseBug("Cannot find type variable on type declaring element "
+			// + typeVariableBinding.declaringElement);
+			// } else if (typeVariableBinding.declaringElement instanceof ParameterizedMethodBinding
+			// || typeVariableBinding.declaringElement instanceof MethodBinding) {
+			// GenericsType[] genericTypes = memberGenericsCurrentlyActive.peek();
+			// GenericsType matchingGenericType = findMatchingGenericType(genericTypes, typeVariableName);
+			// if (matchingGenericType != null) {
+			// ClassNode newNode = ClassHelper.makeWithoutCaching(typeVariableName);
+			// newNode.setRedirect(matchingGenericType.getType());
+			// newNode.setGenericsTypes(new GenericsType[] { matchingGenericType });
+			// newNode.setGenericsPlaceHolder(true);
+			// return newNode;
+			// }
+			// throw new GroovyEclipseBug("Cannot find type variable on method declaring element "
+			// + typeVariableBinding.declaringElement);
+			// }
+			// throw new GroovyEclipseBug("Unexpected type variable reference.  Declaring element is "
+			// + typeVariableBinding.declaringElement);
 			// Next case handles: RawTypeBinding, ParameterizedTypeBinding, SourceTypeBinding
 		} else if (jdtTypeBinding instanceof ReferenceBinding) {
 
@@ -653,6 +658,7 @@ public class JDTResolver extends ResolveVisitor {
 	private ClassNode createClassNodeForWildcardBinding(WildcardBinding wildcardBinding) {
 		// FIXASC could use LazyGenericsType object here
 		ClassNode base = ClassHelper.makeWithoutCaching("?");
+		base.setRedirect(ClassHelper.OBJECT_TYPE);
 		ClassNode lowerBound = null;
 		ClassNode[] allUppers = null;
 		if (wildcardBinding.boundKind == Wildcard.EXTENDS) {

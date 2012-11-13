@@ -8774,6 +8774,23 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n"
 		},"");
 	}
+	
+	public void testCompileStatic_1511() {
+		if (GroovyUtils.GROOVY_LEVEL<20) {
+			return;
+		}
+		runConformTest(new String[]{
+				"Foo.groovy",
+				"@groovy.transform.CompileStatic\n"+
+				"def meth() {\n"+
+				"	List<String> second = []\n"+
+				"	List<String> artefactResources2\n"+
+				"	second.addAll(artefactResources2)\n"+
+				"   println 'abc'\n"+
+				"}\n"+
+				"meth();"},
+			"abc");
+	}
 
 	public void testCompileStatic_1505() {
 		if (GroovyUtils.GROOVY_LEVEL<20) {
