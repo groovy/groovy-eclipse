@@ -196,10 +196,12 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 		ReferenceBinding groovyLangObjectBinding = getGroovyLangObjectBinding();
 		if (!typeBinding.implementsInterface(groovyLangObjectBinding, true)) {
 			ReferenceBinding[] superInterfaceBindings = typeBinding.superInterfaces;
-			int count = superInterfaceBindings.length;
-			System.arraycopy(superInterfaceBindings, 0, superInterfaceBindings = new ReferenceBinding[count + 1], 0, count);
-			superInterfaceBindings[count] = groovyLangObjectBinding;
-			typeBinding.superInterfaces = superInterfaceBindings;
+			if (superInterfaceBindings != null) {
+				int count = superInterfaceBindings.length;
+				System.arraycopy(superInterfaceBindings, 0, superInterfaceBindings = new ReferenceBinding[count + 1], 0, count);
+				superInterfaceBindings[count] = groovyLangObjectBinding;
+				typeBinding.superInterfaces = superInterfaceBindings;
+			}
 		}
 	}
 

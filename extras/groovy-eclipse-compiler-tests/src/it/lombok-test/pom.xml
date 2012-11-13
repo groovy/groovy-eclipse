@@ -35,7 +35,7 @@
 			</plugin>	
   		<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.1</version>
+				<version>@maven-compiler-plugin.version@</version>
 				<configuration>
 					<compilerId>groovy-eclipse-compiler</compilerId>
 					<verbose>true</verbose>

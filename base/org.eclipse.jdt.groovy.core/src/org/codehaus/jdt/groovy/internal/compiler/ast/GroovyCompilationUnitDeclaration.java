@@ -699,7 +699,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum);
 			configureSuperInterfaces(typeDeclaration, classNode);
 			typeDeclaration.methods = createMethodAndConstructorDeclarations(classNode, isEnum, compilationResult);
-			typeDeclaration.fields = createFieldDeclarations(classNode);
+			typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
 			typeDeclaration.properties = classNode.getProperties();
 			if (classNode instanceof InnerClassNode) {
 				InnerClassNode innerClassNode = (InnerClassNode) classNode;
@@ -789,12 +789,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * building declarations, if you want the SourceTypeBinding to correctly build an enum field binding (in
 	 * SourceTypeBinding.resolveTypeFor(FieldBinding)) then you need to: (1) avoid setting modifiers, the enum fields are not
 	 * expected to have any modifiers (2) leave the type as null, that is how these things are identified by JDT.
+	 * 
+	 * @param isEnum
 	 */
-	private FieldDeclaration[] createFieldDeclarations(ClassNode classNode) {
+	private FieldDeclaration[] createFieldDeclarations(ClassNode classNode, boolean isEnum) {
 		List<FieldDeclaration> fieldDeclarations = new ArrayList<FieldDeclaration>();
 		List<FieldNode> fieldNodes = classNode.getFields();
 		if (fieldNodes != null) {
 			for (FieldNode fieldNode : fieldNodes) {
+				if (isEnum && (fieldNode.getName().equals("MAX_VALUE") || fieldNode.getName().equals("MIN_VALUE"))) {
+					continue;
+				}
 				boolean isEnumField = (fieldNode.getModifiers() & Opcodes.ACC_ENUM) != 0;
 				boolean isSynthetic = (fieldNode.getModifiers() & Opcodes.ACC_SYNTHETIC) != 0;
 				if (!isSynthetic) {
@@ -899,21 +904,23 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			// TODO Should check against existing ones before creating a duplicate but quite ugly, and
 			// groovy will be checking anyway...
 			List<FieldNode> fields = classNode.getFields();
-			Argument[] arguments = new Argument[fields.size()];
-			for (int i = 0; i < fields.size(); i++) {
-				FieldNode field = fields.get(i);
-				TypeReference parameterTypeReference = createTypeReferenceForClassNode(field.getType());
-				// TODO should set type reference position
-				arguments[i] = new Argument(fields.get(i).getName().toCharArray(), toPos(field.getStart(), field.getEnd() - 1),
-						parameterTypeReference, ClassFileConstants.AccPublic);
-				arguments[i].declarationSourceStart = fields.get(i).getStart();
+			if (fields.size() > 0) {
+				// only add constructor if one or more methods
+				Argument[] arguments = new Argument[fields.size()];
+				for (int i = 0; i < fields.size(); i++) {
+					FieldNode field = fields.get(i);
+					TypeReference parameterTypeReference = createTypeReferenceForClassNode(field.getType());
+					// TODO should set type reference position
+					arguments[i] = new Argument(fields.get(i).getName().toCharArray(), toPos(field.getStart(), field.getEnd() - 1),
+							parameterTypeReference, ClassFileConstants.AccPublic);
+					arguments[i].declarationSourceStart = fields.get(i).getStart();
+				}
+				ConstructorDeclaration constructor = new ConstructorDeclaration(compilationResult);
+				constructor.selector = ctorName;
+				constructor.modifiers = ClassFileConstants.AccPublic;
+				constructor.arguments = arguments;
+				accumulatedMethodDeclarations.add(constructor);
 			}
-
-			ConstructorDeclaration constructor = new ConstructorDeclaration(compilationResult);
-			constructor.selector = ctorName;
-			constructor.modifiers = ClassFileConstants.AccPublic;
-			constructor.arguments = arguments;
-			accumulatedMethodDeclarations.add(constructor);
 		}
 	}
 
@@ -953,15 +960,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		for (MethodNode methodNode : methods) {
 			if (isEnum && methodNode.isSynthetic()) {
-				// skip values() method and valueOf(String)
-				String name = methodNode.getName();
-				Parameter[] params = methodNode.getParameters();
-				if (name.equals("values") && params.length == 0) {
-					continue;
-				}
-				if (name.equals("valueOf") && params.length == 1 && params[0].getType().equals(ClassHelper.STRING_TYPE)) {
-					continue;
-				}
+				// skip synthetic methods in enums
+				continue;
+				// String name = methodNode.getName();
+				// Parameter[] params = methodNode.getParameters();
+				// if (name.equals("values") && params.length == 0) {
+				// continue;
+				// }
+				// if (name.equals("valueOf") && params.length == 1 && params[0].getType().equals(ClassHelper.STRING_TYPE)) {
+				// continue;
+				// }
 			}
 			MethodDeclaration methodDeclaration = createMethodDeclaration(classNode, methodNode, isEnum, compilationResult);
 			// methodDeclaration.javadoc = new Javadoc(0, 20);

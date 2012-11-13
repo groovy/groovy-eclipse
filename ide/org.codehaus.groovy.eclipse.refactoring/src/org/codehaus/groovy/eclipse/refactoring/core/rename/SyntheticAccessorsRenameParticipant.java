@@ -32,7 +32,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
 import org.eclipse.jdt.core.search.SearchMatch;
-import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.internal.corext.refactoring.Checks;
 import org.eclipse.jdt.internal.corext.refactoring.RefactoringCoreMessages;
 import org.eclipse.jdt.internal.corext.refactoring.SearchResultGroup;
@@ -54,19 +53,28 @@ import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.TextEditGroup;
 
+/**
+ * A rename refactoring participant for renaming synthetic groovy properties and
+ * accessors.
+ *
+ * Renames calls to synthetic getters, setters and issers in groovy and java
+ * files for
+ * groovy properties
+ *
+ * Renames accesses to synthetic groovy properties that are backed by a getter,
+ * setter, and/or isser.
+ *
+ * @author andrew
+ * @created Oct 31, 2012
+ */
 public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
 
     private IMember renameTarget;
 
     private List<SearchMatch> matches;
 
-    /**
-     * Nothing to check
-     */
     @Override
     public RefactoringStatus checkConditions(IProgressMonitor pm, CheckConditionsContext context) throws OperationCanceledException {
-        // FIXADE check here for potential matches or matches in binary files
-        // to check:
         RefactoringStatus status = new RefactoringStatus();
 
         try {
@@ -197,7 +205,6 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
         if (element instanceof IMethod || element instanceof IField) {
             renameTarget = (IMember) element;
             if (!renameTarget.isReadOnly()
-                    && ContentTypeUtils.isGroovyLikeFileName(renameTarget.getCompilationUnit().getElementName())
                     && GroovyNature.hasGroovyNature(renameTarget.getJavaProject().getProject())) {
                 return true;
             }

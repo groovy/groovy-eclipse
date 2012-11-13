@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lifecycleMappingMetadata>
-	<pluginExecutions>
-		<pluginExecution>
-			<pluginExecutionFilter>
+  <pluginExecutions>
+    <pluginExecution>
+      <pluginExecutionFilter>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <versionRange>[2.0,)</versionRange>
@@ -14,14 +14,33 @@
           <compilerId>groovy-eclipse-compiler</compilerId>
         </parameters>
       </pluginExecutionFilter>
-			<action>
-				<configurator>
-					<id>org.codehaus.groovy.m2eclipse.configurator</id>
-				</configurator>
-			</action>
-		</pluginExecution>
-		<pluginExecution>
-			<pluginExecutionFilter>
+      <action>
+        <configurator>
+            <id>org.codehaus.groovy.m2eclipse.configurator</id>
+        </configurator>
+      </action>
+    </pluginExecution>
+    <pluginExecution>
+      <pluginExecutionFilter>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-compiler-plugin</artifactId>
+        <versionRange>[0.12.0,)</versionRange>
+        <goals>
+          <goal>compile</goal>
+          <goal>testCompile</goal>
+        </goals>
+        <parameters>
+          <compilerId>groovy-eclipse-compiler</compilerId>
+        </parameters>
+      </pluginExecutionFilter>
+      <action>
+        <configurator>
+            <id>org.codehaus.groovy.m2eclipse.configurator</id>
+        </configurator>
+      </action>
+    </pluginExecution>    
+    <pluginExecution>
+      <pluginExecutionFilter>
         <groupId>org.codehaus.groovy</groupId>
         <artifactId>groovy-eclipse-compiler</artifactId>
         <versionRange>[2.6.0,)</versionRange>
@@ -29,9 +48,9 @@
           <goal>add-groovy-build-paths</goal>
         </goals>
       </pluginExecutionFilter>
-			<action>
-				<execute />
-			</action>
-		</pluginExecution>
-	</pluginExecutions>
+      <action>
+        <execute />
+      </action>
+    </pluginExecution>
+  </pluginExecutions>
 </lifecycleMappingMetadata>

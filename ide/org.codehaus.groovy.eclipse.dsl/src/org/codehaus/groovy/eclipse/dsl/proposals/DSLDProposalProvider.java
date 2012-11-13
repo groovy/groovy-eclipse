@@ -62,7 +62,8 @@ public class DSLDProposalProvider implements IProposalProvider {
             pattern.setCurrentScope(context.currentScope);
             pattern.setTargetType(completionType);
             pattern.setStatic(isStatic);
-            pattern.setPrimaryNode(context.location == ContentAssistLocation.STATEMENT);
+            pattern.setPrimaryNode(context.location == ContentAssistLocation.STATEMENT ||
+            		(context.location == ContentAssistLocation.METHOD_CONTEXT && context.currentScope.isPrimaryNode()));
             contributions = store.findContributions(pattern, DSLPreferences.getDisabledScriptsAsSet());
         
             boolean isMethodContext = context instanceof MethodInfoContentAssistContext;

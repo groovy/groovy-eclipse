@@ -534,6 +534,16 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 			    if (newElements.containsKey(openable)) {
 			        openable.closeBuffer();
 			    }
+			    // GROOVY start
+			    // perhaps hitting GRECLIPSE-1519
+			    if (openable != null && openable.getBuffer().isClosed()) {
+			    	Util.log(new Status(IStatus.ERROR, "org.eclipse.jdt.groovy.core", 
+			    			"GRECIPSE-1519: Buffer should not be closed.  " +
+			    			"Paste this stack trace into http://jira.codehaus.org/browse/GRECLIPSE-1519", 
+			    			new RuntimeException()));
+			    }
+			    // GROOVY end
+			    
 				throw newNotPresentException();
 			}
 			if (!hadTemporaryCache) {
