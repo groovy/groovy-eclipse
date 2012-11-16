@@ -11,7 +11,9 @@
 package org.eclipse.jdt.core.groovy.tests.builder;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import junit.framework.Test;
@@ -19,10 +21,16 @@ import junit.framework.Test;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.vmplugin.VMPluginFactory;
+import org.codehaus.groovy.vmplugin.v5.Java5;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
@@ -30,6 +38,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
@@ -299,6 +308,240 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			expectingCompiledClassesV("A");
 		}
 
+	}
+	
+//	if (GroovyUtils.GROOVY_LEVEL<20) {
+//		return;
+//	}
+//	runNegativeTest(new String[]{
+//			"Foo.groovy",
+//			"import groovy.transform.CompileStatic\n"+
+//			"@CompileStatic\n"+
+//			"void method(String message) {\n"+
+//			"   List<Integer> ls = new ArrayList<Integer>();\n"+
+//			"   ls.add(123);\n"+
+//			"   ls.add('abc');\n"+
+//			"}"
+//	},
+//	"----------\n" + 
+//	"1. ERROR in Foo.groovy (at line 6)\n" + 
+//	"	ls.add(\'abc\');\n" + 
+//	"	^"+(isGE20()?"^^^^^^^^^^^^":"")+"\n" + 
+//	"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isGE20()?". Please check if the declared type is right and if the method exists.":"")+"\n" + 
+//	"----------\n");
+	
+	
+	
+	public void testCompileStatic_1505() throws Exception {
+		try {
+			if (GroovyUtils.GROOVY_LEVEL < 20) {
+				return;
+			}
+			IPath projectPath = env.addProject("Project","1.6"); //$NON-NLS-1$
+			env.addExternalJars(projectPath, Util.getJavaClassLibs());
+			env.addGroovyJars(projectPath);
+			fullBuild(projectPath);
+			// remove old package fragment root so that names don't collide
+			env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+	
+			IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+			env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+			
+			JDTResolver.recordInstances = true;
+			
+			env.addGroovyClass(root, "", "Foo",
+					"import groovy.transform.CompileStatic\n"+
+					"@CompileStatic\n"+
+					"void method(String message) {\n"+
+					"   Collection<Integer> cs;\n"+
+//					"   List<Integer> ls = new ArrayList<Integer>();\n"+
+//					"   ls.add(123);\n"+
+//					"   ls.add('abc');\n"+
+					// GRECLIPSE-1511 code
+					"	List<String> second = []\n"+
+					"	List<String> artefactResources2\n"+
+					"	second.addAll(artefactResources2)\n"+
+					"}\n"
+//					"interface List2<E> extends Collection<E> {\n"+
+//					"  boolean add(E e);\n" +
+//					"}"
+					);
+	
+			incrementalBuild(projectPath);
+//			expectingCompiledClassesV("Foo","List2");
+			expectingNoProblems();
+			
+			// Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
+			
+			// Access the jdtresolver bits and pieces 
+			
+			JDTClassNode jcn = JDTResolver.getCachedNode("java.util.Collection<E>");
+			
+			assertNotNull(jcn);
+			System.out.println("JDT ClassNode="+jcn);
+//			JDTClassNode jcn2 = jdtr.getCachedNode("List2");
+//			System.out.println(jcn2);
+			
+			ClassNode listcn = new ClassNode(java.util.Collection.class);
+			VMPluginFactory.getPlugin().setAdditionalClassInformation(listcn);
+			listcn.lazyClassInit();
+			System.out.println("Groovy ClassNode="+listcn);
+			
+//			IJavaProject ijp = env.getJavaProject("Project");
+//			GroovyCompilationUnit unit = (GroovyCompilationUnit) ijp.findType("Foo")
+//					.getCompilationUnit();
+
+			// now find the class reference
+//			ClassNode cn = unit.getModuleNode().getClasses().get(1);
+//			System.out.println(cn);
+			
+			// Compare java.util.List from JDTClassNode and List2 from groovy
+			compareClassNodes(jcn.redirect(),listcn.redirect(),0);
+			MethodNode jmn = getMethodNode(jcn,"add",1); // boolean add(E)
+			MethodNode rmn = getMethodNode(listcn,"add",1);						
+			compareMethodNodes(jmn,rmn);
+			
+			jmn = getMethodNode(jcn,"addAll",1);
+			rmn = getMethodNode(listcn,"addAll",1);
+			compareMethodNodes(jmn,rmn);
+			
+			// Want to compare type information in the 
+			// env.addClass(root, "", "Client", "public class Client {\n"
+			// + "  { new Outer.Inner(); }\n" + "}\n");
+			// incrementalBuild(projectPath);
+			// expectingNoProblems();
+			// expectingCompiledClassesV("Client");
+		} finally {
+			JDTResolver.recordInstances = false;
+		}
+	}
+	
+	private MethodNode getMethodNode(ClassNode jcn, String selector, int paramCount) {
+		List<MethodNode> mns = jcn.getDeclaredMethods(selector);
+		for (MethodNode mn: mns) {
+			if (mn.getParameters().length==paramCount) {
+				return mn;
+			}
+		}
+		return null;
+	}
+
+	private void compareMethodNodes(MethodNode jmn, MethodNode mn) {
+		System.out.println("\n\n\nComparing method nodes jmn="+jmn+" mn="+mn);
+		System.out.println("Comparing return types");
+		compareClassNodes(jmn.getReturnType(), mn.getReturnType(),1);
+		compareParameterArrays(jmn.getParameters(),mn.getParameters(),1);
+	}
+
+	private void compareParameterArrays(Parameter[] jps,
+			Parameter[] ps,int d) {
+		if (ps==null) {
+			if (jps!=null) {
+				fail("Expected null parameters but was "+arrayToString(jps));
+			}
+		} else {
+			if (ps.length!=jps.length) {
+				fail("Expected same number of parameters, should be "+arrayToString(ps)+" but was "+arrayToString(jps));
+			}
+			for (int p=0;p<ps.length;p++) {
+				System.out.println("Comparing parameters jp="+jps[p]+" p="+ps[p]);
+				compareParameters(jps[p],ps[p],d+1);
+			}
+		}
+	}
+
+	private void compareParameters(Parameter jp, Parameter p,int d) {
+		compareClassNodes(jp.getType(),p.getType(),d+1);
+	}
+
+	// check whether these are identical (in everything except name!)
+	private void compareClassNodes(ClassNode jcn, ClassNode cn,int d) {
+		System.out.println("Comparing ClassNodes\njcn="+jcn.toString()+"\n cn="+cn.toString());
+		assertEquals(cn.isGenericsPlaceHolder(),jcn.isGenericsPlaceHolder());
+		
+		// Check GenericsType info
+		GenericsType[] gt_cn = cn.getGenericsTypes();
+		GenericsType[] gt_jcn = jcn.getGenericsTypes();
+		if (gt_cn==null) {
+			if (gt_jcn!=null) {
+				fail("Should have been null but was "+arrayToString(gt_jcn));
+			}
+		} else {
+			if (gt_jcn==null) {
+				fail("Did not expect genericstypes to be null, should be "+arrayToString(gt_cn));
+			}
+			assertNotNull(gt_jcn);
+			assertEquals(gt_cn.length,gt_jcn.length);
+			for (int i=0;i<gt_cn.length;i++) {
+				System.out.println("Comparing generics types information, index #"+i);
+				compareGenericsTypes(gt_jcn[i],gt_cn[i],d+1);
+			}
+		}
+	}
+
+	private void compareGenericsTypes(GenericsType jgt, GenericsType gt,int d) {
+		//			protected ClassNode[] upperBounds;
+		//		    protected ClassNode lowerBound;
+		//		    protected ClassNode type;
+		//		    protected String name;
+		//		    protected boolean placeholder;
+		//		    private boolean resolved;
+		//		    private boolean wildcard;
+//		assertEquals(jgt.getText(),gt.getText());
+		assertEquals(jgt.getName(),gt.getName());
+		assertEquals(jgt.isPlaceholder(),gt.isPlaceholder());
+		assertEquals(jgt.isResolved(),gt.isResolved());
+		assertEquals(jgt.isWildcard(),gt.isWildcard());
+		compareType(jgt.getType(),gt.getType(),d+1);
+		compareUpperBounds(jgt.getUpperBounds(),gt.getUpperBounds(),d+1);
+		compareLowerBound(jgt.getLowerBound(),gt.getLowerBound(),d+1);
+	}
+
+	private void compareType(ClassNode jcn, ClassNode cn,int d) {
+		System.out.println("Compare type of GenericsType: jcn="+jcn+" cn="+cn);
+		compareClassNodes(jcn, cn,d+1);
+	}
+
+	private String arrayToString(ClassNode[] cns) {
+		if (cns==null) {
+			return "NULL";
+		}
+		StringBuilder sb = new StringBuilder();
+		sb.append("[");
+		for (int i=0;i<cns.length;i++) {
+			if (i>0) sb.append(",");
+			sb.append(cns[i]);
+		}
+		sb.append("]");
+		return sb.toString();
+	}
+
+	private void compareUpperBounds(ClassNode[] jcnlist, ClassNode[] cnlist,int d) {
+		System.out.println("Comparing upper bounds: jcn="+arrayToString(jcnlist)+" cn="+arrayToString(cnlist));
+		if (cnlist==null) {
+			if (jcnlist!=null) {
+				fail("Should be null but is "+arrayToString(jcnlist));
+			}
+		} else {
+			if (jcnlist==null) {
+				fail("Array not expected to be null, should be "+arrayToString(cnlist));
+			}
+			assertEquals(cnlist.length,cnlist.length);
+			for (int i=0;i<cnlist.length;i++) {
+				compareClassNodes(jcnlist[i].redirect(), cnlist[i].redirect(),d+1);
+			}
+		}
+	}
+	
+	private void compareLowerBound(ClassNode jcn,
+			ClassNode cn,int d) {
+		System.out.println("Comparing lower bound");
+		if (jcn==null) {
+			assertNull(cn);
+		} else {
+			assertNotNull(cn);
+			compareClassNodes(jcn.redirect(), cn.redirect(),d+1);
+		}
 	}
 
 	public void testInners_983() throws Exception {

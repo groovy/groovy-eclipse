@@ -135,7 +135,12 @@ public class LazyGenericsType extends GenericsType {
 			ClassNode redirect = base.redirect();
 			base.setRedirect(null);
 			// TODO collect all bounds
-			TypeBinding[] tBounds = new TypeBinding[] { tvBinding.firstBound };
+			TypeBinding[] tBounds = null;
+			// if (CharOperation.equals(tvBinding.firstBound.signature(), "Ljava/lang/Object;".toCharArray())) {
+			// tBounds = new TypeBinding[] {};
+			// } else {
+			tBounds = new TypeBinding[] { tvBinding.firstBound };
+			// }
 			GenericsType gt;
 			if (tBounds.length == 0) {
 				gt = new GenericsType(base);

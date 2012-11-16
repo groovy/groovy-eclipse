@@ -38,8 +38,12 @@ import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BaseTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
+import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.RawTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
+import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
@@ -146,11 +150,46 @@ public class JDTResolver extends ResolveVisitor {
 		}
 	}
 
-	public JDTClassNode getCachedNode(String name) {
-		for (Map.Entry<Binding, JDTClassNode> nodeFromCache : nodeCache.entrySet()) {
+	public static JDTClassNode getCachedNode(JDTResolver instance, String name) {
+		for (Map.Entry<Binding, JDTClassNode> nodeFromCache : instance.nodeCache.entrySet()) {
 			String nodename = new String(nodeFromCache.getKey().readableName());
 			if (nodename.equals(name)) {
 				return nodeFromCache.getValue();
+			}
+		}
+		return null;
+	}
+
+	public static JDTClassNode getCachedNode(String name) {
+		for (JDTResolver resolver : instances) {
+			for (Map.Entry<Binding, JDTClassNode> nodeFromCache : resolver.nodeCache.entrySet()) {
+				String nodename = new String(nodeFromCache.getKey().readableName());
+				System.out.println(nodename);
+				if (nodename.equals(name)) {
+					return nodeFromCache.getValue();
+				}
+			}
+		}
+		return null;
+	}
+
+	public static JDTClassNode getCachedNodeBySubstring(JDTResolver instance, String substring) {
+		for (Map.Entry<Binding, JDTClassNode> nodeFromCache : instance.nodeCache.entrySet()) {
+			String nodename = new String(nodeFromCache.getKey().readableName());
+			if (nodename.contains(substring)) {
+				return nodeFromCache.getValue();
+			}
+		}
+		return null;
+	}
+
+	public static JDTClassNode getCachedNodeBySubstring(String substring) {
+		for (JDTResolver resolver : instances) {
+			for (Map.Entry<Binding, JDTClassNode> nodeFromCache : resolver.nodeCache.entrySet()) {
+				String nodename = new String(nodeFromCache.getKey().readableName());
+				if (nodename.contains(substring)) {
+					return nodeFromCache.getValue();
+				}
 			}
 		}
 		return null;
@@ -467,6 +506,10 @@ public class JDTResolver extends ResolveVisitor {
 		return jdtNode;
 	}
 
+	ClassNode makeWithoutCaching(TypeBinding jdtBinding) {
+		return createJDTClassNode(jdtBinding);
+	}
+
 	/**
 	 * Create a Groovy ClassNode that represents the JDT TypeBinding. Build the basic structure, mark it as 'in progress' and then
 	 * continue with initialization. This allows self referential generic declarations.
@@ -475,7 +518,11 @@ public class JDTResolver extends ResolveVisitor {
 	 * @return the new ClassNode, of type JDTClassNode
 	 */
 	private ClassNode createJDTClassNode(TypeBinding jdtBinding) {
-		ClassNode classNode = createClassNode(jdtBinding);
+		// damn that enum type, this will sort it:
+		if (inProgress.containsKey(jdtBinding)) {
+			return inProgress.get(jdtBinding);
+		}
+		ClassNode classNode = new ClassNodeBuilder(this).configureType(jdtBinding);// createClassNode(jdtBinding);
 		if (classNode instanceof JDTClassNode) {
 			JDTClassNode jdtNode = (JDTClassNode) classNode;
 			inProgress.put(jdtBinding, jdtNode);
@@ -729,7 +776,7 @@ public class JDTResolver extends ResolveVisitor {
 		unresolvables.clear();
 	}
 
-	private GroovyCompilationUnitScope getScope() {
+	public GroovyCompilationUnitScope getScope() {
 		return activeScope;
 	}
 
@@ -762,6 +809,199 @@ public class JDTResolver extends ResolveVisitor {
 			unresolvables.clear();
 		} catch (AbortResolutionException are) {
 			// Can occur if there are other problems with the node (syntax errors) - so don't try resolving it
+		}
+	}
+
+	static class ClassNodeBuilder {
+
+		private JDTResolver resolver;
+
+		ClassNodeBuilder(JDTResolver resolver) {
+			this.resolver = resolver;
+		}
+
+		public ClassNode configureType(TypeBinding type) {
+			if (type instanceof TypeVariableBinding) {
+				return configureTypeVariableReference((TypeVariableBinding) type);
+			} else if (type instanceof ParameterizedTypeBinding) {
+				return configureParameterizedType((ParameterizedTypeBinding) type);
+			} else if (type instanceof BinaryTypeBinding) {
+				return configureClass((BinaryTypeBinding) type);
+			} else if (type instanceof WildcardBinding) {
+				return configureWildcardType((WildcardBinding) type);
+			} else if (type instanceof ArrayBinding) {
+				return configureGenericArray((ArrayBinding) type);
+			} else if (type instanceof BaseTypeBinding) {
+				return configureBaseTypeBinding((BaseTypeBinding) type);
+			} else if (type instanceof SourceTypeBinding) {
+				return configureSourceType((SourceTypeBinding) type);
+			}
+			throw new IllegalStateException("nyi " + type.getClass());
+		}
+
+		private ClassNode configureSourceType(SourceTypeBinding type) {
+			if (type.id == TypeIds.T_JavaLangObject) {
+				return ClassHelper.OBJECT_TYPE;
+			}
+			return new JDTClassNode(type, resolver);
+			// return resolver.convertToClassNode(type); // TODO correct?
+		}
+
+		private ClassNode configureClass(BinaryTypeBinding type) {
+			if (type.id == TypeIds.T_JavaLangObject) {
+				return ClassHelper.OBJECT_TYPE;
+			}
+			return new JDTClassNode(type, resolver); // TODO who would fix up generics later?
+			// return resolver.makeWithoutCaching(type);
+			// if (c.isPrimitive()) {
+			// return ClassHelper.make(c);
+			// } else {
+			// return ClassHelper.makeWithoutCaching(c, false);
+			// }
+		}
+
+		private ClassNode configureBaseTypeBinding(BaseTypeBinding type) {
+			switch (type.id) {
+				case TypeIds.T_boolean:
+					return ClassHelper.boolean_TYPE;
+				case TypeIds.T_char:
+					return ClassHelper.char_TYPE;
+				case TypeIds.T_byte:
+					return ClassHelper.byte_TYPE;
+				case TypeIds.T_short:
+					return ClassHelper.short_TYPE;
+				case TypeIds.T_int:
+					return ClassHelper.int_TYPE;
+				case TypeIds.T_long:
+					return ClassHelper.long_TYPE;
+				case TypeIds.T_double:
+					return ClassHelper.double_TYPE;
+				case TypeIds.T_float:
+					return ClassHelper.float_TYPE;
+				case TypeIds.T_void:
+					return ClassHelper.VOID_TYPE;
+				default:
+					throw new GroovyEclipseBug("Don't know what this is: " + type);
+			}
+		}
+
+		private ClassNode configureGenericArray(ArrayBinding genericArrayType) {
+			TypeBinding component = genericArrayType.leafComponentType;// getGenericComponentType();
+			ClassNode node = configureType(component);
+			return node.makeArray();
+		}
+
+		private ClassNode configureParameterizedType(ParameterizedTypeBinding parameterizedType) {
+			if (parameterizedType instanceof RawTypeBinding) { // TODO correct?
+				return resolver.makeWithoutCaching(toRawType(parameterizedType));// configureType(toRawType(parameterizedType));
+			}
+			ClassNode base = configureType(parameterizedType.erasure()); // TODO getRawType() - will erasure do?
+			GenericsType[] gts = configureTypeArguments(parameterizedType.arguments);
+			base.setGenericsTypes(gts);
+			return base;
+		}
+
+		private GenericsType[] configureTypeArguments(TypeBinding[] ta) {
+			if (ta.length == 0) {
+				return null;
+			}
+			GenericsType[] gts = new GenericsType[ta.length];
+			for (int i = 0; i < ta.length; i++) {
+				ClassNode t = configureType(ta[i]);
+				if (ta[i] instanceof WildcardBinding) {
+					GenericsType[] gen = t.getGenericsTypes();
+					gts[i] = gen[0];
+				} else {
+					gts[i] = new GenericsType(t);
+				}
+			}
+			return gts;
+		}
+
+		private ClassNode configureTypeVariableReference(TypeVariableBinding tv) {
+			ClassNode cn = ClassHelper.makeWithoutCaching(tv.debugName());
+			cn.setGenericsPlaceHolder(true);
+			ClassNode cn2 = ClassHelper.makeWithoutCaching(tv.debugName());
+			cn2.setGenericsPlaceHolder(true);
+			GenericsType[] gts = new GenericsType[] { new GenericsType(cn2) };
+			cn.setGenericsTypes(gts);
+			cn.setRedirect(ClassHelper.OBJECT_TYPE);
+			return cn;
+		}
+
+		private ClassNode[] configureTypes(TypeBinding[] types) {
+			if (types.length == 0)
+				return null;
+			ClassNode[] nodes = new ClassNode[types.length];
+			for (int i = 0; i < types.length; i++) {
+				nodes[i] = configureType(types[i]);
+			}
+			return nodes;
+		}
+
+		private TypeBinding[] getLowerbounds(WildcardBinding wildcardType) {
+			if (wildcardType.boundKind == Wildcard.SUPER) {
+				return new TypeBinding[] { wildcardType.bound };
+			}
+			return TypeBinding.NO_TYPES;
+		}
+
+		private TypeBinding[] getUpperbounds(WildcardBinding wildcardType) {
+			if (wildcardType.boundKind == Wildcard.EXTENDS) {
+				List<TypeBinding> bounds = new ArrayList<TypeBinding>();
+				bounds.add(wildcardType.bound);
+				if (wildcardType.otherBounds != null) {
+					for (int b = 0; b < wildcardType.otherBounds.length; b++) {
+						bounds.add(wildcardType.otherBounds[b]);
+					}
+				}
+				return bounds.toArray(new TypeBinding[bounds.size()]);
+			}
+			return TypeBinding.NO_TYPES;
+		}
+
+		private ClassNode configureWildcardType(WildcardBinding wildcardType) {
+			ClassNode base = ClassHelper.makeWithoutCaching("?");
+			base.setRedirect(ClassHelper.OBJECT_TYPE);
+			// TODO: more than one lower bound for wildcards?
+
+			int i = wildcardType.boundKind; // Wildcard.UNBOUND/EXTENDS/SUPER
+			ClassNode[] lowers = configureTypes(getLowerbounds(wildcardType)); // wildcardType.getLowerBounds()
+			ClassNode lower = null;
+			// TODO: is it safe to remove this? What was the original intention?
+			if (lowers != null)
+				lower = lowers[0];
+
+			ClassNode[] upper = configureTypes(getUpperbounds(wildcardType));// wildcardType.getUpperBounds());
+			GenericsType t = new GenericsType(base, upper, lower);
+			t.setWildcard(true);
+
+			ClassNode ref = ClassHelper.makeWithoutCaching(Object.class, false);
+			ref.setGenericsTypes(new GenericsType[] { t });
+
+			return ref;
+		}
+
+		private TypeBinding toRawType(TypeBinding tb) {
+			if (tb instanceof ParameterizedTypeBinding) {
+				ParameterizedTypeBinding ptb = (ParameterizedTypeBinding) tb;
+				return resolver.getScope().environment.convertToRawType(ptb.genericType(), false);
+			} else if (tb instanceof TypeVariableBinding) {
+				return tb; // TODO correct?
+			} else if (tb instanceof BinaryTypeBinding) {
+				if (tb.isGenericType()) {
+					return resolver.getScope().environment.convertToRawType(tb, false);
+				} else {
+					return tb;
+				}
+			} else if (tb instanceof ArrayBinding) {
+				return tb; // TODO correct?
+			} else if (tb instanceof BaseTypeBinding) {
+				return tb;
+			} else if (tb instanceof SourceTypeBinding) {
+				return tb;
+			}
+			throw new IllegalStateException("nyi " + tb.getClass());
 		}
 	}
 

@@ -8784,7 +8784,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"@groovy.transform.CompileStatic\n"+
 				"def meth() {\n"+
 				"	List<String> second = []\n"+
-				"	List<String> artefactResources2\n"+
+				"	List<String> artefactResources2 = []\n"+
 				"	second.addAll(artefactResources2)\n"+
 				"   println 'abc'\n"+
 				"}\n"+
