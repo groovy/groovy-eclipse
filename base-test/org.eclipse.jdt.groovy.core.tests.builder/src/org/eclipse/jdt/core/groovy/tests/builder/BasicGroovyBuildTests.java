@@ -416,6 +416,251 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		}
 	}
 	
+//	public void testCompileStatic_1506() throws Exception {
+//		try {
+//			if (GroovyUtils.GROOVY_LEVEL < 20) {
+//				return;
+//			}
+//			IPath projectPath = env.addProject("Project","1.6"); //$NON-NLS-1$
+//			env.addExternalJars(projectPath, Util.getJavaClassLibs());
+//			env.addGroovyJars(projectPath);
+//			fullBuild(projectPath);
+//			// remove old package fragment root so that names don't collide
+//			env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+//	
+//			IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+//			env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+//			
+//			JDTResolver.recordInstances = true;
+//			
+//			env.addGroovyClass(root, "", "Foo",
+//					"import groovy.transform.CompileStatic\n"+
+//					"@CompileStatic\n"+
+//					"void method(String message) {\n"+
+//					"   Collection<Integer> cs;\n"+
+////					"   List<Integer> ls = new ArrayList<Integer>();\n"+
+////					"   ls.add(123);\n"+
+////					"   ls.add('abc');\n"+
+//					// GRECLIPSE-1511 code
+//					"	List<String> second = []\n"+
+//					"	List<String> artefactResources2\n"+
+//					"	second.addAll(artefactResources2)\n"+
+//					"}\n"+
+//					"interface ListOfFile extends ArrayList<File> {\n"+
+//					"}"
+//					);
+//	
+//			incrementalBuild(projectPath);
+////			expectingCompiledClassesV("Foo","List2");
+//			expectingNoProblems();
+//			
+//			// Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
+//			
+//			// Access the jdtresolver bits and pieces 
+//			
+//			JDTClassNode jcn = JDTResolver.getCachedNode("ListOfFile");
+//			
+//			assertNotNull(jcn);
+//			System.out.println("JDT ClassNode="+jcn);
+////			JDTClassNode jcn2 = jdtr.getCachedNode("List2");
+////			System.out.println(jcn2);
+//			
+////			List<File> C = new ArrayList<File>();
+//			ClassNode listcn = new ClassNode(java.util.Collection.class);
+//			VMPluginFactory.getPlugin().setAdditionalClassInformation(listcn);
+//			listcn.lazyClassInit();
+//			System.out.println("Groovy ClassNode="+listcn);
+//			
+////			IJavaProject ijp = env.getJavaProject("Project");
+////			GroovyCompilationUnit unit = (GroovyCompilationUnit) ijp.findType("Foo")
+////					.getCompilationUnit();
+//
+//			// now find the class reference
+////			ClassNode cn = unit.getModuleNode().getClasses().get(1);
+////			System.out.println(cn);
+//			
+//			// Compare java.util.List from JDTClassNode and List2 from groovy
+//			compareClassNodes(jcn.redirect(),listcn.redirect(),0);
+//			MethodNode jmn = getMethodNode(jcn,"add",1); // boolean add(E)
+//			MethodNode rmn = getMethodNode(listcn,"add",1);						
+//			compareMethodNodes(jmn,rmn);
+//			
+//			jmn = getMethodNode(jcn,"addAll",1);
+//			rmn = getMethodNode(listcn,"addAll",1);
+//			compareMethodNodes(jmn,rmn);
+//			
+//			// Want to compare type information in the 
+//			// env.addClass(root, "", "Client", "public class Client {\n"
+//			// + "  { new Outer.Inner(); }\n" + "}\n");
+//			// incrementalBuild(projectPath);
+//			// expectingNoProblems();
+//			// expectingCompiledClassesV("Client");
+//		} finally {
+//			JDTResolver.recordInstances = false;
+//		}
+//	}
+	
+	public void testCompileStatic_FileAddAll() throws Exception {
+		try {
+			if (GroovyUtils.GROOVY_LEVEL < 20) {
+				return;
+			}
+			IPath projectPath = env.addProject("Project","1.6"); //$NON-NLS-1$
+			env.addExternalJars(projectPath, Util.getJavaClassLibs());
+			env.addGroovyJars(projectPath);
+			fullBuild(projectPath);
+			// remove old package fragment root so that names don't collide
+			env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+	
+			IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+			env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+			
+			JDTResolver.recordInstances = true;
+			
+			env.addGroovyClass(root, "", "Foo",
+					"import groovy.transform.CompileStatic\n"+
+					"@CompileStatic\n"+
+					"class Foo {\n"+
+					"List<String> jvmArgs = new ArrayList<String>();\n"+
+					" void method(String message) {\n"+
+					"   List<String> cmd = ['java'];\n"+
+					"	cmd.addAll(jvmArgs);\n"+
+					" }\n"+
+					"}\n"
+					);
+	
+			incrementalBuild(projectPath);
+			expectingNoProblems();
+			expectingCompiledClassesV("Foo");
+			
+			// Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
+		} finally {
+			JDTResolver.recordInstances = false;
+		}
+	}
+	
+	public void testCompileStatic_ListFileArgIteratedOver() throws Exception {
+		try {
+			if (GroovyUtils.GROOVY_LEVEL < 20) {
+				return;
+			}
+			IPath projectPath = env.addProject("Project","1.6"); //$NON-NLS-1$
+			env.addExternalJars(projectPath, Util.getJavaClassLibs());
+			env.addGroovyJars(projectPath);
+			fullBuild(projectPath);
+			// remove old package fragment root so that names don't collide
+			env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+	
+			IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+			env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+			
+			JDTResolver.recordInstances = true;
+			
+			env.addGroovyClass(root, "", "Foo",
+					"import groovy.transform.CompileStatic\n"+
+					"class Foo {\n"+
+					"@CompileStatic\n"+
+					"private populateSourceDirectories() {\n"+
+					"	List<File> pluginDependencies\n"+
+					"  for (zip in pluginDependencies) {\n"+
+					"    registerPluginZipWithScope(zip);\n"+
+					"  }\n"+
+					"}\n"+
+					"private void registerPluginZipWithScope(File pluginzip) {}\n"+
+					"}\n"
+					);
+	
+			incrementalBuild(projectPath);
+			expectingNoProblems();
+			expectingCompiledClassesV("Foo");
+			
+			// Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
+		} finally {
+			JDTResolver.recordInstances = false;
+		}
+	}
+	
+	public void testCompileStatic_IterableParameter() throws Exception {
+		try {
+			if (GroovyUtils.GROOVY_LEVEL < 20) {
+				return;
+			}
+			IPath projectPath = env.addProject("Project","1.6"); //$NON-NLS-1$
+			env.addExternalJars(projectPath, Util.getJavaClassLibs());
+			env.addGroovyJars(projectPath);
+			fullBuild(projectPath);
+			// remove old package fragment root so that names don't collide
+			env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+	
+			IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+			env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+			
+			JDTResolver.recordInstances = true;
+			
+			env.addGroovyClass(root, "", "Foo",
+					"import groovy.transform.CompileStatic\n"+
+					"@CompileStatic\n"+
+					"class Foo {\n"+
+					"private populateSourceDirectories() {\n"+
+					"	List<File> pluginDependencies\n"+
+					"   foo(pluginDependencies);\n"+
+					"}\n"+
+					"private void foo(Iterable<File> iterable) {}\n"+
+					"}\n"
+					);
+	
+			incrementalBuild(projectPath);
+			expectingNoProblems();
+			expectingCompiledClassesV("Foo");
+			
+			// Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
+		} finally {
+			JDTResolver.recordInstances = false;
+		}
+	}
+	
+	public void testCompileStatic_BuildSettings() throws Exception {
+		try {
+			if (GroovyUtils.GROOVY_LEVEL < 20) {
+				return;
+			}
+			IPath projectPath = env.addProject("Project","1.6"); //$NON-NLS-1$
+			env.addExternalJars(projectPath, Util.getJavaClassLibs());
+			env.addGroovyJars(projectPath);
+			fullBuild(projectPath);
+			// remove old package fragment root so that names don't collide
+			env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+	
+			IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+			env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+			
+			JDTResolver.recordInstances = true;
+			
+			env.addGroovyClass(root, "", "BuildSettings",
+					"import groovy.transform.CompileStatic\n"+
+					"\n"+
+					"class BuildSettings  {\n"+
+					"\n"+
+					"   List<File> compileDependencies = []\n"+
+					"	List<File> defaultCompileDependencies = []\n"+
+					"\n"+						
+					"    @CompileStatic\n"+
+					"    void getCompileDependencies() {\n"+
+					"        compileDependencies += defaultCompileDependencies\n"+
+					"    }\n"+
+					"\n"+
+					"}\n");
+	
+			incrementalBuild(projectPath);
+			expectingNoProblems();
+			expectingCompiledClassesV("BuildSettings");
+			
+			// Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
+		} finally {
+			JDTResolver.recordInstances = false;
+		}
+	}
+	
 	private MethodNode getMethodNode(ClassNode jcn, String selector, int paramCount) {
 		List<MethodNode> mns = jcn.getDeclaredMethods(selector);
 		for (MethodNode mn: mns) {

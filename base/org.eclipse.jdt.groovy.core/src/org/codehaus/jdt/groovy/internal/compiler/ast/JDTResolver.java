@@ -510,6 +510,8 @@ public class JDTResolver extends ResolveVisitor {
 		return createJDTClassNode(jdtBinding);
 	}
 
+	private int createJDTClassNodeEntryCounter = 0;
+
 	/**
 	 * Create a Groovy ClassNode that represents the JDT TypeBinding. Build the basic structure, mark it as 'in progress' and then
 	 * continue with initialization. This allows self referential generic declarations.
@@ -518,27 +520,59 @@ public class JDTResolver extends ResolveVisitor {
 	 * @return the new ClassNode, of type JDTClassNode
 	 */
 	private ClassNode createJDTClassNode(TypeBinding jdtBinding) {
+		boolean stop = false;
+		if (jdtBinding.debugName().contains("Collection")) {
+			stop = true;
+			StackTraceElement[] stes = Thread.currentThread().getStackTrace();
+			for (StackTraceElement ste : stes) {
+				if (ste.toString().contains("makeParameter") || ste.toString().contains("methodBindingToMethodNode")) {
+					stop = false;
+				}
+			}
+		}
+		if (stop) {
+			int stopstop = 1;
+		}
+		createJDTClassNodeEntryCounter++;
 		// damn that enum type, this will sort it:
 		if (inProgress.containsKey(jdtBinding)) {
 			return inProgress.get(jdtBinding);
 		}
-		ClassNode classNode = new ClassNodeBuilder(this).configureType(jdtBinding);// createClassNode(jdtBinding);
+		createJDTClassNodeEntryCounter++;
+		ClassNodeBuilder cnb = new ClassNodeBuilder(this);
+		ClassNode classNode = cnb.configureType(jdtBinding);// createClassNode(jdtBinding);
 		if (classNode instanceof JDTClassNode) {
 			JDTClassNode jdtNode = (JDTClassNode) classNode;
 			inProgress.put(jdtBinding, jdtNode);
-			inProgressStack.push(jdtNode);
-			jdtNode.setupGenerics();
-			inProgressStack.pop();
+			// inProgressStack.push(jdtNode);
+			jdtNode.setupGenerics(); // for a binarytypebinding this fixes up those generics.
+			// inProgressStack.pop();
 			inProgress.remove(jdtBinding);
 			nodeCache.put(jdtBinding, jdtNode);
 		}
+		if (classNode.getName().endsWith("Collection") && classNode.getGenericsTypes() != null
+				&& classNode.getGenericsTypes().length > 0 && !classNode.getGenericsTypes()[0].isPlaceholder()) {
+			// int stop = 1;
+		}
+		createJDTClassNodeEntryCounter--;
+		// if (createJDTClassNodeEntryCounter == 0) {
+		// at the top most, we need to initialize generics for anything we encountered during the build of that node
+		for (JDTClassNode jdtNode : cnb.list) {
+			inProgress.put(jdtNode.jdtBinding, jdtNode);
+			// inProgressStack.push(jdtNode);
+			jdtNode.setupGenerics();
+			// inProgressStack.pop();
+			inProgress.remove(jdtNode.jdtBinding);
+			// nodeCache.put(jdtBinding, jdtNode);
+		}
+		// }
 		return classNode;
 	}
 
 	/**
 	 * Create a ClassNode based on the type of the JDT binding, this takes account of all the possible kinds of JDT binding.
 	 */
-	private ClassNode createClassNode(TypeBinding jdtTypeBinding) {
+	ClassNode createClassNode(TypeBinding jdtTypeBinding) {
 		if (jdtTypeBinding instanceof WildcardBinding) {
 			return createClassNodeForWildcardBinding((WildcardBinding) jdtTypeBinding);
 		} else if (jdtTypeBinding instanceof BaseTypeBinding) {
@@ -725,6 +759,9 @@ public class JDTResolver extends ResolveVisitor {
 			assert (wildcardBinding.boundKind == Wildcard.UNBOUND);
 			return JDTClassNode.unboundWildcard;
 		}
+		if (allUppers == null) {
+			throw new IllegalStateException();
+		}
 		GenericsType t = new GenericsType(base, allUppers, lowerBound);
 		t.setWildcard(true);
 		ClassNode ref = ClassHelper.makeWithoutCaching(Object.class, false);
@@ -816,6 +853,8 @@ public class JDTResolver extends ResolveVisitor {
 
 		private JDTResolver resolver;
 
+		public List<JDTClassNode> list = new ArrayList<JDTClassNode>();
+
 		ClassNodeBuilder(JDTResolver resolver) {
 			this.resolver = resolver;
 		}
@@ -836,6 +875,9 @@ public class JDTResolver extends ResolveVisitor {
 			} else if (type instanceof SourceTypeBinding) {
 				return configureSourceType((SourceTypeBinding) type);
 			}
+			if (type == null) {
+				int stop = 1;
+			}
 			throw new IllegalStateException("nyi " + type.getClass());
 		}
 
@@ -843,7 +885,9 @@ public class JDTResolver extends ResolveVisitor {
 			if (type.id == TypeIds.T_JavaLangObject) {
 				return ClassHelper.OBJECT_TYPE;
 			}
-			return new JDTClassNode(type, resolver);
+			JDTClassNode jcn = new JDTClassNode(type, resolver);
+			list.add(jcn);
+			return jcn;
 			// return resolver.convertToClassNode(type); // TODO correct?
 		}
 
@@ -851,7 +895,9 @@ public class JDTResolver extends ResolveVisitor {
 			if (type.id == TypeIds.T_JavaLangObject) {
 				return ClassHelper.OBJECT_TYPE;
 			}
-			return new JDTClassNode(type, resolver); // TODO who would fix up generics later?
+			JDTClassNode jcn = new JDTClassNode(type, resolver); // TODO who would fix up generics later?
+			list.add(jcn);
+			return jcn;
 			// return resolver.makeWithoutCaching(type);
 			// if (c.isPrimitive()) {
 			// return ClassHelper.make(c);
@@ -893,9 +939,28 @@ public class JDTResolver extends ResolveVisitor {
 
 		private ClassNode configureParameterizedType(ParameterizedTypeBinding parameterizedType) {
 			if (parameterizedType instanceof RawTypeBinding) { // TODO correct?
-				return resolver.makeWithoutCaching(toRawType(parameterizedType));// configureType(toRawType(parameterizedType));
+				TypeBinding rt = toRawType(parameterizedType);
+				return new JDTClassNode((RawTypeBinding) rt, resolver); // doesn't need generics initializing
+				// return resolver.makeWithoutCaching(toRawType(parameterizedType));// configureType(toRawType(parameterizedType));
 			}
-			ClassNode base = configureType(parameterizedType.erasure()); // TODO getRawType() - will erasure do?
+			TypeBinding rt = toRawType(parameterizedType);
+			if ((rt instanceof ParameterizedTypeBinding) && !(rt instanceof RawTypeBinding)) {
+				// the type was the inner type of a parameterized type
+				return new JDTClassNode((ParameterizedTypeBinding) rt, resolver); // doesn't need generics initializing
+
+			}
+			ClassNode base = configureType(rt);// .erasure()); // TODO getRawType() - will erasure do?
+			if (base instanceof JDTClassNode) {
+				((JDTClassNode) base).setJdtBinding(parameterizedType);
+				// the messing about in here is for a few reasons. Contrast it with the ClassHelper.makeWithoutCaching
+				// that code when called for Iterable will set the redirect to point to the generics. That is what
+				// we are trying to achieve here.
+				if ((parameterizedType instanceof ParameterizedTypeBinding) && !(parameterizedType instanceof RawTypeBinding)) {
+					ClassNode cn = resolver.createClassNode(parameterizedType.genericType());
+					list.add((JDTClassNode) cn);
+					((JDTClassNode) base).setRedirect(cn);
+				}
+			}
 			GenericsType[] gts = configureTypeArguments(parameterizedType.arguments);
 			base.setGenericsTypes(gts);
 			return base;
@@ -957,7 +1022,7 @@ public class JDTResolver extends ResolveVisitor {
 				}
 				return bounds.toArray(new TypeBinding[bounds.size()]);
 			}
-			return TypeBinding.NO_TYPES;
+			return new TypeBinding[] { resolver.getScope().getJavaLangObject() };// TypeBinding.NO_TYPES;
 		}
 
 		private ClassNode configureWildcardType(WildcardBinding wildcardType) {
@@ -973,6 +1038,9 @@ public class JDTResolver extends ResolveVisitor {
 				lower = lowers[0];
 
 			ClassNode[] upper = configureTypes(getUpperbounds(wildcardType));// wildcardType.getUpperBounds());
+			if (upper == null) {
+				throw new IllegalStateException();
+			}
 			GenericsType t = new GenericsType(base, upper, lower);
 			t.setWildcard(true);
 
@@ -987,7 +1055,13 @@ public class JDTResolver extends ResolveVisitor {
 				ParameterizedTypeBinding ptb = (ParameterizedTypeBinding) tb;
 				return resolver.getScope().environment.convertToRawType(ptb.genericType(), false);
 			} else if (tb instanceof TypeVariableBinding) {
-				return tb; // TODO correct?
+				TypeBinding fb = ((TypeVariableBinding) tb).firstBound;
+				;
+				if (fb == null) {
+					return resolver.getScope().getJavaLangObject();
+				}
+				return fb;
+				// return tb; // TODO correct?
 			} else if (tb instanceof BinaryTypeBinding) {
 				if (tb.isGenericType()) {
 					return resolver.getScope().environment.convertToRawType(tb, false);
