@@ -30,6 +30,9 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.ILocalVariable;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
@@ -126,6 +129,85 @@ public class AnnotationsTests extends BuilderTests {
         return null;
     }
 
+    public void testImmutableAnnotation1() throws Exception {
+        GroovyCompilationUnit unit = createUnit("Thiz", "import groovy.transform.Immutable\n @Immutable class Thiz { String foo }");
+        env.fullBuild();
+        expectingNoProblems();
+        IType type = unit.getType("Thiz");
+        boolean foundConstructor = false;
+        IMethod[] methods = type.getMethods();
+        for (IMethod method : methods) {
+            if (method.isConstructor()) {
+                if (foundConstructor) {
+                    fail("Should have found exactly one constructor");
+                }
+                foundConstructor = true;
+                ILocalVariable[] parameters = method.getParameters();
+                assertEquals("Should have exactly one argument to constructor.", 1, parameters.length);
+                assertEquals("Should be type string", "QString;", parameters[0].getTypeSignature());
+            }
+        }
+        
+        if (!foundConstructor) {
+            fail("Should have found exactly one constructor");
+        }
+    }
+
+    public void testImmutableAnnotation1a() throws Exception {
+        GroovyCompilationUnit unit = createUnit("Thiz", "@groovy.transform.Immutable class Thiz { String foo }");
+        env.fullBuild();
+        expectingNoProblems();
+        IType type = unit.getType("Thiz");
+        boolean foundConstructor = false;
+        IMethod[] methods = type.getMethods();
+        for (IMethod method : methods) {
+            if (method.isConstructor()) {
+                if (foundConstructor) {
+                    fail("Should have found exactly one constructor");
+                }
+                foundConstructor = true;
+                ILocalVariable[] parameters = method.getParameters();
+                assertEquals("Should have exactly one argument to constructor.", 1, parameters.length);
+                assertEquals("Should be type string", "QString;", parameters[0].getTypeSignature());
+            }
+        }
+        
+        if (!foundConstructor) {
+            fail("Should have found exactly one constructor");
+        }
+    }
+    
+    public void testImmutableAnnotation2() throws Exception {
+        GroovyCompilationUnit unit = createUnit("Thiz", "import groovy.transform.Immutable\n @Immutable class Thiz { }");
+        env.fullBuild();
+        expectingNoProblems();
+        IType type = unit.getType("Thiz");
+        int constructorCount = 0;
+        IMethod[] methods = type.getMethods();
+        for (IMethod method : methods) {
+            if (method.isConstructor()) {
+                constructorCount++;
+            }
+        }
+        assertEquals("Should have found no constructors", 0, constructorCount);
+    }
+    
+    public void testImmutableAnnotation3() throws Exception {
+        createUnit("p", "Immutable", "package p\n@interface Immutable { }");
+        GroovyCompilationUnit unit = createUnit("Thiz", "import p.Immutable\n@Immutable class Thiz { String foo }");
+        env.fullBuild();
+        expectingNoProblems();
+        IType type = unit.getType("Thiz");
+        IMethod[] methods = type.getMethods();
+        int constructorCount = 0;
+        for (IMethod method : methods) {
+            if (method.isConstructor()) {
+                constructorCount++;
+            }
+        }
+        assertEquals("Should have found no constructors", 0, constructorCount);
+    }
+    
 
     private ClassNode getClassFromScript(GroovyCompilationUnit unit) {
         return ((ClassExpression) ((ReturnStatement) unit.getModuleNode().getStatementBlock().getStatements().get(0)).getExpression()).getType();
@@ -133,6 +215,11 @@ public class AnnotationsTests extends BuilderTests {
 
     protected GroovyCompilationUnit createUnit(String name, String contents) {
         IPath path = env.addGroovyClass(project.getFolder("src").getFullPath(), name, contents);
+        return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
+    }
+    protected GroovyCompilationUnit createUnit(String pkg, String name, String contents) {
+        IPath pkgPath = env.addPackage(project.getFolder("src").getFullPath(), pkg);
+        IPath path = env.addGroovyClass(pkgPath, name, contents);
         return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
     }
 }

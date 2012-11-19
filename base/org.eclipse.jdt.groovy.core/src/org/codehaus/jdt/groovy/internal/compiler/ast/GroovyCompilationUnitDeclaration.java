@@ -891,8 +891,20 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		boolean hasImmutableAnnotation = false;
 		if (annos != null) {
 			for (AnnotationNode anno : annos) {
-				if (anno.getClassNode() != null && anno.getClassNode().getName().equals("Immutable")) {
-					hasImmutableAnnotation = true;
+				if (anno.getClassNode() != null) {
+					String annoName = anno.getClassNode().getName();
+					if (annoName.equals("groovy.transform.Immutable")) {
+						hasImmutableAnnotation = true;
+					} else if (annoName.equals("Immutable")) {
+						// do our best to see if this is the real groovy @Immutable class node
+						ModuleNode module = classNode.getModule();
+						if (module != null) {
+							ClassNode imp = module.getImportType("Immutable");
+							if (imp == null || imp.getName().equals("groovy.transform.Immutable")) {
+								hasImmutableAnnotation = true;
+							}
+						}
+					}
 				}
 			}
 		}
@@ -905,7 +917,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			// groovy will be checking anyway...
 			List<FieldNode> fields = classNode.getFields();
 			if (fields.size() > 0) {
-				// only add constructor if one or more methods
+				// only add constructor if one or more fields.
+				// when no fields are present, fall back on the default generated constructor
 				Argument[] arguments = new Argument[fields.size()];
 				for (int i = 0; i < fields.size(); i++) {
 					FieldNode field = fields.get(i);
