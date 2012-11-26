@@ -371,7 +371,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
 	private Parameter makeParameter(TypeBinding parameterType, int paramNumber) {
 		ClassNode paramType = makeClassNode(parameterType, new JDTClassNodeBuilder(resolver).toRawType(parameterType));
-		String paramName = "arg" + (paramNumber < 8 ? argNames[paramNumber] : paramNumber);
+		String paramName = (paramNumber < 8 ? argNames[paramNumber] : "arg" + paramNumber);
 		return new Parameter(paramType, paramName);
 	}
 
