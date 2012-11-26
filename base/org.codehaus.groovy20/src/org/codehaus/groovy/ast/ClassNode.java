@@ -181,6 +181,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     private boolean annotated;
 
     // type spec for generics
+    // GRECLIPSE: to protected
     protected GenericsType[] genericsTypes=null;
     private boolean usesGenerics=false;
 
@@ -438,14 +439,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public void setInterfaces(ClassNode[] interfaces) {
-    	
-    	if (this.getName().endsWith("String") && interfaces!=null) {
-    		for (ClassNode i: interfaces) {
-    			if (i.getName().endsWith("String")) {
-    				int stop = 1;
-    			}
-    		}
-    	}
         if (redirect!=null) {
             redirect().setInterfaces(interfaces);
         } else {
@@ -628,7 +621,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             r.properties = new ArrayList<PropertyNode> ();
         r.properties.add(node);
     }
-    
 
     public void addProperty(PropertyNode node) {
         node.setDeclaringClass(redirect());
@@ -1514,11 +1506,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public boolean isUsingGenerics() {
-//    	ensureGenericsInitialized();
         return usesGenerics;
     }
-    
-//    public void ensureGenericsInitialized() {}
 
     public void setUsingGenerics(boolean b) {
         usesGenerics = b;

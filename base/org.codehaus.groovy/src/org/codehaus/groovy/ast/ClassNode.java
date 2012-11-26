@@ -193,7 +193,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     private boolean annotated;
 
     // type spec for generics
-    private GenericsType[] genericsTypes=null;
+    // GRECLIPSE: to protected
+    protected GenericsType[] genericsTypes=null;
     private boolean usesGenerics=false;
 
     // if set to true the name getGenericsTypes consists
