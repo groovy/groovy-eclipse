@@ -9730,6 +9730,11 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"p/q/r/Colour.java",
 				"package p.q.r;\n" + 
 				"enum Colour { Red,Green,Blue; }\n",
+				
+				"p/q/r/Colour3.java",
+				"package p.q.r;\n"+
+				"@SuppressWarnings(\"rawtypes\")\n"+
+				"class Colour3 implements Comparable { public int compareTo(Object o) { return 0;}}\n",
 	
 				"p/q/r/Colour2.java",
 				"package p.q.r;\n" + 
@@ -9738,8 +9743,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 					"}\n",
 				},"RedGreenBlue");		 
 			
-			// Check on the state of Comparable		
-			JDTClassNode classnode = ((JDTResolver)JDTResolver.instances.get(0)).getCachedNode("java.lang.Comparable<T>");
+			// Check on the state of Comparable
+			JDTClassNode classnode = JDTResolver.getCachedNode("java.lang.Comparable<E>");
 			assertNotNull(classnode);
 			// Should have one method
 			List methods = classnode.getMethods();
