@@ -12,7 +12,6 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,7 +33,6 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclar
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.BooleanConstant;
 import org.eclipse.jdt.internal.compiler.impl.ByteConstant;
@@ -48,7 +46,6 @@ import org.eclipse.jdt.internal.compiler.impl.ShortConstant;
 import org.eclipse.jdt.internal.compiler.impl.StringConstant;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
-import org.eclipse.jdt.internal.compiler.lookup.BaseTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
@@ -63,9 +60,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SyntheticMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
-import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
 
 /**
  * Groovy can use these to ask questions of JDT bindings. They are only built as required (as groovy references to java files are
@@ -74,7 +69,6 @@ import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
  * 
  * @author Andy Clement
  */
-@SuppressWarnings("restriction")
 public class JDTClassNode extends ClassNode implements JDTNode {
 
 	private static final Parameter[] NO_PARAMETERS = new Parameter[0];
@@ -115,15 +109,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		unboundWildcard.setRedirect(ClassHelper.OBJECT_TYPE);
 
 		genericsTypeUnboundWildcard = t;
-		// unboundWildcard = ClassHelper.make(name);//new ClassNode(Object.class);// ClassHelper.makeWithoutCaching(Object.class,
-		// false);
-		// unboundWildcard.setGenericsTypes(new GenericsType[] { t });
-	}
-
-	@Override
-	public boolean mightHaveInners() {
-		// return super.hasInnerClasses();
-		return jdtBinding.memberTypes().length != 0;
 	}
 
 	/**
@@ -180,40 +165,18 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			return;
 		}
 		try {
-			if (jdtBinding instanceof ParameterizedTypeBinding && !(jdtBinding instanceof RawTypeBinding)) { // Includes RawTB
-				GenericsType[] gts = configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
+			if (jdtBinding instanceof ParameterizedTypeBinding && !(jdtBinding instanceof RawTypeBinding)) {
+				// GenericsType[] gts = configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
+				GenericsType[] gts = new JDTClassNodeBuilder(this.resolver)
+						.configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
 				setGenericsTypes(gts);
 				// return base;
 			} else if (jdtBinding instanceof RawTypeBinding) {
 				// nothing to do
 			} else {
-				// if (jdtBinding instanceof ParameterizedTypeBinding) { // Includes RawTB
-				// ParameterizedTypeBinding ptb = (ParameterizedTypeBinding) jdtBinding;
-				// TypeBinding[] parameterizationArguments = ptb.arguments;
-				// if (parameterizationArguments != null && parameterizationArguments.length > 0) {
-				// GenericsType[] generics = new GenericsType[parameterizationArguments.length];
-				// for (int g = 0; g < parameterizationArguments.length; g++) {
-				// TypeBinding typeBinding = parameterizationArguments[g];
-				// if (typeBinding instanceof TypeVariableBinding) {
-				// generics[g] = createGenericsTypeInfoForTypeVariableBinding((TypeVariableBinding) parameterizationArguments[g]);
-				// } else {
-				// // minor optimization for the case of the unbound wildcard '?'
-				// if (typeBinding instanceof WildcardBinding && ((WildcardBinding) typeBinding).boundKind == Wildcard.UNBOUND) {
-				// generics[g] = genericsTypeUnboundWildcard;
-				// } else {
-				// generics[g] = new GenericsType(resolver.convertToClassNode(typeBinding));
-				// }
-				// }
-				// }
-				// this.setGenericsTypes(generics);
-				// }
-				// // make the redirect for this parameterized type the generic type
-				// this.setRedirect(resolver.convertToClassNode(ptb.original()));
-				// } else {
 				// SourceTB, BinaryTB, TypeVariableB, WildcardB
 				TypeVariableBinding[] typeVariables = jdtBinding.typeVariables();
-				// GenericsType[] generics = createGenericsTypeInfoForTypeVariableBindings(typeVariables);
-				GenericsType[] generics = configureTypeVariables(typeVariables);
+				GenericsType[] generics = new JDTClassNodeBuilder(this.resolver).configureTypeVariables(typeVariables);
 				if (generics != null) {
 					this.setGenericsTypes(generics);
 				}
@@ -221,48 +184,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		} finally {
 			anyGenericsInitialized = true;
 		}
-	}
-
-	private GenericsType[] configureTypeVariables(TypeVariableBinding[] tvs) {
-		if (tvs.length == 0)
-			return null;
-		GenericsType[] gts = new GenericsType[tvs.length];
-		for (int i = 0; i < tvs.length; i++) {
-			gts[i] = configureTypeVariableDefinition(tvs[i]);
-		}
-		return gts;
-	}
-
-	private GenericsType configureTypeVariableDefinition(TypeVariableBinding tv) {
-		ClassNode base = configureTypeVariableReference(tv);
-		ClassNode redirect = base.redirect();
-		base.setRedirect(null);
-		TypeBinding[] tBounds = getBounds(tv);// ;tv.getBounds();
-		GenericsType gt;
-		if (tBounds.length == 0) {
-			gt = new GenericsType(base);
-		} else {
-			ClassNode[] cBounds = configureTypes(tBounds);
-			gt = new GenericsType(base, cBounds, null);
-			gt.setName(base.getName());
-			gt.setPlaceholder(true);
-		}
-		base.setRedirect(redirect);
-		return gt;
-	}
-
-	private TypeBinding[] getBounds(TypeVariableBinding tv) {
-		List<TypeBinding> bounds = new ArrayList<TypeBinding>();
-		if (tv.firstBound == null) {
-			return new TypeBinding[] { resolver.getScope().getJavaLangObject() };
-			// return null;
-		}
-		bounds.add(tv.firstBound);
-		TypeBinding[] obs = tv.otherUpperBounds();
-		for (int i = 0; i < obs.length; i++) {
-			bounds.add(obs[i]);
-		}
-		return bounds.toArray(new TypeBinding[bounds.size()]);
 	}
 
 	// JDTClassNodes are created because of a JDT Reference Binding file so are
@@ -288,13 +209,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		}
 		try {
 			beingInitialized = true;
-			// if (jdtBinding instanceof ParameterizedTypeBinding) {
-			// ClassNode rd = redirect();
-			// rd.lazyClassInit();
-			// return;
-			// }
 
-			resolver.pushTypeGenerics(getGenericsTypes());
 			if (!jdtBinding.isInterface()) {
 				ReferenceBinding superClass = jdtBinding.superclass();
 				if (superClass != null) {
@@ -302,9 +217,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 				}
 			}
 
-			if (this.getName().contains("List") && this.toString().contains("File")) {
-				int stop = 1;
-			}
 			ReferenceBinding[] superInterfaceBindings = jdtBinding.superInterfaces();
 			superInterfaceBindings = superInterfaceBindings == null ? ReferenceBinding.NO_SUPERINTERFACES : superInterfaceBindings;
 			ClassNode[] interfaces = new ClassNode[superInterfaceBindings.length];
@@ -313,7 +225,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			}
 			setInterfaces(interfaces);
 			initializeMembers();
-			resolver.popTypeGenerics();
 		} finally {
 			beingInitialized = false;
 		}
@@ -399,7 +310,11 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		}
 	}
 
-	boolean stop = false;
+	@Override
+	public boolean mightHaveInners() {
+		// return super.hasInnerClasses();
+		return jdtBinding.memberTypes().length != 0;
+	}
 
 	/**
 	 * Convert a JDT MethodBinding to a Groovy MethodNode
@@ -409,43 +324,36 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
 		TypeVariableBinding[] typeVariables = methodBinding.typeVariables();
 
-		GenericsType[] generics = createGenericsTypeInfoForTypeVariableBindings(typeVariables);
+		GenericsType[] generics = new JDTClassNodeBuilder(resolver).configureTypeVariables(typeVariables);
 		MethodNode mNode = null;
-		try {
-			resolver.pushMemberGenerics(generics);
-			// FIXASC What value is there in getting the parameter names correct? (for methods and ctors)
-			// If they need to be correct we need to retrieve the method decl from the binding scope
-			int modifiers = methodBinding.modifiers;
-			if (jdtBinding.isInterface()) {
-				modifiers |= Modifier.ABSTRACT;
-			}
-			ClassNode returnType = resolver.convertToClassNode(methodBinding.returnType);
-			if (name.equals("onApplicationEvent") && methodBinding.parameters.length == 1
-					&& new String(methodBinding.declaringClass.sourceName()).contains("Jaas")) {
 
-				stop = true;
-			}
-			methodBinding.genericSignature();
-			Parameter[] gParameters = makeParameters(methodBinding.parameters);
-			stop = false;
-			ClassNode[] thrownExceptions = new ClassNode[0]; // FIXASC use constant of size 0
-			if (methodBinding.thrownExceptions != null) {
-				thrownExceptions = new ClassNode[methodBinding.thrownExceptions.length];
-				for (int i = 0; i < methodBinding.thrownExceptions.length; i++) {
-					thrownExceptions[i] = resolver.convertToClassNode(methodBinding.thrownExceptions[i]);
-				}
-			}
-			mNode = new JDTMethodNode(methodBinding, resolver, name, modifiers, returnType, gParameters, thrownExceptions, null);
-
-			// FIXASC (M3) likely to need something like this...
-			// if (jdtBinding.isEnum()) {
-			// if (methodBinding.getDefaultValue() != null) {
-			// mNode.setAnnotationDefault(true);
-			// }
-			// }
-		} finally {
-			resolver.popMemberGenerics();
+		// FIXASC What value is there in getting the parameter names correct? (for methods and ctors)
+		// If they need to be correct we need to retrieve the method decl from the binding scope
+		int modifiers = methodBinding.modifiers;
+		if (jdtBinding.isInterface()) {
+			modifiers |= Modifier.ABSTRACT;
 		}
+		ClassNode returnType = resolver.convertToClassNode(methodBinding.returnType);
+
+		methodBinding.genericSignature();
+		Parameter[] gParameters = makeParameters(methodBinding.parameters);
+
+		ClassNode[] thrownExceptions = new ClassNode[0]; // FIXASC use constant of size 0
+		if (methodBinding.thrownExceptions != null) {
+			thrownExceptions = new ClassNode[methodBinding.thrownExceptions.length];
+			for (int i = 0; i < methodBinding.thrownExceptions.length; i++) {
+				thrownExceptions[i] = resolver.convertToClassNode(methodBinding.thrownExceptions[i]);
+			}
+		}
+		mNode = new JDTMethodNode(methodBinding, resolver, name, modifiers, returnType, gParameters, thrownExceptions, null);
+
+		// FIXASC (M3) likely to need something like this...
+		// if (jdtBinding.isEnum()) {
+		// if (methodBinding.getDefaultValue() != null) {
+		// mNode.setAnnotationDefault(true);
+		// }
+		// }
+
 		mNode.setGenericsTypes(generics);
 		return mNode;
 	}
@@ -455,44 +363,14 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		if (jdtParameters != null && jdtParameters.length > 0) {
 			params = new Parameter[jdtParameters.length];
 			for (int i = 0; i < params.length; i++) {
-				if (stop) {
-					int foo = 1;
-				}
 				params[i] = makeParameter(jdtParameters[i], i);
 			}
 		}
 		return params;
 	}
 
-	private TypeBinding toRawType(TypeBinding tb) {
-		if (tb instanceof ParameterizedTypeBinding) {
-			ParameterizedTypeBinding ptb = (ParameterizedTypeBinding) tb;
-			return resolver.getScope().environment.convertToRawType(ptb.genericType(), false);
-		} else if (tb instanceof TypeVariableBinding) {
-			TypeBinding fb = ((TypeVariableBinding) tb).firstBound;
-			if (fb == null) {
-				return resolver.getScope().getJavaLangObject();
-			}
-			return fb;
-			// return tb; // TODO correct?
-		} else if (tb instanceof BinaryTypeBinding) {
-			if (tb.isGenericType()) {
-				return resolver.getScope().environment.convertToRawType(tb, false);
-			} else {
-				return tb;
-			}
-		} else if (tb instanceof ArrayBinding) {
-			return tb; // TODO correct?
-		} else if (tb instanceof BaseTypeBinding) {
-			return tb;
-		} else if (tb instanceof SourceTypeBinding) {
-			return tb;
-		}
-		throw new IllegalStateException("nyi " + tb.getClass());
-	}
-
 	private Parameter makeParameter(TypeBinding parameterType, int paramNumber) {
-		ClassNode paramType = makeClassNode(parameterType, toRawType(parameterType));
+		ClassNode paramType = makeClassNode(parameterType, new JDTClassNodeBuilder(resolver).toRawType(parameterType));
 		String paramName = "arg" + (paramNumber < 8 ? argNames[paramNumber] : paramNumber);
 		return new Parameter(paramType, paramName);
 	}
@@ -512,112 +390,11 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		if (back == null)
 			back = resolver.convertToClassNode(c);// ClassHelper.make(c);
 		if (!((t instanceof BinaryTypeBinding) || (t instanceof SourceTypeBinding))) {
-			ClassNode front = configureType(t);
+			ClassNode front = JDTClassNodeBuilder.build(this.resolver, t);
 			front.setRedirect(back);
-			if (front.getName().endsWith("Collection") && front.getGenericsTypes() != null && front.getGenericsTypes().length > 0
-					&& !front.getGenericsTypes()[0].isPlaceholder()) {
-				int stop = 1;
-			}
 			return front;
 		}
-		if (back.getName().endsWith("Collection") && back.getGenericsTypes() != null && back.getGenericsTypes().length > 0
-				&& !back.getGenericsTypes()[0].isPlaceholder()) {
-			int stop = 1;
-		}
 		return back;// .getPlainNodeReference();
-	}
-
-	private ClassNode configureType(TypeBinding type) {
-		if (type instanceof TypeVariableBinding) {
-			return configureTypeVariableReference((TypeVariableBinding) type);
-		} else if (type instanceof ParameterizedTypeBinding) {
-			return configureParameterizedType((ParameterizedTypeBinding) type);
-		} else if (type instanceof BinaryTypeBinding) {
-			return configureClass((BinaryTypeBinding) type);
-		} else if (type instanceof WildcardBinding) {
-			return configureWildcardType((WildcardBinding) type);
-		} else if (type instanceof ArrayBinding) {
-			return configureGenericArray((ArrayBinding) type);
-		} else if (type instanceof BaseTypeBinding) {
-			return configureBaseTypeBinding((BaseTypeBinding) type);
-		} else if (type instanceof SourceTypeBinding) {
-			return configureSourceType((SourceTypeBinding) type);
-		}
-		throw new IllegalStateException("nyi " + type.getClass());
-	}
-
-	private ClassNode configureSourceType(SourceTypeBinding type) {
-		return resolver.convertToClassNode(type); // TODO correct?
-	}
-
-	private ClassNode configureBaseTypeBinding(BaseTypeBinding type) {
-		switch (type.id) {
-			case TypeIds.T_boolean:
-				return ClassHelper.boolean_TYPE;
-			case TypeIds.T_char:
-				return ClassHelper.char_TYPE;
-			case TypeIds.T_byte:
-				return ClassHelper.byte_TYPE;
-			case TypeIds.T_short:
-				return ClassHelper.short_TYPE;
-			case TypeIds.T_int:
-				return ClassHelper.int_TYPE;
-			case TypeIds.T_long:
-				return ClassHelper.long_TYPE;
-			case TypeIds.T_double:
-				return ClassHelper.double_TYPE;
-			case TypeIds.T_float:
-				return ClassHelper.float_TYPE;
-			case TypeIds.T_void:
-				return ClassHelper.VOID_TYPE;
-			default:
-				throw new GroovyEclipseBug("Don't know what this is: " + jdtBinding);
-		}
-	}
-
-	private ClassNode configureGenericArray(ArrayBinding genericArrayType) {
-		TypeBinding component = genericArrayType.leafComponentType;// getGenericComponentType();
-		ClassNode node = configureType(component);
-		return node.makeArray();
-	}
-
-	private ClassNode configureClass(BinaryTypeBinding type) {
-		return resolver.makeWithoutCaching(type);
-		// if (c.isPrimitive()) {
-		// return ClassHelper.make(c);
-		// } else {
-		// return ClassHelper.makeWithoutCaching(c, false);
-		// }
-	}
-
-	private ClassNode configureParameterizedType(ParameterizedTypeBinding parameterizedType) {
-		if (parameterizedType instanceof RawTypeBinding) { // TODO correct?
-			TypeBinding rt = toRawType(parameterizedType);
-			return new JDTClassNode((RawTypeBinding) rt, resolver); // doesn't need generics initializing
-			// return resolver.makeWithoutCaching(toRawType(parameterizedType));// configureType(toRawType(parameterizedType));
-		}
-		TypeBinding rt = toRawType(parameterizedType);
-		if ((rt instanceof ParameterizedTypeBinding) && !(rt instanceof RawTypeBinding)) {
-			// the type was the inner type of a parameterized type
-			return new JDTClassNode((ParameterizedTypeBinding) rt, resolver); // doesn't need generics initializing
-
-		}
-		ClassNode base = configureType(rt);// .erasure()); // TODO getRawType() - will erasure do?
-		if (base instanceof JDTClassNode) {
-			((JDTClassNode) base).setJdtBinding(parameterizedType);
-			// the messing about in here is for a few reasons. Contrast it with the ClassHelper.makeWithoutCaching
-			// that code when called for Iterable will set the redirect to point to the generics. That is what
-			// we are trying to achieve here.
-			if ((parameterizedType instanceof ParameterizedTypeBinding) && !(parameterizedType instanceof RawTypeBinding)) {
-				ClassNode cn = resolver.createClassNode(parameterizedType.genericType());
-				// ((JDTClassNode) cn).setupGenerics();
-				// list.add((JDTClassNode) cn);
-				((JDTClassNode) base).setRedirect(cn);
-			}
-		}
-		GenericsType[] gts = configureTypeArguments(parameterizedType.arguments);
-		base.setGenericsTypes(gts);
-		return base;
 	}
 
 	public GenericsType[] getGenericsTypes() {
@@ -625,140 +402,34 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		return genericsTypes;
 	}
 
-	public void ensureGenericsInitialized() {
+	@Override
+	public boolean isUsingGenerics() {
+		ensureGenericsInitialized();
+		return super.isUsingGenerics();
+	}
+
+	private void ensureGenericsInitialized() {
 		if (!anyGenericsInitialized) {
 			setupGenerics();
 		}
 	}
 
-	// private ClassNode configureParameterizedType(ParameterizedTypeBinding parameterizedType) {
-	// if (parameterizedType instanceof RawTypeBinding) { // TODO correct?
-	// return resolver.makeWithoutCaching(toRawType(parameterizedType));// configureType(toRawType(parameterizedType));
-	// }
-	// TypeBinding rt = toRawType(parameterizedType);
-	// if ((rt instanceof ParameterizedTypeBinding) && !(rt instanceof RawTypeBinding)) {
-	// // the type was the inner type of a parameterized type
-	// return new JDTClassNode((ParameterizedTypeBinding) rt, resolver); // doesn't need generics initializing
-	// }
-	// ClassNode base = configureType(rt);// .erasure()); // TODO getRawType() - will erasure do?
-	// // Without this next line we will have a 'base' rawtype but the internal jdtbinding will also be 'RawTypeBinding'.
-	// // We need that internal binding to be the parameterized type binding as that information will be used later
-	// if (base instanceof JDTClassNode) {
-	// ((JDTClassNode) base).setJdtBinding(parameterizedType);
-	// }
-	// GenericsType[] gts = configureTypeArguments(parameterizedType.arguments);
-	// base.setGenericsTypes(gts);
-	// return base;
-	// }
-
-	private GenericsType[] configureTypeArguments(TypeBinding[] ta) {
-		if (ta == null) { // TODO correct?
-			return null;
-		}
-		if (ta.length == 0) {
-			return null;
-		}
-		GenericsType[] gts = new GenericsType[ta.length];
-		for (int i = 0; i < ta.length; i++) {
-			ClassNode t = configureType(ta[i]);
-			if (ta[i] instanceof WildcardBinding) {
-				GenericsType[] gen = t.getGenericsTypes();
-				gts[i] = gen[0];
-			} else {
-				gts[i] = new GenericsType(t);
-			}
-		}
-		return gts;
-	}
-
-	private ClassNode configureTypeVariableReference(TypeVariableBinding tv) {
-		ClassNode cn = ClassHelper.makeWithoutCaching(tv.debugName());
-		cn.setGenericsPlaceHolder(true);
-		ClassNode cn2 = ClassHelper.makeWithoutCaching(tv.debugName());
-		cn2.setGenericsPlaceHolder(true);
-		GenericsType[] gts = new GenericsType[] { new GenericsType(cn2) };
-		cn.setGenericsTypes(gts);
-		cn.setRedirect(ClassHelper.OBJECT_TYPE);
-		return cn;
-	}
-
-	private ClassNode[] configureTypes(TypeBinding[] types) {
-		if (types.length == 0)
-			return null;
-		ClassNode[] nodes = new ClassNode[types.length];
-		for (int i = 0; i < types.length; i++) {
-			nodes[i] = configureType(types[i]);
-		}
-		return nodes;
-	}
-
-	private TypeBinding[] getLowerbounds(WildcardBinding wildcardType) {
-		if (wildcardType.boundKind == Wildcard.SUPER) {
-			return new TypeBinding[] { wildcardType.bound };
-		}
-		return TypeBinding.NO_TYPES;
-	}
-
-	private TypeBinding[] getUpperbounds(WildcardBinding wildcardType) {
-		if (wildcardType.boundKind == Wildcard.EXTENDS) {
-			List<TypeBinding> bounds = new ArrayList<TypeBinding>();
-			bounds.add(wildcardType.bound);
-			if (wildcardType.otherBounds != null) {
-				for (int b = 0; b < wildcardType.otherBounds.length; b++) {
-					bounds.add(wildcardType.otherBounds[b]);
-				}
-			}
-			return bounds.toArray(new TypeBinding[bounds.size()]);
-		}
-		return new TypeBinding[] { resolver.getScope().getJavaLangObject() };// TypeBinding.NO_TYPES;
-	}
-
-	private ClassNode configureWildcardType(WildcardBinding wildcardType) {
-		ClassNode base = ClassHelper.makeWithoutCaching("?");
-		base.setRedirect(ClassHelper.OBJECT_TYPE);
-		// TODO: more than one lower bound for wildcards?
-
-		int i = wildcardType.boundKind; // Wildcard.UNBOUND/EXTENDS/SUPER
-		ClassNode[] lowers = configureTypes(getLowerbounds(wildcardType)); // wildcardType.getLowerBounds()
-		ClassNode lower = null;
-		// TODO: is it safe to remove this? What was the original intention?
-		if (lowers != null)
-			lower = lowers[0];
-
-		TypeBinding[] upperTbs = getUpperbounds(wildcardType);
-		ClassNode[] upper = configureTypes(upperTbs);// wildcardType.getUpperBounds());
-		if (upper == null) {
-			throw new IllegalStateException();
-		}
-
-		GenericsType t = new GenericsType(base, upper, lower);
-		t.setWildcard(true);
-
-		ClassNode ref = ClassHelper.makeWithoutCaching(Object.class, false);
-		ref.setGenericsTypes(new GenericsType[] { t });
-
-		return ref;
-	}
-
 	private ConstructorNode constructorBindingToConstructorNode(MethodBinding methodBinding) {
 		TypeVariableBinding[] typeVariables = methodBinding.typeVariables();
-		GenericsType[] generics = createGenericsTypeInfoForTypeVariableBindings(typeVariables);
+		GenericsType[] generics = new JDTClassNodeBuilder(resolver).configureTypeVariables(typeVariables);
 		ConstructorNode ctorNode = null;
-		try {
-			resolver.pushMemberGenerics(generics);
-			int modifiers = methodBinding.modifiers;
-			Parameter[] parameters = makeParameters(methodBinding.parameters);
-			ClassNode[] thrownExceptions = new ClassNode[0];
-			if (methodBinding.thrownExceptions != null) {
-				thrownExceptions = new ClassNode[methodBinding.thrownExceptions.length];
-				for (int i = 0; i < methodBinding.thrownExceptions.length; i++) {
-					thrownExceptions[i] = resolver.convertToClassNode(methodBinding.thrownExceptions[i]);
-				}
+
+		int modifiers = methodBinding.modifiers;
+		Parameter[] parameters = makeParameters(methodBinding.parameters);
+		ClassNode[] thrownExceptions = new ClassNode[0];
+		if (methodBinding.thrownExceptions != null) {
+			thrownExceptions = new ClassNode[methodBinding.thrownExceptions.length];
+			for (int i = 0; i < methodBinding.thrownExceptions.length; i++) {
+				thrownExceptions[i] = resolver.convertToClassNode(methodBinding.thrownExceptions[i]);
 			}
-			ctorNode = new ConstructorNode(modifiers, parameters, thrownExceptions, null);
-		} finally {
-			resolver.popMemberGenerics();
 		}
+		ctorNode = new ConstructorNode(modifiers, parameters, thrownExceptions, null);
+
 		ctorNode.setGenericsTypes(generics);
 		return ctorNode;
 	}
@@ -823,25 +494,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		// FIXASC (M3) verify always true. Think it is a jdtReferenceBinding is a
 		// reference binding and not a typebinding
 		return false;
-	}
-
-	private GenericsType[] createGenericsTypeInfoForTypeVariableBindings(TypeVariableBinding... typeVariables) {
-		if (typeVariables == null || typeVariables.length == 0) {
-			return null;
-		}
-		// FIXASC anything for RAW types here?
-		GenericsType[] genericTypeInfo = new GenericsType[typeVariables.length];
-		for (int g = 0; g < typeVariables.length; g++) {
-			genericTypeInfo[g] = createGenericsTypeInfoForTypeVariableBinding(typeVariables[g]);
-		}
-		return genericTypeInfo;
-	}
-
-	private GenericsType createGenericsTypeInfoForTypeVariableBinding(TypeVariableBinding typeVariableBinding) {
-		// By creating something 'lazy' we can avoid self referential initialization problems like
-		// "T extends Foo & Comparable<? super T>"
-		GenericsType gt = new LazyGenericsType(typeVariableBinding, resolver);
-		return gt;
 	}
 
 	/**
@@ -1034,15 +686,11 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 				+ transformLoader);
 	}
 
-	/*
-	 * public ClassNode makeArray() { // if (redirect != null) { // ClassNode res = redirect().makeArray(); // res.componentType =
-	 * this; // return res; // } ClassNode cn; if (getTypeClass() != null) { Class ret = Array.newInstance(clazz, 0).getClass(); //
-	 * don't use the ClassHelper here! cn = new ClassNode(ret, this); } else { cn = new ClassNode(this); } return cn; }
-	 * 
-	 * public void setPrimaryNode(boolean b) { this.isPrimaryNode = b; }
-	 */
+	// When working with parameterized types, groovy will create a simple ClassNode for the raw type and then initialize the
+	// generics structure behind it. This setter is used to ensure that these 'simple' ClassNodes that are created for raw types
+	// but are intended to represent parameterized types will have their generics info available (from the parameterized
+	// jdt binding).
 
-	// TODO wtf
 	public void setJdtBinding(ReferenceBinding parameterizedType) {
 		this.jdtBinding = parameterizedType;
 	}

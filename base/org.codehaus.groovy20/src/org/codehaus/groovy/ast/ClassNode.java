@@ -1514,11 +1514,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public boolean isUsingGenerics() {
-    	ensureGenericsInitialized();
+//    	ensureGenericsInitialized();
         return usesGenerics;
     }
     
-    public void ensureGenericsInitialized() {}
+//    public void ensureGenericsInitialized() {}
 
     public void setUsingGenerics(boolean b) {
         usesGenerics = b;
