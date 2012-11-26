@@ -394,7 +394,7 @@ public class GenericsType extends ASTNode {
             }
             GenericsType[] redirectBoundGenericTypes = bound.redirect().getGenericsTypes();
             Map<String, GenericsType> classNodePlaceholders = GenericsUtils.extractPlaceholders(classNode);
-            Map<String, GenericsType> boundPlaceHolders = GenericsUtils.extractPlaceholders(bound);
+            Map<String, GenericsType> boundPlaceHolders = GenericsUtils.extractPlaceholders(bound); // should have been T=E and not T=T
             boolean match = true;
             for (int i = 0; redirectBoundGenericTypes!=null && i < redirectBoundGenericTypes.length && match; i++) {
                 GenericsType redirectBoundType = redirectBoundGenericTypes[i];

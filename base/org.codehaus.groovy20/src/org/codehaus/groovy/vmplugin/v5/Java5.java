@@ -355,7 +355,12 @@ public class Java5 implements VMPlugin {
         Method[] methods = clazz.getDeclaredMethods();
         for (Method m : methods) {
             ClassNode ret = makeClassNode(compileUnit, m.getGenericReturnType(), m.getReturnType());
+            if (clazz.getName().endsWith("Collection") && m.getName().endsWith("addAll") && m.getParameterTypes().length==1) {
+            	stop = true;
+            }
             Parameter[] params = makeParameters(compileUnit, m.getGenericParameterTypes(), m.getParameterTypes(), m.getParameterAnnotations());
+
+        	stop = false;
             ClassNode[] exceptions = makeClassNodes(compileUnit, m.getGenericExceptionTypes(), m.getExceptionTypes());
             MethodNode mn = new MethodNode(m.getName(), m.getModifiers(), ret, params, exceptions, null);
             setMethodDefaultValue(mn, m);
@@ -380,6 +385,8 @@ public class Java5 implements VMPlugin {
             setAnnotationMetaData(classNode.getTypeClass().getPackage().getAnnotations(), packageNode);
         }
     }
+    
+    boolean stop = false;
 
     private void makeInterfaceTypes(CompileUnit cu, ClassNode classNode, Class clazz) {
         Type[] interfaceTypes = clazz.getGenericInterfaces();
@@ -427,6 +434,9 @@ public class Java5 implements VMPlugin {
     }
 
     private Parameter makeParameter(CompileUnit cu, Type type, Class cl, Annotation[] annotations, int idx) {
+    	if (stop) {
+    		int foo = 1;
+    	}
         ClassNode cn = makeClassNode(cu, type, cl);
         Parameter parameter = new Parameter(cn, "param" + idx);
         setAnnotationMetaData(annotations, parameter);

@@ -56,10 +56,8 @@ import org.codehaus.groovy.runtime.EncodingGroovyMethods;
 import org.codehaus.groovy.runtime.ProcessGroovyMethods;
 import org.codehaus.groovy.runtime.SwingGroovyMethods;
 import org.codehaus.groovy.runtime.XmlGroovyMethods;
-import org.codehaus.jdt.groovy.internal.compiler.ast.LazyGenericsType;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.core.Signature;
-import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * @author Andrew Eisenberg
@@ -564,16 +562,6 @@ public class VariableScope {
 		// try to match
 		for (int i = 0; i < typesToParameterize.length; i++) {
 			GenericsType genericsToParameterize = typesToParameterize[i];
-
-			if (genericsToParameterize instanceof LazyGenericsType) {
-				// LazyGenericsType is immutable
-				// shouldn't get here...log error and continue
-				Util.log(
-						new RuntimeException(),
-						"Found a JDTClassNode while resolving type parameters.  " //$NON-NLS-1$
-								+ "This shouldn't happen.  Not trying to resolve any further " + "and continuing.  Type: " + typeToParameterize); //$NON-NLS-1$ //$NON-NLS-2$
-				continue;
-			}
 
 			// recur down the type parameter
 			resolveTypeParameterization(mapper, genericsToParameterize.getType());
