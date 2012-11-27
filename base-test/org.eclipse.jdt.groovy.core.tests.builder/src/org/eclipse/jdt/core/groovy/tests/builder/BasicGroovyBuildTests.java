@@ -39,9 +39,11 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
@@ -499,6 +501,45 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 //			JDTResolver.recordInstances = false;
 //		}
 //	}
+	
+	public void testCompileStatic_ArrayArray() throws Exception {
+		if (GroovyUtils.GROOVY_LEVEL < 20) {
+			return;
+		}
+		IPath projectPath = env.addProject("Project","1.6"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		
+		JDTResolver.recordInstances = true;
+
+		env.addClass(root, "", "ISourceRange", "class ISourceRange {}"); 
+		env.addClass(root, "", "TypeNameMatch",	"class TypeNameMatch {}"); 
+
+		env.addClass(root, "", "IChooseImportQuery",
+				"interface IChooseImportQuery {\n"+
+				"    TypeNameMatch[] chooseImports(TypeNameMatch[][] matches, ISourceRange[] range);\n"+
+				"}"
+				);
+		
+		env.addGroovyClass(root, "", "NoChoiceQuery",
+				"class NoChoiceQuery implements IChooseImportQuery {\n"+
+				"    public TypeNameMatch[] chooseImports(TypeNameMatch[][] matches, ISourceRange[] range) {\n"+
+				"        throw new Exception(\"Should not have a choice, but found $matches[0][0] and $matches[0][1]\")\n"+
+				"        return []\n"+
+				"    }\n"+
+				"}"
+				);
+
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+		expectingCompiledClassesV("IChooseImportQuery","ISourceRange","NoChoiceQuery","TypeNameMatch");
+	}
 	
 	public void testCompileStatic_FileAddAll() throws Exception {
 		try {

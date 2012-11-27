@@ -178,12 +178,17 @@ class JDTClassNodeBuilder {
 	}
 
 	/**
-	 * Based on Java5.configureGenericArray()
+	 * Loosely based on Java5.configureGenericArray()
 	 */
 	private ClassNode configureGenericArray(ArrayBinding genericArrayType) {
 		TypeBinding component = genericArrayType.leafComponentType;
 		ClassNode node = configureType(component);
-		return node.makeArray();
+		int dims = genericArrayType.dimensions;
+		ClassNode result = node;
+		for (int d = 0; d < dims; d++) {
+			result = result.makeArray();
+		}
+		return result;
 	}
 
 	/**
