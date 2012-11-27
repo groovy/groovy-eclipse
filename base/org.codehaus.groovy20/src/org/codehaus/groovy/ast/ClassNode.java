@@ -181,7 +181,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     private boolean annotated;
 
     // type spec for generics
-    private GenericsType[] genericsTypes=null;
+    // GRECLIPSE: to protected
+    protected GenericsType[] genericsTypes=null;
     private boolean usesGenerics=false;
 
     // if set to true the name getGenericsTypes consists
@@ -620,7 +621,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             r.properties = new ArrayList<PropertyNode> ();
         r.properties.add(node);
     }
-    
 
     public void addProperty(PropertyNode node) {
         node.setDeclaringClass(redirect());
