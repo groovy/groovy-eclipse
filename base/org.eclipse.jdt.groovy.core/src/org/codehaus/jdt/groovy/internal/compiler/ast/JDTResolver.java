@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.StringTokenizer;
+import java.util.WeakHashMap;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -138,7 +139,7 @@ public class JDTResolver extends ResolveVisitor {
 	private List<ClassNode> haveBeenResolved = new ArrayList<ClassNode>();
 
 	// Cache from bindings to JDTClassNodes to avoid unnecessary JDTClassNode creation
-	private Map<Binding, JDTClassNode> nodeCache = Collections.synchronizedMap(new HashMap<Binding, JDTClassNode>());
+	private Map<Binding, JDTClassNode> nodeCache = Collections.synchronizedMap(new WeakHashMap<Binding, JDTClassNode>());
 
 	public JDTResolver(CompilationUnit groovyCompilationUnit) {
 		super(groovyCompilationUnit);

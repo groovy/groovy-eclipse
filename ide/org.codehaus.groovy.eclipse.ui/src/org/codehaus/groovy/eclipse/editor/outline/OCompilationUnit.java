@@ -98,6 +98,9 @@ public abstract class OCompilationUnit extends GroovyCompilationUnit implements 
         if (children == null) {
             refresh();
         }
+        if (children == null) {
+            return new IJavaElement[0];
+        }
         return children;
     }
 

@@ -12,6 +12,7 @@ package org.codehaus.groovy.eclipse.dsl.lookup;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -32,7 +33,7 @@ public class ResolverCache {
     private final JDTResolver resolver;
     
     public ResolverCache(JDTResolver resolver, ModuleNode thisModule) {
-        this.nameTypeCache = new HashMap<String, ClassNode>();
+        this.nameTypeCache = new WeakHashMap<String, ClassNode>();
         this.resolver = resolver;
     }
     

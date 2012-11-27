@@ -12,6 +12,7 @@ package org.codehaus.jdt.groovy.control;
 
 import groovy.lang.GroovyClassLoader;
 
+import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
@@ -39,6 +40,12 @@ public class EclipseSourceUnit extends SourceUnit {
 	 */
 	public IFile getEclipseFile() {
 		return file;
+	}
+
+	@Override
+	public void convert() throws CompilationFailedException {
+		super.convert();
+		super.cst = null;
 	}
 
 }
