@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.lookup;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -52,14 +51,27 @@ public class ResolverCache {
             return VariableScope.VOID_CLASS_NODE;
         }
         ClassNode clazz = nameTypeCache.get(qName);
+        int arrayCnt = 0;
         if (clazz == null && resolver != null) {
-            int typeParamStart = qName.indexOf('<');
-            String erasureName;
-            if (typeParamStart > 0) {
-                erasureName = qName.substring(0, typeParamStart);
-            } else {
-                erasureName = qName;
-            }
+        	int typeParamEnd = qName.lastIndexOf('>');
+        	int arrayStart = qName.indexOf('[', typeParamEnd);
+        	String componentName;
+        	if (arrayStart > 0) {
+        		componentName = qName.substring(0, arrayStart);
+        		arrayCnt = calculateArrayCount(qName, arrayStart);
+        		
+        	} else {
+        		componentName = qName;
+        	}
+        			
+        	String erasureName = componentName;
+        	int typeParamStart = -1;
+        	if (typeParamEnd > 0) {
+                typeParamStart = componentName.indexOf('<');
+                if (typeParamStart > 0) {
+                    erasureName = componentName.substring(0, typeParamStart);
+                }
+        	}
             clazz = resolver.resolve(erasureName);
             if (clazz == null) {
                 clazz = VariableScope.OBJECT_CLASS_NODE;
@@ -71,7 +83,7 @@ public class ResolverCache {
                 // only need to clone if generics are involved
                 clazz = VariableScope.clone(clazz);
                 
-                String[] typeParameterNames = qName.substring(typeParamStart+1, qName.length()-1).split(",");
+                String[] typeParameterNames = componentName.substring(typeParamStart+1, componentName.length()-1).split(",");
                 ClassNode[] typeParameters = new ClassNode[typeParameterNames.length];
                 for (int i = 0; i < typeParameterNames.length; i++) {
                     typeParameters[i] = resolve(typeParameterNames[i]);
@@ -84,12 +96,34 @@ public class ResolverCache {
                         genericsTypes[i].setType(typeParameters[i]);
                         genericsTypes[i].setName(typeParameters[i].getName());
                     }
-                    nameTypeCache.put(qName, clazz);
+                    nameTypeCache.put(componentName, clazz);
                 }
+            }
+            while (arrayCnt > 0) {
+            	clazz = new ClassNode(clazz);
+            	componentName += "[]";
+                nameTypeCache.put(componentName, clazz);
+            	arrayCnt--;
             }
         }
         
         return clazz;
+    }
+
+    /**
+     * @param qName
+     * @param arrayStart
+     * @return
+     */
+    private int calculateArrayCount(String qName, int arrayStart) {
+    	if (arrayStart < 0) {
+    		return 0;
+    	}
+    	int cnt = 1;
+    	while ((arrayStart = qName.indexOf('[', arrayStart+1)) > 0) {
+    		cnt ++;
+    	}
+        return cnt;
     }
     
 }

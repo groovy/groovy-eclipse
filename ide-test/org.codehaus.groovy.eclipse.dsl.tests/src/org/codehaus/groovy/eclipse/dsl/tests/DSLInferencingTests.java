@@ -857,6 +857,49 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         int end = start + "foo".length();
         assertType(contents, start, end, "java.lang.Integer");
     }
+    
+    private final static String ARRAY_TYPE_DSLD = "contribute(currentType()) {\n" + 
+    		"    property name:'foot1', type:'java.lang.String[]'\n" + 
+    		"    property name:'foot2', type:'java.lang.String[][]'\n" + 
+    		"    property name:'foot3', type:'java.util.List<java.lang.String[][]>'\n" + 
+    		"    property name:'foot4', type:'java.util.List<java.lang.String>[]'\n" + 
+    		"    property name:'foot5', type:'java.util.List<java.lang.String[]>[]'\n" + 
+    		"    property name:'foot6', type:'java.util.Map<java.lang.String[],java.lang.Integer[]>'\n" + 
+    		"}";
+    
+    // GRECLIPSE-1555
+    public void testArrayType1() throws Exception {
+        createDsls(ARRAY_TYPE_DSLD);
+        String contents = "foot1";
+        assertType(contents, "java.lang.String[]", true);
+    }
+    public void testArrayType2() throws Exception {
+        createDsls(ARRAY_TYPE_DSLD);
+        String contents = "foot2";
+        assertType(contents, "java.lang.String[][]", true);
+    }
+    public void testArrayType3() throws Exception {
+        createDsls(ARRAY_TYPE_DSLD);
+        String contents = "foot3";
+        assertType(contents, "java.util.List<java.lang.String[][]>", true);
+    }
+    // TODO expected to fail
+    public void _testArrayType4() throws Exception {
+        createDsls(ARRAY_TYPE_DSLD);
+        String contents = "foot4";
+        assertType(contents, "java.util.List<java.lang.String>[]", true);
+    }
+    // TODO expected to fail
+    public void _testArrayType5() throws Exception {
+        createDsls(ARRAY_TYPE_DSLD);
+        String contents = "foot5";
+        assertType(contents, "java.util.List<java.lang.String[]>[]", true);
+    }
+    public void testArrayType6() throws Exception {
+        createDsls(ARRAY_TYPE_DSLD);
+        String contents = "foot6";
+        assertType(contents, "java.util.Map<java.lang.String[],java.lang.Integer[]>", true);
+    }
 
 
     private void createDSL() throws IOException {
