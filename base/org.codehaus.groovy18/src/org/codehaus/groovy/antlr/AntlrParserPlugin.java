@@ -114,9 +114,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         final SourceBuffer sourceBuffer = new SourceBuffer();
         transformCSTIntoAST(sourceUnit, reader, sourceBuffer);
         processAST();
-        Reduction outputAST = outputAST(sourceUnit,sourceBuffer);
-        ast = null;
-        return outputAST;
+        return outputAST(sourceUnit,sourceBuffer);
     }
 
     protected void transformCSTIntoAST(SourceUnit sourceUnit, Reader reader, SourceBuffer sourceBuffer) throws CompilationFailedException {
@@ -310,6 +308,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         catch (ASTRuntimeException e) {
             throw new ASTParserException(e.getMessage() + ". File: " + sourceUnit.getName(), e);
         }
+        // GRECLIPSE: start
+        // cleanup
+        ast = null;
+        // GRECLIPSE: end
         return output;
     }
 

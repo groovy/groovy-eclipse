@@ -35,6 +35,7 @@ public class CSTParserPlugin extends AntlrParserPlugin {
     public Reduction parseCST(final SourceUnit sourceUnit, Reader reader) throws CompilationFailedException {
     	Reduction reduction = super.parseCST(sourceUnit, reader);
     	GroovySourceAST cst = (GroovySourceAST) super.ast;
+    	super.ast = null;
     	if (cst != null) {
     		cstReporter.generatedCST(sourceUnit.getName(), cst);
     	}

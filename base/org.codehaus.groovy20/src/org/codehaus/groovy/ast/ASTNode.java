@@ -158,6 +158,9 @@ public class ASTNode {
      */
     public void copyNodeMetaData(ASTNode other) {
         // GRECLIPSE: start
+        if (other.metaDataMap == null) {
+            return;
+        }
         if (metaDataMap == null) {
             metaDataMap = new ListHashMap();
         }
