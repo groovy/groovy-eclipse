@@ -7,6 +7,7 @@ import org.codehaus.groovy.eclipse.test.EclipseTestCase
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.jdt.core.ISourceRange 
 import org.eclipse.jdt.core.search.TypeNameMatch 
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery 
 import org.eclipse.text.edits.DeleteEdit 
 import org.eclipse.text.edits.InsertEdit 
@@ -632,5 +633,32 @@ PP"""
         doDeleteImportTest(contents, 0)
     }
 
+    // GRECLIPSE-1553
+    void testCompileStaticAndMapStyleConstructor() {
+        if (GroovyUtils.GROOVY_LEVEL < 20) {
+            return
+        }
+        
+        testProject.createGroovyTypeAndPackage("example2", "Bar", """
+package example2
+
+class Bar {
+    String name
+}""")
+        
+        String contents = """
+package example
+
+import groovy.transform.CompileStatic
+import example2.Bar
+
+@CompileStatic
+class Foo {
+  void apply() {
+      new Bar([name: "test"])
+  }
+}"""
+        doDeleteImportTest(contents, 0)
+    }
 }
 

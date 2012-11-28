@@ -359,6 +359,34 @@ public class TypeReferenceSearchTests extends AbstractGroovySearchTest {
         assertEquals("Wrong length " + match, len, match.getLength());
     }
     
+    public void testConstructorWithDefaultArgsInCompileStatic() throws Exception {
+    	String firstContents = 
+    			"package p\n" +
+    			"class First {\n" + 
+    			"    Class name\n" + 
+    			"}\n"; 
+    	String secondContents = 
+    			"package q\n" + 
+    			"import p.First\n" + 
+    			"import groovy.transform.CompileStatic\n" + 
+    			"\n" + 
+    			"@CompileStatic\n" + 
+    			"class Foo {\n" + 
+    			"  void apply() {\n" + 
+    			"      new First([name: First])\n" + 
+    			"  }\n" + 
+    			"}";
+    	List<SearchMatch> matches = getAllMatches(firstContents, secondContents, "p", "q", true);
+    	int lastMatch = 0;
+    	for (SearchMatch searchMatch : matches) {
+            int start = secondContents.indexOf("First", lastMatch);
+            assertEquals("Wrong offset " + searchMatch, start, searchMatch.getOffset());
+            assertEquals("Wrong length " + searchMatch, "First".length(), searchMatch.getLength());
+            lastMatch = start+1;
+        }
+    	assertEquals("Wrong number of matches found\n" + matches, 3, matches.size());
+    }
+    
     private void doTestForTwoInScript(String secondContents) throws JavaModelException {
         doTestForTwoTypeReferences(FIRST_CONTENTS_CLASS, secondContents, true, 3);
     }
