@@ -109,6 +109,7 @@ class JDTClassNodeBuilder {
 		return gts;
 	}
 
+	// TODO still not 100% confident that the callers of this are doing the right thing or have the right expectations
 	TypeBinding toRawType(TypeBinding tb) {
 		if (tb instanceof ParameterizedTypeBinding) {
 			ParameterizedTypeBinding ptb = (ParameterizedTypeBinding) tb;
