@@ -235,7 +235,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         String toFind = "x";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
-        assertType(contents, start, end, "[Ljava.lang.String;");
+        assertType(contents, start, end, "java.lang.String[]");
     }
 
     public void testArray2() throws Exception {
@@ -263,7 +263,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         String toFind = "xx";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
-        assertType(contents, start, end, "[LXX;");
+        assertType(contents, start, end, "XX[]");
     }
 
     public void testArray5() throws Exception {
@@ -325,7 +325,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         String toFind = "getXx";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
-        assertType(contents, start, end, "[LXX;");
+        assertType(contents, start, end, "XX[]");
     }
     
     public void testArray12() throws Exception {
@@ -334,7 +334,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         String toFind = "xx";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
-        assertType(contents, start, end, "[LXX;");
+        assertType(contents, start, end, "XX[]");
     }
     
     public void testArray13() throws Exception {
@@ -343,7 +343,7 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         String toFind = "xx";
         int start = contents.lastIndexOf(toFind);
         int end = start + toFind.length();
-        assertType(contents, start, end, "[LXX;");
+        assertType(contents, start, end, "XX[]");
     }
     
     

@@ -318,13 +318,16 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         }
     }
     public static String printTypeName(ClassNode type) {
+    	if (type == null) {
+    		return "null";
+    	}
     	String arraySuffix = "";
     	while (type.getComponentType() != null) {
     		arraySuffix+="[]";
     		type = type.getComponentType();
     	}
         String name = type.getName() + arraySuffix;
-        return type != null ? name + printGenerics(type) : "null";
+        return name + printGenerics(type);
     }
 
     public static String printGenerics(ClassNode type) {
