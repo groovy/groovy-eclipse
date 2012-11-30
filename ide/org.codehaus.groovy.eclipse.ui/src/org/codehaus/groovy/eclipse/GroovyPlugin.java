@@ -59,7 +59,9 @@ public class GroovyPlugin extends AbstractUIPlugin {
         public void pageClosed(IWorkbenchPage page) {
             try {
                 IPartService service = (IPartService) page.getWorkbenchWindow().getService(IPartService.class);
-                service.removePartListener(ensure);
+                if (service != null) {
+                    service.removePartListener(ensure);
+                }
             } catch (Exception e) {
                 GroovyCore.logException("Exception thrown when removing JUnit Monospace font listener", e);
             }
