@@ -116,22 +116,25 @@ public class GroovyCompilationUnit extends CompilationUnit {
 			if (!isConsistent()) {
 				makeConsistent(null);
 			}
-			synchronized (ModuleNodeMapper.getInstance()) {
-				// discard the working copy after finishing
-				// if there was no working copy to begin with
-				boolean becameWorkingCopy = false;
+			boolean becameWorkingCopy = false;
+			ModuleNodeMapper.getInstance().lock();
+			// discard the working copy after finishing
+			// if there was no working copy to begin with
+			try {
+				if (becameWorkingCopy = (force && !isWorkingCopy())) {
+					becomeWorkingCopy(null);
+				}
+				PerWorkingCopyInfo info = getPerWorkingCopyInfo();
+				if (info != null) {
+					return ModuleNodeMapper.getInstance().get(info);
+				}
+			} finally {
 				try {
-					if (becameWorkingCopy = (force && !isWorkingCopy())) {
-						becomeWorkingCopy(null);
-					}
-					PerWorkingCopyInfo info = getPerWorkingCopyInfo();
-					if (info != null) {
-						return ModuleNodeMapper.getInstance().get(info);
-					}
-				} finally {
 					if (becameWorkingCopy) {
 						discardWorkingCopy();
 					}
+				} finally {
+					ModuleNodeMapper.getInstance().unlock();
 				}
 			}
 		} catch (JavaModelException e) {
@@ -159,12 +162,15 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	@Override
 	public void discardWorkingCopy() throws JavaModelException {
 		// GRECLIPSE-804 must synchronize
-		synchronized (ModuleNodeMapper.getInstance()) {
+		ModuleNodeMapper.getInstance().lock();
+		try {
 			PerWorkingCopyInfo info = getPerWorkingCopyInfo();
 			if (workingCopyInfoWillBeDiscarded(info)) {
 				ModuleNodeMapper.getInstance().remove(info);
 			}
 			super.discardWorkingCopy();
+		} finally {
+			ModuleNodeMapper.getInstance().unlock();
 		}
 	}
 

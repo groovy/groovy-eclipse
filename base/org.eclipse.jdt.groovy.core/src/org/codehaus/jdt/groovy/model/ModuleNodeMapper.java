@@ -15,11 +15,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerWorkingCopyInfo;
@@ -51,11 +56,18 @@ public class ModuleNodeMapper {
 		return INSTANCE;
 	}
 
+	private final ReentrantLock lock = new ReentrantLock(true);
+
 	private final Map<PerWorkingCopyInfo, ModuleNodeInfo> infoToModuleMap = new HashMap<PerWorkingCopyInfo, ModuleNodeInfo>();
 
-	synchronized void store(PerWorkingCopyInfo info, ModuleNode module, JDTResolver resolver) {
-		sweepAndPurgeModuleNodes();
-		infoToModuleMap.put(info, new ModuleNodeInfo(module, shouldStoreResovler() ? resolver : null));
+	void store(PerWorkingCopyInfo info, ModuleNode module, JDTResolver resolver) {
+		lock.lock();
+		try {
+			sweepAndPurgeModuleNodes();
+			infoToModuleMap.put(info, new ModuleNodeInfo(module, shouldStoreResovler() ? resolver : null));
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	private final static boolean DSL_BUNDLE_INSTALLED;
@@ -73,25 +85,45 @@ public class ModuleNodeMapper {
 		return DSL_BUNDLE_INSTALLED;
 	}
 
-	synchronized ModuleNode getModule(PerWorkingCopyInfo info) {
-		ModuleNodeInfo moduleNodeInfo = get(info);
-		return moduleNodeInfo != null ? moduleNodeInfo.module : null;
+	ModuleNode getModule(PerWorkingCopyInfo info) {
+		lock.lock();
+		try {
+			ModuleNodeInfo moduleNodeInfo = get(info);
+			return moduleNodeInfo != null ? moduleNodeInfo.module : null;
+		} finally {
+			lock.unlock();
+		}
 	}
 
-	synchronized ModuleNodeInfo get(PerWorkingCopyInfo info) {
-		sweepAndPurgeModuleNodes();
-		return infoToModuleMap.get(info);
+	ModuleNodeInfo get(PerWorkingCopyInfo info) {
+		lock.lock();
+		try {
+			sweepAndPurgeModuleNodes();
+			return infoToModuleMap.get(info);
+		} finally {
+			lock.unlock();
+		}
 	}
 
-	synchronized JDTResolver getResolver(PerWorkingCopyInfo info) {
-		ModuleNodeInfo moduleNodeInfo = get(info);
-		return moduleNodeInfo != null ? moduleNodeInfo.resolver : null;
+	JDTResolver getResolver(PerWorkingCopyInfo info) {
+		lock.lock();
+		try {
+			ModuleNodeInfo moduleNodeInfo = get(info);
+			return moduleNodeInfo != null ? moduleNodeInfo.resolver : null;
+		} finally {
+			lock.unlock();
+		}
 	}
 
-	synchronized ModuleNode remove(PerWorkingCopyInfo info) {
-		sweepAndPurgeModuleNodes();
-		ModuleNodeInfo removed = infoToModuleMap.remove(info);
-		return removed != null ? removed.module : null;
+	ModuleNode remove(PerWorkingCopyInfo info) {
+		lock.lock();
+		try {
+			sweepAndPurgeModuleNodes();
+			ModuleNodeInfo removed = infoToModuleMap.remove(info);
+			return removed != null ? removed.module : null;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	/**
@@ -100,21 +132,37 @@ public class ModuleNodeMapper {
 	 * @param perWorkingCopyInfo
 	 * @param compilationUnitDeclaration
 	 */
-	synchronized protected void maybeCacheModuleNode(JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo,
-			GroovyCompilationUnitDeclaration compilationUnitDeclaration) {
-		if (perWorkingCopyInfo != null && compilationUnitDeclaration != null) {
-			ModuleNode module = compilationUnitDeclaration.getModuleNode();
+	protected void maybeCacheModuleNode(final JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo,
+			final GroovyCompilationUnitDeclaration compilationUnitDeclaration) {
 
-			// Store it for later
-			if (module != null) {
-				JDTResolver resolver;
-				if (shouldStoreResovler()) {
-					resolver = (JDTResolver) compilationUnitDeclaration.getCompilationUnit().getResolveVisitor();
-				} else {
-					resolver = null;
+		if (lock.tryLock()) {
+			try {
+				if (perWorkingCopyInfo != null && compilationUnitDeclaration != null) {
+					ModuleNode module = compilationUnitDeclaration.getModuleNode();
+
+					// Store it for later
+					if (module != null) {
+						JDTResolver resolver;
+						if (shouldStoreResovler()) {
+							resolver = (JDTResolver) compilationUnitDeclaration.getCompilationUnit().getResolveVisitor();
+						} else {
+							resolver = null;
+						}
+						store(perWorkingCopyInfo, module, resolver);
+					}
 				}
-				ModuleNodeMapper.getInstance().store(perWorkingCopyInfo, module, resolver);
+			} finally {
+				lock.unlock();
 			}
+		} else {
+			// lock grabbed by someone else. rerun this operation later
+			new Job("Cache module node") {
+				@Override
+				protected IStatus run(IProgressMonitor monitor) {
+					maybeCacheModuleNode(perWorkingCopyInfo, compilationUnitDeclaration);
+					return Status.OK_STATUS;
+				}
+			}.schedule();
 		}
 	}
 
@@ -124,28 +172,41 @@ public class ModuleNodeMapper {
 
 	// GRECLIPSE-804 check to see that the stored nodes are correct
 	// provide info to stdout if not and purge any stale elements
-	synchronized void sweepAndPurgeModuleNodes() {
-		if (System.getProperty("groovy.eclipse.model.purge") == null) {
-			return;
-		}
-
-		List<PerWorkingCopyInfo> toPurge = new ArrayList<PerWorkingCopyInfo>();
-		for (PerWorkingCopyInfo info : infoToModuleMap.keySet()) {
-			int useCount = ((Integer) ReflectionUtils.getPrivateField(PerWorkingCopyInfo.class, "useCount", info)).intValue();
-			if (useCount <= 0) {
-				String message = "Bad module node map entry: " + info.getWorkingCopy().getElementName();
-				System.out.println(message);
-				Util.log(new RuntimeException(message), message);
-				toPurge.add(info);
-			} else if (useCount > 1) {
-				System.out.println(info.getWorkingCopy().getElementName() + " : useCount : " + useCount);
+	void sweepAndPurgeModuleNodes() {
+		lock.lock();
+		try {
+			if (System.getProperty("groovy.eclipse.model.purge") == null) {
+				return;
 			}
-		}
 
-		if (toPurge.size() > 0) {
-			for (PerWorkingCopyInfo info : toPurge) {
-				infoToModuleMap.remove(info);
+			List<PerWorkingCopyInfo> toPurge = new ArrayList<PerWorkingCopyInfo>();
+			for (PerWorkingCopyInfo info : infoToModuleMap.keySet()) {
+				int useCount = ((Integer) ReflectionUtils.getPrivateField(PerWorkingCopyInfo.class, "useCount", info)).intValue();
+				if (useCount <= 0) {
+					String message = "Bad module node map entry: " + info.getWorkingCopy().getElementName();
+					System.out.println(message);
+					Util.log(new RuntimeException(message), message);
+					toPurge.add(info);
+				} else if (useCount > 1) {
+					System.out.println(info.getWorkingCopy().getElementName() + " : useCount : " + useCount);
+				}
 			}
+
+			if (toPurge.size() > 0) {
+				for (PerWorkingCopyInfo info : toPurge) {
+					infoToModuleMap.remove(info);
+				}
+			}
+		} finally {
+			lock.unlock();
 		}
+	}
+
+	public void lock() {
+		lock.lock();
+	}
+
+	public void unlock() {
+		lock.unlock();
 	}
 }
