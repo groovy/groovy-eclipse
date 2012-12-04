@@ -307,7 +307,7 @@ public class OrganizeGroovyImports {
                             }
                         }
                     }
-                    if (gen.getType() != null && gen.getType().getName().charAt(0) != '?') {
+                    if (gen.getType() != null && gen.getType().getName().charAt(0) != '?' && !gen.isPlaceholder()) {
                         handleType(gen.getType(), false);
                     }
                 }
