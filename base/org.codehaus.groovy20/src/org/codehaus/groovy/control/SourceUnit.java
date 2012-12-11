@@ -311,6 +311,12 @@ public class SourceUnit extends ProcessingUnit {
         	}
         	// GRECLIPSE: end
             getErrorCollector().addError(new SyntaxErrorMessage(e,this));
+        } catch (CompilationFailedException cfe) {
+        	if (this.ast==null) {
+        		// Create a dummy ModuleNode to represent a failed parse - in case a later phase attempts to use the ast
+        		this.ast = new ModuleNode(this);
+        	}
+        	throw cfe;
         }
 
         String property = (String) AccessController.doPrivileged(new PrivilegedAction() {
