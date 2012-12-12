@@ -461,26 +461,11 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
                             if (CharOperation.equals(
                                             fullyQualifiedEnclosingTypeOrPackageName,
                                             importFlatName)) {
-                                // assume not static import
-                                // if(importBinding.isStatic()) {
-                                // if((modifiers &
-                                // ClassFileConstants.AccStatic) != 0) {
-                                // acceptedType.qualifiedTypeName =
-                                // typeName;
-                                // acceptedType.fullyQualifiedName =
-                                // fullyQualifiedName;
-                                // onDemandFound.put(
-                                // simpleTypeName,
-                                // acceptedType);
-                                // continue next;
-                                // }
-                                // } else {
                                 acceptedType.qualifiedTypeName = typeName;
                                 acceptedType.fullyQualifiedName = fullyQualifiedName;
                                 onDemandFound.put(simpleTypeName,
                                         acceptedType);
                                 continue next;
-                                // }
                             }
                         }
                         proposals.add(proposeType(fullyQualifiedEnclosingTypeOrPackageName != null ? fullyQualifiedEnclosingTypeOrPackageName : packageName,
@@ -852,10 +837,16 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
             }
             proposal.setCompletionEngine(mockEngine);
         }
+        if (parameterTypes == null) {
+            parameterTypes = new char[parameterCount][];
+            for (int i = 0; i < parameterCount; i++) {
+                parameterTypes[i] = "def".toCharArray();
+            }
+        }
+        proposal.setParameterTypeNames(parameterTypes);
 
         proposal.setDeclarationPackageName(packageName);
         proposal.setDeclarationTypeName(simpleTypeName);
-        proposal.setParameterTypeNames(parameterTypes);
         // proposal.setParameterPackageNames(); not right
         proposal.setName(simpleTypeName);
 
