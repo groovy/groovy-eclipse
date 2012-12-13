@@ -151,11 +151,13 @@ public class GroovyLanguageSupport implements LanguageSupport {
 			// boolean success =
 			gcuDeclaration.processToPhase(Phases.CONVERSION);
 
-			// Regardless of a successful outcome, build what is possible in the face of any errors
-			gcuDeclaration.populateCompilationUnitDeclaration();
-			for (TypeDeclaration decl : gcuDeclaration.types) {
-				GroovyTypeDeclaration gtDeclaration = (GroovyTypeDeclaration) decl;
-				resolver.record(gtDeclaration);
+			if (gcuDeclaration.getModuleNode() != null) {
+				// Regardless of a successful outcome, build what is possible in the face of any errors
+				gcuDeclaration.populateCompilationUnitDeclaration();
+				for (TypeDeclaration decl : gcuDeclaration.types) {
+					GroovyTypeDeclaration gtDeclaration = (GroovyTypeDeclaration) decl;
+					resolver.record(gtDeclaration);
+				}
 			}
 
 			return gcuDeclaration;
