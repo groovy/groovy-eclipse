@@ -321,20 +321,18 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 //            "}"},"");
 //    }
      
-   public void testGreclipse1521() {
-    	if (GroovyUtils.GROOVY_LEVEL < 20) {
-    		return;
-    	}
-		this.runConformTest(new String[] {
-			"Foo.groovy",
-			"import groovy.transform.CompileStatic;\n"+
-			"import java.util.regex.Pattern\n"+
-			"\n"+	
-			"@groovy.transform.CompileStatic\n"+
-			"class Foo {\n"+
-			"  enum Status { ON, OFF}\n"+
-            "}"},"");
-    }
+//   public void testGreclipse1521() {
+//    	if (GroovyUtils.GROOVY_LEVEL < 20) {
+//    		return;
+//    	}
+//		this.runConformTest(new String[] {
+//			"Foo.groovy",
+//			"\n"+	
+//			"@groovy.transform.CompileStatic\n"+
+//			"class Foo {\n"+
+//			"  enum Status { ON, OFF}\n"+
+//            "}"},"");
+//    }
    
 //    public void testGreclipse1506() {
 //	   	if (GroovyUtils.GROOVY_LEVEL < 20) {
