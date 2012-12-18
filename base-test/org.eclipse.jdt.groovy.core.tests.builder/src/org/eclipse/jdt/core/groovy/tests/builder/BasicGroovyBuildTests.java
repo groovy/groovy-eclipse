@@ -11,6 +11,7 @@
 package org.eclipse.jdt.core.groovy.tests.builder;
 
 import java.io.File;
+import java.net.URL;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
@@ -37,7 +38,9 @@ import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaCore;
@@ -311,6 +314,47 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		}
 
 	}
+	
+
+	// bug not yet fixed
+//    public void testGreclipse1506() throws Exception {
+//	   	if (GroovyUtils.GROOVY_LEVEL < 20) {
+//	   		return;
+//	   	}
+//	    IPath projectPath = env.addProject("Project","1.6"); //$NON-NLS-1$
+//		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+//		env.addGroovyJars(projectPath);
+////		URL jar = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("lib/slf4j-api-1.6.6.jar");
+////        env.addExternalJar(projectPath, FileLocator.resolve(jar).getFile());
+//		fullBuild(projectPath);
+//		// remove old package fragment root so that names don't collide
+//		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+//	
+//		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+//		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+//		
+//		JDTResolver.recordInstances = true;
+//		
+//		env.addGroovyClass(root, "", "LoggerTest",
+//				"import groovy.transform.TypeChecked;\n"+
+//				"import groovy.util.logging.Slf4j;\n"+
+//				"\n"+	
+//				"@Slf4j\n"+
+//			    "@TypeChecked\n"+
+//			    "public class LoggerTest\n"+
+//			    "{\n"+
+//			    "	public static void main(String... args)\n"+
+//			    "	{\n"+
+//			    "		println 'println'\n"+
+//	//		    "		LoggerTest.log.info('Logged');\n"+
+//			    "		log.info('foo')\n"+
+//			    "	}\n"+
+//			    "}\n" );
+//	
+//		incrementalBuild(projectPath);
+//	//	expectingCompiledClassesV("Foo","List2");
+//		expectingNoProblems();
+//	}
 	
 //	if (GroovyUtils.GROOVY_LEVEL<20) {
 //		return;

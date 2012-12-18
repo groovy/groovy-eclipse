@@ -380,6 +380,7 @@ public class GenericsType extends ASTNode {
                         ClassNode[] interfaces = bound.getInterfaces();
                         for (ClassNode anInterface : interfaces) {
                             success &= compareGenericsWithBound(classNode, anInterface);
+                            if (!success) break;
                         }
                     }
                     if (success) return true;
@@ -394,7 +395,7 @@ public class GenericsType extends ASTNode {
             }
             GenericsType[] redirectBoundGenericTypes = bound.redirect().getGenericsTypes();
             Map<String, GenericsType> classNodePlaceholders = GenericsUtils.extractPlaceholders(classNode);
-            Map<String, GenericsType> boundPlaceHolders = GenericsUtils.extractPlaceholders(bound); // should have been T=E and not T=T
+            Map<String, GenericsType> boundPlaceHolders = GenericsUtils.extractPlaceholders(bound);
             boolean match = true;
             for (int i = 0; redirectBoundGenericTypes!=null && i < redirectBoundGenericTypes.length && match; i++) {
                 GenericsType redirectBoundType = redirectBoundGenericTypes[i];
@@ -452,6 +453,7 @@ public class GenericsType extends ASTNode {
                                                 }
                                                 match = match &&
                                                         implementsInterfaceOrIsSubclassOf(classNodeType.getType(), gt.getType());
+                                                if (!match) break;
                                             }
                                         }
                                         return match;

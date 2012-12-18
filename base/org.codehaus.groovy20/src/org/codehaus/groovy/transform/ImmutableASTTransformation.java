@@ -23,6 +23,7 @@ import groovy.transform.Immutable;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
@@ -137,6 +138,36 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
     }
     }
 
+    private void doAddConstructor(final ClassNode cNode, final ConstructorNode constructorNode) {
+        cNode.addConstructor(constructorNode);
+        // GROOVY-5814: Immutable is not compatible with @CompileStatic
+        Parameter argsParam = null;
+        for (Parameter p : constructorNode.getParameters()) {
+            if ("args".equals(p.getName())) {
+                argsParam = p;
+                break;
+            }
+        }
+        if (argsParam!=null) {
+            final Parameter arg = argsParam;
+            ClassCodeVisitorSupport variableExpressionFix = new ClassCodeVisitorSupport() {
+                @Override
+                protected SourceUnit getSourceUnit() {
+                    return cNode.getModule().getContext();
+                }
+
+                @Override
+                public void visitVariableExpression(final VariableExpression expression) {
+                    super.visitVariableExpression(expression);
+                    if ("args".equals(expression.getName())) {
+                        expression.setAccessedVariable(arg);
+                    }
+                }
+            };
+            variableExpressionFix.visitConstructor(constructorNode);
+        }
+    }
+
     private List<String> getKnownImmutableClasses(AnnotationNode node) {
         final ArrayList<String> immutableClasses = new ArrayList<String>();
 
@@ -190,7 +221,7 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
         orderedBody.addStatement(new ExpressionStatement(
                 new ConstructorCallExpression(ClassNode.THIS, new ArgumentListExpression(new CastExpression(HASHMAP_TYPE, argMap)))
         ));
-        cNode.addConstructor(new ConstructorNode(ACC_PUBLIC, orderedParams, ClassNode.EMPTY_ARRAY, orderedBody));
+        doAddConstructor(cNode,new ConstructorNode(ACC_PUBLIC, orderedParams, ClassNode.EMPTY_ARRAY, orderedBody));
         }
 
     private Statement createGetterBodyDefault(FieldNode fNode) {
@@ -235,7 +266,7 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
             body.addStatement(createConstructorStatementDefault(fNode));
         }
         final Parameter[] params = new Parameter[]{new Parameter(HASHMAP_TYPE, "args")};
-        cNode.addConstructor(new ConstructorNode(ACC_PUBLIC, params, ClassNode.EMPTY_ARRAY, new IfStatement(
+        doAddConstructor(cNode,new ConstructorNode(ACC_PUBLIC, params, ClassNode.EMPTY_ARRAY, new IfStatement(
                 equalsNullExpr(new VariableExpression("args")),
                 new EmptyStatement(),
                 body)));
@@ -255,7 +286,7 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
     private Statement createConstructorStatementMapSpecial(FieldNode fNode) {
         final Expression fieldExpr = new VariableExpression(fNode);
         Expression initExpr = fNode.getInitialValueExpression();
-        if (initExpr == null) initExpr = ConstantExpression.NULL;
+        if (initExpr == null) initExpr = new ConstantExpression(null);
         Expression namedArgs = findArg(fNode.getName());
         Expression baseArgs = new VariableExpression("args");
         return new IfStatement(
@@ -310,12 +341,12 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
         Statement statement = null;
         if (fieldType.isArray() || isOrImplements(fieldType, CLONEABLE_TYPE)) {
             statement = createConstructorStatementArrayOrCloneable(fNode);
+        } else if (isKnownImmutableClass(fieldType, knownImmutableClasses)) {
+            statement = createConstructorStatementDefault(fNode);
         } else if (fieldType.isDerivedFrom(DATE_TYPE)) {
             statement = createConstructorStatementDate(fNode);
         } else if (isOrImplements(fieldType, COLLECTION_TYPE) || fieldType.isDerivedFrom(COLLECTION_TYPE) || isOrImplements(fieldType, MAP_TYPE) || fieldType.isDerivedFrom(MAP_TYPE)) {
             statement = createConstructorStatementCollection(fNode);
-        } else if (isKnownImmutable(fieldType, knownImmutableClasses)) {
-            statement = createConstructorStatementDefault(fNode);
         } else if (fieldType.isResolved()) {
             addError(createErrorMessage(cNode.getName(), fNode.getName(), fieldType.getName(), "compiling"), fNode);
         } else {
@@ -327,7 +358,7 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
     private Statement createConstructorStatementGuarded(ClassNode cNode, FieldNode fNode) {
         final Expression fieldExpr = new VariableExpression(fNode);
         Expression initExpr = fNode.getInitialValueExpression();
-        if (initExpr == null) initExpr = ConstantExpression.NULL;
+        if (initExpr == null) initExpr = new ConstantExpression(null);
         Expression unknown = findArg(fNode.getName());
         return new IfStatement(
                 equalsNullExpr(unknown),
@@ -339,14 +370,14 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
     }
 
     private Expression checkUnresolved(ClassNode cNode, FieldNode fNode, Expression value) {
-        Expression args = new TupleExpression(new MethodCallExpression(VariableExpression.THIS_EXPRESSION, "getClass", ArgumentListExpression.EMPTY_ARGUMENTS), new ConstantExpression(fNode.getName()), value);
+        Expression args = new TupleExpression(new MethodCallExpression(new VariableExpression("this"), "getClass", ArgumentListExpression.EMPTY_ARGUMENTS), new ConstantExpression(fNode.getName()), value);
         return new StaticMethodCallExpression(SELF_TYPE, "checkImmutable", args);
     }
 
     private Statement createConstructorStatementCollection(FieldNode fNode) {
         final Expression fieldExpr = new VariableExpression(fNode);
         Expression initExpr = fNode.getInitialValueExpression();
-        if (initExpr == null) initExpr = ConstantExpression.NULL;
+        if (initExpr == null) initExpr = new ConstantExpression(null);
         Expression collection = findArg(fNode.getName());
         return new IfStatement(
                 equalsNullExpr(collection),
@@ -360,7 +391,7 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
                     assignStatement(fieldExpr, cloneCollectionExpr(collection))));
     }
 
-    private boolean isKnownImmutable(ClassNode fieldType, List<String> knownImmutableClasses) {
+    private boolean isKnownImmutableClass(ClassNode fieldType, List<String> knownImmutableClasses) {
         if (!fieldType.isResolved()) return false;
         // GRECLIPSE: need the check in here for whether it is immutable..
         // GRECLIPSE: start - one check missing from here maybe, compared to 180
@@ -387,13 +418,13 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
     private Statement createConstructorStatementArrayOrCloneable(FieldNode fNode) {
         final Expression fieldExpr = new VariableExpression(fNode);
         Expression initExpr = fNode.getInitialValueExpression();
-        if (initExpr == null) initExpr = ConstantExpression.NULL;
+        if (initExpr == null) initExpr = new ConstantExpression(null);
         final Expression array = findArg(fNode.getName());
         return new IfStatement(
                 equalsNullExpr(array),
                 new IfStatement(
                         equalsNullExpr(initExpr),
-                        assignStatement(fieldExpr, ConstantExpression.NULL),
+                        assignStatement(fieldExpr, new ConstantExpression(null)),
                         assignStatement(fieldExpr, cloneArrayOrCloneableExpr(initExpr))),
                 assignStatement(fieldExpr, cloneArrayOrCloneableExpr(array)));
     }
@@ -401,13 +432,13 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
     private Statement createConstructorStatementDate(FieldNode fNode) {
         final Expression fieldExpr = new VariableExpression(fNode);
         Expression initExpr = fNode.getInitialValueExpression();
-        if (initExpr == null) initExpr = ConstantExpression.NULL;
+        if (initExpr == null) initExpr = new ConstantExpression(null);
         final Expression date = findArg(fNode.getName());
         return new IfStatement(
                 equalsNullExpr(date),
                 new IfStatement(
                         equalsNullExpr(initExpr),
-                        assignStatement(fieldExpr, ConstantExpression.NULL),
+                        assignStatement(fieldExpr, new ConstantExpression(null)),
                         assignStatement(fieldExpr, cloneDateExpr(initExpr))),
                 assignStatement(fieldExpr, cloneDateExpr(date)));
     }
@@ -433,7 +464,7 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
         BlockStatement body = new BlockStatement();
         final ClassNode fieldType = fNode.getType();
         final Statement statement;
-        if (fieldType.isArray() || fieldType.implementsInterface(CLONEABLE_TYPE)) {
+        if (fieldType.isArray() || isOrImplements(fieldType, CLONEABLE_TYPE)) {
             statement = createGetterBodyArrayOrCloneable(fNode);
         } else if (fieldType.isDerivedFrom(DATE_TYPE)) {
             statement = createGetterBodyDate(fNode);

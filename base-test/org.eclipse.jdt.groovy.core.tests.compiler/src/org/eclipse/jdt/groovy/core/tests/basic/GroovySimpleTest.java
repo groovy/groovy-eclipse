@@ -101,7 +101,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
             URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry(
-                    "lib/groovy-2.0.4.jar");
+                    "lib/groovy-2.0.6.jar");
             if (groovyJar==null) {
 				groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.6.jar");
 	        	if (groovyJar==null) {
@@ -286,6 +286,78 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				);
 	}	
     
+    public void testGreclipse1514() {
+    	if (GroovyUtils.GROOVY_LEVEL < 20) {
+    		return;
+    	}
+		this.runNegativeTest(new String[] {
+			"C.groovy",
+			"@SuppressWarnings(\"rawtypes\")\n"+
+			"@groovy.transform.CompileStatic\n"+
+			"class C {\n"+
+			"  def xxx(List list) {\n"+
+			"    list.unique().each { }\n"+
+			"  }\n"+
+			"}\n"},"");
+	}	
+    
+//    public void testGreclipse1515() {
+//    	if (GroovyUtils.GROOVY_LEVEL < 20) {
+//    		return;
+//    	}
+//		this.runConformTest(new String[] {
+//			"C.groovy",
+//			"import groovy.transform.CompileStatic;\n"+
+//			"import java.util.regex.Pattern\n"+
+//			"\n"+	
+//			"@CompileStatic\n"+
+//			"class C {\n"+
+//			"	void validate () {\n"+
+//			"		for (String validationKey : keySet()) {\n"+
+//            "			String regex\n"+
+//            "			Pattern pattern = ~regex\n"+
+//            "		}\n"+
+//    		"	}\n"+
+//            "}"},"");
+//    }
+     
+   public void testGreclipse1521() {
+    	if (GroovyUtils.GROOVY_LEVEL < 20) {
+    		return;
+    	}
+		this.runConformTest(new String[] {
+			"Foo.groovy",
+			"import groovy.transform.CompileStatic;\n"+
+			"import java.util.regex.Pattern\n"+
+			"\n"+	
+			"@groovy.transform.CompileStatic\n"+
+			"class Foo {\n"+
+			"  enum Status { ON, OFF}\n"+
+            "}"},"");
+    }
+   
+//    public void testGreclipse1506() {
+//	   	if (GroovyUtils.GROOVY_LEVEL < 20) {
+//	   		return;
+//	   	}
+//		this.runConformTest(new String[] {
+//			"Foo.groovy",
+//			"import groovy.transform.TypeChecked;\n"+
+//			"import groovy.util.logging.Slf4j;\n"+
+//			"\n"+	
+//			"@Slf4j\n"+
+//		    "@TypeChecked\n"+
+//		    "public class LoggerTest\n"+
+//		    "{\n"+
+//		    "	public static void main(String... args)\n"+
+//		    "	{\n"+
+//		    "		println 'println'\n"+
+////		    "		LoggerTest.log.info('Logged');\n"+
+//		    "		log.info('foo')\n"+
+//		    "	}\n"+
+//		    "}\n" },"");
+//    }
+   
 
     public void testParsingRecovery_GRE1192_1() {
     	if (GroovyUtils.GROOVY_LEVEL < 18) {

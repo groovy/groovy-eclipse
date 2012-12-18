@@ -355,14 +355,10 @@ public class Java5 implements VMPlugin {
         Method[] methods = clazz.getDeclaredMethods();
         for (Method m : methods) {
             ClassNode ret = makeClassNode(compileUnit, m.getGenericReturnType(), m.getReturnType());
-            if (clazz.getName().endsWith("Collection") && m.getName().endsWith("addAll") && m.getParameterTypes().length==1) {
-            	stop = true;
-            }
             Parameter[] params = makeParameters(compileUnit, m.getGenericParameterTypes(), m.getParameterTypes(), m.getParameterAnnotations());
-
-        	stop = false;
             ClassNode[] exceptions = makeClassNodes(compileUnit, m.getGenericExceptionTypes(), m.getExceptionTypes());
             MethodNode mn = new MethodNode(m.getName(), m.getModifiers(), ret, params, exceptions, null);
+            mn.setSynthetic(m.isSynthetic());
             setMethodDefaultValue(mn, m);
             setAnnotationMetaData(m.getAnnotations(), mn);
             mn.setGenericsTypes(configureTypeVariable(m.getTypeParameters()));
@@ -386,8 +382,6 @@ public class Java5 implements VMPlugin {
         }
     }
     
-    boolean stop = false;
-
     private void makeInterfaceTypes(CompileUnit cu, ClassNode classNode, Class clazz) {
         Type[] interfaceTypes = clazz.getGenericInterfaces();
         if (interfaceTypes.length == 0) {
@@ -419,7 +413,7 @@ public class Java5 implements VMPlugin {
             front.setRedirect(back);
             return front;
         }
-        return back;//.getPlainNodeReference();
+        return back;//.getPlainNodeReference(); // GRECLIPSE did we remove the getPlain at some point???
     }
 
     private Parameter[] makeParameters(CompileUnit cu, Type[] types, Class[] cls, Annotation[][] parameterAnnotations) {
@@ -434,9 +428,6 @@ public class Java5 implements VMPlugin {
     }
 
     private Parameter makeParameter(CompileUnit cu, Type type, Class cl, Annotation[] annotations, int idx) {
-    	if (stop) {
-    		int foo = 1;
-    	}
         ClassNode cn = makeClassNode(cu, type, cl);
         Parameter parameter = new Parameter(cn, "param" + idx);
         setAnnotationMetaData(annotations, parameter);
