@@ -318,6 +318,11 @@ class JDTClassNodeBuilder {
 	private ClassNode configureClass(BinaryTypeBinding type) {
 		if (type.id == TypeIds.T_JavaLangObject) {
 			return ClassHelper.OBJECT_TYPE;
+			// next two clauses - see GRECLIPSE-1521
+		} else if (type.id == TypeIds.T_JavaLangString) {
+			return ClassHelper.STRING_TYPE;
+		} else if (type.id == TypeIds.T_JavaLangClass) {
+			return ClassHelper.CLASS_Type;
 		}
 		JDTClassNode jcn = new JDTClassNode(type, resolver);
 		return jcn;
