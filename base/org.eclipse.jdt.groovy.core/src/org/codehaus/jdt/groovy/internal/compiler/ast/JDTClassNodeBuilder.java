@@ -11,7 +11,9 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -192,10 +194,16 @@ class JDTClassNodeBuilder {
 		return result;
 	}
 
+	private Map<TypeVariableBinding, ClassNode> typeVariableConfigurationInProgress = new HashMap<TypeVariableBinding, ClassNode>();
+
 	/**
 	 * Based on Java5.configureTypeVariableReference()
 	 */
 	private ClassNode configureTypeVariableReference(TypeVariableBinding tv) {
+		ClassNode nodeInProgress = typeVariableConfigurationInProgress.get(tv);
+		if (nodeInProgress != null) {
+			return nodeInProgress;
+		}
 		ClassNode cn = ClassHelper.makeWithoutCaching(tv.debugName());
 		cn.setGenericsPlaceHolder(true);
 		ClassNode cn2 = ClassHelper.makeWithoutCaching(tv.debugName());
@@ -203,6 +211,14 @@ class JDTClassNodeBuilder {
 		GenericsType[] gts = new GenericsType[] { new GenericsType(cn2) };
 		cn.setGenericsTypes(gts);
 		cn.setRedirect(ClassHelper.OBJECT_TYPE);
+		typeVariableConfigurationInProgress.put(tv, cn);
+		// doing a bit of what is in Java5.makeClassNode() where it sorts out its front/back GR1563
+		TypeBinding tb = tv.firstBound;
+		if (tb != null && !tb.debugName().equals("java.lang.Object")) {
+			ClassNode back = configureType(tb);
+			cn.setRedirect(back);
+		}
+		typeVariableConfigurationInProgress.remove(tv);
 		return cn;
 	}
 
