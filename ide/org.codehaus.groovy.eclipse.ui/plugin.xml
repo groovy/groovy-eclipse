@@ -274,6 +274,14 @@
              menubarPath="groovy/libs"
              tooltip="Add or remove the Groovy classpath container to this project">
 			   </action>
+          <action
+                class="org.codehaus.groovy.eclipse.actions.FixCompilerMismatches"
+                definitionId="org.codehaus.groovy.eclipse.ui.fixCompilerMismatch"
+                enablesFor="1"
+                id="org.codehaus.groovy.eclipse.ui.fixCompilerMismatch.action"
+                label="Fix Compiler Mismatch problems"
+                menubarPath="groovy/nature">
+          </action>
 			   <visibility>
 			      <objectState
 			            name="nature"
@@ -667,6 +675,12 @@
             description="Convert a closure declaration to a method"
             id="org.codehaus.groovy.eclipse.ui.convertToMethod"
             name="Convert to method">
+      </command>
+      <command
+            categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
+            description="Opens a dialog to fix all projects that use a compielr version different from what the workspace provides."
+            id="org.codehaus.groovy.eclipse.ui.fixCompilerMismatch"
+            name="Fix Groovy Compiler Mismatches">
       </command>
    </extension>
    <extension

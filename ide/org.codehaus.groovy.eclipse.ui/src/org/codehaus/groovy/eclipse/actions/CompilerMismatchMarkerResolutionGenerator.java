@@ -3,6 +3,7 @@ package org.codehaus.groovy.eclipse.actions;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.codehaus.groovy.activator.GroovyActivator;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.preferences.CompilerPreferencesPage;
@@ -22,8 +23,6 @@ import org.eclipse.ui.views.markers.WorkbenchMarkerResolution;
 
 public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolutionGenerator {
     private static final IMarkerResolution[] NO_RESOLUTIONS = new IMarkerResolution[0];
-    private static final String COMPILER_MISMATCH_MARKER = "org.codehaus.groovy.eclipse.core.compilerMismatch";
-
     private static abstract class AbstractCompilerConfigurator extends WorkbenchMarkerResolution implements IMarkerResolution2 {
         private final IMarker thisMarker;
 
@@ -36,7 +35,7 @@ public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolut
             List<IMarker> markerList = new ArrayList<IMarker>(markers.length);
             for (IMarker marker : markers) {
                 try {
-                    if (marker != thisMarker && marker.getType().equals(COMPILER_MISMATCH_MARKER)) {
+                    if (marker != thisMarker && marker.getType().equals(GroovyActivator.COMPILER_MISMATCH_MARKER)) {
                         markerList.add(marker);
                     }
                 } catch (CoreException e) {

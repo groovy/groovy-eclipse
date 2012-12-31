@@ -38,6 +38,8 @@ public class GroovyActivator extends Plugin {
     public static URL ASM_JAR_URL;
     
     private static GroovyActivator DEFAULT;
+
+    public static final String COMPILER_MISMATCH_MARKER = "org.codehaus.groovy.eclipse.core.compilerMismatch";
     
     public GroovyActivator() {
         DEFAULT = this;
