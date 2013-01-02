@@ -115,7 +115,11 @@ class JDTClassNodeBuilder {
 	TypeBinding toRawType(TypeBinding tb) {
 		if (tb instanceof ParameterizedTypeBinding) {
 			ParameterizedTypeBinding ptb = (ParameterizedTypeBinding) tb;
-			return resolver.getScope().environment.convertToRawType(ptb.genericType(), false);
+			// resolver.getScope() can return null (if the resolver hasn't yet been used to resolve something) - using
+			// the environment on the ptb seems safe. Other occurrences of getScope in this file could feasibly
+			// be changed in the same way if NPEs become problems there too
+			return ptb.environment().convertToRawType(ptb.genericType(), false);
+			// return resolver.getScope().environment.convertToRawType(ptb.genericType(), false);
 		} else if (tb instanceof TypeVariableBinding) {
 			TypeBinding fb = ((TypeVariableBinding) tb).firstBound;
 			if (fb == null) {
