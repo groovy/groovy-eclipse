@@ -55,7 +55,7 @@ public class FixCompilerMismatches implements IObjectActionDelegate {
                 CompilerUtils.setCompilerLevel(project, CompilerUtils.getActiveGroovyVersion());
             }
         } else {
-            MessageDialog.openInformation(activeShell, "No mismatches found", "All projects up to date.");
+            MessageDialog.openInformation(activeShell, "No mismatches found", "All projects have correct compiler settings.");
         }
     }
 

@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.wizards;
 
+import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
+import org.codehaus.groovy.eclipse.preferences.CompilerSwitchUIHelper;
+import org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -46,7 +49,7 @@ public class ListMessageDialog extends MessageDialog {
         public void dispose() { }
         public void inputChanged(Viewer viewer2, Object oldInput, Object newInput) { }
     }
-    private static final String TITLE = "Should migrate project compiler level?"; //$NON-NLS-1$
+    private static final String TITLE = "Fix compiler level mismatches"; //$NON-NLS-1$
 
     private final IProject[] mismatchedProjects;
     private IProject[] checkedMismatchedProjects;
@@ -100,7 +103,18 @@ public class ListMessageDialog extends MessageDialog {
         gd.verticalSpan = 2;
         viewer.getTable().setLayoutData(gd);
         viewer.setContentProvider(new TableContentProvider());
-        viewer.setLabelProvider(new WorkbenchLabelProvider());
+        viewer.setLabelProvider(new WorkbenchLabelProvider() {
+            @Override
+            protected String decorateText(String input, Object element) {
+                String label = super.decorateText(input, element);
+                if (element instanceof IProject) {
+                    SpecifiedVersion version = CompilerUtils.getCompilerLevel((IProject) element);
+                    return label + " -- " + version.toReadableVersionString();
+                } else {
+                    return label;
+                }
+            }
+        });
         viewer.setInput(mismatchedProjects);
         viewer.setAllChecked(true);
         applyDialogFont(viewer.getControl());
@@ -117,7 +131,10 @@ public class ListMessageDialog extends MessageDialog {
             }
         });
 
-        return viewer.getControl();
+        Composite compilerBlock = CompilerSwitchUIHelper.createCompilerSwitchBlock(parent);
+        compilerBlock.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false, 2, 1));
+
+        return parent;
     }
 
     protected Button createButton(Composite parent, String label, SelectionListener listener) {
@@ -147,16 +164,16 @@ public class ListMessageDialog extends MessageDialog {
     private static String createMessage(IProject[] allMismatchedProjects) {
         StringBuilder sb = new StringBuilder();
         if (allMismatchedProjects.length > 1) {
-            sb.append("The following Groovy compiler mismatches have been found:\n"); //$NON-NLS-1$
+            sb.append("The following Groovy compiler mismatches have been found."); //$NON-NLS-1$
         } else {
-            sb.append("The following Groovy compiler mismatch has been found:\n"); //$NON-NLS-1$
+            sb.append("The following Groovy compiler mismatch has been found."); //$NON-NLS-1$
         }
         if (allMismatchedProjects.length > 1) {
-            sb.append("\n** These projects may not compile until their compiler level matches the workspace level. **\n\n"); //$NON-NLS-1$
+            sb.append(" These projects may not compile until their compiler level matches the workspace level.\n\n"); //$NON-NLS-1$
         } else {
-            sb.append("\n** This project may not compile until its compiler level matches the workspace level. **\n\n"); //$NON-NLS-1$
+            sb.append(" This project may not compile until its compiler level matches the workspace level.\n\n"); //$NON-NLS-1$
         }
-        sb.append("Do you want to change the project compiler levels now?"); //$NON-NLS-1$
+        sb.append("Do you want to change the project compiler levels to match the workspace level?"); //$NON-NLS-1$
         return sb.toString();
     }
 }
