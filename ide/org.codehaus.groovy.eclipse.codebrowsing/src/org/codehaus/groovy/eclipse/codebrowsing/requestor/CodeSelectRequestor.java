@@ -218,6 +218,9 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 String name; 
                 if (declaration instanceof MethodNode) {
                     name = ((MethodNode) declaration).getName();
+                    if (name.equals("<init>")) {
+                        name = type.getElementName();
+                    }
                 } else if (declaration instanceof FieldNode) {
                     name = ((FieldNode) declaration).getName();
                 } else if (declaration instanceof PropertyNode) {
@@ -412,8 +415,10 @@ public class CodeSelectRequestor implements ITypeRequestor {
 
     private StringBuilder createUniqueKeyForMethod(MethodNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType) {
         StringBuilder sb = new StringBuilder();
-        sb.append(createUniqueKeyForClass(node.getDeclaringClass(), resolvedDeclaringType));
-        sb.append('.').append(node.getName());
+        ClassNode declaringClass = node.getDeclaringClass();
+        sb.append(createUniqueKeyForClass(declaringClass, resolvedDeclaringType));
+        String name = node.getName();
+        sb.append('.').append(name.equals("<init>") ? declaringClass.getNameWithoutPackage() : name);
         sb.append('(');
         if (node.getParameters() != null) {
             for (Parameter param : node.getParameters()) {
