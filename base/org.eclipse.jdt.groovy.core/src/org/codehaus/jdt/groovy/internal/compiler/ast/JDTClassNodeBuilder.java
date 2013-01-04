@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,7 @@ import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BaseTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.RawTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
@@ -123,12 +125,21 @@ class JDTClassNodeBuilder {
 		} else if (tb instanceof TypeVariableBinding) {
 			TypeBinding fb = ((TypeVariableBinding) tb).firstBound;
 			if (fb == null) {
-				return resolver.getScope().getJavaLangObject();
+				return tb.erasure(); // Should be JLObject
+				// return resolver.getScope().getJavaLangObject();
 			}
 			return fb;
 		} else if (tb instanceof BinaryTypeBinding) {
 			if (tb.isGenericType()) {
-				return resolver.getScope().environment.convertToRawType(tb, false);
+				try {
+					Field f = BinaryTypeBinding.class.getDeclaredField("environment");
+					f.setAccessible(true);
+					LookupEnvironment le = (LookupEnvironment) f.get(tb);
+					return le.convertToRawType(tb, false);
+					// return resolver.getScope().environment.convertToRawType(tb, false);
+				} catch (Exception e) {
+					throw new RuntimeException("Problem building rawtype ", e);
+				}
 			} else {
 				return tb;
 			}
@@ -250,7 +261,8 @@ class JDTClassNodeBuilder {
 	private TypeBinding[] getBounds(TypeVariableBinding tv) {
 		List<TypeBinding> bounds = new ArrayList<TypeBinding>();
 		if (tv.firstBound == null) {
-			return new TypeBinding[] { resolver.getScope().getJavaLangObject() };
+			return new TypeBinding[] { tv.erasure() }; // Should be JLObject
+			// return new TypeBinding[] { resolver.getScope().getJavaLangObject() };
 			// return null;
 		}
 		bounds.add(tv.firstBound);
@@ -302,7 +314,8 @@ class JDTClassNodeBuilder {
 			}
 			return bounds.toArray(new TypeBinding[bounds.size()]);
 		}
-		return new TypeBinding[] { resolver.getScope().getJavaLangObject() };
+		return new TypeBinding[] { wildcardType.erasure() };
+		// return new TypeBinding[] { resolver.getScope().getJavaLangObject() };
 	}
 
 	private ClassNode configureParameterizedType(ParameterizedTypeBinding parameterizedType) {
