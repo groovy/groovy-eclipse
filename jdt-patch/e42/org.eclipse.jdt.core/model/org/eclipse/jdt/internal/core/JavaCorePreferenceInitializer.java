@@ -12,6 +12,7 @@ package org.eclipse.jdt.internal.core;
 
 import java.util.*;
 
+import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.preferences.*;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
@@ -102,6 +103,18 @@ public class JavaCorePreferenceInitializer extends AbstractPreferenceInitializer
 			defaultPreferences.put(optionName, (String)entry.getValue());
 			optionNames.add(optionName);
 		}
+		
+		// GROOVY start
+		// add groovy-specific options
+		optionNames.add(CompilerOptions.OPTIONG_GroovyExtraImports);
+		optionNames.add(CompilerOptions.OPTIONG_GroovyTransformsToRunOnReconcile);
+		optionNames.add(CompilerOptions.OPTIONG_GroovyClassLoaderPath);
+
+		// these three may not be necessary
+		optionNames.add(CompilerOptions.OPTIONG_GroovyFlags);
+		optionNames.add(CompilerOptions.OPTIONG_BuildGroovyFiles);
+		optionNames.add(CompilerOptions.OPTIONG_GroovyProjectName);
+		// GROOVY end
 
 		// Initialize deprecated options
 		initializeDeprecatedOptions();

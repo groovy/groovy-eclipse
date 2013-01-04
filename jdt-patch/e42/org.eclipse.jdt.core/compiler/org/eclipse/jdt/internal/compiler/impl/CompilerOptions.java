@@ -1754,7 +1754,7 @@ public class CompilerOptions {
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyExtraImports)) != null) {
 			this.groovyExtraImports = (String)optionValue;
 		} else {
-			if (sysPropConfiguredExtraImports!=null) {
+			if (sysPropConfiguredExtraImports!=null && this.groovyExtraImports == null) {
 				this.groovyExtraImports = sysPropConfiguredExtraImports;
 			}
 		}
