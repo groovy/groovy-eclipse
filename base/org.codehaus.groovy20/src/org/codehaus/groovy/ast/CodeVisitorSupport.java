@@ -32,6 +32,7 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
 
     public void visitBlockStatement(BlockStatement block) {
         for (Statement statement : block.getStatements() ) {
+        	if (statement!=null) 
             statement.visit(this);
         }
     }
