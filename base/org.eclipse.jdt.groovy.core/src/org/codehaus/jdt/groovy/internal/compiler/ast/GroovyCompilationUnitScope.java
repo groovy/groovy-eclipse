@@ -154,10 +154,23 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 							// TODO verify binding exists!
 							importBindings.add(new ImportBinding(cs, true, importBinding, null));
 						} else {
+							int asIndex = nextElement.indexOf(" as ");
+							String asName = null;
+
+							if (asIndex != -1) {
+								asName = nextElement.substring(asIndex + 4).trim();
+								nextElement = nextElement.substring(0, asIndex).trim();
+							}
 							char[] type = nextElement.toCharArray();
 							char[][] cs = CharOperation.splitOn('.', type);
 							Binding typeBinding = environment.getType(cs);
 							importBindings.add(new ImportBinding(cs, false, typeBinding, null));
+							if (asName != null) {
+								char[] asNameChars = asName.toCharArray();
+								char[][] cs2 = new char[1][];
+								cs2[0] = asNameChars;
+								importBindings.add(new ImportBinding(cs2, false, typeBinding, null));
+							}
 						}
 					}
 
