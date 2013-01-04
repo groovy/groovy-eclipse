@@ -232,11 +232,22 @@ public class JDTResolver extends ResolveVisitor {
 									}
 								} else {
 									String importedTypeName = nextElement;
-									if (importedTypeName.endsWith(type.getName())) {
+									int asIndex = importedTypeName.indexOf(" as ");
+									String asName = null;
+
+									if (asIndex != -1) {
+										asName = importedTypeName.substring(asIndex + 4).trim();
+										importedTypeName = importedTypeName.substring(0, asIndex).trim();
+									}
+									String typeName = type.getName();
+									if (importedTypeName.endsWith(typeName) || typeName.equals(asName)) {
 										int lastdot = importedTypeName.lastIndexOf('.');
 										String importTypeNameChopped = importedTypeName.substring(0, lastdot + 1);
+										if (typeName.equals(asName)) {
+											typeName = importedTypeName.substring(lastdot + 1);
+										}
 										ConstructedClassWithPackage tmp = new ConstructedClassWithPackage(importTypeNameChopped,
-												type.getName());
+												typeName);
 										if (resolve(tmp, false, false, false)) {
 											type.setRedirect(tmp.redirect());
 											return true;
