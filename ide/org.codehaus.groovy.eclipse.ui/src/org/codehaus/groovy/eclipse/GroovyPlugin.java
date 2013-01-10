@@ -36,6 +36,7 @@ import org.eclipse.ui.IPartService;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.internal.util.PrefUtil;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -202,11 +203,9 @@ public class GroovyPlugin extends AbstractUIPlugin {
     private void addMonospaceFontListener() {
         ensure = new EnsureJUnitFont();
         junitListener = new JUnitPageListener();
-        try {
+        if (PlatformUI.isWorkbenchRunning()) {
             // listen for activations of the JUnit view and ensure monospace font if requested.
             Workbench.getInstance().getActiveWorkbenchWindow().addPageListener(junitListener);
-        } catch (NullPointerException e) {
-            // ignore, UI has not been initialized yet
         }
 
         getPreferenceStore().addPropertyChangeListener(ensure);
