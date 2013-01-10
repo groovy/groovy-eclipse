@@ -12,7 +12,6 @@ package org.eclipse.jdt.internal.core;
 
 import java.util.*;
 
-import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.preferences.*;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
