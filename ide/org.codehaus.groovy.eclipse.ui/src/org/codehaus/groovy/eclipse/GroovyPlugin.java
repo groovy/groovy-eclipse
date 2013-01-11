@@ -203,9 +203,13 @@ public class GroovyPlugin extends AbstractUIPlugin {
     private void addMonospaceFontListener() {
         ensure = new EnsureJUnitFont();
         junitListener = new JUnitPageListener();
-        if (PlatformUI.isWorkbenchRunning()) {
-            // listen for activations of the JUnit view and ensure monospace font if requested.
-            Workbench.getInstance().getActiveWorkbenchWindow().addPageListener(junitListener);
+        try {
+            if (PlatformUI.isWorkbenchRunning()) {
+                // listen for activations of the JUnit view and ensure monospace font if requested.
+                Workbench.getInstance().getActiveWorkbenchWindow().addPageListener(junitListener);
+            }
+        } catch (NullPointerException e) {
+            // ignore workbench is closed
         }
 
         getPreferenceStore().addPropertyChangeListener(ensure);
