@@ -330,7 +330,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 		// there is no package declaration, let them get away with it
 
 		// where we should be:
-		if (compUnitDecl != null && compUnitDecl.compilationResult != null
+		if (!isScript && compUnitDecl != null && compUnitDecl.compilationResult != null
 				&& compUnitDecl.compilationResult.compilationUnit != null) {
 			char[][] packageName = compUnitDecl.compilationResult.compilationUnit.getPackageName();
 			String shouldBe = packageName == null ? "" : CharOperation.toString(packageName);

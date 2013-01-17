@@ -67,17 +67,16 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
     protected IPreferenceStore doGetPreferenceStore() {
         IProject project = getProject();
         ScopedPreferenceStore store;
+        IScopeContext scope;
         if (project == null) {
             // workspace settings
-            IScopeContext scope = InstanceScope.INSTANCE;
-            preferences = scope.getNode(Activator.PLUGIN_ID);
-            store = new ScopedPreferenceStore(scope, Activator.PLUGIN_ID);
+            scope = InstanceScope.INSTANCE;
         } else {
             // project settings
-            IScopeContext projectScope = new ProjectScope(project);
-            preferences = projectScope.getNode(Activator.PLUGIN_ID);
-            store = new ScopedPreferenceStore(projectScope, Activator.PLUGIN_ID);
+            scope = new ProjectScope(project);
         }
+        preferences = scope.getNode(Activator.PLUGIN_ID);
+        store = new ScopedPreferenceStore(scope, Activator.PLUGIN_ID);
         return store;
     }
 
@@ -122,7 +121,7 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
         }
 
         // Groovy script folder
-        scriptFolderSelector = new ScriptFolderSelectorPreferences(page, getPreferences(), getPreferenceStore());
+        scriptFolderSelector = new ScriptFolderSelectorPreferences(page, getPreferences(), getPreferenceStore(), getProject());
         scriptFolderSelector.createListContents();
 
         if (getElement() == null) {
@@ -275,7 +274,6 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
     }
     @Override
     public void performApply() {
-        applyPreferences();
         super.performApply();
     }
 

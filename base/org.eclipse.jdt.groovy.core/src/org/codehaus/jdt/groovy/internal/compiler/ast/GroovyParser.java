@@ -58,7 +58,6 @@ import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.builder.BatchImageBuilder;
 import org.eclipse.jdt.internal.core.builder.BuildNotifier;
-import org.eclipse.jdt.internal.core.builder.SourceFile;
 
 /**
  * The mapping layer between the groovy parser and the JDT. This class communicates with the groovy parser and translates results
@@ -80,7 +79,6 @@ public class GroovyParser {
 	public Object requestor;
 	private boolean allowTransforms;
 	private boolean isReconcile;
-	private ScriptFolderSelector scriptFolderSelector;
 
 	/*
 	 * Each project is allowed a GroovyClassLoader that will be used to load transform definitions and supporting classes. A cache
@@ -92,6 +90,8 @@ public class GroovyParser {
 
 	private static Map<String, PathLoaderPair> projectToLoaderCache = Collections
 			.synchronizedMap(new HashMap<String, PathLoaderPair>());
+	private static Map<String, ScriptFolderSelector> scriptFolderSelectorCache = Collections
+			.synchronizedMap(new HashMap<String, ScriptFolderSelector>());
 
 	static class PathLoaderPair {
 		String classpath;
@@ -146,6 +146,7 @@ public class GroovyParser {
 	public static void tidyCache(String projectName) {
 		// This will orphan the loader on the heap
 		projectToLoaderCache.remove(projectName);
+		scriptFolderSelectorCache.remove(projectName);
 	}
 
 	public static void closeClassLoader(String projectName) {
@@ -414,10 +415,11 @@ public class GroovyParser {
 		// from the hierarchy resolver. If there is the same type in two different packages then the compilation process
 		// is going to go wrong because the filename is used as a key in some groovy data structures. This can lead to false
 		// complaints about the same file defining duplicate types.
+		char[] fileName = sourceUnit.getFileName();
 		if (sourceUnit instanceof org.eclipse.jdt.internal.compiler.batch.CompilationUnit) {
 			filepath = new String(((org.eclipse.jdt.internal.compiler.batch.CompilationUnit) sourceUnit).fileName);
 		} else {
-			filepath = new String(sourceUnit.getFileName());
+			filepath = new String(fileName);
 		}
 
 		// Try to turn this into a 'real' absolute file system reference (this is because Grails 1.5 expects it).
@@ -466,15 +468,15 @@ public class GroovyParser {
 		// Is this a script?
 		// If allowTransforms is TRUE then this is a 'full build' and we should remember which are scripts so that
 		// .class file output can be suppressed
-		if (allowTransforms && (sourceUnit instanceof SourceFile)) {
-			if (this.scriptFolderSelector == null) {
-				this.scriptFolderSelector = new ScriptFolderSelector(((SourceFile) sourceUnit).resource.getProject());
+		if (projectName != null && eclipseFile != null) {
+			ScriptFolderSelector scriptFolderSelector = scriptFolderSelectorCache.get(projectName);
+			if (scriptFolderSelector == null) {
+				scriptFolderSelector = new ScriptFolderSelector(ResourcesPlugin.getWorkspace().getRoot().getProject(projectName));
+				scriptFolderSelectorCache.put(projectName, scriptFolderSelector);
 			}
-			SourceFile file = (SourceFile) sourceUnit;
-			if (scriptFolderSelector.isScript(file.resource)) {
+			if (scriptFolderSelector.isScript(eclipseFile)) {
 				gcuDeclaration.tagAsScript();
 			}
-			// System.out.println(sourceUnit + " " + (isScript ? "IS" : "is NOT") + " a script");
 		}
 		if (debugRequestor != null) {
 			debugRequestor.acceptCompilationUnitDeclaration(gcuDeclaration);
@@ -537,7 +539,6 @@ public class GroovyParser {
 		boolean allowTransforms = this.groovyCompilationUnit.allowTransforms;
 		boolean isReconcile = this.groovyCompilationUnit.isReconcile;
 		this.groovyCompilationUnit = makeCompilationUnit(grabbyLoader, gcl, isReconcile, allowTransforms);
-		this.scriptFolderSelector = null;
 		grabbyLoader.setCompilationUnit(this.groovyCompilationUnit);
 		this.resolver = new JDTResolver(groovyCompilationUnit);
 		this.groovyCompilationUnit.setResolveVisitor(resolver);

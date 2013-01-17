@@ -19,6 +19,16 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
@@ -31,6 +41,7 @@ import org.eclipse.jdt.internal.ui.wizards.dialogfields.IDialogFieldListener;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.IListAdapter;
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.ListDialogField;
 import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -99,7 +110,10 @@ public class ScriptFolderSelectorPreferences {
          */
         public void customButtonPressed(ListDialogField field, int index) {
             doCustomButtonPressed(field, index);
+            hasChanges = true;
         }
+
+
 
         /**
          * @see org.eclipse.jdt.internal.ui.wizards.dialogfields.IListAdapter#selectionChanged(org.eclipse.jdt.internal.ui.wizards.dialogfields.ListDialogField)
@@ -113,13 +127,55 @@ public class ScriptFolderSelectorPreferences {
          */
         public void doubleClicked(ListDialogField field) {
             doDoubleClicked(field);
+            hasChanges = true;
         }
 
         /**
          * @see org.eclipse.jdt.internal.ui.wizards.dialogfields.IDialogFieldListener#dialogFieldChanged(org.eclipse.jdt.internal.ui.wizards.dialogfields.DialogField)
          */
-        public void dialogFieldChanged(DialogField field) {}
+        public void dialogFieldChanged(DialogField field) {
+            hasChanges = true;
+        }
 
+    }
+
+    private static class BuildJob extends Job {
+        private IProject[] projects;
+
+        public BuildJob(IProject...projects) {
+            super(getName(projects));
+            this.projects = projects;
+        }
+
+        private static String getName(IProject...projects) {
+            if (projects.length == 1) {
+                return "Building proiject " + projects[0].getName();
+            } else {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Building proijects ");
+                for (IProject project : projects) {
+                    sb.append(project.getName() + " ");
+                }
+                return sb.toString();
+            }
+        }
+
+        @Override
+        protected IStatus run(IProgressMonitor monitor) {
+            try {
+                IProgressMonitor sub = SubMonitor.convert(monitor, projects.length);
+                for (IProject project : projects) {
+                    project.build(IncrementalProjectBuilder.FULL_BUILD, sub);
+                    sub.worked(1);
+                }
+                return Status.OK_STATUS;
+            } catch (CoreException e) {
+                GroovyCore.logException("Error building groovy project", e);
+                return e.getStatus();
+            } finally {
+                monitor.done();
+            }
+        }
     }
 
     private final Composite parent;
@@ -132,10 +188,15 @@ public class ScriptFolderSelectorPreferences {
 
     private final IPreferenceStore store;
 
-    public ScriptFolderSelectorPreferences(Composite parent, IEclipsePreferences preferences, IPreferenceStore store) {
+    private IProject project;
+
+    private boolean hasChanges = false;
+
+    public ScriptFolderSelectorPreferences(Composite parent, IEclipsePreferences preferences, IPreferenceStore store, IProject project) {
         this.parent = parent;
         this.preferences = preferences;
         this.store = store;
+        this.project = project;
     }
 
     public ListDialogField createListContents() {
@@ -187,6 +248,7 @@ public class ScriptFolderSelectorPreferences {
                         }
                     }
                 }
+                hasChanges = true;
             }
         });
 
@@ -265,13 +327,12 @@ public class ScriptFolderSelectorPreferences {
         return dialog;
     }
 
-    private void editEntry(ListDialogField field) {
-        @SuppressWarnings("unchecked")
+    private void editEntry(ListDialogField<String> field) {
         List<String> selElements = field.getSelectedElements();
         if (selElements.size() != 1) {
             return;
         }
-        String entry = (String) selElements.get(0);
+        String entry = selElements.get(0);
         InputDialog dialog = createInputDialog(entry);
         if (dialog.open() == Window.OK) {
             field.replaceElement(entry, dialog.getValue());
@@ -280,9 +341,14 @@ public class ScriptFolderSelectorPreferences {
 
     @SuppressWarnings("unchecked")
     public void applyPreferences() {
+        if (!hasChanges) {
+            return;
+        }
+        hasChanges = false;
         // must do the store before setting the preference
         // to ensure that the store is flushed
         disableButton.store();
+
         List<String> elts = patternList.getElements();
         List<String> result = new ArrayList<String>(elts.size() * 2);
         for (String elt : elts) {
@@ -290,6 +356,16 @@ public class ScriptFolderSelectorPreferences {
             result.add(patternList.isChecked(elt) ? "y" : "n");
         }
         Activator.getDefault().setPreference(preferences, Activator.GROOVY_SCRIPT_FILTERS, result);
+
+        boolean yesNo = MessageDialog.openQuestion(parent.getShell(), "Do full build?", "Script folder preferences have changed.\n" +
+                "Must do a full build before they come completely into effect.  Do you want to do a full build now?");
+        if (yesNo) {
+            if (project != null) {
+                new BuildJob(project).schedule();
+            } else {
+                new BuildJob(GroovyNature.getAllAccessibleGroovyProjects().toArray(new IProject[0])).schedule();
+            }
+        }
 
     }
 
@@ -319,6 +395,7 @@ public class ScriptFolderSelectorPreferences {
         patternList.setElements(filteredElements);
         patternList.setCheckedElements(checkedElements);
         patternList.selectFirstElement();
+        hasChanges = false;
     }
 
 
