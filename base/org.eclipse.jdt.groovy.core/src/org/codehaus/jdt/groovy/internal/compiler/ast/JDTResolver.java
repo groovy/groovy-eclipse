@@ -396,30 +396,15 @@ public class JDTResolver extends ResolveVisitor {
 
 	@Override
 	protected boolean resolveToInnerEnum(ClassNode type) {
-		if (existsAsInnerClass(type)) {
-			return super.resolveToInnerEnum(type);
-		}
+	    // inner classes are resolved by JDT, so
+	    // if we get here then the inner class does not exist
 		return false;
 	}
 
 	@Override
 	protected boolean resolveToInner(ClassNode type) {
-		if (existsAsInnerClass(type)) {
-			return super.resolveToInner(type);
-		}
-		return false;
-	}
-
-	private boolean existsAsInnerClass(ClassNode type) {
-		Iterator<InnerClassNode> innerClasses = currentClass.getInnerClasses();
-		if (innerClasses != null) {
-			while (innerClasses.hasNext()) {
-				InnerClassNode innerClass = innerClasses.next();
-				if (innerClass.getName().equals(type.getName())) {
-					return true;
-				}
-			}
-		}
+	    // inner classes are resolved by JDT, so
+	    // if we get here then the inner class does not exist
 		return false;
 	}
 
