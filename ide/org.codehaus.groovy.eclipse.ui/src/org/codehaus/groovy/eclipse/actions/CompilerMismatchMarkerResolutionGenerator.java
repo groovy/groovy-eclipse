@@ -3,7 +3,7 @@ package org.codehaus.groovy.eclipse.actions;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codehaus.groovy.activator.GroovyActivator;
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.preferences.CompilerPreferencesPage;
@@ -35,7 +35,7 @@ public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolut
             List<IMarker> markerList = new ArrayList<IMarker>(markers.length);
             for (IMarker marker : markers) {
                 try {
-                    if (marker != thisMarker && marker.getType().equals(GroovyActivator.COMPILER_MISMATCH_MARKER)) {
+                    if (marker != thisMarker && marker.getType().equals(GroovyPlugin.COMPILER_MISMATCH_MARKER)) {
                         markerList.add(marker);
                     }
                 } catch (CoreException e) {

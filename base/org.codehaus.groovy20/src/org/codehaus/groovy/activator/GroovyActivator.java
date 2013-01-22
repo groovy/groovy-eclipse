@@ -39,8 +39,6 @@ public class GroovyActivator extends Plugin {
     
     private static GroovyActivator DEFAULT;
 
-    public static final String COMPILER_MISMATCH_MARKER = "org.codehaus.groovy.eclipse.core.compilerMismatch";
-    
     public GroovyActivator() {
         DEFAULT = this;
     }

@@ -13,7 +13,7 @@ package org.codehaus.groovy.eclipse.actions;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codehaus.groovy.activator.GroovyActivator;
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.wizards.ListMessageDialog;
@@ -64,7 +64,7 @@ public class FixCompilerMismatches implements IObjectActionDelegate {
             return false;
         }
         try {
-            IMarker[] markers = project.findMarkers(GroovyActivator.COMPILER_MISMATCH_MARKER, true, IResource.DEPTH_ZERO);
+            IMarker[] markers = project.findMarkers(GroovyPlugin.COMPILER_MISMATCH_MARKER, true, IResource.DEPTH_ZERO);
             return markers != null && markers.length > 0;
         } catch (CoreException e) {
             GroovyCore.logException("Error finding markers", e);

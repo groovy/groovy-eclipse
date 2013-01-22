@@ -86,6 +86,8 @@ public class GroovyPlugin extends AbstractUIPlugin {
 
     public static final String GROOVY_TEMPLATE_CTX = "org.codehaus.groovy.eclipse.templates";
 
+    public static final String COMPILER_MISMATCH_MARKER = "org.codehaus.groovy.eclipse.core.compilerMismatch";
+
     private EnsureJUnitFont ensure;
 
     private IPageListener junitListener;
