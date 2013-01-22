@@ -335,6 +335,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
     
     // GRECLIPSE: added as a helper
+    /**
+     * check that the given name is an inner class in the enclosing class
+     * assumes name is unqualified
+     */
     private boolean existsAsInnerClass(ClassNode maybeEnclosing, String name) {
         Iterator<InnerClassNode> innerClasses = maybeEnclosing.getInnerClasses();
         if (innerClasses != null) {

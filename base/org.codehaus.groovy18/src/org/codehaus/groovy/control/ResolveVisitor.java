@@ -24,6 +24,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -366,7 +367,35 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 resolveToClass(type);
     }
 
+    
+    // GRECLIPSE: added as a helper
+    /**
+     * check that the given name is an inner class in the enclosing class
+     * assumes name is unqualified
+     */
+    private boolean existsAsInnerClass(ClassNode maybeEnclosing, String name) {
+        Iterator<InnerClassNode> innerClasses = maybeEnclosing.getInnerClasses();
+        if (innerClasses != null) {
+            while (innerClasses.hasNext()) {
+                InnerClassNode innerClass = innerClasses.next();
+                if (name.equals(innerClass.getName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    // GRECLIPSE: end
+ 
     private boolean resolveNestedClass(ClassNode type) {
+        // GRECLIPSE grab the name before the first . or $
+        String qualName = type.getName();
+        int dotIndex = qualName.indexOf('.');
+        int dollarIndex = qualName.indexOf('$');
+        String firstComponent = dotIndex == -1 && dollarIndex == -1 ? qualName
+                : (dotIndex == -1 ? qualName.substring(0, dollarIndex) : qualName.substring(0, dotIndex));
+        // GRECLIPSE: end
+        
         // we have for example a class name A, are in class X
         // and there is a nested class A$X. we want to be able 
         // to access that class directly, so A becomes a valid
@@ -382,8 +411,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     	}
     	
     	for (ClassNode classToCheck : hierClasses.values()) {
-    		if (classToCheck.mightHaveInners()) {  // GRECLIPSE
-            name = classToCheck.getName()+"$"+type.getName();
+            if (classToCheck.mightHaveInners() && existsAsInnerClass(classToCheck, classToCheck.getName()+"$"+firstComponent)) {  // GRECLIPSE
+            name = classToCheck.getName()+"$"+qualName;
             val = ClassHelper.make(name);
 	        if (resolveFromCompileUnit(val)) {
 	            type.setRedirect(val);
@@ -417,11 +446,13 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         // most outer class is now element 0
         for (ClassNode testNode : outerClasses) {
-            name = testNode.getName()+"$"+type.getName();
+            if (testNode.mightHaveInners() && existsAsInnerClass(testNode, testNode.getName()+"$"+firstComponent)) {  // GRECLIPSE
+            name = testNode.getName()+"$"+qualName;
             val = ClassHelper.make(name);
             if (resolveFromCompileUnit(val)) {
                 type.setRedirect(val);
                 return true;
+            }
             }
         }        
         
