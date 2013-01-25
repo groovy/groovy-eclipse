@@ -32,7 +32,7 @@
          version="0.0.0"/>
 
    <includes
-         id="org.codehaus.groovy17.feature"
+         id="org.codehaus.groovy20.feature"
          version="0.0.0"/>
 
    <plugin
