@@ -46,12 +46,12 @@ public class SanityTest extends TestCase {
         Version jdtVersion = getEclipseVersion();
         Version groovyVersion = getGroovyCompilerVersion();
         
-        if (jdtVersion.getMinor() == 8) {
+        if (jdtVersion.getMinor() == 8 || jdtVersion.getMinor() == 7) {
             assertEquals(2, groovyVersion.getMajor());
             assertEquals(0, groovyVersion.getMinor());
-        } else if (jdtVersion.getMinor() == 7) {
-            assertEquals(1, groovyVersion.getMajor());
-            assertEquals(8, groovyVersion.getMinor());
+        } else if (jdtVersion.getMinor() == 9) {
+            assertEquals(2, groovyVersion.getMajor());
+            assertEquals(1, groovyVersion.getMinor());
         }
     }
 }

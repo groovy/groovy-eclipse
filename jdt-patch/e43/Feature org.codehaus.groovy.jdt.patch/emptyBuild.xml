@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<project name="empty" basedir="." default="empty">
+	<target name="empty">
+	</target>
+</project>
