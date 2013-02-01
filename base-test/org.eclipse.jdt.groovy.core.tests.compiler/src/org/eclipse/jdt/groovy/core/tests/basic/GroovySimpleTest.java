@@ -100,17 +100,19 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         String[] newcps = new String[cps.length+3];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-            URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry(
-                    "lib/groovy-2.0.6.jar");
-            if (groovyJar==null) {
-				groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.6.jar");
-	        	if (groovyJar==null) {
-	        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.10.jar");
-	            	if (groovyJar==null) {
-	            		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
-	            	}
-	        	}
-            }
+        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.1.0.jar");
+        	if (groovyJar==null) {
+	            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.0.6.jar");
+	            if (groovyJar==null) {
+					groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.6.jar");
+		        	if (groovyJar==null) {
+		        		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.10.jar");
+		            	if (groovyJar==null) {
+		            		groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
+		            	}
+		        	}
+	            }
+        	}
             newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
             URL asmJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/asm-4.0.jar");
             if (asmJar==null) {
@@ -4678,7 +4680,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},"----------\n" + 
 		"1. ERROR in T.groovy (at line 3)\n" + 
 		"	this \"\"\n" + 
-		"	     ^\n" + 
+		"	     ^^\n" + 
 		"Groovy:Constructor call must be the first statement in a constructor. at line: 3 column: 8. File: T.groovy @ line 3, column 8.\n" + 
 		"----------\n");
 	}
@@ -8833,6 +8835,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		if (GroovyUtils.GROOVY_LEVEL<20) {
 			return;
 		}
+
 		runNegativeTest(new String[]{
 				"Foo.groovy",
 				"import groovy.transform.TypeChecked\n"+

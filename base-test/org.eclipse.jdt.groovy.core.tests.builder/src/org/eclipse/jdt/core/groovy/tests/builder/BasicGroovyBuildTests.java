@@ -66,7 +66,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
 	public static Test suite() {
 		return buildTestSuite(BasicGroovyBuildTests.class);
-	}
+	} 
 
 	/**
 	 * Testing that the classpath computation works for multi dependent
@@ -381,7 +381,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 	public void testCompileStatic_1505() throws Exception {
 		try {
 			if (GroovyUtils.GROOVY_LEVEL < 20) {
-				return;
+				return; 
 			}
 			IPath projectPath = env.addProject("Project","1.6"); //$NON-NLS-1$
 			env.addExternalJars(projectPath, Util.getJavaClassLibs());

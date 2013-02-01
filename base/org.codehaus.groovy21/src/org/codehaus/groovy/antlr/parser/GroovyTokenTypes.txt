@@ -1,0 +1,228 @@
+// $ANTLR 2.7.7 (20060906): groovy.g -> GroovyTokenTypes.txt$
+Groovy    // output token vocab name
+BLOCK=4
+MODIFIERS=5
+OBJBLOCK=6
+SLIST=7
+METHOD_DEF=8
+VARIABLE_DEF=9
+INSTANCE_INIT=10
+STATIC_INIT=11
+TYPE=12
+CLASS_DEF=13
+INTERFACE_DEF=14
+PACKAGE_DEF=15
+ARRAY_DECLARATOR=16
+EXTENDS_CLAUSE=17
+IMPLEMENTS_CLAUSE=18
+PARAMETERS=19
+PARAMETER_DEF=20
+LABELED_STAT=21
+TYPECAST=22
+INDEX_OP=23
+POST_INC=24
+POST_DEC=25
+METHOD_CALL=26
+EXPR=27
+IMPORT=28
+UNARY_MINUS=29
+UNARY_PLUS=30
+CASE_GROUP=31
+ELIST=32
+FOR_INIT=33
+FOR_CONDITION=34
+FOR_ITERATOR=35
+EMPTY_STAT=36
+FINAL="final"=37
+ABSTRACT="abstract"=38
+UNUSED_GOTO="goto"=39
+UNUSED_CONST="const"=40
+UNUSED_DO="do"=41
+STRICTFP="strictfp"=42
+SUPER_CTOR_CALL=43
+CTOR_CALL=44
+CTOR_IDENT=45
+VARIABLE_PARAMETER_DEF=46
+STRING_CONSTRUCTOR=47
+STRING_CTOR_MIDDLE=48
+CLOSABLE_BLOCK=49
+IMPLICIT_PARAMETERS=50
+SELECT_SLOT=51
+DYNAMIC_MEMBER=52
+LABELED_ARG=53
+SPREAD_ARG=54
+SPREAD_MAP_ARG=55
+LIST_CONSTRUCTOR=56
+MAP_CONSTRUCTOR=57
+FOR_IN_ITERABLE=58
+STATIC_IMPORT=59
+ENUM_DEF=60
+ENUM_CONSTANT_DEF=61
+FOR_EACH_CLAUSE=62
+ANNOTATION_DEF=63
+ANNOTATIONS=64
+ANNOTATION=65
+ANNOTATION_MEMBER_VALUE_PAIR=66
+ANNOTATION_FIELD_DEF=67
+ANNOTATION_ARRAY_INIT=68
+TYPE_ARGUMENTS=69
+TYPE_ARGUMENT=70
+TYPE_PARAMETERS=71
+TYPE_PARAMETER=72
+WILDCARD_TYPE=73
+TYPE_UPPER_BOUNDS=74
+TYPE_LOWER_BOUNDS=75
+CLOSURE_LIST=76
+MULTICATCH=77
+MULTICATCH_TYPES=78
+SH_COMMENT("a script header")=79
+LITERAL_package="package"=80
+LITERAL_import="import"=81
+LITERAL_static="static"=82
+LITERAL_def="def"=83
+LBRACK("'['")=84
+RBRACK("']'")=85
+IDENT("an identifier")=86
+STRING_LITERAL("a string literal")=87
+LT("'<'")=88
+DOT("'.'")=89
+LPAREN("'('")=90
+LITERAL_class="class"=91
+LITERAL_interface="interface"=92
+LITERAL_enum="enum"=93
+AT("'@'")=94
+QUESTION("'?'")=95
+LITERAL_extends="extends"=96
+LITERAL_super="super"=97
+GT("'>'")=98
+COMMA("','")=99
+SR("'>>'")=100
+BSR("'>>>'")=101
+LITERAL_void="void"=102
+LITERAL_boolean="boolean"=103
+LITERAL_byte="byte"=104
+LITERAL_char="char"=105
+LITERAL_short="short"=106
+LITERAL_int="int"=107
+LITERAL_float="float"=108
+LITERAL_long="long"=109
+LITERAL_double="double"=110
+STAR("'*'")=111
+LITERAL_as="as"=112
+LITERAL_private="private"=113
+LITERAL_public="public"=114
+LITERAL_protected="protected"=115
+LITERAL_transient="transient"=116
+LITERAL_native="native"=117
+LITERAL_threadsafe="threadsafe"=118
+LITERAL_synchronized="synchronized"=119
+LITERAL_volatile="volatile"=120
+RPAREN("')'")=121
+ASSIGN("'='")=122
+BAND("'&'")=123
+LCURLY("'{'")=124
+RCURLY("'}'")=125
+SEMI("';'")=126
+LITERAL_default="default"=127
+LITERAL_throws="throws"=128
+LITERAL_implements="implements"=129
+LITERAL_this="this"=130
+TRIPLE_DOT("'...'")=131
+BOR("'|'")=132
+CLOSABLE_BLOCK_OP("'->'")=133
+COLON("':'")=134
+LITERAL_if="if"=135
+LITERAL_else="else"=136
+LITERAL_while="while"=137
+LITERAL_switch="switch"=138
+LITERAL_for="for"=139
+LITERAL_in="in"=140
+LITERAL_return="return"=141
+LITERAL_break="break"=142
+LITERAL_continue="continue"=143
+LITERAL_throw="throw"=144
+LITERAL_assert="assert"=145
+PLUS("'+'")=146
+MINUS("'-'")=147
+LITERAL_case="case"=148
+LITERAL_try="try"=149
+LITERAL_finally="finally"=150
+LITERAL_catch="catch"=151
+SPREAD_DOT("'*.'")=152
+OPTIONAL_DOT("'?.'")=153
+MEMBER_POINTER("'.&'")=154
+LITERAL_false="false"=155
+LITERAL_instanceof="instanceof"=156
+LITERAL_new="new"=157
+LITERAL_null="null"=158
+LITERAL_true="true"=159
+PLUS_ASSIGN("'+='")=160
+MINUS_ASSIGN("'-='")=161
+STAR_ASSIGN("'*='")=162
+DIV_ASSIGN("'/='")=163
+MOD_ASSIGN("'%='")=164
+SR_ASSIGN("'>>='")=165
+BSR_ASSIGN("'>>>='")=166
+SL_ASSIGN("'<<='")=167
+BAND_ASSIGN("'&='")=168
+BXOR_ASSIGN("'^='")=169
+BOR_ASSIGN("'|='")=170
+STAR_STAR_ASSIGN("'**='")=171
+ELVIS_OPERATOR("'?:'")=172
+LOR("'||'")=173
+LAND("'&&'")=174
+BXOR("'^'")=175
+REGEX_FIND("'=~'")=176
+REGEX_MATCH("'==~'")=177
+NOT_EQUAL("'!='")=178
+EQUAL("'=='")=179
+IDENTICAL("'==='")=180
+NOT_IDENTICAL("'!=='")=181
+COMPARE_TO("'<=>'")=182
+LE("'<='")=183
+GE("'>='")=184
+SL("'<<'")=185
+RANGE_INCLUSIVE("'..'")=186
+RANGE_EXCLUSIVE("'..<'")=187
+INC("'++'")=188
+DIV("'/'")=189
+MOD("'%'")=190
+DEC("'--'")=191
+STAR_STAR("'**'")=192
+BNOT("'~'")=193
+LNOT("'!'")=194
+STRING_CTOR_START=195
+STRING_CTOR_END("a string literal end")=196
+NUM_INT("a numeric literal")=197
+NUM_FLOAT=198
+NUM_LONG=199
+NUM_DOUBLE=200
+NUM_BIG_INT=201
+NUM_BIG_DECIMAL=202
+NLS("some newlines, whitespace or comments")=203
+DOLLAR("'$'")=204
+WS("whitespace")=205
+ONE_NL("a newline")=206
+ONE_NL_KEEP("a newline")=207
+SL_COMMENT("a single line comment")=208
+ML_COMMENT("a comment")=209
+STRING_CH("a string character")=210
+REGEXP_LITERAL("a multiline regular expression literal")=211
+DOLLAR_REGEXP_LITERAL("a multiline dollar escaping regular expression literal")=212
+REGEXP_CTOR_END("a multiline regular expression literal end")=213
+DOLLAR_REGEXP_CTOR_END("a multiline dollar escaping regular expression literal end")=214
+ESCAPED_SLASH=215
+ESCAPED_DOLLAR=216
+REGEXP_SYMBOL("a multiline regular expression character")=217
+DOLLAR_REGEXP_SYMBOL("a multiline dollar escaping regular expression character")=218
+ESC("an escape sequence")=219
+STRING_NL("a newline inside a string")=220
+HEX_DIGIT("a hexadecimal digit")=221
+VOCAB("a character")=222
+LETTER("a letter")=223
+DIGIT("a digit")=224
+DIGITS_WITH_UNDERSCORE("a sequence of digits and underscores, bordered by digits")=225
+DIGITS_WITH_UNDERSCORE_OPT("a sequence of digits and underscores with maybe underscore starting")=226
+EXPONENT("an exponent")=227
+FLOAT_SUFFIX("a float or double suffix")=228
+BIG_SUFFIX("a big decimal suffix")=229

@@ -202,7 +202,9 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
     }
     
     public void testSwingBuilder1() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL >= 20) {
+        if (GroovyUtils.GROOVY_LEVEL >= 21) {
+            addGroovyJarToProject("groovy-swing-2.1.0.jar");
+        } else if (GroovyUtils.GROOVY_LEVEL >= 20) {
             addGroovyJarToProject("groovy-swing-2.0.6.jar");
         }
         String contents = "new groovy.swing.SwingBuilder().edt { frame }";
@@ -212,7 +214,9 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
         assertDeclaringType(contents, start, end, "groovy.swing.SwingBuilder", true);
     }
     public void testSwingBuilder2() throws Exception {
-        if (GroovyUtils.GROOVY_LEVEL >= 20) {
+        if (GroovyUtils.GROOVY_LEVEL >= 21) {
+            addGroovyJarToProject("groovy-swing-2.1.0.jar");
+        } else if (GroovyUtils.GROOVY_LEVEL >= 20) {
             addGroovyJarToProject("groovy-swing-2.0.6.jar");
         }
         String contents = "groovy.swing.SwingBuilder.edtBuilder { frame }";

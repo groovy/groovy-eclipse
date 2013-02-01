@@ -22,19 +22,23 @@ import org.eclipse.core.runtime.Platform;
 public class GroovyUtils {
     static public final int GROOVY_LEVEL;
     static {
-    	int groovyLevel = 20;
-    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.0.6.jar");
-    	if (groovyJar==null) {
-	        groovyLevel = 18;
-			groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.6.jar");
-	        if (groovyJar==null) {
-	            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.10.jar");
-	            groovyLevel=17;
-	            if (groovyJar==null) {
-	                groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
-	                groovyLevel=16;
-	            }
-	        }
+    	int groovyLevel = 21;
+    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.1.0.jar");
+    	if (groovyJar == null) {
+    		groovyLevel = 20;
+	    	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.0.6.jar");
+	    	if (groovyJar==null) {
+		        groovyLevel = 18;
+				groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.6.jar");
+		        if (groovyJar==null) {
+		            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.10.jar");
+		            groovyLevel=17;
+		            if (groovyJar==null) {
+		                groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
+		                groovyLevel=16;
+		            }
+		        }
+	    	}
     	}
         GROOVY_LEVEL = groovyLevel;
     }
@@ -50,6 +54,10 @@ public class GroovyUtils {
 
     public static boolean isGroovy20() {
         return GROOVY_LEVEL == 20;
+    }
+
+    public static boolean isGroovy21() {
+        return GROOVY_LEVEL == 21;
     }
 
 }
