@@ -39,6 +39,10 @@
          <partition
                type="__java_string">
          </partition>
+         <!-- this is not an error, pde does not recognize this as a valid partition type -->
+         <partition
+               type="__groovy_multiline_string">
+         </partition>
       </javaCompletionProposalComputer>
    </extension>
    <extension

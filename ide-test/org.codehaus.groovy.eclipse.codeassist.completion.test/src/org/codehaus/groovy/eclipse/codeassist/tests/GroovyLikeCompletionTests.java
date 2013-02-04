@@ -375,6 +375,40 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
     }
     
+    // GRECLIPSE-268
+    // disabled because groovy will parse the following as an empty constant expression
+    public void _testGString1() throws Exception {
+        ICompilationUnit unit = create("\"\"\"\"\"\"");
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"".length(), GroovyCompletionProposalComputer.class);
+        assertEquals("Should not have found any proposals, but found:\n" + printProposals(proposals), 0, proposals.length);
+    }
+    
+    // GRECLIPSE-268
+    public void testGString2() throws Exception {
+        ICompilationUnit unit = create("\"\"\"${this}\"\"\"");
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"".length(), GroovyCompletionProposalComputer.class);
+        assertEquals("Should not have found any proposals, but found:\n" + printProposals(proposals), 0, proposals.length);
+    }
+    
+    // GRECLIPSE-268
+    public void testGString3() throws Exception {
+        ICompilationUnit unit = create("\"\"\"this\"\"\"");
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"this".length(), GroovyCompletionProposalComputer.class);
+        assertEquals("Should not have found any proposals, but found:\n" + printProposals(proposals), 0, proposals.length);
+    }
+    
+    // GRECLIPSE-268
+    public void testGString4() throws Exception {
+        String contents = "def flarb;\n\"\"\"${flarb}\"\"\"";
+        ICompilationUnit unit = create(contents);
+        fullBuild();
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "${flarb"), GroovyCompletionProposalComputer.class);
+        checkReplacementString(proposals, "flarb", 1);
+    }
+    
     private ICompilationUnit createGroovy() throws Exception {
         return createGroovy("GroovyLikeCompletions", SCRIPTCONTENTS);
     }

@@ -56,6 +56,7 @@ import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -771,6 +772,21 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
                 createContext(expression, currentDeclaration, EXPRESSION);
             } else {
                 // do method context
+            }
+        }
+    }
+
+    @Override
+    public void visitGStringExpression(GStringExpression expression) {
+        visitListOfExpressions(expression.getValues());
+
+        // now check to see if we are in a string
+        List<ConstantExpression> strings = expression.getStrings();
+        for (ConstantExpression stringExpr : strings) {
+            if (doTest(stringExpr)) {
+                // inside of a string, no completions available
+                context = null;
+                throw new VisitCompleteException();
             }
         }
     }
