@@ -46,6 +46,8 @@ public class SanityTest extends TestCase {
         Version jdtVersion = getEclipseVersion();
         Version groovyVersion = getGroovyCompilerVersion();
         
+        // JDT 3.7 and 3.8 test against Groovy 2.0
+        // JDT 3.9 test against Groovy 2.1
         if (jdtVersion.getMinor() == 8 || jdtVersion.getMinor() == 7) {
             assertEquals(2, groovyVersion.getMajor());
             assertEquals(0, groovyVersion.getMinor());
