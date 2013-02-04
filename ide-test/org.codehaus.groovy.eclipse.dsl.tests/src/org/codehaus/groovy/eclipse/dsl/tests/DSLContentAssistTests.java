@@ -93,7 +93,7 @@ public class DSLContentAssistTests extends CompletionTestCase {
     
     public void testDSLProposalFirstMethod1() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL >= 20) {
-            AbstractDSLInferencingTest.addGroovyJarToProject("groovy-swing-2.0.6.jar", getDefaultProject());
+            AbstractDSLInferencingTest.addGroovyJarToProject(getGroovySwingJar(), getDefaultProject());
         }
         String contents = "import groovy.swing.SwingBuilder\n" +
                 "new SwingBuilder().edt {\n" +
@@ -104,7 +104,7 @@ public class DSLContentAssistTests extends CompletionTestCase {
     }
     public void testDSLProposalFirstMethod2() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL >= 20) {
-            AbstractDSLInferencingTest.addGroovyJarToProject("groovy-swing-2.0.6.jar", getDefaultProject());
+            AbstractDSLInferencingTest.addGroovyJarToProject(getGroovySwingJar(), getDefaultProject());
         }
         String contents = "import groovy.swing.SwingBuilder\n" +
                 "new SwingBuilder().edt {\n" +
@@ -113,11 +113,11 @@ public class DSLContentAssistTests extends CompletionTestCase {
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, "{\n")));
         assertProposalOrdering(proposals, "frame", "registerBinding");
     }
-    
+
     // proposals should not exist since not applied to 'this'
     public void testDSLProposalFirstMethod3() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL >= 20) {
-            AbstractDSLInferencingTest.addGroovyJarToProject("groovy-swing-2.0.6.jar", getDefaultProject());
+            AbstractDSLInferencingTest.addGroovyJarToProject(getGroovySwingJar(), getDefaultProject());
         }
         String contents = "import groovy.swing.SwingBuilder\n" +
                 "new SwingBuilder().edt {\n" +
@@ -297,6 +297,10 @@ public class DSLContentAssistTests extends CompletionTestCase {
 
     protected IProject getDefaultProject() {
         return env.getProject("Project");
+    }
+
+    private String getGroovySwingJar() {
+        return "groovy-swing-*.jar";
     }
 
     

@@ -212,7 +212,7 @@ public class CompilerUtils {
 
     /**
      * Finds a specific jar in the groovy lib folder, or null if not found
-     * 
+     *
      * @param jarName the name of the jar
      * @return the full, resolved url to the jar
      * @throws IOException
@@ -225,9 +225,13 @@ public class CompilerUtils {
             // base directory of the plugins
             enu = groovyBundle.findEntries("", jarName, false);
         }
-        if (enu.hasMoreElements()) {
+        if (enu != null && enu.hasMoreElements()) {
             URL jar = enu.nextElement();
             jar = resolve(jar);
+            if (jar.getFile().indexOf("sources") > 0 && enu.hasMoreElements()) {
+                jar = enu.nextElement();
+                jar = resolve(jar);
+            }
             return jar;
         }
         return null;

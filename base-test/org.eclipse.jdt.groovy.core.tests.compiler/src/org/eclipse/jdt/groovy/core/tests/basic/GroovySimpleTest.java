@@ -4670,7 +4670,14 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 
 	public void testFailureWhilstAttemptingToReportError() {
-		this.runNegativeTest(new String[] {
+	    // error message change in Groovy 2.1
+	    String msgPart;
+		if (GroovyUtils.GROOVY_LEVEL > 20) {
+		    msgPart = "	     ^^\n";
+		} else {
+		    msgPart = "	     ^\n";
+		}
+        this.runNegativeTest(new String[] {
 			"T.groovy",
 			"public class T{\n"+
 			"	def x () {\n"+
@@ -4680,7 +4687,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		},"----------\n" + 
 		"1. ERROR in T.groovy (at line 3)\n" + 
 		"	this \"\"\n" + 
-		"	     ^^\n" + 
+		msgPart + 
 		"Groovy:Constructor call must be the first statement in a constructor. at line: 3 column: 8. File: T.groovy @ line 3, column 8.\n" + 
 		"----------\n");
 	}
