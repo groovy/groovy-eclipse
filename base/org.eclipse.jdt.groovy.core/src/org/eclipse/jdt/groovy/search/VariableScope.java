@@ -38,6 +38,7 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -47,8 +48,11 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.runtime.DateGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
@@ -125,6 +129,16 @@ public class VariableScope {
 	// public static final ClassNode PLUGIN6_GM_CLASS_NODE = ClassHelper
 	// .make(org.codehaus.groovy.vmplugin.v6.PluginDefaultGroovyMethods.class);
 
+	// only exists on 2.1 and later
+	public static ClassNode DELEGATES_TO;
+	static {
+		try {
+			DELEGATES_TO = ClassHelper.make(Class.forName("groovy.lang.DelegatesTo"));
+		} catch (ClassNotFoundException e) {
+			DELEGATES_TO = null;
+		}
+	}
+
 	public static Set<ClassNode> ALL_DEFAULT_CATEGORIES;
 	static {
 		// add all of the known DGM classes. Order counts since we look up earlier in the list before later and need to
@@ -188,13 +202,51 @@ public class VariableScope {
 	}
 
 	public static class CallAndType {
-		public CallAndType(MethodCallExpression call, ClassNode declaringType) {
+
+		public CallAndType(MethodCallExpression call, ClassNode declaringType, ASTNode declaration) {
 			this.call = call;
 			this.declaringType = declaringType;
+			this.declaration = declaration;
+
+			// the @DelegatesTo Groovy 2.1 annotation
+			if (DELEGATES_TO != null && declaration instanceof MethodNode) {
+				MethodNode methodDecl = (MethodNode) declaration;
+				if (methodDecl.getParameters() != null) {
+					Expression argsExpr = call.getArguments();
+					List<Expression> args = null;
+					if (argsExpr instanceof TupleExpression) {
+						args = ((TupleExpression) argsExpr).getExpressions();
+					}
+					if (args != null) {
+						Parameter[] parameters = methodDecl.getParameters();
+						for (int i = 0; i < parameters.length; i++) {
+							Parameter p = parameters[i];
+							List<AnnotationNode> annotations = p.getAnnotations();
+							if (annotations != null) {
+								for (AnnotationNode annotation : annotations) {
+									if (annotation.getClassNode().getName().equals(DELEGATES_TO.getName()) && args.size() > i
+											&& args.get(i) instanceof ClosureExpression
+											&& annotation.getMember("value") instanceof ClassExpression) {
+										delegatesToClosures = new HashMap<ClosureExpression, ClassNode>(3);
+										delegatesToClosures.put((ClosureExpression) args.get(i), annotation.getMember("value")
+												.getType());
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			if (delegatesToClosures == null) {
+				delegatesToClosures = Collections.emptyMap();
+
+			}
 		}
 
+		public final ASTNode declaration;
 		public final MethodCallExpression call;
 		public final ClassNode declaringType;
+		public Map<ClosureExpression, ClassNode> delegatesToClosures;
 	}
 
 	/**

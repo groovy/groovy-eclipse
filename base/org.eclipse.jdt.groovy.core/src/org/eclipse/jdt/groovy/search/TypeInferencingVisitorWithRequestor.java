@@ -118,6 +118,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	}
 
+	class Tuple {
+		ClassNode declaringType;
+		ASTNode declaration;
+
+		Tuple(ClassNode declaringType, ASTNode declaration) {
+			this.declaringType = declaringType;
+			this.declaration = declaration;
+		}
+	}
+
 	/**
 	 * Set to true if debug mode is desired. Any exceptions will be spit to syserr. Also, after a visit, there will be a sanity
 	 * check to ensure that all stacks are empty Only set to true if using a visitor that always visits the entire file
@@ -263,7 +273,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * expression to find type information. this field is only applicable for {@link PropertyExpression}s and
 	 * {@link MethodCallExpression}s.
 	 */
-	private Stack<ClassNode> dependentDeclaringTypeStack;
+	private Stack<Tuple> dependentDeclarationStack;
 
 	/**
 	 * Keeps track of the type of the type of the property field corresponding to each frame of the property expression.
@@ -288,7 +298,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		completeExpressionStack = new Stack<ASTNode>();
 		primaryTypeStack = new Stack<ClassNode>();
 		dependentTypeStack = new Stack<ClassNode>();
-		dependentDeclaringTypeStack = new Stack<ClassNode>();
+		dependentDeclarationStack = new Stack<Tuple>();
 	}
 
 	public void visitCompilationUnit(ITypeRequestor requestor) {
@@ -850,7 +860,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 								if (imp.getFieldNameExpr() != null) {
 									primaryTypeStack.push(type);
 									imp.getFieldNameExpr().visit(this);
-									dependentDeclaringTypeStack.pop();
+									dependentDeclarationStack.pop();
 									dependentTypeStack.pop();
 								}
 
@@ -1188,8 +1198,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			// Delegate is the declaring type of the enclosing call if one exists, or it is 'this'
 			CallAndType cat = scope.getEnclosingMethodCallExpression();
 			if (cat != null) {
-				scope.addVariable("delegate", cat.declaringType, VariableScope.CLOSURE_CLASS);
-				scope.addVariable("getDelegate", cat.declaringType, VariableScope.CLOSURE_CLASS);
+				ClassNode declaringType = cat.declaringType;
+				if (cat.delegatesToClosures.containsKey(node)) {
+					declaringType = cat.delegatesToClosures.get(node);
+				}
+				scope.addVariable("delegate", declaringType, VariableScope.CLOSURE_CLASS);
+				scope.addVariable("getDelegate", declaringType, VariableScope.CLOSURE_CLASS);
 			} else {
 				ClassNode thisType = scope.getThis();
 				scope.addVariable("delegate", thisType, VariableScope.CLOSURE_CLASS);
@@ -1521,8 +1535,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		ClassNode exprType = dependentTypeStack.pop();
 
 		// this is the inferred declaring type of this method
-		ClassNode exprDeclaringType = dependentDeclaringTypeStack.pop();
-		CallAndType call = new CallAndType(node, exprDeclaringType);
+		Tuple t = dependentDeclarationStack.pop();
+		CallAndType call = new CallAndType(node, t.declaringType, t.declaration);
 
 		completeExpressionStack.pop();
 
@@ -1543,7 +1557,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		if (node.isSpreadSafe()) {
 			exprType = createParameterizedList(exprType);
 		}
-		handleCompleteExpression(node, exprType, exprDeclaringType);
+		handleCompleteExpression(node, exprType, t.declaringType);
 		scopes.peek().forgetCurrentNode();
 	}
 
@@ -1622,7 +1636,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		ClassNode exprType = dependentTypeStack.pop();
 
 		// don't care about either of these
-		dependentDeclaringTypeStack.pop();
+		dependentDeclarationStack.pop();
 		completeExpressionStack.pop();
 
 		// if this property expression is the primary of a larger expression,
@@ -1846,12 +1860,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				scope));
 	}
 
-	private void postVisit(Expression node, ClassNode type, ClassNode declaringType) {
+	private void postVisit(Expression node, ClassNode type, ClassNode declaringType, ASTNode declaration) {
 		if (isPrimaryExpression(node)) {
 			primaryTypeStack.push(type);
 		} else if (isDependentExpression(node)) {
 			dependentTypeStack.push(type);
-			dependentDeclaringTypeStack.push(declaringType);
+			dependentDeclarationStack.push(new Tuple(declaringType, declaration));
 		}
 	}
 
@@ -1965,10 +1979,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 		switch (status) {
 			case CONTINUE:
-				postVisit(node, result.type, rememberedDeclaringType);
+				postVisit(node, result.type, rememberedDeclaringType, result.declaration);
 				return true;
 			case CANCEL_BRANCH:
-				postVisit(node, result.type, rememberedDeclaringType);
+				postVisit(node, result.type, rememberedDeclaringType, result.declaration);
 				return false;
 			case CANCEL_MEMBER:
 			case STOP_VISIT:
@@ -2414,7 +2428,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				"Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed.");
 		Assert.isTrue(primaryTypeStack.isEmpty(),
 				"Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed.");
-		Assert.isTrue(dependentDeclaringTypeStack.isEmpty(),
+		Assert.isTrue(dependentDeclarationStack.isEmpty(),
 				"Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed.");
 		Assert.isTrue(dependentTypeStack.isEmpty(),
 				"Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed.");

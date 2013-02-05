@@ -16,14 +16,9 @@
 
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import java.util.List;
-
 import junit.framework.Test;
 
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
-import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 
 /**
  * 

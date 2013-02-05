@@ -41,6 +41,7 @@ public class AllSearchTests {
         suite.addTestSuite(OperatorOverloadingInferencingTests.class);
         suite.addTestSuite(SyntheticAccessorInferencingTests.class);
         suite.addTestSuite(Groovy20InferencingTests.class);
+        suite.addTestSuite(Groovy21InferencingTests.class);
         suite.addTestSuite(GenericsMappingTest.class);
         return suite;
     }
