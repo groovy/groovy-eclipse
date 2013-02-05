@@ -20,7 +20,9 @@ package org.codehaus.groovy.frameworkadapter.util;
 import org.osgi.framework.Version;
 
 public enum SpecifiedVersion {
-    _16(1, 6, "16"), _17(1, 7, "17"), _18(1, 8, "18"), _19(1, 9, "19"), _20(2, 0, "20"), _21(2,1,"21"),UNSPECIFIED(-1, -1, "0");
+    _16(1, 6, "16"), _17(1, 7, "17"), _18(1, 8, "18"), 
+    _19(1, 9, "19"), _20(2, 0, "20"), _21(2,1,"21"),
+    _22(2,2,"22"),UNSPECIFIED(-1, -1, "0");
     public final int majorVersion;
     public final int minorVersion;
     public final String versionName;
@@ -63,6 +65,9 @@ public enum SpecifiedVersion {
         if ("21".equals(compilerLevel) || "2.1".equals(compilerLevel)) {
             return _21;
         }
+        if ("22".equals(compilerLevel) || "2.2".equals(compilerLevel)) {
+            return _22;
+        }
         if ("0".equals(compilerLevel)) {
             return UNSPECIFIED;
         }
@@ -76,6 +81,12 @@ public enum SpecifiedVersion {
         if (ver.getMajor() == 2) {
             if (ver.getMinor() == 0) {
                 return _20;
+            }
+            if (ver.getMinor() == 1) {
+                return _21;
+            }
+            if (ver.getMinor() == 2) {
+                return _22;
             }
         }
         if (ver.getMajor() == 1) {
