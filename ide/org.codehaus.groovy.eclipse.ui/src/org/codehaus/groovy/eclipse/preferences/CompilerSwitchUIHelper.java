@@ -92,14 +92,10 @@ public class CompilerSwitchUIHelper {
         Label compilerVersion = new Label(compilerPage, SWT.LEFT | SWT.WRAP);
         compilerVersion.setText("You are currently using Groovy Compiler version " + CompilerUtils.getGroovyVersion() + ".");
 
-        if (activeGroovyVersion != SpecifiedVersion._17) {
-            switchVersion(SpecifiedVersion._17, compilerPage);
-        }
-        if (activeGroovyVersion != SpecifiedVersion._18) {
-            switchVersion(SpecifiedVersion._18, compilerPage);
-        }
-        if (activeGroovyVersion != SpecifiedVersion._20) {
-            switchVersion(SpecifiedVersion._20, compilerPage);
+        for (SpecifiedVersion version : SpecifiedVersion.values()) {
+            if (activeGroovyVersion != version) {
+                switchVersion(version, compilerPage);
+            }
         }
 
         Link moreInfoLink = new Link(compilerPage, 0);

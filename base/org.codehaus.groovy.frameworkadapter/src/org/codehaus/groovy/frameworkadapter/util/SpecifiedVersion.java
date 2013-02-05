@@ -38,7 +38,7 @@ public enum SpecifiedVersion {
     }
     
     public String toReadableVersionString() {
-        return majorVersion + "." + minorVersion + ".X";
+        return majorVersion + "." + minorVersion;
     }
     
     

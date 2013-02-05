@@ -77,7 +77,7 @@ public class CompilerHook implements HookConfigurator, AdaptorHook {
             return;
         }
         
-        System.out.println("Starting Groovy-Eclipse compiler hook.  Specified compiler level: " + version);
+        System.out.println("Starting Groovy-Eclipse compiler hook.  Specified compiler level: " + version.toReadableVersionString());
         
         // ServiceReference is parameterized in 3.7, not 3.6
         @SuppressWarnings("rawtypes")
