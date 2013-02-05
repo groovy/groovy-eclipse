@@ -59,7 +59,6 @@ public class SubTypePointcut extends FilteringPointcut<ClassNode> {
         return null;
     }
 
-
     @Override
     protected ClassNode filterObject(ClassNode result, GroovyDSLDContext context, String firstArgAsString) {
         if (firstArgAsString == null || result.getName().equals(firstArgAsString)) {
@@ -68,7 +67,6 @@ public class SubTypePointcut extends FilteringPointcut<ClassNode> {
             return null;
         }
     }
-    
     
     private Set<ClassNode> getAllSupers(ClassNode type) {
         Set<ClassNode> cached = cachedHierarchies.get(type);
@@ -79,6 +77,7 @@ public class SubTypePointcut extends FilteringPointcut<ClassNode> {
         }
         return cached;
     }
+    
     private void internalGetAllSupers(ClassNode type, Set<ClassNode> set) {
         if (type == null) {
             return;
@@ -91,5 +90,4 @@ public class SubTypePointcut extends FilteringPointcut<ClassNode> {
             }
         }
     }
-
 }
