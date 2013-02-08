@@ -191,6 +191,7 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
         compilerCombo.add("1.7");
         compilerCombo.add("1.8");
         compilerCombo.add("2.0");
+        compilerCombo.add("2.1");
         currentProjectVersion = CompilerUtils.getCompilerLevel(getProject());
 
         Label explainLabel = new Label(page, SWT.WRAP);
@@ -213,6 +214,9 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
                 break;
             case _20:
                 compilerCombo.select(2);
+                break;
+            case _21:
+                compilerCombo.select(3);
                 break;
         }
     }
@@ -238,12 +242,6 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
         doCheckForCompilerMismatch.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
         doCheckForCompilerMismatch.setText("Enable checking for mismatches between the project and workspace Groovy compiler levels");
         doCheckForCompilerMismatch.setSelection(getPreferences().getBoolean(Activator.GROOVY_CHECK_FOR_COMPILER_MISMATCH, true));
-        //        doCheckForCompilerMismatch.addSelectionListener(new SelectionAdapter() {
-        //            @Override
-        //            public void widgetSelected(SelectionEvent e) {
-        //                doCheckForCompilerMismatch.setSelection(!doCheckForCompilerMismatch.getSelection());
-        //            }
-        //        });
     }
 
 
