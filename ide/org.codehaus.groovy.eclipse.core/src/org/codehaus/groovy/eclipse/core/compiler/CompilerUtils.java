@@ -28,6 +28,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
@@ -328,6 +330,15 @@ public class CompilerUtils {
             }
         }
         return new File[0];
+    }
+
+    public static SortedSet<SpecifiedVersion> getAllGroovyVersions() {
+        BundleDescription[] allBundles = getAllGroovyBundleDescriptions();
+        SortedSet<SpecifiedVersion> allVersions = new TreeSet<SpecifiedVersion>();
+        for (BundleDescription bundle : allBundles) {
+            allVersions.add(SpecifiedVersion.findVersion(bundle.getVersion()));
+        }
+        return allVersions;
     }
 
     private static BundleDescription[] getAllGroovyBundleDescriptions() {

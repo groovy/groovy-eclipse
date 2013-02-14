@@ -42,49 +42,43 @@ public class CompilerCheckerParticipant extends CompilationParticipant {
         if (projectLevel == SpecifiedVersion.UNSPECIFIED) {
             // project is unspecified. just grab the current level and assume it
             // is correct
-            SpecifiedVersion workspaceLevel = CompilerUtils.getWorkspaceCompilerLevel();
+            SpecifiedVersion workspaceLevel = projectLevel = CompilerUtils.getWorkspaceCompilerLevel();
             CompilerUtils.setCompilerLevel(project, workspaceLevel);
-        } else {
-            try {
-                boolean compilerMatch = CompilerUtils.projectVersionMatchesWorkspaceVersion(projectLevel);
-                IMarker[] findMarkers = project.findMarkers(COMPILER_MISMATCH_PROBLEM, true, IResource.DEPTH_ZERO);
-                if (compilerMatch) {
-                    for (IMarker marker : findMarkers) {
-                        marker.delete();
-                    }
-                } else if (findMarkers.length == 0) {
-                    SpecifiedVersion workspaceLevel = CompilerUtils.getWorkspaceCompilerLevel();
-                    IMarker marker = project.getProject().createMarker(COMPILER_MISMATCH_PROBLEM);
-                    marker.setAttribute(
-                            IMarker.MESSAGE,
-                            "Groovy compiler level expected by the project does not match workspace compiler level. "
-                                    + "\nProject compiler level is: "
-                                    + projectLevel.toReadableVersionString()
-                                    + "\nWorkspace compiler level is "
-                                    + workspaceLevel.toReadableVersionString()
-                                    + "\nGo to Project properties -> Groovy compiler to set the Groovy compiler level for this project");
-                    marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
-                    marker.setAttribute(IMarker.LOCATION, project.getName());
+        }
+        try {
+            boolean compilerMatch = CompilerUtils.projectVersionMatchesWorkspaceVersion(projectLevel);
+            IMarker[] findMarkers = project.findMarkers(COMPILER_MISMATCH_PROBLEM, true, IResource.DEPTH_ZERO);
+            if (compilerMatch) {
+                for (IMarker marker : findMarkers) {
+                    marker.delete();
                 }
-            } catch (CoreException e) {
-                GroovyCore.logException("Error creating marker", e);
+            } else if (findMarkers.length == 0) {
+                SpecifiedVersion workspaceLevel = CompilerUtils.getWorkspaceCompilerLevel();
+                IMarker marker = project.getProject().createMarker(COMPILER_MISMATCH_PROBLEM);
+                marker.setAttribute(IMarker.MESSAGE,
+                        "Groovy compiler level expected by the project does not match workspace compiler level. "
+                                + "\nProject compiler level is: " + projectLevel.toReadableVersionString()
+                                + "\nWorkspace compiler level is " + workspaceLevel.toReadableVersionString()
+                                + "\nGo to Project properties -> Groovy compiler to set the Groovy compiler level for this project");
+                marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
+                marker.setAttribute(IMarker.LOCATION, project.getName());
             }
+        } catch (CoreException e) {
+            GroovyCore.logException("Error creating marker", e);
         }
         return super.aboutToBuild(javaProject);
     }
 
     @Override
     public void cleanStarting(IJavaProject javaProject) {
-        // IProject project = javaProject.getProject();
-        // try {
-        // IMarker[] findMarkers =
-        // project.findMarkers(COMPILER_MISMATCH_PROBLEM, true,
-        // IResource.DEPTH_ZERO);
-        // for (IMarker marker : findMarkers) {
-        // marker.delete();
-        // }
-        // } catch (CoreException e) {
-        // GroovyCore.logException("Error finding markers", e);
-        // }
+        IProject project = javaProject.getProject();
+        try {
+            IMarker[] findMarkers = project.findMarkers(COMPILER_MISMATCH_PROBLEM, true, IResource.DEPTH_ZERO);
+            for (IMarker marker : findMarkers) {
+                marker.delete();
+            }
+        } catch (CoreException e) {
+            GroovyCore.logException("Error finding markers", e);
+        }
     }
 }

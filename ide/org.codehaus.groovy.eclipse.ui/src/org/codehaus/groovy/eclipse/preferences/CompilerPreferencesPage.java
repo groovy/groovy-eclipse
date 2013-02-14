@@ -1,6 +1,8 @@
 package org.codehaus.groovy.eclipse.preferences;
 
 
+import java.util.SortedSet;
+
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer;
@@ -21,6 +23,9 @@ import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.internal.ui.preferences.PropertyAndPreferencePage;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.viewers.ComboViewer;
+import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -54,7 +59,7 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
 
     private IEclipsePreferences preferences;
 
-    private Combo compilerCombo;
+    private ComboViewer compilerCombo;
 
     private Button doCheckForCompilerMismatch;
 
@@ -187,11 +192,17 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
         compilerLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
         compilerLabel.setText("Groovy compiler level for project " + getProject().getName() + ":");
         compilerLabel.setFont(getBoldFont(page));
-        compilerCombo = new Combo(page, SWT.DROP_DOWN | SWT.READ_ONLY);
-        compilerCombo.add("1.7");
-        compilerCombo.add("1.8");
-        compilerCombo.add("2.0");
-        compilerCombo.add("2.1");
+        compilerCombo = new ComboViewer(new Combo(page, SWT.DROP_DOWN | SWT.READ_ONLY));
+        compilerCombo.setLabelProvider(new LabelProvider(){
+            @Override
+            public String getText(Object element) {
+                return element instanceof SpecifiedVersion ? ((SpecifiedVersion) element).toReadableVersionString() : "";
+            }
+        });
+        SortedSet<SpecifiedVersion> versions = CompilerUtils.getAllGroovyVersions();
+        for (SpecifiedVersion version : versions) {
+            compilerCombo.add(version);
+        }
         currentProjectVersion = CompilerUtils.getCompilerLevel(getProject());
 
         Label explainLabel = new Label(page, SWT.WRAP);
@@ -205,20 +216,7 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
     }
 
     private void setToProjectVersion() {
-        switch (currentProjectVersion) {
-            case _17:
-                compilerCombo.select(0);
-                break;
-            case _18:
-                compilerCombo.select(1);
-                break;
-            case _20:
-                compilerCombo.select(2);
-                break;
-            case _21:
-                compilerCombo.select(3);
-                break;
-        }
+        compilerCombo.setSelection(new StructuredSelection(currentProjectVersion), true);
     }
 
     protected void createWorkspaceCompilerSection(final Composite page) {
@@ -324,20 +322,10 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
         }
 
         if (compilerCombo != null) {
-            int selectedIndex = compilerCombo.getSelectionIndex();
-            SpecifiedVersion selected;
-            switch (selectedIndex) {
-                case 0:
-                    selected = SpecifiedVersion._17;
-                    break;
-                case 1:
-                    selected = SpecifiedVersion._18;
-                    break;
-                case 2:
-                    selected = SpecifiedVersion._20;
-                    break;
-                default:
-                    selected = SpecifiedVersion.UNSPECIFIED;
+            StructuredSelection selection = (StructuredSelection) compilerCombo.getSelection();
+            SpecifiedVersion selected = (SpecifiedVersion) selection.getFirstElement();
+            if (selected == null) {
+                selected = SpecifiedVersion.UNSPECIFIED;
             }
             if (selected != currentProjectVersion && selected != SpecifiedVersion.UNSPECIFIED) {
                 CompilerUtils.setCompilerLevel(getProject(), selected);
