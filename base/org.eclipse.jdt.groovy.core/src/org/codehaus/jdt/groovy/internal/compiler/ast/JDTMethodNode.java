@@ -42,7 +42,12 @@ public class JDTMethodNode extends MethodNode implements JDTNode {
 
 	@Override
 	public void addAnnotation(AnnotationNode value) {
-		throwImmutableException();
+		// The grails TestMixinTransformation.autoAnnotateSetupTeardown likes to add annotations to immutable objects... (it gets
+		// the setup method from a junit
+		// class sometimes)
+		System.err.println("Unexpected: Trying to add an annotation " + value.getClassNode().getName()
+				+ " to an immutable method node " + toString());
+		// throwImmutableException();
 	}
 
 	@Override
