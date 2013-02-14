@@ -21,17 +21,24 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.messages.ExceptionMessage;
 import org.codehaus.groovy.control.messages.SimpleMessage;
+import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
+import org.codehaus.groovy.syntax.SyntaxException;
 
 import groovy.lang.GroovyClassLoader;
+import groovy.transform.AnnotationCollector;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -44,6 +51,7 @@ import java.util.List;
  *
  * @author Danno Ferrin (shemnon)
  * @author Roshan Dawrani (roshandawrani)
+ * @author Jochen Theodorou (blackdrag)
  */
 public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSupport {
     private SourceUnit source;
@@ -192,6 +200,13 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
      */
     public void visitAnnotations(AnnotatedNode node) {
         super.visitAnnotations(node);
+        List<AnnotationNode> collected = new ArrayList<AnnotationNode>();
+        for (Iterator<AnnotationNode> it = node.getAnnotations().iterator(); it.hasNext();) {
+            AnnotationNode annotation = it.next();
+            if (addCollectedAnnotations(collected, annotation, node)) it.remove();
+        }
+        node.getAnnotations().addAll(collected);
+        
         for (AnnotationNode annotation : node.getAnnotations()) {
         	
         	// GRECLIPSE: start: under eclipse we may be asking a node that has no backing class
@@ -219,6 +234,52 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
             addTransformsToClassNode(annotation, transformClassNames, transformClasses);
         	// end
         }
+    }
+    
+
+    private void assertStringConstant(Expression exp) {
+        if (exp==null) return;
+        if (!(exp instanceof ConstantExpression)) {
+            source.getErrorCollector().addErrorAndContinue(new SyntaxErrorMessage(new SyntaxException(
+                    "Expected a String constant.", exp.getLineNumber(), exp.getColumnNumber()), 
+                    source));
+        }
+        ConstantExpression ce = (ConstantExpression) exp;
+        if (!(ce.getValue() instanceof String)) {
+            source.getErrorCollector().addErrorAndContinue(new SyntaxErrorMessage(new SyntaxException(
+                    "Expected a String constant.", exp.getLineNumber(), exp.getColumnNumber()), 
+                    source));
+        }
+    }
+    
+    private boolean addCollectedAnnotations(List<AnnotationNode> collected, AnnotationNode aliasNode, AnnotatedNode origin) {
+        ClassNode classNode = aliasNode.getClassNode();
+        boolean ret = false;
+        for (AnnotationNode annotation : classNode.getAnnotations()) {
+            if (annotation.getClassNode().getName().equals(AnnotationCollector.class.getName())) {
+                Expression processorExp = annotation.getMember("processor");
+                AnnotationCollectorTransform act = null;
+                assertStringConstant(processorExp);
+                if (processorExp!=null) {
+                    String className = (String) ((ConstantExpression) processorExp).getValue();
+                    Class klass = loadTransformClass(className, aliasNode);
+                    if (klass!=null) {
+                        try {
+                            act = (AnnotationCollectorTransform) klass.newInstance();
+                        } catch (InstantiationException e) {
+                            source.getErrorCollector().addErrorAndContinue(new ExceptionMessage(e, true, source));
+                        } catch (IllegalAccessException e) {
+                            source.getErrorCollector().addErrorAndContinue(new ExceptionMessage(e, true, source));
+                        }
+                    }
+                } else {
+                    act = new AnnotationCollectorTransform();
+                }
+                if (act!=null) collected.addAll(act.visit(annotation, aliasNode, origin, source));
+                ret = true;
+            }
+        }
+        return ret;
     }
     
     // GRECLIPSE start
@@ -293,6 +354,19 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         for (Class klass : transformClasses) {
             verifyAndAddTransform(annotation, klass);
         }
+    }
+    
+    private Class loadTransformClass(String transformClass, AnnotationNode annotation) {
+        try {
+            return transformLoader.loadClass(transformClass, false, true, false);
+        } catch (ClassNotFoundException e) {
+            source.getErrorCollector().addErrorAndContinue(
+                    new SimpleMessage(
+                            "Could not find class for Transformation Processor " + transformClass
+                            + " declared by " + annotation.getClassNode().getName(),
+                            source));
+        }
+        return null;
     }
     
     private void verifyAndAddTransform(AnnotationNode annotation, Class klass) {

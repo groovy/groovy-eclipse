@@ -789,6 +789,37 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     	});
     }
     
+    public void testAnnotationGrouping_1() {
+    	if (GroovyUtils.GROOVY_LEVEL < 21) {
+    		return;
+    	}
+    	runConformTest(new String[]{
+    			"Book.groovy",
+    			"import java.lang.reflect.*;\n"+
+    			"class Book {\n"+
+    			"  @ISBN String isbn;\n"+
+    			"  public static void main(String []argv) {\n"+
+    			"    Field f = Book.class.getDeclaredField('isbn');\n"+
+    			"    Object[] os = f.getDeclaredAnnotations();\n"+
+    			"    for (Object o: os) {\n"+
+    			"      System.out.print(o);\n"+
+    			"    }\n"+
+    			"  }\n"+
+    			"}",
+    			"NotNull.java",
+    			"import java.lang.annotation.*;\n"+
+    			"@Retention(RetentionPolicy.RUNTIME) public @interface NotNull {}",
+    			
+    			"Length.java",
+    			"import java.lang.annotation.*;\n"+
+    			"@Retention(RetentionPolicy.RUNTIME) public @interface Length { int value() default 0;}",
+    			
+    			"ISBN.groovy",
+    			"@NotNull @Length @groovy.transform.AnnotationCollector public @interface ISBN {}"
+    	},"@NotNull()@Length(value=0)");
+    }
+    
+    
     public void testUnreachable_1047_2() {
     	this.runConformTest(new String[]{
     			"MyException.java",
