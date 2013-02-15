@@ -93,9 +93,7 @@
 
 		<property name="upload.bucket" value="dist.springsource.org" />
 		<!-- can be overridden in bamboo properties -->
-		<property name="bamboo_upload_dir_prefix" value="snapshot/GRECLIPSE" />
-		<property name="upload.dir" value="${bamboo_upload_dir_prefix}/${upload.dir.postfix}" />
+		<property name="env.bamboo_upload_dir_prefix" value="snapshot/GRECLIPSE" />
+		<property name="upload.dir" value="${env.bamboo_upload_dir_prefix}/${upload.dir.postfix}" />
 	</target>
-
-
 </project>
