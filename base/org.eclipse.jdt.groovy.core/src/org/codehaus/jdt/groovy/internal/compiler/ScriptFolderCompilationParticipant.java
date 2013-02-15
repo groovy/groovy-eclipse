@@ -84,8 +84,6 @@ public class ScriptFolderCompilationParticipant extends CompilationParticipant {
 
 	private static final PathLengthComparator comparator = new PathLengthComparator();
 
-	private BuildContext[] compiledFiles;
-
 	private IJavaProject project;
 
 	/**
@@ -102,57 +100,12 @@ public class ScriptFolderCompilationParticipant extends CompilationParticipant {
 	}
 
 	@Override
-	public void buildStarting(BuildContext[] files, boolean isBatch) {
-		sanityCheckBuilder(files);
-		compiledFiles = files;
-	}
-
-	/**
-	 * Some simple checks that we can do to ensure that the builder is set up properly
-	 * 
-	 * @param files
-	 */
-	private void sanityCheckBuilder(BuildContext[] files) {
-		// GRECLIPSE-1230 also do a check to ensure the proper compiler is being used
-		if (!LanguageSupportFactory.isGroovyLanguageSupportInstalled()) {
-			for (BuildContext buildContext : files) {
-				buildContext.recordNewProblems(createProblem(buildContext));
-			}
+	public void buildStarting(BuildContext[] compiledFiles, boolean isBatch) {
+		if (!sanityCheckBuilder(compiledFiles)) {
+			// problem happened, do not copy
+			return;
 		}
-		// also check if this project has the JavaBuilder.
-		// note that other builders (like the ajbuilder) may implement the CompilationParticipant API
-		try {
-			ICommand[] buildSpec = project.getProject().getDescription().getBuildSpec();
-			boolean found = false;
-			for (ICommand command : buildSpec) {
-				if (command.getBuilderName().equals(JavaCore.BUILDER_ID)) {
-					found = true;
-					break;
-				}
-			}
-			if (!found) {
-				for (BuildContext buildContext : files) {
-					buildContext.recordNewProblems(createProblem(buildContext));
-				}
-			}
-		} catch (CoreException e) {
-			Util.log(e);
-		}
-	}
 
-	/**
-	 * @param buildContext
-	 * @return
-	 */
-	private CategorizedProblem[] createProblem(BuildContext buildContext) {
-		DefaultProblem problem = new DefaultProblem(buildContext.getFile().getFullPath().toOSString().toCharArray(),
-				"Error compiling Groovy project.  Either the Groovy-JDT patch is not installed or JavaBuilder is not being used.",
-				0, new String[0], ProblemSeverities.Error, 0, 0, 1, 0);
-		return new CategorizedProblem[] { problem };
-	}
-
-	@Override
-	public void buildFinished(IJavaProject project) {
 		try {
 			IProject iproject = project.getProject();
 			if (compiledFiles == null || !ScriptFolderSelector.isEnabled(iproject)) {
@@ -176,10 +129,86 @@ public class ScriptFolderCompilationParticipant extends CompilationParticipant {
 				}
 			}
 		} catch (CoreException e) {
-			Util.log(e, "Error in Script folder compilation participant"); //$NON-NLS-1$
-		} finally {
-			compiledFiles = null;
+			Util.log(e, "Error when copying scripts to output folder"); //$NON-NLS-1$
 		}
+	}
+
+	/**
+	 * Some simple checks that we can do to ensure that the builder is set up properly
+	 * 
+	 * @param files
+	 */
+	private boolean sanityCheckBuilder(BuildContext[] files) {
+		// GRECLIPSE-1230 also do a check to ensure the proper compiler is being used
+		if (!LanguageSupportFactory.isGroovyLanguageSupportInstalled()) {
+			for (BuildContext buildContext : files) {
+				buildContext.recordNewProblems(createProblem(buildContext));
+			}
+		}
+		// also check if this project has the JavaBuilder.
+		// note that other builders (like the ajbuilder) may implement the CompilationParticipant API
+		try {
+			ICommand[] buildSpec = project.getProject().getDescription().getBuildSpec();
+			boolean found = false;
+			for (ICommand command : buildSpec) {
+				if (command.getBuilderName().equals(JavaCore.BUILDER_ID)) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				for (BuildContext buildContext : files) {
+					buildContext.recordNewProblems(createProblem(buildContext));
+				}
+			}
+			return found;
+		} catch (CoreException e) {
+			Util.log(e);
+			return false;
+		}
+
+	}
+
+	/**
+	 * @param buildContext
+	 * @return
+	 */
+	private CategorizedProblem[] createProblem(BuildContext buildContext) {
+		DefaultProblem problem = new DefaultProblem(buildContext.getFile().getFullPath().toOSString().toCharArray(),
+				"Error compiling Groovy project.  Either the Groovy-JDT patch is not installed or JavaBuilder is not being used.",
+				0, new String[0], ProblemSeverities.Error, 0, 0, 1, 0);
+		return new CategorizedProblem[] { problem };
+	}
+
+	@Override
+	public void buildFinished(IJavaProject project) {
+		// try {
+		// IProject iproject = project.getProject();
+		// if (compiledFiles == null || !ScriptFolderSelector.isEnabled(iproject)) {
+		// return;
+		// }
+		//
+		// ScriptFolderSelector selector = new ScriptFolderSelector(iproject);
+		// Map<IContainer, IContainer> sourceToOut = generateSourceToOut(project);
+		// for (BuildContext compiledFile : compiledFiles) {
+		// IFile file = compiledFile.getFile();
+		// if (selector.getFileKind(file) == FileKind.SCRIPT) {
+		// IPath filePath = file.getFullPath();
+		// IContainer containingSourceFolder = findContainingSourceFolder(sourceToOut, filePath);
+		//
+		// // if null, that means the out folder is the same as the source folder
+		// if (containingSourceFolder != null) {
+		// IPath packagePath = findPackagePath(filePath, containingSourceFolder);
+		// IContainer out = sourceToOut.get(containingSourceFolder);
+		// copyFile(file, packagePath, out);
+		// }
+		// }
+		// }
+		// } catch (CoreException e) {
+		//			Util.log(e, "Error in Script folder compilation participant"); //$NON-NLS-1$
+		// } finally {
+		// compiledFiles = null;
+		// }
 	}
 
 	/**

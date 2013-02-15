@@ -266,12 +266,9 @@ public class GroovyParser {
 		// with URLs when grab processing is running. This classloader is used as a last resort when resolving
 		// types and is *only* called if a grab has occurred somewhere during compilation.
 		// Currently it is not cached but created each time - we'll have to decide if there is a need to cache
-		GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader();
+		GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader(gcl);
 		this.groovyCompilationUnit = makeCompilationUnit(grabbyLoader, gcl, isReconcile, allowTransforms);
 		this.groovyCompilationUnit.tweak(isReconcile);
-		if (grabbyLoader != null) {
-			grabbyLoader.setCompilationUnit(groovyCompilationUnit);
-		}
 		this.groovyCompilationUnit.removeOutputPhaseOperation();
 		if ((options.groovyFlags & CompilerUtils.IsGrails) != 0) {
 			// its probably grails!
@@ -293,9 +290,12 @@ public class GroovyParser {
 	static class GrapeAwareGroovyClassLoader extends GroovyClassLoader {
 
 		// Could be prodded to indicate a grab has occurred within this compilation unit
-		private CompilationUnit groovyCompilationUnit;
 
 		public boolean grabbed = false; // set to true if any grabbing is done
+
+		public GrapeAwareGroovyClassLoader(ClassLoader parent) {
+			super(parent != null ? parent : Thread.currentThread().getContextClassLoader());
+		}
 
 		@Override
 		public void addURL(URL url) {
@@ -303,11 +303,6 @@ public class GroovyParser {
 			this.grabbed = true;
 			super.addURL(url);
 		}
-
-		public void setCompilationUnit(CompilationUnit groovyCompilationUnit) {
-			this.groovyCompilationUnit = groovyCompilationUnit;
-		}
-
 	}
 
 	// // FIXASC perf ok?
@@ -535,11 +530,10 @@ public class GroovyParser {
 
 	public void reset() {
 		GroovyClassLoader gcl = getLoaderFor(gclClasspath);
-		GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader();
+		GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader(gcl);
 		boolean allowTransforms = this.groovyCompilationUnit.allowTransforms;
 		boolean isReconcile = this.groovyCompilationUnit.isReconcile;
 		this.groovyCompilationUnit = makeCompilationUnit(grabbyLoader, gcl, isReconcile, allowTransforms);
-		grabbyLoader.setCompilationUnit(this.groovyCompilationUnit);
 		this.resolver = new JDTResolver(groovyCompilationUnit);
 		this.groovyCompilationUnit.setResolveVisitor(resolver);
 	}

@@ -286,6 +286,8 @@ public class ModuleNode extends ASTNode implements Opcodes {
     }
     
     private void setScriptBaseClassFromConfig(ClassNode cn) {
+        // GRECLIPSE  see GROOVY-6002
+        /*orig{
         if (unit != null) {
             String baseClassName = unit.getConfig().getScriptBaseClass();
         	if(baseClassName != null) {
@@ -294,6 +296,20 @@ public class ModuleNode extends ASTNode implements Opcodes {
             	}
         	}
         }
+        }*/
+        // new
+        String baseClassName = null;
+        if (unit != null) {
+            baseClassName = unit.getConfig().getScriptBaseClass();
+        } else if (context != null) {
+            baseClassName = context.getConfiguration().getScriptBaseClass();
+        }
+        if(baseClassName != null) {
+            if(!cn.getSuperClass().getName().equals(baseClassName)) {
+                cn.setSuperClass(ClassHelper.make(baseClassName));
+            }
+        }
+        // GRECLIPSE
     }
     
     protected ClassNode createStatementsClass() {
