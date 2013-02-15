@@ -1985,6 +1985,77 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		executeClass(projectPath, "X", "abc", "");
 	}
 
+	public void testAnnotationCollectorIncremental() throws Exception {
+
+		if (GroovyUtils.GROOVY_LEVEL < 21) {
+			return;
+		}
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "", "NotNull", 
+				"import java.lang.annotation.*;\n"+
+				"@Retention(RetentionPolicy.RUNTIME) @interface NotNull {}\n");
+		
+		env.addGroovyClass(root, "", "Length", 
+				"import java.lang.annotation.*;\n"+
+				"@Retention(RetentionPolicy.RUNTIME) @interface Length {}\n");
+		env.addGroovyClass(root, "", "ISBN", 
+				"import java.lang.annotation.*;\n"+
+				"@NotNull @Length @groovy.transform.AnnotationCollector @interface ISBN {}\n");
+		
+		env.addGroovyClass(root, "", "Book", 
+				"import java.lang.annotation.Annotation;\n"+
+				"import java.lang.reflect.Field;\n"+
+				"\n"+
+				"		class Book {\n"+
+				"			@ISBN\n"+
+				"			String isbn;\n"+
+				"			\n"+
+				"			public static void main(String[] args) {\n"+
+				"				Field f = Book.class.getDeclaredField(\"isbn\");\n"+
+				"				for (Annotation a: f.getDeclaredAnnotations()) {\n"+
+				"					System.out.println(a);\n"+
+				"				} \n"+
+				"			}\n"+
+				"		}\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("Book","Length","NotNull","ISBN");
+		expectingNoProblems();
+		executeClass(projectPath, "Book", "@NotNull()\n@Length()\n", "");
+		
+		// whitespace change
+		env.addGroovyClass(root, "", "Book", 
+				"import java.lang.annotation.Annotation;\n"+
+				"import java.lang.reflect.Field;\n"+
+				"\n"+
+				"		class Book {  \n"+
+				"			@ISBN\n"+
+				"			String isbn;\n"+
+				"			\n"+
+				"			public static void main(String[] args) {\n"+
+				"				Field f = Book.class.getDeclaredField(\"isbn\");\n"+
+				"				for (Annotation a: f.getDeclaredAnnotations()) {\n"+
+				"					System.out.println(a);\n"+
+				"				} \n"+
+				"			}\n"+
+				"		}\n");
+		
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("Book");
+		expectingNoProblems();
+		executeClass(projectPath, "Book", "@NotNull()\n@Length()\n", "");
+	}
+	
 	public void testClosureIncremental() throws Exception {
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());

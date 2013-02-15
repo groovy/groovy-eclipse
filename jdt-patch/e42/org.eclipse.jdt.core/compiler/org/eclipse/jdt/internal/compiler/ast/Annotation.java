@@ -289,6 +289,26 @@ public abstract class Annotation extends Expression {
 		this.resolvedType = typeBinding;
 		// ensure type refers to an annotation type
 		if (!typeBinding.isAnnotationType() && typeBinding.isValidBinding()) {
+			// GRECLIPSE - cope with AnnotationCollector looking ones - GRECLIPSE-1586
+			if (typeBinding instanceof BinaryTypeBinding) {
+				MethodBinding[] mbs = ((BinaryTypeBinding)typeBinding).methods();
+				boolean isOK = false;
+				if (mbs!=null) {
+					for (int m=0;m<mbs.length;m++) {
+						MethodBinding mb = mbs[m];
+						if (CharOperation.equals("value".toCharArray(),mb.selector) && 
+							CharOperation.equals("()[[Ljava/lang/Object;".toCharArray(),mb.signature())) {
+							isOK = true;
+						}
+					}
+				}
+				if (isOK) {
+					this.compilerAnnotation = scope.environment().createAnnotation((ReferenceBinding) this.resolvedType, Binding.NO_ELEMENT_VALUE_PAIRS);
+					return typeBinding;
+//					return null; // skip error reporting
+				}
+			}
+			// GRECLIPSE end
 			scope.problemReporter().typeMismatchError(typeBinding, scope.getJavaLangAnnotationAnnotation(), this.type, null);
 			return null;
 		}
