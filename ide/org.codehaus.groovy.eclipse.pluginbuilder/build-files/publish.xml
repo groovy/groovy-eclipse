@@ -78,22 +78,23 @@
 		<property name="updateSiteDir" value="${workDir}/build/updateSite" />
   	<property name="archive.name" value="archive-${org.codehaus.groovy.eclipse.ui}.zip"/>
 
-		<condition property="bamboo.upload.dir.postfix" value="e4.3">
+		<condition property="upload.dir.postfix" value="e4.3">
 			<equals arg1="${eclipse.target.version}" arg2="e43" />
 		</condition>
-		<condition property="bamboo.upload.dir.postfix" value="e4.2">
+		<condition property="upload.dir.postfix" value="e4.2">
 			<equals arg1="${eclipse.target.version}" arg2="e42" />
 		</condition>
-		<condition property="bamboo.upload.dir.postfix" value="e3.7">
+		<condition property="upload.dir.postfix" value="e3.7">
 			<equals arg1="${eclipse.target.version}" arg2="e37" />
 		</condition>
-		<condition property="bamboo.upload.dir.postfix" value="e3.6">
+		<condition property="upload.dir.postfix" value="e3.6">
 			<equals arg1="${eclipse.target.version}" arg2="e36" />
 		</condition>
 
 		<property name="upload.bucket" value="dist.springsource.org" />
-		<property name="bamboo.upload.dir.prefix" value="snapshot/GRECLIPSE" />
-		<property name="upload.dir" value="${bamboo.upload.dir.prefix}/${bamboo.upload.dir.postfix}" />
+		<!-- can be overridden in bamboo properties -->
+		<property name="bamboo_upload_dir_prefix" value="snapshot/GRECLIPSE" />
+		<property name="upload.dir" value="${bamboo_upload_dir_prefix}/${upload.dir.postfix}" />
 	</target>
 
 
