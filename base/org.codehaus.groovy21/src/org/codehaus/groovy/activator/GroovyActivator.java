@@ -27,8 +27,8 @@ public class GroovyActivator extends Plugin {
 
     public static final String PLUGIN_ID = "org.codehaus.groovy"; //$NON-NLS-1$
     
-	public static final String GROOVY_ALL_JAR = "lib/groovy-all-2.1.0.jar"; //$NON-NLS-1$
-	public static final String GROOVY_JAR = "lib/groovy-2.1.0.jar"; //$NON-NLS-1$
+	public static final String GROOVY_ALL_JAR = "lib/groovy-all-2.1.1.jar"; //$NON-NLS-1$
+	public static final String GROOVY_JAR = "lib/groovy-2.1.1.jar"; //$NON-NLS-1$
     public static final String ASM_JAR = "lib/asm-4.0.jar"; //$NON-NLS-1$
 //    public static final int GROOVY_LEVEL = 17;
 

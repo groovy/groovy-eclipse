@@ -153,33 +153,6 @@ public class GenericsType extends ASTNode {
 
         return ret.toString();
     }
-    /* GRECLIPSE delete these on 1.8.6 upgrade if the 1.8.5 tostring is behaving
-    public String toString() {
-        String ret = (type == null || placeholder || wildcard) ? name : genericsBounds(type);
-        if (upperBounds!=null) {
-            ret += " extends ";
-            for (int i = 0; i < upperBounds.length; i++) {
-                ret += genericsBounds(upperBounds[i]);
-                if (i+1<upperBounds.length) ret += " & ";
-            }
-        } else if (lowerBound!=null) {
-            ret += " super " + genericsBounds(lowerBound);
-        }
-        return ret;
-    }
-
-    private String genericsBounds(ClassNode theType) {
-        String ret = theType.getName();
-        GenericsType[] genericsTypes = theType.getGenericsTypes();
-        if (genericsTypes == null || genericsTypes.length == 0) return ret;
-        ret += "<";
-        for (int i = 0; i < genericsTypes.length; i++) {
-            if (i != 0) ret += ", ";
-            ret += genericsTypes[i].toString();
-        }
-        ret += ">";
-        return ret;
-    }*/
 
     public ClassNode[] getUpperBounds() {
         return upperBounds;

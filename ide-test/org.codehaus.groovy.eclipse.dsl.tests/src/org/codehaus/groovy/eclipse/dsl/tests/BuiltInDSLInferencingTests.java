@@ -203,7 +203,7 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
     
     public void testSwingBuilder1() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL >= 21) {
-            addGroovyJarToProject("groovy-swing-2.1.0.jar");
+            addGroovyJarToProject("groovy-swing-2.1.1.jar");
         } else if (GroovyUtils.GROOVY_LEVEL >= 20) {
             addGroovyJarToProject("groovy-swing-2.0.6.jar");
         }
@@ -215,7 +215,7 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
     }
     public void testSwingBuilder2() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL >= 21) {
-            addGroovyJarToProject("groovy-swing-2.1.0.jar");
+            addGroovyJarToProject("groovy-swing-2.1.1.jar");
         } else if (GroovyUtils.GROOVY_LEVEL >= 20) {
             addGroovyJarToProject("groovy-swing-2.0.6.jar");
         }

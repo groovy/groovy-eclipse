@@ -306,12 +306,7 @@ public class DelegateASTTransformation extends AbstractASTTransformation impleme
             nonGen.setUsingGenerics(false);
             return nonGen;
         } else if (type.isArray() && type.getComponentType().isUsingGenerics()) {
-        	// GRECLIPSE: raised as GROOVY-5123
-        	/*{old
-        	return ClassHelper.makeWithoutCaching(type.getTypeClass(), false);
-        	}new*/
         	return type.getComponentType().getPlainNodeReference().makeArray();
-        	// GRECLIPSE: end
         } else {
             return type;
         }

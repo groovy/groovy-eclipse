@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" output="bin-trace" path="src-trace"/>
-	<classpathentry exported="true" kind="lib" path="lib/groovy-2.1.0.jar" sourcepath="lib/groovy-2.1.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/groovy-2.1.1.jar" sourcepath="lib/groovy-2.1.1-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/antlr-2.7.7.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/asm-4.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/asm-tree-4.0.jar"/>
@@ -12,9 +12,9 @@
 	<classpathentry exported="true" kind="lib" path="lib/bsf-2.4.0.jar"/>
 	<classpathentry kind="lib" path="lib/ivy-2.2.0.jar"/>
 	<classpathentry exported="true" kind="con" path="GROOVY_DSL_SUPPORT"/>
-	<classpathentry exported="true" kind="lib" path="lib/groovy-swing-2.1.0.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/groovy-xml-2.1.0.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/groovy-groovysh-2.1.0.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/groovy-test-2.1.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/groovy-swing-2.1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/groovy-xml-2.1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/groovy-groovysh-2.1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/groovy-test-2.1.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
