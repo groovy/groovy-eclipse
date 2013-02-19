@@ -16,14 +16,13 @@
 
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import groovy.lang.DelegatesTo;
 import junit.framework.Test;
 
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 
 /**
  * Tests for all Groovy 2.1 specific things
- * for example, {@link DelegatesTo}
+ * for example, {@link groovy.lang.DelegatesTo}
  * @author Andrew Eisenberg
  * @created Feb 5, 2013
  */
