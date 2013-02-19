@@ -136,9 +136,14 @@ public class JDTAnnotationNode extends AnnotationNode {
 			MethodBinding mb = evpair.binding;
 			Expression valueExpression = null;
 			// FIXASC needs more cases considering
-			if (mb == null && (evpair.value instanceof StringConstant)) {
-				String v = ((StringConstant) evpair.value).stringValue();
-				valueExpression = new ConstantExpression(v);
+			if (mb == null) {
+				if (evpair.value instanceof StringConstant) {
+					String v = ((StringConstant) evpair.value).stringValue();
+					valueExpression = new ConstantExpression(v);
+				} else {
+					// GRECLIPSE-1587 fill in something here to avoid an NPE
+					valueExpression = ConstantExpression.NULL;
+				}
 			} else {
 				valueExpression = createExpressionFor(mb.returnType, evpair.value);
 			}
