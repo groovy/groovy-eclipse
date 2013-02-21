@@ -278,6 +278,12 @@ public class GroovyTypeCheckingExtensionSupport extends TypeCheckingExtension {
         } catch (InvokerInvocationException err) {
             typeCheckingVisitor.getSourceUnit().addException(err);
             return null;
+        // GRECLIPSE add better error handline
+        // See GROOVY-6011 This patch may become unnecessary
+        } catch (Exception err) {
+            typeCheckingVisitor.getSourceUnit().addException(err);
+            return null;
+        // GRECLIPSE end
         }
     }
 
