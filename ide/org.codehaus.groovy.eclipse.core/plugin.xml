@@ -81,16 +81,13 @@
             value="true">
       </persistent>
    </extension>
-   <!--
-   Disabled now...to be overriden by DSLDs
    <extension
          point="org.eclipse.jdt.groovy.core.typeLookup">
       <lookup
-            lookup="org.codehaus.groovy.eclipse.core.inference.StandardASTTransformInference">
+            lookup="org.codehaus.groovy.eclipse.core.inference.STCTypeLookup">
          <appliesTo
                projectNature="org.eclipse.jdt.groovy.core.groovyNature">
          </appliesTo>
       </lookup>
    </extension>
-   -->
 </plugin>
