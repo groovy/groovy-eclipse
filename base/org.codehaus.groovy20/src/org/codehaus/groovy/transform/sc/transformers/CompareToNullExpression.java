@@ -30,13 +30,11 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-// GRECLIPSE extends BinaryExpression, not Expression
 public class CompareToNullExpression extends BinaryExpression implements Opcodes {
     private final boolean equalsNull;
     private final Expression objectExpression;
 
     public CompareToNullExpression(final Expression objectExpression, final boolean compareToNull) {
-        // GRECLIPSE: call to super
         super(objectExpression, new Token(Types.COMPARE_TO, compareToNull ? "==" : "!=", -1, -1), ConstantExpression.NULL);
         this.objectExpression = objectExpression;
         this.equalsNull = compareToNull;

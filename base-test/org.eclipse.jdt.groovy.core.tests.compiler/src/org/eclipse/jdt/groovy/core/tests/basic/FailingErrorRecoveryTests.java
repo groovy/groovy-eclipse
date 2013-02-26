@@ -76,7 +76,7 @@ public class FailingErrorRecoveryTests extends AbstractRegressionTest {
         try {
         	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.1.1.jar");
         	if (groovyJar==null) {
-	        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.0.6.jar");
+	        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.0.7.jar");
 	        	if (groovyJar==null) {
 					groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.6.jar");
 		            if (groovyJar==null) {

@@ -56,15 +56,6 @@ public class BinaryExpressionTransformer {
         int operationType = operation.getType();
         if (operationType==Types.COMPARE_EQUAL || operationType == Types.COMPARE_NOT_EQUAL) {
             // let's check if one of the operands is the null constant
-            // GRECLIPSE ensure source locations
-            /*old{
-            // let's check if one of the operands is the null constant
-            if (isNullConstant(bin.getLeftExpression())) {
-                return new CompareToNullExpression(staticCompilationTransformer.transform(bin.getRightExpression()), operationType==Types.COMPARE_EQUAL);
-            } else if (isNullConstant(bin.getRightExpression())) {
-                return new CompareToNullExpression(staticCompilationTransformer.transform(bin.getLeftExpression()), operationType==Types.COMPARE_EQUAL);
-            }
-            }new*/
             CompareToNullExpression compareToNullExpression = null;
             if (isNullConstant(bin.getLeftExpression())) {
                 compareToNullExpression = new CompareToNullExpression(staticCompilationTransformer.transform(bin.getRightExpression()), operationType==Types.COMPARE_EQUAL);
@@ -75,7 +66,6 @@ public class BinaryExpressionTransformer {
                 compareToNullExpression.setSourcePosition(bin);
                 return compareToNullExpression;
             }
-            // GRECLIPSE end
         } else if (operationType==Types.KEYWORD_IN) {
             MethodCallExpression call = new MethodCallExpression(
                     bin.getRightExpression(),

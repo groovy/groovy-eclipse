@@ -102,7 +102,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         try {
         	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.1.1.jar");
         	if (groovyJar==null) {
-	            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.0.6.jar");
+	            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.0.7.jar");
 	            if (groovyJar==null) {
 					groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.6.jar");
 		        	if (groovyJar==null) {
@@ -4703,11 +4703,11 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	public void testFailureWhilstAttemptingToReportError() {
 	    // error message change in Groovy 2.1
 	    String msgPart;
-		if (GroovyUtils.GROOVY_LEVEL > 20) {
-		    msgPart = "	     ^^\n";
-		} else {
-		    msgPart = "	     ^\n";
-		}
+//		if (GroovyUtils.GROOVY_LEVEL > 20) {
+	   msgPart = "	     ^^\n";
+//		} else {
+//		    msgPart = "	     ^\n";
+//		}
         this.runNegativeTest(new String[] {
 			"T.groovy",
 			"public class T{\n"+

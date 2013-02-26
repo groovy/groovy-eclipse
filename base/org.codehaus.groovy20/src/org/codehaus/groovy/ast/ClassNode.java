@@ -402,6 +402,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (!usesGenerics && interfaces!=null) {
             for (ClassNode anInterface : interfaces) {
                 usesGenerics = usesGenerics || anInterface.isUsingGenerics();
+                if (usesGenerics) break;
             }
         }
         this.methods = new MapOfLists();
