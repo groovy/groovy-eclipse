@@ -65,7 +65,8 @@ public class Grails20TestSupport {
 	 * org.codehaus.groovy.grails.test.compiler.GrailsTestCompiler and the _TestApp.groovy script.
 	 */
 	public void addGrailsTestCompilerCustomizers(CompilationUnit groovyCompilationUnit) {
-		if (GroovySystem.getVersion().startsWith("1.8")) {
+		String groovyVersion = GroovySystem.getVersion();
+		if (groovyVersion.startsWith("1.8") || groovyVersion.startsWith("2.")) {
 			// The assumption is that only Grails 2.0 projects will be affected, because 1.3.7 projects require 1.7 compiler.
 			ImportCustomizer importCustomizer = new ImportCustomizer() {
 				@Override
