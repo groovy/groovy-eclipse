@@ -1125,8 +1125,19 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 					possibleMatches[i] = possibleMatch.getSimilarMatch();
 					i--;
 				}
+				// GRECLIPSE - delay cleanup (same as other places in this method)
+				// old
+				/*{
 				if (!possibleMatch.nodeSet.mustResolve)
 					possibleMatch.cleanUp();
+				}*/
+				// new:
+				if (!possibleMatch.nodeSet.mustResolve) {
+					if (!alreadyMatched.contains(possibleMatch)) {
+						possibleMatch.cleanUp();
+					}
+				}
+				// GRECLIPSE end
 			}
 		}
 		if (mustResolve)
