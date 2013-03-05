@@ -1911,7 +1911,7 @@ public void configure(String[] argv) {
 
 				// GROOVY promote that suffix to a constant elsewhere - respect registered java like languages? (does that work for batch environment)
 				/* GROOVY change start: allow .groovy files through as source
-				// old code:{
+				// old{
 				if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java)) {
 				}new code: */
 				if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java) 

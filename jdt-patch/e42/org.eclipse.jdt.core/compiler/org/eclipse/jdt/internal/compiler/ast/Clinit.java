@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Patrick Wienands <pwienands@abit.de> - Contribution for bug 393749
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -210,6 +211,8 @@ public class Clinit extends AbstractMethodDeclaration {
 									begin = i;
 									count = 1;
 								}
+							} else {
+								remainingFieldCount++;
 							}
 						}
 					}

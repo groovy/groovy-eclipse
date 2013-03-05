@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 import org.eclipse.core.runtime.FileLocator;
@@ -37,7 +38,15 @@ public abstract class IndexLocation {
 			return null;
 		}
 		if (localUrl.getProtocol().equals("file")) { //$NON-NLS-1$
-			return new FileIndexLocation(url, new File(localUrl.getPath()));
+			File localFile = null;
+			try {
+				URI localFileURI = new URI(localUrl.toExternalForm());
+				localFile = new File(localFileURI);
+			}
+			catch(Exception ex) {
+				localFile = new File(localUrl.getPath());
+			}
+			return new FileIndexLocation(url, localFile);
 		}
 		return new JarIndexLocation(url, localUrl);
 	}
