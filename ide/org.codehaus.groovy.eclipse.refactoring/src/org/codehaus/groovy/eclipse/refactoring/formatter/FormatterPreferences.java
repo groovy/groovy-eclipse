@@ -18,9 +18,13 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
+import java.util.Map;
+
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.internal.formatter.DefaultCodeFormatterOptions;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
@@ -32,6 +36,10 @@ import org.eclipse.ui.texteditor.ChainedPreferenceStore;
  */
 public class FormatterPreferences extends FormatterPreferencesOnStore implements IFormatterPreferences {
 
+    final private IJavaProject project;
+
+    private DefaultCodeFormatterOptions jdtPrefs;
+
     /**
      * Create Formatter Preferences for a given GroovyCompilationUnit. This will
      * only take a "snapshot" of the current preferences for the project.
@@ -40,10 +48,20 @@ public class FormatterPreferences extends FormatterPreferencesOnStore implements
      */
     public FormatterPreferences(ICompilationUnit gunit) {
         super(preferencesFor(gunit));
+        project = gunit.getJavaProject();
+    }
+
+    @Override
+    protected void refresh(IPreferenceStore preferences) {
+        super.refresh(preferences);
+
+        Map<String, String> options = project != null ? project.getOptions(true) : JavaCore.getOptions();
+        jdtPrefs = new DefaultCodeFormatterOptions(options);
     }
 
     public FormatterPreferences(IJavaProject project) {
         super(preferencesFor(project));
+        this.project = project;
     }
 
     private static IPreferenceStore preferencesFor(ICompilationUnit gunit) {
@@ -60,9 +78,28 @@ public class FormatterPreferences extends FormatterPreferencesOnStore implements
         // IPreferenceStore groovyPrefs = GroovyPlugin.getDefault().getPreferenceStore();
         // But unfortunately, we can't get the GroovyPlugin here because that
         // creates a circular build dependency. So we do the following instead:
-        IPreferenceStore groovyPrefs = new ScopedPreferenceStore(new InstanceScope(), "org.codehaus.groovy.eclipse.ui");
+        IPreferenceStore groovyPrefs = new ScopedPreferenceStore(InstanceScope.INSTANCE, "org.codehaus.groovy.eclipse.ui");
         IPreferenceStore javaUIprefs = JavaPlugin.getDefault().getCombinedPreferenceStore();
 
         return new ChainedPreferenceStore(new IPreferenceStore[] { groovyPrefs, javaPrefs, javaUIprefs });
     }
+
+    @Override
+    public int getTabSize() {
+        // Use Java preferences instead
+        return jdtPrefs.tab_size;
+    }
+
+    @Override
+    public boolean useTabs() {
+        // Use Java preferences instead
+        return jdtPrefs.tab_char == DefaultCodeFormatterOptions.TAB;
+    }
+
+    @Override
+    public int getIndentationSize() {
+        // Use Java preferences instead
+        return jdtPrefs.indentation_size;
+    }
+
 }

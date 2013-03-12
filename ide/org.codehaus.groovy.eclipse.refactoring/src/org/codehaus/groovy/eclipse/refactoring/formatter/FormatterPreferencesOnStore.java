@@ -98,7 +98,7 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
      *
      * @param preferences
      */
-    private void refresh(IPreferenceStore preferences) {
+    protected void refresh(IPreferenceStore preferences) {
         indentEmptyLines = DEFAULT_INDENT_EMPTY_LINES;
         String pIndentEmpty = preferences.getString(DefaultCodeFormatterConstants.FORMATTER_INDENT_EMPTY_LINES);
         if (pIndentEmpty != null) {

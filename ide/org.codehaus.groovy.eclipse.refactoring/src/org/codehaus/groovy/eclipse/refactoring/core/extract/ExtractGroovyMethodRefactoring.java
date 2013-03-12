@@ -47,8 +47,7 @@ import org.codehaus.groovy.eclipse.refactoring.Activator;
 import org.codehaus.groovy.eclipse.refactoring.core.rewriter.ASTWriter;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
-import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferencesOnStore;
-import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyIndentationService;
+import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferences;
 import org.codehaus.groovy.eclipse.refactoring.ui.extract.GroovyRefactoringMessages;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
@@ -69,6 +68,7 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.corext.refactoring.JavaRefactoringArguments;
 import org.eclipse.jdt.internal.corext.refactoring.JavaRefactoringDescriptorUtil;
 import org.eclipse.jdt.internal.corext.refactoring.RefactoringCoreMessages;
+import org.eclipse.jdt.internal.corext.util.CodeFormatterUtil;
 import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
@@ -600,12 +600,10 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
 
         StringBuilder sb = new StringBuilder();
         try {
-            final FormatterPreferencesOnStore formmatterPrefs = new FormatterPreferencesOnStore(refactoringPreferences);
-            int indentation = calculateIndentation();
-            sb.append(lineDelimiter
-                    + lineDelimiter
-                    + GroovyIndentationService.createIndentation(formmatterPrefs,
-                            indentation * formmatterPrefs.getIndentationSize()));
+            final FormatterPreferences formmatterPrefs = new FormatterPreferences(unit);
+            int indentLevel = calculateIndentation();
+            String indentation = CodeFormatterUtil.createIndentString(indentLevel, unit.getJavaProject());
+            sb.append(lineDelimiter + lineDelimiter + indentation);
             sb.append(getMethodHead()).append(" {").append(lineDelimiter);
             // copy the source code
             String copyOfSourceCode = unitDocument.get(replaceScope.getOffset(), replaceScope.getLength());
@@ -626,7 +624,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
                 edits.apply(newMethodDocument);
             }
 
-            DefaultGroovyFormatter formatter = new DefaultGroovyFormatter(newMethodDocument, formmatterPrefs, indentation);
+            DefaultGroovyFormatter formatter = new DefaultGroovyFormatter(newMethodDocument, formmatterPrefs, indentLevel);
             formatter.format().apply(newMethodDocument);
             return newMethodDocument.get();
         } catch (BadLocationException e) {
