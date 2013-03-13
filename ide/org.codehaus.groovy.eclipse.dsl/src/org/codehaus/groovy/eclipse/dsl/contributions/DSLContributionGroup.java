@@ -258,7 +258,7 @@ public class DSLContributionGroup extends ContributionGroup {
         
         boolean isStatic = isStatic(args);
         boolean isDeprecated = isDeprecated(args);
-        if (!scope.isStatic() || (scope.isStatic() && isStatic)) {
+        if (!staticScope || (staticScope && isStatic)) {
             contributions.add(new PropertyContributionElement(name == null ? NO_NAME : name, type,
                     declaringType, isStatic, provider, doc, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         }
