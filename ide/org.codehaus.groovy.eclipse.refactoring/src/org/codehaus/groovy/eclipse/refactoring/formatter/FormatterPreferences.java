@@ -48,7 +48,10 @@ public class FormatterPreferences extends FormatterPreferencesOnStore implements
      */
     public FormatterPreferences(ICompilationUnit gunit) {
         super(preferencesFor(gunit));
+
         project = gunit.getJavaProject();
+        // TODO ugh...calling refresh twice. Should fix
+        refresh(preferencesFor(gunit));
     }
 
     @Override

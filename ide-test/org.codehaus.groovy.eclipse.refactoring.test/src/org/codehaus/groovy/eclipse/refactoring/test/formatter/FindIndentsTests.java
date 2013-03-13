@@ -40,7 +40,7 @@ public class FindIndentsTests extends TestCase {
         super.setUp();
         HashMap<String, String> props = new HashMap<String, String>();
         props.put("tabsize", "3");
-        IPreferenceStore pref = TestPrefInitializer.initializePreferences(props);
+        IPreferenceStore pref = TestPrefInitializer.initializePreferences(props, null);
         formatter = new DefaultGroovyFormatter(new Document(), new FormatterPreferencesOnStore(pref), 0);
     }
 

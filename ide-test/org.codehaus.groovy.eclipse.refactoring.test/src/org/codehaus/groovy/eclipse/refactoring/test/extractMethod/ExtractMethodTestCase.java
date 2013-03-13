@@ -65,7 +65,7 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
             RefactoringStatus status = new RefactoringStatus();
             refactoring = new ExtractGroovyMethodRefactoring(unit, getUserSelection().getOffset(), getUserSelection().getLength(),
                     status);
-            refactoring.setPreferences(TestPrefInitializer.initializePreferences(getFileProperties()));
+            refactoring.setPreferences(TestPrefInitializer.initializePreferences(getFileProperties(), testProject.getJavaProject()));
             if (status.getSeverity() != RefactoringStatus.OK) {
                 fail("Bad refactoring status on init: " + status);
             }

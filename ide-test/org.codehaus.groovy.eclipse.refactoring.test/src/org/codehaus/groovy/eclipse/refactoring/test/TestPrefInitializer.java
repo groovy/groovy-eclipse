@@ -22,6 +22,7 @@ package org.codehaus.groovy.eclipse.refactoring.test;
 import java.util.HashMap;
 
 import org.codehaus.groovy.eclipse.refactoring.PreferenceConstants;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceStore;
@@ -31,12 +32,15 @@ import org.eclipse.jface.preference.PreferenceStore;
  */
 public class TestPrefInitializer {
 
-    public static IPreferenceStore initializePreferences(HashMap<String, String> properties) {
+    public static IPreferenceStore initializePreferences(HashMap<String, String> properties, IJavaProject javaProject) {
         IPreferenceStore pref = new PreferenceStore();
 
         String indentation = properties.get("indentation");
         if (indentation != null) {
             pref.setValue(PreferenceConstants.GROOVY_FORMATTER_INDENTATION, indentation);
+            if (javaProject != null) {
+                javaProject.setOption(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, indentation);            
+            }
         }
 
         String tabsize = properties.get("tabsize");
@@ -45,6 +49,20 @@ public class TestPrefInitializer {
         if (tabsize != null) {
             pref.setValue(PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE, Integer.parseInt(tabsize));
             pref.setValue(PreferenceConstants.GROOVY_FORMATTER_TAB_SIZE, Integer.parseInt(tabsize));
+            
+            if (javaProject != null) {
+                javaProject.setOption(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, tabsize);
+                javaProject.setOption(DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE, tabsize);
+            }
+        } else {
+            if (javaProject != null) {
+                javaProject.setOption(
+                        DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, null);
+                javaProject
+                        .setOption(
+                                DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE,
+                                null);
+            }
         }
 
         String indentsize = properties.get("indentsize");
@@ -53,10 +71,22 @@ public class TestPrefInitializer {
             if ("space".equals(indentation)) {
                 pref.setValue(PreferenceConstants.GROOVY_FORMATTER_TAB_SIZE,
                         Integer.parseInt(indentsize));
+                if (javaProject != null) {
+                    javaProject.setOption(
+                            DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE,
+                            indentsize);
+                }
+                
             } else {
                 pref.setValue(
                         PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE,
                         Integer.parseInt(indentsize));
+                if (javaProject != null) {
+                    javaProject
+                            .setOption(
+                                    DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE,
+                                    indentsize);
+                }
             }
         }
 
