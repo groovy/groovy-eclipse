@@ -103,7 +103,7 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 			} else {
 				type = result.type;
 			}
-			if (node instanceof ClassExpression && type == VariableScope.CLASS_CLASS_NODE) {
+			if (node instanceof ClassExpression && type.equals(VariableScope.CLASS_CLASS_NODE)) {
 				// special case...there is a Foo.class expression.
 				// the difference between Foo.class and Foo does not appear in the AST.
 				// The type of the expression is considered to be Class, but we still need to
