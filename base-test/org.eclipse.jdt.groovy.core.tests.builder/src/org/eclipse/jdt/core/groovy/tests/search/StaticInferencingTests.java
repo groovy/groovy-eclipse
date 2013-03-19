@@ -210,4 +210,20 @@ public class StaticInferencingTests extends AbstractInferencingTest {
         int end = start + "p.Other".length();
         assertType(contents, start, end, "p.Other", false);
     }
+    
+    // GRECLIPSE-1544
+    public void testSTCAndClassInstance() throws Exception {
+        String contents = "package pkg0\n" + 
+        		"@groovy.transform.TypeChecked\n" + 
+        		"public class BugClass {\n" + 
+        		"    public void showBug() {\n" + 
+        		"        BugClass.getInstance();  \n" + 
+        		"    }\n" + 
+        		"    static BugClass getInstance() { return null }\n" + 
+        		"}";
+        
+        int start = contents.indexOf("getInstance");
+        int end = start + "getInstance".length();
+        assertType(contents, start, end, "pkg0.BugClass", false);
+    }
 }

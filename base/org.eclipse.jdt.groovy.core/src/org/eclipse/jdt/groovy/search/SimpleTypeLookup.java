@@ -311,6 +311,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			VariableScope scope, TypeConfidence confidence, boolean isStaticObjectExpression, boolean isPrimaryExpression) {
 		ClassNode realDeclaringType;
 		VariableInfo varInfo;
+		TypeConfidence origConfidence = confidence;
 		ASTNode declaration = findDeclaration(name, declaringType, scope.getMethodCallNumberOfArguments());
 
 		if (declaration == null && isPrimaryExpression) {
@@ -373,6 +374,19 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			}
 		}
 
+		if (confidence == UNKNOWN && realDeclaringType.getName().equals(VariableScope.CLASS_CLASS_NODE.getName())) {
+			// GRECLIPSE-1544
+			// check the type parameter for this class node reference
+			// likely a type coming in from STC
+			GenericsType[] classTypeParams = realDeclaringType.getGenericsTypes();
+			ClassNode typeParam = classTypeParams != null && classTypeParams.length == 1 ? classTypeParams[0].getType() : null;
+
+			if (typeParam != null && !typeParam.getName().equals(VariableScope.CLASS_CLASS_NODE.getName())
+					&& !typeParam.getName().equals(VariableScope.OBJECT_CLASS_NODE.getName())) {
+				return findTypeForNameWithKnownObjectExpression(name, type, typeParam, scope, origConfidence,
+						isStaticObjectExpression, isPrimaryExpression);
+			}
+		}
 		return new TypeLookupResult(type, realDeclaringType, declaration, confidence, scope);
 	}
 
