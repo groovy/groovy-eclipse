@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.wizards;
 
-import greclipse.org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageOne;
-
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.model.GroovyNature;
@@ -31,6 +29,7 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.junit.util.JUnitStatus;
+import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageOne;
 import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageTwo;
 
 /**
@@ -58,7 +57,7 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
 
     @Override
     protected String getJUnit3TestSuperclassName() {
-    	return GROOVY_TEST_CASE;
+        return GROOVY_TEST_CASE;
     }
 
     @Override
@@ -153,7 +152,7 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
         }
         if (!isJUnit4() && getPackageFragment().getElementName().equals("")) {
             createTypeInDefaultPackageJUnit3(pack, monitor);
-//            super.createType(monitor);
+            //            super.createType(monitor);
         } else {
             super.createType(monitor);
         }
