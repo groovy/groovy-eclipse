@@ -119,7 +119,9 @@ Export-Package: antlr,
  org.objectweb.asm.tree
 Require-Bundle: org.apache.ant,
  org.junit,
- org.eclipse.core.runtime
+ org.eclipse.core.runtime,
+ org.apache.commons.logging;resolution:=optional,
+ org.mozilla.javascript;resolution:=optional
 Bundle-Vendor: Codehaus.org
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
