@@ -14,9 +14,13 @@ import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovySystem;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.classgen.GeneratorContext;
@@ -40,7 +44,93 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
  * 
  * @author Kris De Volder
  */
+@SuppressWarnings("rawtypes")
 public class Grails20TestSupport {
+
+	private static Object getField(Object o, String name) throws Exception {
+		Class c = o.getClass();
+		Field f = lookupField(c, name);
+		f.setAccessible(true);
+		return f.get(o);
+	}
+
+	/**
+	 * So we can get the field even if dealing with a subclass and irrespective of whether the class was loaded by our own
+	 * classloader (if not, its hard for us to directly get a reference to the class object.
+	 */
+	private static Field lookupField(Class c, String name) throws Exception {
+		if (c != null) {
+			try {
+				return c.getDeclaredField(name);
+			} catch (NoSuchFieldException e) {
+				Class parent = c.getSuperclass();
+				if (parent != null) {
+					return lookupField(parent, name);
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Helper to cleanup after bad code that creates ThreadLocals but doesn't remove them. We protect against such code by grabbing
+	 * the current set of thread locals when the ThreadLocalCleaner is instantiated and then sometime later, when 'cleanup' is
+	 * called, we remove any ThreadLocals that weren't there before.
+	 */
+	public static class ThreadLocalCleaner {
+
+		private Set<ThreadLocal> initialSet;
+
+		public ThreadLocalCleaner() {
+			try {
+				this.initialSet = currentThreadLocals();
+			} catch (Throwable e) {
+				e.printStackTrace();
+			}
+		}
+
+		private Set<ThreadLocal> currentThreadLocals() throws Exception {
+			Set<ThreadLocal> initialSet = new HashSet<ThreadLocal>();
+			Thread t = Thread.currentThread();
+			Object threadLocalMap = getField(t, "threadLocals");
+			if (threadLocalMap != null) {
+				Object[] entries = (Object[]) getField(threadLocalMap, "table");
+				if (entries != null) {
+					for (Object object : entries) {
+						WeakReference<ThreadLocal> ref = (WeakReference<ThreadLocal>) object;
+						if (ref != null) {
+							ThreadLocal tl = ref.get();
+							if (tl != null) {
+								initialSet.add(tl);
+							}
+						}
+					}
+				}
+			}
+			return initialSet;
+		}
+
+		/**
+		 * When called, will remove any threadlocals from the current thread that were not there when the ThreadLocalCleaner
+		 * instance was first created. It is assumed this will be called in the same thread that created the instance. Typically it
+		 * will be called in a finally block to ensure the cleanup happens.
+		 */
+		public void cleanup() {
+			if (initialSet != null) {
+				try {
+					Set<ThreadLocal> currentSet = currentThreadLocals();
+					for (ThreadLocal tl : currentSet) {
+						if (!initialSet.contains(tl)) {
+							tl.remove();
+						}
+					}
+				} catch (Throwable e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+	}
 
 	public static boolean DEBUG = false;
 
@@ -104,10 +194,10 @@ public class Grails20TestSupport {
 				// Somewhat expected... if there's some issue with the project's classpath or its not really a Grails 2.0 project
 				// so silently ignore.
 				// e.printStackTrace();
-			} catch (ClassNotFoundException e) {
-				// Somewhat expected... if there's some issue with the project's classpath or its not really a Grails 2.0 project
-				// so silently ignore.
-				// e.printStackTrace();
+				// } catch (ClassNotFoundException e) {
+				// // Somewhat expected... if there's some issue with the project's classpath or its not really a Grails 2.0 project
+				// // so silently ignore.
+				// // e.printStackTrace();
 			} catch (Exception e) {
 				e.printStackTrace(System.err);
 			}
@@ -120,6 +210,7 @@ public class Grails20TestSupport {
 	@SuppressWarnings("rawtypes")
 	void ensureGrailsBuildSettings() {
 		debug("entering ensureGrailsBuildSettings");
+		ThreadLocalCleaner cleaner = new ThreadLocalCleaner();
 		try {
 			String projectName = options.groovyProjectName;
 			debug("projectName = " + projectName);
@@ -141,6 +232,8 @@ public class Grails20TestSupport {
 			debug("FAILED ensureGrailsBuildSettings");
 			e.printStackTrace();
 			// ignore ... classpath doesn't have what we expect.
+		} finally {
+			cleaner.cleanup();
 		}
 		debug("exiting ensureGrailsBuildSettings");
 	}
