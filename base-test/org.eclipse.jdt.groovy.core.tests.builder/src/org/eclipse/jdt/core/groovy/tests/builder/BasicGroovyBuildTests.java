@@ -2522,10 +2522,9 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		expectingNoProblems();
 
 	}
-
-	public void testIncrementalGenericsAndBinaryTypeBindings_GRE566()
-			throws Exception {
-		IPath projectPath = env.addProject("GRE566", "1.5"); //$NON-NLS-1$
+	
+	public void testIncrementalCompilation1594() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
@@ -2535,6 +2534,78 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
 		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
 		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+
+		env.addClass(root, "testpkg", "AllTests", "package testpkg;\n"
+				+ "public class AllTests {\n"
+				+ "    TestCaseChannelPersistentStore tccps;\n"+
+				  "\n"+
+				  "public static void setupDbConnPool() throws Exception {\n"+
+				  "}\n"+
+				 "}\n");
+		
+		env.addGroovyClass(root, "testpkg", "TestCaseChannelPersistentStore", "package testpkg\n"
+				+ "class TestCaseChannelPersistentStore {\n"+
+// This will be added in a subsequent incremental build
+//				+ "public static void foo() {\n"+
+//				  "  def clazz=TestCaseChannelPersistentStore.class;\n"+
+//				  "}\n"+
+				  "\n"+
+				  "void testRefreshedChannelMap() {\n"+
+				  "    def x= new Runnable() {public void run() { print('running');}};\n"+
+				  "	   x.run();\n"+
+				  "}\n"+
+				  "public static void main(String[]argv) { new TestCaseChannelPersistentStore().testRefreshedChannelMap();}\n"+
+				 "}\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("testpkg.AllTests", "testpkg.TestCaseChannelPersistentStore","testpkg.TestCaseChannelPersistentStore$1");
+		expectingNoProblems();
+		executeClass(projectPath, "testpkg.TestCaseChannelPersistentStore", "running", "");
+		
+		env.addGroovyClass(root, "testpkg", "TestCaseChannelPersistentStore", "package testpkg\n"
+				+ "class TestCaseChannelPersistentStore {\n"
+				+ "public static void foo() {\n"+
+				  "  def clazz=TestCaseChannelPersistentStore.class;\n"+
+				  "}\n"+
+				  "\n"+
+				  "void testRefreshedChannelMap() {\n"
+				+ "    def x= new Runnable() {public void run() {}};\n"+
+				  "}\n"+
+				 "}\n");
+		executeClass(projectPath, "testpkg.TestCaseChannelPersistentStore", "running", "");
+
+//		// whitespace change to groovy file
+//		env.addGroovyClass(root, "testpkg", "TestCaseChannelPersistentStore", "package testpkg\n"
+//				+ "class TestCaseChannelPersistentStore {\n"
+//				+ "public static void foo() {\n"+
+//				  "  def clazz=TestCaseChannelPersistentStore.class;\n"+
+//				  "}\n"+
+//				  "\n"+
+//				  "void testRefreshedChannelMap() {\n"
+//				+ "    def x= new Runnable() {public void run() {}};\n"+
+//				  "}\n"+
+//				 "}\n");
+		
+//		env.addGroovyClass(root, "pkg", "GHello", "package pkg;\n"
+//				+ "public class GHello {\n" + "  \n" + // new blank line
+//				"   public int run() { return 12; }\n" + "}\n");
+		incrementalBuild(projectPath);
+//		expectingCompiledClassesV("pkg.GHello");
+		expectingNoProblems();
+	}
+
+	public void testIncrementalGenericsAndBinaryTypeBindings_GRE566() throws Exception {
+		IPath projectPath = env.addProject("GRE566", "1.5");
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, "");
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
 		env.addClass(root, "pkg", "Intface", "package pkg;\n"
 				+ "public interface Intface<E extends Event> {\n"

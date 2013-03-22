@@ -256,6 +256,11 @@ private void createParentFolder(IContainer parent) throws CoreException {
 	}
 }
 
+//GRECLIPSE 1594
+public boolean avoidAdditionalGroovyAnswers = false;
+private static char[] groovySuffixAsChars = ".groovy".toCharArray(); //$NON-NLS-1$
+//GRECLIPSE end
+
 private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeName) {
 	if (this.notifier != null)
 		this.notifier.checkCancelWithinCompiler();
@@ -272,6 +277,13 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 		// if we answer X.java & it no longer defines Y then the binary type looking for Y will think the class path is wrong
 		// let the recompile loop fix up dependents when the secondary type Y has been deleted from X.java
 		SourceFile unit = (SourceFile) this.additionalUnits.get(qualifiedTypeName); // doesn't have file extension
+		// GRECLIPSE patch
+		if (this.avoidAdditionalGroovyAnswers && unit!=null) {
+			if (CharOperation.endsWith(unit.getFileName(),groovySuffixAsChars)) {
+				unit = null;
+			}
+		}
+		// GRECLIPSE end
 		if (unit != null)
 			return new NameEnvironmentAnswer(unit, null /*no access restriction*/);
 	}

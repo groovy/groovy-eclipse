@@ -23,6 +23,7 @@ import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
@@ -39,6 +40,7 @@ import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.core.builder.AbortIncrementalBuildException;
+import org.eclipse.jdt.internal.core.builder.NameEnvironment;
 
 /**
  * A subtype of CompilationUnitScope that allows us to override some methods and prevent JDT doing some checks that groovy will be
@@ -83,6 +85,12 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 	public GroovyCompilationUnitScope(GroovyCompilationUnitDeclaration compilationUnitDeclaration,
 			LookupEnvironment lookupEnvironment) {
 		super(compilationUnitDeclaration, lookupEnvironment);
+		// GRECLIPSE 1594
+		// lookupEnvironment.nameEnvironment.getClass() = class org.eclipse.jdt.internal.core.builder.NameEnvironment
+		INameEnvironment nameEnvironment = lookupEnvironment.nameEnvironment;
+		if (nameEnvironment instanceof NameEnvironment) {
+			((NameEnvironment) nameEnvironment).avoidAdditionalGroovyAnswers = true;
+		}
 	}
 
 	@Override

@@ -259,6 +259,12 @@ private void createParentFolder(IContainer parent) throws CoreException {
 	}
 }
 
+
+// GRECLIPSE 1594
+public boolean avoidAdditionalGroovyAnswers = false;
+private static char[] groovySuffixAsChars = ".groovy".toCharArray(); //$NON-NLS-1$
+// GRECLIPSE end
+
 private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeName) {
 	if (this.notifier != null)
 		this.notifier.checkCancelWithinCompiler();
@@ -281,10 +287,24 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 		if (index > 0) {
 			String enclosingTypeName = qualifiedTypeName.substring(0, index);
 			SourceFile unit = (SourceFile) this.additionalUnits.get(enclosingTypeName); // doesn't have file extension
+			// GRECLIPSE patch
+			if (this.avoidAdditionalGroovyAnswers && unit!=null) {
+				if (CharOperation.endsWith(unit.getFileName(),groovySuffixAsChars)) {
+					unit = null;
+				}
+			}
+			// GRECLIPSE end
 			if (unit != null)
 				return new NameEnvironmentAnswer(unit, null /*no access restriction*/);
 		}
 		SourceFile unit = (SourceFile) this.additionalUnits.get(qualifiedTypeName); // doesn't have file extension
+		// GRECLIPSE patch
+		if (this.avoidAdditionalGroovyAnswers && unit!=null) {
+			if (CharOperation.endsWith(unit.getFileName(),groovySuffixAsChars)) {
+				unit = null;
+			}
+		}
+		// GRECLIPSE end
 		if (unit != null)
 			return new NameEnvironmentAnswer(unit, null /*no access restriction*/);
 	}
