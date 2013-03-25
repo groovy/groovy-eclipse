@@ -523,7 +523,11 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     public static boolean checkCompatibleAssignmentTypes(ClassNode left, ClassNode right, Expression rightExpression) {
-        ClassNode leftRedirect = left.redirect();
+        return checkCompatibleAssignmentTypes(left, right, rightExpression, true);
+    }
+
+    public static boolean checkCompatibleAssignmentTypes(ClassNode left, ClassNode right, Expression rightExpression, boolean allowConstructorCoercion) {
+    	ClassNode leftRedirect = left.redirect();
         ClassNode rightRedirect = right.redirect();
 
         if (right==VOID_TYPE||right==void_WRAPPER_TYPE) {
@@ -592,11 +596,11 @@ public abstract class StaticTypeCheckingSupport {
 
         // if right is array, map or collection we try invoking the
         // constructor
-        if (rightRedirect.implementsInterface(MAP_TYPE) ||
+        if (allowConstructorCoercion && (rightRedirect.implementsInterface(MAP_TYPE) ||
                 rightRedirect.implementsInterface(Collection_TYPE) ||
                 rightRedirect.equals(MAP_TYPE) ||
                 rightRedirect.equals(Collection_TYPE) ||
-                rightRedirect.isArray()) {
+                rightRedirect.isArray())) {
             //TODO: in case of the array we could maybe make a partial check
             if (leftRedirect.isArray() && rightRedirect.isArray()) {
                 return checkCompatibleAssignmentTypes(leftRedirect.getComponentType(), rightRedirect.getComponentType());
