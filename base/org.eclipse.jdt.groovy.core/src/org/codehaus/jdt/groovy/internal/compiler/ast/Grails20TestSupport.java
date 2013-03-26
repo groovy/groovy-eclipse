@@ -198,6 +198,8 @@ public class Grails20TestSupport {
 				// // Somewhat expected... if there's some issue with the project's classpath or its not really a Grails 2.0 project
 				// // so silently ignore.
 				// // e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				// See comment above. Same deal here.
 			} catch (Exception e) {
 				e.printStackTrace(System.err);
 			}
