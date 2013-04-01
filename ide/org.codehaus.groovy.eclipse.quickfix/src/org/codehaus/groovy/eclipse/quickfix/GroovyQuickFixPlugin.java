@@ -15,10 +15,18 @@
  */
 package org.codehaus.groovy.eclipse.quickfix;
 
+import java.io.IOException;
+
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jface.text.templates.ContextTypeRegistry;
+import org.eclipse.jface.text.templates.persistence.TemplateStore;
+import org.eclipse.ui.editors.text.templates.ContributionContextTypeRegistry;
+import org.eclipse.ui.editors.text.templates.ContributionTemplateStore;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.prefs.BackingStoreException;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -28,10 +36,16 @@ public class GroovyQuickFixPlugin extends AbstractUIPlugin {
 	// The plug-in ID
 	public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.quickfix"; //$NON-NLS-1$
 
-	// The shared instance
+	public final static String GROOVY_CONTEXT_TYPE = "groovy";
+
+    // The shared instance
 	private static GroovyQuickFixPlugin plugin;
 
-	/**
+    private TemplateStore templateStore;
+
+    private ContextTypeRegistry contextTypeRegistry;
+
+    /**
 	 * The constructor
 	 */
 	public GroovyQuickFixPlugin() {
@@ -102,5 +116,44 @@ public class GroovyQuickFixPlugin extends AbstractUIPlugin {
 		}
 		return new Status(IStatus.WARNING, PLUGIN_ID, 0, message, exception);
 	}
+    /**
+     * Returns the template store for the jsp editor templates.
+     * 
+     * @return the template store for the jsp editor templates
+     */
+    public TemplateStore getTemplateStore() {
+        if (templateStore == null) {
+            templateStore= new ContributionTemplateStore(getTemplateContextRegistry(), getPreferenceStore(), GROOVY_CONTEXT_TYPE);
+            try {
+                templateStore.load();
+            } catch (IOException e) {
+                log(e);
+            }
+        }       
+        return templateStore;
+    }
+    
+    /**
+     * Returns the template context type registry for the jsp plugin.
+     * 
+     * @return the template context type registry for the jsp plugin
+     */
+    public ContextTypeRegistry getTemplateContextRegistry() {
+        if (contextTypeRegistry == null) {
+            ContributionContextTypeRegistry registry = new ContributionContextTypeRegistry();
+            registry.addContextType(GROOVY_CONTEXT_TYPE);
+            contextTypeRegistry= registry;
+        }
+        return contextTypeRegistry;
+    }
+    
+    public void savePreferences() {
+        try {
+            InstanceScope.INSTANCE.getNode(PLUGIN_ID).flush();
+        } catch (BackingStoreException e) {
+            log(e);
+        }
+        
+    }
 
 }

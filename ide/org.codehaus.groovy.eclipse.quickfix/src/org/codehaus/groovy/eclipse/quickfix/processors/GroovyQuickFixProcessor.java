@@ -40,8 +40,7 @@ import org.eclipse.jdt.ui.text.java.IQuickFixProcessor;
  * 
  */
 public class GroovyQuickFixProcessor implements IQuickFixProcessor {
-
-	public boolean hasCorrections(ICompilationUnit unit, int problemId) {
+    public boolean hasCorrections(ICompilationUnit unit, int problemId) {
 		return isProblemInGroovyProject(unit) && ProblemType.isRecognizedProblemId(problemId);
 	}
 
@@ -77,14 +76,37 @@ public class GroovyQuickFixProcessor implements IQuickFixProcessor {
 						}
 					}
 
-					return proposals
-							.toArray(new IJavaCompletionProposal[proposals
-									.size()]);
+					return proposals.toArray(new IJavaCompletionProposal[proposals.size()]);
 				}
 
 			}
 		}
-		return new IJavaCompletionProposal[] {};
+		return new IJavaCompletionProposal[0];
+	    
+//	    if (!(context instanceof IQuickAssistInvocationContext)) {
+//	        return new IJavaCompletionProposal[0];
+//	    }
+//	    try {
+//            IQuickAssistInvocationContext assistContext = (IQuickAssistInvocationContext) context;
+//            TemplateStore codeTemplates = GroovyQuickFixPlugin.getDefault().getTemplateStore();
+//            List<IJavaCompletionProposal> templates = new ArrayList<IJavaCompletionProposal>();
+//            Region region = new Region(assistContext.getOffset(), assistContext.getLength());
+//            ContextTypeRegistry templateContextRegistry= GroovyQuickFixPlugin.getDefault().getTemplateContextRegistry();
+//            TemplateContextType contextType= templateContextRegistry.getContextType(GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE);
+//            IDocument document = assistContext.getSourceViewer().getDocument();
+//            JavaContext templateContext = new GroovyContext(contextType, document, 
+//                    region.getOffset(), region.getLength(), context.getCompilationUnit());
+//            
+//            templateContext.setForceEvaluation(true);
+//            templateContext.setVariable("selection", document.get(region.getOffset(), region.getLength()));
+//            for (Template template : codeTemplates.getTemplates()) {
+//                templates.add(new TemplateProposal(template, templateContext, region, null));
+//            }
+//            return templates.toArray(new IJavaCompletionProposal[0]);
+//        } catch (BadLocationException e) {
+//            GroovyQuickFixPlugin.log(e);
+//            return new IJavaCompletionProposal[0];
+//        }
 	}
 
 	/**

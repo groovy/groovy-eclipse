@@ -133,6 +133,9 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         List<CompletionProposalCategory> newCategories = new ArrayList<CompletionProposalCategory>(categories.size()-1);
         for (CompletionProposalCategory category : categories) {
             if (!category.getId().equals("org.eclipse.jdt.ui.javaTypeProposalCategory")
+                    && !category.getId().equals("org.eclipse.jdt.ui.templateProposalCategory")
+                    && !category.getId().equals("org.eclipse.ajdt.ui.templateCategory")
+                    && !category.getId().equals("org.eclipse.jdt.ui.swtProposalCategory")
                     && !category.getId().equals("org.eclipse.jdt.ui.javaNoTypeProposalCategory")
                     && !category.getId().equals("org.eclipse.jdt.ui.javaAllProposalCategory")
                     && !category.getId().equals("org.eclipse.mylyn.java.ui.javaAllProposalCategory")) {

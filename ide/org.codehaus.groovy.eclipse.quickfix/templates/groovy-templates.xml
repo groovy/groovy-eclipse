@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+/*******************************************************************************
+ * Copyright (c) 2013 VMware Inc.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Andrew Eisenberg - initial API and implementation
+ *******************************************************************************/
+-->
+
+<templates>
+<template name="closure" description="Surround with Closure" id="org.codehaus.groovy.eclipse.templates.closure" context="groovy" enabled="true" autoinsert="false">{ ${vars} ->
+	${line_selection}${cursor}
+}</template>
+<template name="while" description="While loop (Groovy)" id="org.codehaus.groovy.eclipse.templates.while_condition" context="groovy" enabled="true" autoinsert="false">while (${condition}) {
+	${line_selection}${cursor}
+}</template>
+<template name="for_in" description="For..in loop (Groovy)" id="org.codehaus.groovy.eclipse.templates.for_in" context="groovy" enabled="true" autoinsert="false">for (${var} in ${collection}) {
+	${line_selection}${cursor}
+}</template>
+<template name="if" description="if statement (Groovy)" id="org.codehaus.groovy.eclipse.templates.if" context="groovy" enabled="true" autoinsert="false">if (${condition}) {
+	${line_selection}${cursor}
+}</template>
+<template name="synchronized" description="synchronized block (Groovy)" id="org.codehaus.groovy.eclipse.templates.synchronized" context="groovy" enabled="true" autoinsert="false">synchronized (${lock}) {
+	${line_selection}${cursor}
+}</template>
+<template name="use" description="use block" id="org.codehaus.groovy.eclipse.templates.synchronized" context="groovy" enabled="true" autoinsert="false">use (${category}) {
+	${line_selection}${cursor}
+}</template>
+<template autoinsert="false" context="groovy" deleted="false" description="try catch block (Groovy)" enabled="true" id="org.eclipse.jdt.ui.templates.try" name="try">try {
+	${line_selection}${cursor}
+} catch (${Exception} ${exception_variable_name}) {
+	${exception_variable_name}.printStackTrace()
+}</template>
+<template autoinsert="false" context="groovy" deleted="false" description="test method (Groovy)" enabled="true" id="org.eclipse.jdt.ui.templates.test" name="test">void test${name}() {
+	${cursor} 
+}</template>
+<template autoinsert="false" context="groovy" deleted="false" description="test method (JUnit 4) (Groovy)" enabled="true" id="org.eclipse.jdt.ui.templates.test_junit4" name="Test">@${testType:newType(org.junit.Test)}
+void ${testName}() {
+	${staticImport:importStatic('org.junit.Assert.*')}${cursor} 
+}</template>
+<template autoinsert="true" context="groovy" deleted="false" description="print to standard out (Groovy)" enabled="true" id="org.eclipse.jdt.ui.templates.sysout" name="sysout">println(${word_selection}${});${cursor}</template>
+<template autoinsert="true" context="groovy" deleted="false" description="print to standard out (Groovy)" enabled="true" id="org.eclipse.jdt.ui.templates.println" name="println">println(${word_selection}${});${cursor}</template>
+</templates>

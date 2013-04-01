@@ -49,6 +49,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -65,6 +66,8 @@ import org.eclipse.jdt.internal.ui.IJavaHelpContextIds;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.actions.AllCleanUpsAction;
 import org.eclipse.jdt.internal.ui.actions.CleanUpAction;
+import org.eclipse.jdt.internal.ui.actions.CompositeActionGroup;
+import org.eclipse.jdt.internal.ui.actions.SurroundWithActionGroup;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaOutlinePage;
@@ -127,17 +130,16 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.actions.ActionGroup;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.texteditor.AbstractMarkerAnnotationModel;
 import org.eclipse.ui.texteditor.ChainedPreferenceStore;
 import org.eclipse.ui.texteditor.IDocumentProvider;
+import org.eclipse.ui.texteditor.ITextEditorActionConstants;
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 
 public class GroovyEditor extends CompilationUnitEditor {
-    /**
-     *
-     */
     private static final String INDENT_ON_TAB = "IndentOnTab";
 
     public static final String EDITOR_ID = "org.codehaus.groovy.eclipse.editor.GroovyEditor";
@@ -786,8 +788,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         // use our Organize Imports instead
         ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fOrganizeImports", group, new OrganizeGroovyImportsAction(this));
         IAction organizeImports = new OrganizeGroovyImportsAction(this);
-        organizeImports
-        .setActionDefinitionId(IJavaEditorActionDefinitionIds.ORGANIZE_IMPORTS);
+        organizeImports.setActionDefinitionId(IJavaEditorActionDefinitionIds.ORGANIZE_IMPORTS);
         setAction("OrganizeImports", organizeImports); //$NON-NLS-1$
 
         // use our FormatAll instead
@@ -888,6 +889,10 @@ public class GroovyEditor extends CompilationUnitEditor {
         setAction("ConvertLocalToField", convertLocalAction);
         replaceRefactoringAction("fConvertLocalToFieldAction", convertLocalAction);
 
+        // use our SurroundWith quick menu instead
+        // for now set to null until we find a way to instantiate it
+        //        setAction("org.eclipse.jdt.internal.ui.actions.SurroundWithTemplateMenuAction", null);
+
         // selections
         ExpandSelectionAction selectionAction= new ExpandSelectionAction(this,
                 (SelectionHistory) ReflectionUtils.getPrivateField(JavaEditor.class, "fSelectionHistory", this));
@@ -896,6 +901,41 @@ public class GroovyEditor extends CompilationUnitEditor {
         setAction(StructureSelectionAction.ENCLOSING, selectionAction);
         setAction(StructureSelectionAction.NEXT, null);
         setAction(StructureSelectionAction.PREVIOUS, null);
+
+        // Now stick our own SurroundWith actions in the menu
+        // TODO how can we avoid using fully qualified name in a string here???
+        ISurroundWithFactory surroundWithFactory = (ISurroundWithFactory) Platform.getAdapterManager().loadAdapter(this, "org.codehaus.groovy.eclipse.quickfix.templates.SurroundWithAdapterFactory");
+        if (surroundWithFactory != null) {
+            CompositeActionGroup compositActions = (CompositeActionGroup) ReflectionUtils.getPrivateField(CompilationUnitEditor.class, "fContextMenuGroup", this);
+            ActionGroup[] groups = (ActionGroup[]) ReflectionUtils.getPrivateField(CompositeActionGroup.class, "fGroups", compositActions);
+            boolean found = false;
+            ActionGroup surroundWithGroup = surroundWithFactory.createSurrundWithGroup(this, ITextEditorActionConstants.GROUP_EDIT);
+            for (int i = 0; i < groups.length; i++) {
+                if (groups[i] instanceof SurroundWithActionGroup) {
+                    found = true;
+                    groups[i] = surroundWithGroup;
+                    break;
+                }
+            }
+            if (!found) {
+                GroovyCore.logTraceMessage("Oops...surroundWithActionGroup not found in context menus");
+            }
+
+            found = false;
+            groups = (ActionGroup[]) ReflectionUtils.getPrivateField(CompositeActionGroup.class, "fGroups", fActionGroups);
+            for (int i = 0; i < groups.length; i++) {
+                if (groups[i] instanceof SurroundWithActionGroup) {
+                    found = true;
+                    groups[i] = surroundWithGroup;
+                    break;
+                }
+            }
+            if (!found) {
+                GroovyCore.logTraceMessage("Oops...surroundWithActionGroup not found");
+            }
+        } else {
+            GroovyCore.logTraceMessage("Oops...surroundWithFactory not initialized");
+        }
     }
 
     private void removeRefactoringAction(String actionFieldName) {

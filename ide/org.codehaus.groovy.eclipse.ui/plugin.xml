@@ -583,29 +583,43 @@
       <page
             class="org.codehaus.groovy.eclipse.preferences.GroovyPreferencePage"
             id="org.codehaus.groovy.eclipse.preferences"
-            name="Groovy"/>
+            name="Groovy">
+      </page>
       <page
             category="org.codehaus.groovy.eclipse.preferences"
             class="org.codehaus.groovy.eclipse.preferences.GroovyEditorPreferencesPage"
             id="org.codehaus.groovy.eclipse.preferences.editor"
-            name="Editor"/>
+            name="Editor">
+         <keywordReference
+               id="org.codehaus.groovy.eclipse.ui.keyword.editor">
+         </keywordReference>
+      </page>
        <page
              category="org.codehaus.groovy.eclipse.preferences"
              class="org.codehaus.groovy.eclipse.preferences.FormatterPreferencesPage"
              id="org.codehaus.groovy.eclipse.preferences.formatter"
              name="Formatter">
+         <keywordReference
+               id="org.codehaus.groovy.eclipse.ui.keyword.formatter">
+         </keywordReference>
        </page>
        <page
              category="org.codehaus.groovy.eclipse.preferences"
              class="org.codehaus.groovy.eclipse.preferences.CompilerPreferencesPage"
              id="org.codehaus.groovy.eclipse.preferences.compiler"
              name="Compiler">
+         <keywordReference
+               id="org.codehaus.groovy.eclipse.ui.keyword.compiler">
+         </keywordReference>
        </page>
        <page
              category="org.codehaus.groovy.eclipse.preferences"
              class="org.codehaus.groovy.eclipse.preferences.DebuggerPreferencesPage"
              id="org.codehaus.groovy.eclipse.preferences.debugger"
              name="Debugger">
+         <keywordReference
+               id="org.codehaus.groovy.eclipse.ui.keyword.debugger">
+         </keywordReference>
        </page>
        <page
              category="org.codehaus.groovy.eclipse.preferences"
@@ -979,5 +993,32 @@
              class="org.codehaus.groovy.eclipse.actions.CompilerMismatchMarkerResolutionGenerator"
              markerType="org.codehaus.groovy.eclipse.core.compilerMismatch">
        </markerResolutionGenerator>
+    </extension>
+    <extension
+          point="org.eclipse.ui.keywords">
+       <keyword
+             id="org.codehaus.groovy.eclipse.ui.keyword.editor"
+             label="groovy editor">
+       </keyword>
+       <keyword
+             id="org.codehaus.groovy.eclipse.ui.keyword.compiler"
+             label="groovy compiler script folder">
+       </keyword>
+       <keyword
+             id="org.codehaus.groovy.eclipse.ui.keyword.debugger"
+             label="groovy debugger">
+       </keyword>
+       <keyword
+             id="org.codehaus.groovy.eclipse.ui.keyword.dsld"
+             label="groovy dsld">
+       </keyword>
+       <keyword
+             id="org.codehaus.groovy.eclipse.ui.keyword.contentassist"
+             label="groovy content assist">
+       </keyword>
+       <keyword
+             id="org.codehaus.groovy.eclipse.ui.keyword.formatter"
+             label="groovy formatter">
+       </keyword>
     </extension>
 </plugin>

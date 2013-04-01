@@ -200,7 +200,69 @@ public class GroovyPlugin extends AbstractUIPlugin {
         if (getPreferenceStore().getBoolean(PreferenceConstants.GROOVY_DEBUG_FORCE_DEBUG_OPTIONS_ON_STARTUP)) {
             new GroovyDebugOptionsEnforcer().maybeForce(getPreferenceStore());
         }
+
+        //        new Job("Initialize Groovy Templates") {
+        //            @Override
+        //            protected IStatus run(IProgressMonitor monitor) {
+        //                return checkTemplatesInstalled(monitor) ? Status.OK_STATUS : Status.CANCEL_STATUS;
+        //            }
+        //        }.schedule();
     }
+
+    //    /**
+    //     * Install the AspectJ code templates. We'd like to do this by an extension
+    //     * point, but there doesn't seem to be one.
+    //     */
+    //    private boolean checkTemplatesInstalled(IProgressMonitor monitor) {
+    //        if (monitor.isCanceled()) {
+    //            return false;
+    //        }
+    //        TemplateStore codeTemplates = null;
+    //        try {
+    //            codeTemplates = JavaPlugin.getDefault()
+    //                    .getTemplateStore();
+    //        } catch (Exception e) {
+    //            // a problem occurred while loading templates (Bug 259033)
+    //            // just ignore and try the next time.
+    //            return true;
+    //        }
+    //        Template template = codeTemplates.findTemplate("closure2");
+    //        if (template == null || !template.getContextTypeId().equals("groovy")) { //$NON-NLS-1$
+    //            try {
+    //                URL loc = getBundle().getEntry("templates/templates.xml"); //$NON-NLS-1$
+    //                TemplateReaderWriter trw = new TemplateReaderWriter();
+    //                TemplatePersistenceData[] templates = trw.read(loc.openStream(), null);
+    //                if ((templates == null) || (templates.length == 0)) {
+    //                    GroovyCore.logWarning("Could not load Groovy code templates.");
+    //                } else {
+    //                    TemplatePersistenceData[] existingTemplates = codeTemplates.getTemplateData(true);
+    //                    for (int i = 0; i < templates.length; i++) {
+    //                        // Check that the individual template has not already been added
+    //                        // would have been nice if templates used the ID tag, but they don't, so have to iterate through all
+    //                        TemplatePersistenceData existing = null;
+    //                        for (TemplatePersistenceData maybeExisting : existingTemplates) {
+    //                            if (maybeExisting.getTemplate().getName().equals(templates[i].getTemplate().getName())) {
+    //                                existing = maybeExisting;
+    //                                break;
+    //                            }
+    //                        }
+    //                        // also look for the the "groovy" context
+    //                        if (existing == null || !existing.getTemplate().getContextTypeId().equals("groovy")) {
+    //                            codeTemplates.add(templates[i]);
+    //                            if (existing != null) {
+    //                                existing.setDeleted(true);
+    //                            }
+    //                        }
+    //                    }
+    //                    codeTemplates.save();
+    //                }
+    //            } catch (IOException fnf) {
+    //                GroovyCore.logWarning("Could not load Groovy code templates.", fnf);
+    //            }
+    //        }
+    //        return true;
+    //    }
+
 
     private void addMonospaceFontListener() {
         ensure = new EnsureJUnitFont();

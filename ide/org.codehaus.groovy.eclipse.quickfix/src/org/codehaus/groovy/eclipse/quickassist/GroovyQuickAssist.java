@@ -16,20 +16,40 @@
 package org.codehaus.groovy.eclipse.quickassist;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
+import org.codehaus.groovy.eclipse.quickfix.templates.GroovyContext;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.internal.corext.template.java.CompilationUnitContextType;
+import org.eclipse.jdt.internal.corext.template.java.JavaContext;
+import org.eclipse.jdt.internal.corext.template.java.JavaDocContextType;
+import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.internal.ui.text.correction.AssistContext;
+import org.eclipse.jdt.internal.ui.text.template.contentassist.TemplateProposal;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
 import org.eclipse.jdt.ui.text.java.IQuickAssistProcessor;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.Region;
+import org.eclipse.jface.text.quickassist.IQuickAssistInvocationContext;
+import org.eclipse.jface.text.templates.ContextTypeRegistry;
+import org.eclipse.jface.text.templates.GlobalTemplateVariables;
+import org.eclipse.jface.text.templates.Template;
+import org.eclipse.jface.text.templates.TemplateContext;
+import org.eclipse.jface.text.templates.TemplateContextType;
+import org.eclipse.jface.text.templates.persistence.TemplateStore;
 
 public class GroovyQuickAssist implements IQuickAssistProcessor {
+    private static final String $_LINE_SELECTION= "${" + GlobalTemplateVariables.LineSelection.NAME + "}"; //$NON-NLS-1$ //$NON-NLS-2$
 
 	public boolean hasAssists(IInvocationContext context) throws CoreException {
 		if (context != null
@@ -52,7 +72,15 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
 	    if (!(context.getCompilationUnit() instanceof GroovyCompilationUnit)) {
 	        return new IJavaCompletionProposal[0];
 	    }
-		List<IJavaCompletionProposal> proposalList = new ArrayList<IJavaCompletionProposal>();
+	    
+		List<IJavaCompletionProposal> proposalList;
+        if (context instanceof IQuickAssistInvocationContext) {
+            proposalList = getTemplateAssists(
+                    (IQuickAssistInvocationContext) context,
+                    (GroovyCompilationUnit) context.getCompilationUnit());
+        } else {
+            proposalList = new ArrayList<IJavaCompletionProposal>();
+        }
 		
 		AddSuggestionsQuickAssistProposal javaProposal = new AddSuggestionsQuickAssistProposal(
 				context);
@@ -104,6 +132,37 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
 		return proposalList.toArray(new IJavaCompletionProposal[0]);
 	}
 	
+	public List<IJavaCompletionProposal> getTemplateAssists(IQuickAssistInvocationContext assistContext, GroovyCompilationUnit unit) {
+        try {
+            TemplateStore codeTemplates = GroovyQuickFixPlugin.getDefault().getTemplateStore();
+            List<IJavaCompletionProposal> templates = new ArrayList<IJavaCompletionProposal>();
+            Region region = new Region(assistContext.getOffset(), assistContext.getLength());
+            ContextTypeRegistry templateContextRegistry= GroovyQuickFixPlugin.getDefault().getTemplateContextRegistry();
+            TemplateContextType contextType= templateContextRegistry.getContextType(GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE);
+            IDocument document = assistContext.getSourceViewer().getDocument();
+            JavaContext templateContext = new GroovyContext(contextType, document, 
+                    region.getOffset(), region.getLength(), unit);
+            
+            templateContext.setForceEvaluation(true);
+            templateContext.setVariable("selection", document.get(region.getOffset(), region.getLength()));
+            for (Template template : codeTemplates.getTemplates()) {
+                if (isSurroundWith(template, templateContext)) {
+                    templates.add(new TemplateProposal(template,
+                            templateContext, region, null));
+                }
+            }
+            return templates;
+        } catch (BadLocationException e) {
+            GroovyQuickFixPlugin.log(e);
+            return Collections.emptyList();
+        }
+	}
+	
+	private boolean isSurroundWith(Template template, JavaContext templateContext) {
+        String contextId= templateContext.getContextType().getId();
+        return GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE.equals(contextId) && template.getPattern().indexOf($_LINE_SELECTION) == -1;
+	}
+	
 	/**
      * True if the problem is contained in an accessible (open and existing)
      * Groovy project in the workspace. False otherwise.
@@ -119,6 +178,8 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
         }
         return isContentInGroovyProject(context.getCompilationUnit());
     }
+    
+    
 
     /**
      * True if the problem is contained in an accessible (open and existing)
