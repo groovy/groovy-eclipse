@@ -70,7 +70,7 @@
       <command
             categoryId="org.codehaus.groovy.eclipse.editor.category.source"
             id="org.codehaus.groovy.quickfix.surround.with.quickMenu"
-            name="Groovy Surround with template">
+            name="Groovy code templates">
       </command>
    </extension>
    <extension
