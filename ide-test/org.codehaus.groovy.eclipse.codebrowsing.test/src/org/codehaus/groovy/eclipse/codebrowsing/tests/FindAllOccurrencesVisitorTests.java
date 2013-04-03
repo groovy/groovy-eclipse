@@ -28,7 +28,7 @@ import org.eclipse.core.runtime.CoreException;
  *
  * Note that there is a limitation in how {@link FindAllOccurrencesVisitor}
  * works. This is described in the comments of the class under test.
- * 
+ *
  * Not entirely happy with the test coverage here. We really should be testing
  * more
  *
@@ -197,6 +197,48 @@ public class FindAllOccurrencesVisitorTests extends AbstractCheckerTests {
         assertOccurrences(exprText, moduleText, first, second);
     }
 
+    public void testFindAllOccurrences23() throws Exception {
+        String moduleText = "FOO + BAR";
+        String exprText = "FOO";
+        int first = moduleText.indexOf(exprText);
+        assertOccurrences(exprText, moduleText, first);
+    }
+
+    public void testFindAllOccurrences23a() throws Exception {
+        String moduleText = "FOO == BAR";
+        String exprText = "FOO";
+        int first = moduleText.indexOf(exprText);
+        assertOccurrences(exprText, moduleText, first);
+    }
+
+    public void testFindAllOccurrences24() throws Exception {
+        String moduleText = "BAR + FOO";
+        String exprText = "FOO";
+        int first = moduleText.indexOf(exprText);
+        assertOccurrences(exprText, moduleText, first);
+    }
+
+    public void testFindAllOccurrences24a() throws Exception {
+        String moduleText = "BAR == FOO";
+        String exprText = "FOO";
+        int first = moduleText.indexOf(exprText);
+        assertOccurrences(exprText, moduleText, first);
+    }
+
+    public void testFindAllOccurrences25() throws Exception {
+        String moduleText = "BAR == FOO.BAR.FOO";
+        String exprText = "FOO";
+        int first = moduleText.indexOf(exprText);
+        assertOccurrences(exprText, moduleText, first);
+    }
+
+    public void testFindAllOccurrences25a() throws Exception {
+        String moduleText = "FOO.BAR == BAR.FOO";
+        String exprText = "FOO";
+        int first = moduleText.indexOf(exprText);
+        assertOccurrences(exprText, moduleText, first);
+    }
+
     private void assertOccurrences(String exprToFindText, String moduleText, int... startLocations) throws CoreException {
         IASTFragment exprToFind = getLastFragment(createModuleFromText(exprToFindText));
         ModuleNode module = createModuleFromText(moduleText);
@@ -209,12 +251,6 @@ public class FindAllOccurrencesVisitorTests extends AbstractCheckerTests {
         }
     }
 
-    /**
-     * @param foundExprs
-     * @param startLocations
-     * @param moduleText
-     * @return
-     */
     private String createMsg(List<IASTFragment> foundExprs, int[] startLocations, String exprToFindText, String moduleText) {
         StringBuilder sb = new StringBuilder();
         sb.append("Incorrect expressions found in:\n" + moduleText + "\n-----\nLooking for:\n" + exprToFindText
@@ -223,10 +259,6 @@ public class FindAllOccurrencesVisitorTests extends AbstractCheckerTests {
         return sb.toString();
     }
 
-    /**
-     * @param foundExprs
-     * @return
-     */
     private String getStarts(List<IASTFragment> foundExprs) {
         StringBuilder sb = new StringBuilder();
         for (IASTFragment foundExpr : foundExprs) {

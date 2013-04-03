@@ -63,6 +63,7 @@ import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentFactory;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentKind;
+import org.codehaus.groovy.eclipse.codebrowsing.fragments.BinaryExpressionFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.FragmentVisitor;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.MethodCallFragment;
@@ -82,15 +83,16 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
         public boolean previsit(IASTFragment fragment) {
             IASTFragment matched = fragment.findMatchingSubFragment(toFind);
             if (matched.kind() != ASTFragmentKind.EMPTY) {
-                occurrences.add(matched);
-                matchWasFound = true;
+                // prevent double matching, which may occur in binary fragments when searching for a simple expression fragment
+                if (occurrences.size() == 0 || 
+                        occurrences.get(occurrences.size()-1).getStart() != matched.getStart()) {
+                    occurrences.add(matched);
+                    matchWasFound = true;
+                }
             }
 
             // only continue for binary fragments since there may be multiple
             // matches inside of them
-            // FIXADE problem with expression a + a when it matches against
-            // a + a + a
-            // should skip some fragments here.
             return fragment.kind() == ASTFragmentKind.BINARY;
         }
 
@@ -113,7 +115,7 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
             }
             return true;
         }
-
+        
         @Override
         public boolean visit(MethodCallFragment fragment) {
             fragment.getArguments().visit(FindAllOccurrencesVisitor.this);
@@ -232,11 +234,16 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
     public void visitBinaryExpression(BinaryExpression expression) {
         IASTFragment fragment = factory.createFragment(expression);
         fragment.accept(fragmentMatcher);
-        // don't visit children directly because that may result in
-        // unanticipated double matches
-        // Don't ignore the first fragment
-        associatedExpressionMatcher.ignoreNext = false;
-        fragment.accept(associatedExpressionMatcher);
+
+        // If looking for a simple expression, then we have already visited the children
+        // don't visit twice
+//        if (toFind.kind() != ASTFragmentKind.SIMPLE_EXPRESSION) {
+            // don't visit children directly because that may result in
+            // unanticipated double matches
+            // Don't ignore the first fragment
+            associatedExpressionMatcher.ignoreNext = false;
+            fragment.accept(associatedExpressionMatcher);
+//        }
     }
 
     @Override
