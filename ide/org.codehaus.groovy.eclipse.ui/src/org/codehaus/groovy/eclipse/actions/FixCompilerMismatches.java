@@ -52,7 +52,7 @@ public class FixCompilerMismatches implements IObjectActionDelegate {
                 return;
             }
             for (IProject project : toConvert) {
-                CompilerUtils.setCompilerLevel(project, CompilerUtils.getActiveGroovyVersion());
+                CompilerUtils.setCompilerLevel(project, CompilerUtils.getActiveGroovyVersion(), false);
             }
         } else {
             MessageDialog.openInformation(activeShell, "No mismatches found", "All projects have correct compiler settings.");

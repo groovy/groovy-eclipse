@@ -36,7 +36,9 @@ import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.frameworkadapter.util.CompilerLevelUtils;
 import org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion;
 import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
@@ -396,12 +398,57 @@ public class CompilerUtils {
         return version;
     }
 
-    public static void setCompilerLevel(IProject project, SpecifiedVersion version) {
-        Activator.getDefault().setGroovyCompilerLevel(project, version.versionName);
+    public static void setCompilerLevel(IProject project, SpecifiedVersion projectLevel) {
+        setCompilerLevel(project, projectLevel, false);
+    }
+    public static void setCompilerLevel(IProject project, SpecifiedVersion projectLevel, boolean assertCompatible) {
+        Activator.getDefault().setGroovyCompilerLevel(project, projectLevel.versionName);
+        if (assertCompatible && !projectVersionMatchesWorkspaceVersion(projectLevel)) {
+            addCompilerMismatchError(project, projectLevel);
+        }
+    }
+
+    /**
+     * Check that the compiler level of the project matches that of the
+     * workspace
+     * if a msmatch, then a marker is added to the project
+     *
+     * @param project
+     * @param projectLevel
+     */
+    public static void addCompilerMismatchError(IProject project, SpecifiedVersion projectLevel) {
+        try {
+            SpecifiedVersion workspaceLevel = CompilerUtils.getWorkspaceCompilerLevel();
+            IMarker marker = project.getProject().createMarker(CompilerCheckerParticipant.COMPILER_MISMATCH_PROBLEM);
+            marker.setAttribute(IMarker.MESSAGE,
+                    "Groovy compiler level expected by the project does not match workspace compiler level. "
+                            + "\nProject compiler level is: " + projectLevel.toReadableVersionString()
+                            + "\nWorkspace compiler level is " + workspaceLevel.toReadableVersionString()
+                            + "\nGo to Project properties -> Groovy compiler to set the Groovy compiler level for this project");
+            marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
+            marker.setAttribute(IMarker.LOCATION, project.getName());
+        } catch (CoreException e) {
+            GroovyCore.logException("Error checking Groovy project compiler level compatibility for " + project.getName(), e);
+        }
+    }
+
+    public static void addMultipleCompilersOnClasspathError(IProject project, SpecifiedVersion compiler1, SpecifiedVersion compiler2) {
+        try {
+            SpecifiedVersion workspaceLevel = CompilerUtils.getWorkspaceCompilerLevel();
+            IMarker marker = project.getProject().createMarker(CompilerCheckerParticipant.COMPILER_MISMATCH_PROBLEM);
+            marker.setAttribute(IMarker.MESSAGE,
+                    "Multiple Groovy compilers found on classpath. Continuing with compilation will produce unpredictible results. "
+                            + "Remove a compiler before coninuing.\n" + "Found " + compiler1.toReadableVersionString() + " and "
+                            + compiler2.toReadableVersionString());
+            marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
+            marker.setAttribute(IMarker.LOCATION, project.getName());
+        } catch (CoreException e) {
+            GroovyCore.logException("Error checking Groovy project compiler level compatibility for " + project.getName(), e);
+        }
     }
 
     public static boolean projectVersionMatchesWorkspaceVersion(SpecifiedVersion version) {
-        if (version == UNSPECIFIED) {
+        if (version == UNSPECIFIED || version == SpecifiedVersion.DONT_CARE) {
             return true;
         } else {
             SpecifiedVersion workspaceCompilerLevel = getWorkspaceCompilerLevel();

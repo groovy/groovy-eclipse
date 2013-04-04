@@ -10,6 +10,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.compiler.CompilationParticipant;
 import org.eclipse.jdt.groovy.core.Activator;
@@ -39,12 +41,6 @@ public class CompilerCheckerParticipant extends CompilationParticipant {
     public int aboutToBuild(IJavaProject javaProject) {
         IProject project = javaProject.getProject();
         SpecifiedVersion projectLevel = CompilerUtils.getCompilerLevel(project);
-        if (projectLevel == SpecifiedVersion.UNSPECIFIED) {
-            // project is unspecified. just grab the current level and assume it
-            // is correct
-            SpecifiedVersion workspaceLevel = projectLevel = CompilerUtils.getWorkspaceCompilerLevel();
-            CompilerUtils.setCompilerLevel(project, workspaceLevel);
-        }
         try {
             boolean compilerMatch = CompilerUtils.projectVersionMatchesWorkspaceVersion(projectLevel);
             IMarker[] findMarkers = project.findMarkers(COMPILER_MISMATCH_PROBLEM, true, IResource.DEPTH_ZERO);
@@ -53,15 +49,7 @@ public class CompilerCheckerParticipant extends CompilationParticipant {
                     marker.delete();
                 }
             } else if (findMarkers.length == 0) {
-                SpecifiedVersion workspaceLevel = CompilerUtils.getWorkspaceCompilerLevel();
-                IMarker marker = project.getProject().createMarker(COMPILER_MISMATCH_PROBLEM);
-                marker.setAttribute(IMarker.MESSAGE,
-                        "Groovy compiler level expected by the project does not match workspace compiler level. "
-                                + "\nProject compiler level is: " + projectLevel.toReadableVersionString()
-                                + "\nWorkspace compiler level is " + workspaceLevel.toReadableVersionString()
-                                + "\nGo to Project properties -> Groovy compiler to set the Groovy compiler level for this project");
-                marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
-                marker.setAttribute(IMarker.LOCATION, project.getName());
+                CompilerUtils.addCompilerMismatchError(project, projectLevel);
             }
         } catch (CoreException e) {
             GroovyCore.logException("Error creating marker", e);
@@ -80,5 +68,51 @@ public class CompilerCheckerParticipant extends CompilationParticipant {
         } catch (CoreException e) {
             GroovyCore.logException("Error finding markers", e);
         }
+    }
+
+    @Override
+    public void buildFinished(IJavaProject javaProject) {
+        // if the project does not already have a compiler level set, infer it
+        // from the classpath
+        // but only if there was a clean build.
+        IProject project = javaProject.getProject();
+        try {
+            if (project.findMaxProblemSeverity(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE) == IMarker.SEVERITY_ERROR) {
+                return;
+            }
+
+            SpecifiedVersion projectLevel = CompilerUtils.getCompilerLevel(project);
+            // project is unspecified. Try to find the groovy version on the
+            // classpath
+            if (projectLevel == SpecifiedVersion.UNSPECIFIED) {
+                IClasspathEntry[] classpath = javaProject.getResolvedClasspath(true);
+                SpecifiedVersion found = null;
+                for (IClasspathEntry entry : classpath) {
+                    if (entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
+                        String jarName = entry.getPath().lastSegment();
+                        SpecifiedVersion inferredProjectLevel = SpecifiedVersion.parseVersion(jarName);
+                        if (inferredProjectLevel != SpecifiedVersion.UNSPECIFIED) {
+                            if (found != null) {
+                                // we have bigger problems. Multiple groovy
+                                // compilers found on classpath
+                                // note that this check is only done if compiler
+                                // level is unspecified.
+                                // don't want to do this check after every
+                                // compile because it is expensive.
+                                CompilerUtils.addMultipleCompilersOnClasspathError(project, found, inferredProjectLevel);
+                            } else {
+                                CompilerUtils.setCompilerLevel(project, inferredProjectLevel, true);
+                            }
+                            found = inferredProjectLevel;
+                        }
+                    }
+                }
+            }
+        } catch (CoreException e) {
+            GroovyCore
+                    .logException("Exception hrown while inferring project " + project.getName() + "'s groovy compiler level.", e);
+            return;
+        }
+
     }
 }

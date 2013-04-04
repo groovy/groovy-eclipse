@@ -200,6 +200,7 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
             }
         });
         SortedSet<SpecifiedVersion> versions = CompilerUtils.getAllGroovyVersions();
+        compilerCombo.add(SpecifiedVersion.DONT_CARE);
         for (SpecifiedVersion version : versions) {
             compilerCombo.add(version);
         }
@@ -328,7 +329,7 @@ IWorkbenchPreferencePage, IWorkbenchPropertyPage {
                 selected = SpecifiedVersion.UNSPECIFIED;
             }
             if (selected != currentProjectVersion && selected != SpecifiedVersion.UNSPECIFIED) {
-                CompilerUtils.setCompilerLevel(getProject(), selected);
+                CompilerUtils.setCompilerLevel(getProject(), selected, true);
             }
         }
     }

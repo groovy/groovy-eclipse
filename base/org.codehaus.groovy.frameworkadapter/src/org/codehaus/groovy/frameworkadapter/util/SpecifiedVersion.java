@@ -22,7 +22,7 @@ import org.osgi.framework.Version;
 public enum SpecifiedVersion {
     _16(1, 6, "16"), _17(1, 7, "17"), _18(1, 8, "18"), 
     _19(1, 9, "19"), _20(2, 0, "20"), _21(2,1,"21"),
-    _22(2,2,"22"),UNSPECIFIED(-1, -1, "0");
+    _22(2,2,"22"),DONT_CARE(0, 0, "-1"), UNSPECIFIED(0, 0, "0");
     public final int majorVersion;
     public final int minorVersion;
     public final String versionName;
@@ -38,10 +38,69 @@ public enum SpecifiedVersion {
     }
     
     public String toReadableVersionString() {
-        return majorVersion + "." + minorVersion;
+        if (this == UNSPECIFIED) {
+            return "unspecified";
+        } else if (this == DONT_CARE) {
+            return "I don't care";
+        } else {
+            return majorVersion + "." + minorVersion;
+        }
     }
     
     
+    /**
+     * Generates a {@link SpecifiedVersion} from a name of a groovy jar
+     *
+     * @param jarName the name of a jar
+     * @return the {@link SpecifiedVersion} if known. Will return
+     *         {@link UNSPECIFIED} if not known
+     */
+    public static SpecifiedVersion parseVersion(String jarName) {
+        boolean groovyStart = jarName.startsWith("groovy-");
+        if (groovyStart && jarName.endsWith(".jar")) {
+            boolean groovyAllStart = jarName.startsWith("groovy-all-");
+            int verstionStart;
+            if (groovyAllStart) {
+                verstionStart = "groovy-all-".length();
+            } else {
+                verstionStart = "groovy-".length();
+            }
+            String[] splits = jarName.substring(verstionStart).split("\\.");
+            if (splits.length > 1) {
+                try {
+                    int major = Integer.valueOf(splits[0]);
+                    int minor = Integer.valueOf(splits[1]);
+                    switch (major) {
+                        case 1:
+                            switch (minor) {
+                                case 6:
+                                    return _16;
+                                case 7:
+                                    return _17;
+                                case 8:
+                                    return _18;
+                            }
+                            break;
+                        case 2:
+                            switch (minor) {
+                                case 0:
+                                    return _20;
+                                case 1:
+                                    return _21;
+                                case 2:
+                                    return _22;
+                            }
+                            break;
+    
+                    }
+                } catch (NumberFormatException e) {
+                    // can ignore just return unspecified
+                }
+            }
+        }
+        return UNSPECIFIED;
+    }
+
     public static SpecifiedVersion findVersionFromString(String compilerLevel) {
         if (compilerLevel == null) {
             return UNSPECIFIED;
@@ -71,37 +130,36 @@ public enum SpecifiedVersion {
         if ("0".equals(compilerLevel)) {
             return UNSPECIFIED;
         }
+        if ("-1".equals(compilerLevel)) {
+            return DONT_CARE;
+        }
         
         // this is an error prevent startup
         throw new IllegalArgumentException("Invalid Groovy compiler level specified: " + compilerLevel + 
-                "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, or 2.0");
+                "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, or 2.2");
     }
 
     public static SpecifiedVersion findVersion(Version ver) {
-        if (ver.getMajor() == 2) {
-            if (ver.getMinor() == 0) {
-                return _20;
-            }
-            if (ver.getMinor() == 1) {
-                return _21;
-            }
-            if (ver.getMinor() == 2) {
-                return _22;
-            }
-        }
-        if (ver.getMajor() == 1) {
-            if (ver.getMinor() == 6) {
-                return _16;
-            }
-            if (ver.getMinor() == 7) {
-                return _17;
-            }
-            if (ver.getMinor() == 8) {
-                return _18;
-            }
-            if (ver.getMinor() == 9) {
-                return _19;
-            }
+        switch (ver.getMajor()) {
+            case 1:
+                switch (ver.getMinor()) {
+                    case 6:
+                        return _16;
+                    case 7:
+                        return _17;
+                    case 8:
+                        return _18;
+                }
+                break;
+            case 2:
+                switch (ver.getMinor()) {
+                    case 0:
+                        return _20; 
+                    case 1:
+                        return _21; 
+                    case 2:
+                        return _20; 
+                }                
         }
         return UNSPECIFIED;
     }
