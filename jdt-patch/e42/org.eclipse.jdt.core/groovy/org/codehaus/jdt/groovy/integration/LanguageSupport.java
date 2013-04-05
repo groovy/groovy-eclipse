@@ -12,6 +12,9 @@
 package org.codehaus.jdt.groovy.integration;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.jdt.core.IClassFile;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchPattern;
@@ -21,11 +24,13 @@ import org.eclipse.jdt.internal.compiler.IProblemFactory;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
+import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.BinaryType;
+import org.eclipse.jdt.internal.core.ClassFile;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.PackageFragment;
 import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
@@ -114,5 +119,22 @@ public interface LanguageSupport {
 	 * @return an expanded scope if required, or the initial scope if there is no change
 	 */
 	IJavaSearchScope expandSearchScope(IJavaSearchScope scope, SearchPattern pattern, SearchRequestor requestor);
+
+	/**
+	 * @param type a binary type that may or may not come from Groovy
+	 * @param typeInfo type info for the given type
+	 * @return true iff the binary type was compiled from groovy sources
+	 */
+	boolean isInterestingBinary(BinaryType type, IBinaryType typeInfo);
+
+	/**
+	 * Performs code select on the given {@link IClassFile}
+	 * @param classFile the class file to use, must be a classFile known to be of groovy origin
+	 * @param offset the start of the selection
+	 * @param length the length of the selection
+	 * @param owner the {@link WorkingCopyOwner} for this operation
+	 * @return {@link IJavaElement}s corresponding to the given selection.
+	 */
+	IJavaElement[] binaryCodeSelect(ClassFile classFile, int offset, int length, WorkingCopyOwner owner) throws JavaModelException;
 
 }

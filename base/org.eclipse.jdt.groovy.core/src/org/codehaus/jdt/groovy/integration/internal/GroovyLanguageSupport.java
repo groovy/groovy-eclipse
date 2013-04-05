@@ -27,6 +27,7 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclar
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyErrorCollectorForJDT;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyTypeDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
+import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
@@ -51,6 +52,7 @@ import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
@@ -255,5 +257,16 @@ public class GroovyLanguageSupport implements LanguageSupport {
 			return searchScopeExpander.expandSearchScope(scope, pattern, requestor);
 		}
 		return scope;
+	}
+
+	public boolean isInterestingBinary(BinaryType type, IBinaryType typeInfo) {
+		return isInterestingProject(type.getJavaProject().getProject())
+				&& ContentTypeUtils.isGroovyLikeFileName(type.sourceFileName(typeInfo));
+	}
+
+	public IJavaElement[] binaryCodeSelect(ClassFile classFile, int offset, int length, WorkingCopyOwner owner)
+			throws JavaModelException {
+		GroovyCompilationUnit binaryUnit = new GroovyClassFileWorkingCopy(classFile, owner);
+		return binaryUnit.codeSelect(offset, length, owner);
 	}
 }

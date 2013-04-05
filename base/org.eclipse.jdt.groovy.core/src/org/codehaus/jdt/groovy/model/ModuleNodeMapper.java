@@ -40,7 +40,7 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class ModuleNodeMapper {
 
-	public class ModuleNodeInfo {
+	public static class ModuleNodeInfo {
 		public ModuleNodeInfo(ModuleNode module, JDTResolver resolver) {
 			this.module = module;
 			this.resolver = resolver;
@@ -81,7 +81,7 @@ public class ModuleNodeMapper {
 		DSL_BUNDLE_INSTALLED = result;
 	}
 
-	private boolean shouldStoreResovler() {
+	public static boolean shouldStoreResovler() {
 		return DSL_BUNDLE_INSTALLED;
 	}
 

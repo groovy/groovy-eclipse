@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -164,8 +165,19 @@ public IJavaElement[] codeSelect(int offset, int length, WorkingCopyOwner owner)
 	IBuffer buffer = getBuffer();
 	char[] contents;
 	if (buffer != null && (contents = buffer.getCharacters()) != null) {
-	    BinaryType type = (BinaryType) getType();
+		BinaryType type = (BinaryType) getType();
+		// GROOVY start
+		/*old{
 		BasicCompilationUnit cu = new BasicCompilationUnit(contents, null, type.sourceFileName((IBinaryType) type.getElementInfo()));
+		}new*/
+		
+		// handle code select for Groovy files differently
+	    IBinaryType typeInfo = (IBinaryType) type.getElementInfo();
+	    if (LanguageSupportFactory.isInterestingBinary(type, typeInfo)) {
+	    	return LanguageSupportFactory.binaryCodeSelect(this, offset, length, owner);
+	    }
+		BasicCompilationUnit cu = new BasicCompilationUnit(contents, null, type.sourceFileName(typeInfo));
+		// GROOVY end
 		return super.codeSelect(cu, offset, length, owner);
 	} else {
 		//has no associated souce
