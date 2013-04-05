@@ -74,7 +74,7 @@ public class FailingErrorRecoveryTests extends AbstractRegressionTest {
         String[] newcps = new String[cps.length+3];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.1.1.jar");
+        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.1.2.jar");
         	if (groovyJar==null) {
 	        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.0.7.jar");
 	        	if (groovyJar==null) {
