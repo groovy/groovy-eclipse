@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2003-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,12 +27,14 @@ import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
 import org.codehaus.groovy.runtime.m12n.ExtensionModule;
+import org.codehaus.groovy.runtime.m12n.ExtensionModuleScanner;
 import org.codehaus.groovy.runtime.m12n.ExtensionModuleRegistry;
 import org.codehaus.groovy.runtime.m12n.MetaInfExtensionModule;
 import org.codehaus.groovy.runtime.metaclass.MetaClassRegistryImpl;
 import org.codehaus.groovy.tools.GroovyClass;
 import org.objectweb.asm.Opcodes;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -150,36 +152,53 @@ public abstract class StaticTypeCheckingSupport {
     }
 
 
+    /**
+     * @deprecated Use {@link #findDGMMethodsForClassNode(ClassLoader,ClassNode,String)} instead
+     */
+    @Deprecated
     protected static Set<MethodNode> findDGMMethodsForClassNode(ClassNode clazz, String name) {
+        return findDGMMethodsForClassNode(MetaClassRegistryImpl.class.getClassLoader(), clazz,  name);
+    }
+
+    protected static Set<MethodNode> findDGMMethodsForClassNode(final ClassLoader loader, ClassNode clazz, String name) {
         TreeSet<MethodNode> accumulator = new TreeSet<MethodNode>(DGM_METHOD_NODE_COMPARATOR);
-        findDGMMethodsForClassNode(clazz, name, accumulator);
+        findDGMMethodsForClassNode(loader, clazz, name, accumulator);
         return accumulator;
     }
 
+
+    /**
+     * @deprecated Use {@link #findDGMMethodsForClassNode(ClassLoader, ClassNode, String, TreeSet)} instead
+     */
+    @Deprecated
     protected static void findDGMMethodsForClassNode(ClassNode clazz, String name, TreeSet<MethodNode> accumulator) {
-        List<MethodNode> fromDGM = EXTENSION_METHOD_CACHE.getExtensionMethods().get(clazz.getName());
+        findDGMMethodsForClassNode(MetaClassRegistryImpl.class.getClassLoader(), clazz, name, accumulator);
+    }
+
+    protected static void findDGMMethodsForClassNode(final ClassLoader loader, ClassNode clazz, String name, TreeSet<MethodNode> accumulator) {
+        List<MethodNode> fromDGM = EXTENSION_METHOD_CACHE.getExtensionMethods(loader).get(clazz.getName());
         if (fromDGM != null) {
             for (MethodNode node : fromDGM) {
                 if (node.getName().equals(name)) accumulator.add(node);
             }
         }
         for (ClassNode node : clazz.getInterfaces()) {
-            findDGMMethodsForClassNode(node, name, accumulator);
+            findDGMMethodsForClassNode(loader, node, name, accumulator);
         }
         if (clazz.isArray()) {
             ClassNode componentClass = clazz.getComponentType();
             if (!componentClass.equals(OBJECT_TYPE)) {
                 if (componentClass.isInterface() || componentClass.getSuperClass()==null) {
-                    findDGMMethodsForClassNode(OBJECT_TYPE.makeArray(), name, accumulator);
+                    findDGMMethodsForClassNode(loader, OBJECT_TYPE.makeArray(), name, accumulator);
                 } else {
-                    findDGMMethodsForClassNode(componentClass.getSuperClass().makeArray(), name, accumulator);
+                    findDGMMethodsForClassNode(loader, componentClass.getSuperClass().makeArray(), name, accumulator);
                 }
             }
         }
         if (clazz.getSuperClass() != null) {
-            findDGMMethodsForClassNode(clazz.getSuperClass(), name, accumulator);
+            findDGMMethodsForClassNode(loader, clazz.getSuperClass(), name, accumulator);
         } else if (!clazz.equals(ClassHelper.OBJECT_TYPE)) {
-            findDGMMethodsForClassNode(ClassHelper.OBJECT_TYPE, name, accumulator);
+            findDGMMethodsForClassNode(loader, ClassHelper.OBJECT_TYPE, name, accumulator);
         }
     }
 
@@ -552,10 +571,11 @@ public abstract class StaticTypeCheckingSupport {
 
         // on an assignment everything that can be done by a GroovyCast is allowed
 
-        // anything can be assigned to an Object, String, boolean, Boolean
+        // anything can be assigned to an Object, String, Boolean
         // or Class typed variable
-        if (isWildcardLeftHandSide(leftRedirect)) return true;
-        
+        if (isWildcardLeftHandSide(leftRedirect)
+                && !(boolean_TYPE.equals(left) && rightExpressionIsNull)) return true;
+       
         // GRECLIPSE: start
         /*old{
         if (leftRedirect == OBJECT_TYPE ||
@@ -827,7 +847,8 @@ public abstract class StaticTypeCheckingSupport {
                 break;
             }
             ref = ref.getSuperClass();
-            if (ref == null) dist += 2;
+            dist++;
+            if (ref == null) dist++ ;
             dist = (dist+1)<<1;
         }
         return dist;
@@ -855,13 +876,29 @@ public abstract class StaticTypeCheckingSupport {
         return Math.max(max, superClassMax);
     }
 
+    /**
+     * @deprecated Use {@link #findDGMMethodsByNameAndArguments(ClassLoader, org.codehaus.groovy.ast.ClassNode, String, org.codehaus.groovy.ast.ClassNode[], java.util.List)} instead
+     */
+    @Deprecated
     public static List<MethodNode> findDGMMethodsByNameAndArguments(final ClassNode receiver, final String name, final ClassNode[] args) {
-        return findDGMMethodsByNameAndArguments(receiver, name, args, new LinkedList<MethodNode>());
+        return findDGMMethodsByNameAndArguments(MetaClassRegistryImpl.class.getClassLoader(), receiver, name, args);
     }
 
+    public static List<MethodNode> findDGMMethodsByNameAndArguments(final ClassLoader loader, final ClassNode receiver, final String name, final ClassNode[] args) {
+        return findDGMMethodsByNameAndArguments(loader, receiver, name, args, new LinkedList<MethodNode>());
+    }
+
+    /**
+     * @deprecated Use {@link #findDGMMethodsByNameAndArguments(ClassLoader, org.codehaus.groovy.ast.ClassNode, String, org.codehaus.groovy.ast.ClassNode[], List)} instead
+     */
+    @Deprecated
     public static List<MethodNode> findDGMMethodsByNameAndArguments(final ClassNode receiver, final String name, final ClassNode[] args, final List<MethodNode> methods) {
+        return findDGMMethodsByNameAndArguments(MetaClassRegistryImpl.class.getClassLoader(), receiver, name, args, methods);
+    }
+
+    public static List<MethodNode> findDGMMethodsByNameAndArguments(final ClassLoader loader, final ClassNode receiver, final String name, final ClassNode[] args, final List<MethodNode> methods) {
         final List<MethodNode> chosen;
-        methods.addAll(findDGMMethodsForClassNode(receiver, name));
+        methods.addAll(findDGMMethodsForClassNode(loader, receiver, name));
 
         chosen = chooseBestMethod(receiver, methods, args);
         // specifically for DGM-like methods, we may have a generic type as the first argument of the DGM method
@@ -1195,36 +1232,35 @@ public abstract class StaticTypeCheckingSupport {
         private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         private List<ExtensionModule> modules = Collections.emptyList();
         private Map<String, List<MethodNode>> cachedMethods = null;
+        private WeakReference<ClassLoader> origin = new WeakReference<ClassLoader>(null);
 
-        public Map<String, List<MethodNode>> getExtensionMethods() {
+        public Map<String, List<MethodNode>> getExtensionMethods(ClassLoader loader) {
             lock.readLock().lock();
-            MetaClassRegistry registry = GroovySystem.getMetaClassRegistry();
-            if (registry instanceof MetaClassRegistryImpl) {
-                MetaClassRegistryImpl impl = (MetaClassRegistryImpl) registry;
-                ExtensionModuleRegistry moduleRegistry = impl.getModuleRegistry();
-                if (!modules.equals(moduleRegistry.getModules())) {
+            if (loader!=origin.get()) {
                     lock.readLock().unlock();
                     lock.writeLock().lock();
                     try {
-                        if (!modules.equals(moduleRegistry.getModules())) {
-                            modules = moduleRegistry.getModules();
-                            cachedMethods = getDGMMethods(registry);
+                    final List<ExtensionModule> modules = new LinkedList<ExtensionModule>();
+                    ExtensionModuleScanner scanner = new ExtensionModuleScanner(new ExtensionModuleScanner.ExtensionModuleListener() {
+                        public void onModule(final ExtensionModule module) {
+                            boolean skip = false;
+                            for (ExtensionModule extensionModule : modules) {
+                                if (extensionModule.getName().equals(module.getName())) {
+                                    skip = true;
+                                    break;
                         }
-                    } finally {
-                        lock.writeLock().unlock();
-                        lock.readLock().lock();
                     }
-                } else if (cachedMethods==null) {
-                    lock.readLock().unlock();
-                    lock.writeLock().lock();
-                    try {
-                        cachedMethods = getDGMMethods(registry);
+                            if (!skip) modules.add(module);
+                        }
+                    }, loader);
+                    scanner.scanClasspathModules();
+                    cachedMethods = getDGMMethods(modules);
+                    origin = new WeakReference<ClassLoader>(loader);
                     } finally {
                         lock.writeLock().unlock();
                         lock.readLock().lock();
                     }
                 }
-            }
             try {
                 return Collections.unmodifiableMap(cachedMethods);
             } finally {
@@ -1237,14 +1273,11 @@ public abstract class StaticTypeCheckingSupport {
          * consists of a list of MethodNode, one for each default groovy method found
          * which is applicable for this class.
          * @return
-         * @param registry
+         * @param modules
          */
-        private static Map<String, List<MethodNode>> getDGMMethods(final MetaClassRegistry registry) {
+        private static Map<String, List<MethodNode>> getDGMMethods(List<ExtensionModule> modules) {
            Set<Class> instanceExtClasses = new LinkedHashSet<Class>();
            Set<Class> staticExtClasses = new LinkedHashSet<Class>();
-            if (registry instanceof MetaClassRegistryImpl) {
-                MetaClassRegistryImpl impl = (MetaClassRegistryImpl) registry;
-                List<ExtensionModule> modules = impl.getModuleRegistry().getModules();
                 for (ExtensionModule module : modules) {
                     if (module instanceof MetaInfExtensionModule) {
                         MetaInfExtensionModule extensionModule = (MetaInfExtensionModule) module;
@@ -1252,7 +1285,6 @@ public abstract class StaticTypeCheckingSupport {
                         staticExtClasses.addAll(extensionModule.getStaticMethodsExtensionClasses());
                     }
                 }
-            }
             Map<String, List<MethodNode>> methods = new HashMap<String, List<MethodNode>>();
             Collections.addAll(instanceExtClasses, DefaultGroovyMethods.DGM_LIKE_CLASSES);
             Collections.addAll(instanceExtClasses, DefaultGroovyMethods.additionals);

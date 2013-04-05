@@ -35,6 +35,12 @@ import static org.codehaus.groovy.ast.ClassHelper.*;
  */
 public class SignatureCodecVersion1 implements SignatureCodec {
 
+    private final ClassLoader classLoader;
+
+    public SignatureCodecVersion1(final ClassLoader classLoader) {
+        this.classLoader = classLoader;
+    }
+
     private void doEncode(final ClassNode node, DataOutputStream dos) throws IOException {
         dos.writeUTF(node.getClass().getSimpleName());
         if (node instanceof UnionTypeClassNode) {
