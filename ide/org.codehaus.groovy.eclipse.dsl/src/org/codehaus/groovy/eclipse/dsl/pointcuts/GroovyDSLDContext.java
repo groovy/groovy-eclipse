@@ -19,6 +19,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
@@ -112,12 +113,14 @@ public class GroovyDSLDContext {
     }
     
     private static String getPathToPackage(GroovyCompilationUnit unit) {
-        return unit.getPackageFragmentRoot().getResource().getFullPath().removeFirstSegments(1).toPortableString();
+        IResource resource = unit.getPackageFragmentRoot().getResource();
+        return resource == null ? null : resource.getFullPath().removeFirstSegments(1).toPortableString();
     }
 
 
     private static String getFullPathToFile(GroovyCompilationUnit unit) {
-        return unit.getResource().getFullPath().removeFirstSegments(1).toPortableString();
+        IResource resource = unit.getResource();
+        return resource == null ? null : resource.getFullPath().removeFirstSegments(1).toPortableString();
     }
 
 
