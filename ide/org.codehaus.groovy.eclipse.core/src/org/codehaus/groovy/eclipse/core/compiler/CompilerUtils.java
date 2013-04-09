@@ -438,7 +438,7 @@ public class CompilerUtils {
             IMarker marker = project.getProject().createMarker(CompilerCheckerParticipant.COMPILER_MISMATCH_PROBLEM);
             marker.setAttribute(IMarker.MESSAGE,
                     "Multiple Groovy compilers found on classpath. Continuing with compilation will produce unpredictible results. "
-                            + "Remove a compiler before coninuing.\n" + "Found " + compiler1.toReadableVersionString() + " and "
+                            + "Remove a compiler before continuing.\n" + "Found " + compiler1.toReadableVersionString() + " and "
                             + compiler2.toReadableVersionString());
             marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
             marker.setAttribute(IMarker.LOCATION, project.getName());
