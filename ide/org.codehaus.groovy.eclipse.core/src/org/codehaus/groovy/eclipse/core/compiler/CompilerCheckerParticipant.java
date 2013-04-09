@@ -86,31 +86,37 @@ public class CompilerCheckerParticipant extends CompilationParticipant {
             // classpath
             if (projectLevel == SpecifiedVersion.UNSPECIFIED) {
                 IClasspathEntry[] classpath = javaProject.getResolvedClasspath(true);
-                SpecifiedVersion found = null;
+                SpecifiedVersion found1 = null;
+                SpecifiedVersion found2 = null;
                 for (IClasspathEntry entry : classpath) {
                     if (entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
                         String jarName = entry.getPath().lastSegment();
                         SpecifiedVersion inferredProjectLevel = SpecifiedVersion.parseVersion(jarName);
                         if (inferredProjectLevel != SpecifiedVersion.UNSPECIFIED) {
-                            if (found != null) {
-                                // we have bigger problems. Multiple groovy
-                                // compilers found on classpath
-                                // note that this check is only done if compiler
-                                // level is unspecified.
-                                // don't want to do this check after every
-                                // compile because it is expensive.
-                                CompilerUtils.addMultipleCompilersOnClasspathError(project, found, inferredProjectLevel);
-                            } else {
-                                CompilerUtils.setCompilerLevel(project, inferredProjectLevel, true);
+                        	if (found1 == null) {
+                        		//first one found now. Just remember it
+                        		found1 = inferredProjectLevel;
+                        	} else if (found1 != null && found2==null) { //only found 1 version so far
+                            	if (inferredProjectLevel==found1) {
+                            		//Same, so nothing new.
+                            	} else {
+                            	    found2 = inferredProjectLevel;
+                                    CompilerUtils.addMultipleCompilersOnClasspathError(project, found1, found2);
+                            	}
                             }
-                            found = inferredProjectLevel;
                         }
                     }
                 }
+                if (found1!=null && found2==null) {
+                	//Only set compiler level if there's no ambiguity about what to set it to.
+                    CompilerUtils.setCompilerLevel(project, found1);
+                }
             }
+
         } catch (CoreException e) {
             GroovyCore
-                    .logException("Exception hrown while inferring project " + project.getName() + "'s groovy compiler level.", e);
+.logException("Exception thrown while inferring project " + project.getName() + "'s groovy compiler level.",
+                    e);
             return;
         }
 
