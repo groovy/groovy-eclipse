@@ -11,7 +11,6 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IClasspathEntry;
-import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.compiler.CompilationParticipant;
 import org.eclipse.jdt.groovy.core.Activator;
@@ -77,10 +76,6 @@ public class CompilerCheckerParticipant extends CompilationParticipant {
         // but only if there was a clean build.
         IProject project = javaProject.getProject();
         try {
-            if (project.findMaxProblemSeverity(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE) == IMarker.SEVERITY_ERROR) {
-                return;
-            }
-
             SpecifiedVersion projectLevel = CompilerUtils.getCompilerLevel(project);
             // project is unspecified. Try to find the groovy version on the
             // classpath
