@@ -31,9 +31,9 @@
          id="org.codehaus.groovy.jdt.patch"
          version="0.0.0"/>
 
-   <includes
-         id="org.codehaus.groovy20.feature"
-         version="0.0.0"/>
+   <requires>
+      <import plugin="org.codehaus.groovy" version="1.7.0" match="greaterOrEqual"/>
+   </requires>
 
    <plugin
          id="org.codehaus.groovy.frameworkadapter"
