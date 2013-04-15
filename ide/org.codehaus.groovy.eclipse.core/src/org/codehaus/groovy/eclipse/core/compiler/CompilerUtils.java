@@ -457,7 +457,7 @@ public class CompilerUtils {
 
     }
 
-    static SpecifiedVersion getWorkspaceCompilerLevel() {
+    public static SpecifiedVersion getWorkspaceCompilerLevel() {
         String groovyVersion = GroovySystem.getVersion();
         // convert from major.minor.micro to major.minor
         int dotIndex = groovyVersion.lastIndexOf('.');
