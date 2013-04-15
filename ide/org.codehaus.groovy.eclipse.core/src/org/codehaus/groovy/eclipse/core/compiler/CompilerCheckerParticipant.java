@@ -77,6 +77,9 @@ public class CompilerCheckerParticipant extends CompilationParticipant {
         IProject project = javaProject.getProject();
         try {
             SpecifiedVersion projectLevel = CompilerUtils.getCompilerLevel(project);
+            if (projectLevel == SpecifiedVersion.DONT_CARE) {
+                return; // All checks related to compiler levels disabled.
+            }
             // project is unspecified. Try to find the groovy version on the
             // classpath
             if (projectLevel == SpecifiedVersion.UNSPECIFIED) {
