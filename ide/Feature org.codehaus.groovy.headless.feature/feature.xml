@@ -32,15 +32,15 @@
          version="0.0.0"/>
 
    <requires>
+      <!-- this will choose the latest compiler available unless specified differently elsewhere -->
       <import plugin="org.codehaus.groovy" version="1.7.0" match="greaterOrEqual"/>
    </requires>
 
    <plugin
-         id="org.codehaus.groovy.frameworkadapter"
+         id="org.codehaus.groovy.eclipse.compilerResolver"
          download-size="0"
          install-size="0"
          version="0.0.0"
-         fragment="true"
          unpack="false"/>
 
    <plugin

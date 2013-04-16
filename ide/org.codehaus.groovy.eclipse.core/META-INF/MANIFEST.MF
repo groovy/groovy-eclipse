@@ -25,6 +25,6 @@ Export-Package: org.codehaus.groovy.eclipse.core,
  org.codehaus.groovy.eclipse.core.search,
  org.codehaus.groovy.eclipse.core.templates,
  org.codehaus.groovy.eclipse.core.util
-Import-Package: org.codehaus.groovy.frameworkadapter.util
 Bundle-Vendor: The Codehaus
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Import-Package: org.codehaus.groovy.frameworkadapter.util;version="2.8.0"

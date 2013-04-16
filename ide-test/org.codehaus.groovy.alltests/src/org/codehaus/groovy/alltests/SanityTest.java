@@ -20,7 +20,6 @@ package org.codehaus.groovy.alltests;
 import junit.framework.TestCase;
 
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
-import org.codehaus.groovy.frameworkadapter.util.CompilerLevelUtils;
 import org.eclipse.core.runtime.Platform;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;

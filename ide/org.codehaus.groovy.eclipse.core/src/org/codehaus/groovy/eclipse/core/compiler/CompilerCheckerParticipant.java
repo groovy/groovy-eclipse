@@ -112,8 +112,7 @@ public class CompilerCheckerParticipant extends CompilationParticipant {
             }
 
         } catch (CoreException e) {
-            GroovyCore
-.logException("Exception thrown while inferring project " + project.getName() + "'s groovy compiler level.",
+            GroovyCore.logException("Exception thrown while inferring project " + project.getName() + "'s groovy compiler level.",
                     e);
             return;
         }

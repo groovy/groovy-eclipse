@@ -100,8 +100,8 @@
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
-		<copy todir="${pluginsDestDir}/org.codehaus.groovy.frameworkadapter">
-			<fileset dir="${workspaceDirBase}/org.codehaus.groovy.frameworkadapter">
+		<copy todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.compilerResolver">
+			<fileset dir="${workspaceDirBase}/org.codehaus.groovy.eclipse.compilerResolver">
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>

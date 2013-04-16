@@ -26,7 +26,6 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
-import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -50,6 +49,7 @@ import org.eclipse.ui.internal.browser.WebBrowserPreference;
 import org.eclipse.ui.internal.browser.WorkbenchBrowserSupport;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.eclipse.ui.internal.ide.actions.OpenWorkspaceAction;
+import org.osgi.framework.Version;
 
 /**
  * Shared functionality to provide
@@ -116,15 +116,15 @@ public class CompilerSwitchUIHelper {
      * Provides UI for switching compiler between versions
      * @param toVersion
      */
-    private static void switchVersion(final SpecifiedVersion toVersion, final Composite compilerPage) {
-        final BundleDescription toBundle = CompilerUtils.getBundleDescription(toVersion);
-        if (toBundle == null) {
+    private static void switchVersion(final SpecifiedVersion toSpecifiedVersion, final Composite compilerPage) {
+        final Version toVersion = CompilerUtils.getBundleVersion(toSpecifiedVersion);
+        if (toVersion == null) {
             // this version is not installed
             return;
         }
 
         Button switchTo = new Button(compilerPage, SWT.PUSH);
-        switchTo.setText("Switch to " + toBundle.getVersion());
+        switchTo.setText("Switch to " + toVersion);
         switchTo.addSelectionListener(new SelectionListener() {
 
             public void widgetSelected(SelectionEvent e) {
@@ -137,13 +137,13 @@ public class CompilerSwitchUIHelper {
                 if (result) {
                     // change compiler
                     SpecifiedVersion activeGroovyVersion = CompilerUtils.getActiveGroovyVersion();
-                    IStatus status = CompilerUtils.switchVersions(activeGroovyVersion, toVersion);
+                    IStatus status = CompilerUtils.switchVersions(activeGroovyVersion, toSpecifiedVersion);
                     if (status == Status.OK_STATUS) {
                         restart(shell);
                     } else {
                         ErrorDialog error = new ErrorDialog(shell,
                                 "Error occurred", "Error occurred when trying to enable Groovy " +
-                                        toBundle.getVersion(),
+                                        toVersion,
                                         status, IStatus.ERROR);
                         error.open();
                     }
