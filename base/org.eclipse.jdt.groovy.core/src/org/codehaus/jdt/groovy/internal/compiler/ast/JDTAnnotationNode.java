@@ -86,7 +86,9 @@ public class JDTAnnotationNode extends AnnotationNode {
 
 	@Override
 	public boolean hasSourceRetention() {
-		return (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationSourceRetention) == TagBits.AnnotationSourceRetention;
+		return !hasRuntimeRetention()
+				&& !hasClassRetention()
+				&& (annotationBinding.getAnnotationType().tagBits & TagBits.AnnotationSourceRetention) == TagBits.AnnotationSourceRetention;
 	}
 
 	@Override
