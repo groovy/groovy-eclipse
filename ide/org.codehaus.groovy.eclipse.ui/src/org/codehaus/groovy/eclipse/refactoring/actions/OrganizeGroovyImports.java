@@ -440,7 +440,8 @@ public class OrganizeGroovyImports {
 
             // now add aliases back to existing imports
             for (Entry<String, String> alias : aliases.entrySet()) {
-                rewriter.addAlias(alias.getKey(), alias.getValue());
+                String key = alias.getKey();
+                rewriter.addAlias(key, alias.getValue(), !importsSlatedForRemoval.containsKey(key.substring(1)));
             }
 
             TextEdit edit = rewriter.rewriteImports(null);

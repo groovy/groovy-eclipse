@@ -116,5 +116,52 @@ public class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
             """
             doAddImportTest(contents)
     }
+    
 
+    // https://issuetracker.springsource.com/browse/STS-3314
+    void testMultiAliasing1() {
+        String contents =
+"""
+import java.awt.Window.Type
+import java.lang.reflect.Type as ReflectionType
+import java.net.Proxy.Type as ProxyType
+
+class TypeHelper {
+    Type someType
+    ReflectionType reflectionType
+    ProxyType proxyType    
+}
+"""
+        doAddImportTest(contents)
+    }
+    void testMultiAliasing2() {
+        String contents =
+                """
+import java.awt.Window.Type
+import java.lang.reflect.Type as ReflectionType
+import java.net.Proxy.Type as ProxyType
+                
+class TypeHelper {
+    Type someType
+    ReflectionType reflectionType
+    // ProxyType proxyType    
+}
+"""
+                doDeleteImportTest(contents, 1)
+    }
+    void testMultiAliasing3() {
+        String contents =
+                """
+                import java.awt.Window.Type
+                import java.lang.reflect.Type as ReflectionType
+                import java.net.Proxy.Type as ProxyType
+                
+                class TypeHelper {
+//                Type someType
+                ReflectionType reflectionType
+//                ProxyType proxyType    
+                }
+                """
+                doDeleteImportTest(contents, 2)
+    }
 }

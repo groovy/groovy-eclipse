@@ -1190,13 +1190,16 @@ public final class ImportRewrite {
     // GRECLIPSE allow aliases to be added to imports, but only if they already
     // exist
     @SuppressWarnings("unchecked")
-    public void addAlias(String importName, String aliasName) {
+    public void addAlias(String importName, String aliasName, boolean force) {
         if (addedImports != null) {
             int index = addedImports.indexOf(importName);
             if (index >= 0) {
                 addedImports.set(index, importName + " as " + aliasName);
+            } else if (force) {
+                addedImports.add(importName + " as " + aliasName);
             }
         }
+
         if (existingImports != null) {
             int index = existingImports.indexOf(importName);
             if (index >= 0) {
