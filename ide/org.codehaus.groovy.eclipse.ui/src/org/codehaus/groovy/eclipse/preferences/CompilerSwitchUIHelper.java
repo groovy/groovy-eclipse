@@ -64,6 +64,8 @@ public class CompilerSwitchUIHelper {
 
     static final String PROP_REFRESH_BUNDLES = "-Declipse.refreshBundles=true";
 
+    static final String PROP_CLEAN = "-Dosgi.clean=true"; //$NON-NLS-1$
+
     static final String PROP_COMMANDS = "eclipse.commands"; //$NON-NLS-1$
 
     private static final String PROP_EXIT_CODE = "eclipse.exitcode"; //$NON-NLS-1$
@@ -71,6 +73,7 @@ public class CompilerSwitchUIHelper {
     private static final String PROP_EXIT_DATA = "eclipse.exitdata"; //$NON-NLS-1$
 
     static final String CMD_VMARGS = "-vmargs"; //$NON-NLS-1$
+
 
     static final String NEW_LINE = "\n"; //$NON-NLS-1$
 
@@ -197,10 +200,8 @@ public class CompilerSwitchUIHelper {
         result.append(NEW_LINE);
 
         // append the vmargs and commands. Assume that these already end in \n
-        String vmargs = System.getProperty(PROP_VMARGS);
-        vmargs = vmargs == null ?
-                PROP_REFRESH_BUNDLES + NEW_LINE :
-                    vmargs + NEW_LINE + PROP_REFRESH_BUNDLES + NEW_LINE;
+        String vmargs = System.getProperty(PROP_VMARGS, "");
+        vmargs = vmargs + NEW_LINE + PROP_REFRESH_BUNDLES + NEW_LINE + PROP_CLEAN;
         result.append(vmargs);
 
         // append the rest of the args, replacing or adding -data as required
