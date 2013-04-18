@@ -160,7 +160,7 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
 	
 	private boolean isSurroundWith(Template template, JavaContext templateContext) {
         String contextId= templateContext.getContextType().getId();
-        return GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE.equals(contextId) && template.getPattern().indexOf($_LINE_SELECTION) == -1;
+        return GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE.equals(contextId) && template.getPattern().indexOf($_LINE_SELECTION) != -1;
 	}
 	
 	/**
