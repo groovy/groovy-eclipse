@@ -19,8 +19,6 @@ package org.codehaus.groovy.frameworkadapter.util;
 
 import static org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion.UNSPECIFIED;
 
-import java.util.Arrays;
-
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
@@ -50,6 +48,8 @@ public class CompilerChooser {
     private Version[] allVersions = new Version[0];
     private SpecifiedVersion[] allSpecifiedVersions = new SpecifiedVersion[0];
     private int activeIndex = -1;
+
+    private boolean initialized;
     
     CompilerChooser() { 
         INSTANCE = this;
@@ -61,28 +61,15 @@ public class CompilerChooser {
     
     void initialize(final BundleContext context) throws BundleException {
         doInitialize(context);
-//        try {
-//            ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
-//                public void run(IProgressMonitor monitor) throws CoreException {
-//                    try {
-//                    } catch (BundleException e) {
-//                        throw new CoreException(new Status(IStatus.ERROR, ResolverActivator.PLUGIN_ID, e.getMessage(), e));
-//                    }
-//                }
-//            }, getSchedulingRule(), IWorkspace.AVOID_UPDATE, new NullProgressMonitor());
-//        } catch (CoreException e) {
-//            if (e.getCause() instanceof BundleException) {
-//                throw (BundleException) e.getCause();
-//            }
-//        }
     }
     
-//    private ISchedulingRule getSchedulingRule() {
-//        return ResourcesPlugin.getWorkspace().getRuleFactory().buildRule();
-//    }
-
+    public boolean isInitiailzed() {
+        return initialized;
+    }
     
     private void doInitialize(BundleContext context) throws BundleException {
+        initialized = true;
+        
         SpecifiedVersion specifiedVersion = findSysPropVersion();
         if (specifiedVersion == SpecifiedVersion.UNSPECIFIED) {
             // system property was unspecified, now try looking at configuration

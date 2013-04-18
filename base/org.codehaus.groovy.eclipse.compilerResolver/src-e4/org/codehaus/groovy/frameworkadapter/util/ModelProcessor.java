@@ -18,6 +18,7 @@
 package org.codehaus.groovy.frameworkadapter.util;
 
 import org.eclipse.e4.core.di.annotations.Execute;
+import org.osgi.framework.BundleException;
 
 /**
  * This class exists only to ensure that this bundle is loaded before the
@@ -29,7 +30,11 @@ import org.eclipse.e4.core.di.annotations.Execute;
 public class ModelProcessor {
     @Execute
     public void doit() {
-        // nop
+//        try {
+//            ResolverActivator.getDefault().getChooser().initialize(ResolverActivator.getContext());
+//        } catch (BundleException e) {
+//            e.printStackTrace();
+//        }
     }
 
 }

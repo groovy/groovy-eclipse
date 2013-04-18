@@ -1,7 +1,11 @@
 package org.codehaus.groovy.frameworkadapter.util;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.BundleListener;
 
 public class ResolverActivator implements BundleActivator {
 
@@ -9,6 +13,7 @@ public class ResolverActivator implements BundleActivator {
     private static BundleContext context;
 	private static ResolverActivator instance;
 	private CompilerChooser chooser;
+    private BundleListener listener;
 
 	public ResolverActivator() {
 	    instance = this;
@@ -22,10 +27,30 @@ public class ResolverActivator implements BundleActivator {
 	 * (non-Javadoc)
 	 * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
 	 */
-	public void start(BundleContext bundleContext) throws Exception {
+	public void start(final BundleContext bundleContext) throws Exception {
 		ResolverActivator.context = bundleContext;
 		chooser = new CompilerChooser();
-		chooser.initialize(bundleContext);
+		
+		// There is a small window where the chooser can be initialized.
+		// It has to be after the workspace has started (in order to ensure
+		// the choose workspace dialog still shows) but before JDT is initialized
+		// (so that the groovy bundles aren't loaded).
+		// Best way to do that is through the listener below
+		listener = new BundleListener() {
+            public void bundleChanged(BundleEvent event) {
+                if ((event.getType() == BundleEvent.STARTING || event.getType() == BundleEvent.STARTED) && 
+                            event.getBundle().getSymbolicName().equals("org.eclipse.core.resources")) {
+                    try {
+                        bundleContext.removeBundleListener(listener);
+                        chooser.initialize(bundleContext);
+                    } catch (BundleException e) {
+                        e.printStackTrace();
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        };
+        bundleContext.addBundleListener(listener);
 	}
 
 	/*

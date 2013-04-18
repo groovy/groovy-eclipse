@@ -6,8 +6,8 @@ Bundle-Version: 2.8.0.qualifier
 Bundle-Activator: org.codehaus.groovy.frameworkadapter.util.ResolverActivator
 Bundle-Vendor: the Codehaus
 Require-Bundle: org.eclipse.core.runtime,
- org.eclipse.e4.ui.workbench;resolution:=optional,
- org.eclipse.e4.core.di;resolution:=optional
+ org.eclipse.e4.core.di;resolution:=optional,
+ org.eclipse.core.resources
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.codehaus.groovy.frameworkadapter.util;version="2.8.0"

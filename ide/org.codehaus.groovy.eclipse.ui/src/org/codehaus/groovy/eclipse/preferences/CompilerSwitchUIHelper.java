@@ -201,7 +201,7 @@ public class CompilerSwitchUIHelper {
 
         // append the vmargs and commands. Assume that these already end in \n
         String vmargs = System.getProperty(PROP_VMARGS, "");
-        vmargs = vmargs + NEW_LINE + PROP_REFRESH_BUNDLES + NEW_LINE + PROP_CLEAN;
+        vmargs = vmargs + NEW_LINE + PROP_REFRESH_BUNDLES + NEW_LINE + PROP_CLEAN + NEW_LINE;
         result.append(vmargs);
 
         // append the rest of the args, replacing or adding -data as required
