@@ -38,7 +38,9 @@ import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTest;
  */
 public class GroovyJDTTests {
     public static Test suite() throws Exception {
-        TestSuite suite = new TestSuite("Groovy JDT Tests"); //$NON-NLS-1$
+        TestSuite suite = new TestSuite("Groovy JDT Tests");
+        
+        suite.addTestSuite(SanityTest.class);
 
         // Model tests
         suite.addTest(AnnotationsTests.suite());
