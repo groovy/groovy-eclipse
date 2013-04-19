@@ -55,8 +55,10 @@
 					builds                  
        - - - - - - - - - - - - - - - - - -->
 	<target name="fix.compilerResolver" if="e3.build">
+		<!--
 		<move file="${pluginsDestDir}/org.codehaus.groovy.eclipse.compilerResolver/e3-build-artifacts/MANIFEST.MF" todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.compilerResolver/META-INF" overwrite="true" />
 		<move file="${pluginsDestDir}/org.codehaus.groovy.eclipse.compilerResolver/e3-build-artifacts/build.properties" todir="${pluginsDestDir}/org.codehaus.groovy.eclipse.compilerResolver" overwrite="true" />
+		-->
 	</target>
 
 	<!-- ===================================================================== -->
