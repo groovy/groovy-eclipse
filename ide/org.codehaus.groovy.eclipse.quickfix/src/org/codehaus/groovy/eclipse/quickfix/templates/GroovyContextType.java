@@ -20,6 +20,8 @@ package org.codehaus.groovy.eclipse.quickfix.templates;
 import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
 import org.eclipse.jdt.internal.corext.template.java.AbstractJavaContextType;
 import org.eclipse.jdt.internal.corext.template.java.JavaContext;
+import org.eclipse.jdt.internal.corext.template.java.StaticImportResolver;
+import org.eclipse.jdt.internal.corext.template.java.TypeResolver;
 import org.eclipse.jface.text.templates.GlobalTemplateVariables;
 
 public class GroovyContextType extends AbstractJavaContextType {
@@ -70,6 +72,12 @@ public class GroovyContextType extends AbstractJavaContextType {
         addResolver(new IterableType());
         addResolver(new IterableElement());
         addResolver(new Todo());
+        
+        // Extra
+        addResolver(new StaticImportResolver("importStatic", "adds a static import"));
+        TypeResolver resolver = new TypeResolver();
+        resolver.setType("newType");
+        addResolver(resolver);
     }
 
 }

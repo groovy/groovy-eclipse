@@ -34,8 +34,8 @@
 }</template>
 <template autoinsert="false" context="groovy" deleted="false" description="try catch block (Groovy)" enabled="true" id="org.eclipse.jdt.ui.templates.try" name="try">try {
 	${line_selection}${cursor}
-} catch (${Exception} ${exception_variable_name}) {
-	${exception_variable_name}.printStackTrace()
+} catch (${Exception} ${e}) {
+	${e}.printStackTrace()
 }</template>
 <template autoinsert="false" context="groovy" deleted="false" description="test method (Groovy)" enabled="true" id="org.eclipse.jdt.ui.templates.test" name="test">void test${name}() {
 	${cursor} 
