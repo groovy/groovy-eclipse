@@ -66,7 +66,7 @@ public class SanityTest extends TestCase {
     }
     
     public void testCompilerJars() throws Exception {
-        assertNotNull("Couldn't find groovy-all jar", GroovyActivator.GROOVY_ALL_JAR);
-        assertNotNull("Couldn't find groovy jar", GroovyActivator.GROOVY_JAR);
+        assertNotNull("Couldn't find groovy-all jar", GroovyActivator.GROOVY_ALL_JAR_URL);
+        assertNotNull("Couldn't find groovy jar", GroovyActivator.GROOVY_JAR_URL);
     }
 }
