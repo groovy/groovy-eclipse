@@ -1286,10 +1286,6 @@ public void cleanBuild() {
         addExternalJar(projectPath, GroovyActivator.ASM_JAR_URL.getFile());
     }   
     
-    public void addGroovyPlusPlusJar(IPath projectPath) throws Exception {
-        addExternalJar(projectPath, GroovyActivator.GROOVY_GPP_URL.getFile());
-    }
-    
     public void addJUnitJar(IPath projectPath) throws Exception {
         addExternalJar(projectPath,FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.builder").getEntry("lib/junit-4.3.1.jar")).getFile());
     }
