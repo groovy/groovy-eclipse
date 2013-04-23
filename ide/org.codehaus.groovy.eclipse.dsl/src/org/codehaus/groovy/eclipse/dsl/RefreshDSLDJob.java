@@ -41,6 +41,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jdt.core.IJavaModelStatusConstants;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
@@ -160,21 +161,29 @@ public class RefreshDSLDJob extends Job {
                             }
                         } else {
                             
-                            Object[] resources = frag.getNonJavaResources();
-                            // make sure we don't add files with the same names.
-                            // this ensures that a dsld file that is coming from 2 different places is 
-                            // not added twice.
-                            for (Object resource : resources) {
-                                if (resource instanceof IStorage) {
-                                    IStorage file = (IStorage) resource;
-                                    if (!alreadyAdded.contains(file.getName()) && isDSLD(file)) {
-                                        alreadyAdded.add(file.getName());
-                                        dsldFiles.add(file);
-                                    } else {
-                                        if (alreadyAdded.contains(file.getName())) {
-                                            GroovyLogManager.manager.log(TraceCategory.DSL, "DSLD File " + file.getFullPath() + " already added, so skipping.");
+                            try {
+                                Object[] resources = frag.getNonJavaResources();
+                                // make sure we don't add files with the same names.
+                                // this ensures that a dsld file that is coming from 2 different places is 
+                                // not added twice.
+                                for (Object resource : resources) {
+                                    if (resource instanceof IStorage) {
+                                        IStorage file = (IStorage) resource;
+                                        if (!alreadyAdded.contains(file.getName()) && isDSLD(file)) {
+                                            alreadyAdded.add(file.getName());
+                                            dsldFiles.add(file);
+                                        } else {
+                                            if (alreadyAdded.contains(file.getName())) {
+                                                GroovyLogManager.manager.log(TraceCategory.DSL, "DSLD File " + file.getFullPath() + " already added, so skipping.");
+                                            }
                                         }
                                     }
+                                }
+                            } catch (JavaModelException e) {
+                                if (e.getStatus().getCode() == IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST) {
+                                    // can ignore, most likely classpath change during refresh operation
+                                } else {
+                                    throw e;
                                 }
                             }
                         }
