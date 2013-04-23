@@ -352,6 +352,10 @@ public class StatementAndExpressionCompletionProcessor extends
             isStatic = isStatic() || requestor.isStatic;
             IProposalCreator[] creators = getAllProposalCreators();
             completionType = getCompletionType(requestor);
+            if (completionType == null) {
+                completionType = context.containingDeclaration instanceof ClassNode ? (ClassNode) context.containingDeclaration
+                        : context.unit.getModuleNode().getScriptClassDummy();
+            }
             proposalCreatorLoop(context, requestor, completionType, isStatic, groovyProposals, creators, false);
             if (ContentAssistLocation.STATEMENT == context.location) {
                 ClassNode closureThis = requestor.currentScope.getThis();
