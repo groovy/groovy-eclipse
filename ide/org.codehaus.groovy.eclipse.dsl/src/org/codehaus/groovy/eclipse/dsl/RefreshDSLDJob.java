@@ -26,6 +26,7 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceRuleFactory;
+import org.eclipse.core.resources.IResourceStatus;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.resources.IStorage;
 import org.eclipse.core.resources.IWorkspace;
@@ -95,7 +96,11 @@ public class RefreshDSLDJob extends Job {
                 // now look for files in class folders of the project
                 findDSLDsInLibraries(monitor);
             } catch (CoreException e) {
-                GroovyDSLCoreActivator.logException(e);
+                if (e.getStatus().getCode() == IResourceStatus.RESOURCE_NOT_FOUND) {
+                    // ignore.  Resource was deleted
+                } else {
+                    GroovyDSLCoreActivator.logException(e);
+                }
             }
             
             return dsldFiles;
@@ -225,7 +230,11 @@ public class RefreshDSLDJob extends Job {
                     }
                 }, getSchedulingRule(), IWorkspace.AVOID_UPDATE, monitor);
             } catch (CoreException e) {
-                GroovyDSLCoreActivator.logException(e);
+                if (e.getStatus().getCode()  == IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST) {
+                    // ignore...project was deleted
+                } else {
+                    GroovyDSLCoreActivator.logException(e);
+                }
             }
             return roots[0] != null ? roots[0] : new IPackageFragmentRoot[0];
         }  

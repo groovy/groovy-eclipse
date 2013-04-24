@@ -15,10 +15,12 @@
  */
 package org.codehaus.groovy.activator;
 
+import java.io.IOException;
 import java.net.URL;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.Status;
 import org.osgi.framework.Bundle;
@@ -50,30 +52,28 @@ public class GroovyActivator extends Plugin {
     @Override
     public void start(BundleContext context) throws Exception {
         super.start(context);
-        Bundle bundle = context.getBundle();
-        System.out.println("-------------------------------------------------------------");
-        System.out.println("Groovy starting version: " + bundle.getSymbolicName() + " " + bundle.getVersion());
         try {
-            GROOVY_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.GROOVY_JAR));
-            GROOVY_ALL_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.GROOVY_ALL_JAR));
-            ASM_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.ASM_JAR));
-            System.out.println("GROOVY_JAR_URL " + GROOVY_JAR_URL);
-            System.out.println("GROOVY_ALL_JAR_URL " + GROOVY_ALL_JAR_URL);
-            System.out.println("ASM_JAR_URL " + ASM_JAR_URL);
-            System.out.println("unresolved: GROOVY_JAR_URL " + bundle.getEntry(GroovyActivator.GROOVY_JAR));
-            System.out.println("unresolved: GROOVY_ALL_JAR_URL " + bundle.getEntry(GroovyActivator.GROOVY_ALL_JAR));
-            System.out.println("unresolved: ASM_JAR_URL " + bundle.getEntry(GroovyActivator.ASM_JAR));
-            System.out.println("-------------------------------------------------------------");
+            initialize();
         } catch (Exception e) {
             getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, "Error starting groovy plugin", e));
         }
     }
 
+    public static void initialize() throws IOException {
+        Bundle bundle = Platform.getBundle("org.codehaus.groovy");
+        GROOVY_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.GROOVY_JAR));
+        GROOVY_ALL_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.GROOVY_ALL_JAR));
+        ASM_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.ASM_JAR));
+        System.out.println("GROOVY_JAR_URL " + GROOVY_JAR_URL);
+        System.out.println("GROOVY_ALL_JAR_URL " + GROOVY_ALL_JAR_URL);
+        System.out.println("ASM_JAR_URL " + ASM_JAR_URL);
+        System.out.println("unresolved: GROOVY_JAR_URL " + bundle.getEntry(GroovyActivator.GROOVY_JAR));
+        System.out.println("unresolved: GROOVY_ALL_JAR_URL " + bundle.getEntry(GroovyActivator.GROOVY_ALL_JAR));
+        System.out.println("unresolved: ASM_JAR_URL " + bundle.getEntry(GroovyActivator.ASM_JAR));
+    }
+
     @Override
     public void stop(BundleContext context) throws Exception {
         super.stop(context);
-        System.out.println("-------------------------------------------------------------");
-        System.out.println("Groovy stopping version: " + context.getBundle().getSymbolicName() + " " + context.getBundle().getVersion());
-        System.out.println("-------------------------------------------------------------");
     }
 }

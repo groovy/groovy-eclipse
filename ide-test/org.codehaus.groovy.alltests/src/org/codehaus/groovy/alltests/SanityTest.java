@@ -31,6 +31,11 @@ import org.osgi.framework.Version;
  * @created Jun 28, 2012
  */
 public class SanityTest extends TestCase {
+    @Override
+    protected void setUp() throws Exception {
+        GroovyActivator.initialize();
+        super.setUp();
+    }
 
     private Version getEclipseVersion() {
         Bundle jdtcore = Platform.getBundle("org.eclipse.jdt.core");
@@ -72,11 +77,8 @@ public class SanityTest extends TestCase {
     public void testCompilerJars() throws Exception {
         System.out.println("---------------------------------------");
         System.out.println("SanityTest.testCompilerJars()");
-        System.out.println("Classloader location" + GroovyActivator.class.getClassLoader().getResource("."));
+        System.out.println("Classloader location " + GroovyActivator.class.getClassLoader().getResource("."));
         assertNotNull("Couldn't find groovy-all jar", GroovyActivator.GROOVY_ALL_JAR_URL);
         assertNotNull("Couldn't find groovy jar", GroovyActivator.GROOVY_JAR_URL);
-              }
-    
-    public static void main(String[] args) {
     }
 }
