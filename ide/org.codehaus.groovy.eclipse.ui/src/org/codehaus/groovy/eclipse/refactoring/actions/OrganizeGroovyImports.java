@@ -373,9 +373,10 @@ public class OrganizeGroovyImports {
                         String alias = imp.getAlias();
                         if (!imp.isStaticStar() && !imp.isStatic()) {
                             importsSlatedForRemoval.put(dottedClassName, imp);
-                            rewriter.addImport(dottedClassName);
                             if (isAliased(imp)) {
                                 aliases.put("n" + dottedClassName, alias);
+                            } else {
+                                rewriter.addImport(dottedClassName);
                             }
                         } else {
                             if (safeToReorganize) {

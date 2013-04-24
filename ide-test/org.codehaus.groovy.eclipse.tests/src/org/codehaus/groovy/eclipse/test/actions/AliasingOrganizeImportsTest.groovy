@@ -149,18 +149,33 @@ class TypeHelper {
 """
                 doDeleteImportTest(contents, 1)
     }
+    void testMultiAliasing2a() {
+        String contents =
+                """
+import java.lang.reflect.Type as ReflectionType
+import java.net.Proxy.Type as ProxyType
+import java.lang.ProcessBuilder.Redirect.Type
+
+class TypeHelper {
+    Type someType
+    ReflectionType reflectionType
+    // ProxyType proxyType    
+}
+                """
+                doDeleteImportTest(contents, 1)
+    }
     void testMultiAliasing3() {
         String contents =
                 """
-                import java.lang.ProcessBuilder.Redirect.Type
-                import java.lang.reflect.Type as ReflectionType
-                import java.net.Proxy.Type as ProxyType
-                
-                class TypeHelper {
-//                Type someType
-                ReflectionType reflectionType
-//                ProxyType proxyType    
-                }
+import java.lang.ProcessBuilder.Redirect.Type
+import java.lang.reflect.Type as ReflectionType
+import java.net.Proxy.Type as ProxyType
+
+class TypeHelper {
+//   Type someType
+    ReflectionType reflectionType
+//   ProxyType proxyType    
+}
                 """
                 doDeleteImportTest(contents, 2)
     }
