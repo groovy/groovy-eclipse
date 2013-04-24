@@ -40,19 +40,23 @@ public class ResolverActivator implements BundleActivator {
             public void bundleChanged(BundleEvent event) {
                 if ((event.getType() == BundleEvent.STARTING || event.getType() == BundleEvent.STARTED) && 
                             event.getBundle().getSymbolicName().equals("org.eclipse.core.resources")) {
-                    try {
-                        bundleContext.removeBundleListener(listener);
-                        chooser.initialize(bundleContext);
-                    } catch (BundleException e) {
-                        e.printStackTrace();
-                        throw new RuntimeException(e);
-                    }
+                    initializeChooser();
                 }
             }
         };
         bundleContext.addBundleListener(listener);
 	}
 
+
+    public void initializeChooser() {
+        try {
+            context.removeBundleListener(listener);
+            chooser.initialize(context);
+        } catch (BundleException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
 	/*
 	 * (non-Javadoc)
 	 * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)

@@ -22,6 +22,7 @@ import org.codehaus.groovy.eclipse.junit.test.AllJUnitTests;
 import org.codehaus.groovy.eclipse.quickfix.test.AllQuickFixTests;
 import org.codehaus.groovy.eclipse.refactoring.test.AllRefactoringTests;
 import org.codehaus.groovy.eclipse.test.AllUITests;
+import org.codehaus.groovy.frameworkadapter.util.ResolverActivator;
 
 /**
  * @author Andrew Eisenberg
@@ -31,6 +32,9 @@ import org.codehaus.groovy.eclipse.test.AllUITests;
  */
 public class AllGroovyTests {
     public static Test suite() throws Exception {
+        // ensure that the compiler chooser starts up
+        ResolverActivator.getDefault().initializeChooser();
+
         TestSuite suite = new TestSuite("All Groovy Tests"); //$NON-NLS-1$
         suite.addTestSuite(SanityTest.class);
         suite.addTest(AllUITests.suite());

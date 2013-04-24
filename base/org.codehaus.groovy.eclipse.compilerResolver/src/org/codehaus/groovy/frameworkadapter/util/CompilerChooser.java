@@ -60,7 +60,10 @@ public class CompilerChooser {
     }
     
     void initialize(final BundleContext context) throws BundleException {
-        doInitialize(context);
+        if (!initialized) {
+            initialized = true;
+            doInitialize(context);
+        }
     }
     
     public boolean isInitiailzed() {
@@ -68,7 +71,6 @@ public class CompilerChooser {
     }
     
     private void doInitialize(BundleContext context) throws BundleException {
-        initialized = true;
         
         SpecifiedVersion specifiedVersion = findSysPropVersion();
         if (specifiedVersion == SpecifiedVersion.UNSPECIFIED) {
@@ -102,7 +104,9 @@ public class CompilerChooser {
                     found = true;
                 }
             }
-            if (found) {
+            
+            // if activeIndex == 0, then there's nothing to do since specified bundle is already first
+            if (found && activeIndex > 0) {
                 for (int i = 0; i < bundles.length; i++) {
                     if (i != activeIndex) {
                         Bundle bundle = bundles[i];

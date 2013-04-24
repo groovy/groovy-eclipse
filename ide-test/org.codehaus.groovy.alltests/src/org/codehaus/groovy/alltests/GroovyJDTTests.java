@@ -14,6 +14,7 @@ package org.codehaus.groovy.alltests;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.codehaus.groovy.frameworkadapter.util.ResolverActivator;
 import org.eclipse.jdt.core.groovy.tests.builder.BasicGroovyBuildTests;
 import org.eclipse.jdt.core.groovy.tests.builder.FullProjectTests;
 import org.eclipse.jdt.core.groovy.tests.compiler.ScriptFolderTests;
@@ -38,6 +39,9 @@ import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTest;
  */
 public class GroovyJDTTests {
     public static Test suite() throws Exception {
+        // ensure that the compiler chooser starts up
+        ResolverActivator.getDefault().initializeChooser();
+        
         TestSuite suite = new TestSuite("Groovy JDT Tests");
         
         suite.addTestSuite(SanityTest.class);
