@@ -1478,7 +1478,29 @@ public class InferencingTests extends AbstractInferencingTest {
         int end = start + "substring".length();
         assertType(contents, start, end, "java.lang.String");
     }
+    
+    public void testGRECLIPSE1348() throws Exception {
+        String contents = "class A {\n" + 
+        		"    def myMethod(String owner) {\n" + 
+        		"        return { return owner }\n" + 
+        		"    }\n" + 
+        		"}";
+        int start = contents.lastIndexOf("owner");
+        int end = start + "owner".length();
+        assertType(contents, start, end, "java.lang.String");
+    } 
 
+    public void testGRECLIPSE1348a() throws Exception {
+        String contents = "class A {\n" + 
+                "    def myMethod(String notOwner) {\n" + 
+                "        return { return owner }\n" + 
+                "    }\n" + 
+                "}";
+        int start = contents.lastIndexOf("owner");
+        int end = start + "owner".length();
+        assertType(contents, start, end, "A");
+    }
+    
     protected void assertNoUnknowns(String contents) {
         GroovyCompilationUnit unit = createUnit("Search", contents);
         
