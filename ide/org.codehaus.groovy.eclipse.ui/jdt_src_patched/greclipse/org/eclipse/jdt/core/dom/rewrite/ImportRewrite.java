@@ -1187,16 +1187,14 @@ public final class ImportRewrite {
         return (String[]) res.toArray(new String[res.size()]);
     }
 
-    // GRECLIPSE allow aliases to be added to imports, but only if they already
-    // exist
+    // GRECLIPSE aliased imports need to update their alias
     @SuppressWarnings("unchecked")
     public void addAlias(String importName, String aliasName, boolean force) {
         if (addedImports != null) {
-            int index = addedImports.indexOf(importName);
+            int index = addedImports == null ? -1 : addedImports.indexOf(importName);
             if (index >= 0) {
                 addedImports.set(index, importName + " as " + aliasName);
-            } else if (force) {
-                addedImports.add(importName + " as " + aliasName);
+                return;
             }
         }
 
@@ -1204,7 +1202,15 @@ public final class ImportRewrite {
             int index = existingImports.indexOf(importName);
             if (index >= 0) {
                 existingImports.set(index, importName + " as " + aliasName);
+                return;
             }
+        }
+
+        if (force) {
+            if (addedImports == null) {
+                addedImports = new ArrayList<String>(2);
+            }
+            addedImports.add(importName + " as " + aliasName);
         }
     }
 
