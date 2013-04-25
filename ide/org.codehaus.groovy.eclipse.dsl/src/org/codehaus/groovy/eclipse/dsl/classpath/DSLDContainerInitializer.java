@@ -40,6 +40,12 @@ import org.eclipse.jdt.core.JavaCore;
 public class DSLDContainerInitializer extends ClasspathContainerInitializer {
 
     private static final IClasspathEntry[] NO_ENTRIES = new IClasspathEntry[0];
+    
+    /**
+     * The location for global dsld files.  Null if the locaiton does not exist and cannot be created
+     */
+    private static final File globalDsldLocation = getglobalDsldLocation();
+
 
     private final class DSLDClasspathContainer implements IClasspathContainer {
         private IClasspathEntry[] entries;
@@ -77,23 +83,11 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
         		return NO_ENTRIES;
         	}
         	
-            String dotGroovyLocation = CompilerUtils.getDotGroovyLocation();
             List<IClasspathEntry> newEntries = new ArrayList<IClasspathEntry>();
-            if (dotGroovyLocation != null) {
-                dotGroovyLocation += "/greclipse/global_dsld_support";
-                File globalDsldLocation = new File(dotGroovyLocation);
-                if (!globalDsldLocation.exists()) {
-                    try {
-                        globalDsldLocation.mkdirs();
-                    } catch (SecurityException e) {
-                        GroovyDSLCoreActivator.logException("Cannot create DSL support location at " + dotGroovyLocation + " since SecurityManager doesn't allow it.", e);
-                    }
-                }
-                
-                if (globalDsldLocation.exists()) {
-                    IPath dsldPath = new Path(globalDsldLocation.getAbsolutePath());
-                    newEntries.add(newLibraryEntry(dsldPath, null, null, false));
-                }
+            
+            if (globalDsldLocation != null && globalDsldLocation.exists()) {
+                IPath dsldPath = new Path(globalDsldLocation.getAbsolutePath());
+                newEntries.add(newLibraryEntry(dsldPath, null, null, false));
             }
             
             URL folder = CompilerUtils.findDSLDFolder();
@@ -105,6 +99,27 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
                 newEntries.add(newLibraryEntry(path, null, null));
             }
             return newEntries.toArray(NO_ENTRIES);
+        }
+
+    }
+    private static File getglobalDsldLocation() {
+        File location = null;
+        String dotGroovyLocation = CompilerUtils.getDotGroovyLocation();
+        if (dotGroovyLocation != null) {
+            dotGroovyLocation += "/greclipse/global_dsld_support";
+            location = new File(dotGroovyLocation);
+            if (!location.exists()) {
+                try {
+                    location.mkdirs();
+                } catch (SecurityException e) {
+                }
+            }
+        }
+        if (location != null && location.exists()) {
+            return location;
+        } else {
+            GroovyDSLCoreActivator.logWarning("Cannot create DSL support location at " + dotGroovyLocation + ". Location is read-only, or a security manager is preventing it.");
+            return null;
         }
     }
 
