@@ -1,11 +1,16 @@
 package org.codehaus.groovy.frameworkadapter.util;
 
+import org.eclipse.core.internal.resources.Workspace;
+import org.eclipse.e4.core.di.suppliers.ExtendedObjectSupplier;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
 
 public class ResolverActivator implements BundleActivator {
 
@@ -13,7 +18,7 @@ public class ResolverActivator implements BundleActivator {
     private static BundleContext context;
 	private static ResolverActivator instance;
 	private CompilerChooser chooser;
-    private BundleListener listener;
+    private ServiceListener serviceListener;
 
 	public ResolverActivator() {
 	    instance = this;
@@ -35,22 +40,25 @@ public class ResolverActivator implements BundleActivator {
 		// It has to be after the workspace has started (in order to ensure
 		// the choose workspace dialog still shows) but before JDT is initialized
 		// (so that the groovy bundles aren't loaded).
-		// Best way to do that is through the listener below
-		listener = new BundleListener() {
-            public void bundleChanged(BundleEvent event) {
-                if ((event.getType() == BundleEvent.STARTING || event.getType() == BundleEvent.STARTED) && 
-                            event.getBundle().getSymbolicName().equals("org.eclipse.core.resources")) {
+		
+		// The service listener is called synchronously as the resources bundle is actived
+        String filter = '(' + Constants.OBJECTCLASS + '=' + Workspace.SERVICE_NAME + ')';
+        serviceListener = new ServiceListener() {
+            
+            @Override
+            public void serviceChanged(ServiceEvent event) {
+                if (event.getType() == ServiceEvent.REGISTERED) {
                     initializeChooser();
                 }
             }
         };
-        bundleContext.addBundleListener(listener);
+        bundleContext.addServiceListener(serviceListener, filter);
 	}
 
 
     public void initializeChooser() {
         try {
-            context.removeBundleListener(listener);
+            context.removeServiceListener(serviceListener);
             chooser.initialize(context);
         } catch (BundleException e) {
             e.printStackTrace();
