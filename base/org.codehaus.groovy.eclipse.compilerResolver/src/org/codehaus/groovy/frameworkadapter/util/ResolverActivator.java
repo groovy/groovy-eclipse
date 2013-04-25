@@ -50,8 +50,6 @@ public class ResolverActivator implements BundleActivator {
 		// The service listener is called synchronously as the resources bundle is actived
         String filter = '(' + Constants.OBJECTCLASS + '=' + Workspace.SERVICE_NAME + ')';
         serviceListener = new ServiceListener() {
-            
-            @Override
             public void serviceChanged(ServiceEvent event) {
                 if (event.getType() == ServiceEvent.REGISTERED) {
                     initializeChooser();
