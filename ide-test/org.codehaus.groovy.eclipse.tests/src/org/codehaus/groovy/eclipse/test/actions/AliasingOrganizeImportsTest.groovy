@@ -122,7 +122,7 @@ public class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     void testMultiAliasing1() {
         String contents =
 """
-import java.lang.ProcessBuilder.Redirect.Type
+import javax.sound.sampled.Control.Type
 import java.lang.reflect.Type as ReflectionType
 import java.net.Proxy.Type as ProxyType
 
@@ -137,7 +137,7 @@ class TypeHelper {
     void testMultiAliasing2() {
         String contents =
                 """
-import java.lang.ProcessBuilder.Redirect.Type
+import javax.sound.sampled.Control.Type
 import java.lang.reflect.Type as ReflectionType
 import java.net.Proxy.Type as ProxyType
                 
@@ -152,7 +152,7 @@ class TypeHelper {
     void testMultiAliasing2a() {
         String contents =
                 """
-import java.lang.ProcessBuilder.Redirect.Type
+import javax.sound.sampled.Control.Type
 import java.lang.reflect.Type as ReflectionType
 import java.net.Proxy.Type as ProxyType
 
@@ -167,7 +167,7 @@ class TypeHelper {
     void testMultiAliasing3() {
         String contents =
                 """
-import java.lang.ProcessBuilder.Redirect.Type
+import javax.sound.sampled.Control.Type
 import java.lang.reflect.Type as ReflectionType
 import java.net.Proxy.Type as ProxyType
 

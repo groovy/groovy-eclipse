@@ -1202,11 +1202,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				if (cat.delegatesToClosures.containsKey(node)) {
 					declaringType = cat.delegatesToClosures.get(node);
 				}
-				// GRECLIPSE-1348 someone is silly enough to have a variable named "owner".
-				// don't override that
-				if (scope.lookupName("delegate") == null) {
-					scope.addVariable("delegate", declaringType, VariableScope.CLOSURE_CLASS);
-				}
+				scope.addVariable("delegate", declaringType, VariableScope.CLOSURE_CLASS);
 				scope.addVariable("getDelegate", declaringType, VariableScope.CLOSURE_CLASS);
 			} else {
 				ClassNode thisType = scope.getThis();
@@ -1220,15 +1216,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 			// Owner is 'this' if no enclosing closure, or 'Closure' if there is
 			if (enclosingClosure != null) {
+				scope.addVariable("getOwner", VariableScope.CLOSURE_CLASS, VariableScope.CLOSURE_CLASS);
+				scope.addVariable("owner", VariableScope.CLOSURE_CLASS, VariableScope.CLOSURE_CLASS);
+			} else {
+				ClassNode thisType = scope.getThis();
 				// GRECLIPSE-1348 someone is silly enough to have a variable named "owner".
 				// don't override that
 				if (scope.lookupName("owner") == null) {
-					scope.addVariable("owner", VariableScope.CLOSURE_CLASS, VariableScope.CLOSURE_CLASS);
+					scope.addVariable("owner", thisType, VariableScope.CLOSURE_CLASS);
 				}
-				scope.addVariable("getOwner", VariableScope.CLOSURE_CLASS, VariableScope.CLOSURE_CLASS);
-			} else {
-				ClassNode thisType = scope.getThis();
-				scope.addVariable("owner", thisType, VariableScope.CLOSURE_CLASS);
 				scope.addVariable("getOwner", thisType, VariableScope.CLOSURE_CLASS);
 
 				// only do this if we are not already in a closure
