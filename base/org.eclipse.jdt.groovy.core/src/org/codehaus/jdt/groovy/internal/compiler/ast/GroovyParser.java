@@ -540,10 +540,6 @@ public class GroovyParser {
 
 	private CompilationUnit makeCompilationUnit(GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean isReconcile,
 			boolean allowTransforms) {
-		// allowTransforms option is no longer set from the outside.
-		// transforms always allowed on real compiles. Also, if any transforms are specified to run on reconcile
-		allowTransforms = !isReconcile || compilerOptions.groovyTransformsToRunOnReconcile != null;
-
 		CompilationUnit it = new CompilationUnit(null, null, loader, transformLoader, allowTransforms,
 				compilerOptions.groovyTransformsToRunOnReconcile);
 		// Grails: start
