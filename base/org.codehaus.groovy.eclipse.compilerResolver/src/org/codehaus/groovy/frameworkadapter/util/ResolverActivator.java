@@ -1,13 +1,19 @@
+/*******************************************************************************
+ * Copyright (c) 2013 VMWare, Inc.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     VMWare, Inc. - initial API and implementation
+ *******************************************************************************/
 package org.codehaus.groovy.frameworkadapter.util;
 
 import org.eclipse.core.internal.resources.Workspace;
-import org.eclipse.e4.core.di.suppliers.ExtendedObjectSupplier;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
