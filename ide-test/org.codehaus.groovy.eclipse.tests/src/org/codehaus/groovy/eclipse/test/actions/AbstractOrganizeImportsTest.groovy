@@ -42,6 +42,7 @@ class AbstractOrganizeImportsTest extends EclipseTestCase {
         testProject.createGroovyTypeAndPackage("other", "Other.groovy", CONTENTS_SUPPORTING)
         testProject.createGroovyTypeAndPackage("other2", "Other.groovy", CONTENTS_SUPPORTING2)
         testProject.createGroovyTypeAndPackage("other3", "Other.groovy", CONTENTS_SUPPORTING2)
+        testProject.createGroovyTypeAndPackage("other4", "Other.groovy", CONTENTS_SUPPORTING2)
         testProject.createJavaTypeAndPackage("other", "Outer.java", CONTENTS_JAVA_SUPPORTING)
     }
     
@@ -126,6 +127,7 @@ class AbstractOrganizeImportsTest extends EclipseTestCase {
         def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)
         testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
         def unit = JavaCore.createCompilationUnitFrom(file)
+        testProject.waitForIndexer()
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
         TextEdit edit = organize.calculateMissingImports()
         TextEdit[] children = edit.getChildren()
@@ -134,6 +136,7 @@ class AbstractOrganizeImportsTest extends EclipseTestCase {
         for (TextEdit child : children) {
             assertTrue("$child is not a delete edit", child instanceof DeleteEdit)
         }
+        unit.discardWorkingCopy()
     }
     
     void doContentsCompareTest(originalContents, expectedContents) {

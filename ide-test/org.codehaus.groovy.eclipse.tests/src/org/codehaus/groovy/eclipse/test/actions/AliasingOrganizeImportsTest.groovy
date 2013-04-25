@@ -122,14 +122,14 @@ public class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     void testMultiAliasing1() {
         String contents =
 """
-import javax.sound.sampled.Control.Type
-import java.lang.reflect.Type as ReflectionType
-import java.net.Proxy.Type as ProxyType
+import other2.FourthClass
+import other3.FourthClass as FourthClass2
+import other4.FourthClass as FourthClass3
 
 class TypeHelper {
-    Type someType
-    ReflectionType reflectionType
-    ProxyType proxyType    
+    FourthClass f1
+    FourthClass2 f2
+    FourthClass3 f3
 }
 """
         doAddImportTest(contents)
@@ -137,14 +137,14 @@ class TypeHelper {
     void testMultiAliasing2() {
         String contents =
                 """
-import javax.sound.sampled.Control.Type
-import java.lang.reflect.Type as ReflectionType
-import java.net.Proxy.Type as ProxyType
-                
+import other2.FourthClass
+import other3.FourthClass as FourthClass2
+import other4.FourthClass as FourthClass3
+
 class TypeHelper {
-    Type someType
-    ReflectionType reflectionType
-    // ProxyType proxyType    
+    FourthClass f1
+    FourthClass2 f2
+//    FourthClass3 f3
 }
 """
                 doDeleteImportTest(contents, 1)
@@ -152,14 +152,14 @@ class TypeHelper {
     void testMultiAliasing2a() {
         String contents =
                 """
-import javax.sound.sampled.Control.Type
-import java.lang.reflect.Type as ReflectionType
-import java.net.Proxy.Type as ProxyType
+import other3.FourthClass as FourthClass2
+import other4.FourthClass as FourthClass3
+import other2.FourthClass
 
 class TypeHelper {
-    Type someType
-    ReflectionType reflectionType
-    // ProxyType proxyType    
+    FourthClass f1
+    FourthClass2 f2
+//    FourthClass3 f3
 }
                 """
                 doDeleteImportTest(contents, 1)
@@ -167,14 +167,14 @@ class TypeHelper {
     void testMultiAliasing3() {
         String contents =
                 """
-import javax.sound.sampled.Control.Type
-import java.lang.reflect.Type as ReflectionType
-import java.net.Proxy.Type as ProxyType
+import other2.FourthClass
+import other3.FourthClass as FourthClass2
+import other4.FourthClass as FourthClass3
 
 class TypeHelper {
-//   Type someType
-    ReflectionType reflectionType
-//   ProxyType proxyType    
+//    FourthClass f1
+    FourthClass2 f2
+//    FourthClass3 f3
 }
                 """
                 doDeleteImportTest(contents, 2)

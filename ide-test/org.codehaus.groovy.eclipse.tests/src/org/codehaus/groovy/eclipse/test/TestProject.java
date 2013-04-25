@@ -399,7 +399,7 @@ public class TestProject {
     }
 
     @SuppressWarnings("deprecation")
-    private void waitForIndexer() throws JavaModelException {
+    public void waitForIndexer() throws JavaModelException {
         final TypeNameRequestor requestor = new TypeNameRequestor() {};
         new SearchEngine().searchAllTypeNames(null, null, R_EXACT_MATCH
                 | R_CASE_SENSITIVE, CLASS,
