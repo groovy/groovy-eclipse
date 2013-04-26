@@ -65,12 +65,6 @@ public class GroovyActivator extends Plugin {
         GROOVY_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.GROOVY_JAR));
         GROOVY_ALL_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.GROOVY_ALL_JAR));
         ASM_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.ASM_JAR));
-        System.out.println("GROOVY_JAR_URL " + GROOVY_JAR_URL);
-        System.out.println("GROOVY_ALL_JAR_URL " + GROOVY_ALL_JAR_URL);
-        System.out.println("ASM_JAR_URL " + ASM_JAR_URL);
-        System.out.println("unresolved: GROOVY_JAR_URL " + bundle.getEntry(GroovyActivator.GROOVY_JAR));
-        System.out.println("unresolved: GROOVY_ALL_JAR_URL " + bundle.getEntry(GroovyActivator.GROOVY_ALL_JAR));
-        System.out.println("unresolved: ASM_JAR_URL " + bundle.getEntry(GroovyActivator.ASM_JAR));
     }
 
     @Override

@@ -48,7 +48,7 @@ public class ResolverActivator implements BundleActivator {
 		// (so that the groovy bundles aren't loaded).
 		
 		// The service listener is called synchronously as the resources bundle is actived
-        String filter = '(' + Constants.OBJECTCLASS + '=' + Workspace.SERVICE_NAME + ')';
+        String filter = '(' + Constants.OBJECTCLASS + "=org.eclipse.core.resources.IWorkspace)";
         serviceListener = new ServiceListener() {
             public void serviceChanged(ServiceEvent event) {
                 if (event.getType() == ServiceEvent.REGISTERED) {
