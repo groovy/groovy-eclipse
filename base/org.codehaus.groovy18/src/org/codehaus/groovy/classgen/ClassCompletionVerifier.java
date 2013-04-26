@@ -19,6 +19,7 @@ import static java.lang.reflect.Modifier.isStrict;
 import static java.lang.reflect.Modifier.isSynchronized;
 import static java.lang.reflect.Modifier.isTransient;
 import static java.lang.reflect.Modifier.isVolatile;
+import groovyjarjarasm.asm.Opcodes;
 
 import java.util.List;
 
@@ -47,7 +48,6 @@ import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
-import org.objectweb.asm.Opcodes;
 
 /**
  * ClassCompletionVerifier

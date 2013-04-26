@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
+import groovyjarjarasm.asm.Opcodes;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,7 +38,6 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOption
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 import org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup.TypeAndDeclaration;
 import org.eclipse.jdt.groovy.search.VariableScope;
-import org.objectweb.asm.Opcodes;
 
 /**
  * 

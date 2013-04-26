@@ -1,16 +1,6 @@
 // $ANTLR 2.7.7 (20060906): "groovy.g" -> "GroovyRecognizer.java"$
 
 package org.codehaus.groovy.antlr.parser;
-import org.codehaus.groovy.antlr.*;
-import java.util.*;
-import java.io.InputStream;
-import java.io.Reader;
-import antlr.InputBuffer;
-import antlr.LexerSharedInputState;
-import antlr.CommonToken;
-import org.codehaus.groovy.GroovyBugError;
-import antlr.TokenStreamRecognitionException;
-import org.codehaus.groovy.ast.Comment;
 
 public interface GroovyTokenTypes {
 	int EOF = 1;

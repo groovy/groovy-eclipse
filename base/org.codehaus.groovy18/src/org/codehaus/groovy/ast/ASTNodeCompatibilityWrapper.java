@@ -15,11 +15,7 @@
  */
 package org.codehaus.groovy.ast;
 
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
-
-import org.objectweb.asm.Opcodes;
 
 /**
  * Some static methods that access values on ASTNodes available 

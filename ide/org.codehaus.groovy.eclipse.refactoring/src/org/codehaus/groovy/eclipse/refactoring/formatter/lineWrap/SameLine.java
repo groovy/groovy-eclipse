@@ -18,12 +18,12 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter.lineWrap;
 
+import groovyjarjarantlr.Token;
+
 import org.codehaus.greclipse.GroovyTokenTypeBridge;
 import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyBeautifier;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.text.edits.ReplaceEdit;
-
-import antlr.Token;
 
 /**
  * @author Mike Klenk mklenk@hsr.ch

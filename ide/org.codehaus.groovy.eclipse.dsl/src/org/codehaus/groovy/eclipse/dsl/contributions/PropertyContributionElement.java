@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
+import groovyjarjarasm.asm.Opcodes;
+
 import java.util.List;
 
 import org.codehaus.groovy.ast.ClassHelper;
@@ -22,7 +24,6 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyPropertyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 import org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup.TypeAndDeclaration;
-import org.objectweb.asm.Opcodes;
 
 /**
  * 

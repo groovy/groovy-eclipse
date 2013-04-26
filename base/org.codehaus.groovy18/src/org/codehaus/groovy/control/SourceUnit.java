@@ -17,22 +17,22 @@
 package org.codehaus.groovy.control;
 
 import groovy.lang.GroovyClassLoader;
+import groovyjarjarantlr.CharScanner;
+import groovyjarjarantlr.MismatchedCharException;
+import groovyjarjarantlr.MismatchedTokenException;
+import groovyjarjarantlr.NoViableAltException;
+import groovyjarjarantlr.NoViableAltForCharException;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.Comment;
-import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.io.FileReaderSource;
 import org.codehaus.groovy.control.io.ReaderSource;
@@ -41,14 +41,9 @@ import org.codehaus.groovy.control.io.URLReaderSource;
 import org.codehaus.groovy.control.messages.Message;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
-import org.codehaus.groovy.syntax.*;
+import org.codehaus.groovy.syntax.Reduction;
+import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.tools.Utilities;
-
-import antlr.CharScanner;
-import antlr.MismatchedTokenException;
-import antlr.MismatchedCharException;
-import antlr.NoViableAltException;
-import antlr.NoViableAltForCharException;
 
 
 /**
@@ -197,8 +192,8 @@ public class SourceUnit extends ProcessingUnit {
         return false;    
     }
 
-    protected boolean isEofToken(antlr.Token token) {
-        return token.getType() == antlr.Token.EOF_TYPE;
+    protected boolean isEofToken(groovyjarjarantlr.Token token) {
+        return token.getType() == groovyjarjarantlr.Token.EOF_TYPE;
     }
 
 

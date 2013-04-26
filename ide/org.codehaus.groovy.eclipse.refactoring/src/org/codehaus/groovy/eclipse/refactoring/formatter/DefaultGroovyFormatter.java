@@ -18,6 +18,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
+import groovyjarjarantlr.Token;
+
 import java.util.Map.Entry;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -47,8 +49,6 @@ import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
-
-import antlr.Token;
 
 /**
  * @author Mike Klenk mklenk@hsr.ch

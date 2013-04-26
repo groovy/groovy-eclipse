@@ -16,6 +16,8 @@
 
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
+import groovyjarjarasm.asm.Opcodes;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -28,7 +30,6 @@ import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.internal.ui.viewsupport.ImageDescriptorRegistry;
 import org.eclipse.jdt.ui.text.java.CompletionProposalLabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.objectweb.asm.Opcodes;
 
 /**
  * @author Andrew Eisenberg

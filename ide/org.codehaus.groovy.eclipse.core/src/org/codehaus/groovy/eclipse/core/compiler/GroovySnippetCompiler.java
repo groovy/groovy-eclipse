@@ -11,6 +11,8 @@
 
 package org.codehaus.groovy.eclipse.core.compiler;
 
+import groovyjarjarasm.asm.Opcodes;
+
 import java.util.Iterator;
 import java.util.Map;
 
@@ -34,7 +36,6 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
-import org.objectweb.asm.Opcodes;
 
 /**
  * @author Andrew Eisenberg

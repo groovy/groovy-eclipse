@@ -16,11 +16,12 @@
 
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
+import groovyjarjarasm.asm.Opcodes;
+
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.objectweb.asm.Opcodes;
 
 /**
  * @author Andrew Eisenberg

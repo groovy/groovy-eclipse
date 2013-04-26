@@ -15,15 +15,16 @@
  */
 package org.eclipse.jdt.groovy.core.util;
 
+import groovyjarjarantlr.Token;
+import groovyjarjarantlr.TokenStream;
+import groovyjarjarantlr.TokenStreamException;
+
 import java.io.Reader;
 import java.io.StringReader;
+
 import org.codehaus.groovy.antlr.parser.GroovyLexer;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
-
-import antlr.Token;
-import antlr.TokenStream;
-import antlr.TokenStreamException;
 
 /**
  * A wrapper around an Antlr Groovy Scanner, providing a convenient interface to tokenize a snippet of groovy code.

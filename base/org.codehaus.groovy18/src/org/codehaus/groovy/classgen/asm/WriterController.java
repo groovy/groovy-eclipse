@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.classgen.asm;
 
+import groovyjarjarasm.asm.ClassVisitor;
+import groovyjarjarasm.asm.MethodVisitor;
+
 import java.util.Map;
 
 import org.codehaus.groovy.GroovyBugError;
@@ -27,8 +30,6 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.classgen.AsmClassGenerator;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.SourceUnit;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.MethodVisitor;
 
 public class WriterController {
 

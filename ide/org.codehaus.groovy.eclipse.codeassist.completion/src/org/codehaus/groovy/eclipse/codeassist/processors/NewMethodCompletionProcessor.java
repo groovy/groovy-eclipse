@@ -20,6 +20,7 @@ import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createDisplay
 import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createMethodSignatureStr;
 import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createTypeSignature;
 import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.getImage;
+import groovyjarjarasm.asm.Opcodes;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,7 +47,6 @@ import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.ui.text.java.OverrideCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
-import org.objectweb.asm.Opcodes;
 
 /**
  * Completion processor that determines methods to be overridden or implemented.

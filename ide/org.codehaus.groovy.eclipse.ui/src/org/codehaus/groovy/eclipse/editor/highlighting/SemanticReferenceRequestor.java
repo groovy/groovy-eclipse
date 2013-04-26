@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.editor.highlighting;
 
+import groovyjarjarasm.asm.Opcodes;
+
 import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -32,7 +34,6 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTNode;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jface.text.Position;
-import org.objectweb.asm.Opcodes;
 
 /**
  * Abstract class to assist with searching for kinds of references in groovy
@@ -67,7 +68,7 @@ public abstract class SemanticReferenceRequestor implements ITypeRequestor {
             // use things like GStrings in the
             // name
             // if (e instanceof ConstantExpression) {
-                start = e.getStart();
+            start = e.getStart();
             length = e.getLength();
             // }
         } else {

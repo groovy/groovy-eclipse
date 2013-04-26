@@ -16,6 +16,7 @@
 package org.codehaus.groovy.control;
 
 import groovy.lang.GroovyClassLoader;
+import groovyjarjarasm.asm.Opcodes;
 
 import java.io.File;
 import java.io.IOException;
@@ -72,7 +73,6 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.control.messages.ExceptionMessage;
 import org.codehaus.groovy.syntax.Types;
-import org.objectweb.asm.Opcodes;
 
 /**
  * Visitor to resolve Types and convert VariableExpression to

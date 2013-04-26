@@ -15,6 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
+import groovyjarjarantlr.Token;
+import groovyjarjarantlr.TokenStream;
+import groovyjarjarantlr.TokenStreamException;
+
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -26,10 +30,6 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
-
-import antlr.Token;
-import antlr.TokenStream;
-import antlr.TokenStreamException;
 
 /**
  * This subclass of GroovyDocumentScanner overrides ensureScanned, to produce

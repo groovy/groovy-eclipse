@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.formatter;
 
+import groovyjarjarantlr.Token;
+
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -24,8 +26,6 @@ import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyDocumentScanner;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
-
-import antlr.Token;
 
 /**
  * @author kdvolder

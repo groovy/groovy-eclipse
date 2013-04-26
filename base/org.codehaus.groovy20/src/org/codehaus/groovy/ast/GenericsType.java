@@ -16,12 +16,12 @@
 
 package org.codehaus.groovy.ast;
 
-import org.codehaus.groovy.ast.tools.GenericsUtils;
-import org.codehaus.groovy.ast.tools.WideningCategories;
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.codehaus.groovy.ast.tools.GenericsUtils;
+import org.codehaus.groovy.ast.tools.WideningCategories;
 
 /**
  * This class is used to describe generic type signatures for ClassNodes.

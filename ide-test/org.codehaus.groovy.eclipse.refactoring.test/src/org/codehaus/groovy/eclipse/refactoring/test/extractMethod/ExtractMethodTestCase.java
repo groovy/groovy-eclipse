@@ -18,6 +18,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.extractMethod;
 
+import groovyjarjarasm.asm.Opcodes;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +35,6 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
-import org.objectweb.asm.Opcodes;
 
 
 /**

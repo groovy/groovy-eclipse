@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -18,11 +18,11 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import antlr.Token;
+import groovyjarjarantlr.Token;
 
 /**
  * @author Mike Klenk mklenk@hsr.ch
- * 
+ *
  */
 public class LineIndentations {
 

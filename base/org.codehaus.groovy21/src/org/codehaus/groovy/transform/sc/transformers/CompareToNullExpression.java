@@ -15,6 +15,10 @@
  */
 package org.codehaus.groovy.transform.sc.transformers;
 
+import groovyjarjarasm.asm.Label;
+import groovyjarjarasm.asm.MethodVisitor;
+import groovyjarjarasm.asm.Opcodes;
+
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GroovyCodeVisitor;
@@ -26,9 +30,6 @@ import org.codehaus.groovy.classgen.AsmClassGenerator;
 import org.codehaus.groovy.classgen.asm.WriterController;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 
 // GRECLIPSE extends BinaryExpression, not Expression
 public class CompareToNullExpression extends BinaryExpression implements Opcodes {

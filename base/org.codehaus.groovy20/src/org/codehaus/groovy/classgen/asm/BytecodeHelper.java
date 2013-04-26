@@ -15,14 +15,20 @@
  */
 package org.codehaus.groovy.classgen.asm;
 
-import org.codehaus.groovy.ast.*;
-import org.codehaus.groovy.reflection.ReflectionCache;
-import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import groovyjarjarasm.asm.Label;
+import groovyjarjarasm.asm.MethodVisitor;
+import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.reflect.Modifier;
+
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.CompileUnit;
+import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.reflection.ReflectionCache;
+import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
 
 /**
  * A helper class for bytecode generation with AsmClassGenerator.
@@ -64,7 +70,7 @@ public class BytecodeHelper implements Opcodes {
     }
 
     public static String getClassInternalName(Class t) {
-        return org.objectweb.asm.Type.getInternalName(t);
+        return groovyjarjarasm.asm.Type.getInternalName(t);
     }
 
     /**
@@ -109,7 +115,7 @@ public class BytecodeHelper implements Opcodes {
     }
 
     public static String getTypeDescription(Class c) {
-        return org.objectweb.asm.Type.getDescriptor(c);
+        return groovyjarjarasm.asm.Type.getDescriptor(c);
     }
 
     /**
@@ -657,7 +663,7 @@ public class BytecodeHelper implements Opcodes {
                     "TYPE",
                     "Ljava/lang/Class;");
         } else {
-            mv.visitLdcInsn(org.objectweb.asm.Type.getType(getTypeDescription(classNode)));
+            mv.visitLdcInsn(groovyjarjarasm.asm.Type.getType(getTypeDescription(classNode)));
         }
     }
 

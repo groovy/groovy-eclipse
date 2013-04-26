@@ -15,6 +15,10 @@
  */
 package org.codehaus.groovy.classgen.asm;
 
+import groovyjarjarasm.asm.Label;
+import groovyjarjarasm.asm.MethodVisitor;
+import static groovyjarjarasm.asm.Opcodes.*;
+
 import java.util.Iterator;
 import java.util.List;
 
@@ -46,10 +50,6 @@ import org.codehaus.groovy.ast.stmt.ThrowStatement;
 import org.codehaus.groovy.ast.stmt.TryCatchStatement;
 import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.classgen.asm.CompileStack.BlockRecorder;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-
-import static org.objectweb.asm.Opcodes.*;
 
 public class StatementWriter {
     // iterator

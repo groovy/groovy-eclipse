@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.ast;
 
-import java.util.LinkedHashMap;
-
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.util.ListHashMap;
 

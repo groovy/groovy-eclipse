@@ -16,6 +16,8 @@
 
 package org.codehaus.groovy.eclipse.codeassist.creators;
 
+import groovyjarjarasm.asm.Opcodes;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,7 +44,6 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.eclipse.jdt.groovy.search.VariableScope;
-import org.objectweb.asm.Opcodes;
 
 /**
  * @author Andrew Eisenberg

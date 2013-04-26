@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.core.extract;
 
+import groovyjarjarasm.asm.Opcodes;
+
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -84,7 +86,6 @@ import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEditGroup;
-import org.objectweb.asm.Opcodes;
 
 /**
  * @author Michael Klenk mklenk@hsr.ch

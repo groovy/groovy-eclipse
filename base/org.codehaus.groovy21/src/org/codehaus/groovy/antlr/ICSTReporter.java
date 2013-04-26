@@ -17,8 +17,6 @@ package org.codehaus.groovy.antlr;
 
 import java.util.List;
 
-import org.codehaus.groovy.antlr.GroovySourceAST;
-
 // FIXASC (groovychange) new type
 /**
  * Reports on CST builds.

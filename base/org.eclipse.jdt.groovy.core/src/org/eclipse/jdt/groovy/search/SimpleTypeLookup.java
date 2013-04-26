@@ -14,6 +14,7 @@ import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.EXAC
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.INFERRED;
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN;
 import static org.eclipse.jdt.groovy.search.VariableScope.NO_GENERICS;
+import groovyjarjarasm.asm.Opcodes;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -50,7 +51,6 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
-import org.objectweb.asm.Opcodes;
 
 /**
  * @author Andrew Eisenberg

@@ -222,7 +222,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
                 """ 
             FourthClass f = null
             """
-        doChoiceTest(contents, ["other2.FourthClass", "other3.FourthClass"])    
+        doChoiceTest(contents, ["other2.FourthClass", "other3.FourthClass", "other4.FourthClass"])    
     }
     
     void testGRECLISPE506() {

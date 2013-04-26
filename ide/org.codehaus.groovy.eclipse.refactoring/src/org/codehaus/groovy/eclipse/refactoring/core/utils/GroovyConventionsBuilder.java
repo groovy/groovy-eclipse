@@ -18,6 +18,10 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.core.utils;
 
+import groovyjarjarantlr.Token;
+import groovyjarjarantlr.TokenStream;
+import groovyjarjarantlr.TokenStreamException;
+
 import java.io.Reader;
 import java.io.StringReader;
 import java.text.MessageFormat;
@@ -31,10 +35,6 @@ import org.codehaus.groovy.eclipse.refactoring.Activator;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
-
-import antlr.Token;
-import antlr.TokenStream;
-import antlr.TokenStreamException;
 
 /**
  * @author Klenk Michael mklenk@hsr.ch

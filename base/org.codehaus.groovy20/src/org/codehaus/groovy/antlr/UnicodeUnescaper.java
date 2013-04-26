@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.antlr;
 
-import java.io.Reader;
 
 /**
  * GRECLIPSE-805 Support for unicode escape sequences

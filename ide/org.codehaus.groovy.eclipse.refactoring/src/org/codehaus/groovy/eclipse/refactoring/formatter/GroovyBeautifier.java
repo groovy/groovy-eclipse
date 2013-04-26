@@ -18,6 +18,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
+import groovyjarjarantlr.Token;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -44,8 +46,6 @@ import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
-
-import antlr.Token;
 
 /**
  * @author Mike Klenk mklenk@hsr.ch

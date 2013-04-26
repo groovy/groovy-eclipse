@@ -11,6 +11,8 @@
 
 package org.codehaus.groovy.eclipse.core.compiler;
 
+import groovyjarjarasm.asm.Opcodes;
+
 import java.util.Hashtable;
 import java.util.Iterator;
 
@@ -32,7 +34,6 @@ import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
-import org.objectweb.asm.Opcodes;
 
 
 /**

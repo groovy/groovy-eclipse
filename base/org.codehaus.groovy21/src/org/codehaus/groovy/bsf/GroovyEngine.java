@@ -17,14 +17,15 @@ package org.codehaus.groovy.bsf;
 
 import groovy.lang.Closure;
 import groovy.lang.GroovyShell;
+
+import java.util.Vector;
+
 import org.apache.bsf.BSFDeclaredBean;
 import org.apache.bsf.BSFException;
 import org.apache.bsf.BSFManager;
 import org.apache.bsf.util.BSFEngineImpl;
 import org.apache.bsf.util.BSFFunctions;
 import org.codehaus.groovy.runtime.InvokerHelper;
-
-import java.util.Vector;
 
 /**
  * A BSF Engine for the <a href="http://groovy.codehaus.org/">Groovy</a>

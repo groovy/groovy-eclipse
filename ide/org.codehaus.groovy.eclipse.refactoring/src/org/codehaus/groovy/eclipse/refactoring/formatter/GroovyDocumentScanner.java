@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
+import groovyjarjarantlr.Token;
+import groovyjarjarantlr.TokenStreamException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,9 +32,6 @@ import org.eclipse.jface.text.DocumentEvent;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IDocumentListener;
 import org.eclipse.jface.text.ITextSelection;
-
-import antlr.Token;
-import antlr.TokenStreamException;
 
 /**
  * This class provides methods to retrieve tokens for a given IDocument

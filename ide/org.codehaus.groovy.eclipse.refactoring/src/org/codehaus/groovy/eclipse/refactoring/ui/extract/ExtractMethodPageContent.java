@@ -18,6 +18,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.ui.extract;
 
+import groovyjarjarasm.asm.Opcodes;
+
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,7 +57,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
-import org.objectweb.asm.Opcodes;
 
 /**
  * Composite for Userinput for ExtractMethod refactoring

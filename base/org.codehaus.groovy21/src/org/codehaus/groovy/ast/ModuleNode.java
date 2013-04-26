@@ -16,6 +16,17 @@
 package org.codehaus.groovy.ast;
 
 import groovy.lang.Binding;
+import groovyjarjarasm.asm.Opcodes;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -25,10 +36,6 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.InvokerHelper;
-import org.objectweb.asm.Opcodes;
-
-import java.io.File;
-import java.util.*;
 
 /**
  * Represents a module, which consists typically of a class declaration

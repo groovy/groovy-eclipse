@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
+import groovyjarjarantlr.Token;
+
 import java.util.List;
 
 import org.codehaus.greclipse.GroovyTokenTypeBridge;
@@ -27,8 +29,6 @@ import org.eclipse.text.edits.DeleteEdit;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.TextEdit;
-
-import antlr.Token;
 
 /**
  * Removes trailing semicolons as they are optional in Groovy.

@@ -18,6 +18,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.core.rewriter;
 
+import groovyjarjarasm.asm.Opcodes;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -108,7 +110,6 @@ import org.codehaus.groovy.syntax.Types;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
-import org.objectweb.asm.Opcodes;
 
 /**
  * @author martin kempf

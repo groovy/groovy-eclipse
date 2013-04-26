@@ -25,6 +25,7 @@ import static org.codehaus.greclipse.GroovyTokenTypeBridge.RCURLY;
 import static org.codehaus.greclipse.GroovyTokenTypeBridge.RPAREN;
 import static org.codehaus.greclipse.GroovyTokenTypeBridge.STRING_CTOR_END;
 import static org.codehaus.greclipse.GroovyTokenTypeBridge.STRING_CTOR_START;
+import groovyjarjarantlr.Token;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,8 +42,6 @@ import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.TextUtilities;
-
-import antlr.Token;
 
 /**
  * This class is intended to be a place to group together code related to

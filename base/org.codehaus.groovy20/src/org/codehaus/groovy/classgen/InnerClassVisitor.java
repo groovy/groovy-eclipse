@@ -15,6 +15,12 @@
  */
 package org.codehaus.groovy.classgen;
 
+import groovyjarjarasm.asm.Opcodes;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -32,11 +38,6 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.SourceUnit;
-import org.objectweb.asm.Opcodes;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 public class InnerClassVisitor extends InnerClassVisitorHelper implements Opcodes {
 

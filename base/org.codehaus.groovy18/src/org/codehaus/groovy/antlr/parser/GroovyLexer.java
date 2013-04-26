@@ -1,42 +1,33 @@
 // $ANTLR 2.7.7 (20060906): "groovy.g" -> "GroovyLexer.java"$
 
 package org.codehaus.groovy.antlr.parser;
-import org.codehaus.groovy.antlr.*;
-import java.util.*;
-import java.io.InputStream;
-import java.io.Reader;
-import antlr.InputBuffer;
-import antlr.LexerSharedInputState;
-import antlr.CommonToken;
-import org.codehaus.groovy.GroovyBugError;
-import antlr.TokenStreamRecognitionException;
-import org.codehaus.groovy.ast.Comment;
+
+import groovyjarjarantlr.ANTLRHashString;
+import groovyjarjarantlr.ByteBuffer;
+import groovyjarjarantlr.CharBuffer;
+import groovyjarjarantlr.CharStreamException;
+import groovyjarjarantlr.CharStreamIOException;
+import groovyjarjarantlr.InputBuffer;
+import groovyjarjarantlr.LexerSharedInputState;
+import groovyjarjarantlr.MismatchedCharException;
+import groovyjarjarantlr.NoViableAltForCharException;
+import groovyjarjarantlr.RecognitionException;
+import groovyjarjarantlr.SemanticException;
+import groovyjarjarantlr.Token;
+import groovyjarjarantlr.TokenStream;
+import groovyjarjarantlr.TokenStreamException;
+import groovyjarjarantlr.TokenStreamIOException;
+import groovyjarjarantlr.TokenStreamRecognitionException;
+import groovyjarjarantlr.collections.impl.BitSet;
 
 import java.io.InputStream;
-import antlr.TokenStreamException;
-import antlr.TokenStreamIOException;
-import antlr.TokenStreamRecognitionException;
-import antlr.CharStreamException;
-import antlr.CharStreamIOException;
-import antlr.ANTLRException;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.Hashtable;
-import antlr.CharScanner;
-import antlr.InputBuffer;
-import antlr.ByteBuffer;
-import antlr.CharBuffer;
-import antlr.Token;
-import antlr.CommonToken;
-import antlr.RecognitionException;
-import antlr.NoViableAltForCharException;
-import antlr.MismatchedCharException;
-import antlr.TokenStream;
-import antlr.ANTLRHashString;
-import antlr.LexerSharedInputState;
-import antlr.collections.impl.BitSet;
-import antlr.SemanticException;
 
-public class GroovyLexer extends antlr.CharScanner implements GroovyTokenTypes, TokenStream
+import org.codehaus.groovy.antlr.GroovySourceToken;
+
+public class GroovyLexer extends groovyjarjarantlr.CharScanner implements GroovyTokenTypes, TokenStream
  {
 
     /** flag for enabling the "assert" keyword */

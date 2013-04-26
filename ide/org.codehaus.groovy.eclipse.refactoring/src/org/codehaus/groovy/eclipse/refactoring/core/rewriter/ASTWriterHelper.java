@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -18,23 +18,25 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.core.rewriter;
 
+import groovyjarjarasm.asm.Opcodes;
+
 import java.util.List;
+
 import org.codehaus.groovy.antlr.LineColumn;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.FilePartReader;
 import org.eclipse.jface.text.IDocument;
-import org.objectweb.asm.Opcodes;
 
 public class ASTWriterHelper implements Opcodes {
-	
+
 	public static final int MOD_FIELD = 1;
     public static final int MOD_CLASS = 2;
     public static final int MOD_METHOD = 3;
-	
+
 	/**
      * Converts the encripted modifier to the string representation
-     * 
+     *
      * @param modifiers encripted modifier
      * @param appearance where is the appearance of the modifier
      * @return modifiers as String
@@ -43,14 +45,14 @@ public class ASTWriterHelper implements Opcodes {
     	StringBuilder accMod = new StringBuilder();
     	if ((modifiers & ACC_PRIVATE) != 0) {
     		accMod.append("private ");
-    	} 
+    	}
     	else if ((modifiers & ACC_PUBLIC) != 0) {
     		if (appearance == MOD_METHOD)
     			accMod.append("def ");
     		else if (appearance == MOD_FIELD)
     			accMod.append("public ");
     		//for class, write nothing
-    		
+
     	}
     	else if ((modifiers & ACC_PROTECTED) != 0) {
     		accMod.append("protected ");
@@ -66,7 +68,7 @@ public class ASTWriterHelper implements Opcodes {
     	}
     	if ((modifiers & ACC_SYNCHRONIZED) != 0) {
     		accMod.append("synchronized ");
-    	} 
+    	}
     	if ((modifiers & ACC_VOLATILE) != 0) {
     		accMod.append("volatile ");
     	}
@@ -93,11 +95,11 @@ public class ASTWriterHelper implements Opcodes {
 		}
 		return false;
 	}
-    
+
     /**
      * Evaluates the different quotes of groovy string or returns an empty string
      * for the case the first character in the expression was not a groovy string quote
-     * 
+     *
      * @param currentDocument document to read
      * @param coords position to read
      * @return different quote versions of groovy strings
@@ -112,7 +114,7 @@ public class ASTWriterHelper implements Opcodes {
 		boolean firstThreeCharsAreSame = false;
 		if(expressionInFile.length() >= 3){
 			 firstThreeChars = expressionInFile.substring(0, 3);
-			 firstThreeCharsAreSame = 	((firstThreeChars.charAt(0) == firstThreeChars.charAt(1)) && 
+			 firstThreeCharsAreSame = 	((firstThreeChars.charAt(0) == firstThreeChars.charAt(1)) &&
 										(firstThreeChars.charAt(1) == firstThreeChars.charAt(2)));
 		}
 		if (charBefore == '\'' || charBefore == '\"' || charBefore == '/') {

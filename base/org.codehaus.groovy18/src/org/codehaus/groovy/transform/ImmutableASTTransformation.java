@@ -15,9 +15,32 @@
  */
 package org.codehaus.groovy.transform;
 
+import static org.codehaus.groovy.transform.AbstractASTTransformUtil.assignStatement;
+import static org.codehaus.groovy.transform.AbstractASTTransformUtil.createConstructorStatementDefault;
+import static org.codehaus.groovy.transform.AbstractASTTransformUtil.equalsNullExpr;
+import static org.codehaus.groovy.transform.AbstractASTTransformUtil.findArg;
+import static org.codehaus.groovy.transform.AbstractASTTransformUtil.getInstanceProperties;
+import static org.codehaus.groovy.transform.AbstractASTTransformUtil.isInstanceOf;
+import static org.codehaus.groovy.transform.AbstractASTTransformUtil.isOneExpr;
+import static org.codehaus.groovy.transform.AbstractASTTransformUtil.isOrImplements;
+import static org.codehaus.groovy.transform.AbstractASTTransformUtil.isTrueExpr;
+import static org.codehaus.groovy.transform.AbstractASTTransformUtil.safeExpression;
+import static org.codehaus.groovy.transform.EqualsAndHashCodeASTTransformation.createEquals;
+import static org.codehaus.groovy.transform.EqualsAndHashCodeASTTransformation.createHashCode;
+import static org.codehaus.groovy.transform.ToStringASTTransformation.createToString;
 import groovy.lang.MetaClass;
 import groovy.lang.MissingPropertyException;
 import groovy.lang.ReadOnlyPropertyException;
+
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -28,7 +51,16 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.expr.*;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.CastExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MapExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.EmptyStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
@@ -39,14 +71,6 @@ import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.InvokerHelper;
-
-import java.lang.reflect.Modifier;
-import java.util.*;
-
-import static org.codehaus.groovy.transform.AbstractASTTransformUtil.*;
-import static org.codehaus.groovy.transform.EqualsAndHashCodeASTTransformation.createEquals;
-import static org.codehaus.groovy.transform.EqualsAndHashCodeASTTransformation.createHashCode;
-import static org.codehaus.groovy.transform.ToStringASTTransformation.createToString;
 
 /**
  * Handles generation of code for the @Immutable annotation.

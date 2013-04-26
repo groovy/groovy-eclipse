@@ -15,21 +15,21 @@
  */
 package org.codehaus.groovy.antlr;
 
+import groovyjarjarantlr.RecognitionException;
+import groovyjarjarantlr.TokenStreamException;
+import groovyjarjarantlr.TokenStreamIOException;
+import groovyjarjarantlr.TokenStreamRecognitionException;
+
 import java.io.Reader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.groovy.control.CompilationFailedException;
-import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.antlr.parser.GroovyLexer;
 import org.codehaus.groovy.antlr.parser.GroovyRecognizer;
+import org.codehaus.groovy.control.CompilationFailedException;
+import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.syntax.SyntaxException;
-
-import antlr.RecognitionException;
-import antlr.TokenStreamException;
-import antlr.TokenStreamIOException;
-import antlr.TokenStreamRecognitionException;
 // FIXASC (groovychange) new type
 /**
  * Parser plugin using grammar which has error recovery enabled/implemented in

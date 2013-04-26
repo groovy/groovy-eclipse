@@ -15,8 +15,9 @@
  */
 package org.codehaus.groovy.ast;
 
+import groovyjarjarasm.asm.Opcodes;
+
 import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.objectweb.asm.Opcodes;
 
 /**
  * Represents an import statement of a single class
