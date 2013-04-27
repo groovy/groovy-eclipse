@@ -20,6 +20,7 @@ import java.util.Map;
 
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.AssertStatement;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.BreakStatement;
@@ -145,9 +146,35 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
     protected void addError(String msg, ASTNode expr) {
         int line = expr.getLineNumber();
         int col = expr.getColumnNumber();
+        // GRECLIPSE
+        int start = expr.getStart();
+        int end = expr.getEnd()-1;
+        if (expr instanceof ClassNode) {
+        	// assume we have a class declaration
+        	ClassNode cn = (ClassNode) expr;
+        	if (cn.getNameEnd() > 0) {
+        		start = cn.getNameStart();
+        		end = cn.getNameEnd();
+        	} else if (cn.getComponentType() != null) {
+        		// avoid extra whitespace after closing ]
+        		end --;
+        	}
+        	
+        } else if (expr instanceof DeclarationExpression) {
+        	// assume that we just want to underline the variable declaration
+        	DeclarationExpression decl = (DeclarationExpression) expr;
+        	Expression lhs = decl.getLeftExpression();
+			start = lhs.getStart();
+        	// avoid extra space before = if a variable
+        	end = lhs instanceof VariableExpression ? start + lhs.getText().length() -1: lhs.getEnd() -1;
+        }
+        // end
+        
         SourceUnit source = getSourceUnit();
-        source.getErrorCollector().addErrorAndContinue(
-                new SyntaxErrorMessage(new SyntaxException(msg + '\n', line, col), source)
+		source.getErrorCollector().addErrorAndContinue(
+                // GRECLIPSE: start
+                new SyntaxErrorMessage(new PreciseSyntaxException(msg + '\n', line, col, start, end), source)
+                // end
         );
     }
     
