@@ -43,6 +43,7 @@ public class AllSearchTests {
         suite.addTestSuite(Groovy20InferencingTests.class);
         suite.addTestSuite(Groovy21InferencingTests.class);
         suite.addTestSuite(GenericsMappingTest.class);
+        suite.addTestSuite(BinarySearchTests.class);
         return suite;
     }
 }

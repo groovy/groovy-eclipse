@@ -18,6 +18,7 @@ package org.eclipse.jdt.groovy.search;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.search.SearchMatch;
@@ -88,11 +89,13 @@ public class TypeDeclarationSearchRequestor implements ITypeRequestor, IIndexCon
 					}
 					if (matchFound) {
 						try {
-							requestor.acceptSearchMatch(new TypeDeclarationMatch(enclosingElement, SearchMatch.A_ACCURATE, orig
-									.getNameStart(), orig.getNameEnd() - orig.getNameStart() + 1, participant, enclosingElement
+							IJavaElement realElement = enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy ? ((GroovyClassFileWorkingCopy) enclosingElement
+									.getOpenable()).convertToBinary(enclosingElement) : enclosingElement;
+							requestor.acceptSearchMatch(new TypeDeclarationMatch(realElement, SearchMatch.A_ACCURATE, orig
+									.getNameStart(), orig.getNameEnd() - orig.getNameStart() + 1, participant, realElement
 									.getResource()));
 						} catch (CoreException e) {
-							Util.log(e, "Exception with groovy search requestor"); //$NON-NLS-1$
+							Util.log(e, "Exception with groovy search requestor. Looking inside " + enclosingElement); //$NON-NLS-1$
 						}
 					}
 				}

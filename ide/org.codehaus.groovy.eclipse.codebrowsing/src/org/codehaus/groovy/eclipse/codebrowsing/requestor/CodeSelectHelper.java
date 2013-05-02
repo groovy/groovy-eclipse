@@ -21,6 +21,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
+import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ICodeSelectHelper;
 import org.eclipse.jdt.core.IJavaElement;
@@ -127,7 +128,13 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                 candidate = candidate.getType(enclosingTypes[i]);
             }
         }
-        return new IJavaElement[] { candidate };
+        IJavaElement result;
+        if (unit instanceof GroovyClassFileWorkingCopy) {
+        	result = ((GroovyClassFileWorkingCopy) unit).convertToBinary(candidate);
+        } else {
+        	result = candidate;
+        }
+        return new IJavaElement[] { result };
     }
 
     private boolean isTypeDeclaration(ModuleNode module, ASTNode nodeToLookFor) {

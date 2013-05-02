@@ -22,6 +22,7 @@ import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.jdt.groovy.integration.EventHandler;
+import org.codehaus.jdt.groovy.integration.ISupplementalIndexer;
 import org.codehaus.jdt.groovy.integration.LanguageSupport;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyErrorCollectorForJDT;
@@ -268,5 +269,9 @@ public class GroovyLanguageSupport implements LanguageSupport {
 			throws JavaModelException {
 		GroovyCompilationUnit binaryUnit = new GroovyClassFileWorkingCopy(classFile, owner);
 		return binaryUnit.codeSelect(offset, length, owner);
+	}
+
+	public ISupplementalIndexer getSupplementalIndexer() {
+		return new BinaryGroovySupplementalIndexer();
 	}
 }

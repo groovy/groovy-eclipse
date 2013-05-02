@@ -17,10 +17,14 @@
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMember;
+import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchRequestor;
 
@@ -36,17 +40,17 @@ public class MockSearchRequestor extends SearchRequestor {
 
     @Override
     public void acceptSearchMatch(SearchMatch match) throws CoreException {
-    	boolean added = false;
-    	for (int i = 0; i < matches.size(); i++) {
-    	    if (matches.get(i).getOffset() > match.getOffset()) {
-    	    	matches.add(i, match);
-    	    	added = true;
-    	    	break;
-    	    }
-    	}
-    	if (!added) {
-    		matches.add(match);
-    	}
+		matches.add(match);
+		Collections.sort(matches, new Comparator<SearchMatch>() {
+			public int compare(SearchMatch l, SearchMatch r) {
+				ITypeRoot lTypeRoot = ((IMember) l.getElement()).getTypeRoot();
+				ITypeRoot rTypeRoot = ((IMember) r.getElement()).getTypeRoot();
+				if (!lTypeRoot.equals(rTypeRoot)) {
+					return lTypeRoot.getElementName().compareTo(rTypeRoot.getElementName());
+				}
+ 				return l.getOffset() - r.getOffset();
+			}
+		});
     }
     
     String printMatches() {
