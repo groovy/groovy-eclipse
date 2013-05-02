@@ -137,4 +137,9 @@ public interface LanguageSupport {
 	 */
 	IJavaElement[] binaryCodeSelect(ClassFile classFile, int offset, int length, WorkingCopyOwner owner) throws JavaModelException;
 
+	/**
+	 * @return
+	 */
+	ISupplementalIndexer getSupplementalIndexer();
+
 }
