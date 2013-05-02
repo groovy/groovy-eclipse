@@ -12,7 +12,6 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -44,12 +43,7 @@ public class EnclosingCallPointcut extends AbstractPointcut {
 
         Object firstArgument = getFirstArgument();
         if (firstArgument instanceof String) {
-            MethodCallExpression matchingCall = matchesInCalls(enclosing, (String) firstArgument, pattern);
-            if (matchingCall != null) {
-                return Collections.singleton(matchingCall);
-            } else {
-                return null;
-            }
+            return matchesInCalls(enclosing, (String) firstArgument, pattern);
         } else if (firstArgument == null) {
             return asCallList(enclosing);
         } else {
@@ -65,14 +59,18 @@ public class EnclosingCallPointcut extends AbstractPointcut {
         return types;
     }
 
-    private MethodCallExpression matchesInCalls(List<CallAndType> enclosing,
+    private List<MethodCallExpression> matchesInCalls(List<CallAndType> enclosing,
             String callName, GroovyDSLDContext pattern) {
+        List<MethodCallExpression> calls = null;
         for (CallAndType callAndType : enclosing) {
             if (callName == null || callName.equals(callAndType.call.getMethodAsString())) {
-                return callAndType.call;
+                if (calls == null) {
+                    calls = new ArrayList<MethodCallExpression>(1);
+                }
+                calls.add(callAndType.call);
             }
         }
-        return null;
+        return calls;
     }
 
 
