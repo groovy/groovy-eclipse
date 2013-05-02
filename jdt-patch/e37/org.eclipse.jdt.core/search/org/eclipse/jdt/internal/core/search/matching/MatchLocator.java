@@ -1024,7 +1024,7 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 		for (int i = start, maxUnits = start + length; i < maxUnits; i++) {
 			PossibleMatch possibleMatch = possibleMatches[i];
 			// GROOVY start
-			if (isInterestingProject && LanguageSupportFactory.isInterestingSourceFile(possibleMatch.document.getPath())) {
+			if (isInterestingProject && possibleMatch.isInterestingSourceFile()) {
 				boolean matchPerformed = LanguageSupportFactory.maybePerformDelegatedSearch(possibleMatch, this.pattern, this.requestor);
 				if (matchPerformed) {
 					alreadyMatched.add(possibleMatch);
@@ -1633,7 +1633,7 @@ protected boolean parseAndBuildBindings(PossibleMatch possibleMatch, boolean mus
 				// getMethodBodies(parsedUnit, possibleMatch.nodeSet);
 				// new
 				// Only getMethodBodies for Java files
-				if (!LanguageSupportFactory.isInterestingSourceFile(new String(parsedUnit.getFileName()))) {
+				if (!possibleMatch.isInterestingSourceFile()) {
 					getMethodBodies(parsedUnit, possibleMatch.nodeSet);
 				}
 				// GROOVY End
@@ -1662,7 +1662,7 @@ protected boolean parseAndBuildBindings(PossibleMatch possibleMatch, boolean mus
 protected void process(PossibleMatch possibleMatch, boolean bindingsWereCreated) throws CoreException {
 	// GROOVY Start
 	// Do not process non-Java files.  They use a separate delegated search
-	if (LanguageSupportFactory.isInterestingSourceFile(new String(possibleMatch.getFileName()))) {
+	if (possibleMatch.isInterestingSourceFile()) {
 		try {
 			this.lookupEnvironment.buildTypeBindings(possibleMatch.parsedUnit, null /*no access restriction*/);
 		} catch (Throwable t) {
