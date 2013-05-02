@@ -15,6 +15,7 @@ import groovy.lang.Closure;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 import org.codehaus.groovy.eclipse.GroovyLogManager;
@@ -113,7 +114,7 @@ public abstract class AbstractPointcut implements IPointcut {
         if (allElementsToMatch == null) {
             return null;
         }
-        Collection<Object> outerResults = new HashSet<Object>();
+        Collection<Object> outerResults = new LinkedHashSet<Object>();
         for (Object toMatch : allElementsToMatch) {
             Collection<?> innerResults = argument.matches(pattern, toMatch);
             if (innerResults != null) {

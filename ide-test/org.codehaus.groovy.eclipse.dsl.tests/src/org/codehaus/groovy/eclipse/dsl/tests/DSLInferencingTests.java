@@ -901,6 +901,29 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
         assertType(contents, "java.util.Map<java.lang.String[],java.lang.Integer[]>", true);
     }
 
+    public void testNestedCalls() throws Exception {
+		createDsls("contribute(bind( x: enclosingCall())) {\n" + 
+				"	x.each { \n" + 
+				"		property name: it.methodAsString + \"XXX\", type: Long\n" + 
+				"	}\n" + 
+				"}");
+		
+		String contents = "bar {\n" + 
+				"	foo {\n" + 
+				"		 fooXXX\n" + 
+				"		 barXXX      \n" + 
+				"	}\n" + 
+				"}";
+		
+		int start = contents.indexOf("fooXXX");
+		int end = start + "fooXXX".length();
+		assertType(contents, start, end, "java.lang.Long");
+
+		start = contents.indexOf("barXXX");
+		end = start + "barXXX".length();
+		assertType(contents, start, end, "java.lang.Long");
+    	
+	}
 
     private void createDSL() throws IOException {
         defaultFileExtension = "dsld";

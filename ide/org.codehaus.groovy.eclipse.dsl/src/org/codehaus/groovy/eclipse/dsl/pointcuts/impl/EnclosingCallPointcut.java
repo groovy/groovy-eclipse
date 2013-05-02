@@ -43,13 +43,15 @@ public class EnclosingCallPointcut extends AbstractPointcut {
         }
 
         Object firstArgument = getFirstArgument();
-        if (firstArgument == null || firstArgument instanceof String) {
+        if (firstArgument instanceof String) {
             MethodCallExpression matchingCall = matchesInCalls(enclosing, (String) firstArgument, pattern);
             if (matchingCall != null) {
                 return Collections.singleton(matchingCall);
             } else {
                 return null;
             }
+        } else if (firstArgument == null) {
+            return asCallList(enclosing);
         } else {
             return matchOnPointcutArgument((IPointcut) firstArgument, pattern, asCallList(enclosing));
         }
