@@ -43,8 +43,14 @@ public class MockSearchRequestor extends SearchRequestor {
 		matches.add(match);
 		Collections.sort(matches, new Comparator<SearchMatch>() {
 			public int compare(SearchMatch l, SearchMatch r) {
-				ITypeRoot lTypeRoot = ((IMember) l.getElement()).getTypeRoot();
-				ITypeRoot rTypeRoot = ((IMember) r.getElement()).getTypeRoot();
+				ITypeRoot lTypeRoot = (ITypeRoot) ((IJavaElement) l.getElement()).getAncestor(IJavaElement.COMPILATION_UNIT);
+				if (lTypeRoot == null) {
+					lTypeRoot = (ITypeRoot) ((IJavaElement) l.getElement()).getAncestor(IJavaElement.CLASS_FILE);
+				}
+				ITypeRoot rTypeRoot = (ITypeRoot) ((IJavaElement) r.getElement()).getAncestor(IJavaElement.COMPILATION_UNIT);
+				if (rTypeRoot == null) {
+					rTypeRoot = (ITypeRoot) ((IJavaElement) r.getElement()).getAncestor(IJavaElement.CLASS_FILE);
+				}
 				if (!lTypeRoot.equals(rTypeRoot)) {
 					return lTypeRoot.getElementName().compareTo(rTypeRoot.getElementName());
 				}
