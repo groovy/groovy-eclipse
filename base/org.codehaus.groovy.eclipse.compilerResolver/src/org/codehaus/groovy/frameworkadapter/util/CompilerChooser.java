@@ -182,18 +182,31 @@ public class CompilerChooser {
         prefNode.flush();
     }
     
+    /**
+     * @return the active groovy (specified) version
+     */
     public SpecifiedVersion getActiveSpecifiedVersion() {
-        return activeIndex == -1 ? SpecifiedVersion.UNSPECIFIED : allSpecifiedVersions[activeIndex];
+    	if (activeIndex == -1) {
+			return allSpecifiedVersions.length > 0 ? allSpecifiedVersions[0] : SpecifiedVersion.UNSPECIFIED;
+    	} else {
+			return allSpecifiedVersions[activeIndex];
+		}
     }
+        
     public Version getActiveVersion() {
-        return activeIndex == -1 ? null : allVersions[activeIndex];
+        if (activeIndex == -1) {
+			Bundle bundle = Platform.getBundle(GROOVY_PLUGIN_ID);
+			return bundle == null ? null : bundle.getVersion();
+        } else {
+			return allVersions[activeIndex];
+        }
     }
     
     public Bundle getActiveBundle() {
         if (activeIndex == -1) {
             return Platform.getBundle(GROOVY_PLUGIN_ID); 
         } else {
-            Bundle[] bundles = Platform.getBundles(GROOVY_PLUGIN_ID, getActiveVersion().toString());
+            Bundle[] bundles = Platform.getBundles(GROOVY_PLUGIN_ID, allVersions[activeIndex].toString());
             if (bundles != null && bundles.length > 0) {
                 // we are guaranteed that the highest installed bundle is the one being used.
                 return bundles[0];

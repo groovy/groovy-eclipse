@@ -30,7 +30,6 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
-import org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.ITypeLookup;
@@ -46,7 +45,8 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 public class STCTypeLookup implements ITypeLookup {
 
     // only enabled for Groovy 2.1 or greater
-    private static final boolean isEnabled = CompilerUtils.getActiveGroovyVersion().compareTo(SpecifiedVersion._21) >= 0;
+    private static final boolean isEnabled = CompilerUtils.getActiveGroovyBundle().getVersion().getMajor() >= 2
+            && CompilerUtils.getActiveGroovyBundle().getVersion().getMinor() > -1;
 
     public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {}
 
