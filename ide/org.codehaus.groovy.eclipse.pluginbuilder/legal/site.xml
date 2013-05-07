@@ -28,9 +28,6 @@
    <feature url="features/org.codehaus.groovy.alltests.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy.alltests.feature" version="0.0.0.qualifier">
       <category name="org.codehaus.groovy.sdk"/>
    </feature>
-   <feature url="features/org.codehaus.groovy17.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy17.feature" version="0.0.0.qualifier">
-      <category name="org.codehaus.groovy.compilers"/>
-   </feature>
    <feature url="features/org.codehaus.groovy21.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy21.feature" version="0.0.0.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
