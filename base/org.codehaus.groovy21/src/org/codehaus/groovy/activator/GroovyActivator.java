@@ -31,14 +31,8 @@ public class GroovyActivator extends Plugin {
     public static final String PLUGIN_ID = "org.codehaus.groovy"; //$NON-NLS-1$
     
 	public static final String GROOVY_ALL_JAR = "lib/groovy-all-2.1.2.jar"; //$NON-NLS-1$
-	public static final String GROOVY_JAR = "lib/groovy-2.1.2.jar"; //$NON-NLS-1$
-    public static final String ASM_JAR = "lib/asm-4.0.jar"; //$NON-NLS-1$
-//    public static final int GROOVY_LEVEL = 17;
 
-    public static URL GROOVY_JAR_URL;
-    public static URL GROOVY_GPP_URL;
     public static URL GROOVY_ALL_JAR_URL;
-    public static URL ASM_JAR_URL;
     
     private static GroovyActivator DEFAULT;
 
@@ -62,9 +56,7 @@ public class GroovyActivator extends Plugin {
 
     public static void initialize() throws IOException {
         Bundle bundle = Platform.getBundle("org.codehaus.groovy");
-        GROOVY_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.GROOVY_JAR));
         GROOVY_ALL_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.GROOVY_ALL_JAR));
-        ASM_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.ASM_JAR));
     }
 
     @Override

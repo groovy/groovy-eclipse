@@ -79,6 +79,5 @@ public class SanityTest extends TestCase {
         System.out.println("SanityTest.testCompilerJars()");
         System.out.println("Classloader location " + GroovyActivator.class.getClassLoader().getResource("."));
         assertNotNull("Couldn't find groovy-all jar", GroovyActivator.GROOVY_ALL_JAR_URL);
-        assertNotNull("Couldn't find groovy jar", GroovyActivator.GROOVY_JAR_URL);
     }
 }
