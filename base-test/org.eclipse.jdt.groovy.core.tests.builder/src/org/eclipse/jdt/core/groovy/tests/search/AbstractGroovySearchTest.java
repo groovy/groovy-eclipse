@@ -398,4 +398,22 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         assertEquals("Incorrect match in " + searchRequestor.printMatches(), secondMatchEnclosingElement, searchRequestor.getElementNumber(1));
         assertLocation(searchRequestor.getMatch(1), secondContents.lastIndexOf(matchText), matchText.length());
     }
+    
+    protected static class Requestor extends TypeNameRequestor { }
+    /**
+     * Force indexes to be populated
+     */
+    public static void performDummySearch(IJavaElement element) throws CoreException {
+        new SearchEngine().searchAllTypeNames(
+            null,
+            SearchPattern.R_EXACT_MATCH,
+            "XXXXXXXXX".toCharArray(), // make sure we search a concrete name. This is faster according to Kent
+            SearchPattern.R_EXACT_MATCH,
+            IJavaSearchConstants.CLASS,
+            SearchEngine.createJavaSearchScope(new IJavaElement[]{element}),
+            new Requestor(),
+            IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
+            null);
+    }
+
 }

@@ -12,6 +12,7 @@ import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.compiler.BuildContext;
 import org.eclipse.jdt.core.compiler.CompilationParticipant;
 import org.eclipse.jdt.groovy.core.Activator;
 
@@ -37,8 +38,12 @@ public class CompilerCheckerParticipant extends CompilationParticipant {
     }
 
     @Override
-    public int aboutToBuild(IJavaProject javaProject) {
-        IProject project = javaProject.getProject();
+    public void buildStarting(BuildContext[] files, boolean isBatch) {
+        if (files == null || files.length == 0) {
+            return;
+        }
+
+        IProject project = files[0].getFile().getProject();
         SpecifiedVersion projectLevel = CompilerUtils.getCompilerLevel(project);
         try {
             boolean compilerMatch = CompilerUtils.projectVersionMatchesWorkspaceVersion(projectLevel);
@@ -53,7 +58,6 @@ public class CompilerCheckerParticipant extends CompilationParticipant {
         } catch (CoreException e) {
             GroovyCore.logException("Error creating marker", e);
         }
-        return super.aboutToBuild(javaProject);
     }
 
     @Override

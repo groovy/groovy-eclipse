@@ -37,39 +37,40 @@ public class EnclosingCallNamePointcut extends AbstractPointcut {
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         List<CallAndType> enclosing = pattern.getCurrentScope().getAllEnclosingMethodCallExpressions();
-        if (enclosing == null) {
+        if (enclosing == null || enclosing.isEmpty()) {
             return null;
         }
 
         Object firstArgument = getFirstArgument();
         if (firstArgument instanceof String) {
-            MethodCallExpression matchingCall = matchesInCalls(enclosing, (String) firstArgument, pattern);
-            if (matchingCall != null) {
-                return Collections.singleton(matchingCall);
-            } else {
-                return null;
-            }
+            return matchesInCalls(enclosing, (String) firstArgument, pattern);
+        } else if (firstArgument == null) {
+            return asCallList(enclosing);
         } else {
             return matchOnPointcutArgument((IPointcut) firstArgument, pattern, asCallList(enclosing));
         }
     }
     
-    private List<MethodCallExpression> asCallList(List<CallAndType> enclosing) {
-        List<MethodCallExpression> types = new ArrayList<MethodCallExpression>(enclosing.size());
+    private List<String> asCallList(List<CallAndType> enclosing) {
+        List<String> types = new ArrayList<String>(enclosing.size());
         for (CallAndType callAndType : enclosing) {
-            types.add(callAndType.call);
+            types.add(callAndType.call.getMethodAsString());
         }
         return types;
     }
 
-    private MethodCallExpression matchesInCalls(List<CallAndType> enclosing,
+    private List<String> matchesInCalls(List<CallAndType> enclosing,
             String callName, GroovyDSLDContext pattern) {
+        List<String> calls = null;
         for (CallAndType callAndType : enclosing) {
-            if (callName.equals(callAndType.call.getMethodAsString())) {
-                return callAndType.call;
+            if (callName == null || callName.equals(callAndType.call.getMethodAsString())) {
+                if (calls == null) {
+                    calls = new ArrayList<String>(1);
+                }
+                calls.add(callAndType.call.getMethodAsString());
             }
         }
-        return null;
+        return calls;
     }
 
 

@@ -18,10 +18,12 @@ package org.eclipse.jdt.groovy.search;
 
 import java.util.List;
 
+import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IOpenable;
+import org.eclipse.jdt.internal.core.ClassFile;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -46,6 +48,11 @@ public class TypeInferencingVisitorFactory {
 				TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorWithRequestor(
 						(GroovyCompilationUnit) openable, createLookups(((GroovyCompilationUnit) openable).getJavaProject()
 								.getProject()));
+				return visitor;
+			} else if (openable instanceof ClassFile) {
+				TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorWithRequestor(
+						new GroovyClassFileWorkingCopy((ClassFile) openable, null), createLookups(((ClassFile) openable)
+								.getJavaProject().getProject()));
 				return visitor;
 			} else {
 				Util.log(new RuntimeException(),

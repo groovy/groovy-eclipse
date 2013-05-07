@@ -31,6 +31,7 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyTypeDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
+import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -55,9 +56,6 @@ import org.eclipse.jface.text.Position;
  */
 @SuppressWarnings("nls")
 public class MethodReferenceSearchRequestor implements ITypeRequestor {
-	/**
-	 * 
-	 */
 	private static final int MAX_PARAMS = 10;
 	private final SearchRequestor requestor;
 	private final SearchParticipant participant;
@@ -152,21 +150,25 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 				int numberOfParameters = findNumberOfParameters(node, result);
 				boolean isCompleteMatch = nameAndArgsMatch(removeArray(result.declaringType), numberOfParameters);
 				if (isCompleteMatch) {
+					IJavaElement realElement = enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy ? ((GroovyClassFileWorkingCopy) enclosingElement
+							.getOpenable()).convertToBinary(enclosingElement) : enclosingElement;
 					SearchMatch match = null;
 					if (isDeclaration && findDeclarations) {
-						match = new MethodDeclarationMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch),
-								start, end - start, participant, enclosingElement.getResource());
+						match = new MethodDeclarationMatch(realElement, getAccuracy(result.confidence, isCompleteMatch), start, end
+								- start, participant, realElement.getResource());
 					} else if (!isDeclaration && findReferences) {
-						match = new MethodReferenceMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start,
-								end - start, isConstructorCall, false, false, false, participant, enclosingElement.getResource());
+						match = new MethodReferenceMatch(realElement, getAccuracy(result.confidence, isCompleteMatch), start, end
+								- start, isConstructorCall, false, false, false, participant, realElement.getResource());
 					}
 					if (match != null) {
 						try {
 							requestor.acceptSearchMatch(match);
 							acceptedPositions.add(position);
 						} catch (CoreException e) {
-							Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource "
-									+ enclosingElement.getResource());
+							Util.log(
+									e,
+									"Error reporting search match inside of " + realElement + " in resource "
+											+ realElement.getResource());
 						}
 					}
 				}

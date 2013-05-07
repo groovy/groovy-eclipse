@@ -198,4 +198,11 @@ public class LanguageSupportFactory {
 	public static IJavaElement[] binaryCodeSelect(ClassFile classFile, int offset, int length, WorkingCopyOwner owner) throws JavaModelException {
 		return getLanguageSupport().binaryCodeSelect(classFile, offset, length, owner);
 	}
+	
+	/**
+	 * @return an object that can provide supplemental indexing on a class file
+	 */
+	public static ISupplementalIndexer getSupplementalIndexer() {
+		return getLanguageSupport().getSupplementalIndexer();
+	}	
 }

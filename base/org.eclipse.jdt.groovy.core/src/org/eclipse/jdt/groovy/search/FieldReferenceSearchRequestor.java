@@ -25,6 +25,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -141,20 +142,26 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 				if (isCompleteMatch
 						&& ((isAssignment && writeAccess) || (!isAssignment && readAccess) || (isDeclaration && findDeclarations))) {
 					SearchMatch match = null;
+
+					// must translate from synthetic source to binary if necessary
+					IJavaElement realElement = enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy ? ((GroovyClassFileWorkingCopy) enclosingElement
+							.getOpenable()).convertToBinary(enclosingElement) : enclosingElement;
 					if (isDeclaration && findDeclarations) {
-						match = new FieldDeclarationMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start,
-								end - start, participant, enclosingElement.getResource());
+						match = new FieldDeclarationMatch(realElement, getAccuracy(result.confidence, isCompleteMatch), start, end
+								- start, participant, realElement.getResource());
 					} else if (!isDeclaration && findReferences) {
-						match = new FieldReferenceMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start,
-								end - start, !isAssignment, isAssignment, false, participant, enclosingElement.getResource());
+						match = new FieldReferenceMatch(realElement, getAccuracy(result.confidence, isCompleteMatch), start, end
+								- start, !isAssignment, isAssignment, false, participant, realElement.getResource());
 					}
 					if (match != null) {
 						try {
 							requestor.acceptSearchMatch(match);
 							acceptedPositions.add(position);
 						} catch (CoreException e) {
-							Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource "
-									+ enclosingElement.getResource());
+							Util.log(
+									e,
+									"Error reporting search match inside of " + realElement + " in resource "
+											+ realElement.getResource());
 						}
 					}
 				}

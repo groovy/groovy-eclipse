@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
 
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -166,4 +167,22 @@ void setSimilarMatch(PossibleMatch possibleMatch) {
 public String toString() {
 	return this.openable == null ? "Fake PossibleMatch" : this.openable.toString(); //$NON-NLS-1$
 }
+
+// GROOVY start
+/**
+ * Determines if this file is relevant for extra language support
+ * 
+ * @return true iff the document's file name has a relevant file extension or
+ * the possible match is binary with associated source code that has a relevant 
+ * file extension 
+ */
+public boolean isInterestingSourceFile() {
+	if (this.document == null || this.openable == null) {
+		return false;
+	}
+	return LanguageSupportFactory.isInterestingSourceFile(this.document.getPath()) ||
+			(this.openable instanceof ClassFile && 
+					LanguageSupportFactory.isInterestingSourceFile(getSourceFileName()));
+}
+//GROOVY end
 }

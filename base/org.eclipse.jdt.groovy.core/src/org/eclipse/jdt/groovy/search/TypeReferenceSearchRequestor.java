@@ -25,6 +25,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaElement;
@@ -178,11 +179,14 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 						// constructors
 						Position position = new Position(start, end - start);
 						if (!acceptedPositions.contains(position)) {
+							IJavaElement realElement = enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy ? ((GroovyClassFileWorkingCopy) enclosingElement
+									.getOpenable()).convertToBinary(enclosingElement) : enclosingElement;
+
 							try {
-								requestor.acceptSearchMatch(createMatch(result, enclosingElement, start, end));
+								requestor.acceptSearchMatch(createMatch(result, realElement, start, end));
 								acceptedPositions.add(position);
 							} catch (CoreException e) {
-								Util.log(e, "Error accepting search match for " + enclosingElement); //$NON-NLS-1$
+								Util.log(e, "Error accepting search match for " + realElement); //$NON-NLS-1$
 							}
 						}
 					}

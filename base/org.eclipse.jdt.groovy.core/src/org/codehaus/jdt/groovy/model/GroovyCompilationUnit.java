@@ -600,13 +600,4 @@ public class GroovyCompilationUnit extends CompilationUnit {
 			super.codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor);
 		}
 	}
-
-	// @Override
-	// public IJavaProject getJavaProject() {
-	// IJavaProject javaProject = super.getJavaProject();
-	// if (!isOnBuildPath()) {
-	// javaProject = new WrappedJavaProject(javaProject);
-	// }
-	// return javaProject;
-	// }
 }

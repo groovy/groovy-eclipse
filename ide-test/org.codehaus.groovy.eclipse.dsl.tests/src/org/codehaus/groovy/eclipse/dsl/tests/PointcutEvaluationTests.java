@@ -23,6 +23,8 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
@@ -493,6 +495,68 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
                 new BindingResult("b", "@java.lang.Deprecated, @java.lang.Deprecated"));
     }
     
+    public void testNestedCalls1() throws Exception {
+    	doTestOfLastBindingSet("bar {\n" + 
+    			"	foo {\n" + 
+    			"		 XXX\n" + 
+    			"	}\n" + 
+    			"}", "bind( x: enclosingCall()) & bind(y: currentIdentifier('XXX'))", 
+    			new BindingResult("x", "foo(), bar()"),
+    			new BindingResult("y", "Var: XXX"));
+	}
+    
+    public void testNestedCalls2() throws Exception {
+    	doTestOfLastBindingSet("foo {\n" + 
+    			"	bar {\n" + 
+    			"		 XXX\n" + 
+    			"	}\n" + 
+    			"}", "bind( x: enclosingCall()) & bind(y: currentIdentifier('XXX'))", 
+    			new BindingResult("x", "bar(), foo()"),
+    			new BindingResult("y", "Var: XXX"));
+    }
+    
+    public void testNestedCalls3() throws Exception {
+    	doTestOfLastBindingSet("foo {\n" + 
+    			"	foo {\n" + 
+    			"		 XXX\n" + 
+    			"	}\n" + 
+    			"}", "bind( x: enclosingCall()) & bind(y: currentIdentifier('XXX'))", 
+    			new BindingResult("x", "foo(), foo()"),
+    			new BindingResult("y", "Var: XXX"));
+    }
+    
+    public void testNestedCallNames1() throws Exception {
+    	doTestOfLastBindingSet("bar {\n" + 
+    			"	foo {\n" + 
+    			"		 XXX\n" + 
+    			"	}\n" + 
+    			"}", "bind( x: enclosingCallName()) & bind(y: currentIdentifier('XXX'))", 
+    			new BindingResult("x", "foo, bar"),
+    			new BindingResult("y", "Var: XXX"));
+    }
+    
+    public void testNestedCallNames2() throws Exception {
+    	doTestOfLastBindingSet("foo {\n" + 
+    			"	bar {\n" + 
+    			"		 XXX\n" + 
+    			"	}\n" + 
+    			"}", "bind( x: enclosingCallName()) & bind(y: currentIdentifier('XXX'))", 
+    			new BindingResult("x", "bar, foo"),
+    			new BindingResult("y", "Var: XXX"));
+    }
+    
+    public void testNestedCallsName3() throws Exception {
+    	doTestOfLastBindingSet("foo {\n" + 
+    			"	foo {\n" + 
+    			"		 XXX\n" + 
+    			"	}\n" + 
+    			"}", "bind( x: enclosingCallName()) & bind(y: currentIdentifier('XXX'))",
+    			
+    			// since we are matching on names and there are 2 names that are the same, they get collapsed
+    			new BindingResult("x", "foo"),
+    			new BindingResult("y", "Var: XXX"));
+    }
+    
 
     
     private void doTestOfLastBindingSet(String cuContents, String pointcutText, BindingResult... results) throws Exception {
@@ -567,6 +631,10 @@ public class PointcutEvaluationTests extends AbstractGroovySearchTest {
         } else if (defaultBinding instanceof AnnotationNode) {
             AnnotationNode annotationNode = (AnnotationNode) defaultBinding;
             return "@" + annotationNode.getClassNode().getName();
+        } else if (defaultBinding instanceof MethodCallExpression) {
+        	return ((MethodCallExpression) defaultBinding).getMethodAsString() + "()";
+        } else if (defaultBinding instanceof VariableExpression) {
+        	return "Var: " + ((VariableExpression) defaultBinding).getName();
         } else if (defaultBinding instanceof Collection<?>) {
             StringBuilder sb = new StringBuilder();
             for (Object item : ((Collection<?>) defaultBinding)) {

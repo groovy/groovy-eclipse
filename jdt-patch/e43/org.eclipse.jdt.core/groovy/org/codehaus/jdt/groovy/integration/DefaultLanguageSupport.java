@@ -135,4 +135,8 @@ class DefaultLanguageSupport implements LanguageSupport {
 	public IJavaElement[] binaryCodeSelect(ClassFile classFile, int offset, int length, WorkingCopyOwner owner) throws JavaModelException {
 	    return new IJavaElement[0];
 	}
+
+	public ISupplementalIndexer getSupplementalIndexer() {
+		return new NoopIndexer();
+	}
 }

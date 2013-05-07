@@ -10,6 +10,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.indexing;
 
+import java.util.Iterator;
+import java.util.List;
+
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -791,6 +795,26 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 			}
 			// record all references found inside the .class file
 			extractReferenceFromConstantPool(contents, reader);
+			
+			// GROOVY start since groovy method calls and property accesses are dynamically invoked and accessed
+			// must index the string constants in the constant pool
+			// TODO would be nice to check for an "interesting project" here, but don't have access to that
+			char[] sourceFileName = reader.sourceFileName();
+			if (sourceFileName!= null && LanguageSupportFactory.isInterestingSourceFile(String.valueOf(sourceFileName))) {
+				List references = LanguageSupportFactory.getSupplementalIndexer().extractNamedReferences(contents, reader);
+				for (Iterator iterator = references.iterator(); iterator.hasNext();) {
+					char[] reference = (char[]) iterator.next();
+					addNameReference(reference);
+					addMethodReference(reference, 0);
+					addMethodReference(reference, 1);
+					addMethodReference(reference, 2);
+					addMethodReference(reference, 3);
+					addMethodReference(reference, 4);
+					addMethodReference(reference, 5);
+				}
+			}
+			// GROOVY end
+			
 		} catch (ClassFormatException e) {
 			// ignore
 			this.document.removeAllIndexEntries();

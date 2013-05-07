@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
 
 /**
  * A set of elements bound under the current evaluated pointcut
@@ -99,6 +100,8 @@ public class BindingSet {
             return ((MethodNode) value).getDeclaringClass().getName() + "." + ((MethodNode) value).getName();
         } else if (value instanceof PropertyNode) {
             return ((PropertyNode) value).getDeclaringClass().getName() + "." + ((PropertyNode) value).getName();
+        } else if (value instanceof MethodCallExpression) {
+            return ((MethodCallExpression) value).getMethodAsString();
         } else if (value instanceof ASTNode) {
             return ((ASTNode) value).getText();
         } else if (value != null) {

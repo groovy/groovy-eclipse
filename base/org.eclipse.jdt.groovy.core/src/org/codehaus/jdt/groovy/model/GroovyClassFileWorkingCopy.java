@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.codehaus.jdt.groovy.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
@@ -22,6 +25,8 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
+import org.eclipse.jdt.core.IMember;
+import org.eclipse.jdt.core.IParent;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.WorkingCopyOwner;
@@ -54,7 +59,7 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
 
-	public ClassFile classFile;
+	public final ClassFile classFile;
 
 	// GROOVY Change
 	private final PerWorkingCopyInfo info;
@@ -69,6 +74,9 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
 				.getSourceFileName(null/* no info available */), owner);
 		this.classFile = classFile;
 		// GROOVY Change
+		if (this.owner == null) {
+			this.owner = DefaultWorkingCopyOwner.PRIMARY;
+		}
 		info = new PerWorkingCopyInfo(this, null);
 		// GROOVY End
 	}
@@ -208,11 +216,25 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
 
 	@Override
 	public ModuleNodeInfo getModuleInfo(boolean force) {
+		if (moduleNodeInfo == null) {
+			try {
+				this.reconcile(true, null);
+			} catch (JavaModelException e) {
+				Util.log(e);
+			}
+		}
 		return moduleNodeInfo;
 	}
 
 	@Override
 	public ModuleNodeInfo getNewModuleInfo() {
+		if (moduleNodeInfo == null) {
+			try {
+				this.open(null);
+			} catch (JavaModelException e) {
+				Util.log(e);
+			}
+		}
 		return moduleNodeInfo;
 	}
 
@@ -233,7 +255,7 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
 
 	@Override
 	public char[] getFileName() {
-		return name.toCharArray(); 
+		return name.toCharArray();
 	}
 
 	@Override
@@ -241,6 +263,65 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
 		// a call to super.isOnBuildPath() will always return false,
 		// but it should be true
 		return true;
+	}
+
+	/**
+	 * Translates from the source element of this synthetic compilation unit into a binary element of the underlying classfile.
+	 * 
+	 * @param source the source element to translate
+	 * @return the same element, but in binary form, or closest possible match if this element doesn't exist
+	 */
+	public IJavaElement convertToBinary(IJavaElement source) {
+		if (source.isReadOnly()) {
+			// already binary
+			return source;
+		}
+		if (source.getElementType() == IJavaElement.COMPILATION_UNIT) {
+			return classFile;
+		}
+		if (!(source instanceof IMember)) {
+			return classFile;
+		}
+
+		// get ancestors to type root
+		List<IJavaElement> srcAncestors = new ArrayList<IJavaElement>(3);
+		IJavaElement srcCandidate = source;
+		while (srcCandidate != null && srcCandidate != this) {
+			srcAncestors.add(srcCandidate);
+			srcCandidate = srcCandidate.getParent();
+		}
+
+		// now, traverse the classFile using the ancestor list in reverse order
+		IJavaElement binCandidate = classFile;
+		try {
+			while (srcAncestors.size() > 0) {
+				srcCandidate = srcAncestors.remove(srcAncestors.size() - 1);
+				if (!(srcCandidate instanceof IParent)) {
+					break;
+				}
+
+				String candidateName = srcCandidate.getElementName();
+				IJavaElement[] binChildren = ((IParent) binCandidate).getChildren();
+				boolean found = false;
+				for (IJavaElement binChild : binChildren) {
+					if (binChild.getElementName().equals(candidateName) ||
+					// check for implicit closure class
+							(binChild.getElementType() == IJavaElement.TYPE && binChild.getParent().getElementName()
+									.equals(candidateName + '$' + binChild.getElementName() + ".class"))) {
+						binCandidate = binChild;
+						found = true;
+						break;
+					}
+				}
+				if (!found) {
+					break;
+				}
+			}
+		} catch (JavaModelException e) {
+			Util.log(e);
+		}
+
+		return binCandidate;
 	}
 	// GROOVY End
 }
