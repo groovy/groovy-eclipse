@@ -127,4 +127,8 @@ public class GroovyDSLCoreActivator extends AbstractUIPlugin {
         return imageDescriptorFromPlugin(PLUGIN_ID, path);
     }
 
+    public boolean isDSLDDisabled() {
+    	return getPreferenceStore().getBoolean(DSLPreferencesInitializer.DSLD_DISABLED);
+    }
+    
 }

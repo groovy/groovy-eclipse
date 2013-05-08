@@ -25,7 +25,6 @@ import org.codehaus.groovy.eclipse.dsl.DSLDStoreManager;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer;
 import org.codehaus.groovy.eclipse.dsl.DisabledScriptsCache;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
-import org.codehaus.groovy.eclipse.dsl.earlystartup.InitializeAllDSLDs;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.internal.filesystem.local.LocalFile;
@@ -34,6 +33,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IStorage;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.internal.core.JavaModelManager;
@@ -74,6 +74,7 @@ import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.eclipse.ui.progress.UIJob;
 
 public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPreferencePage {
     
@@ -420,10 +421,20 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
 
 
     protected void recompile() {
-        GroovyLogManager.manager.log(TraceCategory.DSL, EVENT);
-        GroovyLogManager.manager.logStart(EVENT);
-        new InitializeAllDSLDs().initializeAll();
-        GroovyLogManager.manager.logEnd(EVENT, TraceCategory.DSL);
+    	// re-compile all scripts and then wait for the results to refresh the UIs
+    	new UIJob("Refresh DSLD launcher") {
+            @Override
+            public IStatus runInUIThread(IProgressMonitor monitor) {
+                GroovyLogManager.manager.log(TraceCategory.DSL, EVENT);
+                GroovyLogManager.manager.logStart(EVENT);
+                GroovyDSLCoreActivator.getDefault().getContextStoreManager().initializeAll(true);
+                if (!DSLPreferencesPage.this.getControl().isDisposed()) {
+                    refresh();
+                }
+                GroovyLogManager.manager.logEnd(EVENT, TraceCategory.DSL);
+                return Status.OK_STATUS;
+            }
+        }.schedule();
     }
     
     @Override

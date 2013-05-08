@@ -11,11 +11,18 @@
 package org.codehaus.groovy.eclipse.dsl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
 
 /**
@@ -26,6 +33,8 @@ import org.eclipse.jdt.core.IJavaProject;
 public class DSLDStoreManager {
     
     private final Map<String, DSLDStore> projectDSLDMap;
+    
+    private final Set<String> inProgress = new HashSet<String>();
     
     public DSLDStoreManager() {
         projectDSLDMap = new HashMap<String, DSLDStore>();
@@ -66,5 +75,78 @@ public class DSLDStoreManager {
     public List<String> getAllStores() {
         return new ArrayList<String>(projectDSLDMap.keySet());
     }
-
+    
+    public void initializeAll(boolean synchronous) {
+        if (GroovyDSLCoreActivator.getDefault().isDSLDDisabled()) {
+            return;
+        }
+        IProject[] allProjects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+        initialize(allProjects, synchronous);
+    }
+    
+    public void initialize(IProject[] projects, boolean synchronous) {
+        initialize(Arrays.asList(projects), synchronous);
+    }
+    
+    public void initialize(IProject project, boolean synchronous) {
+        initialize(Collections.singletonList(project), synchronous);
+    }
+    
+    public void initialize(List<IProject> projects, boolean synchronous) {
+        List<IProject> groovyProjects = new ArrayList<IProject>(projects.size());
+        for (IProject project : projects) {
+            if (GroovyNature.hasGroovyNature(project)) {
+                groovyProjects.add(project);
+            }
+        }
+        @SuppressWarnings("deprecation")
+        Job refreshJob = new RefreshDSLDJob(groovyProjects);
+        refreshJob.setPriority(synchronous ? Job.INTERACTIVE : Job.LONG);
+        refreshJob.schedule();
+        if (synchronous) {
+            waitForFinish();
+        }
+    }
+    
+    public void ensureInitialized(IProject project, boolean synchronous) {
+        if (!hasDSLDStoreFor(project) && !isInProgress(project)) {
+            initialize(project, synchronous);
+        }
+    }
+    
+    private final static int TIME_LIMIT = 30000;
+    synchronized void waitForFinish() {
+        long end = System.currentTimeMillis() + TIME_LIMIT;
+        while (!inProgress.isEmpty()) {
+            try {
+                long timeLeft = end - System.currentTimeMillis();
+                if (timeLeft > 0) {
+                    wait(timeLeft);
+                } else {
+                    GroovyDSLCoreActivator.logException("Avoiding potential deadlock", new RuntimeException());
+                    break;
+                }
+            } catch (InterruptedException e) {
+            }
+        }
+    }
+    synchronized boolean isInProgress(IProject project) {
+        return inProgress.contains(project.getName());
+    }
+    private synchronized boolean addInProgress(IProject project) {
+        return inProgress.add(project.getName());
+    }
+    synchronized List<IProject> addInProgress(List<IProject> projects) {
+        List<IProject> addedProjects = new ArrayList<IProject>(projects.size());
+        for (IProject project : projects) {
+            if (addInProgress(project)) {
+                addedProjects.add(project);
+            }
+        }
+        return addedProjects;
+    }
+    synchronized void removeInProgress(IProject project) {
+        inProgress.remove(project.getName());
+        notifyAll();
+    }
 }

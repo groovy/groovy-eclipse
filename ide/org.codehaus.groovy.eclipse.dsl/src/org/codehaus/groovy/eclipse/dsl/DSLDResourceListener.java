@@ -76,9 +76,7 @@ public class DSLDResourceListener implements IResourceChangeListener {
                     return false;
                 } else if (!contextStoreManager.hasDSLDStoreFor(project) && GroovyNature.hasGroovyNature(project)) {
                     // could be that this project has just been opened
-                    Job refreshJob = new RefreshDSLDJob(project);
-                    refreshJob.setPriority(Job.LONG);
-                    refreshJob.schedule();
+                    GroovyDSLCoreActivator.getDefault().getContextStoreManager().initialize(project, false);
                     return false;
                 }
 

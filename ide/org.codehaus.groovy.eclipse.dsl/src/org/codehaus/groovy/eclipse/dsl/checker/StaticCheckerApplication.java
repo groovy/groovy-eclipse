@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 
-import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
+import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -54,8 +54,9 @@ public class StaticCheckerApplication implements IApplication {
             }
             
             // ensure project is open
+            IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
             try {
-                ResourcesPlugin.getWorkspace().getRoot().getProject(projectName).open(null);
+                project.open(null);
             } catch (CoreException e) {
                 System.err.println("Failed to open project " + projectName);
                 e.printStackTrace();
@@ -66,8 +67,7 @@ public class StaticCheckerApplication implements IApplication {
             addExtraDslds();
             
             // Ensure that dslds are all available
-            final RefreshDSLDJob job = new RefreshDSLDJob(ResourcesPlugin.getWorkspace().getRoot().getProject(projectName));
-            job.run(new NullProgressMonitor());
+            GroovyDSLCoreActivator.getDefault().getContextStoreManager().initialize(project, true);
             
             System.out.println("Performing static type checking on project " + projectName);
             boolean success = false;

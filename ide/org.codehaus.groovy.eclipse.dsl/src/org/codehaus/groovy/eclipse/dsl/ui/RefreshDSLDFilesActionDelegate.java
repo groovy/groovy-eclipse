@@ -11,10 +11,9 @@
 package org.codehaus.groovy.eclipse.dsl.ui;
 
 
-import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
+import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -27,11 +26,7 @@ public class RefreshDSLDFilesActionDelegate implements IWorkbenchWindowActionDel
     private IProject[] groovyProjects;
     
     public void run(IAction action) {
-        for (IProject project : groovyProjects) {
-            Job refreshJob = new RefreshDSLDJob(project);
-            refreshJob.setPriority(Job.LONG);
-            refreshJob.schedule();
-        }
+        GroovyDSLCoreActivator.getDefault().getContextStoreManager().initialize(groovyProjects, false);
     }
 
     public void selectionChanged(IAction action, ISelection selection) {

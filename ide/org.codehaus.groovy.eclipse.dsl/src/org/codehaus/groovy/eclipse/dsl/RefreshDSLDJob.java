@@ -49,7 +49,6 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ExternalPackageFragmentRoot;
-import org.eclipse.jface.preference.IPreferenceStore;
 
 public class RefreshDSLDJob extends Job {
     
@@ -256,13 +255,27 @@ public class RefreshDSLDJob extends Job {
     }
 
     private final List<IProject> projects;
+    private DSLDStoreManager contextStoreManager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
 
+    /**
+     * Deprecated.  Use {@link DSLDStoreManager#initialize(IProject, boolean)}
+     * instead.  This new method allows for the initialization of a store synchronously
+     * or asynchronously.
+     */
+    @Deprecated
     public RefreshDSLDJob(IProject project) {
         this(Collections.singletonList(project));
     }
+
+    /**
+     * Deprecated.  Use {@link DSLDStoreManager#initialize(List, boolean)}
+     * instead.  This new method allows for the initialization of a store synchronously
+     * or asynchronously.
+     */
+    @Deprecated
     public RefreshDSLDJob(List<IProject> projects) {
         super("Refresh DSLD scripts");
-        this.projects = projects;
+        this.projects = contextStoreManager.addInProgress(projects);
     }
     
     protected boolean isDSLD(IStorage file) {
@@ -285,37 +298,49 @@ public class RefreshDSLDJob extends Job {
 
     @Override
     public IStatus run(IProgressMonitor monitor) {
-        IPreferenceStore prefStore = GroovyDSLCoreActivator.getDefault().getPreferenceStore();
-        if (prefStore.getBoolean(DSLPreferencesInitializer.DSLD_DISABLED)) {
-            if (GroovyLogManager.manager.hasLoggers()) {
-                GroovyLogManager.manager.log(TraceCategory.DSL, "DSLD support is currently disabled, so not refreshing DSLDs.");
+        try {
+            if (GroovyDSLCoreActivator.getDefault().isDSLDDisabled()) {
+                if (GroovyLogManager.manager.hasLoggers()) {
+                    GroovyLogManager.manager.log(TraceCategory.DSL, "DSLD support is currently disabled, so not refreshing DSLDs.");
+                }
+                return Status.OK_STATUS;
             }
-            return Status.OK_STATUS;
-        }
-
-        List<IStatus> errorStatuses = new ArrayList<IStatus>();
-        if (monitor == null) {
-            monitor = new NullProgressMonitor();
-        }
-        monitor.beginTask("Refresh DSLD scripts", projects.size() * 9);
-        for (IProject project : projects) {
-            IStatus res = refreshProject(project, new SubProgressMonitor(monitor, 9));
-            if (!res.isOK()) {
-                errorStatuses.add(res);
-            } else if (res == Status.CANCEL_STATUS) {
-                return res;
+    
+            List<IStatus> errorStatuses = new ArrayList<IStatus>();
+            if (monitor == null) {
+                monitor = new NullProgressMonitor();
             }
-        }
-        monitor.done();
-        
-        if (errorStatuses.isEmpty()) {
-            return Status.OK_STATUS;
-        } else {
-            MultiStatus multi = new MultiStatus(GroovyDSLCoreActivator.PLUGIN_ID, 0, "Error refreshing DSLDs.", null);
-            for (IStatus error : errorStatuses) {
-                multi.add(error);
+            monitor.beginTask("Refresh DSLD scripts", projects.size() * 9);
+            for (IProject project : projects) {
+                IStatus res = Status.OK_STATUS;
+                try {
+                    res = refreshProject(project, new SubProgressMonitor(monitor, 9));
+                } finally {
+                    contextStoreManager.removeInProgress(project);
+                }
+                if (!res.isOK()) {
+                    errorStatuses.add(res);
+                } else if (res == Status.CANCEL_STATUS) {
+                    return res;
+                }
             }
-            return multi;
+            monitor.done();
+            
+            if (errorStatuses.isEmpty()) {
+                return Status.OK_STATUS;
+            } else {
+                MultiStatus multi = new MultiStatus(GroovyDSLCoreActivator.PLUGIN_ID, 0, "Error refreshing DSLDs.", null);
+                for (IStatus error : errorStatuses) {
+                    multi.add(error);
+                }
+                return multi;
+            }
+        } finally {
+            // in case the job was exited early, ensure all projects 
+            // have their initialization stage removed
+            for (IProject project : projects) {
+                contextStoreManager.removeInProgress(project);
+            }
         }
     }
     

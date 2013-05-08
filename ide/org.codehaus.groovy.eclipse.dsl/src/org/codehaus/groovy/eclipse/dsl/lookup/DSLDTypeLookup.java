@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.dsl.lookup;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Set;
 
@@ -17,18 +18,31 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
+import org.codehaus.groovy.eclipse.dsl.DSLDStoreManager;
 import org.codehaus.groovy.eclipse.dsl.DSLPreferences;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
+import org.codehaus.groovy.eclipse.dsl.RefreshDSLDJob;
 import org.codehaus.groovy.eclipse.dsl.contributions.IContributionElement;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.internal.jobs.JobManager;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.IWorkspaceRunnable;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.groovy.search.AbstractSimplifiedTypeLookup;
 import org.eclipse.jdt.groovy.search.ITypeLookup;
 import org.eclipse.jdt.groovy.search.ITypeResolver;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.ui.internal.Workbench;
 
 /**
  * Uses the current set of DSLs for this project to look up types
@@ -37,6 +51,8 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  * @created Nov 17, 2010
  */
 public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITypeLookup, ITypeResolver {
+
+    DSLDStoreManager contextStoreManager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
 
     private DSLDStore store;
     private GroovyDSLDContext pattern;
@@ -50,7 +66,11 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
     }
 
     public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
-
+        
+        // run referesh dependencies synchronously if DSLD store doesn't exist yet
+        final IProject project = unit.getJavaProject().getProject();
+        contextStoreManager.ensureInitialized(project, true);
+        
         disabledScriptsAsSet = DSLPreferences.getDisabledScriptsAsSet();
         try {
             pattern = new GroovyDSLDContext(unit, module, resolver);
@@ -58,7 +78,7 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
         } catch (CoreException e) {
             GroovyDSLCoreActivator.logException(e);
         }
-        store = GroovyDSLCoreActivator.getDefault().getContextStoreManager().getDSLDStore(unit.getJavaProject());
+        store = contextStoreManager.getDSLDStore(unit.getJavaProject());
         store = store.createSubStore(pattern);
     }
 

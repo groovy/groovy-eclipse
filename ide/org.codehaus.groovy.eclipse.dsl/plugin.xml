@@ -139,12 +139,6 @@
       </objectContribution>
    </extension>
    <extension
-         point="org.eclipse.ui.startup">
-      <startup
-            class="org.codehaus.groovy.eclipse.dsl.earlystartup.InitializeAllDSLDs">
-      </startup>
-   </extension>
-   <extension
          point="org.eclipse.core.contenttype.contentTypes">
       <content-type
             base-type="org.eclipse.jdt.groovy.core.groovySource"

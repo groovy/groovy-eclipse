@@ -20,7 +20,6 @@ import java.util.List;
 
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.ElementChangedEvent;
 import org.eclipse.jdt.core.IElementChangedListener;
 import org.eclipse.jdt.core.IJavaElementDelta;
@@ -47,10 +46,7 @@ public class DSLDElementListener implements IElementChangedListener {
                 }
             }
             if (!projectsToRefresh.isEmpty()) {
-//                System.out.println("==================  calling refresh dsld from classpath change:\ndelta: " + event.getDelta() + "\n\nsource: " + event.getSource());
-                Job refreshJob = new RefreshDSLDJob(projectsToRefresh);
-                refreshJob.setPriority(Job.LONG);
-                refreshJob.schedule();
+                GroovyDSLCoreActivator.getDefault().getContextStoreManager().initialize(projectsToRefresh, false);
             }
         }
     }
