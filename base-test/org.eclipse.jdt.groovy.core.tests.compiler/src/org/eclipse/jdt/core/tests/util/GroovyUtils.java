@@ -10,9 +10,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.util;
 
-import java.net.URL;
-
 import org.eclipse.core.runtime.Platform;
+import org.osgi.framework.Version;
 
 /**
  * 
@@ -22,25 +21,8 @@ import org.eclipse.core.runtime.Platform;
 public class GroovyUtils {
     static public final int GROOVY_LEVEL;
     static {
-    	int groovyLevel = 21;
-    	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.1.2.jar");
-    	if (groovyJar == null) {
-    		groovyLevel = 20;
-	    	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-2.0.7.jar");
-	    	if (groovyJar==null) {
-		        groovyLevel = 18;
-				groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.8.6.jar");
-		        if (groovyJar==null) {
-		            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.7.10.jar");
-		            groovyLevel=17;
-		            if (groovyJar==null) {
-		                groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-1.6.7.jar");
-		                groovyLevel=16;
-		            }
-		        }
-	    	}
-    	}
-        GROOVY_LEVEL = groovyLevel;
+    	Version ver = Platform.getBundle("org.codehaus.groovy").getVersion();
+        GROOVY_LEVEL = ver.getMajor() * 10 + ver.getMinor();
     }
     public static boolean isGroovy16() {
         return GROOVY_LEVEL == 16;

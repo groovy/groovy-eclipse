@@ -144,7 +144,7 @@ public class MetaDSLInferencingTests extends AbstractDSLInferencingTest {
         defaultFileExtension = "dsld";
         createUnit("DSLD_meta_script", GroovyDSLDTestsActivator.getDefault().getTestResourceContents("DSLD_meta_script.dsld"));
         env.fullBuild();
-        expectingNoProblems();
+        expectingNoErrors();
     }
 
 }

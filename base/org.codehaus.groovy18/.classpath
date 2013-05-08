@@ -6,7 +6,7 @@
 	<classpathentry exported="true" kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry exported="true" kind="lib" path="lib/bsf-2.4.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/ivy-2.2.0.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/groovy-all-1.8.6.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/groovy-all-1.8.6.jar" sourcepath="lib/groovy-all-1.8.6-sources.jar"/>
 	<classpathentry kind="lib" path="lib/servlet-api-2.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

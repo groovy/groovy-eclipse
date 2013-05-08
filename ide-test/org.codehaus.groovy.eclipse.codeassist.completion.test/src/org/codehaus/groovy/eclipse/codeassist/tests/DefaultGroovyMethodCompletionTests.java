@@ -151,7 +151,7 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
     }
     
     // tests GRECLIPSE-1158
-    public void testXmlGM() throws Exception {
+    public void testEncodingGM() throws Exception {
         String contents = "byte[] p\n" +
                 "p.encodeBase64";
         ICompilationUnit unit = createGroovyWithContents("Script", contents);
@@ -165,7 +165,7 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
     }
     
     // tests GRECLIPSE-1158
-    public void testEncodingGM() throws Exception {
+    public void testXmlGM() throws Exception {
         String contents = "org.w3c.dom.NodeList p\n" +
                 "p.iterator";
         ICompilationUnit unit = createGroovyWithContents("Script", contents);
