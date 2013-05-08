@@ -68,7 +68,7 @@ public class TypeInferencingVisitorFactory {
 		return new TypeInferencingVisitorWithRequestor(unit, createLookups(unit.getJavaProject().getProject()));
 	}
 
-	// Order matters!!! InferenceByAssignmentStatement must be first and SimpleTypeLookup must be last
+	// Order matters!!! SimpleTypeLookup must be last
 	private ITypeLookup[] createLookups(IProject project) {
 		ITypeLookup[] lookups;
 		try {
