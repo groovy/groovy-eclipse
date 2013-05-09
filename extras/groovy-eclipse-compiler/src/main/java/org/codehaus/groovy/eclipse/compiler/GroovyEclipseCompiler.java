@@ -309,18 +309,18 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             args.add(config.getSourceEncoding());
         }
 
-        for (Entry<Object, Object> entry : (Iterable<Entry<Object, Object>>) config.getCustomCompilerArguments().entrySet()) {
+        for (Entry<String, String> entry : config.getCustomCompilerArgumentsAsMap().entrySet()) {
 
-            Object key = entry.getKey();
+            String key = entry.getKey();
             if (startsWithHyphen(key)) {
                 if (JAVA_AGENT_CLASS_PARAM_NAME.equals(key)) {
-                    setJavaAgentClass((String) entry.getValue());
+                    setJavaAgentClass(entry.getValue());
                     // do not add the custom java agent arg because it is not
                     // expected by groovy-eclipse compiler
                 } else {
                     // don't add a "-" if the arg
                     // already has one
-                    args.add((String) key);
+                    args.add(key);
                 }
             } else if (key != null && !key.equals("org.osgi.framework.system.packages")) {
                 // See https://jira.codehaus.org/browse/GRECLIPSE-1418 ignore
@@ -358,7 +358,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         File outputDirectory = new File(compilerConfiguration.getOutputLocation());
         Set<File> staleSources = new HashSet<File>();
 
-        for (String sourceRoot : (List<String>) compilerConfiguration.getSourceLocations()) {
+        for (String sourceRoot : compilerConfiguration.getSourceLocations()) {
             if (verbose) {
                 getLogger().info("Looking for sources in source root: " + sourceRoot);
             }
