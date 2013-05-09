@@ -300,7 +300,7 @@ public class DSLContentAssistTests extends CompletionTestCase {
     }
 
     private String getGroovySwingJar() {
-        return "groovy-swing-*.jar";
+        return "groovy-all-*.jar";
     }
 
     
