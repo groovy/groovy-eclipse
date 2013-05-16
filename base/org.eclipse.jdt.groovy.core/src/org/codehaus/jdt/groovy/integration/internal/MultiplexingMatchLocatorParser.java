@@ -24,6 +24,7 @@ import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
 import org.eclipse.jdt.internal.core.search.matching.MatchLocatorParser;
+import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 
 /**
  * @author Andrew Eisenberg
@@ -41,7 +42,8 @@ public class MultiplexingMatchLocatorParser extends MatchLocatorParser {
 
 	@Override
 	public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
-		if (ContentTypeUtils.isGroovyLikeFileName(sourceUnit.getFileName())) {
+		if (sourceUnit instanceof PossibleMatch ? ((PossibleMatch) sourceUnit).isInterestingSourceFile() : ContentTypeUtils
+				.isGroovyLikeFileName(sourceUnit.getFileName())) {
 			// FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
 			// FIXASC ought to reuse to ensure types end up in same groovy CU
 			return new GroovyParser(this.groovyParser.getCompilerOptions(), this.groovyParser.problemReporter, false, true)
