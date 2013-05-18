@@ -15,20 +15,8 @@
  */
 package org.codehaus.groovy.classgen;
 
-import groovyjarjarasm.asm.Opcodes;
 
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ConstructorNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.GroovyClassVisitor;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.PackageNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.control.AnnotationConstantsVisitor;
 import org.codehaus.groovy.control.CompilerConfiguration;
@@ -37,11 +25,12 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.syntax.SyntaxException;
+import groovyjarjarasm.asm.Opcodes;
 
 /**
  * A specialized Groovy AST visitor meant to perform additional verifications upon the
  * current AST. Currently it does checks on annotated nodes and annotations itself.
- * <p/>
+ * <p>
  * Current limitations:
  * - annotations on local variables are not supported
  *
@@ -175,7 +164,7 @@ public class ExtendedVerifier implements GroovyClassVisitor {
      * @return true if running on a 1.5+ runtime
      */
     protected boolean isAnnotationCompatible() {
-        return CompilerConfiguration.POST_JDK5.equals(this.source.getConfiguration().getTargetBytecode());
+        return CompilerConfiguration.isPostJDK5(this.source.getConfiguration().getTargetBytecode());
     }
 
     protected void addError(String msg, ASTNode expr) {

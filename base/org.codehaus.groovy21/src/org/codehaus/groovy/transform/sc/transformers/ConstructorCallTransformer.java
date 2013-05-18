@@ -21,17 +21,8 @@ import groovyjarjarasm.asm.Opcodes;
 
 import java.util.List;
 
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ConstructorNode;
-import org.codehaus.groovy.ast.GroovyCodeVisitor;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.MapEntryExpression;
-import org.codehaus.groovy.ast.expr.MapExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.classgen.AsmClassGenerator;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.classgen.asm.BytecodeHelper;

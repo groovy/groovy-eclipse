@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2003-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 
 /**
  * Represents an import statement of a single class
- * <p/>
+ *
  * @author Jochen Theodorou
  * @author Paul King
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
@@ -37,7 +37,7 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     private final boolean isStatic;
 
     /**
-     * Represent an import of an entire package, i.e.&nbsp;import package.Classname
+     * Represent an import of an entire package, i.e.&#160;import package.Classname
      *
      * @param type  the referenced class
      * @param alias optional alias
@@ -52,7 +52,7 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     }
 
     /**
-     * Represent an import of an entire package, i.e.&nbsp;import package.*
+     * Represent an import of an entire package, i.e.&#160;import package.*
      *
      * @param packageName the name of the package
      */
@@ -66,7 +66,7 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     }
 
     /**
-     * Represent a static import of a Class, i.e.&nbsp;import static package.Classname.*
+     * Represent a static import of a Class, i.e.&#160;import static package.Classname.*
      *
      * @param type the referenced class
      */
@@ -80,7 +80,7 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     }
 
     /**
-     * Represent a static import of a field or method, i.e.&nbsp;import static package.Classname.name
+     * Represent a static import of a field or method, i.e.&#160;import static package.Classname.name
      *
      * @param type      the referenced class
      * @param fieldName the field name

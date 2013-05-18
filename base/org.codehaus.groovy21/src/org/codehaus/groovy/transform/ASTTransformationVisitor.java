@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2012 the original author or authors.
+ * Copyright 2008-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,55 +16,35 @@
 
 package org.codehaus.groovy.transform;
 
-import groovy.lang.GroovyClassLoader;
 import groovy.transform.CompilationUnitAware;
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.classgen.GeneratorContext;
+import org.codehaus.groovy.control.*;
+import org.codehaus.groovy.control.messages.SimpleMessage;
+import org.codehaus.groovy.control.messages.WarningMessage;
+import org.codehaus.groovy.eclipse.GroovyLogManager;
+import org.codehaus.groovy.eclipse.TraceCategory;
+import org.codehaus.groovy.syntax.SyntaxException;
+
+import groovy.lang.GroovyClassLoader;
+import org.codehaus.groovy.GroovyException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
-
-import org.codehaus.groovy.GroovyException;
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.classgen.GeneratorContext;
-import org.codehaus.groovy.control.ASTTransformationsContext;
-import org.codehaus.groovy.control.CompilationFailedException;
-import org.codehaus.groovy.control.CompilationUnit;
-import org.codehaus.groovy.control.CompilePhase;
-import org.codehaus.groovy.control.Phases;
-import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.control.messages.SimpleMessage;
-import org.codehaus.groovy.control.messages.WarningMessage;
-import org.codehaus.groovy.eclipse.GroovyLogManager;
-import org.codehaus.groovy.eclipse.TraceCategory;
-import org.codehaus.groovy.syntax.SyntaxException;
+import java.util.*;
 /**
  * This class handles the invocation of the ASTAnnotationTransformation
  * when it is encountered by a tree walk.  One instance of each exists
  * for each phase of the compilation it applies to.  Before invocation the
- * <p/>
+ * <p>
  * {@link org.codehaus.groovy.transform.ASTTransformationCollectorCodeVisitor} will add a list
  * of annotations that this visitor should be concerned about.  All other
  * annotations are ignored, whether or not they are GroovyASTTransformation
  * annotated or not.
- * <p/>
+ * <p>
  * A Two-pass method is used. First all candidate annotations are added to a
  * list then the transformations are called on those collected annotations.
  * This is done to avoid concurrent modification exceptions during the AST tree
@@ -98,10 +78,10 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
 
     /**
      * Main loop entry.
-     * <p/>
+     * <p>
      * First, it delegates to the super visitClass so we can collect the
      * relevant annotations in an AST tree walk.
-     * <p/>
+     * <p>
      * Second, it calls the visit method on the transformation for each relevant
      * annotation found.
      *

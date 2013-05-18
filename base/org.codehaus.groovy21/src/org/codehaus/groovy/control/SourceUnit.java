@@ -41,8 +41,7 @@ import org.codehaus.groovy.control.io.URLReaderSource;
 import org.codehaus.groovy.control.messages.Message;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
-import org.codehaus.groovy.syntax.Reduction;
-import org.codehaus.groovy.syntax.SyntaxException;
+import org.codehaus.groovy.syntax.*;
 import org.codehaus.groovy.tools.Utilities;
 
 

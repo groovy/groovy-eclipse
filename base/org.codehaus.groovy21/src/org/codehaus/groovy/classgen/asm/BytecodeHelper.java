@@ -15,20 +15,15 @@
  */
 package org.codehaus.groovy.classgen.asm;
 
+
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.reflection.ReflectionCache;
+import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
 import groovyjarjarasm.asm.Label;
 import groovyjarjarasm.asm.MethodVisitor;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.reflect.Modifier;
-
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.CompileUnit;
-import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.reflection.ReflectionCache;
-import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
 
 /**
  * A helper class for bytecode generation with AsmClassGenerator.

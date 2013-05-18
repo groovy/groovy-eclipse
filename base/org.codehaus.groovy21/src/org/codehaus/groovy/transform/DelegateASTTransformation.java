@@ -16,35 +16,9 @@
 package org.codehaus.groovy.transform;
 
 import groovy.lang.GroovyObject;
-import groovyjarjarasm.asm.Opcodes;
 
-import java.lang.annotation.Retention;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.classgen.Verifier;
@@ -55,7 +29,11 @@ import org.codehaus.groovy.runtime.GeneratedClosure;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
+import groovyjarjarasm.asm.Opcodes;
 
+import java.lang.annotation.Retention;
+import java.lang.reflect.Modifier;
+import java.util.*;
 /**
  * Handles generation of code for the <code>@Delegate</code> annotation
  *
@@ -108,7 +86,7 @@ public class DelegateASTTransformation extends AbstractASTTransformation impleme
                 addDelegateMethod(node, fieldNode, owner, ownerMethods, mn, includeDeprecated);
             }
 
-            for (PropertyNode prop : type.getProperties()) {
+            for (PropertyNode prop : getAllProperties(type)) {
                 if (prop.isStatic() || !prop.isPublic())
                     continue;
                 String name = prop.getName();
@@ -151,6 +129,16 @@ public class DelegateASTTransformation extends AbstractASTTransformation impleme
         List<MethodNode> result = new ArrayList<MethodNode>();
         while (node != null) {
             result.addAll(node.getMethods());
+            node = node.getSuperClass();
+        }
+        return result;
+    }
+
+    private List<PropertyNode> getAllProperties(ClassNode type) {
+        ClassNode node = type;
+        List<PropertyNode> result = new ArrayList<PropertyNode>();
+        while (node != null) {
+            result.addAll(node.getProperties());
             node = node.getSuperClass();
         }
         return result;
@@ -231,7 +219,7 @@ public class DelegateASTTransformation extends AbstractASTTransformation impleme
             final Parameter[] params = candidate.getParameters();
             final Parameter[] newParams = new Parameter[params.length];
             for (int i = 0; i < newParams.length; i++) {
-                Parameter newParam = new Parameter(nonGeneric(params[i].getType()), params[i].getName());
+                Parameter newParam = new Parameter(nonGeneric(params[i].getType()), getParamName(params, i, fieldNode.getName()));
                 newParam.setInitialExpression(params[i].getInitialExpression());
 
                 if (includeParameterAnnotations) newParam.addAnnotations(copyAnnotatedNodeAnnotations(params[i].getAnnotations(), newParam));
@@ -258,10 +246,26 @@ public class DelegateASTTransformation extends AbstractASTTransformation impleme
         }
     }
 
+    private String getParamName(Parameter[] params, int i, String fieldName) {
+        String name = params[i].getName();
+        while(name.equals(fieldName) || clashesWithOtherParams(name, params, i)) {
+            name = "_" + name;
+        }
+        return name;
+    }
+
+    private boolean clashesWithOtherParams(String name, Parameter[] params, int i) {
+        for (int j = 0; j < params.length; j++) {
+            if (i == j) continue;
+            if (params[j].getName().equals(name)) return true;
+        }
+        return false;
+    }
+
     /**
      * Copies all <tt>candidateAnnotations</tt> with retention policy {@link java.lang.annotation.RetentionPolicy#RUNTIME}
-     * and {@link java.lang.annotation.RetentionPolicy#CLASS}.<p/>
-     *
+     * and {@link java.lang.annotation.RetentionPolicy#CLASS}.
+     * <p>
      * Annotations with {@link GeneratedClosure} members are not supported by now.
      */
     private List<AnnotationNode> copyAnnotatedNodeAnnotations(final List<AnnotationNode> candidateAnnotations, final AnnotatedNode annotatedNode) {

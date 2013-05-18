@@ -15,12 +15,13 @@
  */
 package org.codehaus.groovy.ast;
 
-import groovyjarjarasm.asm.Opcodes;
 
-import java.util.List;
 
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import groovyjarjarasm.asm.Opcodes;
+
+import java.util.List;
 
 /**
  * Represents a method declaration

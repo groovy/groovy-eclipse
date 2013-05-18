@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2003-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.antlr;
 
-import groovyjarjarasm.asm.Opcodes;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -25,7 +24,7 @@ import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MixinNode;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
-
+import groovyjarjarasm.asm.Opcodes;
 
 public class EnumHelper {
     private static final int FS = Opcodes.ACC_FINAL | Opcodes.ACC_STATIC;
@@ -51,20 +50,24 @@ public class EnumHelper {
         
         return enumClass;
     }
-
+    
+    public static void addEnumConstant(ClassNode enumClass, String name, Expression init) {
+        addEnumConstant(enumClass, enumClass, name, init, -1, -1);
+    }
 
     // GRECLIPSE: start
     // modified to return the FieldNode it creates, so that we can fix up the position
     // GRECLIPSE: end
-    public static FieldNode addEnumConstant(ClassNode enumClassType,ClassNode enumClassOwner, String name, Expression init) {
+    public static FieldNode addEnumConstant(ClassNode enumClassType, ClassNode enumClassOwner, String name, Expression init, int lineNumber, int colNumber) {
         int modifiers = PUBLIC_FS | Opcodes.ACC_ENUM;
         if  (init!=null && !(init instanceof ListExpression)) {
             ListExpression list = new ListExpression();
             list.addExpression(init);
             init = list;
-        }
-       
-        FieldNode fn = new FieldNode(name,modifiers,enumClassType.getPlainNodeReference(),enumClassOwner,init);
+        }      
+        FieldNode fn = new FieldNode(name, modifiers, enumClassType.getPlainNodeReference(), enumClassOwner,init);
+        fn.setLineNumber(lineNumber);
+        fn.setColumnNumber(colNumber);
         enumClassOwner.addField(fn);
         return fn;
     }

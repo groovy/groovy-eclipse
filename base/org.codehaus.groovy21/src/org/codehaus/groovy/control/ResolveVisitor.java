@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2003-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,57 +15,8 @@
  */
 package org.codehaus.groovy.control;
 
-import groovy.lang.GroovyClassLoader;
-import groovyjarjarasm.asm.Opcodes;
-
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassCodeExpressionTransformer;
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.CompileUnit;
-import org.codehaus.groovy.ast.DynamicVariable;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.InnerClassNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.Variable;
-import org.codehaus.groovy.ast.VariableScope;
-import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.CastExpression;
-import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
-import org.codehaus.groovy.ast.expr.DeclarationExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.ListExpression;
-import org.codehaus.groovy.ast.expr.MapEntryExpression;
-import org.codehaus.groovy.ast.expr.MapExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
@@ -73,13 +24,25 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.control.ClassNodeResolver.LookupResult;
 import org.codehaus.groovy.syntax.Types;
+import groovy.lang.GroovyClassLoader;
+import org.codehaus.groovy.GroovyBugError;
+import groovyjarjarasm.asm.Opcodes;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.*;
 /**
  * Visitor to resolve Types and convert VariableExpression to
  * ClassExpressions if needed. The ResolveVisitor will try to
  * find the Class for a ClassExpression and prints an error if
  * it fails to do so. Constructions like C[], foo as C, (C) foo
  * will force creation of a ClassExpression for C
- * <p/>
+ * <p>
  * Note: the method to start the resolving is  startResolving(ClassNode, SourceUnit).
  *
  * @author Jochen Theodorou
@@ -421,7 +384,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     	}
     	
     	for (ClassNode classToCheck : hierClasses.values()) {
-    		if (classToCheck.mightHaveInners() && existsAsInnerClass(classToCheck, classToCheck.getName()+"$"+firstComponent)) {  // GRECLIPSE
+    		// GRECLIPSE
+    		if (classToCheck.mightHaveInners() && existsAsInnerClass(classToCheck, classToCheck.getName()+"$"+firstComponent)) {
             name = classToCheck.getName()+"$"+qualName;
             val = ClassHelper.make(name);
 	        if (resolveFromCompileUnit(val)) {
@@ -456,7 +420,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         // most outer class is now element 0
         for (ClassNode testNode : outerClasses) {
-            if (testNode.mightHaveInners() && existsAsInnerClass(testNode, testNode.getName()+"$"+firstComponent)) {  // GRECLIPSE
+            // GRECLIPSE
+            if (testNode.mightHaveInners() && existsAsInnerClass(testNode, testNode.getName()+"$"+firstComponent)) {  
             name = testNode.getName()+"$"+qualName;
             val = ClassHelper.make(name);
             if (resolveFromCompileUnit(val)) {
@@ -1126,6 +1091,13 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return !Character.isLowerCase(name.charAt(0));
     }
 
+    private boolean isLeftSquareBracket(int op) {
+        return op == Types.ARRAY_EXPRESSION
+                || op == Types.LEFT_SQUARE_BRACKET
+                || op == Types.SYNTH_LIST
+                || op == Types.SYNTH_MAP;
+    }
+
     protected Expression transformBinaryExpression(BinaryExpression be) {
         Expression left = transform(be.getLeftExpression());
         int type = be.getOperation().getType();
@@ -1139,7 +1111,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             addError(error, be.getLeftExpression());
             return be;
         }
-        if (left instanceof ClassExpression) {
+        if (left instanceof ClassExpression && isLeftSquareBracket(type)) {
             if (be.getRightExpression() instanceof ListExpression) {
                 ListExpression list = (ListExpression) be.getRightExpression();
                 if (list.getExpressions().isEmpty()) {

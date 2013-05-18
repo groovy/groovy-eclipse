@@ -15,65 +15,28 @@
  */
 package org.codehaus.groovy.classgen.asm.sc;
 
-import static org.codehaus.groovy.ast.ClassHelper.BigDecimal_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.BigInteger_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.CLASS_Type;
-import static org.codehaus.groovy.ast.ClassHelper.CLOSURE_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.GROOVY_OBJECT_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.Integer_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.Iterator_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.LIST_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.Long_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.MAP_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.Number_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.STRING_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.boolean_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.getWrapper;
-import static org.codehaus.groovy.ast.ClassHelper.int_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.make;
-import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.chooseBestMethod;
-import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findDGMMethodsByNameAndArguments;
-import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf;
-import groovyjarjarasm.asm.Label;
-import groovyjarjarasm.asm.MethodVisitor;
-import groovyjarjarasm.asm.Opcodes;
-
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.InnerClassNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.Variable;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
-import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.EmptyStatement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
-import org.codehaus.groovy.classgen.asm.BytecodeHelper;
-import org.codehaus.groovy.classgen.asm.CallSiteWriter;
-import org.codehaus.groovy.classgen.asm.CompileStack;
-import org.codehaus.groovy.classgen.asm.OperandStack;
-import org.codehaus.groovy.classgen.asm.TypeChooser;
-import org.codehaus.groovy.classgen.asm.WriterController;
+import org.codehaus.groovy.classgen.asm.*;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
+import groovyjarjarasm.asm.Label;
+import groovyjarjarasm.asm.MethodVisitor;
+import groovyjarjarasm.asm.Opcodes;
+
+import java.lang.reflect.Modifier;
+import java.util.*;
+
+import static org.codehaus.groovy.ast.ClassHelper.*;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.chooseBestMethod;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findDGMMethodsByNameAndArguments;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf;
 
 /**
  * A call site writer which replaces call site caching with static calls. This means that the generated code
@@ -208,7 +171,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         }
 
         // GROOVY-5568, we would be facing a DGM call, but instead of foo.getText(), have foo.text
-        List<MethodNode> methods = findDGMMethodsByNameAndArguments(receiverType, getterName, ClassNode.EMPTY_ARRAY);
+        List<MethodNode> methods = findDGMMethodsByNameAndArguments(controller.getSourceUnit().getClassLoader(), receiverType, getterName, ClassNode.EMPTY_ARRAY);
         if (!methods.isEmpty()) {
             List<MethodNode> methodNodes = chooseBestMethod(receiverType, methods, ClassNode.EMPTY_ARRAY);
             if (methodNodes.size()==1) {
@@ -232,11 +195,11 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         if (!isStaticProperty) {
             if (receiverType.implementsInterface(MAP_TYPE) || MAP_TYPE.equals(receiverType)) {
                 // for maps, replace map.foo with map.get('foo')
-                writeMapDotProperty(receiver, methodName, mv);
+                writeMapDotProperty(receiver, methodName, mv, safe);
                 return;
             }
             if (receiverType.implementsInterface(LIST_TYPE) || LIST_TYPE.equals(receiverType)) {
-                writeListDotProperty(receiver, methodName, mv);
+                writeListDotProperty(receiver, methodName, mv, safe);
                 return;
             }
         }
@@ -251,14 +214,29 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         controller.getOperandStack().push(OBJECT_TYPE);
     }
 
-    private void writeMapDotProperty(final Expression receiver, final String methodName, final MethodVisitor mv) {
+    private void writeMapDotProperty(final Expression receiver, final String methodName, final MethodVisitor mv, final boolean safe) {
         receiver.visit(controller.getAcg()); // load receiver
+
+        Label exit = new Label();
+        if (safe) {
+            Label doGet = new Label();
+            mv.visitJumpInsn(IFNONNULL, doGet);
+            controller.getOperandStack().remove(1);
+            mv.visitInsn(ACONST_NULL);
+            mv.visitJumpInsn(GOTO, exit);
+            mv.visitLabel(doGet);
+            receiver.visit(controller.getAcg());
+        }
+
         mv.visitLdcInsn(methodName); // load property name
         mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+        if (safe) {
+            mv.visitLabel(exit);
+        }
         controller.getOperandStack().replace(OBJECT_TYPE);
     }
 
-    private void writeListDotProperty(final Expression receiver, final String methodName, final MethodVisitor mv) {
+    private void writeListDotProperty(final Expression receiver, final String methodName, final MethodVisitor mv, final boolean safe) {
         ClassNode componentType = (ClassNode) receiver.getNodeMetaData(StaticCompilationMetadataKeys.COMPONENT_TYPE);
         if (componentType==null) {
             componentType = OBJECT_TYPE;
@@ -268,6 +246,18 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         // for (e in list) { result.add (e.foo) }
         // result
         CompileStack compileStack = controller.getCompileStack();
+
+        Label exit = new Label();
+        if (safe) {
+            receiver.visit(controller.getAcg());
+            Label doGet = new Label();
+            mv.visitJumpInsn(IFNONNULL, doGet);
+            controller.getOperandStack().remove(1);
+            mv.visitInsn(ACONST_NULL);
+            mv.visitJumpInsn(GOTO, exit);
+            mv.visitLabel(doGet);
+        }
+
         Variable tmpList = new VariableExpression("tmpList", make(ArrayList.class));
         int var = compileStack.defineTemporaryVariable(tmpList, false);
         Variable iterator = new VariableExpression("iterator", Iterator_TYPE);
@@ -323,6 +313,9 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         mv.visitJumpInsn(GOTO, l2);
         mv.visitLabel(l3);
         mv.visitVarInsn(ALOAD, var);
+        if (safe) {
+            mv.visitLabel(exit);
+        }
         controller.getOperandStack().push(make(ArrayList.class));
         controller.getCompileStack().removeVar(next);
         controller.getCompileStack().removeVar(it);
@@ -575,7 +568,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         boolean acceptAnyMethod =
                 MAP_TYPE.equals(rType) || rType.implementsInterface(MAP_TYPE)
                 || LIST_TYPE.equals(rType) || rType.implementsInterface(LIST_TYPE);
-        List<MethodNode> nodes = StaticTypeCheckingSupport.findDGMMethodsByNameAndArguments(rType, message, args);
+        List<MethodNode> nodes = StaticTypeCheckingSupport.findDGMMethodsByNameAndArguments(controller.getSourceUnit().getClassLoader(), rType, message, args);
         nodes = StaticTypeCheckingSupport.chooseBestMethod(rType, nodes, args);
         if (nodes.size()==1 || nodes.size()>1 && acceptAnyMethod) {
             MethodNode methodNode = nodes.get(0);

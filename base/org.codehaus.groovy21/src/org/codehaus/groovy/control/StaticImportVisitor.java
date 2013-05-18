@@ -17,39 +17,13 @@ package org.codehaus.groovy.control;
 
 import static org.codehaus.groovy.runtime.MetaClassHelper.capitalize;
 
-import java.util.List;
-import java.util.Map;
-
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassCodeExpressionTransformer;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.DynamicVariable;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.Variable;
-import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
-import org.codehaus.groovy.ast.expr.EmptyExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.ListExpression;
-import org.codehaus.groovy.ast.expr.MapEntryExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.NamedArgumentListExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
-import org.codehaus.groovy.ast.expr.TupleExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.syntax.Types;
+
+import java.util.*;
+
 
 /**
  * Visitor to resolve constants and method calls from static Imports

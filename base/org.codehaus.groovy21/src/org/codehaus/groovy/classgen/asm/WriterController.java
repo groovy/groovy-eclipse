@@ -16,9 +16,7 @@
 package org.codehaus.groovy.classgen.asm;
 
 import groovy.lang.GroovyRuntimeException;
-import groovyjarjarasm.asm.ClassVisitor;
-import groovyjarjarasm.asm.MethodVisitor;
-import groovyjarjarasm.asm.Opcodes;
+
 
 import java.lang.reflect.Constructor;
 import java.util.Map;
@@ -32,7 +30,11 @@ import org.codehaus.groovy.ast.InterfaceHelperClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.classgen.AsmClassGenerator;
 import org.codehaus.groovy.classgen.GeneratorContext;
+import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.SourceUnit;
+import groovyjarjarasm.asm.ClassVisitor;
+import groovyjarjarasm.asm.MethodVisitor;
+import groovyjarjarasm.asm.Opcodes;
 
 public class WriterController {
 
@@ -80,7 +82,8 @@ public class WriterController {
     private int lineNumber = -1;
 
     public void init(AsmClassGenerator asmClassGenerator, GeneratorContext gcon, ClassVisitor cv, ClassNode cn) {
-        Map<String,Boolean> optOptions = cn.getCompileUnit().getConfig().getOptimizationOptions();
+        CompilerConfiguration config = cn.getCompileUnit().getConfig();
+        Map<String,Boolean> optOptions = config.getOptimizationOptions();
         boolean invokedynamic=false;
         if (optOptions.isEmpty()) {
             // IGNORE
@@ -97,8 +100,9 @@ public class WriterController {
         this.outermostClass = null;
         this.internalClassName = BytecodeHelper.getClassInternalName(classNode);
         
+        bytecodeVersion = chooseBytecodeVersion(invokedynamic, config.getTargetBytecode());
+
         if (invokedynamic) {
-            bytecodeVersion = Opcodes.V1_7;
             try {
                 this.invocationWriter = (InvocationWriter) indyWriter.newInstance(this);
                 this.callSiteWriter = (CallSiteWriter) indyCallSiteWriter.newInstance(this);
@@ -141,6 +145,27 @@ public class WriterController {
             this.statementWriter = new StatementWriter(this);
         }
         this.typeChooser = new StatementMetaTypeChooser();
+    }
+
+    private static int chooseBytecodeVersion(final boolean invokedynamic, final String targetBytecode) {
+        // todo: support JDK 1.8 when ASM5 is out
+        if (invokedynamic) {
+            return Opcodes.V1_7;
+        } else {
+            if (CompilerConfiguration.JDK4.equals(targetBytecode)) {
+                return Opcodes.V1_4;
+            }
+            if (CompilerConfiguration.JDK5.equals(targetBytecode)) {
+                return Opcodes.V1_5;
+            }
+            if (CompilerConfiguration.JDK6.equals(targetBytecode)) {
+                return Opcodes.V1_6;
+            }
+            if (CompilerConfiguration.JDK7.equals(targetBytecode)) {
+                return Opcodes.V1_7;
+            }
+        }
+        throw new GroovyBugError("Bytecode version ["+targetBytecode+"] is not supported by the compiler");
     }
 
     public AsmClassGenerator getAcg() {

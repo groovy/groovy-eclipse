@@ -15,42 +15,7 @@
  */
 package org.codehaus.groovy.transform.stc;
 
-import static org.codehaus.groovy.ast.ClassHelper.Annotation_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.BigDecimal_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.BigInteger_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.Boolean_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.Byte_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.CLASS_Type;
-import static org.codehaus.groovy.ast.ClassHelper.CLOSURE_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.Character_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.DYNAMIC_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.Double_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.Float_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.GROOVY_OBJECT_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.GSTRING_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.Integer_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.LIST_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.Long_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.MAP_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.Number_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.PATTERN_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.STRING_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.Short_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.boolean_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.byte_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.char_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.double_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.float_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.getUnwrapper;
-import static org.codehaus.groovy.ast.ClassHelper.getWrapper;
-import static org.codehaus.groovy.ast.ClassHelper.int_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.isNumberType;
-import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveType;
-import static org.codehaus.groovy.ast.ClassHelper.long_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.short_TYPE;
-import static org.codehaus.groovy.ast.ClassHelper.void_WRAPPER_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.*;
 import static org.codehaus.groovy.ast.tools.WideningCategories.isBigDecCategory;
 import static org.codehaus.groovy.ast.tools.WideningCategories.isBigIntCategory;
 import static org.codehaus.groovy.ast.tools.WideningCategories.isDouble;
@@ -341,7 +306,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      * Returns the list of type checking annotations class nodes. Subclasses may override this method
      * in order to provide additional classes which must be looked up when checking if a method or
      * a class node should be skipped.
-     * <p/>
+     * <p>
      * The default implementation returns {@link TypeChecked}.
      *
      * @return array of class nodes
@@ -436,10 +401,16 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             if (vexp.getName().equals("this")) storeType(vexp, typeCheckingContext.getEnclosingClassNode());
             if (vexp.getName().equals("super")) storeType(vexp, typeCheckingContext.getEnclosingClassNode().getSuperClass());
             if (typeCheckingContext.getEnclosingClosure() != null) {
-                if (vexp.getName().equals("owner")
-                        || vexp.getName().equals("delegate")
-                        || vexp.getName().equals("thisObject")) {
+                if (vexp.getName().equals("owner") || vexp.getName().equals("thisObject")) {
                     storeType(vexp, typeCheckingContext.getEnclosingClassNode());
+                    return;
+                } else if ("delegate".equals(vexp.getName())) {
+                    DelegationMetadata md = getDelegationMetadata(typeCheckingContext.getEnclosingClosure().getClosureExpression());
+                    ClassNode type = typeCheckingContext.getEnclosingClassNode();
+                    if (md!=null) {
+                        type = md.getType();
+                    }
+                    storeType(vexp, type);
                     return;
                 }
             }
@@ -798,7 +769,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 ClassNode elemType = getType(listExpression);
                 ClassNode tupleType = getType(tupleExpression);
                 if (!isAssignableTo(elemType, tupleType)) {
-                    addStaticTypeError("Cannot assign value of type " + elemType.getText() + " to variable of type " + tupleType.getText(), rightExpression);
+                    addStaticTypeError("Cannot assign value of type " + elemType.toString(false) + " to variable of type " + tupleType.toString(false), rightExpression);
                     break; // avoids too many errors
                 }
             }
@@ -845,14 +816,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 if (rightRedirect.isArray()) {
                     ClassNode rightComponentType = rightRedirect.getComponentType();
                     if (!checkCompatibleAssignmentTypes(leftComponentType, rightComponentType)) {
-                        addStaticTypeError("Cannot assign value of type " + rightComponentType.getText() + " into array of type " + leftExpressionType.toString(false), assignmentExpression.getRightExpression());
+                        addStaticTypeError("Cannot assign value of type " + rightComponentType.toString(false) + " into array of type " + leftExpressionType.toString(false), assignmentExpression.getRightExpression());
                     }
                 } else if (rightExpression instanceof ListExpression) {
                     for (Expression element : ((ListExpression) rightExpression).getExpressions()) {
                         ClassNode rightComponentType = element.getType().redirect();
                         if (!checkCompatibleAssignmentTypes(leftComponentType, rightComponentType)
                                 && !(isNullConstant(element) && !isPrimitiveType(leftComponentType))) {
-                            addStaticTypeError("Cannot assign value of type " + rightComponentType.getText() + " into array of type " + leftExpressionType.toString(false), assignmentExpression.getRightExpression());
+                            addStaticTypeError("Cannot assign value of type " + rightComponentType.toString(false) + " into array of type " + leftExpressionType.toString(false), assignmentExpression.getRightExpression());
                         }
                     }
                 }
@@ -1610,6 +1581,9 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     @Override
     public void visitClosureExpression(final ClosureExpression expression) {
+        boolean oldStaticContext = typeCheckingContext.isInStaticContext;
+        typeCheckingContext.isInStaticContext = false;
+
         // collect every variable expression used in the loop body
         final Map<VariableExpression, ClassNode> varOrigType = new HashMap<VariableExpression, ClassNode>();
         Statement code = expression.getCode();
@@ -1661,6 +1635,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
         // restore original metadata
         restoreVariableExpressionMetadata(typesBeforeVisit);
+        typeCheckingContext.isInStaticContext = oldStaticContext;
     }
 
     protected DelegationMetadata getDelegationMetadata(final ClosureExpression expression) {
@@ -2254,10 +2229,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         }
 
                         if (isUsingGenericsOrIsArrayUsingGenerics(returnType)) {
-                            visitMethodCallArguments(argumentList, true, (MethodNode)call.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET));
+                            visitMethodCallArguments(argumentList, true, directMethodCallCandidate);
                             ClassNode irtg = inferReturnTypeGenerics(chosenReceiver.getType(), directMethodCallCandidate, callArguments);
                             returnType = irtg != null && implementsInterfaceOrIsSubclassOf(irtg, returnType) ? irtg : returnType;
                             callArgsVisited = true;
+                        }
+                        if (directMethodCallCandidate==GET_DELEGATE && typeCheckingContext.getEnclosingClosure()!=null) {
+                            DelegationMetadata md = getDelegationMetadata(typeCheckingContext.getEnclosingClosure().getClosureExpression());
+                            returnType = typeCheckingContext.getEnclosingClassNode();
+                            if (md!=null) {
+                                returnType = md.getType();
+                            }
                         }
                         storeType(call, returnType);
                         storeTargetMethod(call, directMethodCallCandidate);
@@ -2459,7 +2441,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             Expression source = expression.getExpression();
             ClassNode expressionType = getType(source);
             if (!checkCast(targetType, source)) {
-                addStaticTypeError("Inconvertible types: cannot cast " + expressionType.toString(false) + " to " + targetType.getName(), expression);
+                addStaticTypeError("Inconvertible types: cannot cast " + expressionType.toString(false) + " to " + targetType.toString(false), expression);
             }
         }
         storeType(expression, expression.getType());

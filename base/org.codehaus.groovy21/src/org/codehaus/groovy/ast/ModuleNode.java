@@ -15,18 +15,8 @@
  */
 package org.codehaus.groovy.ast;
 
+
 import groovy.lang.Binding;
-import groovyjarjarasm.asm.Opcodes;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -36,6 +26,10 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.InvokerHelper;
+import groovyjarjarasm.asm.Opcodes;
+
+import java.io.File;
+import java.util.*;
 
 /**
  * Represents a module, which consists typically of a class declaration
@@ -169,6 +163,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
         // end
         imports.put(alias, importNode);
         importNode.addAnnotations(annotations);
+        storeLastAddedImportNode(importNode);
     }
 
     public void addStarImport(String packageName) {
@@ -179,6 +174,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
         ImportNode importNode = new ImportNode(packageName);
         importNode.addAnnotations(annotations);
         starImports.add(importNode);
+        storeLastAddedImportNode(importNode);
     }
 
     public void addStatement(Statement node) {
@@ -477,6 +473,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
         ImportNode node = new ImportNode(type, fieldName, alias);
         node.addAnnotations(annotations);
         staticImports.put(alias, node);
+        storeLastAddedImportNode(node);
     }
 
     public void addStaticStarImport(String name, ClassNode type) {
@@ -487,6 +484,15 @@ public class ModuleNode extends ASTNode implements Opcodes {
         ImportNode node = new ImportNode(type);
         node.addAnnotations(annotations);
         staticStarImports.put(name, node);
+        storeLastAddedImportNode(node);
+    }
+
+    // This method only exists as a workaround for GROOVY-6094
+    // In order to keep binary compatibility
+    private void storeLastAddedImportNode(final ImportNode node) {
+        if (getNodeMetaData(ImportNode.class)==ImportNode.class) {
+            putNodeMetaData(ImportNode.class, node);
+        }
     }
 
     public String getMainClassName() {

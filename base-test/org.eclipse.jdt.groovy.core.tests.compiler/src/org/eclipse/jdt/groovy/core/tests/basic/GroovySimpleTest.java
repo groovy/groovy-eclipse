@@ -100,7 +100,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         String[] newcps = new String[cps.length+2];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.1.2.jar");
+        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.1.3.jar");
         	if (groovyJar==null) {
 	            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.0.7.jar");
 	            if (groovyJar==null) {
@@ -10104,8 +10104,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         
         List imports = mn.getImports();
         ImportNode brokenImportNode =(ImportNode) imports.get(0);
-        assertEquals(2,brokenImportNode.getStart());
-        assertEquals(0,brokenImportNode.getEnd());
+        assertEquals(0,brokenImportNode.getStart());
+        assertEquals(6,brokenImportNode.getEnd());
         assertEquals("java.lang.Object",brokenImportNode.getType().getName());
         
         ClassNode cn = (ClassNode)mn.getClasses().get(0);

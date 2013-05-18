@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2012 the original author or authors.
+ * Copyright 2003-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,19 @@ import groovyjarjarantlr.TokenStreamRecognitionException;
 import groovyjarjarantlr.collections.AST;
 import groovyjarjarasm.asm.Opcodes;
 
+import org.codehaus.groovy.GroovyBugError;
+import org.codehaus.groovy.antlr.parser.GroovyLexer;
+import org.codehaus.groovy.antlr.parser.GroovyRecognizer;
+import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
+import org.codehaus.groovy.antlr.treewalker.*;
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.expr.*;
+import org.codehaus.groovy.ast.stmt.*;
+import org.codehaus.groovy.control.CompilationFailedException;
+import org.codehaus.groovy.control.ParserPlugin;
+import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.syntax.*;
+
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
@@ -35,100 +48,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
-import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.antlr.parser.GroovyLexer;
-import org.codehaus.groovy.antlr.parser.GroovyRecognizer;
-import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
-import org.codehaus.groovy.antlr.treewalker.CompositeVisitor;
-import org.codehaus.groovy.antlr.treewalker.MindMapPrinter;
-import org.codehaus.groovy.antlr.treewalker.NodeAsHTMLPrinter;
-import org.codehaus.groovy.antlr.treewalker.PreOrderTraversal;
-import org.codehaus.groovy.antlr.treewalker.SourceCodeTraversal;
-import org.codehaus.groovy.antlr.treewalker.SourcePrinter;
-import org.codehaus.groovy.antlr.treewalker.Visitor;
-import org.codehaus.groovy.antlr.treewalker.VisitorAdapter;
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ConstructorNode;
-import org.codehaus.groovy.ast.EnumConstantClassNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.InnerClassNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.MixinNode;
-import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.ast.PackageNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
-import org.codehaus.groovy.ast.expr.ArrayExpression;
-import org.codehaus.groovy.ast.expr.AttributeExpression;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
-import org.codehaus.groovy.ast.expr.BooleanExpression;
-import org.codehaus.groovy.ast.expr.CastExpression;
-import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.ClosureListExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
-import org.codehaus.groovy.ast.expr.DeclarationExpression;
-import org.codehaus.groovy.ast.expr.ElvisOperatorExpression;
-import org.codehaus.groovy.ast.expr.EmptyExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.ExpressionTransformer;
-import org.codehaus.groovy.ast.expr.FieldExpression;
-import org.codehaus.groovy.ast.expr.GStringExpression;
-import org.codehaus.groovy.ast.expr.ListExpression;
-import org.codehaus.groovy.ast.expr.MapEntryExpression;
-import org.codehaus.groovy.ast.expr.MapExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.MethodPointerExpression;
-import org.codehaus.groovy.ast.expr.NamedArgumentListExpression;
-import org.codehaus.groovy.ast.expr.NotExpression;
-import org.codehaus.groovy.ast.expr.PostfixExpression;
-import org.codehaus.groovy.ast.expr.PrefixExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
-import org.codehaus.groovy.ast.expr.RangeExpression;
-import org.codehaus.groovy.ast.expr.SpreadExpression;
-import org.codehaus.groovy.ast.expr.SpreadMapExpression;
-import org.codehaus.groovy.ast.expr.TernaryExpression;
-import org.codehaus.groovy.ast.expr.TupleExpression;
-import org.codehaus.groovy.ast.expr.UnaryMinusExpression;
-import org.codehaus.groovy.ast.expr.UnaryPlusExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.ast.stmt.AssertStatement;
-import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.ast.stmt.BreakStatement;
-import org.codehaus.groovy.ast.stmt.CaseStatement;
-import org.codehaus.groovy.ast.stmt.CatchStatement;
-import org.codehaus.groovy.ast.stmt.ContinueStatement;
-import org.codehaus.groovy.ast.stmt.EmptyStatement;
-import org.codehaus.groovy.ast.stmt.ExpressionStatement;
-import org.codehaus.groovy.ast.stmt.ForStatement;
-import org.codehaus.groovy.ast.stmt.IfStatement;
-import org.codehaus.groovy.ast.stmt.ReturnStatement;
-import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.ast.stmt.SwitchStatement;
-import org.codehaus.groovy.ast.stmt.SynchronizedStatement;
-import org.codehaus.groovy.ast.stmt.ThrowStatement;
-import org.codehaus.groovy.ast.stmt.TryCatchStatement;
-import org.codehaus.groovy.ast.stmt.WhileStatement;
-import org.codehaus.groovy.control.CompilationFailedException;
-import org.codehaus.groovy.control.ParserPlugin;
-import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.syntax.ASTHelper;
-import org.codehaus.groovy.syntax.Numbers;
-import org.codehaus.groovy.syntax.ParserException;
-import org.codehaus.groovy.syntax.Reduction;
-import org.codehaus.groovy.syntax.SyntaxException;
-import org.codehaus.groovy.syntax.Token;
-import org.codehaus.groovy.syntax.Types;
 
 /**
  * A parser plugin which adapts the JSR Antlr Parser to the Groovy runtime
@@ -503,8 +422,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     protected void importDef(AST importNode) {
-        boolean isStatic = importNode.getType() == STATIC_IMPORT;
-        List<AnnotationNode> annotations = new ArrayList<AnnotationNode>();
+        try {
+            // GROOVY-6094
+            output.putNodeMetaData(ImportNode.class, ImportNode.class);
+
+      		boolean isStatic = importNode.getType() == STATIC_IMPORT;
+        	List<AnnotationNode> annotations = new ArrayList<AnnotationNode>();
 
         AST node = importNode.getFirstChild();
         if (isType(ANNOTATIONS, node)) {
@@ -614,13 +537,22 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 configureAST(imp, importNode);
                 // end
             }
-            // GRECLIPSE: start: configure alias ast
-            if (alias != null) {
-                ConstantExpression aliasExpr = new ConstantExpression(alias);
-                configureAST(aliasExpr, aliasNode);
-                imp.setAliasExpr(aliasExpr);
+                // GRECLIPSE: start: configure alias ast
+            	if (alias != null) {
+        	        ConstantExpression aliasExpr = new ConstantExpression(alias);
+	                configureAST(aliasExpr, aliasNode);
+    	            imp.setAliasExpr(aliasExpr);
+            	}
+            	// GRECLIPSE end
+        	}
+        } finally {
+            // we're using node metadata here in order to fix GROOVY-6094
+            // without breaking external APIs
+            Object node = output.getNodeMetaData(ImportNode.class);
+            if (node!=null && node!=ImportNode.class) {
+                configureAST((ImportNode)node, importNode);
             }
-            // end
+            output.removeNodeMetaData(ImportNode.class);
         }
     }
 
@@ -974,16 +906,30 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     protected void enumConstantDef(AST node) {
         enumConstantBeingDef = true;
         assertNodeType(ENUM_CONSTANT_DEF, node);
+        List<AnnotationNode> annotations = new ArrayList<AnnotationNode>();
         AST element = node.getFirstChild();
         if (isType(ANNOTATIONS,element)) {
+            processAnnotations(annotations, element);
             element = element.getNextSibling();
         }
         String identifier = identifier(element);
+        int savedLine = element.getLine();
+        int savedColumn = element.getColumn();
         Expression init = null;
         element = element.getNextSibling();
         if (element!=null) {
             init = expression(element);
-            ClassNode innerClass = getAnonymousInnerClassNode(init);
+            ClassNode innerClass;
+            if (element.getNextSibling() == null) {
+                innerClass = getAnonymousInnerClassNode(init);
+                if (innerClass != null) {
+                    init = null;
+                }
+            } else {
+                element = element.getNextSibling();
+                Expression next = expression(element);
+                innerClass = getAnonymousInnerClassNode(next);
+            }
             
             if (innerClass!=null) {
                 // we have to handle an enum that defines a class for a constant
@@ -991,12 +937,26 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // to configure the inner class 
                 innerClass.setSuperClass(classNode.getPlainNodeReference());
                 innerClass.setModifiers(classNode.getModifiers() | Opcodes.ACC_FINAL);
-                // we use a ClassExpression for transportation o EnumVisitor
-                init = new ClassExpression(innerClass);
+                // we use a ClassExpression for transportation to EnumVisitor
+                Expression inner = new ClassExpression(innerClass);
+                if (init == null) {
+                    ListExpression le = new ListExpression();
+                    le.addExpression(inner);
+                    init = le;
+                } else {
+                    if (init instanceof ListExpression) {
+                        ((ListExpression) init).addExpression(inner);
+                    } else {
+                        ListExpression le = new ListExpression();
+                    le.addExpression(init);
+                        le.addExpression(inner);
+                        init = le;
+                    }
+                }
                 // and remove the final modifier from classNode to allow the sub class
                 classNode.setModifiers(classNode.getModifiers() & ~Opcodes.ACC_FINAL);
-            } else if (isType(ELIST,element)) {
-            	if(init instanceof ListExpression && !((ListExpression)init).isWrapped()) {
+            } else if (isType(ELIST, element)) {
+                if (init instanceof ListExpression && !((ListExpression) init).isWrapped()) {
                     ListExpression le = new ListExpression();
                     le.addExpression(init);
                     init = le;
@@ -1017,7 +977,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         FieldNode fn = 
         // end
-        EnumHelper.addEnumConstant(fakeNodeToRepresentTheNonDeclaredTypeOfEnumValue,classNode, identifier, init);
+        EnumHelper.addEnumConstant(fakeNodeToRepresentTheNonDeclaredTypeOfEnumValue, classNode, identifier, init, savedLine, savedColumn);
         // GRECLIPSE: start
         configureAST(fn, node);
         fn.setNameStart(nameStart);
@@ -3097,6 +3057,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
     	list.add(size);
     	return list;
+    }
+
+    protected Expression enumArguments(AST elist) {
+        List<Expression> expressionList = new ArrayList<Expression>();
+        for (AST node = elist; node != null; node = node.getNextSibling()) {
+            Expression expression = expression(node);
+            expressionList.add(expression);
+        }
+        ArgumentListExpression argumentListExpression = new ArgumentListExpression(expressionList);
+        configureAST(argumentListExpression, elist);
+        return argumentListExpression;
     }
 
     protected Expression arguments(AST elist) {
