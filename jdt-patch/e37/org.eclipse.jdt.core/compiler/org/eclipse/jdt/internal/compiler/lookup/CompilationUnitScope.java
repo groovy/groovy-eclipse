@@ -83,6 +83,9 @@ protected boolean reportPackageIsNotExpectedPackage(CompilationUnitDeclaration r
 }
 // GROOVY end
 
+// GROOVY start
+protected
+// GROOVY end
 void buildTypeBindings(AccessRestriction accessRestriction) {
 	this.topLevelTypes = new SourceTypeBinding[0]; // want it initialized if the package cannot be resolved
 	boolean firstIsSynthetic = false;

@@ -115,7 +115,9 @@ class JDTClassNodeBuilder {
 
 	// TODO still not 100% confident that the callers of this are doing the right thing or have the right expectations
 	TypeBinding toRawType(TypeBinding tb) {
-		if (tb instanceof ParameterizedTypeBinding) {
+		if (tb instanceof RawTypeBinding) {
+			return tb;
+		} else if (tb instanceof ParameterizedTypeBinding) {
 			ParameterizedTypeBinding ptb = (ParameterizedTypeBinding) tb;
 			// resolver.getScope() can return null (if the resolver hasn't yet been used to resolve something) - using
 			// the environment on the ptb seems safe. Other occurrences of getScope in this file could feasibly
@@ -321,6 +323,9 @@ class JDTClassNodeBuilder {
 	private ClassNode configureParameterizedType(ParameterizedTypeBinding parameterizedType) {
 		if (parameterizedType instanceof RawTypeBinding) { // TODO correct?
 			TypeBinding rt = toRawType(parameterizedType);
+			if (!(rt instanceof RawTypeBinding)) {
+				System.out.println("yikes");
+			}
 			return new JDTClassNode((RawTypeBinding) rt, resolver); // doesn't need generics initializing
 			// return resolver.makeWithoutCaching(toRawType(parameterizedType));// configureType(toRawType(parameterizedType));
 		}

@@ -122,15 +122,21 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 } else {
                     ClassNode declaringType = findDeclaringType(result);
                     if (declaringType != null) {
+                    	ClassNode effectiveDeclaringType = declaringType;
                         // find it in the java model
+                        if (declaringType.getEnclosingMethod() != null) {
+                        	// inner class, assume anonymous
+                        	effectiveDeclaringType = declaringType.getEnclosingMethod().getDeclaringClass();
+                        }
                         IType type = project.groovyClassToJavaType(declaringType);
                         if (type == null && !unit.isOnBuildPath()) {
                             // try to find it in the current compilation unit
-                            type = unit.getType(declaringType.getNameWithoutPackage());
+                            type = unit.getType(effectiveDeclaringType.getNameWithoutPackage());
                             if (! type.exists()) {
                                 type = null;
                             }
                         }
+                        
                         if (type != null) {
                             try {
                                 // find the requested java element

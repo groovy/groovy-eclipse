@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,7 +25,6 @@ import java.util.WeakHashMap;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.ResolveVisitor;
@@ -393,29 +391,29 @@ public class JDTResolver extends ResolveVisitor {
 			return ClassHelper.DYNAMIC_TYPE;
 		}
 	}
-	
-	// avoiding an inner resolve is dangerous.  
+
+	// avoiding an inner resolve is dangerous.
 	// leave a back door here to turn it back on
 	// if no one complains, then safe to remove
 	private static boolean doInnerResolve = Boolean.valueOf(System.getProperty("greclipse.doInnerResolve", "false"));
 
 	@Override
 	protected boolean resolveToInnerEnum(ClassNode type) {
-	    if (doInnerResolve) {
-	        return super.resolveToInnerEnum(type);
-	    }
-	    // inner classes are resolved by JDT, so
-	    // if we get here then the inner class does not exist
+		if (doInnerResolve) {
+			return super.resolveToInnerEnum(type);
+		}
+		// inner classes are resolved by JDT, so
+		// if we get here then the inner class does not exist
 		return false;
 	}
 
 	@Override
 	protected boolean resolveToInner(ClassNode type) {
-	    if (doInnerResolve) {
-	        return super.resolveToInner(type);
-	    }
-	    // inner classes are resolved by JDT, so
-	    // if we get here then the inner class does not exist
+		if (doInnerResolve) {
+			return super.resolveToInner(type);
+		}
+		// inner classes are resolved by JDT, so
+		// if we get here then the inner class does not exist
 		return false;
 	}
 
@@ -548,6 +546,12 @@ public class JDTResolver extends ResolveVisitor {
 			TypeDeclaration[] members = gtDeclaration.memberTypes;
 			for (int m = 0; m < members.length; m++) {
 				record((GroovyTypeDeclaration) members[m]);
+			}
+		}
+		GroovyTypeDeclaration[] anonymousTypes = gtDeclaration.getAnonymousTypes();
+		if (anonymousTypes != null) {
+			for (int m = 0; m < anonymousTypes.length; m++) {
+				record((GroovyTypeDeclaration) anonymousTypes[m]);
 			}
 		}
 	}

@@ -81,11 +81,14 @@ import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.Javadoc;
 import org.eclipse.jdt.internal.compiler.ast.MarkerAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.NullLiteral;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleMemberAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.Statement;
 import org.eclipse.jdt.internal.compiler.ast.StringLiteral;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
@@ -98,6 +101,7 @@ import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.LocalTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
@@ -617,6 +621,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	private void createTypeDeclarations(ModuleNode moduleNode) {
 		List<ClassNode> moduleClassNodes = moduleNode.getClasses();
+		hasAnonInners = false;
+		for (ClassNode classNode : moduleClassNodes) {
+			if (isAnon(classNode)) {
+				hasAnonInners = true;
+				enclosingMethodMap = new HashMap<MethodNode, AbstractMethodDeclaration>();
+				break;
+			}
+		}
 		List<TypeDeclaration> typeDeclarations = new ArrayList<TypeDeclaration>();
 		Map<ClassNode, TypeDeclaration> fromClassNodeToDecl = new HashMap<ClassNode, TypeDeclaration>();
 
@@ -633,21 +645,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			GroovyTypeDeclaration typeDeclaration = new GroovyTypeDeclaration(compilationResult, classNode);
 
 			typeDeclaration.annotations = transformAnnotations(classNode.getAnnotations());
-			// FIXASC duplicates code further down, tidy this up
 			if (classNode instanceof InnerClassNode) {
-				InnerClassNode innerClassNode = (InnerClassNode) classNode;
-				ClassNode outerClass = innerClassNode.getOuterClass();
-				String outername = outerClass.getNameWithoutPackage();
-				String newInner = innerClassNode.getNameWithoutPackage().substring(outername.length() + 1);
-				typeDeclaration.name = newInner.toCharArray();
 				isInner = true;
 			} else {
 				typeDeclaration.name = classNode.getNameWithoutPackage().toCharArray();
+				if (!CharOperation.equals(typeDeclaration.name, mainName)) {
+					typeDeclaration.bits |= ASTNode.IsSecondaryType;
+				}
 				isInner = false;
 			}
 
-			// classNode.getInnerClasses();
-			// classNode.
 			boolean isInterface = classNode.isInterface();
 			int mods = classNode.getModifiers();
 			if ((mods & Opcodes.ACC_ENUM) != 0) {
@@ -665,12 +672,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				}
 			}
 			typeDeclaration.modifiers = mods & ~(isInterface ? Opcodes.ACC_ABSTRACT : 0);
-
-			if (!(classNode instanceof InnerClassNode)) {
-				if (!CharOperation.equals(typeDeclaration.name, mainName)) {
-					typeDeclaration.bits |= ASTNode.IsSecondaryType;
-				}
-			}
 
 			fixupSourceLocationsForTypeDeclaration(typeDeclaration, classNode);
 
@@ -717,6 +718,19 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 					innersToRecord.put(outerClass, inners);
 				}
 				inners.add(typeDeclaration);
+
+				if (isAnon(classNode)) {
+					// anon inner class, actually
+					typeDeclaration.bits |= (ASTNode.IsAnonymousType | ASTNode.IsLocalType);
+					// fill in the AST just enough to get JDT working
+					typeDeclaration.allocation = new QualifiedAllocationExpression(typeDeclaration);
+					typeDeclaration.allocation.type = typeDeclaration.superclass;
+					// typeDeclaration.allocation.enclosingInstance = new CastExpression(typeDeclaration.allocation,
+					// typeDeclaration.superclass);
+					typeDeclaration.allocation.enclosingInstance = new NullLiteral(typeDeclaration.sourceStart,
+							typeDeclaration.sourceEnd);
+					typeDeclaration.name = CharOperation.NO_CHAR;
+				}
 			} else {
 				typeDeclarations.add(typeDeclaration);
 			}
@@ -726,16 +740,45 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		// For inner types, now attach them to their parents. This was not done earlier as sometimes the types are processed in
 		// such an order that inners are dealt with before outers
 		for (Map.Entry<ClassNode, List<TypeDeclaration>> innersToRecordEntry : innersToRecord.entrySet()) {
-			TypeDeclaration outerTypeDeclaration = fromClassNodeToDecl.get(innersToRecordEntry.getKey());
+			ClassNode outer = innersToRecordEntry.getKey();
+			TypeDeclaration outerTypeDeclaration = fromClassNodeToDecl.get(outer);
 			// Check if there is a problem locating the parent for the inner
 			if (outerTypeDeclaration == null) {
-				throw new GroovyEclipseBug("Failed to find the type declaration for " + innersToRecordEntry.getKey().getName());
+				throw new GroovyEclipseBug("Failed to find the type declaration for " + outer.getText());
 			}
+
 			List<TypeDeclaration> newInnersList = innersToRecordEntry.getValue();
+			for (Iterator<TypeDeclaration> iterator = newInnersList.iterator(); iterator.hasNext();) {
+				GroovyTypeDeclaration inner = (GroovyTypeDeclaration) iterator.next();
+				if ((inner.bits & ASTNode.IsAnonymousType) > 0) {
+					iterator.remove();
+					AbstractMethodDeclaration enclosingMethod = enclosingMethodMap.get(inner.getClassNode().getEnclosingMethod());
+					enclosingMethod.bits |= ASTNode.HasLocalType;
+					inner.enclosingMethod = enclosingMethod;
+
+					// just a dummy to be filled in for real later. needed for structure requesting
+					enclosingMethod.scope = new MethodScope(outerTypeDeclaration.scope, enclosingMethod, enclosingMethod.isStatic());
+					inner.enclosingMethod.statements = new Statement[] { inner.allocation };
+					((GroovyTypeDeclaration) outerTypeDeclaration).addAnonymousType(inner, enclosingMethod);
+
+				}
+			}
 			outerTypeDeclaration.memberTypes = newInnersList.toArray(new TypeDeclaration[newInnersList.size()]);
 		}
 
 		types = typeDeclarations.toArray(new TypeDeclaration[typeDeclarations.size()]);
+
+		// don't need this anymore...clean up
+		enclosingMethodMap = null;
+	}
+
+	/**
+	 * @param classNode
+	 * @return
+	 */
+	private boolean isAnon(ClassNode classNode) {
+		// FIXADE does Groovy support non-anon local types???
+		return classNode.getEnclosingMethod() != null;
 	}
 
 	public char[] toMainName(char[] fileName) {
@@ -875,6 +918,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			} else {
 				accumulatedMethodDeclarations.add(constructorDeclaration);
 			}
+
+			if (hasAnonInners) {
+				enclosingMethodMap.put(constructorNode, constructorDeclaration);
+			}
 		}
 
 		if (earlyTransforms) {
@@ -992,6 +1039,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				createMethodVariants(methodNode, methodDeclaration, accumulatedDeclarations, compilationResult);
 			} else {
 				accumulatedDeclarations.add(methodDeclaration);
+			}
+			if (hasAnonInners) {
+				enclosingMethodMap.put(methodNode, methodDeclaration);
 			}
 		}
 	}
@@ -1130,7 +1180,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			return methodDeclaration;
 		} else {
 			MethodDeclaration methodDeclaration = new MethodDeclaration(compilationResult);
-
 			// TODO refactor - extract method
 			GenericsType[] generics = methodNode.getGenericsTypes();
 			// generic method
@@ -1539,6 +1588,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	}
 
 	private final static boolean DEBUG = false;
+	private boolean hasAnonInners;
+
+	/**
+	 * Map to keep track of anonymous inner type outer methods. Only used is hasAnonInners is true
+	 */
+	private Map<MethodNode, AbstractMethodDeclaration> enclosingMethodMap = null;
 
 	// FIXASC this is useless - use proper positions
 	private long[] getPositionsFor(char[][] compoundName) {
@@ -1844,10 +1899,15 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	private void fixupSourceLocationsForTypeDeclaration(GroovyTypeDeclaration typeDeclaration, ClassNode classNode) {
 		// start and end of the name of class
-		// scripts do not have a name, so use start instead
-		typeDeclaration.sourceStart = Math.max(classNode.getNameStart(), classNode.getStart());
-		typeDeclaration.sourceEnd = Math.max(classNode.getNameEnd(), classNode.getStart());
-
+		if (classNode instanceof InnerClassNode) {
+			// anonynymous inner classes do not have start and end set aproproately
+			typeDeclaration.sourceStart = classNode.getNameStart();
+			typeDeclaration.sourceEnd = classNode.getNameEnd();
+		} else {
+			// scripts do not have a name, so use start instead
+			typeDeclaration.sourceStart = Math.max(classNode.getNameStart(), classNode.getStart());
+			typeDeclaration.sourceEnd = Math.max(classNode.getNameEnd(), classNode.getStart());
+		}
 		// start and end of the entire declaration including Javadoc and ending at the last close bracket
 		int line = classNode.getLineNumber();
 		Javadoc doc = findJavadoc(line);
@@ -2088,7 +2148,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				}
 			}
 		} catch (AbortCompilation ac) {
-			// that is ok... probably cancelled
+			// that is okf probably cancelled
 		} catch (Throwable t) {
 			Util.log(t, "Unexpected problem processing task tags in " + groovySourceUnit.getName());
 			new RuntimeException("Unexpected problem processing task tags in " + groovySourceUnit.getName(), t).printStackTrace();
@@ -2098,7 +2158,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	@Override
 	public void analyseCode() {
 		processToPhase(Phases.CANONICALIZATION);
-
 	}
 
 	@Override

@@ -23,6 +23,7 @@ import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
@@ -230,6 +231,19 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 		CompilationUnitScope unitScope = compilationUnitScope();
 		unitScope.recordQualifiedReference(GROOVY_LANG_GROOVYOBJECT);
 		return unitScope.environment.getResolvedType(GROOVY_LANG_GROOVYOBJECT, this);
+	}
+
+	@Override
+	protected void buildTypeBindings(AccessRestriction accessRestriction) {
+		TypeDeclaration[] types = referenceContext.types;
+		if (types != null) {
+			for (TypeDeclaration type : types) {
+				if (type instanceof GroovyTypeDeclaration) {
+					((GroovyTypeDeclaration) type).fixAnonymousTypeBinding();
+				}
+			}
+		}
+		super.buildTypeBindings(accessRestriction);
 	}
 
 	/**

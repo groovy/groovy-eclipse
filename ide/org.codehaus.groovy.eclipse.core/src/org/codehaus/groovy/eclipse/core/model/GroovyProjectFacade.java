@@ -22,7 +22,10 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.InnerClassNode;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -111,14 +114,69 @@ public class GroovyProjectFacade {
 
      public IType groovyClassToJavaType(ClassNode node) {
          try {
+            // GRECLIPSE-1628 handle anonymous inner classes. Only go one level
+            // deep
+            // FIXADE ignore rest
+            ClassNode toLookFor = node;
+            if (node.getEnclosingMethod() != null) {
+                toLookFor = node.getEnclosingMethod().getDeclaringClass();
+                IType enclosing = groovyClassToJavaType(node.getEnclosingMethod().getDeclaringClass());
+                if (enclosing != null) {
+                    return findAnonymousInnerClass(enclosing, (InnerClassNode) node);
+                } else {
+                    return null;
+                }
+            }
             // GRECLIPSE-800 Ensure that inner class nodes are handled properly
-            String name = node.getName().replace('$', '.');
-             return project.findType(name, new NullProgressMonitor());
+            String name = toLookFor.getName().replace('$', '.');
+            IType type = project.findType(name, new NullProgressMonitor());
+            if (type != null && toLookFor != node) {
+                type = type.getType("", 1);
+                if (!type.exists()) {
+                    type = null;
+                }
+            }
+            return type;
         } catch (JavaModelException e) {
             GroovyCore.logException("Error converting from Groovy Element to Java Element: " + node.getName(), e);
             return null;
         }
      }
+
+    private IType findAnonymousInnerClass(IType enclosing, InnerClassNode anon) throws JavaModelException {
+        IMethod[] children = enclosing.getMethods();
+        MethodNode enclosingMethod = anon.getEnclosingMethod();
+        if (enclosingMethod == null) {
+            return null;
+        }
+        Parameter[] parameters = enclosingMethod.getParameters();
+        if (parameters == null) {
+            parameters = new Parameter[0];
+        }
+        for (IMethod child : children) {
+            if (child.getElementName().equals(enclosingMethod.getName())) {
+                String[] names = child.getParameterNames();
+                if (names.length == parameters.length) {
+                    // FIXADE for now, only look for a single inner type
+                    // check the names, not the types since we don't know the
+                    // full types of the IMethod.
+                    // This could go wrong, but it's safe enoug
+                    for (int i = 0; i < names.length; i++) {
+                        if (!names[i].equals(parameters[i].getName())) {
+                            continue;
+                        }
+                    }
+                    IType found = child.getType("", 1);
+                    if (found.exists()) {
+                        return found;
+                    } else {
+                        return null;
+                    }
+                }
+            }
+        }
+        return null;
+    }
 
      GroovyCompilationUnit groovyModuleToCompilationUnit(ModuleNode node) {
     	 List classes = node.getClasses();
@@ -154,11 +212,6 @@ public class GroovyProjectFacade {
         return null;
      }
 
-    /**
-     * @param name
-     * @param type
-     * @return
-     */
     private ClassNode javaTypeToGroovyClass(IType type) {
         ICompilationUnit unit = type.getCompilationUnit();
          if (unit instanceof GroovyCompilationUnit) {
@@ -249,10 +302,6 @@ public class GroovyProjectFacade {
         return project;
     }
 
-    /**
-     * @param iType
-     * @return
-     */
     public boolean isGroovyScript(IType type) {
         ClassNode node = javaTypeToGroovyClass(type);
         if (node != null) {
@@ -261,10 +310,6 @@ public class GroovyProjectFacade {
         return false;
     }
 
-    /**
-     * @return
-     * @throws JavaModelException
-     */
     public List<IType> findAllScripts() throws JavaModelException {
         final List<IType> results = newList();
         IPackageFragmentRoot[] roots = project.getAllPackageFragmentRoots();
@@ -290,10 +335,6 @@ public class GroovyProjectFacade {
         return results;
     }
 
-    /**
-     * @param unit
-     * @return
-     */
     public boolean isGroovyScript(ICompilationUnit unit) {
         if (unit instanceof GroovyCompilationUnit) {
             GroovyCompilationUnit gunit = (GroovyCompilationUnit) unit;

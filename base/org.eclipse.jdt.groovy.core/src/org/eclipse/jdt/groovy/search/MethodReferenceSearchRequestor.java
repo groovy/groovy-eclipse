@@ -201,10 +201,12 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 	}
 
 	private boolean matchOnName(ClassNode declaringType) {
-		if (declaringType == null ||
-		// since local variables have a declaring type of object, we don't accidentally want to return them as a match
-				(declaringType.getName().equals("java.lang.Object") && declaringType.getDeclaredMethods(String.valueOf(name))
-						.size() == 0)) {
+		if (declaringType == null) {
+			return false;
+		}
+		String declaringTypeName = declaringType.getName();
+		if (// since local variables have a declaring type of object, we don't accidentally want to return them as a match
+		(declaringTypeName.equals("java.lang.Object") && declaringType.getDeclaredMethods(String.valueOf(name)).size() == 0)) {
 			return false;
 		}
 		if (declaringQualifiedName == null || declaringQualifiedName.equals("")) {
@@ -212,12 +214,14 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 			return true;
 		}
 
+		declaringTypeName = declaringTypeName.replace('$', '.');
+
 		Boolean maybeMatch = cachedDeclaringNameMatches.get(declaringType);
 		if (maybeMatch != null) {
 			return maybeMatch;
 		}
 
-		if (declaringType.getName().equals(declaringQualifiedName)) {
+		if (declaringTypeName.equals(declaringQualifiedName)) {
 			cachedDeclaringNameMatches.put(declaringType, true);
 
 			// the name matches, now what about number of arguments?

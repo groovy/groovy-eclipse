@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
+import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -108,10 +109,19 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 	}
 
 	/**
-	 * always return the passed in node
+	 * always return the passed in node, unless the declaration of an InnerClassNode
 	 */
 	public TypeLookupResult lookupType(ClassNode node, VariableScope scope) {
-		return new TypeLookupResult(node, node, node, EXACT, scope);
+		ClassNode resultType;
+		if (node instanceof InnerClassNode && !node.isRedirectNode()) {
+			resultType = node.getSuperClass();
+			if (resultType.getName().equals(VariableScope.OBJECT_CLASS_NODE.getName()) && node.getInterfaces().length > 0) {
+				resultType = node.getInterfaces()[0];
+			}
+		} else {
+			resultType = node;
+		}
+		return new TypeLookupResult(resultType, resultType, node, EXACT, scope);
 	}
 
 	public TypeLookupResult lookupType(Parameter node, VariableScope scope) {

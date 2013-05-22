@@ -151,6 +151,9 @@ public class ClassScope extends Scope {
 		sourceType.setFields(fieldBindings);
 	}
 
+	// GROOVY start
+	public
+	// GROOVY end
 	void buildFieldsAndMethods() {
 		buildFields();
 		buildMethods();

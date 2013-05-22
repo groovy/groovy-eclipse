@@ -23,6 +23,8 @@ import org.eclipse.jdt.internal.compiler.SourceElementParser;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
+import org.eclipse.jdt.internal.compiler.ast.Statement;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -120,6 +122,14 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
 		if (tDecl.methods != null) {
 			for (AbstractMethodDeclaration mDecl : tDecl.methods) {
 				table.put(mDecl, mDecl.sourceEnd);
+				if (mDecl.statements != null && mDecl.statements.length > 0) {
+					for (Statement expr : mDecl.statements) {
+						if (expr instanceof QualifiedAllocationExpression) {
+							// assume anon inner type
+							createSourceEndsForType(((QualifiedAllocationExpression) expr).anonymousType, table);
+						}
+					}
+				}
 			}
 		}
 		if (tDecl.memberTypes != null) {

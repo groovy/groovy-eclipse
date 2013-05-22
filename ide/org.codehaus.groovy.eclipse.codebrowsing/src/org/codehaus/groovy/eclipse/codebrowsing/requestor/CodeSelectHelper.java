@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
@@ -138,7 +139,8 @@ public class CodeSelectHelper implements ICodeSelectHelper {
     }
 
     private boolean isTypeDeclaration(ModuleNode module, ASTNode nodeToLookFor) {
-        if (nodeToLookFor instanceof ClassNode) {
+    	// don't use inner class nodes since they really should resolve to the super type
+        if (nodeToLookFor instanceof ClassNode &&  !(nodeToLookFor instanceof InnerClassNode)) {
             for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
                 if (clazz == nodeToLookFor) {
                     return true;

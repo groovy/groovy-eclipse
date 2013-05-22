@@ -16,8 +16,12 @@ import java.util.List;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.ast.ASTNode;
+import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 
 @SuppressWarnings("restriction")
@@ -51,6 +55,51 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
 	public boolean isScannerUsableOnThisDeclaration() {
 		return false;
 	}
+
 	// FIXASC (groovychange) end
 
+	/**
+	 * Fixes the super types of anonymous inner classes These kinds of classes are always constructed so that they extend the super
+	 * type, even if the super type is an interface. This is because during parse time we don't know if the super type is a class or
+	 * interface, se we need to wait until after the resolve phase to fix this.
+	 */
+	public void fixAnonymousTypeBinding() {
+		if ((this.bits & ASTNode.IsAnonymousType) != 0) {
+			if (classNode.getInterfaces() != null && classNode.getInterfaces().length == 1
+					&& classNode.getSuperClass().getName().equals("java.lang.Object")) {
+
+				this.superInterfaces = new TypeReference[] { this.superclass };
+				this.binding.superInterfaces = new ReferenceBinding[] { (ReferenceBinding) this.superclass.resolvedType };
+				this.superclass = null;
+
+			}
+		}
+		if (anonymousTypes != null) {
+			for (GroovyTypeDeclaration type : anonymousTypes) {
+				GroovyClassScope anonScope = new GroovyClassScope(this.scope, type);
+				type.scope = anonScope;
+			}
+		}
+	}
+
+	// FIXADE anonyonous type really should be associated with the expression that creates them
+	// but we associate them with the type declaration for now
+	private GroovyTypeDeclaration[] anonymousTypes = null;
+
+	public AbstractMethodDeclaration enclosingMethod;
+
+	public void addAnonymousType(GroovyTypeDeclaration anonymousType, AbstractMethodDeclaration enclosingMethod) {
+		if (anonymousTypes == null) {
+			anonymousTypes = new GroovyTypeDeclaration[] { anonymousType };
+		} else {
+			GroovyTypeDeclaration[] newTypes = new GroovyTypeDeclaration[anonymousTypes.length + 1];
+			System.arraycopy(anonymousTypes, 0, newTypes, 0, anonymousTypes.length);
+			newTypes[anonymousTypes.length] = anonymousType;
+			anonymousTypes = newTypes;
+		}
+	}
+
+	public GroovyTypeDeclaration[] getAnonymousTypes() {
+		return anonymousTypes;
+	}
 }

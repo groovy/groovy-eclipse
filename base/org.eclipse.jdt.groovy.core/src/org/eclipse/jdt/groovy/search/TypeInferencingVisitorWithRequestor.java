@@ -95,6 +95,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.CallAndType;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
+import org.eclipse.jdt.internal.core.SourceType;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -323,7 +324,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			visitPackage(((ModuleNode) enclosingDeclarationNode).getPackage());
 			visitImports((ModuleNode) enclosingDeclarationNode);
 			try {
-				IType[] types = unit.getTypes();
+				IType[] types = unit.getAllTypes();
 				for (IType type : types) {
 					visitJDT(type, requestor);
 				}
@@ -457,11 +458,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 */
 	private String createName(IType type) {
 		StringBuilder sb = new StringBuilder();
-		sb.append(type.getElementName());
-		while (type.getParent().getElementType() == IJavaElement.TYPE) {
-			sb.insert(0, '$');
-			type = (IType) type.getParent();
-			sb.insert(0, type.getElementName());
+		while (type != null) {
+			if (sb.length() > 0) {
+				sb.insert(0, '$');
+			}
+			if (type instanceof SourceType && type.getElementName().isEmpty()) {
+				sb.insert(0, ((SourceType) type).localOccurrenceCount);
+			} else {
+				sb.insert(0, type.getElementName());
+			}
+			type = (IType) type.getParent().getAncestor(IJavaElement.TYPE);
 		}
 		return sb.toString();
 	}
@@ -532,6 +538,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		scopes.push(new VariableScope(scopes.peek(), methodNode, methodNode.isStatic()));
 		try {
 			visitConstructorOrMethod(methodNode, method.isConstructor());
+
+			// check for anonymous inner types
+			IJavaElement[] children = method.getChildren();
+			for (IJavaElement child : children) {
+				if (child.getElementType() == IJavaElement.TYPE) {
+					visitJDT((IType) child, requestor);
+				}
+			}
 		} catch (VisitCompleted vc) {
 			if (vc.status == VisitStatus.STOP_VISIT) {
 				throw vc;
@@ -2007,6 +2021,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	}
 
 	private MethodNode findMethodNode(IMethod method) {
+		// FIXADE TODO pass this in as a parameter
 		ClassNode clazz = findClassWithName(createName(method.getDeclaringType()));
 		try {
 			if (method.isConstructor()) {

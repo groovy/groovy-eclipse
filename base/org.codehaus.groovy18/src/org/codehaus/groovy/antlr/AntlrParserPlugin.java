@@ -3005,6 +3005,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             ret.setType(innerClass);
             ret.setUsingAnonymousInnerClass(true);
             innerClass.setUnresolvedSuperClass(type);
+            // GRECLIPSE start
+            innerClass.setNameStart(type.getStart());
+            innerClass.setNameEnd(type.getEnd()-1);
+            // GRECLIPSE end
         }
 
         configureAST(ret, constructorCallNode);
