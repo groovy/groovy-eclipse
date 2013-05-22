@@ -10104,8 +10104,13 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         
         List imports = mn.getImports();
         ImportNode brokenImportNode =(ImportNode) imports.get(0);
-        assertEquals(0,brokenImportNode.getStart());
-        assertEquals(6,brokenImportNode.getEnd());
+        if (GroovyUtils.GROOVY_LEVEL >= 21) {
+            assertEquals(0,brokenImportNode.getStart());
+            assertEquals(6,brokenImportNode.getEnd());
+        } else {
+        	assertEquals(2,brokenImportNode.getStart());
+        	assertEquals(0,brokenImportNode.getEnd());
+        }
         assertEquals("java.lang.Object",brokenImportNode.getType().getName());
         
         ClassNode cn = (ClassNode)mn.getClasses().get(0);
