@@ -1501,6 +1501,40 @@ public class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "A");
     }
     
+    public void testAnonInner1() throws Exception {
+		String contents = "def foo = new Runnable() { void run() {} }";
+        int start = contents.lastIndexOf("Runnable");
+        int end = start + "Runnable".length();
+        assertType(contents, start, end, "java.lang.Runnable");
+	}
+    public void testAnonInner2() throws Exception {
+    	String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }";
+    	int start = contents.lastIndexOf("Comparable");
+    	int end = start + "Comparable".length();
+    	assertType(contents, start, end, "java.lang.Comparable<java.lang.String>");
+    }
+    public void testAnonInner3() throws Exception {
+    	String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) { compareTo()} }";
+    	int start = contents.lastIndexOf("compareTo");
+    	int end = start + "compareTo".length();
+    	assertDeclaringType(contents, start, end, "Search$1");
+    }
+    public void testAnonInner4() throws Exception {
+    	String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
+    			"foo.compareTo";
+    	int start = contents.lastIndexOf("compareTo");
+    	int end = start + "compareTo".length();
+    	assertDeclaringType(contents, start, end, "Search$1");
+    }
+    public void testAnonInner5() throws Exception {
+    	String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
+    			"foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
+    			"foo.compareTo";
+    	int start = contents.lastIndexOf("compareTo");
+    	int end = start + "compareTo".length();
+    	assertDeclaringType(contents, start, end, "Search$2");
+    }
+    
     protected void assertNoUnknowns(String contents) {
         GroovyCompilationUnit unit = createUnit("Search", contents);
         
@@ -1511,5 +1545,4 @@ public class InferencingTests extends AbstractInferencingTest {
         List<ASTNode> unknownNodes = requestor.getUnknownNodes();
         assertTrue("Should not have found any AST nodes with unknown confidence, but instead found:\n" + unknownNodes, unknownNodes.isEmpty());
     }
-    
 }

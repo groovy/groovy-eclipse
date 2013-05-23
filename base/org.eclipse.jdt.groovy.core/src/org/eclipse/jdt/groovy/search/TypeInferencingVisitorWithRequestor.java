@@ -90,6 +90,7 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.CallAndType;
@@ -463,7 +464,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				sb.insert(0, '$');
 			}
 			if (type instanceof SourceType && type.getElementName().isEmpty()) {
-				sb.insert(0, ((SourceType) type).localOccurrenceCount);
+				int count;
+				try {
+					count = (Integer) ReflectionUtils.throwableGetPrivateField(SourceType.class, "localOccurrenceCount",
+							(SourceType) type);
+				} catch (Exception e) {
+					// localOccurrenceCount does not exist in 3.7
+					count = type.getOccurrenceCount();
+				}
+				sb.insert(0, count);
 			} else {
 				sb.insert(0, type.getElementName());
 			}

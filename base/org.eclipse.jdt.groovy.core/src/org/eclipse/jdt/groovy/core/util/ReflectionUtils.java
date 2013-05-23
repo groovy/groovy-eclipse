@@ -30,8 +30,6 @@ import org.eclipse.jdt.internal.core.LocalVariable;
  * @created May 8, 2009
  * 
  *          common functionality for accessing private fields and methods
- * 
- * 
  */
 public class ReflectionUtils {
 
@@ -92,12 +90,23 @@ public class ReflectionUtils {
 		}
 	}
 
-	public static <T> Object throwableExecutePrivateMethod(Class<T> clazz, String methodName, Class<?>[] types, Object target,
+	public static <T> Object throwableExecutePrivateMethod(Class<T> clazz, String methodName, Class<?>[] types, T target,
 			Object[] args) throws Exception {
 		// forget caching for now...
 		Method method = clazz.getDeclaredMethod(methodName, types);
 		method.setAccessible(true);
 		return method.invoke(target, args);
+	}
+
+	public static <T> Object throwableGetPrivateField(Class<T> clazz, String fieldName, T target) throws Exception {
+		String key = clazz.getCanonicalName() + fieldName;
+		Field field = fieldMap.get(key);
+		if (field == null) {
+			field = clazz.getDeclaredField(fieldName);
+			field.setAccessible(true);
+			fieldMap.put(key, field);
+		}
+		return field.get(target);
 	}
 
 	/**
