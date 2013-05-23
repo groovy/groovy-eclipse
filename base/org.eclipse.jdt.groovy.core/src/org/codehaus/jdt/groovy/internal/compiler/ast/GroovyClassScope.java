@@ -399,14 +399,6 @@ public class GroovyClassScope extends ClassScope {
 				anonType.scope = anonScope;
 				anonType.resolve(anonType.enclosingMethod.scope);
 			}
-			if (referenceContext.memberTypes != null) {
-				TypeDeclaration[] newMemberTypes = new TypeDeclaration[anonymousTypes.length + referenceContext.memberTypes.length];
-				System.arraycopy(referenceContext.memberTypes, 0, newMemberTypes, 0, referenceContext.memberTypes.length);
-				System.arraycopy(anonymousTypes, 0, newMemberTypes, referenceContext.memberTypes.length, anonymousTypes.length);
-				referenceContext.memberTypes = newMemberTypes;
-			} else {
-				referenceContext.memberTypes = anonymousTypes;
-			}
 		}
 	}
 }

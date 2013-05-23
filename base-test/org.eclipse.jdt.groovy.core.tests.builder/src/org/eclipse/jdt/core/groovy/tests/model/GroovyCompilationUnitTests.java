@@ -11,6 +11,7 @@
 
 package org.eclipse.jdt.core.groovy.tests.model;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 import junit.framework.Test;
@@ -20,10 +21,12 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IField;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMemberValuePair;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
@@ -518,6 +521,194 @@ public class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTests {
         GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
         IType type = unit.getType("X");
         assertEquals("These annotations should not be included in the model", 0, type.getAnnotations().length);
+	}
+    
+    public void testAnonymousInner1() throws Exception {
+    	IPath root = createAnnotationGroovyProject();
+        env.addGroovyClass(root, "p", "X",
+        		"package p;\n" + 
+        		"def foo = new Runnable() { void run() { } }"
+            );
+        incrementalBuild();
+        env.waitForAutoBuild();
+        expectingNoProblems();
+        IFile file = getFile("Project/src/p/X.groovy");
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
+        unit.becomeWorkingCopy(new NullProgressMonitor());
+        try {
+			IType type = unit.getType("X");
+			IMethod method = type.getMethod("run", new String[0]);
+			IJavaElement[] children = method.getChildren();
+			assertEquals("Expecting exactly one child, but found: " + Arrays.toString(children), 1, children.length);
+			IType anonType = (IType) children[0];
+			assertEquals("Anon type should have empty name", "", anonType.getElementName());
+			children = anonType.getChildren();
+			assertEquals("Expecting exactly one child, but found: " + Arrays.toString(children), 1, children.length);
+			assertEquals("run", children[0].getElementName());
+		} finally {
+			unit.discardWorkingCopy();
+		}
+	}
+    
+    public void testAnonymousInner2() throws Exception {
+    	IPath root = createAnnotationGroovyProject();
+        env.addGroovyClass(root, "p", "X",
+        		"package p;\n" + 
+        		"def foo = new Runnable() { void run() { } }\n" +
+        		"foo = new Runnable() { void run() { }\n  void other() { } }"
+            );
+        incrementalBuild();
+        env.waitForAutoBuild();
+        expectingNoProblems();
+        IFile file = getFile("Project/src/p/X.groovy");
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
+        unit.becomeWorkingCopy(new NullProgressMonitor());
+        try {
+            IType type = unit.getType("X");
+            IMethod method = type.getMethod("run", new String[0]);
+            IJavaElement[] children = method.getChildren();
+    		assertEquals("Expecting exactly one child, but found: " + Arrays.toString(children), 2, children.length);
+    		
+    		for (int i = 0; i < 2; i++) {
+        		IType anonType = (IType) children[i];
+        		assertEquals("Anon type should have empty name", "", anonType.getElementName());
+        		 IJavaElement[] anonChildren = anonType.getChildren();
+        		assertEquals("Expecting exactly one child, but found: " + Arrays.toString(anonChildren), i+1, anonChildren.length);
+        		assertEquals("run", anonChildren[0].getElementName());
+        		if (i == 1) {
+        			assertEquals("other", anonChildren[1].getElementName());
+        		}
+    		}
+        } finally {
+        	unit.discardWorkingCopy();
+        }
+	}
+    
+    public void testAnonymousInner3() throws Exception {
+    	IPath root = createAnnotationGroovyProject();
+        env.addGroovyClass(root, "p", "X",
+        		"package p;\n" + 
+        		"class Foo {\n" +
+        		"  def run() {\n" +
+        		"    def foo = new Runnable() { void run() { } }\n" +
+        		"  }\n" +
+        		"}"
+            );
+        incrementalBuild();
+        env.waitForAutoBuild();
+        expectingNoProblems();
+        IFile file = getFile("Project/src/p/X.groovy");
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
+        unit.becomeWorkingCopy(new NullProgressMonitor());
+        try {
+            IType type = unit.getType("Foo");
+            IMethod method = type.getMethod("run", new String[0]);
+            IJavaElement[] children = method.getChildren();
+    		assertEquals("Expecting exactly one child, but found: " + Arrays.toString(children), 1, children.length);
+    		IType anonType = (IType) children[0];
+    		assertEquals("Anon type should have empty name", "", anonType.getElementName());
+    		children = anonType.getChildren();
+    		assertEquals("Expecting exactly one child, but found: " + Arrays.toString(children), 1, children.length);
+    		assertEquals("run", children[0].getElementName());
+        } finally {
+        	unit.discardWorkingCopy();
+        }
+	}
+    
+    public void testAnonymousInner4() throws Exception {
+    	IPath root = createAnnotationGroovyProject();
+        env.addGroovyClass(root, "p", "X",
+        		"package p;\n" + 
+        		"class Foo {\n" +
+        		"  def run() {\n" +
+        		"    def foo = new Runnable() { void run() { } }\n" +
+        		"    foo = new Runnable() { void run() { }\n  void other() { } }" +
+        		"  }\n" +
+        		"}"
+            );
+        incrementalBuild();
+        env.waitForAutoBuild();
+        expectingNoProblems();
+        IFile file = getFile("Project/src/p/X.groovy");
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
+        unit.becomeWorkingCopy(new NullProgressMonitor());
+        try {
+            IType type = unit.getType("Foo");
+            IMethod method = type.getMethod("run", new String[0]);
+            IJavaElement[] children = method.getChildren();
+    		assertEquals("Expecting exactly one child, but found: " + Arrays.toString(children), 2, children.length);
+    		
+    		for (int i = 0; i < 2; i++) {
+        		IType anonType = (IType) children[i];
+        		assertEquals("Anon type should have empty name", "", anonType.getElementName());
+        		IJavaElement[] innerChildren = anonType.getChildren();
+        		assertEquals("Expecting exactly one child, but found: " + Arrays.toString(children), i+1, innerChildren.length);
+        		assertEquals("run", innerChildren[0].getElementName());
+        		if (i == 1) {
+        			assertEquals("other", innerChildren[1].getElementName());
+        		}
+    		}
+        } finally {
+        	unit.discardWorkingCopy();
+        }
+	}
+    
+    // FIXADE TODO: anon inner classes not properly structured on field initializers
+    public void testAnonymousInner5() throws Exception {
+    	IPath root = createAnnotationGroovyProject();
+        env.addGroovyClass(root, "p", "X",
+        		"package p;\n" + 
+        		"class Foo {\n" +
+        		"  def foo = new Runnable() { void run() { } }\n" +
+        		"}"
+            );
+        incrementalBuild();
+        env.waitForAutoBuild();
+        expectingNoProblems();
+        IFile file = getFile("Project/src/p/X.groovy");
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
+        unit.becomeWorkingCopy(new NullProgressMonitor());
+        try {
+            IType type = unit.getType("Foo");
+            IField field = type.getField("foo");
+            assertEquals(0, field.getChildren().length);
+            IType anon = type.getType("1");
+            assertTrue("Anon inner type should exist as a member type", anon.exists());
+        } finally {
+        	unit.discardWorkingCopy();
+        }
+    }
+    
+    // Test that classes in a script are not treated as anon inners
+    public void testAnonInner6() throws Exception {
+    	IPath root = createAnnotationGroovyProject();
+        env.addGroovyClass(root, "p", "X",
+        		"package p;\n" + 
+        		"class Other{ }\n" + 
+        		"def foo = new Runnable() { void run() { } }\n" + 
+        		"class Other2 { }"
+            );
+        incrementalBuild();
+        env.waitForAutoBuild();
+        expectingNoProblems();
+        IFile file = getFile("Project/src/p/X.groovy");
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
+        unit.becomeWorkingCopy(new NullProgressMonitor());
+        try {
+        	unit.getType("Other").exists();
+        	unit.getType("Other2").exists();
+			IType type = unit.getType("X");
+			IMethod method = type.getMethod("run", new String[0]);
+			IJavaElement[] children = method.getChildren();
+			assertEquals("Expecting exactly one child, but found: " + Arrays.toString(children), 1, children.length);
+			IType anonType = (IType) children[0];
+			assertEquals("Anon type should have empty name", "", anonType.getElementName());
+			children = anonType.getChildren();
+			assertEquals("Expecting exactly one child, but found: " + Arrays.toString(children), 1, children.length);
+			assertEquals("run", children[0].getElementName());
+        } finally {
+        	unit.discardWorkingCopy();
+        }
 	}
     
     

@@ -82,13 +82,17 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
 		}
 	}
 
-	// FIXADE anonyonous type really should be associated with the expression that creates them
-	// but we associate them with the type declaration for now
+	/**
+	 * Anonymous types that are declared in this type's methods
+	 */
 	private GroovyTypeDeclaration[] anonymousTypes = null;
 
+	/**
+	 * If this type is anonymous, points to the enclosing method
+	 */
 	public AbstractMethodDeclaration enclosingMethod;
 
-	public void addAnonymousType(GroovyTypeDeclaration anonymousType, AbstractMethodDeclaration enclosingMethod) {
+	public void addAnonymousType(GroovyTypeDeclaration anonymousType) {
 		if (anonymousTypes == null) {
 			anonymousTypes = new GroovyTypeDeclaration[] { anonymousType };
 		} else {

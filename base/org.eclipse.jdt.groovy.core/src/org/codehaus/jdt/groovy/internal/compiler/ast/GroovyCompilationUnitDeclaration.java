@@ -130,6 +130,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	private boolean isScript = false;
 
+	private boolean hasAnonInners;
+
+	/**
+	 * Map to keep track of anonymous inner type outer methods. Only used is hasAnonInners is true
+	 */
+	private Map<MethodNode, AbstractMethodDeclaration> enclosingMethodMap = null;
+
 	private static final boolean DEBUG_TASK_TAGS = false;
 
 	public GroovyCompilationUnitDeclaration(ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength,
@@ -725,8 +732,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 					// fill in the AST just enough to get JDT working
 					typeDeclaration.allocation = new QualifiedAllocationExpression(typeDeclaration);
 					typeDeclaration.allocation.type = typeDeclaration.superclass;
-					// typeDeclaration.allocation.enclosingInstance = new CastExpression(typeDeclaration.allocation,
-					// typeDeclaration.superclass);
 					typeDeclaration.allocation.enclosingInstance = new NullLiteral(typeDeclaration.sourceStart,
 							typeDeclaration.sourceEnd);
 					typeDeclaration.name = CharOperation.NO_CHAR;
@@ -752,14 +757,33 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				GroovyTypeDeclaration inner = (GroovyTypeDeclaration) iterator.next();
 				if ((inner.bits & ASTNode.IsAnonymousType) > 0) {
 					iterator.remove();
-					AbstractMethodDeclaration enclosingMethod = enclosingMethodMap.get(inner.getClassNode().getEnclosingMethod());
-					enclosingMethod.bits |= ASTNode.HasLocalType;
-					inner.enclosingMethod = enclosingMethod;
+					MethodNode enclosingMethodGroovy = inner.getClassNode().getEnclosingMethod();
+					if (enclosingMethodGroovy == null) {
+						// probably an anon type inside a script
+						ClassNode outerClass = inner.getClassNode().getOuterClass();
+						enclosingMethodGroovy = outerClass.getMethod("run", new Parameter[0]);
+						if (enclosingMethodGroovy == null) {
+							throw new GroovyEclipseBug("Failed to find the enclosing method for anonymous type "
+									+ inner.getClassNode().getName());
+						}
+					}
+					AbstractMethodDeclaration enclosingMethodJDT = enclosingMethodMap.get(enclosingMethodGroovy);
+					enclosingMethodJDT.bits |= ASTNode.HasLocalType;
+					inner.enclosingMethod = enclosingMethodJDT;
 
-					// just a dummy to be filled in for real later. needed for structure requesting
-					enclosingMethod.scope = new MethodScope(outerTypeDeclaration.scope, enclosingMethod, enclosingMethod.isStatic());
-					inner.enclosingMethod.statements = new Statement[] { inner.allocation };
-					((GroovyTypeDeclaration) outerTypeDeclaration).addAnonymousType(inner, enclosingMethod);
+					// just a dummy scope to be filled in for real later. needed for structure requesting
+					enclosingMethodJDT.scope = new MethodScope(outerTypeDeclaration.scope, enclosingMethodJDT,
+							enclosingMethodJDT.isStatic());
+					if (inner.enclosingMethod.statements == null || inner.enclosingMethod.statements.length == 0) {
+						inner.enclosingMethod.statements = new Statement[] { inner.allocation };
+					} else {
+						Statement[] newStatements = new Statement[inner.enclosingMethod.statements.length + 1];
+						System.arraycopy(inner.enclosingMethod.statements, 0, newStatements, 0,
+								inner.enclosingMethod.statements.length);
+						newStatements[inner.enclosingMethod.statements.length] = inner.allocation;
+						inner.enclosingMethod.statements = newStatements;
+					}
+					((GroovyTypeDeclaration) outerTypeDeclaration).addAnonymousType(inner);
 
 				}
 			}
@@ -768,7 +792,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		types = typeDeclarations.toArray(new TypeDeclaration[typeDeclarations.size()]);
 
-		// don't need this anymore...clean up
+		// clean up
 		enclosingMethodMap = null;
 	}
 
@@ -778,7 +802,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	private boolean isAnon(ClassNode classNode) {
 		// FIXADE does Groovy support non-anon local types???
-		return classNode.getEnclosingMethod() != null;
+		return classNode.getEnclosingMethod() != null
+		// check to see if anon type inside of a script
+				|| (classNode.getOuterClass() != null && classNode.getOuterClass().isScript());
 	}
 
 	public char[] toMainName(char[] fileName) {
@@ -1588,12 +1614,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	}
 
 	private final static boolean DEBUG = false;
-	private boolean hasAnonInners;
-
-	/**
-	 * Map to keep track of anonymous inner type outer methods. Only used is hasAnonInners is true
-	 */
-	private Map<MethodNode, AbstractMethodDeclaration> enclosingMethodMap = null;
 
 	// FIXASC this is useless - use proper positions
 	private long[] getPositionsFor(char[][] compoundName) {
@@ -2148,7 +2168,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				}
 			}
 		} catch (AbortCompilation ac) {
-			// that is okf probably cancelled
+			// that is ok... probably cancelled
 		} catch (Throwable t) {
 			Util.log(t, "Unexpected problem processing task tags in " + groovySourceUnit.getName());
 			new RuntimeException("Unexpected problem processing task tags in " + groovySourceUnit.getName(), t).printStackTrace();

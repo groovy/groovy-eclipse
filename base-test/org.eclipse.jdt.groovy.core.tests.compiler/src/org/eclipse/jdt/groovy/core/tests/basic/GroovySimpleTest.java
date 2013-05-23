@@ -9830,8 +9830,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	public void testPositions_2() {
 		this.runNegativeTest(new String[] {
 			"One.groovy",
-			"class One {\r\n" + 
-			"		/*a*/			Stack plates;\r\n"+
+			"class One {\n" + 
+			"		/*a*/			Stack plates;\n"+
 			"  /*b*/ Stack plates2;\n"+
 			"}\n",
 		},"----------\n" + 
@@ -10332,6 +10332,75 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         cn = (ClassNode)mn.getClasses().get(1);
         assertNotNull(cn);
         assertEquals("BBB",cn.getName());
+    }
+    
+    public void testInnerClass1() throws Exception {
+		this.runConformTest(new String[] {
+				"A.groovy",
+				"def foo = new Runnable() {\n" + 
+				"	void run() {\n" + 
+				"		println \"hi!\";\n" + 
+				"	}\n" + 
+				"}\n" + 
+				"foo.run()"
+		}, "hi!");
+	}
+    public void testInnerClass2() throws Exception {
+    	this.runConformTest(new String[] {
+    			"A.groovy",
+    			"def foo = new Runnable() {\n" + 
+    			"	void run() {\n" + 
+				"		println \"bye!\";\n" + 
+				"	}\n" + 
+				"}\n" + 
+				"foo = new Runnable() {\n" + 
+				"	void run() {\n" + 
+				"		println \"hi!\";\n" + 
+				"	}\n" + 
+				"}\n" + 
+				"foo.run()"
+    	}, "hi!");
+    }
+    public void testInnerClass3() throws Exception {
+    	this.runConformTest(new String[] {
+    			"A.groovy",
+    			"def foo() {\n" +
+    			"	new Runnable() {\n" + 
+    			"		void run() {\n" + 
+				"			println \"hi!\";\n" + 
+				"		}\n" + 
+				"	}\n" + 
+				"}\n" + 
+				"foo().run()"
+    	}, "hi!");
+    }
+    public void testInnerClass4() throws Exception {
+    	this.runConformTest(new String[] {
+    			"A.groovy",
+    			"class Foo {\n" +
+    			"	def foo = new Runnable() {\n" + 
+    			"		void run() {\n" + 
+				"			println \"hi!\";\n" + 
+				"		}\n" + 
+				"	}\n" + 
+				"}\n" + 
+				"new Foo().foo.run()"
+    	}, "hi!");
+    }
+    public void testInnerClass5() throws Exception {
+    	this.runNegativeTest(new String[] {
+    			"A.groovy",
+    			"def foo = new Runnable() {\n" + 
+    			"	void bad() {\n" + 
+    			"		println \"hi!\";\n" + 
+    			"	}\n" + 
+    			"}"
+    	}, "----------\n" + 
+  			"1. ERROR in A.groovy (at line 1)\n" + 
+   			"	def foo = new Runnable() {\n" + 
+   			"	              ^^^^^^^^\n" + 
+   			"Groovy:Can't have an abstract method in a non-abstract class. The class 'A$1' must be declared abstract or the method 'void run()' must be implemented.\n" + 
+   			"----------\n");
     }
 
 
