@@ -24,7 +24,7 @@
 	  		groovy.deploy.username : your codehaus username
 	  		groovy.deploy.password : your codehaus password
 -->
-<project name="Build the groovy-eclipse-batch jar" basedir="." default="extract-create-publish">
+<project name="Build the groovy-eclipse-batch jar" basedir="." default="extract-create-install">
 
 	<import file="maven/build-maven.xml"/> 
 
@@ -135,18 +135,12 @@
 
 		<fileset dir="${git.repo.loc}/base" id="orig.groovy.jars">
 
-			<!-- includes all the groovy modules already inside greclipse, and the groovy sources -->
-			<!-- FIXADE Do we need to include all modules or just the core?  -->
-			<include name="${groovy.folder}/lib/groovy-*.jar"/>
-			<include name="${groovy.folder}/lib/antlr-*.jar"/>
-			<!-- Captures ASM and ASM tree-->
-			<include name="${groovy.folder}/lib/asm-*.jar"/>
+			<!-- include groovy-all and the sources -->
+			<include name="${groovy.folder}/lib/groovy-all*.jar"/>
 
 			<!-- Also include the non-locking classloader with sources -->
 			<include name="org.eclipse.jdt.groovy.core/nlcl*.jar"/>
 			
-			<!-- -->
-			<exclude name="${groovy.folder}/lib/groovy-all*.jar"/>
 		</fileset>
 
 
