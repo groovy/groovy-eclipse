@@ -325,7 +325,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			visitPackage(((ModuleNode) enclosingDeclarationNode).getPackage());
 			visitImports((ModuleNode) enclosingDeclarationNode);
 			try {
-				IType[] types = unit.getAllTypes();
+				IType[] types = unit.getTypes();
 				for (IType type : types) {
 					visitJDT(type, requestor);
 				}
