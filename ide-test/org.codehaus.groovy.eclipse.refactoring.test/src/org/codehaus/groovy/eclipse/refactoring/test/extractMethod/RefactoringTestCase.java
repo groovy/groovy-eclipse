@@ -19,6 +19,8 @@
 
 package org.codehaus.groovy.eclipse.refactoring.test.extractMethod;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import junit.framework.AssertionFailedError;
 
@@ -33,7 +35,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatusEntry;
 
 public abstract class RefactoringTestCase extends BaseTestCase {
 
-	public RefactoringTestCase(String name, File file) {
+	public RefactoringTestCase(String name, File file) throws FileNotFoundException, IOException {
 		super(name, file);
 		// Set Method to call for JUnit
 		setName("testRefactoring");
@@ -86,7 +88,7 @@ public abstract class RefactoringTestCase extends BaseTestCase {
 		return true;
 	}
 
-	public abstract void preAction();
+	public abstract void preAction() throws FileNotFoundException, IOException;
 
 	public abstract RefactoringStatus checkInitialCondition() throws OperationCanceledException, CoreException;
 

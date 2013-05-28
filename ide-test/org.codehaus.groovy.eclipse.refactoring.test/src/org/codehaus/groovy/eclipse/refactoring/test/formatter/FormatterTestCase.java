@@ -19,6 +19,8 @@
 package org.codehaus.groovy.eclipse.refactoring.test.formatter;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
 import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferencesOnStore;
@@ -37,7 +39,7 @@ import org.eclipse.text.edits.MalformedTreeException;
  */
 public class FormatterTestCase extends BaseTestCase {
 
-    public FormatterTestCase(String arg0, File arg1) {
+    public FormatterTestCase(String arg0, File arg1) throws FileNotFoundException, IOException {
         super(arg0, arg1);
         // Set Method to call for JUnit
         setName("testFormatter");

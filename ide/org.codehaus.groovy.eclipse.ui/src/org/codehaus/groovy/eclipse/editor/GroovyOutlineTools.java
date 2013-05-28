@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.editor.outline.OutlineExtenderRegistry;
+import org.eclipse.core.runtime.CoreException;
 
 /**
  * @author Maxime Hamm
@@ -33,7 +35,11 @@ public class GroovyOutlineTools {
     public OutlineExtenderRegistry getOutlineExtenderRegistry() {
         if (outlineExtenderRegistry == null) {
             outlineExtenderRegistry = new OutlineExtenderRegistry();
-            outlineExtenderRegistry.initialize();
+            try {
+                outlineExtenderRegistry.initialize();
+            } catch (CoreException e) {
+                GroovyCore.logException("Error creating outline page registry", e);
+            }
         }
         return outlineExtenderRegistry;
     }

@@ -21,6 +21,7 @@ package org.codehaus.groovy.eclipse.refactoring.test;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
@@ -59,10 +60,10 @@ public abstract class BaseTestCase extends TestCase {
 
     protected TextSelection selection;
 
-    protected BaseTestCase(String name, File fileToTest) {
+    protected BaseTestCase(String name, File fileToTest) throws FileNotFoundException, IOException {
         setFile(fileToTest);
         this.name = name;
-        newLine = FilePartReader.getLineDelimiter(file);
+        newLine = FilePartReader.getLineDelimiter(new FileReader(file));
         origRegExp = Pattern.compile("###src" + newLine + "(.*)" + newLine + "###exp", Pattern.DOTALL);
         expRegExp = Pattern.compile("###exp" + newLine + "(.*)" + newLine + "###end", Pattern.DOTALL);
         propertiesRegExp = Pattern.compile("###prop" + newLine + "(.*)" + newLine + "###src", Pattern.DOTALL);
@@ -169,12 +170,12 @@ public abstract class BaseTestCase extends TestCase {
      * reads properties from the testfiles and puts them into
      * the map "properties"
      */
-    public HashMap<String, String> getFileProperties() {
+    public HashMap<String, String> getFileProperties() throws FileNotFoundException, IOException {
 
         HashMap<String, String> properties = new HashMap<String, String>();
         Matcher propertiesSection = propertiesRegExp.matcher(getContents(file));
         if (propertiesSection.find()) {
-            String[] reults = propertiesSection.group(1).split(FilePartReader.getLineDelimiter(file));
+            String[] reults = propertiesSection.group(1).split(FilePartReader.getLineDelimiter(new FileReader(file)));
             for (String line : reults) {
                 String[] prop = line.split("=");
                 if (prop.length != 2)
@@ -210,7 +211,7 @@ public abstract class BaseTestCase extends TestCase {
                 String line = null; // not declared within while loop
                 while ((line = input.readLine()) != null) {
                     contents.append(line);
-                    contents.append(FilePartReader.getLineDelimiter(aFile));
+                    contents.append(FilePartReader.getLineDelimiter(new FileReader(aFile)));
                 }
             } finally {
                 input.close();

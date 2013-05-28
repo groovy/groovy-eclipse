@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -41,7 +44,7 @@ import org.codehaus.groovy.eclipse.refactoring.test.rename.SyntheticAccessorRena
  */
 public class AllRefactoringTests {
 
-    public static Test suite() {
+    public static Test suite() throws FileNotFoundException, IOException {
         final TestSuite suite = new TestSuite("Test for " + AllRefactoringTests.class.getPackage().getName());
 
         // rename

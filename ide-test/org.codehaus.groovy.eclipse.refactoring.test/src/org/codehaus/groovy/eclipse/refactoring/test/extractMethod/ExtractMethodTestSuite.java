@@ -19,6 +19,8 @@
 package org.codehaus.groovy.eclipse.refactoring.test.extractMethod;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.refactoring.test.BaseTestSuite;
@@ -27,7 +29,7 @@ import junit.framework.TestSuite;
 
 public class ExtractMethodTestSuite extends BaseTestSuite {
 
-    public static TestSuite suite() {
+    public static TestSuite suite() throws FileNotFoundException, IOException {
         TestSuite ts = new TestSuite("Extract Method Suite");
         List<File> files = getFileList("/ExtractMethod", "ExtractMethod_Test_");
         for (File file : files) {

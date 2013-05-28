@@ -20,10 +20,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightingExtenderRegistry;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.text.SingleTokenJavaScanner;
 import org.eclipse.jdt.internal.ui.text.java.CompletionProposalCategory;
@@ -61,8 +63,12 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         super(colorManager, preferenceSource, editor, IJavaPartitions.JAVA_PARTITIONING);
         ReflectionUtils.setPrivateField(JavaSourceViewerConfiguration.class, "fStringScanner", this,
                 createStringScanner(colorManager, preferenceSource));
-        ReflectionUtils.setPrivateField(JavaSourceViewerConfiguration.class, "fCodeScanner", this,
-                createTagScanner(getProject(), colorManager, getHighlightingExtenderRegistry()));
+        try {
+            ReflectionUtils.setPrivateField(JavaSourceViewerConfiguration.class, "fCodeScanner", this,
+                    createTagScanner(getProject(), colorManager, getHighlightingExtenderRegistry()));
+        } catch (CoreException e) {
+            GroovyCore.logException("Error creating syntax highlighter", e);
+        }
     }
 
     /**
@@ -72,7 +78,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         return new SingleTokenJavaScanner(colorManager, store, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
     }
 
-    private GroovyTagScanner createTagScanner(IProject project, IColorManager colorManager, HighlightingExtenderRegistry registry) {
+    private GroovyTagScanner createTagScanner(IProject project, IColorManager colorManager, HighlightingExtenderRegistry registry) throws CoreException {
         return new GroovyTagScanner(colorManager, registry.getAdditionalRulesForProject(project),
                 registry.getExtraGroovyKeywordsForProject(project), registry.getExtraGJDKKeywordsForProject(project));
     }

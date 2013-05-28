@@ -1468,8 +1468,12 @@ public class GroovyEditor extends CompilationUnitEditor {
 
         GroovyCompilationUnit unit = getGroovyCompilationUnit();
         if (unit != null) {
-            page = outlineExtenderRegistry.getGroovyOutlinePageForEditor(unit.getJavaProject().getProject(),
-                    fOutlinerContextMenuId, this);
+            try {
+                page = outlineExtenderRegistry.getGroovyOutlinePageForEditor(unit.getJavaProject().getProject(),
+                        fOutlinerContextMenuId, this);
+            } catch (CoreException e) {
+                GroovyCore.logException("Error creating Groovy Outline page", e);
+            }
             if (page != null) {
                 // don't call this since it will grab the GroovyCompilationUnit
                 // instead of the OCompilationUnit

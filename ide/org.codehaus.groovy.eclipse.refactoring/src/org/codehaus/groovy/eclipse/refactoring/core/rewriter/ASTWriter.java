@@ -905,11 +905,15 @@ public class ASTWriter extends CodeVisitorSupport implements
         } else {
         	LineColumn coords = new LineColumn(expression.getLineNumber(),
         			expression.getColumnNumber());
-        	if (!(getParent() instanceof DeclarationExpression) &&
-        	        FilePartReader.readForwardFromCoordinate(currentDocument,coords).startsWith("(")) {
-        		groovyCode.append("(");
-        		writeParanthesis = true;
-        	}
+            try {
+                if (!(getParent() instanceof DeclarationExpression)
+                        && FilePartReader.readForwardFromCoordinate(currentDocument, coords).startsWith("(")) {
+                    groovyCode.append("(");
+                    writeParanthesis = true;
+                }
+            } catch (BadLocationException e) {
+                GroovyCore.logException("Error in refactoring", e);
+            }
         	expression.getLeftExpression().visit(this);
         	if (expression.getRightExpression().getText() != "null") {
 	        	groovyCode.append(" ");
@@ -1176,12 +1180,15 @@ public class ASTWriter extends CodeVisitorSupport implements
     	preVisitExpression(expression);
     	LineColumn coords = new LineColumn(expression.getLineNumber(),
     			expression.getColumnNumber());
-    	if (FilePartReader.readForwardFromCoordinate(currentDocument,coords).startsWith("(")) {
-    		printExpression("(", expression, ")");
-    	}
-    	else {
-    		printExpression(expression);
-    	}
+        try {
+            if (FilePartReader.readForwardFromCoordinate(currentDocument, coords).startsWith("(")) {
+                printExpression("(", expression, ")");
+            } else {
+                printExpression(expression);
+            }
+        } catch (BadLocationException e) {
+            GroovyCore.logException("Error in refactoring", e);
+        }
     	postVisitExpression(expression);
     }
 
@@ -1347,7 +1354,13 @@ public class ASTWriter extends CodeVisitorSupport implements
     private void visitValueInGString(Iterator<Expression> it) {
         Expression valueExpression = it.next();
 		LineColumn coords = new LineColumn(valueExpression.getLineNumber(), valueExpression.getColumnNumber());
-		char firstChar = FilePartReader.readForwardFromCoordinate(currentDocument,coords).charAt(0);
+        char firstChar;
+        try {
+            firstChar = FilePartReader.readForwardFromCoordinate(currentDocument, coords).charAt(0);
+        } catch (BadLocationException e) {
+            GroovyCore.logException("Error during refactoring...trying to recover", e);
+            firstChar = '\0';
+        }
 		groovyCode.append("$");
 		if(firstChar == '{'){
 			groovyCode.append("{");

@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightingExtenderRegistry;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.rules.IPartitionTokenScanner;
 
 /**
@@ -52,7 +54,11 @@ public class GroovyTextTools {
     public HighlightingExtenderRegistry getHighlightingExtenderRegistry() {
         if (highlightingExtenderRegistry == null) {
             highlightingExtenderRegistry = new HighlightingExtenderRegistry();
-            highlightingExtenderRegistry.initialize();
+            try {
+                highlightingExtenderRegistry.initialize();
+            } catch (CoreException e) {
+                GroovyCore.logException("Error creating syntax highlighting registry", e);
+            }
         }
         return highlightingExtenderRegistry;
     }

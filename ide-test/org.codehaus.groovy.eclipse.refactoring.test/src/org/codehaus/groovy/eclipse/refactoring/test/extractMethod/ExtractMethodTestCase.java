@@ -21,6 +21,8 @@ package org.codehaus.groovy.eclipse.refactoring.test.extractMethod;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,12 +52,12 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
 
     private GroovyCompilationUnit unit;
 
-    public ExtractMethodTestCase(String arg0, File arg1) {
+    public ExtractMethodTestCase(String arg0, File arg1) throws FileNotFoundException, IOException {
         super(arg0, arg1);
     }
 
     @Override
-    public void preAction() {
+    public void preAction() throws FileNotFoundException, IOException {
         try {
             testProject = new TestProject();
             GroovyRuntime.addGroovyRuntime(testProject.getProject());

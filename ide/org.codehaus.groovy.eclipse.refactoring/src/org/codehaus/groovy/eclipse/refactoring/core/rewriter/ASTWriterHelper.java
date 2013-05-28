@@ -25,7 +25,9 @@ import java.util.List;
 import org.codehaus.groovy.antlr.LineColumn;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.FilePartReader;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 
 public class ASTWriterHelper implements Opcodes {
@@ -108,7 +110,13 @@ public class ASTWriterHelper implements Opcodes {
 	    if (currentDocument == null) {
 	        return "\"";
 	    }
-		String expressionInFile = FilePartReader.readForwardFromCoordinate(currentDocument,coords);
+        String expressionInFile;
+        try {
+            expressionInFile = FilePartReader.readForwardFromCoordinate(currentDocument, coords);
+        } catch (BadLocationException e) {
+            GroovyCore.logException("Error during refactoring...trying to recover", e);
+            expressionInFile = "";
+        }
 		char charBefore = expressionInFile.charAt(0);
 		String firstThreeChars = "";
 		boolean firstThreeCharsAreSame = false;
