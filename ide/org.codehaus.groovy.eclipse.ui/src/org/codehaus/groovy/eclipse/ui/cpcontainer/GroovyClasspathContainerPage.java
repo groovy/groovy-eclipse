@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,10 +15,15 @@
  */
 package org.codehaus.groovy.eclipse.ui.cpcontainer;
 
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
+
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer;
+import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.core.resources.IProject;
@@ -42,40 +47,42 @@ import org.eclipse.swt.widgets.Label;
 import org.osgi.service.prefs.BackingStoreException;
 
 public class GroovyClasspathContainerPage extends NewElementWizardPage
-        implements IClasspathContainerPage, IClasspathContainerPageExtension {
+implements IClasspathContainerPage, IClasspathContainerPageExtension {
     private IJavaProject jProject;
     private IEclipsePreferences prefStore;
     private IClasspathEntry containerEntryResult;
     private Button[] useGroovyLib;
-    
+    private Button yesButt;
+    private Button noButt;
+
     private enum UseGroovyLib { TRUE("true", "Yes"), FALSE("false", "No"), DEFAULT("default", "Use workspace default");
-        private final String val;
-        private final String label;
-        private UseGroovyLib(String val, String label) {
-            this.val = val;
-            this.label = label;
+    private final String val;
+    private final String label;
+    private UseGroovyLib(String val, String label) {
+        this.val = val;
+        this.label = label;
+    }
+    String val() {
+        return val;
+    }
+
+    String label() {
+        return label;
+    }
+
+
+    /**
+     * @param string
+     * @return
+     */
+    static UseGroovyLib fromString(String val) {
+        if (val.equals(TRUE.val)) {
+            return TRUE;
+        } else if (val.equals(FALSE.val)) {
+            return FALSE;
         }
-        String val() {
-            return val;
-        }
-        
-        String label() {
-            return label;
-        }
-        
-        
-        /**
-         * @param string
-         * @return
-         */
-        static UseGroovyLib fromString(String val) {
-            if (val.equals(TRUE.val)) {
-                return TRUE;
-            } else if (val.equals(FALSE.val)) {
-                return FALSE;
-            }
-            return DEFAULT;
-        }
+        return DEFAULT;
+    }
     }
 
 
@@ -87,30 +94,29 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
     }
 
     private UseGroovyLib getPreference() {
-        return prefStore != null ? 
-                UseGroovyLib.fromString(prefStore.get(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB, "default")) : 
-                UseGroovyLib.DEFAULT;
+        return prefStore != null ?
+                UseGroovyLib.fromString(prefStore.get(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB, "default")) :
+                    UseGroovyLib.DEFAULT;
     }
 
     public boolean finish() {
         try {
-            if (prefStore == null) {
-                return true;
+            if (prefStore != null) {
+                UseGroovyLib storedPreference = getPreference();
+                UseGroovyLib currentPreference = getPreferenceSelection();
+                if (storedPreference != currentPreference) {
+                    prefStore.put(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB,
+                            currentPreference.val());
+                    prefStore.flush();
+                }
             }
-            
-            UseGroovyLib storedPreference = getPreference();
-            UseGroovyLib currentPreference = getPreferenceSelection();
-            if (storedPreference != currentPreference) {
-                prefStore.put(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB,
-                        currentPreference.val());
-                prefStore.flush();
-            }
+
+            GroovyRuntime.ensureGroovyClasspathContainer(jProject, noButt.getSelection());
+
             // always refresh on finish
             refreshNow();
         } catch (BackingStoreException e) {
             GroovyCore.logException("Exception trying to store Groovy classpath container changes", e);
-        } finally {
-            GroovyRuntime.addGroovyClasspathContainer(jProject);
         }
         return true;
     }
@@ -140,8 +146,8 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
     }
 
     public IClasspathEntry getSelection() {
-        return this.containerEntryResult != null ? 
-                this.containerEntryResult : 
+        return this.containerEntryResult != null ?
+                this.containerEntryResult :
                     JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID);
     }
 
@@ -149,36 +155,83 @@ public class GroovyClasspathContainerPage extends NewElementWizardPage
         this.containerEntryResult = containerEntry;
     }
 
+    private boolean hasAttribute() {
+        try {
+            return GroovyClasspathContainer.hasMinimalAttribute(containerEntryResult);
+        } catch (JavaModelException e) {
+            GroovyCore.logException("Error getting Groovy Classpath container", e);
+            return false;
+        }
+    }
+
     public void createControl(final Composite parent) {
-        final Composite composite = new Composite(parent, SWT.NONE);
+        Composite composite = new Composite(parent, SWT.NONE);
 
         composite.setLayout(new GridLayout(1, false));
-        
-        Label should = new Label(composite, SWT.WRAP);
+
+        Composite isMinimalContainer = new Composite(composite, SWT.NONE | SWT.BORDER);
+        isMinimalContainer.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true,
+                false));
+
+        isMinimalContainer.setLayout(new GridLayout(1, false));
+        Label isMinimal = new Label(isMinimalContainer, SWT.WRAP);
+        isMinimal.setText("Should all jars in the groovy-eclipse lib folder be included on the classpath?");
+
+        boolean hasAttribute = hasAttribute();
+        yesButt = new Button(isMinimalContainer, SWT.RADIO);
+        yesButt.setText("Yes, include groovy-all and " + extraJarsAsString());
+        yesButt.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+        yesButt.setSelection(!hasAttribute);
+
+        noButt = new Button(isMinimalContainer, SWT.RADIO);
+        noButt.setText("No, only include groovy-all");
+        noButt.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
+        noButt.setSelection(hasAttribute);
+
+        Composite dotGroovyContainer = new Composite(composite, SWT.NONE | SWT.BORDER);
+        dotGroovyContainer.setLayout(new GridLayout(1, false));
+        dotGroovyContainer.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true,
+                false));
+
+        Label should = new Label(dotGroovyContainer, SWT.WRAP);
         should.setText("Should jars in the ~/.groovy/lib directory be included on the classpath?");
-        
         useGroovyLib = new Button[3];
         for (int i = 0; i < useGroovyLib.length; i++) {
-            useGroovyLib[i] = new Button(composite, SWT.RADIO);
+            useGroovyLib[i] = new Button(dotGroovyContainer, SWT.RADIO);
             useGroovyLib[i].setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
                     false));
             useGroovyLib[i].setSelection(getPreference() == UseGroovyLib.values()[i]);
             useGroovyLib[i].setData(UseGroovyLib.values()[i]);
             useGroovyLib[i].setText(UseGroovyLib.values()[i].label());
-            
+
             if (prefStore == null) {
                 // if container not associated with project, then can't change this
                 useGroovyLib[i].setEnabled(false);
             }
         }
-        
-        Label l = new Label(composite, SWT.NONE);
-        l.setText("(Affects this project only)\n\n");
-        
+
+        Label l = new Label(dotGroovyContainer, SWT.NONE);
+        l.setText("(Affects this project only)");
+
         l = new Label(composite, SWT.NONE);
         l.setText("Groovy Libraries will automatically be refreshed for this project when 'Finish' is clicked.");
 
         setControl(composite);
+    }
+
+    private String extraJarsAsString() {
+        URL[] extraJars = CompilerUtils.getExtraJarsForClasspath();
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n");
+        for (URL jar : extraJars) {
+            try {
+                sb.append(new File(jar.toURI()).getName()).append("\n");
+            } catch (URISyntaxException e) {
+                // OK to ignore
+            }
+        }
+        sb.replace(sb.length()-1, sb.length(), "");
+        return sb.toString();
     }
 
     public void initialize(final IJavaProject project,

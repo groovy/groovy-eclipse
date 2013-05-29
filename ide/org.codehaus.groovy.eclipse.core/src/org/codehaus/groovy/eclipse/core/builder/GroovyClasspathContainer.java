@@ -27,6 +27,7 @@ import java.util.List;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
+import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
@@ -37,12 +38,18 @@ import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ClasspathAttribute;
 
 public class GroovyClasspathContainer implements IClasspathContainer {
-    public static Path CONTAINER_ID = new Path("GROOVY_SUPPORT");
+    public static final Path CONTAINER_ID = new Path("GROOVY_SUPPORT");
 
-    public static String DESC = "Groovy Libraries";
+    public static final IClasspathAttribute MINIMAL_ATTRIBUTE = new ClasspathAttribute("minimal", "true");
+
+    public static final String DESC = "Groovy Libraries";
+
+    public static final IClasspathAttribute[] MINIMAL_ATTRIBUTE_ARR = new IClasspathAttribute[] { MINIMAL_ATTRIBUTE };
 
     private IClasspathEntry[] entries;
 
@@ -63,7 +70,6 @@ public class GroovyClasspathContainer implements IClasspathContainer {
         entries = null;
     }
 
-    // Theoretically, we can support multiple versions of org.codehaus.groovy here
     private void updateEntries() {
         final List<IClasspathEntry> newEntries = newList();
         try {
@@ -72,7 +78,6 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 	        File srcJarFile = new File(groovyURL.getPath().replace(".jar", "-sources.jar"));
 	        IPath srcJarPath = srcJarFile.exists() ?
 	        		new Path(srcJarFile.getAbsolutePath()) : null;
-
 
 	        File javadocJarFile = new File(groovyURL.getPath().replace(".jar", "-javadoc.jar"));
 	        IClasspathAttribute[] attrs;
@@ -91,21 +96,35 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 	                attrs, true);
 	        newEntries.add(entry);
 
-            URL[] extraJars = CompilerUtils.getExtraJarsForClasspath();
-            for (URL jar : extraJars) {
-                IPath jarPath = new Path(jar.getPath());
-                newEntries.add(newLibraryEntry(jarPath, null, null));
-            }
+            if (!hasMinimalAttribute(GroovyRuntime.getGroovyClasspathEntry(JavaCore.create(project)))) {
+                URL[] extraJars = CompilerUtils.getExtraJarsForClasspath();
+                for (URL jar : extraJars) {
+                    IPath jarPath = new Path(jar.getPath());
+                    newEntries.add(newLibraryEntry(jarPath, null, null));
+                }
 
-	        if (useGroovyLibs()) {
-	            newEntries.addAll(getGroovyJarsInDotGroovyLib());
+                if (useGroovyLibs()) {
+                    newEntries.addAll(getGroovyJarsInDotGroovyLib());
+                }
 	        }
-
 	        entries = newEntries.toArray(new IClasspathEntry[0]);
         } catch (Exception e) {
         	GroovyCore.logException("Problem finding groovy runtime", e);
         	entries = new IClasspathEntry[0];
         }
+    }
+
+    public static boolean hasMinimalAttribute(IClasspathEntry entry) throws JavaModelException {
+        if (entry == null) {
+            return false;
+        }
+        IClasspathAttribute[] extraAttributes = entry.getExtraAttributes();
+        for (IClasspathAttribute attribute : extraAttributes) {
+            if (attribute.getName().equals(MINIMAL_ATTRIBUTE.getName()) && Boolean.valueOf(attribute.getValue())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean useGroovyLibs() {

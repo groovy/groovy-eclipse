@@ -25,6 +25,8 @@ import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.IAccessRule;
+import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
@@ -102,6 +104,22 @@ public class GroovyRuntime {
         return hasClasspathContainer(javaProject, GroovyClasspathContainer.CONTAINER_ID);
     }
 
+    public static IClasspathEntry getGroovyClasspathEntry(IJavaProject javaProject) throws JavaModelException {
+        if (javaProject == null || !javaProject.getProject().isAccessible())
+            return null;
+        final IClasspathEntry[] entries = javaProject.getRawClasspath();
+        for (int i = 0; i < entries.length; i++) {
+            final IClasspathEntry entry = entries[i];
+            if (entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
+                if (ObjectUtils.equals(entry.getPath(), GroovyClasspathContainer.CONTAINER_ID)
+                        || GroovyClasspathContainer.CONTAINER_ID.isPrefixOf(entry.getPath())) {
+                    return entry;
+                }
+            }
+        }
+        return null;
+    }
+
     public static boolean hasClasspathContainer(final IJavaProject javaProject, final IPath libraryPath) throws CoreException {
         if (javaProject == null || !javaProject.getProject().isAccessible())
             return false;
@@ -155,20 +173,77 @@ public class GroovyRuntime {
 //                StringUtils.join(excludedResources, ","));
 //    }
 
-    public static void addGroovyClasspathContainer(
-            final IJavaProject javaProject) {
+    private static void internalAddGroovyClasspathContainer(IJavaProject javaProject, boolean isMinimal) {
         try {
-            if (javaProject == null || hasGroovyClasspathContainer(javaProject)) {
+            if (javaProject == null) {
                 return;
             }
 
-            final IClasspathEntry containerEntry = JavaCore.newContainerEntry(
-                    GroovyClasspathContainer.CONTAINER_ID, true);
+            if (hasGroovyClasspathContainer(javaProject)) {
+                removeGroovyClasspathContainer(javaProject);
+            }
+            final IClasspathEntry containerEntry = createContainerEntry(isMinimal);
             addClassPathEntry(javaProject, containerEntry);
         } catch (final CoreException ce) {
-            GroovyCore.logException("Failed to add groovy classpath container:"
-                    + ce.getMessage(), ce);
+            GroovyCore.logException("Failed to add groovy classpath container:" + ce.getMessage(), ce);
             throw new RuntimeException(ce);
+        }
+    }
+
+    private static IClasspathEntry createContainerEntry(boolean isMinimal) {
+        return JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID, new IAccessRule[0],
+                (isMinimal ? GroovyClasspathContainer.MINIMAL_ATTRIBUTE_ARR : new IClasspathAttribute[0]), true);
+    }
+
+    public static void addMinimalGroovyClasspathContainer(IJavaProject javaProject) {
+        internalAddGroovyClasspathContainer(javaProject, true);
+    }
+
+    public static void addGroovyClasspathContainer(IJavaProject javaProject) {
+        internalAddGroovyClasspathContainer(javaProject, false);
+    }
+
+    public static void ensureGroovyClasspathContainer(IJavaProject javaProject, boolean isMinimal) {
+        try {
+            if (javaProject == null) {
+                return;
+            }
+            IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
+            boolean found = false;
+            boolean workDone = false;
+            for (int i = 0; i < rawClasspath.length; i++) {
+                if (rawClasspath[i].getPath().equals(GroovyClasspathContainer.CONTAINER_ID)) {
+                    found = true;
+                    if (isMinimal) {
+                        if (GroovyClasspathContainer.hasMinimalAttribute(rawClasspath[i])) {
+                            // do nothing
+                        } else {
+                            rawClasspath[i] = createContainerEntry(true);
+                            workDone = true;
+                        }
+                    } else {
+                        if (GroovyClasspathContainer.hasMinimalAttribute(rawClasspath[i])) {
+                            rawClasspath[i] = createContainerEntry(false);
+                            workDone = true;
+                        } else {
+                            // do nothing
+                        }
+                    }
+                    break;
+                }
+            }
+            if (!found) {
+                IClasspathEntry[] newClasspath = new IClasspathEntry[rawClasspath.length + 1];
+                System.arraycopy(rawClasspath, 0, newClasspath, 0, rawClasspath.length);
+                newClasspath[rawClasspath.length] = createContainerEntry(isMinimal);
+                workDone = true;
+            }
+
+            if (workDone) {
+                javaProject.setRawClasspath(rawClasspath, null);
+            }
+        } catch (JavaModelException e) {
+            GroovyCore.logException("Problem setting groovy classpath container", e);
         }
     }
 

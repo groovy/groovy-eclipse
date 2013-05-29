@@ -16,6 +16,7 @@ import org.eclipse.jdt.internal.core.JavaModelManager;
 public class GroovyClasspathContainerInitializer extends
         ClasspathContainerInitializer {
 
+    @Override
     public void initialize(IPath containerPath, IJavaProject project)
             throws CoreException {
         IClasspathContainer container = new GroovyClasspathContainer(project.getProject());
@@ -60,7 +61,6 @@ public class GroovyClasspathContainerInitializer extends
     public static void updateGroovyClasspathContainer(IJavaProject project) throws JavaModelException {
         updateSomeGroovyClasspathContainers(new IJavaProject[] { project });
     }
-    
     
 
     /**
