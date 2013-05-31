@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.lang.annotation.Annotation;
 import java.lang.ref.SoftReference;
 
 /**
@@ -90,16 +91,25 @@ public class ClassHelper {
         GROOVY_OBJECT_TYPE = makeWithoutCaching(GroovyObject.class),
         GROOVY_INTERCEPTABLE_TYPE = makeWithoutCaching(GroovyInterceptable.class),
         
-        Enum_Type = new ClassNode("java.lang.Enum",0,OBJECT_TYPE),
-        Annotation_TYPE = new ClassNode("java.lang.annotation.Annotation",0,OBJECT_TYPE),
+        // GRECLIPSE start: GROOVY-6184 Resolve the enum and annotation ClassNodes
+        // old
+//                Enum_Type = new ClassNode("java.lang.Enum",0,OBJECT_TYPE),
+//                Annotation_TYPE = new ClassNode("java.lang.annotation.Annotation",0,OBJECT_TYPE),
+        // new
+        Enum_Type = make(Enum.class, true),
+        Annotation_TYPE = make(Annotation.class, true),
+        // GRECLIPSE end
         ELEMENT_TYPE_TYPE = new ClassNode("java.lang.annotation.ElementType",0,Enum_Type)
         ;
         
         
-    static {
-        Enum_Type.isPrimaryNode = false;
-        Annotation_TYPE.isPrimaryNode = false;
-    }
+    // GRECLIPSE start: GROOVY-6184
+    // old
+//            static {
+//                Enum_Type.isPrimaryNode = false;
+//                Annotation_TYPE.isPrimaryNode = false;
+//            }
+    // GRECLIPSE end
     
     private static ClassNode[] types = new ClassNode[] {
         OBJECT_TYPE,
