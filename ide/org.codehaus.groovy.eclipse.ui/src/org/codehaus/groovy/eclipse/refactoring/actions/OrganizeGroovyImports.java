@@ -77,7 +77,6 @@ public class OrganizeGroovyImports {
 
     /**
      * From {@link OrganizeImportsOperation.TypeReferenceProcessor.UnresolvedTypeData}
-     *
      */
     public static class UnresolvedTypeData {
         final String ref;
@@ -254,7 +253,7 @@ public class OrganizeGroovyImports {
          * ensure that we don't remove the import if the type is resolved
          */
         private void handleType(ClassNode node, boolean isAnnotation) {
-            if (!node.isResolved() && node != current) {
+            if (!node.isResolved() && node.redirect() != current) {
                 // there may be a partial qualifier if
                 // the type referenced is an inner type.
                 // in this case, only take the first part
