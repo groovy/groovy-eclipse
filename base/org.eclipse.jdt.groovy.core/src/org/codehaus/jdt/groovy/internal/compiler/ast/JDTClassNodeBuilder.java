@@ -30,6 +30,7 @@ import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
+import org.eclipse.jdt.internal.compiler.lookup.UnresolvedReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
 
 /**
@@ -54,6 +55,10 @@ class JDTClassNodeBuilder {
 	 * Based on Java5.configureType()
 	 */
 	public ClassNode configureType(TypeBinding type) {
+		if (type instanceof UnresolvedReferenceBinding) {
+			type = resolver.getScope().environment.askForType(((UnresolvedReferenceBinding) type).compoundName);
+		}
+
 		if (type instanceof TypeVariableBinding) {
 			return configureTypeVariableReference((TypeVariableBinding) type);
 		} else if (type instanceof ParameterizedTypeBinding) {
