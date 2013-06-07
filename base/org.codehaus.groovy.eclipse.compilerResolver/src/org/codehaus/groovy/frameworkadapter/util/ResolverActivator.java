@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.codehaus.groovy.frameworkadapter.util;
 
-import org.eclipse.core.internal.resources.Workspace;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;

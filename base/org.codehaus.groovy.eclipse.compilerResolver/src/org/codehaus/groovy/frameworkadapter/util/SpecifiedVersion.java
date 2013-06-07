@@ -134,9 +134,9 @@ public enum SpecifiedVersion {
             return DONT_CARE;
         }
         
-        // this is an error prevent startup
-        throw new IllegalArgumentException("Invalid Groovy compiler level specified: " + compilerLevel + 
-                "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, or 2.2");
+        System.out.println("Invalid Groovy compiler level specified: " + compilerLevel + 
+                        "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, or 2.2");
+        return UNSPECIFIED;
     }
 
     public static SpecifiedVersion findVersion(Version ver) {

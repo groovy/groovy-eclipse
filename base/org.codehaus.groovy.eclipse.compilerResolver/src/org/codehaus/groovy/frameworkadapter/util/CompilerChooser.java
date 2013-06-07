@@ -87,6 +87,7 @@ public class CompilerChooser {
 
         if (bundles == null || bundles.length == 0) {
             System.out.println("No Groovy bundles found...this will cause some problems.");
+            bundles = new Bundle[0];
         }
 
         allVersions = new Version[bundles.length];
