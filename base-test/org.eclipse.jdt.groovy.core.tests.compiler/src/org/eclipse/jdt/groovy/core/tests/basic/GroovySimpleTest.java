@@ -10403,6 +10403,27 @@ public class GroovySimpleTest extends AbstractRegressionTest {
    			"----------\n");
     }
 
+    
+    // See https://jira.codehaus.org/browse/GRECLIPSE-1639
+    public void testTransforms_Gaelyk() throws IOException {
+        Map options = getCompilerOptions();
+        String[] defaultClassPaths = getDefaultClassPaths();
+        String[] augmented = new String[defaultClassPaths.length + 2];
+        System.arraycopy(defaultClassPaths, 0, augmented, 0,
+                defaultClassPaths.length);
+        augmented[augmented.length-1] = FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("gaelyk-2.0.jar")).getFile();
+        augmented[augmented.length-2] = FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("appengine-api-1.0-sdk-1.8.0.jar")).getFile();
+        
+        options.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("gaelyk-2.0.jar")).getFile()
+                + File.pathSeparator + FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("appengine-api-1.0-sdk-1.8.0.jar")).getFile());
+        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
+        this.runConformTest(new String[]{
+                "Foo.groovy",
+                "import groovyx.gaelyk.datastore.Entity\r\n" + 
+                "@Entity\n" + 
+                "class Avatar{}\n" +
+                "println 'done'"}, "done", augmented, true, null, options, null);
+    }
 
 	// FIXASC what does this actually mean to groovy?  from GrailsPluginUtils
 //  static Resource[] getPluginXmlMetadata(String pluginsDirPath) {

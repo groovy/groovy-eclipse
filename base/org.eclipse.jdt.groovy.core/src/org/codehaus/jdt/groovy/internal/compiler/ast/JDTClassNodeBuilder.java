@@ -55,6 +55,9 @@ class JDTClassNodeBuilder {
 	 * Based on Java5.configureType()
 	 */
 	public ClassNode configureType(TypeBinding type) {
+		// GRECLIPSE-1639 not all TypeBinding have been resolved when we get to this point.
+		// See comment on org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment.getTypeFromCompoundName(char[][], boolean,
+		// boolean)
 		if (type instanceof UnresolvedReferenceBinding) {
 			type = resolver.getScope().environment.askForType(((UnresolvedReferenceBinding) type).compoundName);
 		}
