@@ -10406,6 +10406,12 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     
     // See https://jira.codehaus.org/browse/GRECLIPSE-1639
     public void testTransforms_Gaelyk() throws IOException {
+        float classVersion = Float.parseFloat(System.getProperty("java.class.version"));
+        if (classVersion < 51.0f) {
+            System.out.println("TEST DISABLED: Gaelyk requires a java.class.version of 51.0 or greater. This JRE is java.class.version " + classVersion + 
+                    "\nand you are running Java version " + System.getProperty("java.version"));
+            return;
+        }
         Map options = getCompilerOptions();
         String[] defaultClassPaths = getDefaultClassPaths();
         String[] augmented = new String[defaultClassPaths.length + 2];
