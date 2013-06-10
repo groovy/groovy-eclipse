@@ -144,11 +144,9 @@ public class ASTNode {
      * @return the node meta data value for this key
      */
     public <T> T getNodeMetaData(Object key) {
-        // GRECLIPSE: start
         if (metaDataMap == null) {
             return (T) null;
         }
-        // GRECLIPSE: end
         return (T) metaDataMap.get(key);
     }
     
@@ -157,14 +155,12 @@ public class ASTNode {
      * @param other - the other node
      */
     public void copyNodeMetaData(ASTNode other) {
-        // GRECLIPSE: start
         if (other.metaDataMap == null) {
             return;
         }
         if (metaDataMap == null) {
             metaDataMap = new ListHashMap();
         }
-        // GRECLIPSE: end
         metaDataMap.putAll(other.metaDataMap);
     }
     
@@ -178,11 +174,9 @@ public class ASTNode {
      */
     public void setNodeMetaData(Object key, Object value) {
         if (key==null) throw new GroovyBugError("Tried to set meta data with null key on "+this+".");
-        // GRECLIPSE: start
         if (metaDataMap == null) {
             metaDataMap = new ListHashMap();
         }
-        // GRECLIPSE: end
         Object old = metaDataMap.put(key,value);
         if (old!=null) throw new GroovyBugError("Tried to overwrite existing meta data "+this+".");
     }
@@ -197,11 +191,9 @@ public class ASTNode {
      */
     public Object putNodeMetaData(Object key, Object value) {
         if (key == null) throw new GroovyBugError("Tried to set meta data with null key on " + this + ".");
-        // GRECLIPSE: start
         if (metaDataMap == null) {
             metaDataMap = new ListHashMap();
         }
-        // GRECLIPSE: end
         return metaDataMap.put(key, value);
     }
 
@@ -217,7 +209,6 @@ public class ASTNode {
         if (metaDataMap == null) {
             return;
         }
-        // GRECLIPSE: end
         metaDataMap.remove(key);
     }
 }

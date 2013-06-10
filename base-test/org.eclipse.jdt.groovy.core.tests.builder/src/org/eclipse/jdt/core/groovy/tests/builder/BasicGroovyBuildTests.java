@@ -998,7 +998,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"class Foo {\n"+
 				"	@groovy.transform.CompileStatic\n"+
 				"	public static void main(String[] args) {\n"+
-				"		((GroovyObject)this);\n"+
+				"		((GroovyObject)new Foo());\n"+
 				"	}\n"+
 				"}\n");
 

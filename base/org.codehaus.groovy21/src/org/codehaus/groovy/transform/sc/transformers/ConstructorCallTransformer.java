@@ -15,22 +15,19 @@
  */
 package org.codehaus.groovy.transform.sc.transformers;
 
-import static org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET;
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.expr.*;
+import org.codehaus.groovy.ast.stmt.EmptyStatement;
+import org.codehaus.groovy.classgen.*;
+import org.codehaus.groovy.classgen.asm.*;
+import org.codehaus.groovy.syntax.Token;
+import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
+import org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor;
 import groovyjarjarasm.asm.MethodVisitor;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.util.List;
-
-import org.codehaus.groovy.ast.*;
-import org.codehaus.groovy.ast.expr.*;
-import org.codehaus.groovy.classgen.AsmClassGenerator;
-import org.codehaus.groovy.classgen.BytecodeExpression;
-import org.codehaus.groovy.classgen.asm.BytecodeHelper;
-import org.codehaus.groovy.classgen.asm.CompileStack;
-import org.codehaus.groovy.classgen.asm.OperandStack;
-import org.codehaus.groovy.classgen.asm.WriterController;
-import org.codehaus.groovy.syntax.Token;
-import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
+import static org.codehaus.groovy.transform.stc.StaticTypesMarker.*;
 
 public class ConstructorCallTransformer {
     private final StaticCompilationTransformer staticCompilationTransformer;
@@ -42,7 +39,9 @@ public class ConstructorCallTransformer {
     Expression transformConstructorCall(final ConstructorCallExpression expr) {
         ConstructorNode node = (ConstructorNode) expr.getNodeMetaData(DIRECT_METHOD_CALL_TARGET);
         if (node == null) return expr;
-        if (node.getParameters().length == 1 && StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(node.getParameters()[0].getType(), ClassHelper.MAP_TYPE)) {
+        if (node.getParameters().length == 1
+                && StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(node.getParameters()[0].getType(), ClassHelper.MAP_TYPE)
+                && node.getCode() == StaticTypeCheckingVisitor.GENERATED_EMPTY_STATEMENT) {
             Expression arguments = expr.getArguments();
             if (arguments instanceof TupleExpression) {
                 TupleExpression tupleExpression = (TupleExpression) arguments;
@@ -64,11 +63,8 @@ public class ConstructorCallTransformer {
                         MapStyleConstructorCall result = new MapStyleConstructorCall(
                                 staticCompilationTransformer,
                                 declaringClass,
-                                map
-                                // GRECLIPSE: start
-                                // see https://jira.codehaus.org/browse/GROOVY-5818
-                                , expr
-                                // GRECLIPSE: end
+                                map,
+                                expr
                         );
 
                         return result;
@@ -104,11 +100,8 @@ public class ConstructorCallTransformer {
         public void visit(final GroovyCodeVisitor visitor) {
             if (visitor instanceof AsmClassGenerator) {
                 acg = (AsmClassGenerator) visitor;
-                // GRECLIPSE: start
-                // see https://jira.codehaus.org/browse/GROOVY-5818
             } else {
                 orginalCall.visit(visitor);
-                // GRECLIPSE: end
             } 
             super.visit(visitor);
         }

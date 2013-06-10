@@ -15,11 +15,6 @@
  */
 package org.codehaus.groovy.transform.sc.transformers;
 
-import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.BINARY_EXP_TARGET;
-
-import java.util.Iterator;
-import java.util.List;
-
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -30,6 +25,11 @@ import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.sc.ListOfExpressionsExpression;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
+
+import java.util.Iterator;
+import java.util.List;
+
+import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.*;
 
 public class BinaryExpressionTransformer {
     private final static MethodNode COMPARE_TO_METHOD = ClassHelper.COMPARABLE_TYPE.getMethods("compareTo").get(0);
@@ -54,49 +54,48 @@ public class BinaryExpressionTransformer {
         Object[] list = (Object[]) bin.getNodeMetaData(BINARY_EXP_TARGET);
         Token operation = bin.getOperation();
         int operationType = operation.getType();
+        Expression rightExpression = bin.getRightExpression();
+        Expression leftExpression = bin.getLeftExpression();
         if (operationType==Types.COMPARE_EQUAL || operationType == Types.COMPARE_NOT_EQUAL) {
             // let's check if one of the operands is the null constant
-            // GRECLIPSE ensure source locations
-            /*old{
-            // let's check if one of the operands is the null constant
-            if (isNullConstant(bin.getLeftExpression())) {
-                return new CompareToNullExpression(staticCompilationTransformer.transform(bin.getRightExpression()), operationType==Types.COMPARE_EQUAL);
-            } else if (isNullConstant(bin.getRightExpression())) {
-                return new CompareToNullExpression(staticCompilationTransformer.transform(bin.getLeftExpression()), operationType==Types.COMPARE_EQUAL);
-            }
-            }new*/
             CompareToNullExpression compareToNullExpression = null;
-            if (isNullConstant(bin.getLeftExpression())) {
-                compareToNullExpression = new CompareToNullExpression(staticCompilationTransformer.transform(bin.getRightExpression()), operationType==Types.COMPARE_EQUAL);
-            } else if (isNullConstant(bin.getRightExpression())) {
-                compareToNullExpression = new CompareToNullExpression(staticCompilationTransformer.transform(bin.getLeftExpression()), operationType==Types.COMPARE_EQUAL);
+            if (isNullConstant(leftExpression)) {
+                compareToNullExpression = new CompareToNullExpression(staticCompilationTransformer.transform(rightExpression), operationType==Types.COMPARE_EQUAL);
+            } else if (isNullConstant(rightExpression)) {
+                compareToNullExpression = new CompareToNullExpression(staticCompilationTransformer.transform(leftExpression), operationType==Types.COMPARE_EQUAL);
             }
             if (compareToNullExpression != null) {
                 compareToNullExpression.setSourcePosition(bin);
                 return compareToNullExpression;
             }
-            // GRECLIPSE end
         } else if (operationType==Types.KEYWORD_IN) {
             MethodCallExpression call = new MethodCallExpression(
-                    bin.getRightExpression(),
+                    rightExpression,
                     "isCase",
-                    bin.getLeftExpression()
+                    leftExpression
             );
             call.setMethodTarget((MethodNode) bin.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET));
             call.setSourcePosition(bin);
             call.copyNodeMetaData(bin);
-            return staticCompilationTransformer.transform(call);
+            TernaryExpression tExp = new TernaryExpression(
+                    new BooleanExpression(
+                            new BinaryExpression(rightExpression, Token.newSymbol("==",-1,-1), new ConstantExpression(null))
+                    ),
+                    new BinaryExpression(leftExpression, Token.newSymbol("==", -1, -1), new ConstantExpression(null)),
+                    call
+            );
+            return staticCompilationTransformer.transform(tExp);
         }
         if (list != null) {
             if (operationType == Types.COMPARE_TO) {
                 StaticTypesTypeChooser typeChooser = staticCompilationTransformer.getTypeChooser();
                 ClassNode classNode = staticCompilationTransformer.getClassNode();
-                ClassNode leftType = typeChooser.resolveType(bin.getLeftExpression(), classNode);
+                ClassNode leftType = typeChooser.resolveType(leftExpression, classNode);
                 if (leftType.implementsInterface(ClassHelper.COMPARABLE_TYPE)) {
-                    ClassNode rightType = typeChooser.resolveType(bin.getRightExpression(), classNode);
+                    ClassNode rightType = typeChooser.resolveType(rightExpression, classNode);
                     if (rightType.implementsInterface(ClassHelper.COMPARABLE_TYPE)) {
-                        Expression left = staticCompilationTransformer.transform(bin.getLeftExpression());
-                        Expression right = staticCompilationTransformer.transform(bin.getRightExpression());
+                        Expression left = staticCompilationTransformer.transform(leftExpression);
+                        Expression right = staticCompilationTransformer.transform(rightExpression);
                         MethodCallExpression call = new MethodCallExpression(left, "compareTo", new ArgumentListExpression(right));
                         call.setImplicitThis(false);
                         call.setMethodTarget(COMPARE_TO_METHOD);
@@ -133,8 +132,8 @@ public class BinaryExpressionTransformer {
             MethodCallExpression call;
             MethodNode node = (MethodNode) list[0];
             String name = (String) list[1];
-            Expression left = staticCompilationTransformer.transform(bin.getLeftExpression());
-            Expression right = staticCompilationTransformer.transform(bin.getRightExpression());
+            Expression left = staticCompilationTransformer.transform(leftExpression);
+            Expression right = staticCompilationTransformer.transform(rightExpression);
             call = new MethodCallExpression(
                     left,
                     name,
@@ -157,12 +156,12 @@ public class BinaryExpressionTransformer {
             // the method represents the operation type only, and we must add an assignment
             return new BinaryExpression(left, Token.newSymbol("=", operation.getStartLine(), operation.getStartColumn()), call);
         }
-        if (bin.getOperation().getType() == Types.EQUAL && bin.getLeftExpression() instanceof TupleExpression && bin.getRightExpression() instanceof ListExpression) {
+        if (bin.getOperation().getType() == Types.EQUAL && leftExpression instanceof TupleExpression && rightExpression instanceof ListExpression) {
             // multiple assignment
             ListOfExpressionsExpression cle = new ListOfExpressionsExpression();
             boolean isDeclaration = bin instanceof DeclarationExpression;
-            List<Expression> leftExpressions = ((TupleExpression) bin.getLeftExpression()).getExpressions();
-            List<Expression> rightExpressions = ((ListExpression) bin.getRightExpression()).getExpressions();
+            List<Expression> leftExpressions = ((TupleExpression) leftExpression).getExpressions();
+            List<Expression> rightExpressions = ((ListExpression) rightExpression).getExpressions();
             Iterator<Expression> leftIt = leftExpressions.iterator();
             Iterator<Expression> rightIt = rightExpressions.iterator();
             while (leftIt.hasNext()) {

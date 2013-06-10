@@ -1198,14 +1198,6 @@ public class CompilationUnit extends ProcessingUnit {
                         offset++;
                     }
                     body.call(context, new GeneratorContext(this.ast, offset), classNode); 
-/****                1.8.6 seemed to adjust this code, who is impacted? can I remove our change below?      
-                  body.call(context, new GeneratorContext(this.ast), classNode);
-                    // GRECLIPSE: start
-                    if (phase==Phases.CLASS_GENERATION && getProgressListener()!=null && body==phaseOperations[phase].getLast()) {
-                    	getProgressListener().generateComplete(phase,classNode);
-                    }
-                    // FIXASC (groovychange) end
-*****/
                 }
             } catch (CompilationFailedException e) {
                 // fall through, getErrorReporter().failIfErrors() will trigger
