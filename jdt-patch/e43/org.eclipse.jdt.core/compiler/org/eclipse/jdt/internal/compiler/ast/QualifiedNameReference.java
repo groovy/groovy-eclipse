@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,12 @@
  *								bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 365519 - editorial cleanup after bug 186342 and bug 365387
  *								bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
+ *								bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
+ *								bug 331649 - [compiler][null] consider null annotations for fields
+ *								bug 383368 - [compiler][null] syntactic null analysis for field references
+ *								bug 402993 - [null] Follow up of bug 401088: Missing warning about redundant null check
+ *     Jesper S Moller <jesper@selskabet.org> - Contributions for
+ *								bug 378674 - "The method can be declared as static" is wrong
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -85,9 +91,6 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 					currentScope.problemReporter().uninitializedBlankFinalField(lastFieldBinding, this);
 				}
 			}
-			if (!lastFieldBinding.isStatic()) {
-				currentScope.resetDeclaringClassMethodStaticFlag(lastFieldBinding.declaringClass);
-			}
 			break;
 		case Binding.LOCAL :
 			// first binding is a local variable
@@ -102,7 +105,7 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 				localBinding.useFlag = LocalVariableBinding.FAKE_USED;
 			}
 			if (needValue) {
-				checkNPE(currentScope, flowContext, flowInfo, true);
+				checkInternalNPE(currentScope, flowContext, flowInfo, true);
 			}
 	}
 
@@ -163,6 +166,7 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 			}
 		}
 	}
+	// note: not covering def.assign for @NonNull: QNR cannot provably refer to a variable of the current object
 	manageSyntheticAccessIfNecessary(currentScope, lastFieldBinding, -1 /*write-access*/, flowInfo);
 
 	return flowInfo;
@@ -194,9 +198,6 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 					}
 				}
 			}
-			if (!fieldBinding.isStatic()) {
-				currentScope.resetDeclaringClassMethodStaticFlag(fieldBinding.declaringClass);
-			}
 			break;
 		case Binding.LOCAL : // reading a local variable
 			LocalVariableBinding localBinding;
@@ -208,9 +209,9 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			} else if (localBinding.useFlag == LocalVariableBinding.UNUSED) {
 				localBinding.useFlag = LocalVariableBinding.FAKE_USED;
 			}
-			if (needValue) {
-				checkNPE(currentScope, flowContext, flowInfo, true);
-			}
+	}
+	if (needValue) {
+		checkInternalNPE(currentScope, flowContext, flowInfo, true);
 	}
 	if (needValue) {
 		manageEnclosingInstanceAccessIfNecessary(currentScope, flowInfo);
@@ -227,9 +228,8 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	return flowInfo;
 }
 
-public void checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInfo, boolean checkString) {
-	// cannot override localVariableBinding because this would project o.m onto o when
-	// analyzing assignments
+/* check if any dot in this QNR may trigger an NPE. */
+private void checkInternalNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInfo, boolean checkString) {
 	if ((this.bits & ASTNode.RestrictiveFlagMASK) == Binding.LOCAL) {
 		LocalVariableBinding local = (LocalVariableBinding) this.binding;
 		if (local != null &&
@@ -241,11 +241,41 @@ public void checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInf
 			}
 			flowInfo.markAsComparedEqualToNonNull(local);
 			// from thereon it is set
-			if (flowContext.initsOnFinally != null) {
-				flowContext.initsOnFinally.markAsComparedEqualToNonNull(local);
-			}
+			flowContext.markFinallyNullStatus(local, FlowInfo.NON_NULL);
 		}
 	}
+	if (this.otherBindings != null) {
+		if ((this.bits & ASTNode.RestrictiveFlagMASK) == Binding.FIELD) {
+			// is the first field dereferenced annotated Nullable? If so, report immediately
+			checkNullableFieldDereference(scope, (FieldBinding) this.binding, this.sourcePositions[0]);
+		}
+		// look for annotated fields, they do not depend on flow context -> check immediately:
+		int length = this.otherBindings.length - 1; // don't check the last binding
+		for (int i = 0; i < length; i++) {
+			checkNullableFieldDereference(scope, this.otherBindings[i], this.sourcePositions[i+1]);
+		}
+	}
+}
+
+public boolean checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInfo) {
+	if (super.checkNPE(scope, flowContext, flowInfo)) {
+		return true;
+	}
+	FieldBinding fieldBinding = null;
+	long position = 0L;
+	if (this.otherBindings == null) {
+		if ((this.bits & RestrictiveFlagMASK) == Binding.FIELD) {
+			fieldBinding = (FieldBinding) this.binding;
+			position = this.sourcePositions[0];
+		}
+	} else {
+		fieldBinding = this.otherBindings[this.otherBindings.length - 1];
+		position = this.sourcePositions[this.sourcePositions.length - 1];
+	}
+	if (fieldBinding != null) {
+		return checkNullableFieldDereference(scope, fieldBinding, position);
+	}
+	return false;
 }
 
 /**
@@ -780,11 +810,42 @@ public TypeBinding getOtherFieldBindings(BlockScope scope) {
 			: type;
 }
 
+public boolean isEquivalent(Reference reference) {
+	if (reference instanceof FieldReference) {
+		return reference.isEquivalent(this); // comparison FR <-> QNR is implemented only once
+	}
+	if (!(reference instanceof QualifiedNameReference)) return false;
+	// straight-forward test of equality of two QNRs:
+	QualifiedNameReference qualifiedReference = (QualifiedNameReference) reference;
+	if (this.tokens.length != qualifiedReference.tokens.length) return false;
+	if (this.binding != qualifiedReference.binding) return false;
+	if (this.otherBindings != null) {
+		if (qualifiedReference.otherBindings == null) return false;
+		int len = this.otherBindings.length;
+		if (len != qualifiedReference.otherBindings.length) return false;
+		for (int i=0; i<len; i++) {
+			if (this.otherBindings[i] != qualifiedReference.otherBindings[i]) return false;
+		}
+	} else if (qualifiedReference.otherBindings != null) {
+		return false;
+	}
+	return true;
+}
+
 public boolean isFieldAccess() {
 	if (this.otherBindings != null) {
 		return true;
 	}
 	return (this.bits & ASTNode.RestrictiveFlagMASK) == Binding.FIELD;
+}
+
+public FieldBinding lastFieldBinding() {
+	if (this.otherBindings != null) {
+		return this.otherBindings[this.otherBindings.length - 1];		
+	} else if (this.binding != null && (this.bits & RestrictiveFlagMASK) == Binding.FIELD) {
+		return (FieldBinding) this.binding;
+	}
+	return null;
 }
 
 public void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo) {
@@ -839,10 +900,6 @@ public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FieldBindi
 			return;
 		}
 	}
-}
-
-public int nullStatus(FlowInfo flowInfo) {
-	return FlowInfo.UNKNOWN;
 }
 
 public Constant optimizedBooleanConstant() {
@@ -1071,5 +1128,20 @@ public void traverse(ASTVisitor visitor, ClassScope scope) {
 
 public String unboundReferenceErrorName() {
 	return new String(this.tokens[0]);
+}
+
+public VariableBinding nullAnnotatedVariableBinding() {
+	if (this.binding != null && isFieldAccess()) {
+		FieldBinding fieldBinding;
+		if (this.otherBindings == null) {
+			fieldBinding = (FieldBinding) this.binding;
+		} else {
+			fieldBinding = this.otherBindings[this.otherBindings.length - 1];
+		}
+		if (fieldBinding.isNullable() || fieldBinding.isNonNull()) {
+			return fieldBinding;
+		}
+	}
+	return null;
 }
 }

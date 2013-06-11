@@ -12,6 +12,8 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -275,9 +277,15 @@ class GroovyClassFile extends ClassFile {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
 	public void traverse(MethodBinding methodBinding, int maxLocals, byte[] bytecodes, int codeOffset, int codeLength,
 			@SuppressWarnings("rawtypes") ArrayList frames, boolean isClinit) {
+		throw new UnsupportedOperationException();
+	}
+
+	// 4.3 method (version of above method?)
+	@SuppressWarnings("rawtypes")
+	public List traverse(MethodBinding methodBinding, int maxLocals, byte[] bytecodes, int codeOffset, int codeLength, Map frames,
+			boolean isClinit) {
 		throw new UnsupportedOperationException();
 	}
 

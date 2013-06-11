@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,7 @@ import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 import org.eclipse.jdt.internal.core.search.indexing.IIndexConstants;
 
-public abstract class PatternLocator implements IIndexConstants {
+public abstract class PatternLocator implements IIndexConstants, IQualifiedTypeResolutionListener {
 
 // store pattern info
 protected int matchMode;
@@ -149,7 +149,7 @@ protected char[] getQualifiedPattern(char[] simpleNamePattern, char[] qualificat
 }
 /* (non-Javadoc)
  * Modify PatternLocator.qualifiedSourceName behavior:
- * also concatene enclosing type name when type is a only a member type.
+ * also concatenate enclosing type name when type is a only a member type.
  */
 protected char[] getQualifiedSourceName(TypeBinding binding) {
 	TypeBinding type = binding instanceof ArrayBinding ? ((ArrayBinding)binding).leafComponentType : binding;
@@ -602,7 +602,7 @@ protected void updateMatch(TypeBinding[] argumentsBinding, MatchLocator locator,
 				continue;
 			}
 
-			// Verify tha pattern binding is compatible with match type argument binding
+			// Verify the pattern binding is compatible with match type argument binding
 			switch (patternWildcard) {
 				case Signature.C_STAR : // UNBOUND pattern
 					// unbound always match => skip to next argument
@@ -969,5 +969,8 @@ protected int resolveLevelForType (char[] simpleNamePattern,
 }
 public String toString(){
 	return "SearchPattern"; //$NON-NLS-1$
+}
+public void recordResolution(QualifiedTypeReference typeReference, TypeBinding resolution) {
+	// noop by default
 }
 }

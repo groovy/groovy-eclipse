@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -77,11 +77,12 @@ public int match(FieldDeclaration field, MatchingNodeSet nodeSet) {
 }
 //public int match(MethodDeclaration node, MatchingNodeSet nodeSet) - SKIP IT
 /**
- * Special case for message send in javadoc comment. They can be in fact bound to a contructor.
+ * Special case for message send in javadoc comment. They can be in fact bound to a constructor.
  * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=83285"
  */
 public int match(MessageSend msgSend, MatchingNodeSet nodeSet)  {
 	if ((msgSend.bits & ASTNode.InsideJavadoc) == 0) return IMPOSSIBLE_MATCH;
+	if (!this.pattern.findReferences) return IMPOSSIBLE_MATCH;
 	if (this.pattern.declaringSimpleName == null || CharOperation.equals(msgSend.selector, this.pattern.declaringSimpleName)) {
 		return nodeSet.addMatch(msgSend, this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
 	}

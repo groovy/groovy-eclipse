@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,6 +16,8 @@ import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
+import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jdt.core.dom.rewrite.TargetSourceRangeComputer;
 import org.eclipse.text.edits.TextEditGroup;
 
@@ -26,6 +28,22 @@ import org.eclipse.text.edits.TextEditGroup;
  */
 public final class RewriteEventStore {
 
+	/**
+	 * Debug AST rewrite events.
+	 * <p>
+	 * If enabled, then {@link ASTRewrite} and {@link ListRewrite}
+	 * throw an {@link IllegalArgumentException} if a rewrite operation tries to insert an
+	 * AST node in a place where nodes of this type are not allowed (node type not a subtype of
+	 * the structural property's type). 
+	 * </p>
+	 * <p>
+	 * Disabled by default, since this hasn't been enforced from the beginning, and there are clients
+	 * (e.g. in JDT UI refactorings) that rely on a bit of leeway here.
+	 * E.g. the qualifier of a QualifiedName cannot be a MethodInvocation expression or a SimpleType, but
+	 * that's sometimes the easiest solution for such a change, and ASTRewrite has no problems with it.  
+	 * </p>
+	 */
+	public static boolean DEBUG = false;
 
 	public static final class PropertyLocation {
 		private final ASTNode parent;

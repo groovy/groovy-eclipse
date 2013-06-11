@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Kelly Campbell <kellyc@google.com> - Hangs in SourceMapper during java proposals - https://bugs.eclipse.org/bugs/show_bug.cgi?id=281575
+ *     Stephan Herrmann - Contribution for Bug 380048 - error popup when navigating to source files
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 // GROOVY PATCHED
@@ -372,12 +373,13 @@ public class SourceMapper
 	}
 
 	/**
+	 * NOT API, public only for access by Unit tests.
 	 * Converts these type names to unqualified signatures. This needs to be done in order to be consistent
 	 * with the way the source range is retrieved.
 	 * @see SourceMapper#getUnqualifiedMethodHandle
 	 * @see Signature
 	 */
-	private String[] convertTypeNamesToSigs(char[][] typeNames) {
+	public String[] convertTypeNamesToSigs(char[][] typeNames) {
 		if (typeNames == null)
 			return CharOperation.NO_STRINGS;
 		int n = typeNames.length;
@@ -404,6 +406,16 @@ public class SourceMapper
 						dot = j;
 						break;
 					case Signature.C_GENERIC_START:
+						int matchingEnd = findMatchingGenericEnd(typeSig, j+1);
+						if (matchingEnd > 0 && matchingEnd+1 < length && typeSig[matchingEnd+1] == Signature.C_DOT) {
+							// found Head<Param>.Tail -> discard everything except Tail
+							if (simpleTypeSig == null)
+								simpleTypeSig = new StringBuffer().append(typeSig, 0, start);
+							simpleTypeSig.append(Signature.C_UNRESOLVED);
+							start = j = matchingEnd+2;
+							break;
+						}
+						//$FALL-THROUGH$
 					case Signature.C_NAME_END:
 						if (dot > start) {
 							if (simpleTypeSig == null)
@@ -423,6 +435,24 @@ public class SourceMapper
 			}
 		}
 		return typeSigs;
+	}
+
+	private int findMatchingGenericEnd(char[] sig, int start) {
+		int nesting = 0;
+		int length = sig.length;
+		for (int i=start; i < length; i++) {
+			switch (sig[i]) {
+				case Signature.C_GENERIC_START:
+					nesting++;
+					break;
+				case Signature.C_GENERIC_END:
+					if (nesting == 0)
+						return i;
+					nesting--;
+					break;
+			}
+		}
+		return -1;
 	}
 
 	private synchronized void computeAllRootPaths(IType type) {

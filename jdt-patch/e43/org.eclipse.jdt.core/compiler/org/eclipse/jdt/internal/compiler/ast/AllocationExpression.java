@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,7 +7,7 @@
  * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Stephan Herrmann - Contributions for 
+ *     Stephan Herrmann - Contributions for
  *     						bug 236385 - [compiler] Warn for potential programming problem if an object is created but not used
  *     						bug 319201 - [null] no warning when unboxing SingleNameReference causes NPE
  *     						bug 349326 - [1.7] new warning for missing try-with-resources
@@ -15,6 +15,11 @@
  *							bug 358903 - Filter practically unimportant resource leak warnings
  *							bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
  *							bug 370639 - [compiler][resource] restore the default for resource leak warnings
+ *							bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
+ *							bug 388996 - [compiler][resource] Incorrect 'potential resource leak'
+ *							bug 403147 - [compiler][null] FUP of bug 400761: consolidate interaction between unboxing, NPE, and deferred checking
+ *     Jesper S Moller <jesper@selskabet.org> - Contributions for
+ *							bug 378674 - "The method can be declared as static" is wrong
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -59,11 +64,9 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 					.unconditionalInits();
 			// if argument is an AutoCloseable insert info that it *may* be closed (by the target method, i.e.)
 			if (analyseResources && !hasResourceWrapperType) { // allocation of wrapped closeables is analyzed specially
-				flowInfo = FakedTrackingVariable.markPassedToOutside(currentScope, this.arguments[i], flowInfo, false);
+				flowInfo = FakedTrackingVariable.markPassedToOutside(currentScope, this.arguments[i], flowInfo, flowContext, false);
 			}
-			if ((this.arguments[i].implicitConversion & TypeIds.UNBOXING) != 0) {
-				this.arguments[i].checkNPE(currentScope, flowContext, flowInfo);
-			}
+			this.arguments[i].checkNPEbyUnboxing(currentScope, flowContext, flowInfo);
 		}
 		analyseArguments(currentScope, flowContext, flowInfo, this.binding, this.arguments);
 	}
@@ -91,9 +94,14 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		// allocating a non-static member type without an enclosing instance of parent type
 		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=335845
 		currentScope.resetDeclaringClassMethodStaticFlag(this.binding.declaringClass.enclosingType());
+		// Reviewed for https://bugs.eclipse.org/bugs/show_bug.cgi?id=378674 :
+		// The corresponding problem (when called from static) is not produced until during code generation
 	}
 	manageEnclosingInstanceAccessIfNecessary(currentScope, flowInfo);
 	manageSyntheticAccessIfNecessary(currentScope, flowInfo);
+
+	// account for possible exceptions thrown by the constructor
+	flowContext.recordAbruptExit(); // TODO whitelist of ctors that cannot throw any exc.??
 
 	return flowInfo;
 }

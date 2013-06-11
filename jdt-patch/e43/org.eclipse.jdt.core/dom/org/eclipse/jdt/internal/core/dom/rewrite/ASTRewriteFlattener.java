@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -523,11 +523,8 @@ public class ASTRewriteFlattener extends ASTVisitor {
 		this.result.append(' ');
 		getChildNode(node, InfixExpression.RIGHT_OPERAND_PROPERTY).accept(this);
 
-		List list= getChildList(node, InfixExpression.EXTENDED_OPERANDS_PROPERTY);
-		for (int i= 0; i < list.size(); i++) {
-			this.result.append(operator);
-			((ASTNode) list.get(i)).accept(this);
-		}
+		String separator= ' ' + operator + ' ';
+		visitList(node, InfixExpression.EXTENDED_OPERANDS_PROPERTY, separator, separator, Util.EMPTY_STRING);
 		return false;
 	}
 

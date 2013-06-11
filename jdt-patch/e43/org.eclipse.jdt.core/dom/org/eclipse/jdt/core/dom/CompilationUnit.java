@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,6 +21,7 @@ import java.util.Map;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.compiler.IProblem;
+import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
 import org.eclipse.jdt.internal.compiler.util.Util;
 import org.eclipse.jface.text.IDocument;
@@ -875,13 +876,20 @@ public class CompilationUnit extends ASTNode {
 	/**
 	 * Enables the recording of changes to this compilation
 	 * unit and its descendants. The compilation unit must have
-	 * been created by <code>ASTParser</code> and still be in
+	 * been created by {@link ASTParser} and still be in
 	 * its original state. Once recording is on,
 	 * arbitrary changes to the subtree rooted at this compilation
 	 * unit are recorded internally. Once the modification has
-	 * been completed, call <code>rewrite</code> to get an object
+	 * been completed, call {@link #rewrite(IDocument, Map)} to get an object
 	 * representing the corresponding edits to the original
 	 * source code string.
+	 * <p>
+	 * Note that this way of manipulating an AST only allows a single line of modifications.
+	 * To modify an AST in a non-destructive way, use an external {@link ASTRewrite}.
+	 * As an added benefit, you can then also use
+	 * {@link ASTRewrite#createStringPlaceholder(String, int) string placeholders} and
+	 * {@link ASTRewrite#createCopyTarget(ASTNode) copy} nodes including comments and formatting.
+	 * </p>
 	 *
 	 * @exception IllegalArgumentException if this compilation unit is
 	 * marked as unmodifiable, or if this compilation unit has already
@@ -899,9 +907,9 @@ public class CompilationUnit extends ASTNode {
 	 * code for this compilation unit.
 	 * <p>
 	 * The compilation unit must have been created by
-	 * <code>ASTParser</code> from the source code string in the
+	 * {@link ASTParser} from the source code string in the
 	 * given document, and recording must have been turned
-	 * on with a prior call to <code>recordModifications</code>
+	 * on with a prior call to {@link #recordModifications()}
 	 * while the AST was still in its original state.
 	 * </p>
 	 * <p>
@@ -1042,7 +1050,6 @@ public class CompilationUnit extends ASTNode {
 	 * Sets internal data used to perform statements recovery.
 	 * @param data
 	 * 
-	 * @noreference This method is not intended to be referenced by clients.
 	 * @since 3.5
 	 */
 	void setStatementsRecoveryData(Object data) {

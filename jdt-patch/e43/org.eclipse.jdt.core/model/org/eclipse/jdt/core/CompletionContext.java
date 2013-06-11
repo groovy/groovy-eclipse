@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -52,6 +52,24 @@ public class CompletionContext {
 	 * @since 3.4
 	 */
 	public static final int TL_STATEMENT_START = 2;
+	
+	/**
+	 * The completed token is the first token of a constructor
+	 * invocation expression.<br>
+	 * e.g.
+	 * <pre>
+	 * public class X {
+	 *   public void bar() {
+	 *     new Foo| // completion occurs at |
+	 *   }
+	 * }
+	 * </pre>
+	 *
+	 * @see #getTokenLocation()
+	 *
+	 * @since 3.9
+	 */
+	public static final int TL_CONSTRUCTOR_START = 4;
 
 	/**
 	 * The completion token is unknown.

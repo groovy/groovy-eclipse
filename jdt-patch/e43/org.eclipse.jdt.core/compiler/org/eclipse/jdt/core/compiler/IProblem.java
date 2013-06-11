@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -116,7 +116,7 @@
  *		Benjamin Muskalla - added the following constants
  *									MissingSynchronizedModifierInInheritedMethod
  *		Stephan Herrmann  - added the following constants
- *									UnusedObjectAllocation									
+ *									UnusedObjectAllocation
  *									PotentiallyUnclosedCloseable
  *									PotentiallyUnclosedCloseableAtExit
  *									UnclosedCloseable
@@ -149,6 +149,21 @@
  *									UninitializedLocalVariableHintMissingDefault
  *									UninitializedBlankFinalFieldHintMissingDefault
  *									ShouldReturnValueHintMissingDefault
+ *									NullableFieldReference
+ *									UninitializedNonNullField
+ *									UninitializedNonNullFieldHintMissingDefault
+ *									NonNullMessageSendComparisonYieldsFalse
+ *									RedundantNullCheckOnNonNullSpecdField
+ *									NonNullSpecdFieldComparisonYieldsFalse
+ *									NonNullExpressionComparisonYieldsFalse
+ *									RedundantNullCheckOnNonNullExpression
+ *									ConflictingNullAnnotations
+ *									ConflictingInheritedNullAnnotations
+ *									UnsafeElementTypeConversion
+ *									PotentialNullUnboxing
+ *									NullUnboxing
+ *									NullExpressionReference
+ *									PotentialNullExpressionReference
  *******************************************************************************/
 package org.eclipse.jdt.core.compiler;
 
@@ -889,6 +904,10 @@ void setSourceStart(int sourceStart);
 	int RedundantNullCheckOnNonNullLocalVariable = Internal + 457;
 	/** @since 3.3 */
 	int NonNullLocalVariableComparisonYieldsFalse = Internal + 458;
+	/** @since 3.9 */
+	int PotentialNullUnboxing = Internal + 459;
+	/** @since 3.9 */
+	int NullUnboxing = Internal + 461;
 
 	// block
 	/** @since 3.0 */
@@ -1185,7 +1204,10 @@ void setSourceStart(int sourceStart);
 	int DuplicateInheritedMethods = MethodRelated + 583;
 	/** @since 3.8 */
 	int MethodNameClashHidden = MethodRelated + 584;
-	
+
+	/** @since 3.9 */
+	int UnsafeElementTypeConversion = TypeRelated + 585;
+
 	/**
 	 * 1.5 Syntax errors (when source level < 1.5)
 	 */
@@ -1293,6 +1315,22 @@ void setSourceStart(int sourceStart);
 	 */
     /** @since 3.4 */
     int UnusedTypeArgumentsForConstructorInvocation = MethodRelated + 660;
+	/** @since 3.9 */
+	int UnusedTypeParameter = TypeRelated + 661;
+	/** @since 3.9 */
+	int IllegalArrayOfUnionType = TypeRelated + 662;
+
+	/**
+	 * Null analysis for other kinds of expressions, syntactically nonnull
+	 */
+	/** @since 3.9 */
+	int NonNullExpressionComparisonYieldsFalse = Internal + 670;
+	/** @since 3.9 */
+	int RedundantNullCheckOnNonNullExpression = Internal + 671;
+	/** @since 3.9 */
+	int NullExpressionReference = Internal + 672;
+	/** @since 3.9 */
+	int PotentialNullExpressionReference = Internal + 673;
 
 	/**
 	 * Corrupted binaries
@@ -1485,6 +1523,8 @@ void setSourceStart(int sourceStart);
 	int RedundantNullAnnotation = MethodRelated + 922;
 	/** @since 3.8 */
 	int IllegalAnnotationForBaseType = TypeRelated + 923;
+	/** @since 3.9 */
+	int NullableFieldReference = FieldRelated + 924;
 	/** @since 3.8 */
 	int RedundantNullDefaultAnnotation = Internal + 925; // shouldn't actually occur any more after bug 366063
 	/** @since 3.8 */
@@ -1503,6 +1543,20 @@ void setSourceStart(int sourceStart);
 	int SpecdNonNullLocalVariableComparisonYieldsFalse = Internal + 932;
 	/** @since 3.8 */
 	int RequiredNonNullButProvidedSpecdNullable = Internal + 933;
+	/** @since 3.9 */
+	int UninitializedNonNullField = FieldRelated + 934;
+	/** @since 3.9 */
+	int UninitializedNonNullFieldHintMissingDefault = FieldRelated + 935;
+	/** @since 3.9 */
+	int NonNullMessageSendComparisonYieldsFalse = Internal + 936;
+	/** @since 3.9 */
+	int RedundantNullCheckOnNonNullSpecdField = Internal + 937;
+	/** @since 3.9 */
+	int NonNullSpecdFieldComparisonYieldsFalse = Internal + 938;
+	/** @since 3.9 */
+	int ConflictingNullAnnotations = MethodRelated + 939;
+	/** @since 3.9 */
+	int ConflictingInheritedNullAnnotations = MethodRelated + 940;
 
 	/**
 	 * External problems -- These are problems defined by other plugins

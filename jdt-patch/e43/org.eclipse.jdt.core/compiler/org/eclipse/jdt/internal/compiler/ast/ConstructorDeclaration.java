@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,10 @@
  *								bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 361407 - Resource leak warning when resource is assigned to a field outside of constructor
  *								bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
+ *								bug 383690 - [compiler] location of error re uninitialized final field should be aligned
+ *								bug 331649 - [compiler][null] consider null annotations for fields
+ *								bug 383368 - [compiler][null] syntactic null analysis for field references
+ *								bug 400421 - [compiler] Null analysis for fields does not take @com.google.inject.Inject into account
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -88,7 +92,16 @@ public void analyseCode(ClassScope classScope, InitializationFlowContext initial
 	if (isRecursive(null /*lazy initialized visited list*/)) {
 		this.scope.problemReporter().recursiveConstructorInvocation(this.constructorCall);
 	}
-
+	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=385780
+	if (this.typeParameters != null  &&
+			!this.scope.referenceCompilationUnit().compilationResult.hasSyntaxError) {
+		for (int i = 0, length = this.typeParameters.length; i < length; ++i) {
+			TypeParameter typeParameter = this.typeParameters[i];
+			if ((typeParameter.binding.modifiers & ExtraCompilerModifiers.AccLocallyUsed) == 0) {
+				this.scope.problemReporter().unusedTypeParameter(typeParameter);						
+			}
+		}
+	}
 	try {
 		ExceptionHandlingFlowContext constructorContext =
 			new ExceptionHandlingFlowContext(
@@ -140,11 +153,15 @@ public void analyseCode(ClassScope classScope, InitializationFlowContext initial
 
 		// propagate to statements
 		if (this.statements != null) {
+			boolean enableSyntacticNullAnalysisForFields = this.scope.compilerOptions().enableSyntacticNullAnalysisForFields;
 			int complaintLevel = (nonStaticFieldInfoReachMode & FlowInfo.UNREACHABLE) == 0 ? Statement.NOT_COMPLAINED : Statement.COMPLAINED_FAKE_REACHABLE;
 			for (int i = 0, count = this.statements.length; i < count; i++) {
 				Statement stat = this.statements[i];
 				if ((complaintLevel = stat.complainIfUnreachable(flowInfo, this.scope, complaintLevel, true)) < Statement.COMPLAINED_UNREACHABLE) {
 					flowInfo = stat.analyseCode(this.scope, constructorContext, flowInfo);
+				}
+				if (enableSyntacticNullAnalysisForFields) {
+					constructorContext.expireNullCheckedFieldInfo();
 				}
 			}
 		}
@@ -158,19 +175,29 @@ public void analyseCode(ClassScope classScope, InitializationFlowContext initial
 		// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=235781
 		// flowInfo.setReachMode(initialReachMode);
 
-		// check missing blank final field initializations
+		// check missing blank final field initializations (plus @NonNull)
 		if ((this.constructorCall != null)
 			&& (this.constructorCall.accessMode != ExplicitConstructorCall.This)) {
 			flowInfo = flowInfo.mergedWith(constructorContext.initsOnReturn);
 			FieldBinding[] fields = this.binding.declaringClass.fields();
 			for (int i = 0, count = fields.length; i < count; i++) {
-				FieldBinding field;
-				if ((!(field = fields[i]).isStatic())
-					&& field.isFinal()
-					&& (!flowInfo.isDefinitelyAssigned(fields[i]))) {
-					this.scope.problemReporter().uninitializedBlankFinalField(
-						field,
-						((this.bits & ASTNode.IsDefaultConstructor) != 0) ? (ASTNode) this.scope.referenceType() : this);
+				FieldBinding field = fields[i];
+				if (!field.isStatic() && !flowInfo.isDefinitelyAssigned(field)) {
+					if (field.isFinal()) {
+						this.scope.problemReporter().uninitializedBlankFinalField(
+								field,
+								((this.bits & ASTNode.IsDefaultConstructor) != 0)
+									? (ASTNode) this.scope.referenceType().declarationOf(field.original())
+									: this);
+					} else if (field.isNonNull()) {
+						FieldDeclaration fieldDecl = this.scope.referenceType().declarationOf(field.original());
+						if (!isValueProvidedUsingAnnotation(fieldDecl))
+							this.scope.problemReporter().uninitializedNonNullField(
+								field,
+								((this.bits & ASTNode.IsDefaultConstructor) != 0) 
+									? (ASTNode) fieldDecl
+									: this);
+					}
 				}
 			}
 		}
@@ -182,6 +209,29 @@ public void analyseCode(ClassScope classScope, InitializationFlowContext initial
 	} catch (AbortMethod e) {
 		this.ignoreFurtherInvestigation = true;
 	}
+}
+
+boolean isValueProvidedUsingAnnotation(FieldDeclaration fieldDecl) {
+	// a member field annotated with @Inject is considered to be initialized by the injector 
+	if (fieldDecl.annotations != null) {
+		int length = fieldDecl.annotations.length;
+		for (int i = 0; i < length; i++) {
+			Annotation annotation = fieldDecl.annotations[i];
+			if (annotation.resolvedType.id == TypeIds.T_JavaxInjectInject) {
+				return true; // no concept of "optional"
+			} else if (annotation.resolvedType.id == TypeIds.T_ComGoogleInjectInject) {
+				MemberValuePair[] memberValuePairs = annotation.memberValuePairs();
+				if (memberValuePairs == Annotation.NoValuePairs)
+					return true;
+				for (int j = 0; j < memberValuePairs.length; j++) {
+					// if "optional=false" is specified, don't rely on initialization by the injector:
+					if (CharOperation.equals(memberValuePairs[j].name, TypeConstants.OPTIONAL))
+						return memberValuePairs[j].value instanceof FalseLiteral;
+				}
+			}
+		}
+	}
+	return false;
 }
 
 /**

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -262,6 +262,7 @@ public class CommentRecorderParser extends Parser {
 	}
 	/* (non-Javadoc)
 	 * Save all source comments currently stored before flushing them.
+	 * this.scanner.commentPtr is expected *not* yet being reset before calling this method.
 	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#resetModifiers()
 	 */
 	protected void resetModifiers() {

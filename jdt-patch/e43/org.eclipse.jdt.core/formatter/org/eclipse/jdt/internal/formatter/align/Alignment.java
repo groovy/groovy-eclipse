@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -129,7 +129,7 @@ public class Alignment {
 
 	/** foobar(<ul>
 	 * <li>    #fragment1, #fragment2,  </li>
-	 * <li>     #fragment5, #fragment4, </li>
+	 * <li>     #fragment3, #fragment4, </li>
 	 * </ul>
 	 */
 	public static final int M_COMPACT_FIRST_BREAK_SPLIT = 32; //  compact mode, but will first try to break before first fragment

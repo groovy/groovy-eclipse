@@ -10,6 +10,7 @@
  *     Stephan Herrmann - Contributions for 
  *								bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
  *								bug 370639 - [compiler][resource] restore the default for resource leak warnings
+ *								bug 388996 - [compiler][resource] Incorrect 'potential resource leak'
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -40,7 +41,7 @@ public class ArrayInitializer extends Expression {
 				flowInfo = this.expressions[i].analyseCode(currentScope, flowContext, flowInfo).unconditionalInits();
 
 				if (analyseResources && FakedTrackingVariable.isAnyCloseable(this.expressions[i].resolvedType)) {
-					flowInfo = FakedTrackingVariable.markPassedToOutside(currentScope, this.expressions[i], flowInfo, false);
+					flowInfo = FakedTrackingVariable.markPassedToOutside(currentScope, this.expressions[i], flowInfo, flowContext, false);
 				}
 			}
 		}

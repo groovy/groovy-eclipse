@@ -9,3 +9,5 @@
 this then dumped into e42 branch
 27-Jun-2012: ported to C58 (v20120531-0637)
 21-Sep-2012: ported to (3.8.1 contains org.eclipse.jdt.core_3.8.2.v20120814-155456.jar, yes yes, 3.8.2)
+
+10-Jun-2013: ported to 4.3RC4 (I20130604-2000) - found that tag in the manifest for the version in the rc4 bundle

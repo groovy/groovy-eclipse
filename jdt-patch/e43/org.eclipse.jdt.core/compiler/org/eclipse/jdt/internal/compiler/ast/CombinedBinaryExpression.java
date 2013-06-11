@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2008 IBM Corporation and others.
+ * Copyright (c) 2006, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *								bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -121,27 +123,32 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 	if (this.referencesTable == null) {
 		return super.analyseCode(currentScope, flowContext, flowInfo);
 	}
-	BinaryExpression cursor;
-	if ((cursor = this.referencesTable[0]).resolvedType.id !=
-			TypeIds.T_JavaLangString) {
-		cursor.left.checkNPE(currentScope, flowContext, flowInfo);
-	}
-	flowInfo = cursor.left.analyseCode(currentScope, flowContext, flowInfo).
-		unconditionalInits();
-	for (int i = 0, end = this.arity; i < end; i ++) {
-		if ((cursor = this.referencesTable[i]).resolvedType.id !=
+	try {
+		BinaryExpression cursor;
+		if ((cursor = this.referencesTable[0]).resolvedType.id !=
 				TypeIds.T_JavaLangString) {
-			cursor.right.checkNPE(currentScope, flowContext, flowInfo);
+			cursor.left.checkNPE(currentScope, flowContext, flowInfo);
 		}
-		flowInfo = cursor.right.
-			analyseCode(currentScope, flowContext, flowInfo).
-				unconditionalInits();
+		flowInfo = cursor.left.analyseCode(currentScope, flowContext, flowInfo).
+			unconditionalInits();
+		for (int i = 0, end = this.arity; i < end; i ++) {
+			if ((cursor = this.referencesTable[i]).resolvedType.id !=
+					TypeIds.T_JavaLangString) {
+				cursor.right.checkNPE(currentScope, flowContext, flowInfo);
+			}
+			flowInfo = cursor.right.
+				analyseCode(currentScope, flowContext, flowInfo).
+					unconditionalInits();
+		}
+		if (this.resolvedType.id != TypeIds.T_JavaLangString) {
+			this.right.checkNPE(currentScope, flowContext, flowInfo);
+		}
+		return this.right.analyseCode(currentScope, flowContext, flowInfo).
+			unconditionalInits();
+	} finally {
+		// account for exception possibly thrown by arithmetics
+		flowContext.recordAbruptExit();
 	}
-	if (this.resolvedType.id != TypeIds.T_JavaLangString) {
-		this.right.checkNPE(currentScope, flowContext, flowInfo);
-	}
-	return this.right.analyseCode(currentScope, flowContext, flowInfo).
-		unconditionalInits();
 }
 
 public void generateOptimizedStringConcatenation(BlockScope blockScope,

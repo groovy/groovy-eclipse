@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,12 +17,21 @@
  *							bug 358903 - Filter practically unimportant resource leak warnings
  *							bug 370639 - [compiler][resource] restore the default for resource leak warnings
  *							bug 365859 - [compiler][null] distinguish warnings based on flow analysis vs. null annotations
+ *							bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
+ *							bug 388996 - [compiler][resource] Incorrect 'potential resource leak'
+ *							bug 394768 - [compiler][resource] Incorrect resource leak warning when creating stream in conditional
+ *							bug 395002 - Self bound generic class doesn't resolve bounds properly for wildcards for certain parametrisation.
+ *							bug 331649 - [compiler][null] consider null annotations for fields
+ *							bug 383368 - [compiler][null] syntactic null analysis for field references
+ *							bug 402993 - [null] Follow up of bug 401088: Missing warning about redundant null check
+ *							bug 403147 - [compiler][null] FUP of bug 400761: consolidate interaction between unboxing, NPE, and deferred checking
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.codegen.*;
 import org.eclipse.jdt.internal.compiler.flow.*;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
@@ -46,20 +55,19 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 // a field reference, a blank final field reference, a field of an enclosing instance or
 // just a local variable.
 	LocalVariableBinding local = this.lhs.localVariableBinding();
-	if ((this.expression.implicitConversion & TypeIds.UNBOXING) != 0) {
-		this.expression.checkNPE(currentScope, flowContext, flowInfo);
-	}
+	this.expression.checkNPEbyUnboxing(currentScope, flowContext, flowInfo);
 	
 	FlowInfo preInitInfo = null;
+	CompilerOptions compilerOptions = currentScope.compilerOptions();
 	boolean shouldAnalyseResource = local != null
-			&& flowInfo.reachMode() == FlowInfo.REACHABLE 
-			&& currentScope.compilerOptions().analyseResourceLeaks
+			&& flowInfo.reachMode() == FlowInfo.REACHABLE
+			&& compilerOptions.analyseResourceLeaks
 			&& (FakedTrackingVariable.isAnyCloseable(this.expression.resolvedType)
 					|| this.expression.resolvedType == TypeBinding.NULL);
 	if (shouldAnalyseResource) {
 		preInitInfo = flowInfo.unconditionalCopy();
 		// analysis of resource leaks needs additional context while analyzing the RHS:
-		FakedTrackingVariable.preConnectTrackerAcrossAssignment(this, local, this.expression);
+		FakedTrackingVariable.preConnectTrackerAcrossAssignment(this, local, this.expression, flowInfo);
 	}
 	
 	flowInfo = ((Reference) this.lhs)
@@ -67,22 +75,36 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		.unconditionalInits();
 
 	if (shouldAnalyseResource)
-		FakedTrackingVariable.handleResourceAssignment(currentScope, preInitInfo, flowInfo, this, this.expression, local);
+		FakedTrackingVariable.handleResourceAssignment(currentScope, preInitInfo, flowInfo, flowContext, this, this.expression, local);
 	else
 		FakedTrackingVariable.cleanUpAfterAssignment(currentScope, this.lhs.bits, this.expression);
 
-	int nullStatus = this.expression.nullStatus(flowInfo);
+	int nullStatus = this.expression.nullStatus(flowInfo, flowContext);
 	if (local != null && (local.type.tagBits & TagBits.IsBaseType) == 0) {
 		if (nullStatus == FlowInfo.NULL) {
 			flowContext.recordUsingNullReference(currentScope, local, this.lhs,
 				FlowContext.CAN_ONLY_NULL | FlowContext.IN_ASSIGNMENT, flowInfo);
 		}
 	}
-	nullStatus = checkAssignmentAgainstNullAnnotation(currentScope, flowContext, local, nullStatus, this.expression, this.expression.resolvedType);
+	if (compilerOptions.isAnnotationBasedNullAnalysisEnabled) {
+		VariableBinding var = this.lhs.nullAnnotatedVariableBinding();
+		if (var != null) {
+			nullStatus = checkAssignmentAgainstNullAnnotation(currentScope, flowContext, var, nullStatus, this.expression, this.expression.resolvedType);
+			if (nullStatus == FlowInfo.NON_NULL
+					&& var instanceof FieldBinding
+					&& this.lhs instanceof Reference
+					&& compilerOptions.enableSyntacticNullAnalysisForFields)
+			{
+				int timeToLive = (this.bits & InsideExpressionStatement) != 0
+									? 2  // assignment is statement: make info survives the end of this statement
+									: 1; // assignment is expression: expire on next event.
+				flowContext.recordNullCheckedFieldReference((Reference) this.lhs, timeToLive);
+			}
+		}
+	}
 	if (local != null && (local.type.tagBits & TagBits.IsBaseType) == 0) {
 		flowInfo.markNullStatus(local, nullStatus);
-		if (flowContext.initsOnFinally != null)
-			flowContext.initsOnFinally.markNullStatus(local, nullStatus);
+		flowContext.markFinallyNullStatus(local, nullStatus);
 	}
 	return flowInfo;
 }
@@ -130,8 +152,8 @@ FieldBinding getLastField(Expression someExpression) {
     return null;
 }
 
-public int nullStatus(FlowInfo flowInfo) {
-	return this.expression.nullStatus(flowInfo);
+public int nullStatus(FlowInfo flowInfo, FlowContext flowContext) {
+	return this.expression.nullStatus(flowInfo, flowContext);
 }
 
 public StringBuffer print(int indent, StringBuffer output) {
@@ -187,7 +209,7 @@ public TypeBinding resolveType(BlockScope scope) {
 		scope.compilationUnitScope().recordTypeConversion(lhsType, rhsType);
 	}
 	if (this.expression.isConstantValueOfTypeAssignableToType(rhsType, lhsType)
-			|| rhsType.isCompatibleWith(lhsType)) {
+			|| rhsType.isCompatibleWith(lhsType, scope)) {
 		this.expression.computeConversion(scope, lhsType, rhsType);
 		checkAssignment(scope, lhsType, rhsType);
 		if (this.expression instanceof CastExpression

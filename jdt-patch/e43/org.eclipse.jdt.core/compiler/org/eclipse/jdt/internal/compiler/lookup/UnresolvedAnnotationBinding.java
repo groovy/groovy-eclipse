@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,8 +21,14 @@ UnresolvedAnnotationBinding(ReferenceBinding type, ElementValuePair[] pairs, Loo
 
 public ReferenceBinding getAnnotationType() {
 	if (this.typeUnresolved) { // the type is resolved when requested
-		this.type = (ReferenceBinding) BinaryTypeBinding.resolveType(this.type, this.env, false /* no raw conversion for now */);
-			// annotation type are never parameterized
+		boolean wasToleratingMissingTypeProcessingAnnotations = this.env.mayTolerateMissingType;
+		this.env.mayTolerateMissingType = true; // https://bugs.eclipse.org/bugs/show_bug.cgi?id=388042
+		try {
+			this.type = (ReferenceBinding) BinaryTypeBinding.resolveType(this.type, this.env, false /* no raw conversion for now */);
+				// annotation types are never parameterized
+		} finally {
+			this.env.mayTolerateMissingType = wasToleratingMissingTypeProcessingAnnotations;
+		}
 		this.typeUnresolved = false;
 	}
 	return this.type;

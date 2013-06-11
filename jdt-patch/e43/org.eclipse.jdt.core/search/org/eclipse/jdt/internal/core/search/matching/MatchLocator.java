@@ -551,7 +551,7 @@ IMethod createBinaryMethodHandle(IType type, char[] methodSelector, char[][] arg
 }
 /*
  * Create method handle.
- * Store occurences for create handle to retrieve possible duplicate ones.
+ * Store occurrences for create handle to retrieve possible duplicate ones.
  */
 private IJavaElement createMethodHandle(IType type, String methodName, String[] parameterTypeSignatures) {
 	IMethod methodHandle = type.getMethod(methodName, parameterTypeSignatures);
@@ -1064,6 +1064,8 @@ public void initialize(JavaProject project, int possibleMatchSize) throws JavaMo
 	// initialize queue of units
 	this.numberOfMatches = 0;
 	this.matchesToProcess = new PossibleMatch[possibleMatchSize];
+
+	this.lookupEnvironment.addResolutionListener(this.patternLocator);
 }
 protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMatches, int start, int length) throws CoreException {
 	initialize(javaProject, length);
@@ -1158,11 +1160,11 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 			process(possibleMatch, bindingsWereCreated);
 		} catch (AbortCompilation e) {
 			// problem with class path: it could not find base classes
-			// continue and try next matching openable reporting innacurate matches (since bindings will be null)
+			// continue and try next matching openable reporting inaccurate matches (since bindings will be null)
 			bindingsWereCreated = false;
 		} catch (JavaModelException e) {
 			// problem with class path: it could not find base classes
-			// continue and try next matching openable reporting innacurate matches (since bindings will be null)
+			// continue and try next matching openable reporting inaccurate matches (since bindings will be null)
 			bindingsWereCreated = false;
 		} finally {
 			if (this.progressMonitor != null) {

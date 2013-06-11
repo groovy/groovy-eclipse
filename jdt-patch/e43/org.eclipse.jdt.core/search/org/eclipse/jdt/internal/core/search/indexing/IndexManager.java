@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -68,6 +68,10 @@ public class IndexManager extends JobManager implements IIndexConstants {
 	// search participants who register indexes with the index manager
 	private SimpleLookupTable participantsContainers = null;
 	private boolean participantUpdated = false;
+
+	// should JDT manage (update, delete as needed) pre-built indexes?
+	public static final String MANAGE_PRODUCT_INDEXES_PROPERTY = "jdt.core.manageProductIndexes"; //$NON-NLS-1$
+	private static final boolean IS_MANAGING_PRODUCT_INDEXES_PROPERTY = Boolean.getBoolean(MANAGE_PRODUCT_INDEXES_PROPERTY);
 
 	// Debug
 	public static boolean DEBUG = false;
@@ -138,6 +142,37 @@ public void cleanUpIndexes() {
 			removeIndexesState(locations);
 	}
 	deleteIndexFiles(knownPaths);
+}
+/**
+ * Compute the pre-built index location for a specified URL
+ */
+public synchronized IndexLocation computeIndexLocation(IPath containerPath, final URL newIndexURL) {
+	IndexLocation indexLocation = (IndexLocation) this.indexLocations.get(containerPath);
+	if (indexLocation == null) {
+		if(newIndexURL != null) {
+			indexLocation = IndexLocation.createIndexLocation(newIndexURL);
+			// update caches
+			indexLocation = (IndexLocation) getIndexStates().getKey(indexLocation);
+			this.indexLocations.put(containerPath, indexLocation);
+		}
+	}
+	else {
+		// an existing index location exists - make sure it has not changed (i.e. the URL has not changed)
+		URL existingURL = indexLocation.getUrl();
+		if (newIndexURL != null) {
+			// if either URL is different then the index location has been updated so rebuild.
+			if(!newIndexURL.equals(existingURL)) {
+				// URL has changed so remove the old index and create a new one
+				this.removeIndex(containerPath);
+				// create a new one
+				indexLocation = IndexLocation.createIndexLocation(newIndexURL);
+				// update caches
+				indexLocation = (IndexLocation) getIndexStates().getKey(indexLocation);
+				this.indexLocations.put(containerPath, indexLocation);
+			}
+		}
+	}
+	return indexLocation;
 }
 public synchronized IndexLocation computeIndexLocation(IPath containerPath) {
 	IndexLocation indexLocation = (IndexLocation) this.indexLocations.get(containerPath);
@@ -507,20 +542,33 @@ public void indexAll(IProject project) {
 	if (!isJobWaiting(request))
 		request(request);
 }
+public void indexLibrary(IPath path, IProject requestingProject, URL indexURL) {
+	this.indexLibrary(path, requestingProject, indexURL, false);
+}
+
 /**
  * Trigger addition of a library to an index
  * Note: the actual operation is performed in background
  */
-public void indexLibrary(IPath path, IProject requestingProject, URL indexURL) {
+public void indexLibrary(IPath path, IProject requestingProject, URL indexURL, final boolean updateIndex) {
 	// requestingProject is no longer used to cancel jobs but leave it here just in case
-	IndexLocation indexFile = indexURL != null ? IndexLocation.createIndexLocation(indexURL): null;
+	IndexLocation indexFile = null;
+	if(indexURL != null) {
+		if(IS_MANAGING_PRODUCT_INDEXES_PROPERTY) {
+			indexFile = computeIndexLocation(path, indexURL);
+		}
+		else {
+			indexFile = IndexLocation.createIndexLocation(indexURL);
+		}
+	}
 	if (JavaCore.getPlugin() == null) return;
 	IndexRequest request = null;
+	boolean forceIndexUpdate = IS_MANAGING_PRODUCT_INDEXES_PROPERTY && updateIndex;
 	Object target = JavaModel.getTarget(path, true);
 	if (target instanceof IFile) {
-		request = new AddJarFileToIndex((IFile) target, indexFile, this);
+		request = new AddJarFileToIndex((IFile) target, indexFile, this, forceIndexUpdate);
 	} else if (target instanceof File) {
-		request = new AddJarFileToIndex(path, indexFile, this);
+		request = new AddJarFileToIndex(path, indexFile, this, forceIndexUpdate);
 	} else if (target instanceof IContainer) {
 		request = new IndexBinaryFolder((IContainer) target, this);
 	} else {
@@ -689,6 +737,9 @@ public synchronized void removeIndex(IPath containerPath) {
 		indexFile.delete();
 	}
 	this.indexes.removeKey(indexLocation);
+	if (IS_MANAGING_PRODUCT_INDEXES_PROPERTY) {
+		this.indexLocations.removeKey(containerPath);
+	}
 	updateIndexState(indexLocation, null);
 }
 /**
@@ -1027,6 +1078,7 @@ private synchronized void updateIndexState(IndexLocation indexLocation, Integer 
 			else if (indexState == UPDATING_STATE) state = "UPDATING"; //$NON-NLS-1$
 			else if (indexState == UNKNOWN_STATE) state = "UNKNOWN"; //$NON-NLS-1$
 			else if (indexState == REBUILDING_STATE) state = "REBUILDING"; //$NON-NLS-1$
+			else if (indexState == REUSE_STATE) state = "REUSE"; //$NON-NLS-1$
 			Util.verbose("-> index state updated to: " + state + " for: "+indexLocation); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}

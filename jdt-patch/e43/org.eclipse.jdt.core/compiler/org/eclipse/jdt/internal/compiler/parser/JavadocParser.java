@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -92,6 +92,7 @@ public class JavadocParser extends AbstractCommentParser {
 		// Parse
 		try {
 			this.source = this.sourceParser.scanner.source;
+			this.scanner.setSource(this.source); // updating source in scanner
 			if (this.checkDocComment) {
 				// Initialization
 				this.scanner.lineEnds = this.sourceParser.scanner.lineEnds;
@@ -140,6 +141,7 @@ public class JavadocParser extends AbstractCommentParser {
 			}
 		} finally {
 			this.source = null; // release source as soon as finished
+			this.scanner.setSource((char[]) null); //release source in scanner
 		}
 		return this.deprecated;
 	}

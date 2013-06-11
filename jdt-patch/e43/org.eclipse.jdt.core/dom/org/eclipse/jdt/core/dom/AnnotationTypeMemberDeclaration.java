@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2010 IBM Corporation and others.
+ * Copyright (c) 2004, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -52,16 +52,16 @@ public class AnnotationTypeMemberDeclaration extends BodyDeclaration {
 		internalModifiers2PropertyFactory(AnnotationTypeMemberDeclaration.class);
 
 	/**
+	 * The "type" structural property of this node type (child type: {@link Type}).
+	 */
+	public static final ChildPropertyDescriptor TYPE_PROPERTY =
+			new ChildPropertyDescriptor(AnnotationTypeMemberDeclaration.class, "type", Type.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$
+
+	/**
 	 * The "name" structural property of this node type (child type: {@link SimpleName}).
 	 */
 	public static final ChildPropertyDescriptor NAME_PROPERTY =
 		new ChildPropertyDescriptor(AnnotationTypeMemberDeclaration.class, "name", SimpleName.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$
-
-	/**
-	 * The "type" structural property of this node type (child type: {@link Type}).
-	 */
-	public static final ChildPropertyDescriptor TYPE_PROPERTY =
-		new ChildPropertyDescriptor(AnnotationTypeMemberDeclaration.class, "type", Type.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "default" structural property of this node type (child type: {@link Expression}).
@@ -81,8 +81,8 @@ public class AnnotationTypeMemberDeclaration extends BodyDeclaration {
 		createPropertyList(AnnotationTypeMemberDeclaration.class, properyList);
 		addProperty(JAVADOC_PROPERTY, properyList);
 		addProperty(MODIFIERS2_PROPERTY, properyList);
-		addProperty(NAME_PROPERTY, properyList);
 		addProperty(TYPE_PROPERTY, properyList);
+		addProperty(NAME_PROPERTY, properyList);
 		addProperty(DEFAULT_PROPERTY, properyList);
 		PROPERTY_DESCRIPTORS = reapPropertyList(properyList);
 	}
@@ -101,15 +101,15 @@ public class AnnotationTypeMemberDeclaration extends BodyDeclaration {
 	}
 
 	/**
+	 * The member type; lazily initialized; defaults to int.
+	 */
+	private Type memberType = null;
+
+	/**
 	 * The member name; lazily initialized; defaults to an unspecified,
 	 * legal Java identifier.
 	 */
 	private SimpleName memberName = null;
-
-	/**
-	 * The member type; lazily initialized; defaults to int.
-	 */
-	private Type memberType = null;
 
 	/**
 	 * The optional default expression; <code>null</code> for none; defaults to none.
@@ -153,27 +153,19 @@ public class AnnotationTypeMemberDeclaration extends BodyDeclaration {
 				return null;
 			}
 		}
-		if (property == NAME_PROPERTY) {
-			if (get) {
-				return getName();
-			} else {
-				setName((SimpleName) child);
-				return null;
-			}
-		}
-		if (property == NAME_PROPERTY) {
-			if (get) {
-				return getName();
-			} else {
-				setName((SimpleName) child);
-				return null;
-			}
-		}
 		if (property == TYPE_PROPERTY) {
 			if (get) {
 				return getType();
 			} else {
 				setType((Type) child);
+				return null;
+			}
+		}
+		if (property == NAME_PROPERTY) {
+			if (get) {
+				return getName();
+			} else {
+				setName((SimpleName) child);
 				return null;
 			}
 		}
@@ -269,46 +261,6 @@ public class AnnotationTypeMemberDeclaration extends BodyDeclaration {
 	}
 
 	/**
-	 * Returns the name of the annotation type member declared in this declaration.
-	 *
-	 * @return the member name node
-	 */
-	public SimpleName getName() {
-		if (this.memberName == null) {
-			// lazy init must be thread-safe for readers
-			synchronized (this) {
-				if (this.memberName == null) {
-					preLazyInit();
-					this.memberName = new SimpleName(this.ast);
-					postLazyInit(this.memberName, NAME_PROPERTY);
-				}
-			}
-		}
-		return this.memberName;
-	}
-
-	/**
-	 * Sets the name of the annotation type member declared in this declaration to the
-	 * given name.
-	 *
-	 * @param memberName the new member name
-	 * @exception IllegalArgumentException if:
-	 * <ul>
-	 * <li>the node belongs to a different AST</li>
-	 * <li>the node already has a parent</li>
-	 * </ul>
-	 */
-	public void setName(SimpleName memberName) {
-		if (memberName == null) {
-			throw new IllegalArgumentException();
-		}
-		ASTNode oldChild = this.memberName;
-		preReplaceChild(oldChild, memberName, NAME_PROPERTY);
-		this.memberName = memberName;
-		postReplaceChild(oldChild, memberName, NAME_PROPERTY);
-	}
-
-	/**
 	 * Returns the type of the annotation type member declared in this
 	 * declaration.
 	 *
@@ -347,6 +299,46 @@ public class AnnotationTypeMemberDeclaration extends BodyDeclaration {
 		preReplaceChild(oldChild, type, TYPE_PROPERTY);
 		this.memberType = type;
 		postReplaceChild(oldChild, type, TYPE_PROPERTY);
+	}
+
+	/**
+	 * Returns the name of the annotation type member declared in this declaration.
+	 *
+	 * @return the member name node
+	 */
+	public SimpleName getName() {
+		if (this.memberName == null) {
+			// lazy init must be thread-safe for readers
+			synchronized (this) {
+				if (this.memberName == null) {
+					preLazyInit();
+					this.memberName = new SimpleName(this.ast);
+					postLazyInit(this.memberName, NAME_PROPERTY);
+				}
+			}
+		}
+		return this.memberName;
+	}
+
+	/**
+	 * Sets the name of the annotation type member declared in this declaration to the
+	 * given name.
+	 *
+	 * @param memberName the new member name
+	 * @exception IllegalArgumentException if:
+	 * <ul>
+	 * <li>the node belongs to a different AST</li>
+	 * <li>the node already has a parent</li>
+	 * </ul>
+	 */
+	public void setName(SimpleName memberName) {
+		if (memberName == null) {
+			throw new IllegalArgumentException();
+		}
+		ASTNode oldChild = this.memberName;
+		preReplaceChild(oldChild, memberName, NAME_PROPERTY);
+		this.memberName = memberName;
+		postReplaceChild(oldChild, memberName, NAME_PROPERTY);
 	}
 
 	/**

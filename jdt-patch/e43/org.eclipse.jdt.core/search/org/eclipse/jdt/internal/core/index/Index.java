@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,12 +20,11 @@ import org.eclipse.jdt.internal.core.search.indexing.ReadWriteMonitor;
 
 /**
  * An <code>Index</code> maps document names to their referenced words in various categories.
- *
+ * <p>
  * Queries can search a single category or several at the same time.
- *
+ * </p>
  * Indexes are not synchronized structures and should only be queried/updated one at a time.
  */
-
 public class Index {
 
 public String containerPath;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,7 @@
  *     Stephan Herrmann - Contributions for
  *								bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 365662 - [compiler][null] warn on contradictory and redundant null annotations
+ *								bug 331649 - [compiler][null] consider null annotations for fields
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 // GROOVY PATCHED
@@ -404,6 +405,10 @@ public abstract class Annotation extends Expression {
 							sourceType = (SourceTypeBinding) sourceField.declaringClass;
 							FieldDeclaration fieldDeclaration = sourceType.scope.referenceContext.declarationOf(sourceField);
 							recordSuppressWarnings(scope, fieldDeclaration.declarationSourceStart, fieldDeclaration.declarationSourceEnd, scope.compilerOptions().suppressWarnings);
+						}
+						if ((sourceField.tagBits & TAGBITS_NULLABLE_OR_NONNULL) == TAGBITS_NULLABLE_OR_NONNULL) {
+							scope.problemReporter().contradictoryNullAnnotations(this);
+							sourceField.tagBits &= ~TAGBITS_NULLABLE_OR_NONNULL; // avoid secondary problems
 						}
 						break;
 					case Binding.LOCAL :

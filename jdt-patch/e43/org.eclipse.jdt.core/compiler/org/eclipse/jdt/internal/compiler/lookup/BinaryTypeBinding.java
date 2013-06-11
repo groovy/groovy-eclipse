@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,8 @@
  *								bug 365387 - [compiler][null] bug 186342: Issues to follow up post review and verification.
  *								bug 358903 - Filter practically unimportant resource leak warnings
  *								bug 365531 - [compiler][null] investigate alternative strategy for internally encoding nullness defaults
+ *								bug 388281 - [compiler][null] inheritance of null annotations as an option
+ *								bug 331649 - [compiler][null] consider null annotations for fields
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 // GROOVY PATCHED
@@ -446,6 +448,12 @@ private void createFields(IBinaryField[] iFields, long sourceLevel, char[][][] m
 				for (int i = firstAnnotatedFieldIndex; i <size; i++) {
 					IBinaryField binaryField = iFields[i];
 					this.fields[i].setAnnotations(createAnnotations(binaryField.getAnnotations(), this.environment, missingTypeNames));
+				}
+			}
+			if (this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
+				for (int i = 0; i <size; i++) {
+					IBinaryField binaryField = iFields[i];
+					scanFieldForNullAnnotation(binaryField, this.fields[i]);
 				}
 			}
 		}
@@ -1187,6 +1195,42 @@ SimpleLookupTable storedAnnotations(boolean forceInitialize) {
 	}
 	return this.storedAnnotations;
 }
+
+void scanFieldForNullAnnotation(IBinaryField field, FieldBinding fieldBinding) {
+	// global option is checked by caller
+	char[][] nullableAnnotationName = this.environment.getNullableAnnotationName();
+	char[][] nonNullAnnotationName = this.environment.getNonNullAnnotationName();
+	if (nullableAnnotationName == null || nonNullAnnotationName == null)
+		return; // not well-configured to use null annotations
+
+	if (fieldBinding.type == null || fieldBinding.type.isBaseType())
+		return; // null annotations are only applied to reference types
+
+	boolean explicitNullness = false;
+	IBinaryAnnotation[] annotations = field.getAnnotations();
+	if (annotations != null) {
+		for (int i = 0; i < annotations.length; i++) {
+			char[] annotationTypeName = annotations[i].getTypeName();
+			if (annotationTypeName[0] != Util.C_RESOLVED)
+				continue;
+			char[][] typeName = CharOperation.splitOn('/', annotationTypeName, 1, annotationTypeName.length-1); // cut of leading 'L' and trailing ';'
+			if (CharOperation.equals(typeName, nonNullAnnotationName)) {
+				fieldBinding.tagBits |= TagBits.AnnotationNonNull;
+				explicitNullness = true;
+				break;
+			}
+			if (CharOperation.equals(typeName, nullableAnnotationName)) {
+				fieldBinding.tagBits |= TagBits.AnnotationNullable;
+				explicitNullness = true;
+				break;
+			}
+		}
+	}
+	if (!explicitNullness && (this.tagBits & TagBits.AnnotationNonNullByDefault) != 0) {
+		fieldBinding.tagBits |= TagBits.AnnotationNonNull;
+	}
+}
+
 void scanMethodForNullAnnotation(IBinaryMethod method, MethodBinding methodBinding) {
 	if (!this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled)
 		return;
@@ -1195,13 +1239,6 @@ void scanMethodForNullAnnotation(IBinaryMethod method, MethodBinding methodBindi
 	char[][] nonNullByDefaultAnnotationName = this.environment.getNonNullByDefaultAnnotationName();
 	if (nullableAnnotationName == null || nonNullAnnotationName == null || nonNullByDefaultAnnotationName == null)
 		return; // not well-configured to use null annotations
-
-	int currentDefault = NO_NULL_DEFAULT;
-	if ((this.tagBits & TagBits.AnnotationNonNullByDefault) != 0) {
-		currentDefault = NONNULL_BY_DEFAULT;
-	} else if ((this.tagBits & TagBits.AnnotationNullUnspecifiedByDefault) != 0) {
-		currentDefault = NULL_UNSPECIFIED_BY_DEFAULT;
-	}
 
 	// return:
 	IBinaryAnnotation[] annotations = method.getAnnotations();
@@ -1214,7 +1251,6 @@ void scanMethodForNullAnnotation(IBinaryMethod method, MethodBinding methodBindi
 			char[][] typeName = CharOperation.splitOn('/', annotationTypeName, 1, annotationTypeName.length-1); // cut of leading 'L' and trailing ';'
 			if (CharOperation.equals(typeName, nonNullByDefaultAnnotationName)) {
 				methodBinding.tagBits |= TagBits.AnnotationNonNullByDefault;
-				currentDefault = NONNULL_BY_DEFAULT;
 			}
 			if (!explicitNullness && CharOperation.equals(typeName, nonNullAnnotationName)) {
 				methodBinding.tagBits |= TagBits.AnnotationNonNull;
@@ -1226,19 +1262,13 @@ void scanMethodForNullAnnotation(IBinaryMethod method, MethodBinding methodBindi
 			}
 		}
 	}
-	if (!explicitNullness 
-			&& (methodBinding.returnType != null && !methodBinding.returnType.isBaseType()) 
-			&& currentDefault == NONNULL_BY_DEFAULT) {
-		methodBinding.tagBits |= TagBits.AnnotationNonNull;
-	}
 
 	// parameters:
 	TypeBinding[] parameters = methodBinding.parameters;
 	int numVisibleParams = parameters.length;
 	int numParamAnnotations = method.getAnnotatedParametersCount();
-	if (numParamAnnotations > 0 || currentDefault == NONNULL_BY_DEFAULT) {
+	if (numParamAnnotations > 0) {
 		for (int j = 0; j < numVisibleParams; j++) {
-			explicitNullness = false;
 	if (numParamAnnotations > 0) {
 		int startIndex = numParamAnnotations - numVisibleParams;
 			IBinaryAnnotation[] paramAnnotations = method.getParameterAnnotations(j+startIndex);
@@ -1252,25 +1282,16 @@ void scanMethodForNullAnnotation(IBinaryMethod method, MethodBinding methodBindi
 						if (methodBinding.parameterNonNullness == null)
 							methodBinding.parameterNonNullness = new Boolean[numVisibleParams];
 						methodBinding.parameterNonNullness[j] = Boolean.TRUE;
-							explicitNullness = true;
 						break;
 					} else if (CharOperation.equals(typeName, nullableAnnotationName)) {
 						if (methodBinding.parameterNonNullness == null)
 							methodBinding.parameterNonNullness = new Boolean[numVisibleParams];
 						methodBinding.parameterNonNullness[j] = Boolean.FALSE;
-							explicitNullness = true;
 						break;
 					}
 				}
 			}
 		}
-			if (!explicitNullness && currentDefault == NONNULL_BY_DEFAULT) {
-				if (methodBinding.parameterNonNullness == null)
-					methodBinding.parameterNonNullness = new Boolean[numVisibleParams];
-				if (methodBinding.parameters[j]!= null && !methodBinding.parameters[j].isBaseType()) {
-					methodBinding.parameterNonNullness[j] = Boolean.TRUE;
-	}
-}
 		}
 	}
 }

@@ -7,7 +7,10 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Stephan Herrmann - Contribution for bug 332637 - Dead Code detection removing code that isn't dead
+ *     Stephan Herrmann - Contributions for
+ *								bug 332637 - Dead Code detection removing code that isn't dead
+ *								bug 391517 - java.lang.VerifyError on code that runs correctly in Eclipse 3.7 and eclipse 3.6
+ *								bug 394768 - [compiler][resource] Incorrect resource leak warning when creating stream in conditional
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.flow;
 
@@ -27,6 +30,7 @@ ConditionalFlowInfo(FlowInfo initsWhenTrue, FlowInfo initsWhenFalse){
 
 	this.initsWhenTrue = initsWhenTrue;
 	this.initsWhenFalse = initsWhenFalse;
+	this.tagBits = initsWhenTrue.tagBits & initsWhenFalse.tagBits & UNREACHABLE;
 }
 
 public FlowInfo addInitializationsFrom(FlowInfo otherInits) {
@@ -98,6 +102,11 @@ public boolean isDefinitelyNull(LocalVariableBinding local) {
 public boolean isDefinitelyUnknown(LocalVariableBinding local) {
 	return this.initsWhenTrue.isDefinitelyUnknown(local)
 			&& this.initsWhenFalse.isDefinitelyUnknown(local);
+}
+
+public boolean hasNullInfoFor(LocalVariableBinding local) {
+	return this.initsWhenTrue.hasNullInfoFor(local) 
+			|| this.initsWhenFalse.hasNullInfoFor(local);
 }
 
 public boolean isPotentiallyAssigned(FieldBinding field) {

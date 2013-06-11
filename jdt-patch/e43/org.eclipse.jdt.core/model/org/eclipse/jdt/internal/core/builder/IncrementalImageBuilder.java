@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -814,7 +814,7 @@ protected void resetCollections() {
 protected void updateProblemsFor(SourceFile sourceFile, CompilationResult result) throws CoreException {
 	if (CharOperation.equals(sourceFile.getMainTypeName(), TypeConstants.PACKAGE_INFO_NAME)) {
 		IResource pkgResource = sourceFile.resource.getParent();
-		pkgResource.deleteMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_INFINITE);
+		pkgResource.deleteMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_ZERO);
 	}
 	IMarker[] markers = JavaBuilder.getProblemsFor(sourceFile.resource);
 	CategorizedProblem[] problems = result.getProblems();

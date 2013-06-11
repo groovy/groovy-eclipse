@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Jesper S Moller <jesper@selskabet.org> - Contributions for
+ *								bug 378674 - "The method can be declared as static" is wrong
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -102,6 +104,9 @@ public class QualifiedThisReference extends ThisReference {
 		if (this.currentCompatibleType == null) {
 			scope.problemReporter().noSuchEnclosingInstance(type, this, false);
 			return this.resolvedType;
+		} else {
+			// Mark all methods between here and the declared type as not static
+			scope.resetDeclaringClassMethodStaticFlag(this.currentCompatibleType);
 		}
 
 		// Ensure one cannot write code like: B() { super(B.this); }

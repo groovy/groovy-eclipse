@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,7 +7,11 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Stephan Herrmann - Contribution for bug 319201 - [null] no warning when unboxing SingleNameReference causes NPE
+ *     Stephan Herrmann - Contributions for
+ *								bug 319201 - [null] no warning when unboxing SingleNameReference causes NPE
+ *								bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
+ *								bug 403086 - [compiler][null] include the effect of 'assert' in syntactic null analysis for fields
+ *								bug 403147 - [compiler][null] FUP of bug 400761: consolidate interaction between unboxing, NPE, and deferred checking
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -44,14 +48,13 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	this.preAssertInitStateIndex = currentScope.methodScope().recordInitializationStates(flowInfo);
 
 	Constant cst = this.assertExpression.optimizedBooleanConstant();
-	if ((this.assertExpression.implicitConversion & TypeIds.UNBOXING) != 0) {
-		this.assertExpression.checkNPE(currentScope, flowContext, flowInfo);
-	}
+	this.assertExpression.checkNPEbyUnboxing(currentScope, flowContext, flowInfo);
 	boolean isOptimizedTrueAssertion = cst != Constant.NotAConstant && cst.booleanValue() == true;
 	boolean isOptimizedFalseAssertion = cst != Constant.NotAConstant && cst.booleanValue() == false;
 	
 	flowContext.tagBits |= FlowContext.HIDE_NULL_COMPARISON_WARNING;
 	FlowInfo conditionFlowInfo = this.assertExpression.analyseCode(currentScope, flowContext, flowInfo.copy());
+	flowContext.extendTimeToLiveForNullCheckedField(1); // survive this assert as a Statement
 	flowContext.tagBits &= ~FlowContext.HIDE_NULL_COMPARISON_WARNING;
 	UnconditionalFlowInfo assertWhenTrueInfo = conditionFlowInfo.initsWhenTrue().unconditionalInits();
 	FlowInfo assertInfo = conditionFlowInfo.initsWhenFalse();
@@ -78,6 +81,8 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 		// add the assert support in the clinit
 		manageSyntheticAccessIfNecessary(currentScope, flowInfo);
 	}
+	// account for potential AssertionError:
+	flowContext.recordAbruptExit();
 	if (isOptimizedFalseAssertion) {
 		return flowInfo; // if assertions are enabled, the following code will be unreachable
 		// change this if we need to carry null analysis results of the assert

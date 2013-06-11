@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,6 +9,12 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.*;
@@ -680,7 +686,7 @@ protected int resolveLevel(TypeReference typeRef) {
 	if (typeRef instanceof SingleTypeReference) {
 		return resolveLevelForType(typeBinding);
 	} else
-		return resolveLevelForTypeOrEnclosingTypes(this.pattern.simpleName, this.pattern.qualification, typeBinding);
+		return resolveLevelForTypeOrQualifyingTypes(typeRef, typeBinding);
 }
 /* (non-Javadoc)
  * Resolve level for type with a given binding.
@@ -741,6 +747,27 @@ protected int resolveLevelForTypeOrEnclosingTypes(char[] simpleNamePattern, char
 		}
 	}
 	return IMPOSSIBLE_MATCH;
+}
+private Map/*<QualifiedTypeReference, List<TypeBinding>>*/ recordedResolutions = new HashMap();
+int resolveLevelForTypeOrQualifyingTypes(TypeReference typeRef, TypeBinding typeBinding) {
+	if (typeBinding == null || !typeBinding.isValidBinding()) return INACCURATE_MATCH;
+	List resolutionsList = (List) this.recordedResolutions.get(typeRef);
+	if (resolutionsList != null) {
+		for (Iterator i = resolutionsList.iterator(); i.hasNext();) {
+			TypeBinding resolution = (TypeBinding) i.next();
+			int level = resolveLevelForType(resolution);
+			if (level != IMPOSSIBLE_MATCH) return level;
+		}
+	}
+	return IMPOSSIBLE_MATCH;
+}
+public void recordResolution(QualifiedTypeReference typeReference, TypeBinding resolution) {
+	List/*<TypeBinding>*/ resolutionsForTypeReference = (List) this.recordedResolutions.get(typeReference);
+	if (resolutionsForTypeReference == null) {
+		resolutionsForTypeReference = new ArrayList();
+	}
+	resolutionsForTypeReference.add(resolution);
+	this.recordedResolutions.put(typeReference, resolutionsForTypeReference);
 }
 public String toString() {
 	return "Locator for " + this.pattern.toString(); //$NON-NLS-1$

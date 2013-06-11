@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Jesper S Moller <jesper@selskabet.org> - Contributions for
+ *								bug 378674 - "The method can be declared as static" is wrong
  *******************************************************************************/
 package org.eclipse.jdt.internal.eval;
 
@@ -503,6 +505,8 @@ public Binding getBinding(char[][] compoundName, int mask, InvocationSite invoca
 					CharOperation.concatWith(CharOperation.subarray(compoundName, 0, currentIndex), '.'),
 					ProblemReasons.NonStaticReferenceInStaticContext);
 		}
+		// Since a qualified reference must be for a static member, it won't affect static-ness of the enclosing method, 
+		// so we don't have to call resetEnclosingMethodStaticFlag() in this case
 		return binding;
 	}
 	if ((mask & Binding.TYPE) != 0 && (binding instanceof ReferenceBinding)) { // was looking for a type and found a type

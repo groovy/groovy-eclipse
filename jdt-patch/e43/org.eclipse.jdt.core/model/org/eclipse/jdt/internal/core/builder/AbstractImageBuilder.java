@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -64,7 +64,8 @@ private boolean inCompiler;
 protected boolean keepStoringProblemMarkers;
 protected SimpleSet filesWithAnnotations = null;
 
-public static int MAX_AT_ONCE = 2000; // best compromise between space used and speed
+//2000 is best compromise between space used and speed
+public static int MAX_AT_ONCE = Integer.getInteger(JavaModelManager.MAX_COMPILED_UNITS_AT_ONCE, 2000).intValue();
 public final static String[] JAVA_PROBLEM_MARKER_ATTRIBUTE_NAMES = {
 	IMarker.MESSAGE,
 	IMarker.SEVERITY,
@@ -312,7 +313,7 @@ protected void compile(SourceFile[] units) {
 	}
 
 	int unitsLength = units.length;
-	this.compiledAllAtOnce = unitsLength <= MAX_AT_ONCE;
+	this.compiledAllAtOnce = MAX_AT_ONCE == 0 || unitsLength <= MAX_AT_ONCE;
 
 	// GROOVY start
 	// currently can't easily fault in files from the other group.  Easier to

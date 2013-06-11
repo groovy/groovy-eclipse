@@ -8,8 +8,9 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann <stephan@cs.tu-berlin.de> - Contributions for 
- *     				bug 292478 - Report potentially null across variable assignment
- *     				bug 332637 - Dead Code detection removing code that isn't dead
+ *			     				bug 292478 - Report potentially null across variable assignment
+ *     							bug 332637 - Dead Code detection removing code that isn't dead
+ *								bug 394768 - [compiler][resource] Incorrect resource leak warning when creating stream in conditional
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.flow;
 
@@ -194,6 +195,12 @@ public abstract boolean isDefinitelyNull(LocalVariableBinding local);
  */
 public abstract boolean isDefinitelyUnknown(LocalVariableBinding local);
 
+/**
+ * Check if any null info has been recorded for a given local variable.
+ * Here even recording of 'UNKNOWN' is considered as null info.
+ */
+public abstract boolean hasNullInfoFor(LocalVariableBinding local);
+
 	/**
 	 * Check status of potential assignment for a field.
 	 */
@@ -358,6 +365,54 @@ public int nullStatus(LocalVariableBinding local) {
 	if (status > 0)
 		return status;
 	return FlowInfo.UNKNOWN;
+}
+
+/**
+ * Merge two single bits (NULL, NON_NULL, POTENTIALLY*..) into one.
+ * This method implements a simpler logic than the 4-bit encoding used in FlowInfo instances.
+ */
+public static int mergeNullStatus(int nullStatus1, int nullStatus2) {
+	boolean canBeNull = false;
+	boolean canBeNonNull = false;
+	switch (nullStatus1) {
+		case POTENTIALLY_NULL:
+			canBeNonNull = true;
+			//$FALL-THROUGH$
+		case NULL:
+			canBeNull = true;
+			break;
+		case POTENTIALLY_NON_NULL:
+			canBeNull = true;
+			//$FALL-THROUGH$
+		case NON_NULL:
+			canBeNonNull = true;
+			break;
+	}
+	switch (nullStatus2) {
+		case POTENTIALLY_NULL:
+			canBeNonNull = true;
+			//$FALL-THROUGH$
+		case NULL:
+			canBeNull = true;
+			break;
+		case POTENTIALLY_NON_NULL:
+			canBeNull = true;
+			//$FALL-THROUGH$
+		case NON_NULL:
+			canBeNonNull = true;
+			break;
+	}
+	if (canBeNull) {
+		if (canBeNonNull)
+			return POTENTIALLY_NULL;
+		else
+			return NULL;
+	} else {
+		if (canBeNonNull)
+			return NON_NULL;
+		else
+			return UNKNOWN;
+	}
 }
 
 /**

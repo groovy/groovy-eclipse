@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2008, 2009 IBM Corporation and others.
+ * Copyright (c) 2008, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -183,7 +183,9 @@ public class CompletionUnitStructureRequestor extends CompilationUnitStructureRe
 	protected static boolean hasEmptyName(TypeReference reference, ASTNode assistNode) {
 		if (reference == null) return false;
 
-		if (reference.sourceStart <= assistNode.sourceStart && assistNode.sourceEnd <= reference.sourceEnd) return false;
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=397070
+		if (reference != assistNode &&
+				reference.sourceStart <= assistNode.sourceStart && assistNode.sourceEnd <= reference.sourceEnd) return false;
 
 		if (reference instanceof CompletionOnSingleTypeReference ||
 				reference instanceof CompletionOnQualifiedTypeReference ||

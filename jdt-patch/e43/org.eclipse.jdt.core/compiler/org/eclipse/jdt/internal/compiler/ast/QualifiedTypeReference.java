@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -111,9 +111,17 @@ public class QualifiedTypeReference extends TypeReference {
 			} else {
 				qualifiedType = currentType.isGenericType() ? (ReferenceBinding)scope.environment().convertToRawType(currentType, false /*do not force conversion of enclosing types*/) : currentType;
 			}
+			recordResolution(scope.environment(), qualifiedType);
 		}
 		this.resolvedType = qualifiedType;
 		return this.resolvedType;
+	}
+
+	void recordResolution(LookupEnvironment env, TypeBinding typeFound) {
+		if (typeFound != null && typeFound.isValidBinding())
+			for (int i = 0; i < env.resolutionListeners.length; i++) {
+				env.resolutionListeners[i].recordResolution(this, typeFound);
+			}
 	}
 
 	public char[][] getTypeName(){

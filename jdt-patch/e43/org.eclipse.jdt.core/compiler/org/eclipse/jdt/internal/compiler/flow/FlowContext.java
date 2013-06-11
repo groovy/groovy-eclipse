@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,11 @@
  *								bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
  *								bug 365859 - [compiler][null] distinguish warnings based on flow analysis vs. null annotations
+ *								bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
+ *								bug 383368 - [compiler][null] syntactic null analysis for field references
+ *								bug 402993 - [null] Follow up of bug 401088: Missing warning about redundant null check
+ *								bug 403086 - [compiler][null] include the effect of 'assert' in syntactic null analysis for fields
+ *								bug 403147 - [compiler][null] FUP of bug 400761: consolidate interaction between unboxing, NPE, and deferred checking
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.flow;
 
@@ -52,17 +57,33 @@ public class FlowContext implements TypeConstants {
 	public final static FlowContext NotContinuableContext = new FlowContext(null, null);
 	public ASTNode associatedNode;
 	public FlowContext parent;
-	public NullInfoRegistry initsOnFinally;
+	public FlowInfo initsOnFinally;
 		// only used within try blocks; remembers upstream flow info mergedWith
 		// any null related operation happening within the try block
+	/** 
+	 * Used to record whether effects in a try block affect the finally-block
+	 * conditionally or unconditionally.
+	 * -1 means: no effect,
+	 * 0 means: unconditional effect,
+	 * > 0 means levels of nested conditional structures.
+	 */
+	public int conditionalLevel = -1;
 
 	public int tagBits;
 
 	// array to store the provided and expected types from the potential error location (for display in error messages):
 	public TypeBinding[][] providedExpectedTypes = null;
 
+	// record field references known to be non-null
+	//   this array will never shrink, only grow. reset happens by nulling the first cell
+	//   adding elements after reset ensures that the valid part of the array is always null-terminated
+	private Reference[] nullCheckedFieldReferences = null;
+	private int timeToLiveForNullCheckInfo = -1;
+
 	public static final int DEFER_NULL_DIAGNOSTIC = 0x1;
 	public static final int PREEMPT_NULL_DIAGNOSTIC = 0x2;
+	// inside an assertFalse or a not-expression checks for equality / inequality have reversed meaning for syntactic analysis for fields:
+	public static final int INSIDE_NEGATION = 0x4;
 	/**
 	 * used to hide null comparison related warnings inside assert statements 
 	 */
@@ -78,6 +99,8 @@ public static final int CAN_ONLY_NON_NULL = 0x0002;
 public static final int MAY_NULL = 0x0003;
 //check binding a value to a @NonNull variable 
 public final static int ASSIGN_TO_NONNULL = 0x0080;
+//check against an unboxing conversion
+public static final int IN_UNBOXING = 0x0010;
 //check against unclosed resource at early exit:
 public static final int EXIT_RESOURCE = 0x0800;
 // check against null, with potential values -- NPE guard
@@ -99,7 +122,80 @@ public FlowContext(FlowContext parent, ASTNode associatedNode) {
 			this.tagBits |= FlowContext.DEFER_NULL_DIAGNOSTIC;
 		}
 		this.initsOnFinally = parent.initsOnFinally;
+		this.conditionalLevel = parent.conditionalLevel;
+		this.nullCheckedFieldReferences = parent.nullCheckedFieldReferences; // re-use list if there is one
 	}
+}
+
+/**
+ * Record that a reference to a field has been seen in a non-null state.
+ *
+ * @param reference Can be a SingleNameReference, a FieldReference or a QualifiedNameReference resolving to a field
+ * @param timeToLive control how many expire events are needed to expire this information
+ */
+public void recordNullCheckedFieldReference(Reference reference, int timeToLive) {
+	this.timeToLiveForNullCheckInfo = timeToLive;
+	if (this.nullCheckedFieldReferences == null) {
+		// first entry:
+		this.nullCheckedFieldReferences = new Reference[2];
+		this.nullCheckedFieldReferences[0] = reference;
+	} else {
+		int len = this.nullCheckedFieldReferences.length;
+		// insert into first empty slot:
+		for (int i=0; i<len; i++) {
+			if (this.nullCheckedFieldReferences[i] == null) {
+				this.nullCheckedFieldReferences[i] = reference;
+				if (i+1 < len) {
+					this.nullCheckedFieldReferences[i+1] = null; // lazily mark next as empty
+				}
+				return;
+			}
+		}
+		// grow array:
+		System.arraycopy(this.nullCheckedFieldReferences, 0, this.nullCheckedFieldReferences=new Reference[len+2], 0, len);
+		this.nullCheckedFieldReferences[len] = reference;
+	}
+}
+
+/** If a null checked field has been recorded recently, increase its time to live. */
+public void extendTimeToLiveForNullCheckedField(int t) {
+	if (this.timeToLiveForNullCheckInfo > 0)
+		this.timeToLiveForNullCheckInfo += t;
+}
+
+/**
+ * Forget any information about fields that were previously known to be non-null.
+ * 
+ * Will only cause any effect if CompilerOptions.enableSyntacticNullAnalysisForFields
+ * (implicitly by guards before calls to {@link #recordNullCheckedFieldReference(Reference, int)}).
+ */	 
+public void expireNullCheckedFieldInfo() {
+	if (this.nullCheckedFieldReferences != null) {
+		if (--this.timeToLiveForNullCheckInfo == 0) {
+			this.nullCheckedFieldReferences[0] = null; // lazily wipe
+		}
+	}
+}
+
+/** 
+ * Is the given field reference equivalent to a reference that is freshly known to be non-null?
+ * Can only return true if CompilerOptions.enableSyntacticNullAnalysisForFields
+ * (implicitly by guards before calls to {@link #recordNullCheckedFieldReference(Reference, int)}).
+ */
+public boolean isNullcheckedFieldAccess(Reference reference) {
+	if (this.nullCheckedFieldReferences == null)  // always null unless CompilerOptions.enableSyntacticNullAnalysisForFields
+		return false;
+	int len = this.nullCheckedFieldReferences.length;
+	for (int i=0; i<len; i++) {
+		Reference checked = this.nullCheckedFieldReferences[i];
+		if (checked == null) {
+			return false;
+		}
+		if (checked.isEquivalent(reference)) {
+			return true;
+		}
+	}
+	return false;
 }
 
 public BranchLabel breakLabel() {
@@ -550,6 +646,60 @@ public char[] labelName() {
 	return null;
 }
 
+/**
+ * Record a given null status of a given local variable as it will be seen in the finally block.
+ * @param local the local variable being observed
+ * @param nullStatus the null status of local at the current point in the flow
+ */
+public void markFinallyNullStatus(LocalVariableBinding local, int nullStatus) {
+	if (this.initsOnFinally == null) return;
+	if (this.conditionalLevel == -1) return;
+	if (this.conditionalLevel == 0) {
+		// node is unconditionally reached, take nullStatus as is:
+		this.initsOnFinally.markNullStatus(local, nullStatus);
+		return;
+	}
+	// node is reached only conditionally, weaken status to potentially_ and merge with previous
+	UnconditionalFlowInfo newInfo = this.initsOnFinally.unconditionalCopy();
+	newInfo.markNullStatus(local, nullStatus);
+	this.initsOnFinally = this.initsOnFinally.mergedWith(newInfo);
+}
+
+/**
+ * Merge the effect of a statement presumably contained in a try-block,
+ * i.e., record how the collected info will affect the corresponding finally-block.
+ * Precondition: caller has checked that initsOnFinally != null.
+ * @param flowInfo info after executing a statement of the try-block.
+ */
+public void mergeFinallyNullInfo(FlowInfo flowInfo) {
+	if (this.initsOnFinally == null) return;
+	if (this.conditionalLevel == -1) return;
+	if (this.conditionalLevel == 0) {
+		// node is unconditionally reached, take null info as is:
+		this.initsOnFinally.addNullInfoFrom(flowInfo);
+		return;
+	}
+	// node is reached only conditionally: merge flowInfo with existing since both paths are possible
+	this.initsOnFinally = this.initsOnFinally.mergedWith(flowInfo.unconditionalCopy());
+}
+
+/**
+ * Record the fact that an abrupt exit has been observed, one of:
+ * - potential exception (incl. unchecked exceptions)
+ * - break
+ * - continue
+ * - return
+ */
+public void recordAbruptExit() {
+	if (this.conditionalLevel > -1) {
+		this.conditionalLevel++;
+		// delegate up up-to the enclosing try-finally:
+		if (!(this instanceof ExceptionHandlingFlowContext) && this.parent != null) {
+			this.parent.recordAbruptExit();
+		}
+	}
+}
+
 public void recordBreakFrom(FlowInfo flowInfo) {
 	// default implementation: do nothing
 }
@@ -596,21 +746,51 @@ protected boolean recordFinalAssignment(VariableBinding variable, Reference fina
 
 /**
  * Record a null reference for use by deferred checks. Only looping or
- * finally contexts really record that information.
+ * finally contexts really record that information. Other contexts
+ * immediately check for unboxing.
  * @param local the local variable involved in the check
  * @param location the location triggering the analysis, for normal null dereference
  *      this is an expression resolving to 'local', for resource leaks it is an
  *      early exit statement.
- * @param status the status against which the check must be performed; one of
+ * @param checkType the checkType against which the check must be performed; one of
  * 		{@link #CAN_ONLY_NULL CAN_ONLY_NULL}, {@link #CAN_ONLY_NULL_NON_NULL
  * 		CAN_ONLY_NULL_NON_NULL}, {@link #MAY_NULL MAY_NULL},
  *      {@link #CAN_ONLY_NON_NULL CAN_ONLY_NON_NULL}, potentially
  *      combined with a context indicator (one of {@link #IN_COMPARISON_NULL},
- *      {@link #IN_COMPARISON_NON_NULL}, {@link #IN_ASSIGNMENT} or {@link #IN_INSTANCEOF})
+ *      {@link #IN_COMPARISON_NON_NULL}, {@link #IN_ASSIGNMENT} or {@link #IN_INSTANCEOF}).
+ *      <br>
+ *      Alternatively, a {@link #IN_UNBOXING} check can e requested.
  */
 protected void recordNullReference(LocalVariableBinding local,
-	ASTNode location, int status) {
+	ASTNode location, int checkType) {
 	// default implementation: do nothing
+}
+
+/**
+ * Either AST analysis or checking of a child flow context has encountered an unboxing situation.
+ * Record this fact for handling at an appropriate point in time.
+ * @param nullStatus the status as we know it so far.
+ */
+public void recordUnboxing(Scope scope, Expression expression, int nullStatus, FlowInfo flowInfo) {
+	// default: handle immediately:
+	checkUnboxing(scope, expression, flowInfo);
+}
+/** During deferred checking re-visit a previously recording unboxing situation. */
+protected void checkUnboxing(Scope scope, Expression expression, FlowInfo flowInfo) {
+	int status = expression.nullStatus(flowInfo, this);
+	if ((status & FlowInfo.NULL) != 0) {
+		scope.problemReporter().nullUnboxing(expression, expression.resolvedType);
+		return;
+	} else if ((status & FlowInfo.POTENTIALLY_NULL) != 0) {
+		scope.problemReporter().potentialNullUnboxing(expression, expression.resolvedType);
+		return;
+	} else if ((status & FlowInfo.NON_NULL) != 0) {
+		return;
+	}
+	// not handled, perhaps our parent will eventually have something to say?
+	if (this.parent != null) {
+		this.parent.recordUnboxing(scope, expression, FlowInfo.UNKNOWN, flowInfo);
+	}
 }
 
 public void recordReturnFrom(UnconditionalFlowInfo flowInfo) {

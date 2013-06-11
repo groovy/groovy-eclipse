@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,7 +8,13 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Nick Teryaev - fix for bug (https://bugs.eclipse.org/bugs/show_bug.cgi?id=40752)
- *     Stephan Herrmann - Contribution for bug 319201 - [null] no warning when unboxing SingleNameReference causes NPE
+ *     Stephan Herrmann - Contributions for
+ *								bug 319201 - [null] no warning when unboxing SingleNameReference causes NPE
+ *								bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
+ *								bug 395002 - Self bound generic class doesn't resolve bounds properly for wildcards for certain parametrisation.
+ *								bug 383368 - [compiler][null] syntactic null analysis for field references
+ *								bug 401017 - [compiler][null] casted reference to @Nullable field lacks a warning
+ *								bug 400761 - [compiler][null] null may be return as boolean without a diagnostic
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -52,9 +58,9 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	FlowInfo result = this.expression
 		.analyseCode(currentScope, flowContext, flowInfo)
 		.unconditionalInits();
-	if ((this.expression.implicitConversion & TypeIds.UNBOXING) != 0) {
-		this.expression.checkNPE(currentScope, flowContext, flowInfo);
-	}
+	this.expression.checkNPEbyUnboxing(currentScope, flowContext, flowInfo);
+	// account for pot. CCE:
+	flowContext.recordAbruptExit();
 	return result;
 }
 
@@ -69,7 +75,7 @@ public static void checkNeedForAssignedCast(BlockScope scope, TypeBinding expect
 	// double d = (float) n; // cast to float is unnecessary
 	if (castedExpressionType == null || rhs.resolvedType.isBaseType()) return;
 	//if (castedExpressionType.id == T_null) return; // tolerate null expression cast
-	if (castedExpressionType.isCompatibleWith(expectedType)) {
+	if (castedExpressionType.isCompatibleWith(expectedType, scope)) {
 		scope.problemReporter().unnecessaryCast(rhs);
 	}
 }
@@ -238,6 +244,11 @@ public static void checkNeedForArgumentCasts(BlockScope scope, int operator, int
 			if (rightIsCast) scope.problemReporter().unnecessaryCast((CastExpression)right);
 		}
 	}
+}
+
+public boolean checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInfo) {
+	checkNPEbyUnboxing(scope, flowContext, flowInfo);
+	return this.expression.checkNPE(scope, flowContext, flowInfo);
 }
 
 private static void checkAlternateBinding(BlockScope scope, Expression receiver, TypeBinding receiverType, MethodBinding binding, Expression[] arguments, TypeBinding[] originalArgumentTypes, TypeBinding[] alternateArgumentTypes, final InvocationSite invocationSite) {
@@ -445,8 +456,8 @@ public LocalVariableBinding localVariableBinding() {
 	return this.expression.localVariableBinding();
 }
 
-public int nullStatus(FlowInfo flowInfo) {
-	return this.expression.nullStatus(flowInfo);
+public int nullStatus(FlowInfo flowInfo, FlowContext flowContext) {
+	return this.expression.nullStatus(flowInfo, flowContext);
 }
 
 /**

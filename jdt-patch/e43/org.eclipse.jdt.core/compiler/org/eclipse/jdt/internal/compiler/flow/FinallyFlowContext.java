@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,8 @@
  *								bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
  *								bug 365859 - [compiler][null] distinguish warnings based on flow analysis vs. null annotations
  *								bug 385626 - @NonNull fails across loop boundaries
+ *								bug 388996 - [compiler][resource] Incorrect 'potential resource leak'
+ *								bug 403147 - [compiler][null] FUP of bug 400761: consolidate interaction between unboxing, NPE, and deferred checking
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.flow;
 
@@ -31,22 +33,26 @@ import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
  * Reflects the context of code analysis, keeping track of enclosing
  *	try statements, exception handlers, etc...
  */
-public class FinallyFlowContext extends FlowContext {
+public class FinallyFlowContext extends TryFlowContext {
 
 	Reference[] finalAssignments;
 	VariableBinding[] finalVariables;
 	int assignCount;
 
 	// the following three arrays are in sync regarding their indices:
-	LocalVariableBinding[] nullLocals;
+	LocalVariableBinding[] nullLocals; // slots can be null for checkType == IN_UNBOXING
 	ASTNode[] nullReferences;	// Expressions for null checking, Statements for resource analysis
 								// cast to Expression is safe if corresponding nullCheckType != EXIT_RESOURCE
 	int[] nullCheckTypes;
 	int nullCount;
 	// see also the related field FlowContext#expectedTypes
 
-	public FinallyFlowContext(FlowContext parent, ASTNode associatedNode) {
+	// back reference to the flow context of the corresponding try statement
+	public FlowContext tryContext;
+
+	public FinallyFlowContext(FlowContext parent, ASTNode associatedNode, ExceptionHandlingFlowContext tryContext) {
 		super(parent, associatedNode);
+		this.tryContext = tryContext;
 	}
 
 /**
@@ -93,15 +99,21 @@ public void complainOnDeferredChecks(FlowInfo flowInfo, BlockScope scope) {
 	// check inconsistent null checks
 	if ((this.tagBits & FlowContext.DEFER_NULL_DIAGNOSTIC) != 0) { // within an enclosing loop, be conservative
 		for (int i = 0; i < this.nullCount; i++) {
-			if ((this.nullCheckTypes[i] & ~HIDE_NULL_COMPARISON_WARNING_MASK) == ASSIGN_TO_NONNULL) {
-				int nullStatus = flowInfo.nullStatus(this.nullLocals[i]);
-				if (nullStatus != FlowInfo.NON_NULL) {
-					this.parent.recordNullityMismatch(scope, (Expression)this.nullReferences[i],
-							this.providedExpectedTypes[i][0], this.providedExpectedTypes[i][1], nullStatus);
-				}
-			} else {
-				this.parent.recordUsingNullReference(scope, this.nullLocals[i],
-						this.nullReferences[i],	this.nullCheckTypes[i], flowInfo);
+			ASTNode location = this.nullReferences[i];
+			switch (this.nullCheckTypes[i] & ~HIDE_NULL_COMPARISON_WARNING_MASK) {
+				case ASSIGN_TO_NONNULL:
+					int nullStatus = flowInfo.nullStatus(this.nullLocals[i]);
+					if (nullStatus != FlowInfo.NON_NULL) {
+						this.parent.recordNullityMismatch(scope, (Expression) location,
+								this.providedExpectedTypes[i][0], this.providedExpectedTypes[i][1], nullStatus);
+					}
+					break;
+				case IN_UNBOXING:
+					checkUnboxing(scope, (Expression) location, flowInfo);
+					break;
+				default:
+					this.parent.recordUsingNullReference(scope, this.nullLocals[i],
+							this.nullReferences[i],	this.nullCheckTypes[i], flowInfo);
 			}
 
 		}
@@ -189,6 +201,9 @@ public void complainOnDeferredChecks(FlowInfo flowInfo, BlockScope scope) {
 						char[][] annotationName = scope.environment().getNonNullAnnotationName();
 						scope.problemReporter().nullityMismatch((Expression) location, this.providedExpectedTypes[i][0], this.providedExpectedTypes[i][1], nullStatus, annotationName);
 					}
+					break;
+				case IN_UNBOXING:
+					checkUnboxing(scope, (Expression) location, flowInfo);	
 					break;
 				default:
 					// should not happen
@@ -418,10 +433,10 @@ public void complainOnDeferredChecks(FlowInfo flowInfo, BlockScope scope) {
 	}
 
 protected void recordNullReference(LocalVariableBinding local,
-	ASTNode expression, int status) {
+	ASTNode expression, int checkType) {
 	if (this.nullCount == 0) {
 		this.nullLocals = new LocalVariableBinding[5];
-		this.nullReferences = new Expression[5];
+		this.nullReferences = new ASTNode[5];
 		this.nullCheckTypes = new int[5];
 	}
 	else if (this.nullCount == this.nullLocals.length) {
@@ -430,7 +445,7 @@ protected void recordNullReference(LocalVariableBinding local,
 			this.nullLocals = new LocalVariableBinding[newLength], 0,
 			this.nullCount);
 		System.arraycopy(this.nullReferences, 0,
-			this.nullReferences = new Expression[newLength], 0,
+			this.nullReferences = new ASTNode[newLength], 0,
 			this.nullCount);
 		System.arraycopy(this.nullCheckTypes, 0,
 			this.nullCheckTypes = new int[newLength], 0,
@@ -438,7 +453,13 @@ protected void recordNullReference(LocalVariableBinding local,
 	}
 	this.nullLocals[this.nullCount] = local;
 	this.nullReferences[this.nullCount] = expression;
-	this.nullCheckTypes[this.nullCount++] = status;
+	this.nullCheckTypes[this.nullCount++] = checkType;
+}
+public void recordUnboxing(Scope scope, Expression expression, int nullStatus, FlowInfo flowInfo) {
+	if (nullStatus == FlowInfo.NULL)
+		super.recordUnboxing(scope, expression, nullStatus, flowInfo);
+	else // defer checking:
+		recordNullReference(null, expression, IN_UNBOXING);
 }
 protected boolean internalRecordNullityMismatch(Expression expression, TypeBinding providedType, int nullStatus, TypeBinding expectedType, int checkType) {
 	// cf. decision structure inside FinallyFlowContext.recordUsingNullReference(..)

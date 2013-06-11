@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,19 +28,19 @@ import java.util.List;
 public class DoStatement extends Statement {
 
 	/**
-	 * The "expression" structural property of this node type (child type: {@link Expression}).
-	 * @since 3.0
-	 */
-	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY =
-		new ChildPropertyDescriptor(DoStatement.class, "expression", Expression.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
-
-	/**
 	 * The "body" structural property of this node type (child type: {@link Statement}).
 	 * @since 3.0
 	 */
 	public static final ChildPropertyDescriptor BODY_PROPERTY =
 		new ChildPropertyDescriptor(DoStatement.class, "body", Statement.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
 
+	/**
+	 * The "expression" structural property of this node type (child type: {@link Expression}).
+	 * @since 3.0
+	 */
+	public static final ChildPropertyDescriptor EXPRESSION_PROPERTY =
+			new ChildPropertyDescriptor(DoStatement.class, "expression", Expression.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$
+	
 	/**
 	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
@@ -51,8 +51,8 @@ public class DoStatement extends Statement {
 	static {
 		List properyList = new ArrayList(3);
 		createPropertyList(DoStatement.class, properyList);
-		addProperty(EXPRESSION_PROPERTY, properyList);
 		addProperty(BODY_PROPERTY, properyList);
+		addProperty(EXPRESSION_PROPERTY, properyList);
 		PROPERTY_DESCRIPTORS = reapPropertyList(properyList);
 	}
 
@@ -72,19 +72,19 @@ public class DoStatement extends Statement {
 	}
 
 	/**
+	 * The body statement; lazily initialized; defaults to an empty block.
+	 */
+	private Statement body = null;
+	
+	/**
 	 * The expression; lazily initialized; defaults to an unspecified, but
 	 * legal, expression.
 	 */
 	private Expression expression = null;
 
 	/**
-	 * The body statement; lazily initialized; defaults to an empty block.
-	 */
-	private Statement body = null;
-
-	/**
 	 * Creates a new unparented do statement node owned by the given
-	 * AST. By default, the expresssion is unspecified, but legal,
+	 * AST. By default, the expression is unspecified, but legal,
 	 * and the body statement is an empty block.
 	 * <p>
 	 * N.B. This constructor is package-private.
@@ -107,19 +107,19 @@ public class DoStatement extends Statement {
 	 * Method declared on ASTNode.
 	 */
 	final ASTNode internalGetSetChildProperty(ChildPropertyDescriptor property, boolean get, ASTNode child) {
-		if (property == EXPRESSION_PROPERTY) {
-			if (get) {
-				return getExpression();
-			} else {
-				setExpression((Expression) child);
-				return null;
-			}
-		}
 		if (property == BODY_PROPERTY) {
 			if (get) {
 				return getBody();
 			} else {
 				setBody((Statement) child);
+				return null;
+			}
+		}
+		if (property == EXPRESSION_PROPERTY) {
+			if (get) {
+				return getExpression();
+			} else {
+				setExpression((Expression) child);
 				return null;
 			}
 		}
@@ -141,8 +141,8 @@ public class DoStatement extends Statement {
 		DoStatement result = new DoStatement(target);
 		result.setSourceRange(getStartPosition(), getLength());
 		result.copyLeadingComment(this);
-		result.setExpression((Expression) getExpression().clone(target));
 		result.setBody((Statement) getBody().clone(target));
+		result.setExpression((Expression) getExpression().clone(target));
 		return result;
 	}
 
@@ -165,46 +165,6 @@ public class DoStatement extends Statement {
 			acceptChild(visitor, getExpression());
 		}
 		visitor.endVisit(this);
-	}
-
-	/**
-	 * Returns the expression of this do statement.
-	 *
-	 * @return the expression node
-	 */
-	public Expression getExpression() {
-		if (this.expression == null) {
-			// lazy init must be thread-safe for readers
-			synchronized (this) {
-				if (this.expression == null) {
-					preLazyInit();
-					this.expression = new SimpleName(this.ast);
-					postLazyInit(this.expression, EXPRESSION_PROPERTY);
-				}
-			}
-		}
-		return this.expression;
-	}
-
-	/**
-	 * Sets the expression of this do statement.
-	 *
-	 * @param expression the expression node
-	 * @exception IllegalArgumentException if:
-	 * <ul>
-	 * <li>the node belongs to a different AST</li>
-	 * <li>the node already has a parent</li>
-	 * <li>a cycle in would be created</li>
-	 * </ul>
-	 */
-	public void setExpression(Expression expression) {
-		if (expression == null) {
-			throw new IllegalArgumentException();
-		}
-		ASTNode oldChild = this.expression;
-		preReplaceChild(oldChild, expression, EXPRESSION_PROPERTY);
-		this.expression = expression;
-		postReplaceChild(oldChild, expression, EXPRESSION_PROPERTY);
 	}
 
 	/**
@@ -254,6 +214,46 @@ public class DoStatement extends Statement {
 		this.body = statement;
 		postReplaceChild(oldChild, statement, BODY_PROPERTY);
 	}
+
+    /**
+     * Returns the expression of this do statement.
+     *
+     * @return the expression node
+     */
+    public Expression getExpression() {
+        if (this.expression == null) {
+            // lazy init must be thread-safe for readers
+            synchronized (this) {
+                if (this.expression == null) {
+                    preLazyInit();
+                    this.expression = new SimpleName(this.ast);
+                    postLazyInit(this.expression, EXPRESSION_PROPERTY);
+                }
+            }
+        }
+        return this.expression;
+    }
+
+    /**
+     * Sets the expression of this do statement.
+     *
+     * @param expression the expression node
+     * @exception IllegalArgumentException if:
+     * <ul>
+     * <li>the node belongs to a different AST</li>
+     * <li>the node already has a parent</li>
+     * <li>a cycle in would be created</li>
+     * </ul>
+     */
+    public void setExpression(Expression expression) {
+        if (expression == null) {
+            throw new IllegalArgumentException();
+        }
+        ASTNode oldChild = this.expression;
+        preReplaceChild(oldChild, expression, EXPRESSION_PROPERTY);
+        this.expression = expression;
+        postReplaceChild(oldChild, expression, EXPRESSION_PROPERTY);
+    }
 
 	/* (omit javadoc for this method)
 	 * Method declared on ASTNode.

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,9 +8,12 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Perry James - nullStatus method improvement (165346)
+ *     Stephan Herrmann - Contribution for
+ *								bug 383368 - [compiler][null] syntactic null analysis for field references
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
+import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
@@ -1556,7 +1559,7 @@ public abstract class OperatorExpression extends Expression implements OperatorI
 		return "unknown operator"; //$NON-NLS-1$
 	}
 
-	public int nullStatus(FlowInfo flowInfo) {
+	public int nullStatus(FlowInfo flowInfo, FlowContext flowContext) {
 		return FlowInfo.NON_NULL;
 	}
 

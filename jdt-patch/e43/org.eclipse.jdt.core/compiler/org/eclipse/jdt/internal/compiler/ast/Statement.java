@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,8 @@
  *								bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
  *								bug 370930 - NonNull annotation not considered for enhanced for loops
  *								bug 365859 - [compiler][null] distinguish warnings based on flow analysis vs. null annotations
+ *								bug 331649 - [compiler][null] consider null annotations for fields
+ *								bug 383368 - [compiler][null] syntactic null analysis for field references
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -62,6 +64,7 @@ public abstract FlowInfo analyseCode(BlockScope currentScope, FlowContext flowCo
 	public static final int COMPLAINED_FAKE_REACHABLE = 1;
 	public static final int COMPLAINED_UNREACHABLE = 2;
 	
+
 /** Analysing arguments of MessageSend, ExplicitConstructorCall, AllocationExpression. */
 protected void analyseArguments(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo, MethodBinding methodBinding, Expression[] arguments)
 {
@@ -90,7 +93,7 @@ protected void analyseArguments(BlockScope currentScope, FlowContext flowContext
 			if (methodBinding.parameterNonNullness[i] == Boolean.TRUE) {
 				TypeBinding expectedType = methodBinding.parameters[i];
 				Expression argument = arguments[i];
-				int nullStatus = argument.nullStatus(flowInfo); // slight loss of precision: should also use the null info from the receiver.
+				int nullStatus = argument.nullStatus(flowInfo, flowContext); // slight loss of precision: should also use the null info from the receiver.
 				if (nullStatus != FlowInfo.NON_NULL) // if required non-null is not provided
 					flowContext.recordNullityMismatch(currentScope, argument, argument.resolvedType, expectedType, nullStatus);
 			}
@@ -98,19 +101,17 @@ protected void analyseArguments(BlockScope currentScope, FlowContext flowContext
 	}
 }
 
-/** Check null-ness of 'local' against a possible null annotation */
+/** Check null-ness of 'var' against a possible null annotation */
 protected int checkAssignmentAgainstNullAnnotation(BlockScope currentScope, FlowContext flowContext,
-												   LocalVariableBinding local, int nullStatus, Expression expression, TypeBinding providedType)
+												   VariableBinding var, int nullStatus, Expression expression, TypeBinding providedType)
 {
-	if (local != null) {
-		if ((local.tagBits & TagBits.AnnotationNonNull) != 0
+	if ((var.tagBits & TagBits.AnnotationNonNull) != 0
 			&& nullStatus != FlowInfo.NON_NULL) {
-			flowContext.recordNullityMismatch(currentScope, expression, providedType, local.type, nullStatus);
-			return FlowInfo.NON_NULL;
-		} else if ((local.tagBits & TagBits.AnnotationNullable) != 0
-				&& nullStatus == FlowInfo.UNKNOWN) {	// provided a legacy type?
-			return FlowInfo.POTENTIALLY_NULL;			// -> use more specific info from the annotation
-		}
+		flowContext.recordNullityMismatch(currentScope, expression, providedType, var.type, nullStatus);
+		return FlowInfo.NON_NULL;
+	} else if ((var.tagBits & TagBits.AnnotationNullable) != 0
+			&& nullStatus == FlowInfo.UNKNOWN) {	// provided a legacy type?
+		return FlowInfo.POTENTIALLY_NULL;			// -> use more specific info from the annotation
 	}
 	return nullStatus;
 }

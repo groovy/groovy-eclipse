@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,10 @@
  *								bug 365519 - editorial cleanup after bug 186342 and bug 365387
  *								bug 358903 - Filter practically unimportant resource leak warnings
  *								bug 365531 - [compiler][null] investigate alternative strategy for internally encoding nullness defaults
+ *								bug 388281 - [compiler][null] inheritance of null annotations as an option
+ *								bug 395002 - Self bound generic class doesn't resolve bounds properly for wildcards for certain parametrisation.
+ *								bug 400421 - [compiler] Null analysis for fields does not take @com.google.inject.Inject into account
+ *								bug 382069 - [null] Make the null analysis consider JUnit's assertNotNull similarly to assertions
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 // GROOVY PATCHED
@@ -383,10 +387,34 @@ public void computeId() {
 	switch (this.compoundName.length) {
 
 		case 3 :
-			if (!CharOperation.equals(TypeConstants.JAVA, this.compoundName[0]))
+			char[] packageName = this.compoundName[0];
+			// expect only java.*.* and javax.*.* and junit.*.* and org.junit.*
+			switch (packageName.length) {
+				case 3: // only one type in this group, yet:
+					if (CharOperation.equals(TypeConstants.ORG_JUNIT_ASSERT, this.compoundName))
+						this.id = TypeIds.T_OrgJunitAssert;
+					return;						
+				case 4:
+					if (!CharOperation.equals(TypeConstants.JAVA, packageName))
+						return;
+					break; // continue below ...
+				case 5:
+					switch (packageName[1]) {
+						case 'a':
+							if (CharOperation.equals(TypeConstants.JAVAX_ANNOTATION_INJECT_INJECT, this.compoundName))
+								this.id = TypeIds.T_JavaxInjectInject;
 				return;
+						case 'u':
+							if (CharOperation.equals(TypeConstants.JUNIT_FRAMEWORK_ASSERT, this.compoundName))
+								this.id = TypeIds.T_JunitFrameworkAssert;
+							return;
+					}
+					return;
+				default: return;
+			}
+			// ... at this point we know it's java.*.*
 
-			char[] packageName = this.compoundName[1];
+			packageName = this.compoundName[1];
 			if (packageName.length == 0) return; // just to be safe
 			char[] typeName = this.compoundName[2];
 			if (typeName.length == 0) return; // just to be safe
@@ -433,6 +461,10 @@ public void computeId() {
 								case 'I' :
 									if (CharOperation.equals(typeName, TypeConstants.JAVA_UTIL_ITERATOR[2]))
 										this.id = TypeIds.T_JavaUtilIterator;
+									return;
+								case 'O' :
+									if (CharOperation.equals(typeName, TypeConstants.JAVA_UTIL_OBJECTS[2]))
+										this.id = TypeIds.T_JavaUtilObjects;
 									return;
 							}
 						}
@@ -601,6 +633,12 @@ public void computeId() {
 		break;
 
 		case 4:
+			// expect one type from com.*.*.*:
+			if (CharOperation.equals(TypeConstants.COM_GOOGLE_INJECT_INJECT, this.compoundName)) {
+				this.id = TypeIds.T_ComGoogleInjectInject;
+				return;
+			}
+			// otherwise only expect java.*.*.*
 			if (!CharOperation.equals(TypeConstants.JAVA, this.compoundName[0]))
 				return;
 			packageName = this.compoundName[1];
@@ -718,6 +756,8 @@ public void computeId() {
 					packageName = this.compoundName[1];
 					if (packageName.length == 0) return; // just to be safe
 
+					switch (packageName[0]) {
+						case 'e':
 					if (CharOperation.equals(TypeConstants.ECLIPSE, packageName)) {
 						packageName = this.compoundName[2];
 						if (packageName.length == 0) return; // just to be safe
@@ -740,6 +780,24 @@ public void computeId() {
 						}
 						return;
 					}
+					return;
+						case 'a':
+							if (CharOperation.equals(TypeConstants.APACHE, packageName)) {
+								if (CharOperation.equals(TypeConstants.COMMONS, this.compoundName[2])) {
+									if (CharOperation.equals(TypeConstants.ORG_APACHE_COMMONS_LANG_VALIDATE, this.compoundName))
+										this.id = TypeIds.T_OrgApacheCommonsLangValidate;
+									else if (CharOperation.equals(TypeConstants.ORG_APACHE_COMMONS_LANG3_VALIDATE, this.compoundName))
+										this.id = TypeIds.T_OrgApacheCommonsLang3Validate;
+								}
+							}
+							return;
+			}
+					return;
+				case 'c':
+					if (!CharOperation.equals(TypeConstants.COM, this.compoundName[0]))
+						return;
+					if (CharOperation.equals(TypeConstants.COM_GOOGLE_COMMON_BASE_PRECONDITIONS, this.compoundName))
+						this.id = TypeIds.T_ComGoogleCommonBasePreconditions;
 					return;
 			}
 			break;
@@ -909,7 +967,7 @@ public TypeVariableBinding getTypeVariable(char[] variableName) {
 }
 
 public int hashCode() {
-	// ensure ReferenceBindings hash to the same posiiton as UnresolvedReferenceBindings so they can be replaced without rehashing
+	// ensure ReferenceBindings hash to the same position as UnresolvedReferenceBindings so they can be replaced without rehashing
 	// ALL ReferenceBindings are unique when created so equals() is the same as ==
 	return (this.compoundName == null || this.compoundName.length == 0)
 		? super.hashCode()
@@ -977,6 +1035,23 @@ public boolean hasIncompatibleSuperType(ReferenceBinding otherType) {
 
 public boolean hasMemberTypes() {
     return false;
+}
+
+/**
+ * Answer whether a @NonNullByDefault is applicable at the given method binding.
+ */
+boolean hasNonNullDefault() {
+	// Note, STB overrides for correctly handling local types
+	ReferenceBinding currentType = this;
+	while (currentType != null) {
+		if ((currentType.tagBits & TagBits.AnnotationNonNullByDefault) != 0)
+			return true;
+		if ((currentType.tagBits & TagBits.AnnotationNullUnspecifiedByDefault) != 0)
+			return false;
+		currentType = currentType.enclosingType();
+	}
+	// package
+	return this.getPackage().defaultNullness == NONNULL_BY_DEFAULT;
 }
 
 public final boolean hasRestrictedAccess() {
@@ -1081,7 +1156,7 @@ public boolean isClass() {
  * In addition to improving performance, caching also ensures there is no infinite regression
  * since per nature, the compatibility check is recursive through parameterized type arguments (122775)
  */
-public boolean isCompatibleWith(TypeBinding otherType) {
+public boolean isCompatibleWith(TypeBinding otherType, /*@Nullable*/ Scope captureScope) {
 	if (otherType == this)
 		return true;
 	if (otherType.id == TypeIds.T_JavaLangObject)
@@ -1097,9 +1172,17 @@ public boolean isCompatibleWith(TypeBinding otherType) {
 		}
 	}
 	this.compatibleCache.put(otherType, Boolean.FALSE); // protect from recursive call
-	if (isCompatibleWith0(otherType)) {
+	if (isCompatibleWith0(otherType, captureScope)) {
 		this.compatibleCache.put(otherType, Boolean.TRUE);
 		return true;
+	}
+	if (captureScope == null 
+			&& this instanceof TypeVariableBinding 
+			&& ((TypeVariableBinding)this).firstBound instanceof ParameterizedTypeBinding) {
+		// see https://bugs.eclipse.org/395002#c9
+		// in this case a subsequent check with captureScope != null may actually get
+		// a better result, reset this info to ensure we're not blocking that re-check.
+		this.compatibleCache.put(otherType, null);
 	}
 	return false;
 }
@@ -1107,7 +1190,7 @@ public boolean isCompatibleWith(TypeBinding otherType) {
 /**
  * Answer true if the receiver type can be assigned to the argument type (right)
  */
-private boolean isCompatibleWith0(TypeBinding otherType) {
+private boolean isCompatibleWith0(TypeBinding otherType, /*@Nullable*/ Scope captureScope) {
 	if (otherType == this)
 		return true;
 	if (otherType.id == TypeIds.T_JavaLangObject)
@@ -1145,8 +1228,17 @@ private boolean isCompatibleWith0(TypeBinding otherType) {
 										// above if same erasure
 			}
 			ReferenceBinding otherReferenceType = (ReferenceBinding) otherType;
-			if (otherReferenceType.isInterface()) // could be annotation type
-				return implementsInterface(otherReferenceType, true);
+			if (otherReferenceType.isInterface()) { // could be annotation type
+				if (implementsInterface(otherReferenceType, true))
+					return true;
+				if (this instanceof TypeVariableBinding && captureScope != null) {
+					TypeVariableBinding typeVariable = (TypeVariableBinding) this;
+					if (typeVariable.firstBound instanceof ParameterizedTypeBinding) {
+						TypeBinding bound = typeVariable.firstBound.capture(captureScope, -1); // no position needed as this capture will never escape this context
+						return bound.isCompatibleWith(otherReferenceType);
+					}
+				}
+			}
 			if (isInterface())  // Explicit conversion from an interface
 										// to a class is not allowed
 				return false;

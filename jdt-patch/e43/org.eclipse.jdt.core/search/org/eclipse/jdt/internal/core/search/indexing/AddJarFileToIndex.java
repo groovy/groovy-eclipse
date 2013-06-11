@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -44,16 +44,25 @@ class AddJarFileToIndex extends IndexRequest {
 	IFile resource;
 	Scanner scanner;
 	private IndexLocation indexFileURL;
+	private final boolean forceIndexUpdate;
 
 	public AddJarFileToIndex(IFile resource, IndexLocation indexFile, IndexManager manager) {
+		this(resource, indexFile, manager, false);
+	}
+	public AddJarFileToIndex(IFile resource, IndexLocation indexFile, IndexManager manager, final boolean updateIndex) {
 		super(resource.getFullPath(), manager);
 		this.resource = resource;
 		this.indexFileURL = indexFile;
+		this.forceIndexUpdate = updateIndex;
 	}
 	public AddJarFileToIndex(IPath jarPath, IndexLocation indexFile, IndexManager manager) {
+		this(jarPath, indexFile, manager, false);
+	}
+	public AddJarFileToIndex(IPath jarPath, IndexLocation indexFile, IndexManager manager, final boolean updateIndex) {
 		// external JAR scenario - no resource
 		super(jarPath, manager);
 		this.indexFileURL = indexFile;
+		this.forceIndexUpdate = updateIndex;
 	}
 	public boolean equals(Object o) {
 		if (o instanceof AddJarFileToIndex) {
@@ -75,7 +84,7 @@ class AddJarFileToIndex extends IndexRequest {
 
 		if (this.isCancelled || progressMonitor != null && progressMonitor.isCanceled()) return true;
 
-		if (this.indexFileURL != null) {
+		if (hasPreBuiltIndex()) {
 			boolean added = this.manager.addIndex(this.containerPath, this.indexFileURL);
 			if (added) return true;	
 			this.indexFileURL = null;
@@ -291,9 +300,21 @@ class AddJarFileToIndex extends IndexRequest {
 		return false;
 	}
 	protected Integer updatedIndexState() {
-		return IndexManager.REBUILDING_STATE;
+
+		Integer updateState = null;
+		if(hasPreBuiltIndex()) {
+			updateState = IndexManager.REUSE_STATE;
+		}
+		else {
+			updateState = IndexManager.REBUILDING_STATE;
+		}
+		return updateState;
 	}
 	public String toString() {
 		return "indexing " + this.containerPath.toString(); //$NON-NLS-1$
+	}
+
+	protected boolean hasPreBuiltIndex() {
+		return !this.forceIndexUpdate && (this.indexFileURL != null && this.indexFileURL.exists());
 	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -164,7 +164,7 @@ HashtableOfObject addQueryResults(char[][] categories, char[] key, int matchRule
 
 	HashtableOfObject results = null; // initialized if needed
 	
-	// No need to check the results table for duplicacy while processing the 
+	// No need to check the results table for duplicates while processing the
 	// first category table or if the first category tables doesn't have any results.
 	boolean prevResults = false;
 	if (key == null) {
@@ -226,7 +226,6 @@ HashtableOfObject addQueryResults(char[][] categories, char[] key, int matchRule
 		}
 	}
 
-	if (results == null) return null;
 	return results;
 }
 private void cacheDocumentNames() throws IOException {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contribution for  bug 365662 - [compiler][null] warn on contradictory and redundant null annotations
+ *     Keigo Imai - Contribution for  bug 388903 - Cannot extend inner class as an anonymous class when it extends the outer class
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -70,12 +71,8 @@ public SyntheticArgumentBinding addSyntheticArgument(ReferenceBinding targetEncl
 	} else {
 		int size = this.enclosingInstances.length;
 		int newArgIndex = size;
-		for (int i = size; --i >= 0;) {
-			if (this.enclosingInstances[i].type == targetEnclosingType)
-				return this.enclosingInstances[i]; // already exists
-			if (enclosingType() == targetEnclosingType)
-				newArgIndex = 0;
-		}
+		if (enclosingType() == targetEnclosingType)
+			newArgIndex = 0;
 		SyntheticArgumentBinding[] newInstances = new SyntheticArgumentBinding[size + 1];
 		System.arraycopy(this.enclosingInstances, 0, newInstances, newArgIndex == 0 ? 1 : 0, size);
 		newInstances[newArgIndex] = synthLocal = new SyntheticArgumentBinding(targetEnclosingType);
@@ -170,9 +167,27 @@ public SyntheticArgumentBinding getSyntheticArgument(LocalVariableBinding actual
 
 /* Answer the synthetic argument for <targetEnclosingType> or null if one does not exist.
 */
-public SyntheticArgumentBinding getSyntheticArgument(ReferenceBinding targetEnclosingType, boolean onlyExactMatch) {
+public SyntheticArgumentBinding getSyntheticArgument(ReferenceBinding targetEnclosingType, boolean onlyExactMatch, boolean scopeIsConstructorCall) {
 	if (this.enclosingInstances == null) return null;		// is null if no enclosing instances are known
+	
 	// exact match
+	
+	// firstly, during allocation, check and use the leftmost one (if possible) 
+	// to handle cases involving two instances of same type, such as
+	// class X {
+	//   class Inner extends X {}
+	//   void f(){
+	//     new X().new Inner(){} 
+	//     // here the result of (new X()) is passed as the first (synthetic) arg for ctor of new Inner(){}
+	//     // (and (this) as the second, of course) 
+	//   }
+	// }
+	if (scopeIsConstructorCall && this.enclosingInstances.length > 0)
+		if (this.enclosingInstances[0].type == targetEnclosingType) 
+			if (this.enclosingInstances[0].actualOuterLocalVariable == null)
+				return this.enclosingInstances[0];
+	
+	// then check other possibility
 	for (int i = this.enclosingInstances.length; --i >= 0;)
 		if (this.enclosingInstances[i].type == targetEnclosingType)
 			if (this.enclosingInstances[i].actualOuterLocalVariable == null)

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -4045,7 +4045,7 @@ public void invokeIterableIterator(TypeBinding iterableReceiverType) {
 public void invokeAutoCloseableClose(TypeBinding resourceType) {
 	// invokevirtual/interface: <resourceType>.close()
 	invoke(
-			resourceType.isInterface() ? Opcodes.OPC_invokeinterface : Opcodes.OPC_invokevirtual,
+			resourceType.erasure().isInterface() ? Opcodes.OPC_invokeinterface : Opcodes.OPC_invokevirtual,
 			1, // receiverAndArgsSize
 			0, // returnTypeSize
 			resourceType.constantPoolName(), 
@@ -5841,7 +5841,8 @@ public void recordPositionsFrom(int startPC, int sourcePos, boolean widen) {
 	 */
 	if ((this.generateAttributes & ClassFileConstants.ATTR_LINES) == 0
 			|| sourcePos == 0
-			|| (startPC == this.position && !widen))
+			|| (startPC == this.position && !widen)
+			|| startPC > this.position)
 		return;
 
 	// Widening an existing entry that already has the same source positions

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,9 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *								bug 383368 - [compiler][null] syntactic null analysis for field references
+ *								bug 403086 - [compiler][null] include the effect of 'assert' in syntactic null analysis for fields
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -33,9 +36,12 @@ public FlowInfo analyseCode(
 		FlowInfo flowInfo) {
 	this.expression.checkNPE(currentScope, flowContext, flowInfo);
 	if (((this.bits & OperatorMASK) >> OperatorSHIFT) == NOT) {
-		return this.expression.
+		flowContext.tagBits ^= FlowContext.INSIDE_NEGATION;
+		flowInfo = this.expression.
 			analyseCode(currentScope, flowContext, flowInfo).
 			asNegatedCondition();
+		flowContext.tagBits ^= FlowContext.INSIDE_NEGATION;
+		return flowInfo;
 	} else {
 		return this.expression.
 			analyseCode(currentScope, flowContext, flowInfo);

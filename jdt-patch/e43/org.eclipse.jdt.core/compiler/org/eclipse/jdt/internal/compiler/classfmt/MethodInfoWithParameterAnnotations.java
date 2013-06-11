@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2011 BEA Systems, Inc.
+ * Copyright (c) 2005, 2013 BEA Systems, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,27 +13,14 @@
 package org.eclipse.jdt.internal.compiler.classfmt;
 
 import org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation;
-import org.eclipse.jdt.internal.compiler.util.Util;
 
 class MethodInfoWithParameterAnnotations extends MethodInfoWithAnnotations {
 	private AnnotationInfo[][] parameterAnnotations;
 
 MethodInfoWithParameterAnnotations(MethodInfo methodInfo, AnnotationInfo[] annotations, AnnotationInfo[][] parameterAnnotations) {
 	super(methodInfo, annotations);
-	if (methodInfo.isConstructor()) {
-		int parametersCount = Util.getParameterCount(methodInfo.getMethodDescriptor());
-		if (parameterAnnotations.length < parametersCount) {
-			AnnotationInfo[][] temp = new AnnotationInfo[parametersCount][];
-			System.arraycopy(parameterAnnotations, 0, temp, 1, parameterAnnotations.length);
-			this.parameterAnnotations = temp;
-		} else {
-			this.parameterAnnotations = parameterAnnotations;
-		}
-	} else {
-		this.parameterAnnotations = parameterAnnotations;
-	}
+	this.parameterAnnotations = parameterAnnotations;
 }
-
 public IBinaryAnnotation[] getParameterAnnotations(int index) {
 	return this.parameterAnnotations[index];
 }

@@ -45,7 +45,7 @@ import org.eclipse.text.edits.UndoEdit;
  */
 public class CompilationUnit extends Openable implements ICompilationUnit, org.eclipse.jdt.internal.compiler.env.ICompilationUnit, SuffixConstants {
 	/**
-	 * Internal synonynm for deprecated constant AST.JSL2
+	 * Internal synonym for deprecated constant AST.JSL2
 	 * to alleviate deprecation warnings.
 	 * @deprecated
 	 */

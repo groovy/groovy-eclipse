@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2011 BEA Systems, Inc.
+ * Copyright (c) 2005, 2013 BEA Systems, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,8 +28,10 @@ class DefaultValuePairBinding extends MemberValuePairBinding {
 		this.method = binding;
 		this.value = MemberValuePairBinding.buildDOMValue(binding.getDefaultValue(), resolver);
 		if (binding.returnType != null && binding.returnType.isArrayType()) {
-			if (!this.value.getClass().isArray()) {
-				// wrap into an array
+			// wrap into an array
+			if (this.value == null) {
+				this.value = new Object[0];
+			} else if (!this.value.getClass().isArray()) {
 				this.value = new Object[] { this.value };
 			}
 		}

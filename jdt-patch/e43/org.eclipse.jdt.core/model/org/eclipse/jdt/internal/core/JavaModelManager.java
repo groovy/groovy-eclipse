@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -54,6 +54,8 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 import org.eclipse.jdt.internal.core.JavaProjectElementInfo.ProjectCache;
 import org.eclipse.jdt.internal.core.builder.JavaBuilder;
+import org.eclipse.jdt.internal.core.dom.SourceRangeVerifier;
+import org.eclipse.jdt.internal.core.dom.rewrite.RewriteEventStore;
 import org.eclipse.jdt.internal.core.hierarchy.TypeHierarchy;
 import org.eclipse.jdt.internal.core.search.AbstractSearchScope;
 import org.eclipse.jdt.internal.core.search.BasicSearchEngine;
@@ -224,6 +226,12 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	private static final String RESOLVE_REFERENCED_LIBRARIES_FOR_CONTAINERS = "resolveReferencedLibrariesForContainers"; //$NON-NLS-1$
 	
 	/**
+	 * Name of the JVM parameter to specify how many compilation units must be handled at once by the builder.
+	 * The default value is represented by <code>AbstractImageBuilder#MAX_AT_ONCE</code>.
+	 */
+	public static final String MAX_COMPILED_UNITS_AT_ONCE = "maxCompiledUnitsAtOnce"; //$NON-NLS-1$
+
+	/**
 	 * Special value used for recognizing ongoing initialization and breaking initialization cycles
 	 */
 	public final static IPath VARIABLE_INITIALIZATION_IN_PROGRESS = new Path("Variable Initialization In Progress"); //$NON-NLS-1$
@@ -247,6 +255,9 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	private static final String ZIP_ACCESS_DEBUG = JavaCore.PLUGIN_ID + "/debug/zipaccess" ; //$NON-NLS-1$
 	private static final String DELTA_DEBUG =JavaCore.PLUGIN_ID + "/debug/javadelta" ; //$NON-NLS-1$
 	private static final String DELTA_DEBUG_VERBOSE =JavaCore.PLUGIN_ID + "/debug/javadelta/verbose" ; //$NON-NLS-1$
+	private static final String DOM_AST_DEBUG = JavaCore.PLUGIN_ID + "/debug/dom/ast" ; //$NON-NLS-1$
+	private static final String DOM_AST_DEBUG_THROW = JavaCore.PLUGIN_ID + "/debug/dom/ast/throw" ; //$NON-NLS-1$
+	private static final String DOM_REWRITE_DEBUG = JavaCore.PLUGIN_ID + "/debug/dom/rewrite" ; //$NON-NLS-1$
 	private static final String HIERARCHY_DEBUG = JavaCore.PLUGIN_ID + "/debug/hierarchy" ; //$NON-NLS-1$
 	private static final String POST_ACTION_DEBUG = JavaCore.PLUGIN_ID + "/debug/postaction" ; //$NON-NLS-1$
 	private static final String BUILDER_DEBUG = JavaCore.PLUGIN_ID + "/debug/builder" ; //$NON-NLS-1$
@@ -1483,6 +1494,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 					propertyName.equals(JavaCore.CORE_INCOMPLETE_CLASSPATH) ||
 					propertyName.equals(JavaCore.CORE_CIRCULAR_CLASSPATH) ||
 					propertyName.equals(JavaCore.CORE_INCOMPATIBLE_JDK_LEVEL) ||
+					propertyName.equals(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM) ||
 					propertyName.equals(JavaCore.CORE_OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE)) {
 					JavaModelManager manager = JavaModelManager.getJavaModelManager();
 					IJavaModel model = manager.getJavaModel();
@@ -1658,6 +1670,18 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			option = Platform.getDebugOption(DELTA_DEBUG_VERBOSE);
 			if(option != null) DeltaProcessor.VERBOSE = option.equalsIgnoreCase(TRUE) ;
 
+			option = Platform.getDebugOption(DOM_AST_DEBUG);
+			if(option != null) SourceRangeVerifier.DEBUG = option.equalsIgnoreCase(TRUE) ;
+
+			option = Platform.getDebugOption(DOM_AST_DEBUG_THROW);
+			if(option != null) {
+				SourceRangeVerifier.DEBUG_THROW = option.equalsIgnoreCase(TRUE) ;
+				SourceRangeVerifier.DEBUG |= SourceRangeVerifier.DEBUG_THROW;
+			}
+			
+			option = Platform.getDebugOption(DOM_REWRITE_DEBUG);
+			if(option != null) RewriteEventStore.DEBUG = option.equalsIgnoreCase(TRUE) ;
+			
 			option = Platform.getDebugOption(HIERARCHY_DEBUG);
 			if(option != null) TypeHierarchy.DEBUG = option.equalsIgnoreCase(TRUE) ;
 
@@ -4378,14 +4402,18 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 	/**
 	 * Get all secondary types for a project and store result in per project info cache.
-	 *
-	 * This cache is an Hashtable<String, HashMap<String, IType>>:
-	 * 	- key: package name
-	 * 	- value:
-	 * 		+ key: type name
-	 * 		+ value: java model handle for the secondary type
+	 * <p>
+	 * This cache is an <code>Hashtable&lt;String, HashMap&lt;String, IType&gt;&gt;</code>:
+	 *  <ul>
+	 * 	<li>key: package name
+	 * 	<li>value:
+	 * 		<ul>
+	 * 		<li>key: type name
+	 * 		<li>value: java model handle for the secondary type
+	 * 		</ul>
+	 * </ul>
 	 * Hashtable was used to protect callers from possible concurrent access.
-	 *
+	 * </p>
 	 * Note that this map may have a specific entry which key is {@link #INDEXED_SECONDARY_TYPES }
 	 * and value is a map containing all secondary types created during indexing.
 	 * When this key is in cache and indexing is finished, returned map is merged

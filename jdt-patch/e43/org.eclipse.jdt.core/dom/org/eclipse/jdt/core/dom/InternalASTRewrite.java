@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2009 IBM Corporation and others.
+ * Copyright (c) 2004, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -44,6 +44,7 @@ class InternalASTRewrite extends NodeEventHandler {
 
 	protected final RewriteEventStore eventStore;
 	protected final NodeInfoStore nodeStore;
+	/** ASTNode clone -> ASTNode original */ 
 	protected final Hashtable clonedNodes;
 
 	int cloneDepth = 0;
@@ -102,6 +103,37 @@ class InternalASTRewrite extends NodeEventHandler {
 	}
 
 	private  void markAsMoveOrCopyTarget(ASTNode node, ASTNode newChild) {
+		if (this.cloneDepth == 0) {
+			while (node != null && this.clonedNodes.containsKey(node)) {
+				/*
+				 * A modified node cannot be considered as cloned any more.
+				 * we can't copy the original formatting/comments and at the same time modify the node.
+				 * 
+				 * Workaround for https://bugs.eclipse.org/405699 is to remove such nodes from clonedNodes
+				 * and instead mark all children as cloned (or skip them if they are not in clonedNodes).
+				 */
+				ASTNode orig = (ASTNode) this.clonedNodes.remove(node);
+				if (orig != null) {
+					List properties = node.structuralPropertiesForType();
+					for (int i= 0; i < properties.size(); i++) {
+						StructuralPropertyDescriptor property = (StructuralPropertyDescriptor) properties.get(i);
+						Object child = node.getStructuralProperty(property);
+						if (child instanceof ASTNode) {
+							markAsMoveOrCopyTarget(node, (ASTNode) child);
+						} else if (child instanceof List) {
+							List children = (List) child;
+							for (int j= 0; j < children.size(); j++) {
+								ASTNode clonedChild = (ASTNode) children.get(j);
+								markAsMoveOrCopyTarget(node, clonedChild);
+							}
+						}
+					}
+				}
+				
+				node = node.getParent();
+			}
+		}
+		
 		ASTNode source = (ASTNode)this.clonedNodes.get(newChild);
 		if(source != null) {
 			if(this.cloneDepth == 0) {

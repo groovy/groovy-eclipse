@@ -12,6 +12,7 @@
  *     							bug 349326 - [1.7] new warning for missing try-with-resources
  *								bug 265744 - Enum switch should warn about missing default
  *								bug 374605 - Unreasonable warning for enum-based switch statements
+ *								bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -67,7 +68,7 @@ public class SwitchStatement extends Statement {
 				this.expression.checkNPE(currentScope, flowContext, flowInfo);
 			}
 			SwitchFlowContext switchContext =
-				new SwitchFlowContext(flowContext, this, (this.breakLabel = new BranchLabel()));
+				new SwitchFlowContext(flowContext, this, (this.breakLabel = new BranchLabel()), true);
 
 			// analyse the block by considering specially the case/default statements (need to bind them
 			// to the entry point)
@@ -551,19 +552,19 @@ public class SwitchStatement extends Statement {
 			// for enum switch, check if all constants are accounted for (perhaps depending on existence of a default case)
 			if (isEnumSwitch && compilerOptions.complianceLevel >= ClassFileConstants.JDK1_5) {
 				if (this.defaultCase == null || compilerOptions.reportMissingEnumCaseDespiteDefault) {
-				int constantCount = this.constants == null ? 0 : this.constants.length; // could be null if no case statement
-				if (constantCount == this.caseCount
-						&& this.caseCount != ((ReferenceBinding)expressionType).enumConstantCount()) {
-					FieldBinding[] enumFields = ((ReferenceBinding)expressionType.erasure()).fields();
-					for (int i = 0, max = enumFields.length; i <max; i++) {
-						FieldBinding enumConstant = enumFields[i];
-						if ((enumConstant.modifiers & ClassFileConstants.AccEnum) == 0) continue;
-						findConstant : {
-							for (int j = 0; j < this.caseCount; j++) {
-								if ((enumConstant.id + 1) == this.constants[j]) // zero should not be returned see bug 141810
-									break findConstant;
-							}
-							// enum constant did not get referenced from switch
+					int constantCount = this.constants == null ? 0 : this.constants.length; // could be null if no case statement
+					if (constantCount == this.caseCount
+							&& this.caseCount != ((ReferenceBinding)expressionType).enumConstantCount()) {
+						FieldBinding[] enumFields = ((ReferenceBinding)expressionType.erasure()).fields();
+						for (int i = 0, max = enumFields.length; i <max; i++) {
+							FieldBinding enumConstant = enumFields[i];
+							if ((enumConstant.modifiers & ClassFileConstants.AccEnum) == 0) continue;
+							findConstant : {
+								for (int j = 0; j < this.caseCount; j++) {
+									if ((enumConstant.id + 1) == this.constants[j]) // zero should not be returned see bug 141810
+										break findConstant;
+								}
+								// enum constant did not get referenced from switch
 								boolean suppress = (this.defaultCase != null && (this.defaultCase.bits & DocumentedCasesOmitted) != 0);
 								if (!suppress) {
 									upperScope.problemReporter().missingEnumConstantCase(this, enumConstant);

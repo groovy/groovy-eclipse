@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,7 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-
+// GROOVY PATCHED
 import java.util.*;
 
 import org.eclipse.core.runtime.preferences.*;
@@ -29,6 +29,7 @@ public class JavaCorePreferenceInitializer extends AbstractPreferenceInitializer
 	 */
 	public void initializeDefaultPreferences() {
 		// If modified, also modify the method JavaModelManager#getDefaultOptionsNoInitialization()
+		// and also consider updating org.eclipse.jdt.internal.compiler.batch.Main#initializeWarnings(String)
 		// Get options names set
 		HashSet optionNames = JavaModelManager.getJavaModelManager().optionNames;
 

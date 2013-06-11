@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -154,35 +154,35 @@ public interface IJavaElement extends IAdaptable {
 	boolean exists();
 
 	/**
-	 * Returns the first ancestor of this Java element that has the given type.
-	 * Returns <code>null</code> if no such an ancestor can be found.
+	 * Returns this Java element or the first ancestor of this element that has the given type.
+	 * Returns <code>null</code> if no such element can be found.
 	 * This is a handle-only method.
 	 *
 	 * @param ancestorType the given type
-	 * @return the first ancestor of this Java element that has the given type, null if no such an ancestor can be found
+	 * @return this Java element or the first ancestor of this element that has the given type, or <code>null</code> if no such element can be found
 	 * @since 2.0
 	 */
 	IJavaElement getAncestor(int ancestorType);
 
 	/**
-	 * <p>Returns the Javadoc as an html source if this element has an attached javadoc,
-	 * null otherwise.</p>
-	 * <p>This should be used only for binary elements. Source elements will always return null.</p>
-	 * <p>The encoding used to read the javadoc is the one defined by the content type of the
-	 * file. If none is defined, then the project's encoding of this java element is used. If the project's
+	 * <p>Returns the Javadoc as HTML source if this element has attached Javadoc,
+	 * <code>null</code> otherwise.</p>
+	 * <p>This should be used only for binary elements. Source elements will always return <code>null</code>.</p>
+	 * <p>The encoding used to read the Javadoc is the one defined by the content type of the
+	 * file. If none is defined, then the project's encoding of this Java element is used. If the project's
 	 * encoding cannot be retrieved, then the platform encoding is used.</p>
-	 * <p>In case of the javadoc doesn't exist for this element, null is returned.</p>
+	 * <p>In case the Javadoc doesn't exist for this element, <code>null</code> is returned.</p>
 	 *
-	 * <p>The html is extracted from the attached javadoc and provided as is. No
+	 * <p>The HTML is extracted from the attached Javadoc and provided as is. No
 	 * transformation or validation is done.</p>
 	 *
-	 * @param monitor the given progress monitor
+	 * @param monitor the given progress monitor, can be <code>null</code>
 	 * @exception JavaModelException if:<ul>
 	 *  <li>this element does not exist</li>
 	 *  <li>retrieving the attached javadoc fails (timed-out, invalid URL, ...)</li>
 	 *  <li>the format of the javadoc doesn't match expected standards (different anchors,...)</li>
 	 *  </ul>
-	 * @return the extracted javadoc from the attached javadoc, null if none
+	 * @return the extracted javadoc from the attached javadoc, <code>null</code> if none
 	 * @see IClasspathAttribute#JAVADOC_LOCATION_ATTRIBUTE_NAME
 	 * @since 3.2
 	 */

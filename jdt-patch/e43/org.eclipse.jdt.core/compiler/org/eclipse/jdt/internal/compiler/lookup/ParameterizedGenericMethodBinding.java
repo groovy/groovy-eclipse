@@ -7,7 +7,9 @@
  * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Stephan Herrmann - Contribution for bug 186342 - [compiler][null] Using annotations for null checking
+ *     Stephan Herrmann - Contributions for
+ *								bug 186342 - [compiler][null] Using annotations for null checking
+ *								bug 395002 - Self bound generic class doesn't resolve bounds properly for wildcards for certain parametrisation.
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -107,7 +109,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 		    }
 		    
 		    if (uncheckedArguments != null && uncheckedArguments[i] == null) continue; // only bound check if inferred through 15.12.2.6
-			switch (typeVariable.boundCheck(substitution, substituteForChecks)) {
+			switch (typeVariable.boundCheck(substitution, substituteForChecks, scope)) {
 				case TypeConstants.MISMATCH :
 			        // incompatible due to bound check
 					int argLength = arguments.length;
@@ -259,7 +261,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 					if (substitute != null) continue nextTypeParameter; // already inferred previously
 					TypeBinding [] bounds = inferenceContext.getSubstitutes(current, TypeConstants.CONSTRAINT_EXTENDS);
 					if (bounds == null) continue nextTypeParameter;
-					TypeBinding[] glb = Scope.greaterLowerBound(bounds);
+					TypeBinding[] glb = Scope.greaterLowerBound(bounds, scope);
 					TypeBinding mostSpecificSubstitute = null;
 					// https://bugs.eclipse.org/bugs/show_bug.cgi?id=341795 - Per 15.12.2.8, we should fully apply glb
 					if (glb != null) {

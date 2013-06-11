@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -232,7 +232,7 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 * <p>
 	 * The result does not include package fragment roots in other projects
 	 * referenced on this project's classpath.
-	 *
+	 * 
 	 * @param entry the given entry
 	 * @return the existing package fragment roots identified by the given entry
 	 * @see IClasspathContainer
@@ -240,13 +240,13 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 */
 	IPackageFragmentRoot[] findPackageFragmentRoots(IClasspathEntry entry);
 	/**
-	 * Returns the first type found following this project's classpath
-	 * with the given fully qualified name or <code>null</code> if none is found.
+	 * Returns the first type (excluding secondary types) found following this project's
+	 * classpath with the given fully qualified name or <code>null</code> if none is found.
 	 * The fully qualified name is a dot-separated name. For example,
 	 * a class B defined as a member type of a class A in package x.y should have a
 	 * the fully qualified name "x.y.A.B".
 	 *
-	 * Note that in order to be found, a type name (or its toplevel enclosing
+	 * Note that in order to be found, a type name (or its top level enclosing
 	 * type name) must match its corresponding compilation unit name. As a
 	 * consequence, secondary types cannot be found using this functionality.
 	 * To find secondary types use {@link #findType(String, IProgressMonitor)} instead.
@@ -261,8 +261,8 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 */
 	IType findType(String fullyQualifiedName) throws JavaModelException;
 	/**
-	 * Same functionality as {@link #findType(String)} but also look for secondary
-	 * types if given name does not match a compilation unit name.
+	 * Same functionality as {@link #findType(String)} but also looks for secondary
+	 * types if the given name does not match a compilation unit name.
 	 *
 	 * @param fullyQualifiedName the given fully qualified name
 	 * @param progressMonitor the progress monitor to report progress to,
@@ -276,15 +276,15 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 */
 	IType findType(String fullyQualifiedName, IProgressMonitor progressMonitor) throws JavaModelException;
 	/**
-	 * Returns the first type found following this project's classpath
-	 * with the given fully qualified name or <code>null</code> if none is found.
+	 * Returns the first type (excluding secondary types) found following this project's
+	 * classpath with the given fully qualified name or <code>null</code> if none is found.
 	 * The fully qualified name is a dot-separated name. For example,
 	 * a class B defined as a member type of a class A in package x.y should have a
 	 * the fully qualified name "x.y.A.B".
 	 * If the returned type is part of a compilation unit, its owner is the given
 	 * owner.
 	 *
-	 * Note that in order to be found, a type name (or its toplevel enclosing
+	 * Note that in order to be found, a type name (or its top level enclosing
 	 * type name) must match its corresponding compilation unit name. As a
 	 * consequence, secondary types cannot be found using this functionality.
 	 * To find secondary types use {@link #findType(String, WorkingCopyOwner, IProgressMonitor)}
@@ -302,7 +302,7 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	IType findType(String fullyQualifiedName, WorkingCopyOwner owner) throws JavaModelException;
 	/**
 	 * Same functionality as {@link #findType(String, WorkingCopyOwner)}
-	 * but also look for secondary types if given name does not match
+	 * but also looks for secondary types if the given name does not match
 	 * a compilation unit name.
 	 *
 	 * @param fullyQualifiedName the given fully qualified name
@@ -318,15 +318,15 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 */
 	IType findType(String fullyQualifiedName, WorkingCopyOwner owner, IProgressMonitor progressMonitor) throws JavaModelException;
 	/**
-	 * Returns the first type found following this project's classpath
-	 * with the given package name and type qualified name
+	 * Returns the first type (excluding secondary types) found following this
+	 * project's classpath with the given package name and type qualified name
 	 * or <code>null</code> if none is found.
 	 * The package name is a dot-separated name.
 	 * The type qualified name is also a dot-separated name. For example,
 	 * a class B defined as a member type of a class A should have the
 	 * type qualified name "A.B".
 	 *
-	 * Note that in order to be found, a type name (or its toplevel enclosing
+	 * Note that in order to be found, a type name (or its top level enclosing
 	 * type name) must match its corresponding compilation unit name. As a
 	 * consequence, secondary types cannot be found using this functionality.
 	 * To find secondary types use {@link #findType(String, String, IProgressMonitor)}
@@ -344,8 +344,8 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 */
 	IType findType(String packageName, String typeQualifiedName) throws JavaModelException;
 	/**
-	 * Same functionality as {@link #findType(String, String)} but also look for
-	 * secondary types if given name does not match a compilation unit name.
+	 * Same functionality as {@link #findType(String, String)} but also looks for
+	 * secondary types if the given name does not match a compilation unit name.
 	 *
 	 * @param packageName the given package name
 	 * @param typeQualifiedName the given type qualified name
@@ -360,8 +360,8 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 */
 	IType findType(String packageName, String typeQualifiedName, IProgressMonitor progressMonitor) throws JavaModelException;
 	/**
-	 * Returns the first type found following this project's classpath
-	 * with the given package name and type qualified name
+	 * Returns the first type (excluding secondary types) found following this
+	 * project's classpath with the given package name and type qualified name
 	 * or <code>null</code> if none is found.
 	 * The package name is a dot-separated name.
 	 * The type qualified name is also a dot-separated name. For example,
@@ -370,7 +370,7 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 * If the returned type is part of a compilation unit, its owner is the given
 	 * owner.
 	 *
-	 * Note that in order to be found, a type name (or its toplevel enclosing
+	 * Note that in order to be found, a type name (or its top level enclosing
 	 * type name) must match its corresponding compilation unit name. As a
 	 * consequence, secondary types cannot be found using this functionality.
 	 * To find secondary types use {@link #findType(String, String, WorkingCopyOwner, IProgressMonitor)}
@@ -390,7 +390,7 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	IType findType(String packageName, String typeQualifiedName, WorkingCopyOwner owner) throws JavaModelException;
 	/**
 	 * Same functionality as {@link #findType(String, String, WorkingCopyOwner)}
-	 * but also look for secondary types if given name does not match a compilation unit name.
+	 * but also looks for secondary types if the given name does not match a compilation unit name.
 	 *
 	 * @param packageName the given package name
 	 * @param typeQualifiedName the given type qualified name
@@ -544,7 +544,7 @@ public interface IJavaProject extends IParent, IJavaElement, IOpenable {
 	 * <p>
 	 * The result does not include package fragment roots in other projects
 	 * referenced on this project's classpath.
-	 *
+	 * 
 	 * @param entry the given entry
 	 * @return the existing package fragment roots identified by the given entry
 	 * @see IClasspathContainer

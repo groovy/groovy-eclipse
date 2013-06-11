@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,10 @@
  *								bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
  *								bug 365859 - [compiler][null] distinguish warnings based on flow analysis vs. null annotations
  *								bug 385626 - @NonNull fails across loop boundaries
+ *								bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
+ *								bug 376263 - Bogus "Potential null pointer access" warning
+ *								bug 403147 - [compiler][null] FUP of bug 400761: consolidate interaction between unboxing, NPE, and deferred checking
+ *								bug 406384 - Internal error with I20130413
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.flow;
 
@@ -53,7 +57,7 @@ public class LoopingFlowContext extends SwitchFlowContext {
 	int assignCount = 0;
 
 	// the following three arrays are in sync regarding their indices:
-	LocalVariableBinding[] nullLocals;
+	LocalVariableBinding[] nullLocals; // slots can be null for checkType == IN_UNBOXING
 	ASTNode[] nullReferences;	// Expressions for null checking, Statements for resource analysis
 								// cast to Expression is safe if corresponding nullCheckType != EXIT_RESOURCE
 	int[] nullCheckTypes;
@@ -85,8 +89,9 @@ public class LoopingFlowContext extends SwitchFlowContext {
 		ASTNode associatedNode,
 		BranchLabel breakLabel,
 		BranchLabel continueLabel,
-		Scope associatedScope) {
-		super(parent, associatedNode, breakLabel);
+		Scope associatedScope,
+		boolean isPreTest) {
+		super(parent, associatedNode, breakLabel, isPreTest);
 		this.tagBits |= FlowContext.PREEMPT_NULL_DIAGNOSTIC;
 			// children will defer to this, which may defer to its own parent
 		this.continueLabel = continueLabel;
@@ -146,6 +151,7 @@ public void complainOnDeferredNullChecks(BlockScope scope, FlowInfo callerFlowIn
 			addPotentialNullInfoFrom(this.innerFlowInfos[i]);
 	}
 	this.innerFlowContextsCount = 0;
+	FlowInfo upstreamCopy = this.upstreamNullFlowInfo.copy();
 	UnconditionalFlowInfo flowInfo = this.upstreamNullFlowInfo.
 		addPotentialNullInfoFrom(callerFlowInfo.unconditionalInitsWithoutSideEffect());
 	if ((this.tagBits & FlowContext.DEFER_NULL_DIAGNOSTIC) != 0) {
@@ -272,11 +278,18 @@ public void complainOnDeferredNullChecks(BlockScope scope, FlowInfo callerFlowIn
 							}
 						}
 					break;
+				case IN_UNBOXING:
+					checkUnboxing(scope, (Expression) location, flowInfo);
+					continue; // delegation to parent already handled in the above.
 				default:
 					// never happens
 			}
-			this.parent.recordUsingNullReference(scope, local, location,
-					this.nullCheckTypes[i], flowInfo);
+			// https://bugs.eclipse.org/376263: avoid further deferring if the upstream info
+			// already has definite information (which might get lost for deferred checking).
+			if (!(this.nullCheckTypes[i] == MAY_NULL && upstreamCopy.isDefinitelyNonNull(local))) {
+				this.parent.recordUsingNullReference(scope, local, location,
+						this.nullCheckTypes[i], flowInfo);
+			}
 		}
 	}
 	else {
@@ -387,6 +400,9 @@ public void complainOnDeferredNullChecks(BlockScope scope, FlowInfo callerFlowIn
 							continue;
 						}
 					}
+					break;
+				case IN_UNBOXING:
+					checkUnboxing(scope, (Expression) location, flowInfo);
 					break;
 				default:
 					// never happens
@@ -510,7 +526,7 @@ public void recordContinueFrom(FlowContext innerFlowContext, FlowInfo flowInfo) 
 	}
 
 protected void recordNullReference(LocalVariableBinding local,
-	ASTNode expression, int status) {
+	ASTNode expression, int checkType) {
 	if (this.nullCount == 0) {
 		this.nullLocals = new LocalVariableBinding[5];
 		this.nullReferences = new ASTNode[5];
@@ -526,7 +542,13 @@ protected void recordNullReference(LocalVariableBinding local,
 	}
 	this.nullLocals[this.nullCount] = local;
 	this.nullReferences[this.nullCount] = expression;
-	this.nullCheckTypes[this.nullCount++] = status;
+	this.nullCheckTypes[this.nullCount++] = checkType;
+}
+public void recordUnboxing(Scope scope, Expression expression, int nullStatus, FlowInfo flowInfo) {
+	if (nullStatus == FlowInfo.NULL)
+		super.recordUnboxing(scope, expression, nullStatus, flowInfo);
+	else // defer checking:
+		recordNullReference(null, expression, IN_UNBOXING);
 }
 
 /** Record the fact that we see an early exit (in 'reference') while 'trackingVar' is in scope and may be unclosed. */

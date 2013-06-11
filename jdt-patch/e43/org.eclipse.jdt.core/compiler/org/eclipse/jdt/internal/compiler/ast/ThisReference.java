@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,11 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *								bug 331649 - [compiler][null] consider null annotations for fields
+ *								bug 383368 - [compiler][null] syntactic null analysis for field references
+ *     Jesper S Moller - Contributions for
+ *								Bug 378674 - "The method can be declared as static" is wrong
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -53,7 +58,12 @@ public class ThisReference extends Reference {
 			methodScope.problemReporter().errorThisSuperInStatic(this);
 			return false;
 		}
+		methodScope.resetEnclosingMethodStaticFlag();
 		return true;
+	}
+
+	public boolean checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInfo) {
+		return true; // never problematic
 	}
 
 	/*
@@ -98,10 +108,6 @@ public class ThisReference extends Reference {
 		return true ;
 	}
 
-	public int nullStatus(FlowInfo flowInfo) {
-		return FlowInfo.NON_NULL;
-	}
-
 	public StringBuffer printExpression(int indent, StringBuffer output){
 
 		if (isImplicitThis()) return output;
@@ -126,14 +132,5 @@ public class ThisReference extends Reference {
 
 		visitor.visit(this, blockScope);
 		visitor.endVisit(this, blockScope);
-	}
-
-	public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
-		if (!isImplicitThis()) {
-			// explicit this reference, not allowed in static context
-			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=335780
-			currentScope.resetEnclosingMethodStaticFlag();
-		}
-		return super.analyseCode(currentScope, flowContext, flowInfo);
 	}
 }

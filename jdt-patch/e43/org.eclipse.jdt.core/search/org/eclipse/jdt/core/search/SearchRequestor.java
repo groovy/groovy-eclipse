@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -55,7 +55,7 @@ public abstract class SearchRequestor {
 	/**
 	 * Notification sent after having completed the search action.
 	 * Typically, this would tell a search requestor collector that no more
-	 * results will be forthcomping in this search.
+	 * results will be forthcoming in this search.
 	 * <p>
 	 * The default implementation of this method does nothing. Subclasses
 	 * may override.

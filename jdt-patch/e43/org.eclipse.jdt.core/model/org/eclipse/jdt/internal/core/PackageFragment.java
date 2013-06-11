@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,7 +29,6 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaModelStatusConstants;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
@@ -506,9 +505,12 @@ public String getAttachedJavadoc(IProgressMonitor monitor) throws JavaModelExcep
 	pathBuffer.append(packPath).append('/').append(JavadocConstants.PACKAGE_FILE_NAME);
 
 	if (monitor != null && monitor.isCanceled()) throw new OperationCanceledException();
-	final String contents = getURLContents(String.valueOf(pathBuffer));
+	String contents = getURLContents(String.valueOf(pathBuffer));
 	if (monitor != null && monitor.isCanceled()) throw new OperationCanceledException();
-	if (contents == null) throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.CANNOT_RETRIEVE_ATTACHED_JAVADOC, this));
+	if (contents == null) return null;
+	
+	contents = (new JavadocContents(contents)).getPackageDoc();
+	if (contents == null) contents = ""; //$NON-NLS-1$
 	synchronized (projectInfo.javadocCache) {
 		projectInfo.javadocCache.put(this, contents);
 	}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -314,8 +314,21 @@ private void generateMethodInfos(IType type, IBinaryType typeInfo, HashMap newEl
 				argumentNames[j] = ("arg" + j).toCharArray(); //$NON-NLS-1$
 			}
 		}
-		for (int j = 0; j < max; j++) {
-			IBinaryAnnotation[] parameterAnnotations = methodInfo.getParameterAnnotations(j);
+		int startIndex = 0;
+		try {
+			if (isConstructor) {
+				if (type.isEnum()) {
+					startIndex = 2;
+				} else if (type.isMember()
+						&& !Flags.isStatic(type.getFlags())) {
+					startIndex = 1;
+				}
+			}
+		} catch(JavaModelException e) {
+			// ignore
+		}
+		for (int j = startIndex; j < max; j++) {
+			IBinaryAnnotation[] parameterAnnotations = methodInfo.getParameterAnnotations(j - startIndex);
 			if (parameterAnnotations != null) {
 				LocalVariable localVariable = new LocalVariable(
 						method,

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,10 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *								bug 395002 - Self bound generic class doesn't resolve bounds properly for wildcards for certain parametrisation.
+ *								bug 331649 - [compiler][null] consider null annotations for fields
+ *								bug 400761 - [compiler][null] null may be return as boolean without a diagnostic
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -74,6 +78,17 @@ public FlowInfo analyseCode(MethodScope initializationScope, FlowContext flowCon
 				.analyseCode(initializationScope, flowContext, flowInfo)
 				.unconditionalInits();
 		flowInfo.markAsDefinitelyAssigned(this.binding);
+	}
+	if (this.initialization != null) {
+		if (this.binding.isNonNull()) {
+			int nullStatus = this.initialization.nullStatus(flowInfo, flowContext);
+			// check against annotation @NonNull:
+			if (nullStatus != FlowInfo.NON_NULL) {
+				char[][] annotationName = initializationScope.environment().getNonNullAnnotationName();
+				initializationScope.problemReporter().nullityMismatch(this.initialization, this.initialization.resolvedType, this.binding.type, nullStatus, annotationName);
+			}
+		}
+		this.initialization.checkNPEbyUnboxing(initializationScope, flowContext, flowInfo);
 	}
 	return flowInfo;
 }
@@ -224,7 +239,7 @@ public void resolve(MethodScope initializationScope) {
 				if (fieldType != initializationType) // must call before computeConversion() and typeMismatchError()
 					initializationScope.compilationUnitScope().recordTypeConversion(fieldType, initializationType);
 				if (this.initialization.isConstantValueOfTypeAssignableToType(initializationType, fieldType)
-						|| initializationType.isCompatibleWith(fieldType)) {
+						|| initializationType.isCompatibleWith(fieldType, classScope)) {
 					this.initialization.computeConversion(initializationScope, fieldType, initializationType);
 					if (initializationType.needsUncheckedConversion(fieldType)) {
 						    initializationScope.problemReporter().unsafeTypeConversion(this.initialization, initializationType, fieldType);

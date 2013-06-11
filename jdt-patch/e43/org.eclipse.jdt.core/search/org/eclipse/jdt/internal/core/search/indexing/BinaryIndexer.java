@@ -9,7 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.indexing;
-
+// GROOVY PATCHED
 import java.util.Iterator;
 import java.util.List;
 

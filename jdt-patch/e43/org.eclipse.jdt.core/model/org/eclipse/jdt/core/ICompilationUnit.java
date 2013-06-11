@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -580,11 +580,12 @@ boolean isWorkingCopy();
  * <p>
  * If requested, a DOM AST representing the compilation unit is returned.
  * Its bindings are computed only if the problem requestor is active.
- * This method returns <code>null</code> if the creation of the DOM AST was not requested,
- * or if the requested level of AST API is not supported, or if the working copy was
- * already consistent.
- * </p>
- *
+ * This method returns <code>null</code> if one of the following conditions is true:
+ * <ul>
+ *   <li>the creation of the DOM AST is not requested</li>
+ *   <li>the requested level of AST API is not supported</li>
+ *   <li>the working copy was already consistent and problem detection is not forced</li>
+ * </ul>
  * <p>
  * This method doesn't perform statements recovery. To recover statements with syntax
  * errors, {@link #reconcile(int, boolean, boolean, WorkingCopyOwner, IProgressMonitor)} must be use.
@@ -598,9 +599,12 @@ boolean isWorkingCopy();
  *   original compilation units, or <code>null</code> if the primary working
  *   copy owner should be used
  * @param monitor a progress monitor
- * @return the compilation unit AST or <code>null</code> if not requested,
- *    or if the requested level of AST API is not supported,
- *    or if the working copy was consistent
+ * @return the compilation unit AST or <code>null</code> if one of the following conditions is true:
+ * <ul>
+ *   <li>the creation of the DOM AST is not requested</li>
+ *   <li>the requested level of AST API is not supported</li>
+ *   <li>the working copy was already consistent and problem detection is not forced</li>
+ * </ul>
  * @throws JavaModelException if the contents of the original element
  *		cannot be accessed. Reasons include:
  * <ul>
@@ -643,10 +647,12 @@ CompilationUnit reconcile(int astLevel, boolean forceProblemDetection, WorkingCo
  * <p>
  * If requested, a DOM AST representing the compilation unit is returned.
  * Its bindings are computed only if the problem requestor is active.
- * This method returns <code>null</code> if the creation of the DOM AST was not requested,
- * or if the requested level of AST API is not supported, or if the working copy was
- * already consistent.
- * </p>
+ * This method returns <code>null</code> if one of the following conditions is true:
+ * <ul>
+ *   <li>the creation of the DOM AST is not requested</li>
+ *   <li>the requested level of AST API is not supported</li>
+ *   <li>the working copy was already consistent and problem detection is not forced</li>
+ * </ul>
  *
  * <p>
  * If statements recovery is enabled then this method tries to rebuild statements
@@ -663,9 +669,12 @@ CompilationUnit reconcile(int astLevel, boolean forceProblemDetection, WorkingCo
  *   original compilation units, or <code>null</code> if the primary working
  *   copy owner should be used
  * @param monitor a progress monitor
- * @return the compilation unit AST or <code>null</code> if not requested,
- *    or if the requested level of AST API is not supported,
- *    or if the working copy was consistent
+ * @return the compilation unit AST or <code>null</code> if one of the following conditions is true:
+ * <ul>
+ *   <li>the creation of the DOM AST is not requested</li>
+ *   <li>the requested level of AST API is not supported</li>
+ *   <li>the working copy was already consistent and problem detection is not forced</li>
+ * </ul>
  * @throws JavaModelException if the contents of the original element
  *		cannot be accessed. Reasons include:
  * <ul>
@@ -711,9 +720,12 @@ CompilationUnit reconcile(int astLevel, boolean forceProblemDetection, boolean e
  * <p>
  * If requested, a DOM AST representing the compilation unit is returned.
  * Its bindings are computed only if the problem requestor is active.
- * This method returns <code>null</code> if the creation of the DOM AST was not requested,
- * or if the requested level of AST API is not supported, or if the working copy was
- * already consistent.
+ * This method returns <code>null</code> if one of the following conditions is true:
+ * <ul>
+ *   <li>the creation of the DOM AST is not requested</li>
+ *   <li>the requested level of AST API is not supported</li>
+ *   <li>the working copy was already consistent and problem detection is not forced</li>
+ * </ul>
  * </p>
  *
  * <p>
@@ -735,9 +747,12 @@ CompilationUnit reconcile(int astLevel, boolean forceProblemDetection, boolean e
  *   original compilation units, or <code>null</code> if the primary working
  *   copy owner should be used
  * @param monitor a progress monitor
- * @return the compilation unit AST or <code>null</code> if not requested,
- *    or if the requested level of AST API is not supported,
- *    or if the working copy was consistent
+ * @return the compilation unit AST or <code>null</code> if one of the following conditions is true:
+ * <ul>
+ *   <li>the creation of the DOM AST is not requested</li>
+ *   <li>the requested level of AST API is not supported</li>
+ *   <li>the working copy was already consistent and problem detection is not forced</li>
+ * </ul>
  * @throws JavaModelException if the contents of the original element
  *		cannot be accessed. Reasons include:
  * <ul>

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -723,10 +723,14 @@ public boolean hasFineGrainChanges() {
 	return collector != null && collector.needsRefresh();
 }
 /**
- * Returns whether one of the subtypes in this hierarchy has the given simple name
- * or this type has the given simple name.
+ * Returns whether this type or one of the subtypes in this hierarchy has the
+ * same simple name as the given name.
  */
-private boolean hasSubtypeNamed(String simpleName) {
+private boolean hasSubtypeNamed(String name) {
+	int idx = -1;
+	String rawName = (idx = name.indexOf('<')) > -1 ? name.substring(0, idx) : name;
+	String simpleName = (idx = rawName.lastIndexOf('.')) > -1 ? rawName.substring(idx + 1) : rawName;
+
 	if (this.focusType != null && this.focusType.getElementName().equals(simpleName)) {
 		return true;
 	}
@@ -1457,11 +1461,7 @@ boolean subtypesIncludeSupertypeOf(IType type) {
 	if (superclassName == null) {
 		superclassName = "Object"; //$NON-NLS-1$
 	}
-	int dot = -1;
-	String simpleSuper = (dot = superclassName.lastIndexOf('.')) > -1 ?
-		superclassName.substring(dot + 1) :
-		superclassName;
-	if (hasSubtypeNamed(simpleSuper)) {
+	if (hasSubtypeNamed(superclassName)) {
 		return true;
 	}
 
@@ -1475,12 +1475,8 @@ boolean subtypesIncludeSupertypeOf(IType type) {
 		return false;
 	}
 	for (int i = 0, length = interfaceNames.length; i < length; i++) {
-		dot = -1;
 		String interfaceName = interfaceNames[i];
-		String simpleInterface = (dot = interfaceName.lastIndexOf('.')) > -1 ?
-			interfaceName.substring(dot) :
-			interfaceName;
-		if (hasSubtypeNamed(simpleInterface)) {
+		if (hasSubtypeNamed(interfaceName)) {
 			return true;
 		}
 	}

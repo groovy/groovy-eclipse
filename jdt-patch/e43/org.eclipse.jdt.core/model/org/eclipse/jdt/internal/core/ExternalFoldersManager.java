@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,7 +11,6 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -25,7 +24,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -161,46 +159,10 @@ public class ExternalFoldersManager {
 									IProject externalFoldersProject, IProgressMonitor monitor) throws CoreException {
 		
 		IFolder result = addFolder(externalFolderPath, externalFoldersProject, false);
-		try {
-			if (!result.exists())
-				result.createLink(externalFolderPath, IResource.ALLOW_MISSING_LOCAL, monitor);
-			else if (refreshIfExistAlready)
-				result.refreshLocal(IResource.DEPTH_INFINITE,  monitor);
-		}
-		catch(IllegalArgumentException e) {
-			if (System.getProperty("jdt.bug.367669") != null) { //$NON-NLS-1$
-				System.out.println("============================================================================================================"); //$NON-NLS-1$
-				System.out.println("The following logs are created for troubleshooting bug: https://bugs.eclipse.org/bugs/show_bug.cgi?id=367669"); //$NON-NLS-1$
-				System.out.println("Exteral folder: " + externalFolderPath); //$NON-NLS-1$
-				System.out.println("Link folder: " + result.toString()); //$NON-NLS-1$
-				File externalFile = new File(externalFolderPath.toOSString());
-				System.out.println(externalFile.exists() ? "External folder exists" : "ERROR: External folder DOES NOT exist"); //$NON-NLS-1$ //$NON-NLS-2$
-				System.out.println(result.exists() ? "Link for folder exists" : "ERROR: Link for folder does not exist");  //$NON-NLS-1$//$NON-NLS-2$
-				IProject externalFolderProject = getExternalFoldersProject();
-				IFile externalProjectFile = externalFolderProject.getFile(IProjectDescription.DESCRIPTION_FILE_NAME);
-				if (externalProjectFile.exists()) {
-					System.out.println("External Folder Project exists with following content:"); //$NON-NLS-1$
-					BufferedInputStream bs = new BufferedInputStream(externalProjectFile.getContents());
-					int available = 0;
-					try {
-						while ((available = bs.available()) > 0) {
-							byte[] contents = new byte[available];
-							bs.read(contents);
-							System.out.println(new String(contents));
-						}
-						bs.close();
-					} catch (IOException e1) {
-						System.out.println("Error reading external folder project file: Here is the stack trace:"); //$NON-NLS-1$
-						e1.printStackTrace();
-					}
-				}
-				else {
-					System.out.println("ERROR: External folders project doesn't exist."); //$NON-NLS-1$
-				}
-				System.out.println("========================================== Debug information ends =========================================="); //$NON-NLS-1$
-			}
-			throw e;
-		}
+		if (!result.exists())
+			result.createLink(externalFolderPath, IResource.ALLOW_MISSING_LOCAL, monitor);
+		else if (refreshIfExistAlready)
+			result.refreshLocal(IResource.DEPTH_INFINITE,  monitor);
 		return result;
 	}
 

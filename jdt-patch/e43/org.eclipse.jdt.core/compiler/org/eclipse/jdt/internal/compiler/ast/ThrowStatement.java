@@ -10,6 +10,7 @@
  *     Stephan Herrmann - Contributions for
  *								bug 359334 - Analysis for resource leak warnings does not consider exceptions as method exit points
  *								bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
+ *								bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -39,6 +40,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	// need to check that exception thrown is actually caught somewhere
 	flowContext.checkExceptionHandlers(this.exceptionType, this, flowInfo, currentScope);
 	currentScope.checkUnclosedCloseables(flowInfo, flowContext, this, currentScope);
+	flowContext.recordAbruptExit();
 	return FlowInfo.DEAD_END;
 }
 

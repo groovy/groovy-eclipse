@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,7 +7,10 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Stephan Herrmann - Contribution for bug 319201 - [null] no warning when unboxing SingleNameReference causes NPE
+ *     Stephan Herrmann - Contributions for
+ *								bug 319201 - [null] no warning when unboxing SingleNameReference causes NPE
+ *								bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
+ *								bug 403147 - [compiler][null] FUP of bug 400761: consolidate interaction between unboxing, NPE, and deferred checking
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -31,11 +34,11 @@ public class ArrayAllocationExpression extends Expression {
 			Expression dim;
 			if ((dim = this.dimensions[i]) != null) {
 				flowInfo = dim.analyseCode(currentScope, flowContext, flowInfo);
-				if ((dim.implicitConversion & TypeIds.UNBOXING) != 0) {
-					dim.checkNPE(currentScope, flowContext, flowInfo);
-				}
+				dim.checkNPEbyUnboxing(currentScope, flowContext, flowInfo);
 			}
 		}
+		// account for potential OutOfMemoryError:
+		flowContext.recordAbruptExit();
 		if (this.initializer != null) {
 			return this.initializer.analyseCode(currentScope, flowContext, flowInfo);
 		}

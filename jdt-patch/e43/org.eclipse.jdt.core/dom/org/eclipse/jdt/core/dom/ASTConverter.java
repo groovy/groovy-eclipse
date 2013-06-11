@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *								bug 393719 - [compiler] inconsistent warnings on iteration variables
  *******************************************************************************/
 
 package org.eclipse.jdt.core.dom;
@@ -55,6 +57,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.parser.RecoveryScanner;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
 import org.eclipse.jdt.internal.compiler.parser.TerminalTokens;
+import org.eclipse.jdt.internal.core.dom.SourceRangeVerifier;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -1320,6 +1323,26 @@ class ASTConverter {
 				lookupForScopes();
 			}
 			compilationUnit.initCommentMapper(this.scanner);
+			if (SourceRangeVerifier.DEBUG) {
+				String bugs = new SourceRangeVerifier().process(compilationUnit);
+				if (bugs != null) {
+					StringBuffer message = new StringBuffer("Bad AST node structure:");  //$NON-NLS-1$
+					String lineDelimiter = Util.findLineSeparator(source);
+					if (lineDelimiter == null) lineDelimiter = System.getProperty("line.separator");//$NON-NLS-1$
+					message.append(lineDelimiter);
+					message.append(bugs.replaceAll("\n", lineDelimiter)); //$NON-NLS-1$
+					message.append(lineDelimiter);
+					message.append("----------------------------------- SOURCE BEGIN -------------------------------------"); //$NON-NLS-1$
+					message.append(lineDelimiter);
+					message.append(source);
+					message.append(lineDelimiter);
+					message.append("----------------------------------- SOURCE END -------------------------------------"); //$NON-NLS-1$
+					Util.log(new IllegalStateException("Bad AST node structure"), message.toString()); //$NON-NLS-1$
+					if (SourceRangeVerifier.DEBUG_THROW) {
+						throw new IllegalStateException(message.toString());
+					}
+				}
+			}
 			return compilationUnit;
 		} catch(IllegalArgumentException e) {
 			StringBuffer message = new StringBuffer("Exception occurred during compilation unit conversion:");  //$NON-NLS-1$
@@ -3000,7 +3023,11 @@ class ASTConverter {
 		variableDecl.setExtraDimensions(extraDimensions);
 		Type type = convertType(localDeclaration.type);
 		int typeEnd = type.getStartPosition() + type.getLength() - 1;
-		int rightEnd = Math.max(typeEnd, localDeclaration.declarationSourceEnd);
+		// https://bugs.eclipse.org/393719 - [compiler] inconsistent warnings on iteration variables
+		// compiler considers collectionExpression as within the declarationSourceEnd, DOM AST must use the shorter range to avoid overlap
+		int sourceEnd = ((localDeclaration.bits & org.eclipse.jdt.internal.compiler.ast.ASTNode.IsForeachElementVariable) != 0)  
+				? localDeclaration.sourceEnd : localDeclaration.declarationSourceEnd;
+		int rightEnd = Math.max(typeEnd, sourceEnd);
 		/*
 		 * There is extra work to do to set the proper type positions
 		 * See PR http://bugs.eclipse.org/bugs/show_bug.cgi?id=23284

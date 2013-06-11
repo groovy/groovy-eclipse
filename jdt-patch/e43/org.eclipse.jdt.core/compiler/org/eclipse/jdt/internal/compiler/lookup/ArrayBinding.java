@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *								bug 395002 - Self bound generic class doesn't resolve bounds properly for wildcards for certain parametrisation.
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -164,7 +166,7 @@ public int hashCode() {
 
 /* Answer true if the receiver type can be assigned to the argument type (right)
 */
-public boolean isCompatibleWith(TypeBinding otherType) {
+public boolean isCompatibleWith(TypeBinding otherType, Scope captureScope) {
 	if (this == otherType)
 		return true;
 
@@ -191,7 +193,7 @@ public boolean isCompatibleWith(TypeBinding otherType) {
 				TypeBinding otherLowerBound;
 				if ((otherLowerBound = otherCapture.lowerBound) != null) {
 					if (!otherLowerBound.isArrayType()) return false;
-					return isCompatibleWith(otherLowerBound);
+					return isCompatibleWith(otherLowerBound, captureScope);
 				}
 			}
 			return false;

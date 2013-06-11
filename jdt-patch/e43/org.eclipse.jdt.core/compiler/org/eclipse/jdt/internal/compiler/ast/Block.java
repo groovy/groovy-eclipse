@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,9 @@
  *     Stephan Herrmann - Contributions for
  *								bug 349326 - [1.7] new warning for missing try-with-resources
  *								bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
+ *								bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
+ *								bug 383368 - [compiler][null] syntactic null analysis for field references
+ *								bug 402993 - [null] Follow up of bug 401088: Missing warning about redundant null check
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -33,10 +36,16 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	// empty block
 	if (this.statements == null)	return flowInfo;
 	int complaintLevel = (flowInfo.reachMode() & FlowInfo.UNREACHABLE) != 0 ? Statement.COMPLAINED_FAKE_REACHABLE : Statement.NOT_COMPLAINED;
+	boolean enableSyntacticNullAnalysisForFields = currentScope.compilerOptions().enableSyntacticNullAnalysisForFields;
 	for (int i = 0, max = this.statements.length; i < max; i++) {
 		Statement stat = this.statements[i];
 		if ((complaintLevel = stat.complainIfUnreachable(flowInfo, this.scope, complaintLevel, true)) < Statement.COMPLAINED_UNREACHABLE) {
 			flowInfo = stat.analyseCode(this.scope, flowContext, flowInfo);
+		}
+		// record the effect of stat on the finally block of an enclosing try-finally, if any:
+		flowContext.mergeFinallyNullInfo(flowInfo);
+		if (enableSyntacticNullAnalysisForFields) {
+			flowContext.expireNullCheckedFieldInfo();
 		}
 	}
 	if (this.explicitDeclarations > 0) {

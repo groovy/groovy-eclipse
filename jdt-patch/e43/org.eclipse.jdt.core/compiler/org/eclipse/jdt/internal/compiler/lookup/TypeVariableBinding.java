@@ -12,6 +12,7 @@
  *     							bug 349326 - [1.7] new warning for missing try-with-resources
  *     							bug 359362 - FUP of bug 349326: Resource leak on non-Closeable resource
  *								bug 358903 - Filter practically unimportant resource leak warnings
+ *								bug 395002 - Self bound generic class doesn't resolve bounds properly for wildcards for certain parametrisation.
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -52,7 +53,20 @@ public class TypeVariableBinding extends ReferenceBinding {
 	/**
 	 * Returns true if the argument type satisfies all bounds of the type parameter
 	 */
-	public int boundCheck(Substitution substitution, TypeBinding argumentType) {
+	public int boundCheck(Substitution substitution, TypeBinding argumentType, Scope scope) {
+		int code = internalBoundCheck(substitution, argumentType, scope);
+		if (code == TypeConstants.MISMATCH) {
+			if (argumentType instanceof TypeVariableBinding && scope != null) {
+				TypeBinding bound = ((TypeVariableBinding)argumentType).firstBound;
+				if (bound instanceof ParameterizedTypeBinding) {
+					int code2 = boundCheck(substitution, bound.capture(scope, -1), scope); // no position needed as this capture will never escape this context
+					return Math.min(code, code2);
+				}
+			}
+		}
+		return code;
+	}
+	private int internalBoundCheck(Substitution substitution, TypeBinding argumentType, Scope scope) {
 		if (argumentType == TypeBinding.NULL || argumentType == this) {
 			return TypeConstants.OK;
 		}
@@ -76,7 +90,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 						TypeBinding substitutedSuperType = hasSubstitution ? Scope.substitute(substitution, this.superclass) : this.superclass;
 						if (substitutedSuperType.id != TypeIds.T_JavaLangObject) {
 							if (isArrayBound) {
-								if (!wildcardBound.isCompatibleWith(substitutedSuperType))
+								if (!wildcardBound.isCompatibleWith(substitutedSuperType, scope))
 									return TypeConstants.MISMATCH;
 							} else {
 								TypeBinding match = wildcardBound.findSuperTypeOriginatingFrom(substitutedSuperType);
@@ -103,7 +117,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 					for (int i = 0, length = this.superInterfaces.length; i < length; i++) {
 						TypeBinding substitutedSuperType = hasSubstitution ? Scope.substitute(substitution, this.superInterfaces[i]) : this.superInterfaces[i];
 						if (isArrayBound) {
-							if (!wildcardBound.isCompatibleWith(substitutedSuperType))
+							if (!wildcardBound.isCompatibleWith(substitutedSuperType, scope))
 									return TypeConstants.MISMATCH;
 						} else {
 							TypeBinding match = wildcardBound.findSuperTypeOriginatingFrom(substitutedSuperType);
@@ -123,7 +137,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 					// if the wildcard is lower-bounded by a type variable that has no relevant upper bound there's nothing to check here (bug 282152):
 					if (wildcard.bound.isTypeVariable() && ((TypeVariableBinding)wildcard.bound).superclass.id == TypeIds.T_JavaLangObject)
 						break;
-					return boundCheck(substitution, wildcard.bound);
+					return boundCheck(substitution, wildcard.bound, scope);
 
 				case Wildcard.UNBOUND :
 					break;
@@ -134,7 +148,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 		if (this.superclass.id != TypeIds.T_JavaLangObject) {
 			TypeBinding substitutedSuperType = hasSubstitution ? Scope.substitute(substitution, this.superclass) : this.superclass;
 	    	if (substitutedSuperType != argumentType) {
-				if (!argumentType.isCompatibleWith(substitutedSuperType)) {
+				if (!argumentType.isCompatibleWith(substitutedSuperType, scope)) {
 				    return TypeConstants.MISMATCH;
 				}
 				TypeBinding match = argumentType.findSuperTypeOriginatingFrom(substitutedSuperType);
@@ -148,7 +162,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 	    for (int i = 0, length = this.superInterfaces.length; i < length; i++) {
 			TypeBinding substitutedSuperType = hasSubstitution ? Scope.substitute(substitution, this.superInterfaces[i]) : this.superInterfaces[i];
 	    	if (substitutedSuperType != argumentType) {
-				if (!argumentType.isCompatibleWith(substitutedSuperType)) {
+				if (!argumentType.isCompatibleWith(substitutedSuperType, scope)) {
 				    return TypeConstants.MISMATCH;
 				}
 				TypeBinding match = argumentType.findSuperTypeOriginatingFrom(substitutedSuperType);

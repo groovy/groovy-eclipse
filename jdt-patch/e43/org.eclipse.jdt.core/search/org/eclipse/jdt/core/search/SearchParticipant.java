@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -86,7 +86,7 @@ public abstract class SearchParticipant {
 	 * Returns a displayable name of this search participant.
 	 * <p>
 	 * This method should be re-implemented in subclasses that need to
-	 * display a meaningfull name.
+	 * display a meaningful name.
 	 * </p>
 	 *
 	 * @return the displayable name of this search participant
@@ -135,14 +135,14 @@ public abstract class SearchParticipant {
 
 	/**
 	 * Locates the matches in the given documents using the given search pattern
-	 * and search scope, and reports them to the givenn search requestor. This
+	 * and search scope, and reports them to the given search requestor. This
 	 * method is called by the search engine once it has search documents
 	 * matching the given pattern in the given search scope.
 	 * <p>
 	 * Note that a participant (e.g. a JSP participant) can pre-process the contents of the given documents,
 	 * create its own documents whose contents are Java compilation units and delegate the match location
 	 * to the default participant (see {@link SearchEngine#getDefaultSearchParticipant()}). Passing its own
-	 * {@link SearchRequestor} this particpant can then map the match positions back to the original
+	 * {@link SearchRequestor} this participant can then map the match positions back to the original
 	 * contents, create its own matches and report them to the original requestor.
 	 * </p><p>
 	 * Implementors of this method should check the progress monitor

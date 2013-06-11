@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -84,21 +84,51 @@ public ILocalVariable[] getParameters() throws JavaModelException {
 			argumentNames[j] = ("arg" + j).toCharArray(); //$NON-NLS-1$
 		}
 	}
+	int startIndex = 0;
+	try {
+		if (isConstructor()) {
+			IType declaringType = this.getDeclaringType();
+			if (declaringType.isEnum()) {
+				startIndex = 2;
+			} else if (declaringType.isMember()
+					&& !Flags.isStatic(declaringType.getFlags())) {
+				startIndex = 1;
+			}
+		}
+	} catch(JavaModelException e) {
+		// ignore
+	}
 	for (int i= 0; i < length; i++) {
-		LocalVariable localVariable = new LocalVariable(
-				this,
-				new String(argumentNames[i]),
-				0,
-				-1,
-				0,
-				-1,
-				this.parameterTypes[i],
-				null,
-				-1,
-				true);
-		localVariables[i] = localVariable;
-		IAnnotation[] annotations = getAnnotations(localVariable, info.getParameterAnnotations(i));
-		localVariable.annotations = annotations;
+		if (i < startIndex) {
+			LocalVariable localVariable = new LocalVariable(
+					this,
+					new String(argumentNames[i]),
+					0,
+					-1,
+					0,
+					-1,
+					this.parameterTypes[i],
+					null,
+					-1,
+					true);
+			localVariables[i] = localVariable;
+			localVariable.annotations = Annotation.NO_ANNOTATIONS;
+		} else {
+			LocalVariable localVariable = new LocalVariable(
+					this,
+					new String(argumentNames[i]),
+					0,
+					-1,
+					0,
+					-1,
+					this.parameterTypes[i],
+					null,
+					-1,
+					true);
+			localVariables[i] = localVariable;
+			IAnnotation[] annotations = getAnnotations(localVariable, info.getParameterAnnotations(i - startIndex));
+			localVariable.annotations = annotations;
+		}
 	}
 	return localVariables;
 }

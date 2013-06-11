@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Jesper S Moller - Contributions for
+ *								Bug 378674 - "The method can be declared as static" is wrong
  *******************************************************************************/
 package org.eclipse.jdt.internal.eval;
 
@@ -54,6 +56,7 @@ public class CodeSnippetThisReference extends ThisReference implements Evaluatio
 			methodScope.problemReporter().errorThisSuperInStatic(this);
 			return false;
 		}
+		methodScope.resetEnclosingMethodStaticFlag();
 		return true;
 	}
 	

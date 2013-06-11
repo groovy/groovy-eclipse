@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *								bug 331649 - [compiler][null] consider null annotations for fields
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -21,18 +23,29 @@ public abstract class NameReference extends Reference implements InvocationSite 
 	//the error printing
 	//some name reference are build as name reference but
 	//only used as type reference. When it happens, instead of
-	//creating a new objet (aTypeReference) we just flag a boolean
-	//This concesion is valuable while their are cases when the NameReference
+	//creating a new object (aTypeReference) we just flag a boolean
+	//This concesion is valuable while there are cases when the NameReference
 	//will be a TypeReference (static message sends.....) and there is
 	//no changeClass in java.
 public NameReference() {
 	this.bits |= Binding.TYPE | Binding.VARIABLE; // restrictiveFlag
 }
 
+/** 
+ * Use this method only when sure that the current reference is <strong>not</strong>
+ * a chain of several fields (QualifiedNameReference with more than one field).
+ * Otherwise use {@link #lastFieldBinding()}.
+ */
 public FieldBinding fieldBinding() {
 	//this method should be sent ONLY after a check against isFieldReference()
 	//check its use doing senders.........
 	return (FieldBinding) this.binding ;
+}
+
+public FieldBinding lastFieldBinding() {
+	if ((this.bits & ASTNode.RestrictiveFlagMASK) == Binding.FIELD)
+		return fieldBinding(); // most subclasses only refer to one field anyway
+	return null;
 }
 
 public boolean isSuperAccess() {

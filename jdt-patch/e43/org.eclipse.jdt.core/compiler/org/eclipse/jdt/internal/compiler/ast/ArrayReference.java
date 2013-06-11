@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,10 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *								bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
+ *								bug 383368 - [compiler][null] syntactic null analysis for field references
+ *								bug 403147 - [compiler][null] FUP of bug 400761: consolidate interaction between unboxing, NPE, and deferred checking
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -33,6 +37,8 @@ public ArrayReference(Expression rec, Expression pos) {
 
 public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo, Assignment assignment, boolean compoundAssignment) {
 	// TODO (maxime) optimization: unconditionalInits is applied to all existing calls
+	// account for potential ArrayIndexOutOfBoundsException:
+	flowContext.recordAbruptExit();
 	if (assignment.expression == null) {
 		return analyseCode(currentScope, flowContext, flowInfo);
 	}
@@ -47,7 +53,11 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	this.receiver.checkNPE(currentScope, flowContext, flowInfo);
 	flowInfo = this.receiver.analyseCode(currentScope, flowContext, flowInfo);
-	return this.position.analyseCode(currentScope, flowContext, flowInfo);
+	flowInfo = this.position.analyseCode(currentScope, flowContext, flowInfo);
+	this.position.checkNPEbyUnboxing(currentScope, flowContext, flowInfo);
+	// account for potential ArrayIndexOutOfBoundsException:
+	flowContext.recordAbruptExit();
+	return flowInfo;
 }
 
 public void generateAssignment(BlockScope currentScope, CodeStream codeStream, Assignment assignment, boolean valueRequired) {
@@ -160,7 +170,7 @@ public void generatePostIncrement(BlockScope currentScope, CodeStream codeStream
 	codeStream.arrayAtPut(this.resolvedType.id, false);
 }
 
-public int nullStatus(FlowInfo flowInfo) {
+public int nullStatus(FlowInfo flowInfo, FlowContext flowContext) {
 	return FlowInfo.UNKNOWN;
 }
 

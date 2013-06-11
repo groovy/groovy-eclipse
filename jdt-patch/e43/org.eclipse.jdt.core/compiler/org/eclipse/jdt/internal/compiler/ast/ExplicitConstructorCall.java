@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,8 @@
  *								bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 361407 - Resource leak warning when resource is assigned to a field outside of constructor
  *								bug 370639 - [compiler][resource] restore the default for resource leak warnings
+ *								bug 388996 - [compiler][resource] Incorrect 'potential resource leak'
+ *								bug 403147 - [compiler][null] FUP of bug 400761: consolidate interaction between unboxing, NPE, and deferred checking
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -84,11 +86,9 @@ public class ExplicitConstructorCall extends Statement implements InvocationSite
 							.unconditionalInits();
 					if (analyseResources) {
 						// if argument is an AutoCloseable insert info that it *may* be closed (by the target constructor, i.e.)
-						flowInfo = FakedTrackingVariable.markPassedToOutside(currentScope, this.arguments[i], flowInfo, false);
+						flowInfo = FakedTrackingVariable.markPassedToOutside(currentScope, this.arguments[i], flowInfo, flowContext, false);
 					}
-					if ((this.arguments[i].implicitConversion & TypeIds.UNBOXING) != 0) {
-						this.arguments[i].checkNPE(currentScope, flowContext, flowInfo);
-					}
+					this.arguments[i].checkNPEbyUnboxing(currentScope, flowContext, flowInfo);
 				}
 				analyseArguments(currentScope, flowContext, flowInfo, this.binding, this.arguments);
 			}

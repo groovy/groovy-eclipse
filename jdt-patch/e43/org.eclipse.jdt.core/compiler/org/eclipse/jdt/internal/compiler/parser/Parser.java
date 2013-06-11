@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,10 @@
  *     Stephan Herrmann - Contributions for 
  *								bug 366003 - CCE in ASTNode.resolveAnnotations(ASTNode.java:639)
  *								bug 374605 - Unreasonable warning for enum-based switch statements
+ *								bug 393719 - [compiler] inconsistent warnings on iteration variables
+ *
+ *     Jesper S Moller - Contributions for
+ *									bug 393192 - Incomplete type hierarchy with > 10 annotations
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.parser;
 // GROOVY PATCHED
@@ -167,6 +171,12 @@ public class Parser implements  ParserBasicInformation, TerminalTokens, Operator
 						compliance = ClassFileConstants.JDK1_4;
 					} else if("1.5".equals(token)) { //$NON-NLS-1$
 						compliance = ClassFileConstants.JDK1_5;
+					} else if("1.6".equals(token)) { //$NON-NLS-1$
+						compliance = ClassFileConstants.JDK1_6;
+					} else if("1.7".equals(token)) { //$NON-NLS-1$
+						compliance = ClassFileConstants.JDK1_7;
+					} else if("1.8".equals(token)) { //$NON-NLS-1$
+						compliance = ClassFileConstants.JDK1_8;
 					} else if("recovery".equals(token)) { //$NON-NLS-1$
 						compliance = ClassFileConstants.JDK_DEFERRED;
 					}
@@ -1108,7 +1118,7 @@ public void checkComment() {
 	int lastComment = this.scanner.commentPtr;
 
 	if (this.modifiersSourceStart >= 0) {
-		// eliminate comments located after modifierSourceStart if positionned
+		// eliminate comments located after modifierSourceStart if positioned
 		while (lastComment >= 0) {
 			int commentSourceStart = this.scanner.commentStarts[lastComment];
 			if (commentSourceStart < 0) commentSourceStart = -commentSourceStart;
@@ -2149,6 +2159,10 @@ protected void consumeCatchFormalParameter() {
 	if (extendedDimensions > 0) {
 		type = type.copyDims(type.dimensions() + extendedDimensions);
 		type.sourceEnd = this.endPosition;
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=391092
+		if (type instanceof UnionTypeReference) {
+			this.problemReporter().illegalArrayOfUnionType(identifierName, type);		
+		}
 	}
 	this.astLengthPtr--;
 	int modifierPositions = this.intStack[this.intPtr--];
@@ -3049,6 +3063,10 @@ protected void consumeEnhancedForStatementHeader(){
 	this.expressionLengthPtr--;
 	final Expression collection = this.expressionStack[this.expressionPtr--];
 	statement.collection = collection;
+	// https://bugs.eclipse.org/393719 - [compiler] inconsistent warnings on iteration variables
+	// let declaration(Source)End include the collection to achieve that @SuppressWarnings affects this part, too:
+	statement.elementVariable.declarationSourceEnd = collection.sourceEnd;
+	statement.elementVariable.declarationEnd = collection.sourceEnd;
 	statement.sourceEnd = this.rParenPos;
 
 	if(!this.statementRecoveryActivated &&
@@ -3065,6 +3083,7 @@ protected void consumeEnhancedForStatementHeaderInit(boolean hasModifiers) {
 
 	LocalDeclaration localDeclaration = createLocalDeclaration(identifierName, (int) (namePosition >>> 32), (int) namePosition);
 	localDeclaration.declarationSourceEnd = localDeclaration.declarationEnd;
+	localDeclaration.bits |= ASTNode.IsForeachElementVariable;
 
 	int extraDims = this.intStack[this.intPtr--];
 	this.identifierPtr--;
@@ -7188,7 +7207,7 @@ protected void consumeSingleTypeImportDeclarationName() {
 }
 protected void consumeStatementBreak() {
 	// BreakStatement ::= 'break' ';'
-	// break pushs a position on this.intStack in case there is no label
+	// break pushes a position on this.intStack in case there is no label
 
 	pushOnAstStack(new BreakStatement(null, this.intStack[this.intPtr--], this.endStatementPosition));
 
@@ -7443,7 +7462,8 @@ protected void consumeStatementSynchronized() {
 				this.intStack[this.intPtr--],
 				this.endStatementPosition);
 	}
-	resetModifiers();
+	this.modifiers = ClassFileConstants.AccDefault;
+	this.modifiersSourceStart = -1; // <-- see comment into modifiersFlag(int)
 }
 protected void consumeStatementThrow() {
 	// ThrowStatement ::= 'throw' Expression ';'
@@ -8658,6 +8678,7 @@ protected CompilationUnitDeclaration endParse(int act) {
 			this.scanner.foundTaskPositions[i][0],
 			this.scanner.foundTaskPositions[i][1]);
 	}
+	this.javadoc = null;
 	return this.compilationUnit;
 }
 /*
@@ -9222,8 +9243,9 @@ public void initialize() {
 	this.initialize(false);
 }
 public void initialize(boolean initializeNLS) {
-	//positionning the parser for a new compilation unit
+	//positioning the parser for a new compilation unit
 	//avoiding stack reallocation and all that....
+	this.javadoc = null;
 	this.astPtr = -1;
 	this.astLengthPtr = -1;
 	this.expressionPtr = -1;
@@ -9734,7 +9756,7 @@ protected void parse() {
 			}
 		}
 	}
-
+	this.problemReporter.referenceContext = null; // Null this so we won't escalate problems needlessly (bug 393192)
 	if (DEBUG) System.out.println("-- EXIT FROM PARSE METHOD --");  //$NON-NLS-1$
 }
 public void parse(ConstructorDeclaration cd, CompilationUnitDeclaration unit, boolean recordLineSeparator) {
@@ -10784,6 +10806,9 @@ private void reportSyntaxErrorsForSkippedMethod(TypeDeclaration[] types){
 		}
 	}
 }
+/**
+ * Reset modifiers buffer and comment stack. Should be call only for nodes that claim both.
+ */
 protected void resetModifiers() {
 	this.modifiers = ClassFileConstants.AccDefault;
 	this.modifiersSourceStart = -1; // <-- see comment into modifiersFlag(int)

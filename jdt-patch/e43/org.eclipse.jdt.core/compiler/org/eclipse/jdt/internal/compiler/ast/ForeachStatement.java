@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,10 @@
  *								bug 349326 - [1.7] new warning for missing try-with-resources
  *								bug 370930 - NonNull annotation not considered for enhanced for loops
  *								bug 365859 - [compiler][null] distinguish warnings based on flow analysis vs. null annotations
+ *								bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
+ *								bug 393719 - [compiler] inconsistent warnings on iteration variables
+ *     Jesper S Moller -  Contribution for
+ *								bug 401853 - Eclipse Java compiler creates invalid bytecode (java.lang.VerifyError)
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -31,6 +35,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 
 public class ForeachStatement extends Statement {
 
@@ -94,10 +99,11 @@ public class ForeachStatement extends Statement {
 
 		this.postCollectionInitStateIndex = currentScope.methodScope().recordInitializationStates(condInfo);
 
+
 		// process the action
 		LoopingFlowContext loopingContext =
 			new LoopingFlowContext(flowContext, flowInfo, this, this.breakLabel,
-				this.continueLabel, this.scope);
+				this.continueLabel, this.scope, true);
 		UnconditionalFlowInfo actionInfo =
 			condInfo.nullInfoLessUnconditionalCopy();
 		actionInfo.markAsDefinitelyUnknown(elementVarBinding);
@@ -301,7 +307,15 @@ public class ForeachStatement extends Statement {
 					}
 				}
 				if (this.elementVariable.binding.resolvedPosition == -1) {
-					codeStream.pop();
+					switch (this.elementVariable.binding.type.id) {
+						case TypeIds.T_long :
+						case TypeIds.T_double :
+							codeStream.pop2();
+							break;
+						default:
+							codeStream.pop();
+							break;
+					}
 				} else {
 					codeStream.store(this.elementVariable.binding, false);
 					codeStream.addVisibleLocalVariable(this.elementVariable.binding);
@@ -406,7 +420,7 @@ public class ForeachStatement extends Statement {
 						&& !this.scope.isBoxingCompatibleWith(this.collectionElementType, elementType)) {
 					this.scope.problemReporter().notCompatibleTypesErrorInForeach(this.collection, this.collectionElementType, elementType);
 				} else if (this.collectionElementType.needsUncheckedConversion(elementType)) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=321085
-				    this.scope.problemReporter().unsafeTypeConversion(this.collection, collectionType, upperScope.createArrayType(elementType, 1));
+				    this.scope.problemReporter().unsafeElementTypeConversion(this.collection, this.collectionElementType, elementType);
 				}
 				// in case we need to do a conversion
 				int compileTimeTypeID = this.collectionElementType.id;
@@ -486,6 +500,8 @@ public class ForeachStatement extends Statement {
 					if (!this.collectionElementType.isCompatibleWith(elementType)
 							&& !this.scope.isBoxingCompatibleWith(this.collectionElementType, elementType)) {
 						this.scope.problemReporter().notCompatibleTypesErrorInForeach(this.collection, this.collectionElementType, elementType);
+					} else if (this.collectionElementType.needsUncheckedConversion(elementType)) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=393719
+					    this.scope.problemReporter().unsafeElementTypeConversion(this.collection, this.collectionElementType, elementType);
 					}
 					int compileTimeTypeID = this.collectionElementType.id;
 					// no conversion needed as only for reference types

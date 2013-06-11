@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,8 +14,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
@@ -1858,6 +1861,9 @@ public class ClassFile implements TypeConstants, TypeIds {
 			this.contentsOffset = startingContentsOffset;
 			return;
 		}
+		if (annotationTypeBinding.isMemberType()) {
+			this.recordInnerClasses(annotationTypeBinding);
+		}
 		final int typeIndex = this.constantPool.literalIndex(annotationTypeBinding.signature());
 		this.contents[this.contentsOffset++] = (byte) (typeIndex >> 8);
 		this.contents[this.contentsOffset++] = (byte) typeIndex;
@@ -2071,6 +2077,12 @@ public class ClassFile implements TypeConstants, TypeIds {
 		if (defaultValueBinding == null) {
 			this.contentsOffset = attributeOffset;
 		} else {
+			if (defaultValueBinding.isMemberType()) {
+				this.recordInnerClasses(defaultValueBinding);
+			}
+			if (memberValuePairReturnType.isMemberType()) {
+				this.recordInnerClasses(memberValuePairReturnType);
+			}
 			if (memberValuePairReturnType.isArrayType() && !defaultValueBinding.isArrayType()) {
 				// automatic wrapping
 				if (this.contentsOffset + 3 >= this.contents.length) {
@@ -3182,9 +3194,9 @@ public class ClassFile implements TypeConstants, TypeIds {
 		StackMapFrameCodeStream stackMapFrameCodeStream = (StackMapFrameCodeStream) this.codeStream;
 		stackMapFrameCodeStream.removeFramePosition(code_length);
 		if (stackMapFrameCodeStream.hasFramePositions()) {
-			ArrayList frames = new ArrayList();
-			traverse(isClinit ? null : methodBinding, max_locals, this.contents, codeAttributeOffset + 14, code_length, frames, isClinit);
-			int numberOfFrames = frames.size();
+			Map frames = new HashMap();
+			List realFrames = traverse(isClinit ? null : methodBinding, max_locals, this.contents, codeAttributeOffset + 14, code_length, frames, isClinit);
+			int numberOfFrames = realFrames.size();
 			if (numberOfFrames > 1) {
 				int stackMapTableAttributeOffset = localContentsOffset;
 				// add the stack map table attribute
@@ -3207,10 +3219,10 @@ public class ClassFile implements TypeConstants, TypeIds {
 				if (localContentsOffset + 2 >= this.contents.length) {
 					resizeContents(2);
 				}
-				StackMapFrame currentFrame = (StackMapFrame) frames.get(0);
+				StackMapFrame currentFrame = (StackMapFrame) realFrames.get(0);
 				for (int j = 1; j < numberOfFrames; j++) {
 					// select next frame
-					currentFrame = (StackMapFrame) frames.get(j);
+					currentFrame = (StackMapFrame) realFrames.get(j);
 					// generate current frame
 					// need to find differences between the current frame and the previous frame
 					int frameOffset = currentFrame.pc;
@@ -3359,9 +3371,9 @@ public class ClassFile implements TypeConstants, TypeIds {
 		StackMapFrameCodeStream stackMapFrameCodeStream = (StackMapFrameCodeStream) this.codeStream;
 		stackMapFrameCodeStream.removeFramePosition(code_length);
 		if (stackMapFrameCodeStream.hasFramePositions()) {
-			ArrayList frames = new ArrayList();
-			traverse(isClinit ? null: methodBinding, max_locals, this.contents, codeAttributeOffset + 14, code_length, frames, isClinit);
-			int numberOfFrames = frames.size();
+			Map frames = new HashMap();
+			List realFrames = traverse(isClinit ? null: methodBinding, max_locals, this.contents, codeAttributeOffset + 14, code_length, frames, isClinit);
+			int numberOfFrames = realFrames.size();
 			if (numberOfFrames > 1) {
 				int stackMapTableAttributeOffset = localContentsOffset;
 				// add the stack map table attribute
@@ -3384,12 +3396,12 @@ public class ClassFile implements TypeConstants, TypeIds {
 				if (localContentsOffset + 2 >= this.contents.length) {
 					resizeContents(2);
 				}
-				StackMapFrame currentFrame = (StackMapFrame) frames.get(0);
+				StackMapFrame currentFrame = (StackMapFrame) realFrames.get(0);
 				StackMapFrame prevFrame = null;
 				for (int j = 1; j < numberOfFrames; j++) {
 					// select next frame
 					prevFrame = currentFrame;
-					currentFrame = (StackMapFrame) frames.get(j);
+					currentFrame = (StackMapFrame) realFrames.get(j);
 					// generate current frame
 					// need to find differences between the current frame and the previous frame
 					int offsetDelta = currentFrame.getOffsetDelta(prevFrame);
@@ -3826,7 +3838,6 @@ public class ClassFile implements TypeConstants, TypeIds {
 				methodSignature.length);
 	}
 
-
 	private final int i4At(byte[] reference, int relativeOffset,
 			int structOffset) {
 		int position = relativeOffset + structOffset;
@@ -4230,8 +4241,32 @@ public class ClassFile implements TypeConstants, TypeIds {
 		this.methodCountOffset = this.contentsOffset;
 		this.contentsOffset += 2;
 	}
+	
+	private List filterFakeFrames(Set realJumpTargets, Map frames, int codeLength) {
+		// no more frame to generate
+		// filter out "fake" frames
+		realJumpTargets.remove(new Integer(codeLength));
+		List result = new ArrayList();
+		for (Iterator iterator = realJumpTargets.iterator(); iterator.hasNext(); ) {
+			Integer jumpTarget = (Integer) iterator.next();
+			StackMapFrame frame = (StackMapFrame) frames.get(jumpTarget);
+			if (frame != null) {
+				result.add(frame);
+			}
+		}
+		Collections.sort(result, new Comparator() {
+			public int compare(Object o1, Object o2) {
+				StackMapFrame frame = (StackMapFrame) o1;
+				StackMapFrame frame2 = (StackMapFrame) o2;
+				return frame.pc - frame2.pc;
+			}
+		});
+		return result;
+	}
 
-	public void traverse(MethodBinding methodBinding, int maxLocals, byte[] bytecodes, int codeOffset, int codeLength, ArrayList frames, boolean isClinit) {
+	public List traverse(MethodBinding methodBinding, int maxLocals, byte[] bytecodes, int codeOffset, int codeLength, Map frames, boolean isClinit) {
+		Set realJumpTarget = new HashSet(); 
+
 		StackMapFrameCodeStream stackMapFrameCodeStream = (StackMapFrameCodeStream) this.codeStream;
 		int[] framePositions = stackMapFrameCodeStream.getFramePositions();
 		int pc = codeOffset;
@@ -4279,7 +4314,14 @@ public class ClassFile implements TypeConstants, TypeIds {
 			initializeDefaultLocals(frame, methodBinding, maxLocals, codeLength);
 		}
 		frame.pc = -1;
-		frames.add(frame.duplicate());
+		add(frames, frame.duplicate());
+		addRealJumpTarget(realJumpTarget, -1);
+		for (int i = 0, max = this.codeStream.exceptionLabelsCounter; i < max; i++) {
+			ExceptionLabel exceptionLabel = this.codeStream.exceptionLabels[i];
+			if (exceptionLabel != null) {
+				addRealJumpTarget(realJumpTarget, exceptionLabel.position);
+			}
+		}
 		while (true) {
 			int currentPC = pc - codeOffset;
 			if (hasStackMarkers && stackMarker.pc == currentPC) {
@@ -4332,8 +4374,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 					if (indexInFramePositions < framePositionsLength) {
 						currentFramePosition = framePositions[indexInFramePositions];
 					} else {
-						// no more frame to generate
-						return;
+						currentFramePosition = Integer.MAX_VALUE;
 					}
 				} while (currentFramePosition < currentPC);
 			}
@@ -4344,13 +4385,12 @@ public class ClassFile implements TypeConstants, TypeIds {
 				// initialize locals
 				initializeLocals(isClinit ? true : methodBinding.isStatic(), currentPC, currentFrame);
 				// insert a new frame
-				frames.add(currentFrame);
+				add(frames, currentFrame);
 				indexInFramePositions++;
 				if (indexInFramePositions < framePositionsLength) {
 					currentFramePosition = framePositions[indexInFramePositions];
 				} else {
-					// no more frame to generate
-					return;
+					currentFramePosition = Integer.MAX_VALUE;
 				}
 			}
 			byte opcode = (byte) u1At(bytecodes, 0, pc);
@@ -4896,6 +4936,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 				case Opcodes.OPC_ifgt:
 				case Opcodes.OPC_ifle:
 					frame.numberOfStackItems--;
+					addRealJumpTarget(realJumpTarget, currentPC + i2At(bytecodes, 1, pc));
 					pc += 3;
 					break;
 				case Opcodes.OPC_if_icmpeq:
@@ -4907,23 +4948,32 @@ public class ClassFile implements TypeConstants, TypeIds {
 				case Opcodes.OPC_if_acmpeq:
 				case Opcodes.OPC_if_acmpne:
 					frame.numberOfStackItems -= 2;
+					addRealJumpTarget(realJumpTarget, currentPC + i2At(bytecodes, 1, pc));
 					pc += 3;
 					break;
 				case Opcodes.OPC_goto:
+					addRealJumpTarget(realJumpTarget, currentPC + i2At(bytecodes, 1, pc));
 					pc += 3;
+					addRealJumpTarget(realJumpTarget, pc - codeOffset);
 					break;
 				case Opcodes.OPC_tableswitch:
 					pc++;
 					while (((pc - codeOffset) & 0x03) != 0) {
 						pc++;
 					}
+					// default offset
+					addRealJumpTarget(realJumpTarget, currentPC + i4At(bytecodes, 0, pc));
 					pc += 4; // default
 					int low = i4At(bytecodes, 0, pc);
 					pc += 4;
 					int high = i4At(bytecodes, 0, pc);
 					pc += 4;
 					int length = high - low + 1;
-					pc += (length * 4);
+					for (int i = 0; i < length; i++) {
+						// pair offset
+						addRealJumpTarget(realJumpTarget, currentPC + i4At(bytecodes, 0, pc));
+						pc += 4;
+					}
 					frame.numberOfStackItems--;
 					break;
 				case Opcodes.OPC_lookupswitch:
@@ -4931,9 +4981,16 @@ public class ClassFile implements TypeConstants, TypeIds {
 					while (((pc - codeOffset) & 0x03) != 0) {
 						pc++;
 					}
-					pc += 4; // default
+					addRealJumpTarget(realJumpTarget, currentPC + i4At(bytecodes, 0, pc));
+					pc += 4; // default offset
 					int npairs = (int) u4At(bytecodes, 0, pc);
-					pc += (4 + npairs * 8);
+					pc += 4; // npair value
+					for (int i = 0; i < npairs; i++) {
+						pc += 4; // case value
+						// pair offset
+						addRealJumpTarget(realJumpTarget, currentPC + i4At(bytecodes, 0, pc));
+						pc += 4;
+					}
 					frame.numberOfStackItems--;
 					break;
 				case Opcodes.OPC_ireturn:
@@ -4943,9 +5000,11 @@ public class ClassFile implements TypeConstants, TypeIds {
 				case Opcodes.OPC_areturn:
 					frame.numberOfStackItems--;
 					pc++;
+					addRealJumpTarget(realJumpTarget, pc - codeOffset);
 					break;
 				case Opcodes.OPC_return:
 					pc++;
+					addRealJumpTarget(realJumpTarget, pc - codeOffset);
 					break;
 				case Opcodes.OPC_getstatic:
 					index = u2At(bytecodes, 1, pc);
@@ -5348,6 +5407,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 				case Opcodes.OPC_athrow:
 					frame.numberOfStackItems--;
 					pc++;
+					addRealJumpTarget(realJumpTarget, pc - codeOffset);
 					break;
 				case Opcodes.OPC_checkcast:
 					index = u2At(bytecodes, 1, pc);
@@ -5442,10 +5502,13 @@ public class ClassFile implements TypeConstants, TypeIds {
 				case Opcodes.OPC_ifnull:
 				case Opcodes.OPC_ifnonnull:
 					frame.numberOfStackItems--;
+					addRealJumpTarget(realJumpTarget, currentPC + i2At(bytecodes, 1, pc));
 					pc += 3;
 					break;
 				case Opcodes.OPC_goto_w:
+					addRealJumpTarget(realJumpTarget, currentPC + i4At(bytecodes, 1, pc));
 					pc += 5;
+					addRealJumpTarget(realJumpTarget, pc - codeOffset); // handle infinite loop
 					break;
 				default: // should not occur
 					this.codeStream.methodDeclaration.scope.problemReporter().abortDueToInternalError(
@@ -5463,8 +5526,15 @@ public class ClassFile implements TypeConstants, TypeIds {
 				break;
 			}
 		}
+		return filterFakeFrames(realJumpTarget, frames, codeLength);
 	}
 
+	private void addRealJumpTarget(Set realJumpTarget, int pc) {
+		realJumpTarget.add(new Integer(pc));
+	}
+	private void add(Map frames, StackMapFrame frame) {
+		frames.put(new Integer(frame.pc), frame);
+	}
 	private final int u1At(byte[] reference, int relativeOffset,
 			int structOffset) {
 		return (reference[relativeOffset + structOffset] & 0xFF);
@@ -5483,6 +5553,11 @@ public class ClassFile implements TypeConstants, TypeIds {
 		return (((reference[position++] & 0xFFL) << 24)
 				+ ((reference[position++] & 0xFF) << 16)
 				+ ((reference[position++] & 0xFF) << 8) + (reference[position] & 0xFF));
+	}
+
+	private final int i2At(byte[] reference, int relativeOffset, int structOffset) {
+		int position = relativeOffset + structOffset;
+		return (reference[position++] << 8) + (reference[position] & 0xFF);
 	}
 
 	public char[] utf8At(byte[] reference, int absoluteOffset,

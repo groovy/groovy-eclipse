@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,7 @@
  *								bug 370639 - [compiler][resource] restore the default for resource leak warnings
  *								bug 265744 - Enum switch should warn about missing default
  *								bug 374605 - Unreasonable warning for enum-based switch statements
+ *								bug 381443 - [compiler][null] Allow parameter widening from @NonNull to unannotated
  *******************************************************************************/
 
 package org.eclipse.jdt.internal.compiler.impl;
@@ -111,7 +112,8 @@ public class IrritantSet {
 				|CompilerOptions.Tasks
 				|CompilerOptions.UnclosedCloseable
 				|CompilerOptions.NullUncheckedConversion
-				|CompilerOptions.RedundantNullAnnotation);
+				|CompilerOptions.RedundantNullAnnotation
+				|CompilerOptions.NonnullParameterAnnotationDropped);
 		// default errors IF AnnotationBasedNullAnalysis is enabled:
 		COMPILER_DEFAULT_ERRORS.set(
 				CompilerOptions.NullSpecViolation
@@ -128,7 +130,8 @@ public class IrritantSet {
 			.set(CompilerOptions.NullSpecViolation)
 			.set(CompilerOptions.NullAnnotationInferenceConflict)
 			.set(CompilerOptions.NullUncheckedConversion)
-			.set(CompilerOptions.RedundantNullAnnotation);
+			.set(CompilerOptions.RedundantNullAnnotation)
+			.set(CompilerOptions.NonnullParameterAnnotationDropped);
 
 		RESTRICTION.set(CompilerOptions.DiscouragedReference);
 		STATIC_ACCESS.set(CompilerOptions.NonStaticAccessToStatic);
@@ -142,6 +145,7 @@ public class IrritantSet {
 			.set(CompilerOptions.RedundantSuperinterface)
 			.set(CompilerOptions.DeadCode)
 			.set(CompilerOptions.UnusedObjectAllocation)
+			.set(CompilerOptions.UnusedTypeParameter)
 			.set(CompilerOptions.RedundantSpecificationOfTypeArguments);
 		STATIC_METHOD
 		    .set(CompilerOptions.MethodCanBePotentiallyStatic);

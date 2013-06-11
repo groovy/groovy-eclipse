@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2012 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,14 +12,15 @@ package org.eclipse.jdt.core.search;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IType;
 
 /**
  * An <code>IJavaSearchScope</code> defines where search result should be found by a
  * <code>SearchEngine</code>. Clients must pass an instance of this interface
- * to the <code>search(...)</code> methods. Such an instance can be created using the
- * following factory methods on <code>SearchEngine</code>: <code>createHierarchyScope(IType)</code>,
- * <code>createJavaSearchScope(IResource[])</code>, <code>createWorkspaceScope()</code>, or
- * clients may choose to implement this interface.
+ * to the <code>search(...)</code> methods. Such an instance can be created
+ * using the following factory methods: {@link SearchEngine#createHierarchyScope(IType)},
+ * {@link SearchEngine#createJavaSearchScope(IJavaElement[])}, {@link SearchEngine#createWorkspaceScope()} or clients
+ * may choose to implement this interface.
  */
 public interface IJavaSearchScope {
 /**

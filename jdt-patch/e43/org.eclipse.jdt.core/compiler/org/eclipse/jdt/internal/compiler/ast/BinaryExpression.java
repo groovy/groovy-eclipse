@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,9 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *								bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
+ *								bug 383368 - [compiler][null] syntactic null analysis for field references
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -58,16 +61,28 @@ public BinaryExpression(BinaryExpression expression) {
 }
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	// keep implementation in sync with CombinedBinaryExpression#analyseCode
-	if (this.resolvedType.id == TypeIds.T_JavaLangString) {
-		return this.right.analyseCode(
-							currentScope, flowContext,
-							this.left.analyseCode(currentScope, flowContext, flowInfo).unconditionalInits())
-						.unconditionalInits();
-	} else {
-		this.left.checkNPE(currentScope, flowContext, flowInfo);
-		flowInfo = this.left.analyseCode(currentScope, flowContext, flowInfo).unconditionalInits();
-		this.right.checkNPE(currentScope, flowContext, flowInfo);
-		return this.right.analyseCode(currentScope, flowContext, flowInfo).unconditionalInits();
+	try {
+		if (this.resolvedType.id == TypeIds.T_JavaLangString) {
+			return this.right.analyseCode(
+								currentScope, flowContext,
+								this.left.analyseCode(currentScope, flowContext, flowInfo).unconditionalInits())
+							.unconditionalInits();
+		} else {
+			this.left.checkNPE(currentScope, flowContext, flowInfo);
+			flowInfo = this.left.analyseCode(currentScope, flowContext, flowInfo).unconditionalInits();
+			if (((this.bits & OperatorMASK) >> OperatorSHIFT) != AND) {
+				flowContext.expireNullCheckedFieldInfo();
+			}
+			this.right.checkNPE(currentScope, flowContext, flowInfo);
+			flowInfo = this.right.analyseCode(currentScope, flowContext, flowInfo).unconditionalInits();
+			if (((this.bits & OperatorMASK) >> OperatorSHIFT) != AND) {
+				flowContext.expireNullCheckedFieldInfo();
+			}
+			return flowInfo;
+		}
+	} finally {
+		// account for exception possibly thrown by arithmetics
+		flowContext.recordAbruptExit();
 	}
 }
 

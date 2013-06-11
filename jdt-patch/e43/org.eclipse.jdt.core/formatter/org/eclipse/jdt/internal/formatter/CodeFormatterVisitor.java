@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2012 IBM Corporation and others.
+ * Copyright (c) 2002, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -473,9 +473,20 @@ public class CodeFormatterVisitor extends ASTVisitor {
 								this.scribe.printNextToken(operators[i], this.preferences.insert_space_before_binary_operator);
 								this.scribe.alignFragment(binaryExpressionAlignment, i);
 							}
-							if (operators[i] == TerminalTokens.TokenNameMINUS && isNextToken(TerminalTokens.TokenNameMINUS)) {
-								// the next character is a minus (unary operator)
-								this.scribe.space();
+							switch(operators[i]) {
+								case TerminalTokens.TokenNameMINUS :
+									if (isNextToken(TerminalTokens.TokenNameMINUS)
+											|| isNextToken(TerminalTokens.TokenNameMINUS_MINUS)) {
+										// the next character is a '-' or '--' (unary operator)
+										this.scribe.space();
+									}
+									break;
+								case TerminalTokens.TokenNamePLUS :
+									if (isNextToken(TerminalTokens.TokenNamePLUS)
+											|| isNextToken(TerminalTokens.TokenNamePLUS_PLUS)) {
+										// the next character is a + or ++ (unary operator)
+										this.scribe.space();
+									}
 							}
 							if (this.preferences.insert_space_after_binary_operator) {
 								this.scribe.space();
