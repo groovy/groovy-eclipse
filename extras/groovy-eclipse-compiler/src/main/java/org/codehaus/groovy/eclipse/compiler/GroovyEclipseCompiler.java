@@ -12,12 +12,11 @@
  *******************************************************************************/
 package org.codehaus.groovy.eclipse.compiler;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -28,15 +27,15 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import org.codehaus.plexus.compiler.AbstractCompiler;
 import org.codehaus.plexus.compiler.CompilerConfiguration;
-import org.codehaus.plexus.compiler.CompilerError;
 import org.codehaus.plexus.compiler.CompilerException;
+import org.codehaus.plexus.compiler.CompilerMessage;
+import org.codehaus.plexus.compiler.CompilerResult;
+import org.codehaus.plexus.compiler.CompilerMessage.Kind;
 import org.codehaus.plexus.compiler.CompilerOutputStyle;
 import org.codehaus.plexus.compiler.util.scan.InclusionScanException;
 import org.codehaus.plexus.compiler.util.scan.SourceInclusionScanner;
@@ -65,11 +64,10 @@ import org.eclipse.jdt.internal.compiler.batch.Main;
  */
 public class GroovyEclipseCompiler extends AbstractCompiler {
 
-    // see compiler.warn.warning in compiler.properties of javac sources
-    private static final String[] WARNING_PREFIXES = { "warning: ", "\u8b66\u544a: ", "\u8b66\u544a\uff1a " };
-
-    // see compiler.note.note in compiler.properties of javac sources
-    private static final String[] NOTE_PREFIXES = { "Note: ", "\u6ce8: ", "\u6ce8\u610f\uff1a " };
+    /**
+     * 
+     */
+    private static final String PROB_SEPARATOR = "----------\n";
 
     private static final String JAVA_AGENT_CLASS_PARAM_NAME = "-javaAgentClass";
 
@@ -115,17 +113,23 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         // for sources, so we pass it "". Later, we must recalculate for real.
         super(CompilerOutputStyle.ONE_OUTPUT_FILE_PER_INPUT_FILE, "", ".class", null);
     }
+    
+    @Override
+    public CompilerResult performCompile(CompilerConfiguration configuration) throws CompilerException {
+        List<CompilerMessage> messages = new ArrayList<CompilerMessage>();
+        boolean result = internalCompile(configuration, messages);
+        return new CompilerResult(result, messages);
+    }
 
-    @SuppressWarnings("rawtypes")
-    public List compile(CompilerConfiguration config) throws CompilerException {
+    private boolean internalCompile(CompilerConfiguration config, List<CompilerMessage> messages) throws CompilerException {
 
         String[] args = createCommandLine(config);
         if (args.length == 0) {
             getLogger().info("Nothing to compile - all classes are up to date");
-            return Collections.emptyList();
+            return true;
         }
 
-        List<CompilerError> messages;
+        boolean result;
         if (config.isFork()) {
             String executable = config.getExecutable();
 
@@ -139,16 +143,25 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             }
 
             String groovyEclipseLocation = getGroovyEclipseBatchLocation();
-            messages = compileOutOfProcess(config, executable, groovyEclipseLocation, args);
+            result = compileOutOfProcess(config, executable, groovyEclipseLocation, args, messages);
         } else {
             Progress progress = new Progress();
-            Main main = new Main(new PrintWriter(System.out), new PrintWriter(System.err), false/* systemExit */,
-                    null/* options */, progress);
-            boolean result = main.compile(args);
+            StringWriter out = new StringWriter();
 
-            messages = formatResult(main, result);
+            Main main = new Main(new PrintWriter(out), new PrintWriter(out), false/* systemExit */,
+                    null/* options */, progress);
+            result = main.compile(args);
+            try {
+                messages.addAll(parseMessages(result ? 0 : 1, out.getBuffer().toString(), config.isShowWarnings()));
+            } catch (IOException e) {
+                messages = new ArrayList<CompilerMessage>(1);
+            }
+
+            if (!result) {
+                messages.add(formatResult(main, result));
+            }
         }
-        return messages;
+        return result;
     }
 
     private File[] recalculateStaleFiles(CompilerConfiguration config) throws CompilerException {
@@ -170,14 +183,23 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return null != key && String.class.isInstance(key) && ((String) key).startsWith("-");
     }
 
-    private List<CompilerError> formatResult(Main main, boolean result) {
+    private CompilerMessage formatResult(Main main, boolean result) {
         if (result) {
-            return Collections.EMPTY_LIST;
+            return new CompilerMessage("Success!", Kind.NOTE);
         } else {
+            Kind kind;
+            if (main.globalErrorsCount > 0) {
+                kind = Kind.ERROR;
+            } else if (main.globalWarningsCount > 0) {
+                kind = Kind.WARNING;
+            } else {
+                kind = Kind.NOTE;
+            }
+            
             String error = main.globalErrorsCount == 1 ? "error" : "errors";
             String warning = main.globalWarningsCount == 1 ? "warning" : "warnings";
-            return Collections.singletonList(new CompilerError("Found " + main.globalErrorsCount + " " + error + " and "
-                    + main.globalWarningsCount + " " + warning + ".", true));
+            return new CompilerMessage("Found " + main.globalErrorsCount + " " + error + " and "
+                    + main.globalWarningsCount + " " + warning + ".", kind);
         }
     }
 
@@ -389,11 +411,12 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      *            name of the executable to launch
      * @param args
      *            arguments for the executable launched
+     * @param messages2 
      * @return List of CompilerError objects with the errors encountered.
      * @throws CompilerException
      */
-    private List<CompilerError> compileOutOfProcess(CompilerConfiguration config, String executable, String groovyEclipseLocation,
-            String[] args) throws CompilerException {
+    private boolean compileOutOfProcess(CompilerConfiguration config, String executable, String groovyEclipseLocation,
+            String[] args, List<CompilerMessage> messages) throws CompilerException {
 
         Commandline cli = new Commandline();
         cli.setWorkingDirectory(config.getWorkingDirectory().getAbsolutePath());
@@ -428,7 +451,6 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         CommandLineUtils.StringStreamConsumer err = new CommandLineUtils.StringStreamConsumer();
 
         int returnCode;
-        List<CompilerError> messages;
 
         if ((getLogger() != null) && getLogger().isDebugEnabled()) {
             File commandLineFile = new File(config.getOutputLocation(), "greclipse."
@@ -449,7 +471,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         try {
             getLogger().info("Compiling in a forked process using " + groovyEclipseLocation);
             returnCode = CommandLineUtils.executeCommandLine(cli, out, err);
-            messages = parseModernStream(returnCode, new BufferedReader(new StringReader(err.getOutput())));
+            messages.addAll(parseMessages(returnCode, out.getOutput(), config.isShowWarnings()));
         } catch (CommandLineException e) {
             throw new CompilerException("Error while executing the external compiler.", e);
         } catch (IOException e) {
@@ -460,11 +482,11 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             if (err.getOutput().length() == 0) {
                 throw new CompilerException("Unknown error trying to execute the external compiler: " + EOL + cli.toString());
             } else {
-                messages.add(new CompilerError("Failure executing groovy-eclipse compiler:" + EOL + err.getOutput(), true));
+                messages.add(new CompilerMessage("Failure executing groovy-eclipse compiler:" + EOL + err.getOutput(), Kind.ERROR));
             }
         }
 
-        return messages;
+        return returnCode != 0;
     }
 
     /**
@@ -477,183 +499,105 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      * @return List of CompilerError objects
      * @throws IOException
      */
-    List<CompilerError> parseModernStream(int exitCode, BufferedReader input) throws IOException {
-        List<CompilerError> errors = new ArrayList<CompilerError>();
+   private List<CompilerMessage> parseMessages(int exitCode, String input, boolean showWarnings) throws IOException {
+        List<CompilerMessage> parsedMessages = new ArrayList<CompilerMessage>();
 
-        String line;
-
-        StringBuffer buffer;
-
-        while (true) {
-            // cleanup the buffer
-            buffer = new StringBuffer(); // this is quicker than clearing it
-
-            // most errors terminate with the '^' char
-            do {
-                line = input.readLine();
-
-                if (line == null) {
-                    return errors;
-                }
-
-                if ((buffer.length() == 0) && line.startsWith("error: ")) {
-                    errors.add(new CompilerError(line, true));
-                } else if ((buffer.length() == 0) && isNote(line)) {
-                    // skip, JDK 1.5 telling us deprecated APIs are used but
-                    // -Xlint:deprecation isn't set
+        String[] msgs = input.split(PROB_SEPARATOR);
+        for (String msg : msgs) {
+            if (msg.length() > 1) {
+                // add the error bean
+                CompilerMessage message = parseMessage(msg, showWarnings, false);
+                if (message != null) {
+                    if (showWarnings || message.getKind() == Kind.ERROR) {
+                        parsedMessages.add(message);
+                    }
                 } else {
-                    buffer.append(line);
-
-                    buffer.append(EOL);
+                    // assume that there are one or more non-normal messages here
+                    // All messages start with <num>. ERROR or <num>. WARNING
+                    String[] extraMsgs = msg.split("\n");
+                    StringBuilder sb = new StringBuilder();
+                    for (String extraMsg : extraMsgs) {
+                        if (extraMsg.indexOf(". WARNING") > 0 || extraMsg.indexOf(". ERROR") > 0) {
+                            if (sb.length() > 0) {
+                                message = parseMessage(sb.toString(), showWarnings, true);
+                                if (showWarnings || message.getKind() == Kind.ERROR) {
+                                    parsedMessages.add(message);
+                                }
+                            }
+                            sb = new StringBuilder(extraMsg);
+                        } else {
+                            if (!PROB_SEPARATOR.equals(extraMsg)) {
+                                sb.append(extraMsg);
+                            }
+                        }
+                    }
                 }
-            } while (!line.endsWith("^"));
-
-            // add the error bean
-            errors.add(parseModernError(exitCode, buffer.toString()));
-        }
-    }
-
-    private static boolean isNote(String line) {
-        for (int i = 0; i < NOTE_PREFIXES.length; i++) {
-            if (line.startsWith(NOTE_PREFIXES[i])) {
-                return true;
             }
         }
-        return false;
+        return parsedMessages;
     }
 
     /**
      * Construct a CompilerError object from a line of the compiler output
      * 
-     * @param exitCode
-     *            The exit code from javac.
-     * @param error
+     * @param msgText
      *            output line from the compiler
      * @return the CompilerError object
      */
-    static CompilerError parseModernError(int exitCode, String error) {
-        StringTokenizer tokens = new StringTokenizer(error, ":");
-
-        boolean isError = exitCode != 0;
-
-        StringBuffer msgBuffer;
-
-        try {
-            // With Java 6 error output lines from the compiler got longer. For
-            // backward compatibility
-            // .. and the time being, we eat up all (if any) tokens up to the
-            // erroneous file and source
-            // .. line indicator tokens.
-
-            boolean tokenIsAnInteger;
-
-            String previousToken = null;
-
-            String currentToken = null;
-
-            do {
-                previousToken = currentToken;
-
-                currentToken = tokens.nextToken();
-
-                // Probably the only backward compatible means of checking if a
-                // string is an integer.
-
-                tokenIsAnInteger = true;
-
-                try {
-                    Integer.parseInt(currentToken);
-                } catch (NumberFormatException e) {
-                    tokenIsAnInteger = false;
-                }
-            } while (!tokenIsAnInteger);
-
-            String file = previousToken;
-
-            String lineIndicator = currentToken;
-
-            int startOfFileName = previousToken.lastIndexOf("]");
-
-            if (startOfFileName > -1) {
-                file = file.substring(startOfFileName + 2);
+   private CompilerMessage parseMessage(String msgText, boolean showWarning, boolean force) {
+        // message should look like this:
+//        1. WARNING in /Users/andrew/git-repos/foo/src/main/java/packAction.java (at line 47)
+//            public abstract class AbstractScmTagAction extends TaskAction implements BuildBadgeAction {
+//                                  ^^^^^^^^^^^^^^^^^^^^
+        
+        // But there will also be messages contributed from annotation processors that will look non-normal
+        int dotIndex = msgText.indexOf('.');
+        Kind kind;
+        boolean isNormal = false;
+        if (dotIndex > 0) {
+            if (msgText.substring(dotIndex, dotIndex + ". WARNING".length()).equals(". WARNING")) {
+                kind = Kind.WARNING;
+                isNormal = true;
+                dotIndex += ". WARNING in ".length();
+            } else if (msgText.substring(dotIndex, dotIndex + ". ERROR".length()).equals(". ERROR")) {
+                kind = Kind.ERROR;
+                isNormal = true;
+                dotIndex += ". ERROR in ".length();
+            } else {
+                kind = Kind.NOTE;
             }
-
-            // When will this happen?
-            if (file.length() == 1) {
-                file = new StringBuffer(file).append(":").append(tokens.nextToken()).toString();
-            }
-
-            int line = Integer.parseInt(lineIndicator);
-
-            msgBuffer = new StringBuffer();
-
-            String msg = tokens.nextToken(EOL).substring(2);
-
-            isError = exitCode != 0;
-
-            // Remove the 'warning: ' prefix
-            String warnPrefix = getWarnPrefix(msg);
-            if (warnPrefix != null) {
-                isError = false;
-                msg = msg.substring(warnPrefix.length());
-            }
-
-            msgBuffer.append(msg);
-
-            msgBuffer.append(EOL);
-
-            String context = tokens.nextToken(EOL);
-
-            String pointer = tokens.nextToken(EOL);
-
-            if (tokens.hasMoreTokens()) {
-                msgBuffer.append(context); // 'symbol' line
-
-                msgBuffer.append(EOL);
-
-                msgBuffer.append(pointer); // 'location' line
-
-                msgBuffer.append(EOL);
-
-                context = tokens.nextToken(EOL);
-
-                try {
-                    pointer = tokens.nextToken(EOL);
-                } catch (NoSuchElementException e) {
-                    pointer = context;
-
-                    context = null;
-                }
-
-            }
-
-            String message = msgBuffer.toString();
-
-            int startcolumn = pointer.indexOf("^");
-
-            int endcolumn = context == null ? startcolumn : context.indexOf(" ", startcolumn);
-
-            if (endcolumn == -1) {
-                endcolumn = context.length();
-            }
-
-            return new CompilerError(file, isError, line, startcolumn, line, endcolumn, message.trim());
-        } catch (NoSuchElementException e) {
-            return new CompilerError("no more tokens - could not parse error message: " + error, isError);
-        } catch (NumberFormatException e) {
-            return new CompilerError("could not parse error message: " + error, isError);
-        } catch (Exception e) {
-            return new CompilerError("could not parse error message: " + error, isError);
+        } else {
+            kind = Kind.NOTE;
         }
-    }
-
-    private static String getWarnPrefix(String msg) {
-        for (int i = 0; i < WARNING_PREFIXES.length; i++) {
-            if (msg.startsWith(WARNING_PREFIXES[i])) {
-                return WARNING_PREFIXES[i];
+        
+        int firstNewline = msgText.indexOf('\n');
+        String firstLine = firstNewline > 0 ? msgText.substring(0, firstNewline) : msgText;
+        String rest = firstNewline > 0 ? msgText.substring(firstNewline+1) : "";
+        
+        if (isNormal) {
+            try {
+                int parenIndex = firstLine.indexOf(" (");
+                String file = firstLine.substring(dotIndex, parenIndex);
+                int line = Integer.parseInt(firstLine.substring(parenIndex + " (at line ".length(), firstLine.indexOf(')')));
+                int lastLineIndex = rest.lastIndexOf("\n\t");
+                int startColumn = rest.indexOf('^', lastLineIndex) -1 - lastLineIndex; // -1 because starts with tab
+                int endColumn = rest.lastIndexOf('^') -1 - lastLineIndex;
+                return new CompilerMessage(file, kind, line, startColumn, line, endColumn, msgText);
+            } catch (RuntimeException e) {
+                // lots of things could go wrong
+                if (force) {
+                    return new CompilerMessage(msgText, kind);
+                } else {
+                    return null;
+                }
+            }
+        } else {
+            if (force) {
+                return new CompilerMessage(msgText, kind);
+            } else {
+                return null;
             }
         }
-        return null;
     }
 
     /**
