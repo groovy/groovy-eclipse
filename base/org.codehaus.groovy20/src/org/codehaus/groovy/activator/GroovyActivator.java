@@ -47,11 +47,51 @@ public class GroovyActivator extends Plugin {
     
     @Override
     public void start(BundleContext context) throws Exception {
+        if (Boolean.parseBoolean(System.getProperty("greclipse.debug.trace_compiler_start", "false"))) {
+            System.out.println("------------");
+            System.out.println("GRECLIPSE-1642: stack trace and other info as Groovy-compiler starts");
+            printBundleState("org.codehaus.groovy.eclipse.compilerResolver");
+            printBundleState("org.eclipse.jdt.core");
+            new Exception().printStackTrace();
+            System.out.println("------------");
+        }
         super.start(context);
         try {
             initialize();
         } catch (Exception e) {
             getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, "Error starting groovy plugin", e));
+        }
+    }
+
+    private void printBundleState(String id) {
+        Bundle resolverBundle = Platform.getBundle(id);
+        if (resolverBundle != null) {
+            int state = resolverBundle.getState();
+            String stateString;
+            switch (state) {
+                case Bundle.ACTIVE:
+                    stateString = "ACTIVE";
+                    break;
+                case Bundle.INSTALLED:
+                    stateString = "INSTALLED";
+                    break;
+                case Bundle.RESOLVED:
+                    stateString = "RESOLVED";
+                    break;
+                case Bundle.STOPPING:
+                    stateString = "STOPPING";
+                    break;
+                case Bundle.UNINSTALLED:
+                    stateString = "UNINSTALLED";
+                    break;
+
+                default:
+                    stateString = "UNKNOWN";
+                    break;
+            }
+            System.out.println(id + " state: " + stateString);
+        } else {
+            System.out.println(id + " is not installed");
         }
     }
 
