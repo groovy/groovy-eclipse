@@ -126,9 +126,9 @@ public abstract class AbstractGroovySearchTest extends BuilderTests {
         env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
         IProject proj = env.getProject("Project");
         IJavaProject javaProject = JavaCore.create(proj);
-        javaProject.setOption(CompilerOptions.OPTION_Compliance, "1.5");
-        javaProject.setOption(CompilerOptions.OPTION_Source, "1.5");
-        javaProject.setOption(CompilerOptions.OPTION_TargetPlatform, "1.5");
+        javaProject.setOption(CompilerOptions.OPTION_Compliance, "1.6");
+        javaProject.setOption(CompilerOptions.OPTION_Source, "1.6");
+        javaProject.setOption(CompilerOptions.OPTION_TargetPlatform, "1.6");
         fullBuild(projectPath);
         return proj;
     }
