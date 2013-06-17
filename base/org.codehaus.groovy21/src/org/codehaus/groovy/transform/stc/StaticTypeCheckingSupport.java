@@ -117,6 +117,7 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.ast.tools.WideningCategories;
 import org.codehaus.groovy.control.CompilationUnit;
+import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
 import org.codehaus.groovy.runtime.m12n.ExtensionModule;
@@ -1140,6 +1141,8 @@ public abstract class StaticTypeCheckingSupport {
                     System.arraycopy(params, 0, firstParams, 0, firstParams.length);
                     dist = allParametersAndArgumentsMatch(firstParams, args);
                     firstParamMatches =  dist >= 0;
+                } else {
+                    dist = 0;
                 }
                 if (firstParamMatches) {
                     // there are three case for vargs
@@ -1479,14 +1482,16 @@ public abstract class StaticTypeCheckingSupport {
      * If this method throws an exception, then the expression cannot be evaluated on its own.
      *
      * @param expr the expression to be evaluated
+     * @param config the compiler configuration
      * @return the result of the expression
      */
-    public static Object evaluateExpression(Expression expr) {
+    public static Object evaluateExpression(Expression expr, CompilerConfiguration config) {
         String className = "Expression$" + UUID.randomUUID().toString().replace('-', '$');
         ClassNode node = new ClassNode(className, Opcodes.ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
         ReturnStatement code = new ReturnStatement(expr);
         node.addMethod(new MethodNode("eval", Opcodes.ACC_PUBLIC+Opcodes.ACC_STATIC, ClassHelper.OBJECT_TYPE, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, code));
-        CompilationUnit cu = new CompilationUnit();
+        CompilerConfiguration copyConf = new CompilerConfiguration(config);
+        CompilationUnit cu = new CompilationUnit(copyConf);
         cu.addClassNode(node);
         cu.compile();
         @SuppressWarnings("unchecked")
