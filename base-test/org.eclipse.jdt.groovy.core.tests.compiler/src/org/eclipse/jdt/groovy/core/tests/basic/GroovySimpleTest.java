@@ -8538,13 +8538,24 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"123");
 	}
 	
-	
 	public void testGrab() {
 		this.runConformTest(new String[]{
 				"Printer.groovy",
 				"import groovy.lang.Grab;\n"+
 				"\n"+
 				"@Grab(group=\"joda-time\", module=\"joda-time\", version=\"1.6\")\n"+
+				"def printDate() {\n"+
+				"      def dt = new org.joda.time.DateTime()\n"+
+				"}\n"+
+				"printDate()"},"");
+	}
+	
+	public void testGrabError() {
+		this.runConformTest(new String[]{
+				"Printer.groovy",
+				"import groovy.lang.Grab;\n"+
+				"\n"+
+				"@Grab(group=\"joda-timex\", module=\"joda-time\", version=\"1.6\")\n"+
 				"def printDate() {\n"+
 				"      def dt = new org.joda.time.DateTime()\n"+
 				"}\n"+
