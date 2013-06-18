@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.classgen;
 
+import groovyjarjarasm.asm.Opcodes;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -34,7 +36,6 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.syntax.SyntaxException;
-import org.objectweb.asm.Opcodes;
 
 /**
  * A specialized Groovy AST visitor meant to perform additional verifications upon the

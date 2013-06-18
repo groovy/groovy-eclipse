@@ -16,6 +16,7 @@
 package org.codehaus.groovy.ast;
 
 import groovy.lang.Binding;
+import groovyjarjarasm.asm.Opcodes;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -35,7 +36,6 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.InvokerHelper;
-import org.objectweb.asm.Opcodes;
 
 /**
  * Represents a module, which consists typically of a class declaration

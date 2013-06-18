@@ -16,6 +16,7 @@
 package org.codehaus.groovy.ast;
 
 import groovy.lang.GroovyObject;
+import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -44,7 +45,6 @@ import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
-import org.objectweb.asm.Opcodes;
 
 /**
  * Represents a class in the AST.<br/>

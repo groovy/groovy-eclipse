@@ -10,6 +10,9 @@
       <category name="org.codehaus.groovy.eclipse"/>
    </feature>
    <feature url="features/org.codehaus.groovy.jdt.patch_0.0.0.qualifier.jar" id="org.codehaus.groovy.jdt.patch" version="0.0.0.qualifier" patch="true"/>
+   <feature url="features/org.codehaus.groovy17.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy18.feature" version="0.0.0.qualifier">
+      <category name="org.codehaus.groovy.compilers"/>
+   </feature>
    <feature url="features/org.codehaus.groovy18.feature_0.0.0.qualifier.jar" id="org.codehaus.groovy18.feature" version="0.0.0.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature>

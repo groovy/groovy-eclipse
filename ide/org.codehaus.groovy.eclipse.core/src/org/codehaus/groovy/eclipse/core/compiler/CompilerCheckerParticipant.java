@@ -98,7 +98,8 @@ public class CompilerCheckerParticipant extends CompilationParticipant {
                         	if (found1 == null) {
                         		//first one found now. Just remember it
                         		found1 = inferredProjectLevel;
-                        	} else if (found1 != null && found2==null) { //only found 1 version so far
+                            } else if (found2 == null) { // only found 1 version
+                                                         // so far
                             	if (inferredProjectLevel==found1) {
                             		//Same, so nothing new.
                             	} else {
