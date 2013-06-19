@@ -239,7 +239,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 		if (types != null) {
 			for (TypeDeclaration type : types) {
 				if (type instanceof GroovyTypeDeclaration) {
-					((GroovyTypeDeclaration) type).fixAnonymousTypeBinding();
+					((GroovyTypeDeclaration) type).fixAnonymousTypeBinding(this);
 				}
 			}
 		}
