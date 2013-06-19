@@ -313,25 +313,57 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
             basicArgs.put("classLoader", loader != null ? loader : sourceUnit.getClassLoader());
             if (!grabExcludeMaps.isEmpty()) basicArgs.put("excludes", grabExcludeMaps);
 
-            try {
-                Grape.grab(basicArgs, grabMaps.toArray(new Map[grabMaps.size()]));
-                // grab may have added more transformations through new URLs added to classpath, so do one more scan
-                if (compilationUnit!=null) {
-                    ASTTransformationVisitor.addGlobalTransformsAfterGrab(compilationUnit.getASTTransformationsContext());
-                }
-            } catch (RuntimeException re) {
-                // Decided against syntax exception since this is not a syntax error.
-                // The down side is we lose line number information for the offending
-                // @Grab annotation.
-            	// Error grabbing Grapes -- [unresolved dependency: joda-timxxe#joda-time;1.6: not found]
-            	String msg = re.getMessage();
-            	System.out.println(">>"+msg+"<<");
-            	if (firstNode!=null) {
-            		addError(msg, firstNode);
-            	} else {
-            		source.addException(re);
-            	}
-            }
+        	// GRECLIPSE was:
+//            try {
+//                Grape.grab(basicArgs, grabMaps.toArray(new Map[grabMaps.size()]));
+//                // grab may have added more transformations through new URLs added to classpath, so do one more scan
+//                if (compilationUnit!=null) {
+//                    ASTTransformationVisitor.addGlobalTransformsAfterGrab(compilationUnit.getASTTransformationsContext());
+//                }
+//            } catch (RuntimeException re) {
+//            	// GRECLIPSE was:
+//            	// source.addException(re);
+//            	// GRECLIPSE now:
+//                // Decided against syntax exception since this is not a syntax error.
+//                // The down side is we lose line number information for the offending
+//                // @Grab annotation.
+//            	// Error grabbing Grapes -- [unresolved dependency: joda-timxxe#joda-time;1.6: not found]
+//            	String msg = re.getMessage();re.printStackTrace();
+//            	System.out.println(">>"+msg+"<<");
+//            	if (firstNode!=null) {
+//            		addError(msg, firstNode);
+//            	} else {
+//            		source.addException(re);
+//            	}
+//            	// GRECLIPSE end            	
+//            }
+            // GRECLIPSE now:
+        	Map[] grabMapsAsMapArray = grabMaps.toArray(new Map[grabMaps.size()]);
+        	for (int i=0;i<grabMapsAsMapArray.length;i++) {
+	            try {
+	           		Grape.grab(new HashMap<String,Object>(basicArgs),grabMapsAsMapArray[i]);
+	                // grab may have added more transformations through new URLs added to classpath, so do one more scan
+	                if (compilationUnit!=null) {
+	                    ASTTransformationVisitor.addGlobalTransformsAfterGrab(compilationUnit.getASTTransformationsContext());
+	                }
+	            } catch (RuntimeException re) {
+	            	// GRECLIPSE was:
+	            	// source.addException(re);
+	            	// GRECLIPSE now:
+	                // Decided against syntax exception since this is not a syntax error.
+	                // The down side is we lose line number information for the offending
+	                // @Grab annotation.
+	            	// Error grabbing Grapes -- [unresolved dependency: joda-timxxe#joda-time;1.6: not found]
+	            	String msg = re.getMessage();re.printStackTrace();
+	            	System.out.println(">>"+msg+"<<");
+	            	if (firstNode!=null) {
+	            		addError(msg, firstNode);
+	            	} else {
+	            		source.addException(re);
+	            	}
+	            }
+        	}
+        	// GRECLIPSE end            	
         }
     }
 
