@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.jar.JarFile;
 
 import org.apache.xbean.classloader.NonLockingJarFileClassLoader;
@@ -31,6 +32,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilationUnit.PrimaryClassNodeOperation;
 import org.codehaus.groovy.control.CompilationUnit.ProgressListener;
+import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
@@ -270,6 +272,8 @@ public class GroovyParser {
 		this.groovyCompilationUnit = makeCompilationUnit(grabbyLoader, gcl, isReconcile, allowTransforms);
 		this.groovyCompilationUnit.tweak(isReconcile);
 		this.groovyCompilationUnit.removeOutputPhaseOperation();
+		String s = options.groovyCustomizerClassesList;
+		System.out.println("Customizer classes list is " + s);
 		if ((options.groovyFlags & CompilerUtils.IsGrails) != 0) {
 			// its probably grails!
 			// nothing up my sleeve, abracadabra!
@@ -400,10 +404,8 @@ public class GroovyParser {
 			sourceCode = CharOperation.NO_CHAR; // pretend empty from thereon
 		}
 
-		// FIXASC (M3) need our own tweaked subclass of CompilerConfiguration?
-		CompilerConfiguration groovyCompilerConfig = new CompilerConfiguration();
 		// groovyCompilerConfig.setPluginFactory(new ErrorRecoveredCSTParserPluginFactory(null));
-		ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(groovyCompilerConfig);
+		ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(groovyCompilationUnit.getConfiguration());
 		String filepath = null;
 
 		// This check is necessary because the filename is short (as in the last part, eg. Foo.groovy) for types coming in
@@ -430,8 +432,8 @@ public class GroovyParser {
 			}
 		}
 
-		SourceUnit groovySourceUnit = new EclipseSourceUnit(eclipseFile, filepath, new String(sourceCode), groovyCompilerConfig,
-				groovyCompilationUnit.getClassLoader(), errorCollector);
+		SourceUnit groovySourceUnit = new EclipseSourceUnit(eclipseFile, filepath, new String(sourceCode),
+				groovyCompilationUnit.getConfiguration(), groovyCompilationUnit.getClassLoader(), errorCollector);
 		groovySourceUnit.isReconcile = isReconcile;
 		GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult,
 				sourceCode.length, groovyCompilationUnit, groovySourceUnit, compilerOptions);
@@ -540,7 +542,28 @@ public class GroovyParser {
 
 	private CompilationUnit makeCompilationUnit(GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean isReconcile,
 			boolean allowTransforms) {
-		CompilationUnit it = new CompilationUnit(null, null, loader, transformLoader, allowTransforms,
+
+		// FIXASC (M3) need our own tweaked subclass of CompilerConfiguration?
+		CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
+		if (compilerOptions.groovyCustomizerClassesList != null && transformLoader != null) {
+			List<CompilationCustomizer> customizers = new ArrayList<CompilationCustomizer>();
+			if (loader != null) {
+				StringTokenizer tokenizer = new StringTokenizer(compilerOptions.groovyCustomizerClassesList, ",");
+				while (tokenizer.hasMoreTokens()) {
+					String classname = tokenizer.nextToken();
+					try {
+						Class<?> clazz = transformLoader.loadClass(classname);
+						CompilationCustomizer cc = (CompilationCustomizer) clazz.newInstance();
+						customizers.add(cc);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+				compilerConfiguration.addCompilationCustomizers(customizers.toArray(new CompilationCustomizer[customizers.size()]));
+			}
+		}
+
+		CompilationUnit it = new CompilationUnit(compilerConfiguration, null, loader, transformLoader, allowTransforms,
 				compilerOptions.groovyTransformsToRunOnReconcile);
 		// Grails: start
 		// This code makes Grails 1.4.M1 AST transforms work.

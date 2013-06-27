@@ -114,6 +114,9 @@ public class JavaCorePreferenceInitializer extends AbstractPreferenceInitializer
 		optionNames.add(CompilerOptions.OPTIONG_GroovyFlags);
 		optionNames.add(CompilerOptions.OPTIONG_BuildGroovyFiles);
 		optionNames.add(CompilerOptions.OPTIONG_GroovyProjectName);
+		
+
+		optionNames.add(CompilerOptions.OPTIONG_GroovyCustomizerClassesList);
 		// GROOVY end
 
 		// Initialize deprecated options
