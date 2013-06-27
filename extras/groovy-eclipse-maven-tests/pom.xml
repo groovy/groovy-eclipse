@@ -46,8 +46,6 @@
 				<version>3.0</version>
 				<configuration>
 					<compilerId>groovy-eclipse-compiler</compilerId>
-					<compilerArgument>nowarn</compilerArgument>
-					<verbose>true</verbose>
  					<includes>
 						<include>**/*.groovy</include>
 						<include>**/*.java</include>
@@ -56,7 +54,6 @@
 						<testInclude>**/*.groovy</testInclude>
 						<testInclude>**/*.java</testInclude>
 					</testIncludes>
-					<compilerArgument>--indy</compilerArgument>
 					<source>1.7</source>
 					<target>1.7</target>
 				</configuration>
@@ -64,12 +61,12 @@
 					<dependency>
 						<groupId>org.codehaus.groovy</groupId>
 						<artifactId>groovy-eclipse-compiler</artifactId>
-						<version>2.7.2-01-SNAPSHOT</version>
+						<version>2.8.0-01-SNAPSHOT</version>
 					</dependency>
-					<dependency>
+ 					<dependency>
 						<groupId>org.codehaus.groovy</groupId>
 						<artifactId>groovy-eclipse-batch</artifactId>
-						<version>2.0.6-01</version>
+						<version>2.1.5-03</version>
 					</dependency>
 					<dependency>
 						<groupId>log4j</groupId>

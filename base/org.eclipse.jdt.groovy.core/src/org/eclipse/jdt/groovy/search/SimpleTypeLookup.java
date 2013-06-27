@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
@@ -279,11 +280,17 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 				MethodNode method = methods.get(0);
 				return new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method, confidence, scope);
 			}
+		} else if (node instanceof ConstructorCallExpression) {
+			List<ConstructorNode> declaredConstructors = declaringType.getDeclaredConstructors();
+			if (declaredConstructors != null && declaredConstructors.size() > 0) {
+				// FIXADE we can do better here and at least match on number of arguments
+				return new TypeLookupResult(nodeType, declaringType, declaredConstructors.get(0), confidence, scope);
+			}
+			return new TypeLookupResult(nodeType, declaringType, declaringType, confidence, scope);
 		}
 
 		// if we get here, then we can't infer the type. Set to unknown if required.
-		if (!(node instanceof ConstructorCallExpression) && !(node instanceof TupleExpression)
-				&& nodeType.equals(VariableScope.OBJECT_CLASS_NODE)) {
+		if (!(node instanceof TupleExpression) && nodeType.equals(VariableScope.OBJECT_CLASS_NODE)) {
 			confidence = UNKNOWN;
 		}
 

@@ -42,7 +42,10 @@ public class ContentTypeUtils {
 	}
 
 	static {
-		Platform.getContentTypeManager().addContentTypeChangeListener(new ChangeListener());
+		IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
+		if (contentTypeManager != null) {
+			contentTypeManager.addContentTypeChangeListener(new ChangeListener());
+		}
 	}
 
 	private ContentTypeUtils() {
@@ -138,7 +141,7 @@ public class ContentTypeUtils {
 			HashSet<String> fileExtensions = new HashSet<String>();
 			// content types derived from groovy content type should be included
 			// (https://bugs.eclipse.org/bugs/show_bug.cgi?id=121715)
-			IContentType[] contentTypes = Platform.getContentTypeManager().getAllContentTypes();
+			IContentType[] contentTypes = contentTypeManager.getAllContentTypes();
 			for (int i = 0, length = contentTypes.length; i < length; i++) {
 				if (contentTypes[i].isKindOf(groovyContentType)) { // note that javaContentType.isKindOf(javaContentType) == true
 					String[] fileExtension = contentTypes[i].getFileSpecs(IContentType.FILE_EXTENSION_SPEC);

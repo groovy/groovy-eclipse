@@ -30,6 +30,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
+import org.codehaus.groovy.eclipse.compiler.InternalCompiler.Result;
 import org.codehaus.plexus.compiler.AbstractCompiler;
 import org.codehaus.plexus.compiler.CompilerConfiguration;
 import org.codehaus.plexus.compiler.CompilerException;
@@ -48,8 +49,6 @@ import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
 import org.codehaus.plexus.util.cli.Commandline;
-import org.eclipse.jdt.core.compiler.CompilationProgress;
-import org.eclipse.jdt.internal.compiler.batch.Main;
 
 /**
  * Allows the use of the Groovy-Eclipse compiler through maven.
@@ -63,48 +62,13 @@ import org.eclipse.jdt.internal.compiler.batch.Main;
  * @author <a href="mailto:matthew.pocock@ncl.ac.uk">Matthew Pocock</a>
  */
 public class GroovyEclipseCompiler extends AbstractCompiler {
+    // IMPORTANT!!! this class must not reference any JDT classes directly.  Must be loadable even if batch compiler not around
 
-    /**
-     * 
-     */
     private static final String PROB_SEPARATOR = "----------\n";
 
     private static final String JAVA_AGENT_CLASS_PARAM_NAME = "-javaAgentClass";
 
     private String javaAgentClass = "";
-
-    /**
-     * Simple progress monitor to keep track of number of files compiled
-     * 
-     * @author Andrew Eisenberg
-     * @created Aug 13, 2010
-     */
-    private class Progress extends CompilationProgress {
-
-        private int count = 0;
-
-        public void begin(int remainingWork) {}
-
-        public void done() {
-            if (verbose) {
-                getLogger().info("Compilation complete.  Compiled " + count + " files.");
-            }
-        }
-
-        public boolean isCanceled() {
-            return false;
-        }
-
-        public void setTaskName(String newTaskName) {}
-
-        public void worked(int workIncrement, int remainingWork) {
-            if (verbose) {
-                String file = remainingWork == 1 ? "file" : "files";
-                getLogger().info(remainingWork + " " + file + " left.");
-                count++;
-            }
-        }
-    }
 
     boolean verbose;
 
@@ -116,9 +80,24 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     
     @Override
     public CompilerResult performCompile(CompilerConfiguration configuration) throws CompilerException {
+        checkForGroovyEclipseBatch();
+        
         List<CompilerMessage> messages = new ArrayList<CompilerMessage>();
         boolean result = internalCompile(configuration, messages);
         return new CompilerResult(result, messages);
+    }
+
+    /**
+     * groovy-eclipse-batch must be depended upon explicitly.if it is not there, then raise a nice, readable error
+     * @throws CompilerException 
+     */
+    private void checkForGroovyEclipseBatch() throws CompilerException {
+        try {
+            Class.forName("org.eclipse.jdt.core.compiler.CompilationProgress");
+        } catch (Exception e) {
+            throw new CompilerException("Could not find groovy-eclipse-batch artifact. "
+                    + "Must add this artifact as an explicit dependency the pom.");
+        }
     }
 
     private boolean internalCompile(CompilerConfiguration config, List<CompilerMessage> messages) throws CompilerException {
@@ -129,7 +108,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             return true;
         }
 
-        boolean result;
+        boolean success;
         if (config.isFork()) {
             String executable = config.getExecutable();
 
@@ -143,25 +122,22 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             }
 
             String groovyEclipseLocation = getGroovyEclipseBatchLocation();
-            result = compileOutOfProcess(config, executable, groovyEclipseLocation, args, messages);
+            success = compileOutOfProcess(config, executable, groovyEclipseLocation, args, messages);
         } else {
-            Progress progress = new Progress();
             StringWriter out = new StringWriter();
-
-            Main main = new Main(new PrintWriter(out), new PrintWriter(out), false/* systemExit */,
-                    null/* options */, progress);
-            result = main.compile(args);
+            Result result = InternalCompiler.doCompile(args, out, getLogger(), verbose);
+            success = result.success;
             try {
-                messages.addAll(parseMessages(result ? 0 : 1, out.getBuffer().toString(), config.isShowWarnings()));
+                messages.addAll(parseMessages(success ? 0 : 1, out.getBuffer().toString(), config.isShowWarnings()));
             } catch (IOException e) {
                 messages = new ArrayList<CompilerMessage>(1);
             }
 
-            if (!result) {
-                messages.add(formatResult(main, result));
+            if (!success) {
+                messages.add(formatResult(success, result.globalErrorsCount, result.globalWarningsCount));
             }
         }
-        return result;
+        return success;
     }
 
     private File[] recalculateStaleFiles(CompilerConfiguration config) throws CompilerException {
@@ -183,23 +159,23 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return null != key && String.class.isInstance(key) && ((String) key).startsWith("-");
     }
 
-    private CompilerMessage formatResult(Main main, boolean result) {
+    private CompilerMessage formatResult(boolean result, int globalErrorsCount, int globalWarningsCount) {
         if (result) {
             return new CompilerMessage("Success!", Kind.NOTE);
         } else {
             Kind kind;
-            if (main.globalErrorsCount > 0) {
+            if (globalErrorsCount > 0) {
                 kind = Kind.ERROR;
-            } else if (main.globalWarningsCount > 0) {
+            } else if (globalWarningsCount > 0) {
                 kind = Kind.WARNING;
             } else {
                 kind = Kind.NOTE;
             }
             
-            String error = main.globalErrorsCount == 1 ? "error" : "errors";
-            String warning = main.globalWarningsCount == 1 ? "warning" : "warnings";
-            return new CompilerMessage("Found " + main.globalErrorsCount + " " + error + " and "
-                    + main.globalWarningsCount + " " + warning + ".", kind);
+            String error = globalErrorsCount == 1 ? "error" : "errors";
+            String warning = globalWarningsCount == 1 ? "warning" : "warnings";
+            return new CompilerMessage("Found " + globalErrorsCount + " " + error + " and "
+                    + globalWarningsCount + " " + warning + ".", kind);
         }
     }
 
@@ -645,7 +621,8 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     }
 
     private String getGroovyEclipseBatchLocation() throws CompilerException {
-        return getClassLocation(Main.class.getName());
+        // can't reference JDT directly in this class
+        return getClassLocation("org.eclipse.jdt.internal.compiler.batch.Main");
     }
 
     private String getClassLocation(String className) throws CompilerException {
