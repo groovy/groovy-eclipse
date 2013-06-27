@@ -36,6 +36,7 @@ import org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -137,8 +138,12 @@ public class CompilerUtils {
 
     public static void setCompilerLevel(IProject project, SpecifiedVersion projectLevel, boolean assertCompatible) {
         Activator.getDefault().setGroovyCompilerLevel(project, projectLevel.versionName);
-        if (assertCompatible && !projectVersionMatchesWorkspaceVersion(projectLevel)) {
-            addCompilerMismatchError(project, projectLevel);
+        if (assertCompatible) {
+            if (projectVersionMatchesWorkspaceVersion(projectLevel)) {
+                removeCompilermMismatchProblem(project);
+            } else {
+                addCompilerMismatchError(project, projectLevel);
+            }
         }
     }
 
@@ -155,12 +160,24 @@ public class CompilerUtils {
             SpecifiedVersion workspaceLevel = CompilerUtils.getWorkspaceCompilerLevel();
             IMarker marker = project.getProject().createMarker(CompilerCheckerParticipant.COMPILER_MISMATCH_PROBLEM);
             marker.setAttribute(IMarker.MESSAGE,
-                    "Groovy compiler level expected by the project does not match workspace compiler level. "
-                            + "\nProject compiler level is: " + projectLevel.toReadableVersionString()
-                            + "\nWorkspace compiler level is " + workspaceLevel.toReadableVersionString()
-                            + "\nGo to Project properties -> Groovy compiler to set the Groovy compiler level for this project");
+                    "Groovy: compiler mismatch Project level is: " + projectLevel.toReadableVersionString()
+                            + " Workspace level is " + workspaceLevel.toReadableVersionString()
+                    + "\nGroovy compiler level expected by the project does not match workspace compiler level. "
+                    + "\nGo to Project properties -> Groovy compiler to set the Groovy compiler level for this project");
             marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
             marker.setAttribute(IMarker.LOCATION, project.getName());
+        } catch (CoreException e) {
+            GroovyCore.logException("Error checking Groovy project compiler level compatibility for " + project.getName(), e);
+        }
+    }
+
+    public static void removeCompilermMismatchProblem(IProject project) {
+        try {
+            IMarker[] findMarkers = project.findMarkers(CompilerCheckerParticipant.COMPILER_MISMATCH_PROBLEM, true,
+                    IResource.DEPTH_ZERO);
+            for (IMarker marker : findMarkers) {
+                marker.delete();
+            }
         } catch (CoreException e) {
             GroovyCore.logException("Error checking Groovy project compiler level compatibility for " + project.getName(), e);
         }

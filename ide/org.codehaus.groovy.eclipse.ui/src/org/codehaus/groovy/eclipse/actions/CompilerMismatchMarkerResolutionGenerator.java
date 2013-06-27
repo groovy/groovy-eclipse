@@ -54,7 +54,7 @@ public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolut
             super(thisMarker);
         }
         public String getLabel() {
-            return "Configure Groovy compiler level for project";
+            return "2. Configure Groovy compiler level for project";
         }
 
         public void run(IMarker marker) {
@@ -80,7 +80,7 @@ public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolut
         }
 
         public String getLabel() {
-            return "Configure the Groovy compiler level for the entire workspace";
+            return "3. Configure the Groovy compiler level for the entire workspace";
         }
 
         public void run(IMarker marker) {
@@ -104,7 +104,7 @@ public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolut
             super(thisMarker);
         }
         public String getLabel() {
-            return "Set the Groovy compiler level for project to match the workspace level";
+            return "1. Set the Groovy compiler level for project to match the workspace level";
         }
 
         public void run(IMarker marker) {
