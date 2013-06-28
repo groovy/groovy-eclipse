@@ -109,7 +109,7 @@ public class CompilerMismatchMarkerResolutionGenerator implements IMarkerResolut
 
         public void run(IMarker marker) {
             IProject project = marker.getResource().getProject();
-            CompilerUtils.setCompilerLevel(project, CompilerUtils.getActiveGroovyVersion(), false);
+            CompilerUtils.setCompilerLevel(project, CompilerUtils.getActiveGroovyVersion(), true);
         }
 
         public String getDescription() {
