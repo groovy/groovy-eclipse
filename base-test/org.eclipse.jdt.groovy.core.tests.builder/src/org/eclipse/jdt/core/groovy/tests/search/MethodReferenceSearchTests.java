@@ -16,9 +16,21 @@
 
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import java.util.List;
+
 import junit.framework.Test;
 
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.SearchEngine;
+import org.eclipse.jdt.core.search.SearchMatch;
+import org.eclipse.jdt.core.search.SearchParticipant;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.internal.core.Openable;
 
 /**
  * @author Andrew Eisenberg
@@ -248,6 +260,53 @@ public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
                 "        f.xxx\n" +
                 "    }\n" +
                 "}", false, 0, "xxx" );
+    }
+    
+    
+    public void testConstructorReferenceSearch() throws Exception {
+        String groovyContents = 
+                "package p\n"
+                + "class Foo {\n"
+                + "  Foo() {\n"
+                + "    new Foo()\n"
+                + "  }\n"
+                + "  Foo(a) {\n"
+                + "    new Foo(a)\n"
+                + "  }\n"
+                + "}";
+        String otherContents = 
+                "import p.Foo\n"
+                + "new Foo()\n"
+                + "new Foo(a)\n"
+                + "new p.Foo()\n"
+                + "new p.Foo(a)\n";
+        
+        GroovyCompilationUnit first = createUnit("p", "Foo", groovyContents);
+        createUnit("", "Other", otherContents);
+       
+        IMethod constructor = first.getType("Foo").getMethods()[0];
+        MockSearchRequestor requestor = new MockSearchRequestor();
+        SearchEngine engine = new SearchEngine();
+        engine.search(SearchPattern.createPattern(constructor, IJavaSearchConstants.REFERENCES), 
+                new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() }, 
+                SearchEngine.createJavaSearchScope(new IJavaElement[] { first.getPackageFragmentRoot() }, false), 
+                requestor, new NullProgressMonitor());
+        List<SearchMatch> matches = requestor.matches;
+        assertEquals("Incorrect number of matches:\n" + matches, 6, matches.size());
+        
+        // two from Foo and two from other
+        int fooCnt = 0, otherCnt = 0;
+        for (SearchMatch match : matches) {
+            if (match.getElement() instanceof IMethod) {
+                if (((IMethod) match.getElement()).getResource().getName().equals("Foo.groovy")) {
+                    fooCnt++;
+                } else if (((IMethod) match.getElement()).getResource().getName().equals("Other.groovy")) {
+                    otherCnt++;
+                }
+            }
+        }
+        assertEquals("Should have found 2 matches in Foo.groovy", 2, fooCnt);
+        assertEquals("Should have found 4 matches in Other.groovy", 4, otherCnt);
     }
     
     private void doTestForTwoMethodReferencesInScript(String secondContents) throws JavaModelException {

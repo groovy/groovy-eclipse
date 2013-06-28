@@ -497,6 +497,9 @@ public class CodeSelectRequestor implements ITypeRequestor {
         if (text.equals(type.getElementName())) {
             return type;
         }
+        if (text.equals("<init>")) {
+            text = type.getElementName();
+        }
         
         // check for methods first, then fields, and then getter/setter variants of the name
         // these values might be null

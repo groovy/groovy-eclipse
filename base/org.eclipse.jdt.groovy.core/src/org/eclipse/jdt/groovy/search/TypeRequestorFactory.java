@@ -19,11 +19,13 @@ package org.eclipse.jdt.groovy.search;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.eclipse.jdt.core.ILocalVariable;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.core.search.matching.ConstructorPattern;
 import org.eclipse.jdt.internal.core.search.matching.FieldPattern;
 import org.eclipse.jdt.internal.core.search.matching.LocalVariablePattern;
 import org.eclipse.jdt.internal.core.search.matching.MethodPattern;
@@ -48,11 +50,11 @@ public class TypeRequestorFactory {
 	 */
 	public ITypeRequestor createRequestor(PossibleMatch possibleMatch, SearchPattern pattern, SearchRequestor requestor) {
 		if (pattern instanceof TypeReferencePattern) {
-			return new TypeReferenceSearchRequestor((TypeReferencePattern) pattern, requestor, possibleMatch.document
-					.getParticipant());
+			return new TypeReferenceSearchRequestor((TypeReferencePattern) pattern, requestor,
+					possibleMatch.document.getParticipant());
 		} else if (pattern instanceof TypeDeclarationPattern) {
-			return new TypeDeclarationSearchRequestor((TypeDeclarationPattern) pattern, requestor, possibleMatch.document
-					.getParticipant());
+			return new TypeDeclarationSearchRequestor((TypeDeclarationPattern) pattern, requestor,
+					possibleMatch.document.getParticipant());
 		} else if (pattern instanceof FieldPattern) {
 			return new FieldReferenceSearchRequestor((FieldPattern) pattern, requestor, possibleMatch.document.getParticipant());
 		} else if (pattern instanceof MethodPattern) {
@@ -69,6 +71,9 @@ public class TypeRequestorFactory {
 			}
 			return new LocalVariableReferenceRequestor(localVar.getElementName(), localVar.getParent(), requestor,
 					possibleMatch.document.getParticipant(), start);
+		} else if (pattern instanceof ConstructorPattern) {
+			return new ConstructorReferenceSearchRequestor((ConstructorPattern) pattern, requestor,
+					possibleMatch.document.getParticipant());
 		} else if (pattern instanceof OrPattern) {
 			SearchPattern[] patterns = getPatterns((OrPattern) pattern);
 			List<ITypeRequestor> requestors = new ArrayList<ITypeRequestor>(patterns.length);
