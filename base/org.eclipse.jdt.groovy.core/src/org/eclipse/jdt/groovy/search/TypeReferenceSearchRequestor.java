@@ -208,8 +208,14 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
 		if (findDeclaration) {
 			// don't use the enclosing element, but rather use the declaration of the type
 			try {
-				element = enclosingElement.getJavaProject().findType(result.type.getName().replace('$', '.'),
-						new NullProgressMonitor());
+				ClassNode type = result.type;
+				while (type.getComponentType() != null) {
+					type = type.getComponentType();
+				}
+				element = enclosingElement.getJavaProject().findType(type.getName().replace('$', '.'), new NullProgressMonitor());
+				if (element == null) {
+					element = enclosingElement;
+				}
 			} catch (JavaModelException e) {
 				Util.log(e);
 				element = enclosingElement;

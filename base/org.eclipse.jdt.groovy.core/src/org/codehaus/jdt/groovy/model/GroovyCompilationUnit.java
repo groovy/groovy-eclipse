@@ -529,9 +529,11 @@ public class GroovyCompilationUnit extends CompilationUnit {
 			return type;
 		}
 		try {
-			IType[] types = getTypes();
-			if (types != null && types.length > 0) {
-				return types[0];
+			if (getResource().exists()) {
+				IType[] types = getTypes();
+				if (types != null && types.length > 0) {
+					return types[0];
+				}
 			}
 		} catch (JavaModelException e) {
 			// can ignore situations when trying to find types that are not on the classpath
