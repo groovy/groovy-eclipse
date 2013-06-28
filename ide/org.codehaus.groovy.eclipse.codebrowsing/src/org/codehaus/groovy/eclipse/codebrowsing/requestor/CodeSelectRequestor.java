@@ -19,6 +19,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
@@ -282,6 +283,10 @@ public class CodeSelectRequestor implements ITypeRequestor {
             String getterName = maybeRequested.getElementName();
             MethodNode maybeDeclaration = (MethodNode) declaration.getDeclaringClass().getMethods(getterName).get(0);
             declaration = maybeDeclaration == null ? declaration : maybeDeclaration;
+        }
+        if (declaration instanceof ConstructorNode && declaration.getEnd() <= 0) {
+            // implicit default constructor. use type instead
+            declaration = declaration.getDeclaringClass();
         }
         
         String uniqueKey = createUniqueKey(declaration, result.type, result.declaringType, maybeRequested);
