@@ -307,12 +307,14 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 	private boolean nodeIsDotClassReference(Expression node) {
 		int end = node.getEnd();
 		int start = node.getStart();
-		char[] contents = unit.getContents();
-		if (contents.length >= end) {
-			char[] realText = new char[end - start];
-			System.arraycopy(contents, start, realText, 0, end - start);
-			String realTextStr = String.valueOf(realText).trim();
-			return realTextStr.endsWith(".class") || realTextStr.endsWith(".class."); //$NON-NLS-1$ //$NON-NLS-2$
+		if (unit.exists()) { // will return false if unit was moved during inferencing operation
+			char[] contents = unit.getContents();
+			if (contents.length >= end) {
+				char[] realText = new char[end - start];
+				System.arraycopy(contents, start, realText, 0, end - start);
+				String realTextStr = String.valueOf(realText).trim();
+				return realTextStr.endsWith(".class") || realTextStr.endsWith(".class."); //$NON-NLS-1$ //$NON-NLS-2$
+			}
 		}
 		return false;
 	}
