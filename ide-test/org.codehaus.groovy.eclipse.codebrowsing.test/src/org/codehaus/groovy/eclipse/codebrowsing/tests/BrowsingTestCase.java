@@ -187,12 +187,7 @@ public abstract class BrowsingTestCase extends BuilderTests {
                     createJavaUnit("Structure", structureContents);
                 }
             } else {
-                // this is an array test, use a different file name
-                if (isGroovy) {
-                    createJavaUnit("XX", structureContents);
-                } else {
-                    createJavaUnit("XX", structureContents);
-                }
+                createJavaUnit("XX", structureContents);
             }
         }
         GroovyCompilationUnit groovyUnit = createUnit(groovyContents);
