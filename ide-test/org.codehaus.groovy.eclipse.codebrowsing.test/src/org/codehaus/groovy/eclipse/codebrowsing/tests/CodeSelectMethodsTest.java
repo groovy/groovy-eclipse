@@ -482,6 +482,22 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         assertConstructor(root, "p", "Foo2", "Foo", contents);
     }
 
+    public void testConstuctorOtherFile2() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        env.addGroovyClass(root, "p", "Foo", "package p\nclass Foo {\nFoo(a) { } }");
+        String contents = "package p\nnew Foo()";
+        assertConstructor(root, "p", "Foo2", "Foo", contents);
+    }
+
+    public void testConstuctorOtherFile3() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        env.addGroovyClass(root, "p", "Foo", "package p\nclass Foo { Foo() { }\nFoo(a) { } }");
+        String contents = "package p\nnew Foo()";
+        assertConstructor(root, "p", "Foo2", "Foo", contents);
+    }
+
     public void testConstuctorJavaFile() throws Exception {
         IPath projectPath = createGenericProject();
         IPath root = projectPath.append("src");
