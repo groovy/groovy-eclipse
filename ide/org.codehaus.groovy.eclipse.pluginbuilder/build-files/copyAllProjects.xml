@@ -57,10 +57,6 @@
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy18.feature">
 			</fileset>
 		</copy>
-		<copy todir="${featuresDestDir}/org.codehaus.groovy17.feature">
-			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy17.feature">
-			</fileset>
-		</copy>
 		<copy todir="${featuresDestDir}/org.codehaus.groovy.dsl.feature">
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.dsl.feature">
 			</fileset>
@@ -75,11 +71,6 @@
 		</copy>
   	
   	<!-- Base Plugins -->
-		<copy todir="${pluginsDestDir}/org.codehaus.groovy">
-			<fileset dir="${workspaceDirBase}/org.codehaus.groovy">
-					<exclude name="**/bin"/>
-			</fileset>
-		</copy>
 		<copy todir="${pluginsDestDir}/org.codehaus.groovy18">
 			<fileset dir="${workspaceDirBase}/org.codehaus.groovy18">
 					<exclude name="**/bin"/>
