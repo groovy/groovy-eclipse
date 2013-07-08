@@ -315,6 +315,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                     setJavaAgentClass(entry.getValue());
                     // do not add the custom java agent arg because it is not
                     // expected by groovy-eclipse compiler
+                    continue;
                 } else {
                     // don't add a "-" if the arg
                     // already has one
@@ -329,9 +330,9 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                  * isn't going to play nicely with any compiler?
                  */
                 args.add("-" + key);
-                if (null != entry.getValue()) { // don't allow a null value
-                    args.add("\"" + entry.getValue() + "\"");
-                }
+            }
+            if (null != entry.getValue()) { // don't allow a null value
+                args.add("\"" + entry.getValue() + "\"");
             }
 
         }
