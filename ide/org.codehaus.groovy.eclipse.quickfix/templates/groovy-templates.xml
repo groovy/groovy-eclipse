@@ -44,6 +44,14 @@
 void ${testName}() {
 	${staticImport:importStatic('org.junit.Assert.*')}${cursor} 
 }</template>
+<template autoinsert="true" context="groovy" deleted="false" description="before method (JUnit 4) (Groovy)" enabled="true" id="org.codehaus.groovy.eclipse.templates.before"  name="Before">@${testType:newType(org.junit.Before)}
+void before() {
+	${cursor}
+}</template>
+<template autoinsert="true" context="groovy" deleted="false" description="after method (JUnit 4) (Groovy)" enabled="true" id="org.codehaus.groovy.eclipse.templates.after" name="After">@${testType:newType(org.junit.After)}
+void after() {
+	${cursor}
+}</template>
 <template autoinsert="true" context="groovy" deleted="false" description="print to standard out (Groovy)" enabled="true" id="org.eclipse.jdt.ui.templates.sysout" name="sysout">println ${word_selection}${}${cursor}</template>
 <template autoinsert="true" context="groovy" deleted="false" description="print to standard out (Groovy)" enabled="true" id="org.eclipse.jdt.ui.templates.println" name="println">println ${word_selection}${}${cursor}</template>
 </templates>
