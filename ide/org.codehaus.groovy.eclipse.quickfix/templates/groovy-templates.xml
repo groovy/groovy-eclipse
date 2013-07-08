@@ -52,6 +52,8 @@ void before() {
 void after() {
 	${cursor}
 }</template>
+<template autoinsert="true" context="groovy" deleted="false" description="assert equals" enabled="true" id="org.codehaus.groovy.eclipse.templates.assert" name="ase">assert ${actual:var(java.lang.Object)} == ${expect:var(java.lang.Object)}</template>
+<template autoinsert="true" context="groovy" deleted="false" description="assert non null" enabled="true" id="org.codehaus.groovy.eclipse.templates.asn" name="asn">assert ${actual:var(java.lang.Object)} != null</template>
 <template autoinsert="true" context="groovy" deleted="false" description="print to standard out (Groovy)" enabled="true" id="org.eclipse.jdt.ui.templates.sysout" name="sysout">println ${word_selection}${}${cursor}</template>
 <template autoinsert="true" context="groovy" deleted="false" description="print to standard out (Groovy)" enabled="true" id="org.eclipse.jdt.ui.templates.println" name="println">println ${word_selection}${}${cursor}</template>
 </templates>
