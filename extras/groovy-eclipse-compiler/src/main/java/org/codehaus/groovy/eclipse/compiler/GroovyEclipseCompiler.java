@@ -461,7 +461,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             }
         }
 
-        return returnCode != 0;
+        return returnCode == 0;
     }
 
     /**
