@@ -23,9 +23,12 @@ import java.net.URLDecoder;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
@@ -43,6 +46,7 @@ import org.codehaus.plexus.compiler.util.scan.SourceInclusionScanner;
 import org.codehaus.plexus.compiler.util.scan.StaleSourceScanner;
 import org.codehaus.plexus.compiler.util.scan.mapping.SourceMapping;
 import org.codehaus.plexus.compiler.util.scan.mapping.SuffixMapping;
+import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.Os;
 import org.codehaus.plexus.util.StringUtils;
@@ -52,11 +56,11 @@ import org.codehaus.plexus.util.cli.Commandline;
 
 /**
  * Allows the use of the Groovy-Eclipse compiler through maven.
- * 
+ *
  * @plexus.component role="org.codehaus.plexus.compiler.Compiler"
  *                   role-hint="groovy-eclipse-compiler"
- * 
- * 
+ *
+ *
  * @author <a href="mailto:andrew@eisenberg.as">Andrew Eisenberg</a>
  * @author <a href="mailto:trygvis@inamo.no">Trygve Laugst&oslash;l</a>
  * @author <a href="mailto:matthew.pocock@ncl.ac.uk">Matthew Pocock</a>
@@ -77,11 +81,11 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         // for sources, so we pass it "". Later, we must recalculate for real.
         super(CompilerOutputStyle.ONE_OUTPUT_FILE_PER_INPUT_FILE, "", ".class", null);
     }
-    
+
     @Override
     public CompilerResult performCompile(CompilerConfiguration configuration) throws CompilerException {
         checkForGroovyEclipseBatch();
-        
+
         List<CompilerMessage> messages = new ArrayList<CompilerMessage>();
         boolean result = internalCompile(configuration, messages);
         return new CompilerResult(result, messages);
@@ -89,7 +93,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
     /**
      * groovy-eclipse-batch must be depended upon explicitly.if it is not there, then raise a nice, readable error
-     * @throws CompilerException 
+     * @throws CompilerException
      */
     private void checkForGroovyEclipseBatch() throws CompilerException {
         try {
@@ -171,7 +175,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             } else {
                 kind = Kind.NOTE;
             }
-            
+
             String error = globalErrorsCount == 1 ? "error" : "errors";
             String warning = globalWarningsCount == 1 ? "warning" : "warnings";
             return new CompilerMessage("Found " + globalErrorsCount + " " + error + " and "
@@ -179,10 +183,10 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         }
     }
 
-    private List<String> composeSourceFiles(File[] sourceFiles) {
-        List<String> sources = new ArrayList<String>(sourceFiles.length);
+    private Map<String,String> composeSourceFiles(File[] sourceFiles) {
+        Map<String,String> sources = new DeduplicatingHashMap<String,String>(getLogger(), sourceFiles.length);
         for (int i = 0; i < sourceFiles.length; i++) {
-            sources.add(sourceFiles[i].getPath());
+            sources.put(sourceFiles[i].getPath(), null);
         }
         return sources;
     }
@@ -225,62 +229,60 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 "Compiling " + sourceFiles.length + " " + "source file" + (sourceFiles.length == 1 ? "" : "s") + " to "
                         + destinationDir.getAbsolutePath());
 
-        List<String> args = new ArrayList<String>();
+        // intentionally using DeduplicatingHashMap to preserve order and Map to deduplicate values
+        // See https://jira.codehaus.org/browse/GRECLIPSE-1659
+        Map<String,String> args = new DeduplicatingHashMap<String,String>(getLogger());
+
         String cp = super.getPathString(config.getClasspathEntries());
         verbose = config.isVerbose();
         if (verbose) {
             getLogger().info("Classpath: " + cp);
         }
         if (cp.length() > 0) {
-            args.add("-cp");
-            args.add(cp);
+            args.put("-cp", cp);
         }
 
         if (config.getOutputLocation() != null && config.getOutputLocation().length() > 0) {
-            args.add("-d");
-            args.add(config.getOutputLocation());
+            args.put("-d", config.getOutputLocation());
         }
 
         if (config.isDebug()) {
             if (config.getDebugLevel() != null && config.getDebugLevel().trim().length() > 0) {
-                args.add("-g:" + config.getDebugLevel());
+                args.put("-g:" + config.getDebugLevel(), null);
             } else {
-                args.add("-g");
+                args.put("-g", null);
             }
         }
 
         if ("none".equals(config.getProc())) {
-            args.add("-proc:none");
+            args.put("-proc:none", null);
         } else if ("only".equals(config.getProc())) {
-            args.add("-proc:only");
+            args.put("-proc:only", null);
         }
 
         if (config.getGeneratedSourcesDirectory() != null) {
-            args.add("-s");
-            args.add(config.getGeneratedSourcesDirectory().getAbsolutePath());
+            args.put("-s", config.getGeneratedSourcesDirectory().getAbsolutePath());
         }
 
         // change default to 1.5
         String source = config.getSourceVersion();
-        args.add("-source");
         if (source != null && source.length() > 0) {
-            args.add(source);
+            args.put("-source", source);
         } else {
-            args.add("1.5");
+            args.put("-source", "1.5");
         }
         String target = config.getTargetVersion();
-        args.add("-target");
         if (target != null && target.length() > 0) {
-            args.add(target);
+            args.put("-target", target);
         } else {
-            args.add("1.5");
+            args.put("-target", "1.5");
         }
 
         if (config.isShowDeprecation()) {
-            args.add("-deprecation");
+            args.put("-deprecation", null);
         }
         if (!config.isShowWarnings()) {
-            args.add("-nowarn");
+            args.put("-nowarn", null);
         }
 
         if (config.getAnnotationProcessors() != null) {
@@ -292,19 +294,17 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 }
             }
             if (procArg.length() > 0) {
-                args.add("-processor ");
                 procArg.replace(procArg.length() - 1, procArg.length(), "");
-                args.add("\"" + procArg.toString() + "\"");
+                args.put("-processor ", "\"" + procArg.toString() + "\"");
             }
         }
 
         if (verbose) {
-            args.add("-verbose");
+            args.put("-verbose", null);
         }
 
         if (config.getSourceEncoding() != null) {
-            args.add("-encoding");
-            args.add(config.getSourceEncoding());
+            args.put("-encoding", config.getSourceEncoding());
         }
 
         for (Entry<String, String> entry : config.getCustomCompilerArgumentsAsMap().entrySet()) {
@@ -319,7 +319,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 } else {
                     // don't add a "-" if the arg
                     // already has one
-                    args.add(key);
+                    args.put(key, entry.getValue());
                 }
             } else if (key != null && !key.equals("org.osgi.framework.system.packages")) {
                 // See https://jira.codehaus.org/browse/GRECLIPSE-1418 ignore
@@ -329,21 +329,19 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                  * don't think this should allow for null keys? "-null" probably
                  * isn't going to play nicely with any compiler?
                  */
-                args.add("-" + key);
-            }
-            if (null != entry.getValue()) { // don't allow a null value
-                args.add("\"" + entry.getValue() + "\"");
+                args.put("-" + key, entry.getValue());
             }
 
         }
 
-        args.addAll(composeSourceFiles(sourceFiles));
+        args.putAll(composeSourceFiles(sourceFiles));
 
+        String[] argsList = flattenArgumentsMap(args);
         if (verbose) {
-            getLogger().info("All args: " + args);
+            getLogger().info("All args: " + Arrays.toString(argsList));
         }
 
-        return args.toArray(new String[args.size()]);
+        return argsList;
     }
 
     private Set<File> computeStaleSources(CompilerConfiguration compilerConfiguration, SourceInclusionScanner scanner)
@@ -381,14 +379,14 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     /**
      * Compile the java sources in a external process, calling an external
      * executable, like javac.
-     * 
+     *
      * @param config
      *            compiler configuration
      * @param executable
      *            name of the executable to launch
      * @param args
      *            arguments for the executable launched
-     * @param messages2 
+     * @param messages2
      * @return List of CompilerError objects with the errors encountered.
      * @throws CompilerException
      */
@@ -468,7 +466,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
     /**
      * Parse the output from the compiler into a list of CompilerError objects
-     * 
+     *
      * @param exitCode
      *            The exit code of javac.
      * @param input
@@ -516,7 +514,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
     /**
      * Construct a CompilerError object from a line of the compiler output
-     * 
+     *
      * @param msgText
      *            output line from the compiler
      * @return the CompilerError object
@@ -526,7 +524,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 //        1. WARNING in /Users/andrew/git-repos/foo/src/main/java/packAction.java (at line 47)
 //            public abstract class AbstractScmTagAction extends TaskAction implements BuildBadgeAction {
 //                                  ^^^^^^^^^^^^^^^^^^^^
-        
+
         // But there will also be messages contributed from annotation processors that will look non-normal
         int dotIndex = msgText.indexOf('.');
         Kind kind;
@@ -546,11 +544,11 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         } else {
             kind = Kind.NOTE;
         }
-        
+
         int firstNewline = msgText.indexOf('\n');
         String firstLine = firstNewline > 0 ? msgText.substring(0, firstNewline) : msgText;
         String rest = firstNewline > 0 ? msgText.substring(firstNewline+1) : "";
-        
+
         if (isNormal) {
             try {
                 int parenIndex = firstLine.indexOf(" (");
@@ -580,7 +578,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     /**
      * put args into a temp file to be referenced using the @ option in javac
      * command line
-     * 
+     *
      * @param args
      * @return the temporary file wth the arguments
      * @throws IOException
@@ -650,12 +648,12 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             throw new CompilerException("Cannot find the location of the requested className <" + className + "> in classpath");
         }
     }
-    
+
     /**
      * Get the path of the javac tool executable: try to find it depending the
      * OS or the <code>java.home</code> system property or the
      * <code>JAVA_HOME</code> environment variable.
-     * 
+     *
      * @return the path of the Javadoc tool
      * @throws IOException
      *             if not found
@@ -698,11 +696,76 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return javaExe.getAbsolutePath();
     }
 
+    /**
+     * Returns content of the Map as an array of Strings. Ignores {@code null} and empty Strings.
+     * Implementation note {@link LinkedHashMap} is preferred Map implementation as it preserves order
+     * @param args Map to be converted
+     * @return Array with {@code args} converted to an array
+     */
+    private String[] flattenArgumentsMap(Map<String,String> args) {
+        List<String> argsList = new ArrayList<String>(args.size()*2);
+
+        for(Map.Entry<String, String> entry: args.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            if(key!=null && key.length()>0) {
+                argsList.add(key);
+                // adds value only if key is actually defined
+                if(value!=null && value.length()>0) {
+                    argsList.add(value);
+                }
+            }
+        }
+
+        return argsList.toArray(new String[0]);
+    }
+
     public String getJavaAgentClass() {
         return javaAgentClass;
     }
 
     public void setJavaAgentClass(String className) {
         this.javaAgentClass = className;
+    }
+
+    /**
+     * Linked Hash Map implementation that logs replaced entries
+     *
+     * @author <a href="kpiwko@redhat.com">Karel Piwko</a>
+     *
+     */
+    private static class DeduplicatingHashMap<K, V> extends LinkedHashMap<K, V> {
+
+        private static final long serialVersionUID = -589299605523895999L;
+
+        private Logger logger;
+
+        public DeduplicatingHashMap(Logger logger, int initialCapacity) {
+            super(initialCapacity);
+            this.logger = logger;
+        }
+
+        public DeduplicatingHashMap(Logger logger) {
+            super();
+            this.logger = logger;
+        }
+
+        @Override
+        public V put(K key, V value) {
+            if(this.containsKey(key) && logger.isDebugEnabled()) {
+                logger.debug("Replacing compiler argument \"" +key + "\" old value: " + this.get(key) + " with: " + value);
+            }
+
+            return super.put(key, value);
+        }
+
+        @Override
+        public void putAll(Map<? extends K, ? extends V> m) {
+            for(Map.Entry<? extends K, ? extends V> entry: m.entrySet()) {
+                this.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+
     }
 }
