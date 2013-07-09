@@ -348,197 +348,199 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         }
     }
 
-	private static String[] types =
-	{
-		"boolean",
-		"byte",
-		"char",
-		"class",
-		"double",
-		"float",
-		"int",
-		"interface",
-		"long",
-		"short",
-		"void"
-	};
-	private static String[] keywords =
-	{
-		"abstract",
-		"break",
-		"case",
-		"catch",
-		"const",
-		"continue",
-		"def",
-		"default",
-		"do",
-		"else",
-		"enum",
-		"extends",
-		"final",
-		"finally",
-		"for",
-		"goto",
-		"if",
-		"implements",
-		"import",
-		"instanceof",
-		"interface",
-		"native",
-		"new",
-		"package",
-		"private",
-		"protected",
-		"public",
-            // "return", use the special return keyword now so returns can be
-            // highlighted differently
-		"static",
-		"super",
-		"switch",
-		"synchronized",
-		"this",
-		"throw",
-		"throws",
-		"transient",
-		"try",
-		"volatile",
-		"while",
-		"true",
-		"false",
-		"null",
-		"void"
-	};
-	private static String[] groovyKeywords = {
-		"as",
-		"def",
-		"assert",
-		"in",
-	};
+    private static String[] types =
+        {
+        "boolean",
+        "byte",
+        "char",
+        "class",
+        "double",
+        "float",
+        "int",
+        "interface",
+        "long",
+        "short",
+        "void"
+        };
+    private static String[] keywords =
+        {
+        "abstract",
+        "break",
+        "case",
+        "catch",
+        "const",
+        "continue",
+        "def",
+        "default",
+        "do",
+        "else",
+        "enum",
+        "extends",
+        "final",
+        "finally",
+        "for",
+        "goto",
+        "if",
+        "implements",
+        "import",
+        "instanceof",
+        "interface",
+        "native",
+        "new",
+        "package",
+        "private",
+        "protected",
+        "public",
+        // "return", use the special return keyword now so returns can be
+        // highlighted differently
+        "static",
+        "super",
+        "switch",
+        "synchronized",
+        "this",
+        "throw",
+        "throws",
+        "transient",
+        "try",
+        "volatile",
+        "while",
+        "true",
+        "false",
+        "null",
+        "void"
+        };
+    private static String[] groovyKeywords = {
+        "as",
+        "def",
+        "assert",
+        "in",
+    };
 
-	private static String[] gjdkWords = {
-		"abs",
-		"any",
-		"append",
-		"asList",
-		"asWritable",
-		"call",
-		"collect",
-		"compareTo",
-		"count",
-		"div",
-		"dump",
-		"each",
-		"eachByte",
-		"eachFile",
-		"eachLine",
-		"every",
-		"find",
-		"findAll",
-		"flatten",
-		"getAt",
-		"getErr",
-		"getIn",
-		"getOut",
-		"getText",
-		"grep",
-		"immutable",
-		"inject",
-		"inspect",
-		"intersect",
-		"invokeMethods",
-		"isCase",
-		"it",
-		"join",
-		"leftShift",
-		"minus",
-		"multiply",
-		"newInputStream",
-		"newOutputStream",
-		"newPrintWriter",
-		"newReader",
-		"newWriter",
-		"next",
-		"plus",
-		"pop",
-		"power",
-		"previous",
-		"print",
-		"println",
-		"push",
-		"putAt",
-		"read",
-		"readBytes",
-		"readLines",
-		"reverse",
-		"reverseEach",
-		"round",
-		"size",
-		"sort",
-		"splitEachLine",
-		"step",
-		"subMap",
-		"times",
-		"toInteger",
-		"toList",
-		"tokenize",
-		"upto",
-		"use",
-		"waitForOrKill",
-		"withPrintWriter",
-		"withReader",
-		"withStream",
-		"withWriter",
-		"withWriterAppend",
-		"write",
-		"writeLine",
-	};
+    private static String[] gjdkWords = {
+        "abs",
+        "any",
+        "append",
+        "asList",
+        "asWritable",
+        "call",
+        "collect",
+        "compareTo",
+        "count",
+        "div",
+        "dump",
+        "each",
+        "eachByte",
+        "eachFile",
+        "eachLine",
+        "every",
+        "find",
+        "findAll",
+        "flatten",
+        "getAt",
+        "getErr",
+        "getIn",
+        "getOut",
+        "getText",
+        "grep",
+        "immutable",
+        "inject",
+        "inspect",
+        "intersect",
+        "invokeMethods",
+        "isCase",
+        "it",
+        "join",
+        "leftShift",
+        "minus",
+        "multiply",
+        "newInputStream",
+        "newOutputStream",
+        "newPrintWriter",
+        "newReader",
+        "newWriter",
+        "next",
+        "plus",
+        "pop",
+        "power",
+        "previous",
+        "print",
+        "println",
+        "push",
+        "putAt",
+        "read",
+        "readBytes",
+        "readLines",
+        "reverse",
+        "reverseEach",
+        "round",
+        "size",
+        "sort",
+        "splitEachLine",
+        "step",
+        "subMap",
+        "times",
+        "toInteger",
+        "toList",
+        "tokenize",
+        "upto",
+        "use",
+        "waitForOrKill",
+        "withPrintWriter",
+        "withReader",
+        "withStream",
+        "withWriter",
+        "withWriterAppend",
+        "write",
+        "writeLine",
+    };
 
     private static final String RETURN = "return"; //$NON-NLS-1$
 
 
     private static String[] fgTokenProperties = { PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR,
-            PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR,
-            PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR,
-            PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR,
-            PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
-            PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR,
-            PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR,
-            PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR };
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR,
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR,
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR,
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR,
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR,
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR };
 
-	private final List<IRule> additionalRules;
-	private final List<String> additionalGroovyKeywords;
+    private final List<IRule> initialAdditionalRules;
+    private final List<IRule> additionalRules;
+    private final List<String> additionalGroovyKeywords;
 
     private final List<String> additionalGJDKWords;
 
-	/**
-	 * @deprecated
-	 */
-	@Deprecated
+    /**
+     * @deprecated
+     */
+    @Deprecated
     public GroovyTagScanner(IColorManager manager) {
-	    this(manager, null, null, null);
-	}
+        this(manager, null, null, null);
+    }
 
 
-	/**
-	 * @param manager the color manager
-	 * @param additionalRules Additional scanner rules for sub-types to add new kinds of partitioning
-	 * @param additionalGroovyKeywords Additional keywords for sub-types to add new kinds of syntax highlighting
+    /**
+     * @param manager the color manager
+     * @param additionalRules Additional scanner rules for sub-types to add new kinds of partitioning
+     * @param additionalGroovyKeywords Additional keywords for sub-types to add new kinds of syntax highlighting
      * @deprecated use the syntaxHighlightingExtender extension point instead.  This gets all of the additional keyword
      * highlighting into editors of files in a project with a particular nature.
-	 */
-	@Deprecated
-    public GroovyTagScanner(IColorManager manager, List<IRule> additionalRules, List<String> additionalGroovyKeywords) {
-	    this(manager, additionalRules, additionalGroovyKeywords, null);
-	}
+     */
+    @Deprecated
+    public GroovyTagScanner(IColorManager manager, List<IRule> initialAdditionalRules, List<IRule> additionalRules, List<String> additionalGroovyKeywords) {
+        this(manager, initialAdditionalRules, additionalRules, additionalGroovyKeywords, null);
+    }
     /**
      * @param manager the color manager
      * @param additionalRules Additional scanner rules for sub-types to add new kinds of partitioning
      * @param additionalGroovyKeywords Additional keywords for sub-types to add new kinds of groovy keyword syntax highlighting
      * @param additionalGJDKKeywords Additional keywords for sub-types to add new kinds of gjdk syntax highlightin
      */
-    public GroovyTagScanner(IColorManager manager, List<IRule> additionalRules, List<String> additionalGroovyKeywords, List<String> additionalGJDKKeywords) {
+    public GroovyTagScanner(IColorManager manager, List<IRule> initialAdditionalRules, List<IRule> additionalRules, List<String> additionalGroovyKeywords, List<String> additionalGJDKKeywords) {
         super(manager, GroovyPlugin.getDefault().getPreferenceStore());
+        this.initialAdditionalRules = initialAdditionalRules;
         this.additionalRules = additionalRules;
         this.additionalGroovyKeywords = additionalGroovyKeywords;
         this.additionalGJDKWords = additionalGJDKKeywords;
@@ -558,6 +560,11 @@ public class GroovyTagScanner extends AbstractJavaScanner {
     protected List<IRule> createRules() {
 
         List<IRule> rules = new ArrayList<IRule>();
+
+        // initial additional rules
+        if (initialAdditionalRules != null) {
+            rules.addAll(initialAdditionalRules);
+        }
 
         // Add rule for character constants.
         Token token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);

@@ -79,8 +79,11 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
     }
 
     private GroovyTagScanner createTagScanner(IProject project, IColorManager colorManager, HighlightingExtenderRegistry registry) throws CoreException {
-        return new GroovyTagScanner(colorManager, registry.getAdditionalRulesForProject(project),
-                registry.getExtraGroovyKeywordsForProject(project), registry.getExtraGJDKKeywordsForProject(project));
+        return new GroovyTagScanner(colorManager,
+                registry.getInitialAdditionalRulesForProject(project),
+                registry.getAdditionalRulesForProject(project),
+                registry.getExtraGroovyKeywordsForProject(project),
+                registry.getExtraGJDKKeywordsForProject(project));
     }
 
     public HighlightingExtenderRegistry getHighlightingExtenderRegistry() {
