@@ -110,4 +110,22 @@ public class HighlightingExtenderRegistry {
         }
         return extraRules;
     }
+
+    public List<IRule> getInitialAdditionalRulesForProject(IProject project) throws CoreException {
+        if (project == null) {
+            return null;
+        }
+        List<IRule> extraRules = new ArrayList<IRule>();
+        String[] natureIds = project.getDescription().getNatureIds();
+        for (String natureId : natureIds) {
+            IHighlightingExtender extender = getExtender(natureId);
+            if (extender != null && (extender instanceof IHighlightingExtender2)) {
+                List<IRule> rules = ((IHighlightingExtender2)extender).getInitialAdditionalRules();
+                if (rules != null) {
+                    extraRules.addAll(rules);
+                }
+            }
+        }
+        return extraRules;
+    }
 }
