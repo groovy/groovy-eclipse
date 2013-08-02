@@ -237,7 +237,9 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
                 javaProject.getElementName());
         launchConfigProperties.put(
                 IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS,
-                "-Dgroovy.starter.conf="+getGroovyConf() +
+                // don't add the groovyConf here
+                // see https://jira.codehaus.org/browse/GRECLIPSE-1650
+                //                "-Dgroovy.starter.conf="+getGroovyConf() +
                 " -Dgroovy.home="+getGroovyHome()
                 );
         launchConfigProperties.put(

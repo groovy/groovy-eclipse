@@ -117,7 +117,9 @@ public class CompilerChooser {
                 ((BundleContextImpl) context).getFramework().getPackageAdmin().refreshPackages(bundles, true, (FrameworkListener[]) null);
 //                ((BundleContextImpl) context).getFramework().getPackageAdmin().refreshPackages(bundles);
             } else {
-                System.out.println("Specified version not found, using " + allVersions[0] + " instead.");
+                if (!found) {
+                    System.out.println("Specified version not found, using " + allVersions[0] + " instead.");
+                }
             }
         } else {
             // just use highest version

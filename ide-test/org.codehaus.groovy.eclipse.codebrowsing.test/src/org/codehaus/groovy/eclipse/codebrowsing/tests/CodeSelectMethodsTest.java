@@ -15,6 +15,7 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.JavaModelException;
 
 /**
  * @author Andrew Eisenberg
@@ -444,4 +445,68 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         assertEquals("Wrong number of parameters to method", 2, ((IMethod) elt[0]).getParameterTypes().length);
     }
 
+    private IMethod assertConstructor(IPath root, String packName, String className, String toSearch, String contents)
+            throws Exception,
+            JavaModelException {
+        env.addGroovyClass(root, packName, className, contents);
+        incrementalBuild();
+        expectingNoProblems();
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root.append(packName), className + ".groovy");
+        unit.becomeWorkingCopy(null);
+        IJavaElement[] elt = unit.codeSelect(contents.lastIndexOf(toSearch), toSearch.length());
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found constructor 'Foo'", "Foo", elt[0].getElementName());
+        assertTrue("Should be a constructor", ((IMethod) elt[0]).isConstructor());
+        return (IMethod) elt[0];
+    }
+
+    public void testConstuctorSimple() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "package p\nclass Foo { Foo() { } }\nnew Foo()";
+        assertConstructor(root, "p", "Foo2", "Foo", contents);
+    }
+
+    public void testConstuctorQualName() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        String contents = "package p\nclass Foo { Foo() { } }\nnew p.Foo()";
+        assertConstructor(root, "p", "Foo2", "p.Foo", contents);
+    }
+
+    public void testConstuctorOtherFile() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        env.addGroovyClass(root, "p", "Foo", "package p\nclass Foo { Foo() { } }");
+        String contents = "package p\nnew Foo()";
+        assertConstructor(root, "p", "Foo2", "Foo", contents);
+    }
+
+    public void testConstuctorJavaFile() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        env.addClass(root, "p", "Foo", "package p;\nclass Foo { Foo() { } }");
+        String contents = "package p\nnew Foo()";
+        assertConstructor(root, "p", "Foo2", "Foo", contents);
+    }
+
+    public void testConstuctorMultipleConstructors() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        env.addGroovyClass(root, "p", "Foo", "package p\nclass Foo { Foo() { }\nFoo(a) { } }");
+        String contents = "package p\nnew Foo()";
+        IMethod method = assertConstructor(root, "p", "Foo2", "Foo", contents);
+        // should have arbitrarily found the first method
+        assertEquals("Should have found a constructor with no args", 0, method.getParameterNames().length);
+    }
+
+    public void testConstuctorMultipleConstructors2() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+        env.addGroovyClass(root, "p", "Foo", "package p\nclass Foo { Foo() { }\nFoo(a) { } }");
+        String contents = "package p\nnew Foo(0)";
+        IMethod method = assertConstructor(root, "p", "Foo2", "Foo", contents);
+        // should have arbitrarily found the first method
+        assertEquals("Should have found a constructor with no args", 0, method.getParameterNames().length);
+    }
 }

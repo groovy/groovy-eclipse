@@ -55,7 +55,7 @@
 	
 	<!--  ================================= 
           target: extract-create-install
-         installs into the local repo                     
+         installs into the local repo     
          =================================  -->
 	<target name="extract-create-install" depends="-init,extract-create">
 		<mavenInstall version="${version}" prefix="${jar.prefix}"/>
@@ -126,6 +126,7 @@
 			<include name="org.eclipse.core.runtime_*.jar" />
 			<include name="org.eclipse.core.resources_*.jar" />
 			<include name="org.eclipse.core.filesystem_*.jar" />
+			<include name="org.eclipse.core.contenttype_*.jar" />
 			<include name="org.eclipse.equinox.common_*.jar" />
 			<include name="org.eclipse.core.jobs_*.jar" />
 			<include name="org.eclipse.text_*.jar" />
@@ -147,7 +148,7 @@
 		<fileset dir="${git.repo.loc}/base/org.eclipse.jdt.groovy.core/bin" id="jdt.groovy.core.class.files">
 			<include name="**/*.*" />
 		</fileset>
-		<fileset dir="${git.repo.loc}/jdt-patch/e42/org.eclipse.jdt.core/bin" id="jdt.core.class.files">
+		<fileset dir="${git.repo.loc}/jdt-patch/e43/org.eclipse.jdt.core/bin" id="jdt.core.class.files">
 			<include name="**/*.*" />
 		</fileset>
 		<!-- Ensure that this comes after the core groocy compiler files because the groovy-eclipse.jar must overwrite the groovy jar -->

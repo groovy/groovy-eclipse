@@ -31,7 +31,7 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 
 /**
- * Reads parts of a file
+ * Reads parts of a file *
  * 
  * @author reto kleeb
  * @author Andrew Eisenberg

@@ -84,7 +84,8 @@ public abstract class BrowsingTestCase extends BuilderTests {
             env.addGroovyNature("Project");
             env.addGroovyJars(projectPath);
             fullBuild(projectPath);
-            env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+            IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+            env.addPackage(root, "p");
             env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
         } else {
             projectPath = env.getJavaProject("Project").getPath();
@@ -186,12 +187,7 @@ public abstract class BrowsingTestCase extends BuilderTests {
                     createJavaUnit("Structure", structureContents);
                 }
             } else {
-                // this is an array test, use a different file name
-                if (isGroovy) {
-                    createJavaUnit("XX", structureContents);
-                } else {
-                    createJavaUnit("XX", structureContents);
-                }
+                createJavaUnit("XX", structureContents);
             }
         }
         GroovyCompilationUnit groovyUnit = createUnit(groovyContents);

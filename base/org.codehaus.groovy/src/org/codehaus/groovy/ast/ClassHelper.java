@@ -16,18 +16,24 @@
 
 package org.codehaus.groovy.ast;
 
-import groovy.lang.*;
-import org.codehaus.groovy.runtime.GeneratedClosure;
-import org.codehaus.groovy.vmplugin.VMPluginFactory;
-import org.objectweb.asm.Opcodes;
+import groovy.lang.Closure;
+import groovy.lang.GString;
+import groovy.lang.MetaClass;
+import groovy.lang.Range;
+import groovy.lang.Reference;
+import groovy.lang.Script;
+import groovyjarjarasm.asm.Opcodes;
 
+import java.lang.ref.SoftReference;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.regex.Pattern;
-import java.lang.ref.SoftReference;
+
+import org.codehaus.groovy.runtime.GeneratedClosure;
+import org.codehaus.groovy.vmplugin.VMPluginFactory;
 
 /**
  * This class is a Helper for ClassNode and classes handling ClassNodes.

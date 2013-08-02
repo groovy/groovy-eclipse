@@ -19,6 +19,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
@@ -283,6 +284,10 @@ public class CodeSelectRequestor implements ITypeRequestor {
             MethodNode maybeDeclaration = (MethodNode) declaration.getDeclaringClass().getMethods(getterName).get(0);
             declaration = maybeDeclaration == null ? declaration : maybeDeclaration;
         }
+        if (declaration instanceof ConstructorNode && declaration.getEnd() <= 0) {
+            // implicit default constructor. use type instead
+            declaration = declaration.getDeclaringClass();
+        }
         
         String uniqueKey = createUniqueKey(declaration, result.type, result.declaringType, maybeRequested);
         IJavaElement candidate;
@@ -496,6 +501,9 @@ public class CodeSelectRequestor implements ITypeRequestor {
     private IJavaElement findElement(IType type, String text, int preferredParamNumber) throws JavaModelException {
         if (text.equals(type.getElementName())) {
             return type;
+        }
+        if (text.equals("<init>")) {
+            text = type.getElementName();
         }
         
         // check for methods first, then fields, and then getter/setter variants of the name

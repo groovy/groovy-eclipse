@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
@@ -145,6 +146,10 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
     }
 
     private SourceRange getSourceRange(org.codehaus.groovy.ast.ASTNode node) {
+        if (node instanceof ConstructorCallExpression) {
+            // want to select the type name, not the entire expression
+            node = ((ConstructorCallExpression) node).getType();
+        }
         if (node instanceof ClassNode) {
             // handle inner classes referenced semi-qualified
             String semiQualifiedName = ((ClassNode) node).getNameWithoutPackage();

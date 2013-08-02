@@ -11,7 +11,19 @@
  ******************************************************************************/
 package org.codehaus.groovy.classgen;
 
-import java.util.Iterator;
+import static java.lang.reflect.Modifier.isAbstract;
+import static java.lang.reflect.Modifier.isFinal;
+import static java.lang.reflect.Modifier.isNative;
+import static java.lang.reflect.Modifier.isPrivate;
+import static java.lang.reflect.Modifier.isProtected;
+import static java.lang.reflect.Modifier.isPublic;
+import static java.lang.reflect.Modifier.isStatic;
+import static java.lang.reflect.Modifier.isStrict;
+import static java.lang.reflect.Modifier.isSynchronized;
+import static java.lang.reflect.Modifier.isTransient;
+import static java.lang.reflect.Modifier.isVolatile;
+import groovyjarjarasm.asm.Opcodes;
+
 import java.util.List;
 
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
@@ -35,11 +47,8 @@ import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.control.SourceUnit;
-import org.objectweb.asm.Opcodes;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
-
-import static java.lang.reflect.Modifier.*;
 
 /**
  * ClassCompletionVerifier

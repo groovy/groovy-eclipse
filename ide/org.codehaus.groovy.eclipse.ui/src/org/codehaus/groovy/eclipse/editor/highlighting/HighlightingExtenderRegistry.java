@@ -57,7 +57,6 @@ public class HighlightingExtenderRegistry {
                 String natureid = elt.getAttribute(NATURE_ID);
                 Object object = WorkbenchPlugin.createExtension(elt, EXTENDER);
                 if (object instanceof IHighlightingExtender) {
-                    //                  natureToExtenderMap += [ "${natureid}" : object ]
                     natureToExtenderMap.put(natureid, (IHighlightingExtender) object);
                 }
             }

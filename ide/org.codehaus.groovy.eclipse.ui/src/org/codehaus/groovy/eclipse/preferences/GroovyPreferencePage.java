@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,7 +49,7 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         Label myLabel;
 
         private MonospaceFieldEditor() {
-            super(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT, "&Use monospace font for JUnit",
+            super(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT, "&Use monospace font for JUnit (deprecated)",
                     getFieldEditorParent());
         }
 
@@ -103,11 +103,12 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         // JUnit Monospace
         final BooleanFieldEditor monospaceEditor = new MonospaceFieldEditor();
         monospaceEditor.setPreferenceStore(getPreferenceStore());
+        monospaceEditor.setEnabled(false, getFieldEditorParent());
         addField(monospaceEditor);
         Label monoLabel = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
         monoLabel.setText(
-                    "This option is particularly useful for testing frameworks\n" +
-                    "that use a formatted output such as Spock\n\n");
+                "This option is particularly useful for testing frameworks\n" +
+                "that use a formatted output such as Spock\n\n");
 
         Label contentAssistLabel = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
         contentAssistLabel.setText("\n\nGroovy Content assist options to make your content assist Groovier.");
@@ -124,12 +125,12 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
 
         // default launch location for scripts
         addField(new RadioGroupFieldEditor(PreferenceConstants.GROOVY_SCRIPT_DEFAULT_WORKING_DIRECTORY,
-                    "\nDefault working directory for running Groovy scripts \n(will not change the working directory of existing scripts," +
-                    "\nonly new ones).", 1,
-                    new String[][] {{ "Project home", PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME },
-                                    { "Script location", PreferenceConstants.GROOVY_SCRIPT_SCRIPT_LOC },
-                                    { "Eclipse home", PreferenceConstants.GROOVY_SCRIPT_ECLIPSE_HOME } },
-                    getFieldEditorParent()));
+                "\nDefault working directory for running Groovy scripts \n(will not change the working directory of existing scripts," +
+                        "\nonly new ones).", 1,
+                        new String[][] {{ "Project home", PreferenceConstants.GROOVY_SCRIPT_PROJECT_HOME },
+                { "Script location", PreferenceConstants.GROOVY_SCRIPT_SCRIPT_LOC },
+                { "Eclipse home", PreferenceConstants.GROOVY_SCRIPT_ECLIPSE_HOME } },
+                getFieldEditorParent()));
 
         // legacy projects
         ConvertLegacyProject convert = new ConvertLegacyProject();

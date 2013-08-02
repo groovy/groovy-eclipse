@@ -55,7 +55,6 @@ public class GroovyActivator extends Plugin {
             System.out.println("------------");
         }
         super.start(context);
-        new Exception().printStackTrace();
         try {
             initialize();
         } catch (Exception e) {

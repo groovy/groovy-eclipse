@@ -1,35 +1,37 @@
 // $ANTLR 2.7.7 (20060906): "groovy.g" -> "GroovyRecognizer.java"$
 
 package org.codehaus.groovy.antlr.parser;
-import org.codehaus.groovy.antlr.*;
-import java.util.*;
+import groovyjarjarantlr.ASTFactory;
+import groovyjarjarantlr.ASTPair;
+import groovyjarjarantlr.CommonToken;
+import groovyjarjarantlr.InputBuffer;
+import groovyjarjarantlr.LexerSharedInputState;
+import groovyjarjarantlr.MismatchedTokenException;
+import groovyjarjarantlr.NoViableAltException;
+import groovyjarjarantlr.ParserSharedInputState;
+import groovyjarjarantlr.RecognitionException;
+import groovyjarjarantlr.SemanticException;
+import groovyjarjarantlr.Token;
+import groovyjarjarantlr.TokenBuffer;
+import groovyjarjarantlr.TokenStream;
+import groovyjarjarantlr.TokenStreamException;
+import groovyjarjarantlr.TokenStreamRecognitionException;
+import groovyjarjarantlr.collections.AST;
+import groovyjarjarantlr.collections.impl.ASTArray;
+import groovyjarjarantlr.collections.impl.BitSet;
+
 import java.io.InputStream;
 import java.io.Reader;
-import antlr.InputBuffer;
-import antlr.LexerSharedInputState;
-import antlr.CommonToken;
-import org.codehaus.groovy.GroovyBugError;
-import antlr.TokenStreamRecognitionException;
-import org.codehaus.groovy.ast.Comment;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 
-import antlr.TokenBuffer;
-import antlr.TokenStreamException;
-import antlr.TokenStreamIOException;
-import antlr.ANTLRException;
-import antlr.LLkParser;
-import antlr.Token;
-import antlr.TokenStream;
-import antlr.RecognitionException;
-import antlr.NoViableAltException;
-import antlr.MismatchedTokenException;
-import antlr.SemanticException;
-import antlr.ParserSharedInputState;
-import antlr.collections.impl.BitSet;
-import antlr.collections.AST;
-import java.util.Hashtable;
-import antlr.ASTFactory;
-import antlr.ASTPair;
-import antlr.collections.impl.ASTArray;
+import org.codehaus.groovy.antlr.GroovySourceAST;
+import org.codehaus.groovy.antlr.SourceBuffer;
+import org.codehaus.groovy.antlr.SourceInfo;
+import org.codehaus.groovy.ast.Comment;
 
 /** JSR-241 Groovy Recognizer 
  *
@@ -215,7 +217,7 @@ import antlr.collections.impl.ASTArray;
  *
  * This grammar is in the PUBLIC DOMAIN
  */
-public class GroovyRecognizer extends antlr.LLkParser       implements GroovyTokenTypes
+public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implements GroovyTokenTypes
  {
 
         /** This factory is the correct way to wire together a Groovy parser and lexer. */

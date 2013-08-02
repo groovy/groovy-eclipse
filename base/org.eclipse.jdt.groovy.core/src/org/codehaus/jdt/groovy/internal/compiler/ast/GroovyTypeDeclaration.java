@@ -22,6 +22,7 @@ import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
+import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 
 @SuppressWarnings("restriction")
@@ -62,8 +63,10 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
 	 * Fixes the super types of anonymous inner classes These kinds of classes are always constructed so that they extend the super
 	 * type, even if the super type is an interface. This is because during parse time we don't know if the super type is a class or
 	 * interface, se we need to wait until after the resolve phase to fix this.
+	 * 
+	 * @param groovyCompilationUnitScope
 	 */
-	public void fixAnonymousTypeBinding() {
+	public void fixAnonymousTypeBinding(GroovyCompilationUnitScope groovyCompilationUnitScope) {
 		if ((this.bits & ASTNode.IsAnonymousType) != 0) {
 			if (classNode.getInterfaces() != null && classNode.getInterfaces().length == 1
 					&& classNode.getSuperClass().getName().equals("java.lang.Object")) {
@@ -75,9 +78,16 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
 			}
 		}
 		if (anonymousTypes != null) {
-			for (GroovyTypeDeclaration type : anonymousTypes) {
-				GroovyClassScope anonScope = new GroovyClassScope(this.scope, type);
-				type.scope = anonScope;
+			fixAnonymousTypeDeclarations(anonymousTypes, groovyCompilationUnitScope);
+		}
+	}
+
+	private void fixAnonymousTypeDeclarations(GroovyTypeDeclaration[] types, Scope parentScope) {
+		for (GroovyTypeDeclaration type : types) {
+			GroovyClassScope anonScope = new GroovyClassScope(parentScope, type);
+			type.scope = anonScope;
+			if (type.anonymousTypes != null) {
+				fixAnonymousTypeDeclarations(type.anonymousTypes, anonScope);
 			}
 		}
 	}

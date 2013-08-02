@@ -19,6 +19,9 @@ import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyObject;
 import groovy.lang.GroovyObjectSupport;
 import groovy.lang.MetaClass;
+import groovyjarjarasm.asm.Label;
+import groovyjarjarasm.asm.MethodVisitor;
+import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -64,9 +67,6 @@ import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.RuntimeParserException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 
 /**
  * Verifies the AST node and adds any defaulted AST code before

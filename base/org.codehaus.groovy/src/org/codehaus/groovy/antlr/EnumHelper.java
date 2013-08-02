@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.antlr;
 
+import groovyjarjarasm.asm.Opcodes;
+
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -23,7 +25,6 @@ import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MixinNode;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
-import org.objectweb.asm.Opcodes;
 
 
 public class EnumHelper {

@@ -214,7 +214,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
     @Override
     public void visitConstructorCallExpression(
             ConstructorCallExpression call) {
-        check(call.getType());
+        check(call.getType(), call);
         super.visitConstructorCallExpression(call);
     }
 
@@ -436,6 +436,24 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         }
     }
 
+    /**
+     * Check if the body of the node covers the selection
+     * 
+     * This variant of the method allowsyou to check for one node
+     * but target another one
+     *
+     * @throw {@link VisitCompleteException} if a match is found
+     */
+    protected void check(ASTNode checkNode, ASTNode targetNode) {
+        if (doTest(checkNode)) {
+            nodeFound = targetNode;
+            throw new VisitCompleteException();
+        }
+        if (checkNode instanceof ClassNode) {
+            checkGenerics((ClassNode) checkNode);
+        }
+    }
+    
     /**
      * Check if the name of the node covers the selection
      *

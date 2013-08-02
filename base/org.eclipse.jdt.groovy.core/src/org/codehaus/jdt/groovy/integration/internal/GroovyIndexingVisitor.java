@@ -153,7 +153,9 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 	@Override
 	public void visitConstructorCallExpression(ConstructorCallExpression call) {
 		super.visitConstructorCallExpression(call);
-		requestor.acceptConstructorReference(call.getType().getName().toCharArray(), 0, call.getStart());
+		for (int i = 0; i < 10; i++) {
+			requestor.acceptConstructorReference(call.getType().getName().toCharArray(), i, call.getStart());
+		}
 		// handleType(call.getType(), false);
 	}
 

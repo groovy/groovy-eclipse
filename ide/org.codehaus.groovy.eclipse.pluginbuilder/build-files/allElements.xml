@@ -24,6 +24,11 @@
  	<!-- Add on <ant> task for each top level element being built.             -->
  	<!-- ===================================================================== -->	
 	<target name="allElementsDelegator">
+		<echo message="Delegating to org.codehaus.groovy17.feature"/>
+		<ant antfile="${genericTargets}" target="${target}">
+			<property name="type" value="feature" />
+			<property name="id" value="org.codehaus.groovy17.feature" />
+		</ant>
 		<echo message="Delegating to org.codehaus.groovy18.feature"/>
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
@@ -109,6 +114,18 @@
 			<property name="zipargs" value="" />
 		</ant>
 	</target>
+	<target name="assemble.org.codehaus.groovy17.feature">
+		<echo message="Assembling org.codehaus.groovy17.feature"/>
+		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
+			<property name="zipargs" value="" />
+		</ant>
+	</target>
+	<target name="assemble.org.codehaus.groovy18.feature">
+		<echo message="Assembling org.codehaus.groovy18.feature"/>
+		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
+			<property name="zipargs" value="" />
+		</ant>
+	</target>
 	<target name="assemble.org.codehaus.groovy20.feature">
 		<echo message="Assembling org.codehaus.groovy20.feature"/>
 		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
@@ -117,12 +134,6 @@
 	</target>
 	<target name="assemble.org.codehaus.groovy21.feature">
 		<echo message="Assembling org.codehaus.groovy21.feature"/>
-		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
-			<property name="zipargs" value="" />
-		</ant>
-	</target>
-	<target name="assemble.org.codehaus.groovy18.feature">
-		<echo message="Assembling org.codehaus.groovy18.feature"/>
 		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
 			<property name="zipargs" value="" />
 		</ant>

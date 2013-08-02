@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.antlr;
 
-import antlr.LexerSharedInputState;
+import groovyjarjarantlr.LexerSharedInputState;
 
 /**
  * GRECLIPSE-805 Support for unicode escape sequences
