@@ -8550,12 +8550,48 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"printDate()"},"");
 	}
 	
+	// Improving grab, this program has a broken grab. Without changes we get a 'general error' recorded on the first line of the source file (big juicy exception)
+//	General error during conversion: Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found] java.lang.RuntimeException: Error grabbing 
+//	 Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found] at sun.reflect.GeneratedConstructorAccessor48.newInstance(Unknown Source) at 
+//	 sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:27) at java.lang.reflect.Constructor.newInstance(Constructor.java:513) at 
+//	 org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:77) at ...
+	// With grab improvements we get two errors - the missing dependency and the missing type (which is at the right version of that dependency!)
+	public void testGrabWithErrors() {
+		this.runNegativeTest(new String[]{
+				"Grab1.groovy",
+				"\n"+
+				"@Grab(group=\"joda-time\", module=\"joda-time\", version=\"1.6\")\n"+
+				"\n"+
+				"@Grab(group=\"org.aspectj\", module=\"aspectjweaver\", version=\"1.6.11x\")\n"+
+				"class C {\n"+
+				"	def printDate() {\n"+
+				"	      def dt = new org.joda.time.DateTime()\n"+
+				"		  def world = new org.aspectj.weaver.bcel.BcelWorld();\n"+
+				"		  print dt;\n"+
+				"	}\n"+
+				"	public static void main(String[] argv) {\n"+
+				"		new C().printDate()\n"+
+				"	}\n"+
+				"}\n"},
+				"----------\n" + 
+				"1. ERROR in Grab1.groovy (at line 4)\n" + 
+				"	@Grab(group=\"org.aspectj\", module=\"aspectjweaver\", version=\"1.6.11x\")\n" + 
+				"	 ^^^\n" + 
+				"Groovy:Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found]\n" + 
+				"----------\n" + 
+				"2. ERROR in Grab1.groovy (at line 8)\n" + 
+				"	def world = new org.aspectj.weaver.bcel.BcelWorld();\n" + 
+				"	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+				"Groovy:unable to resolve class org.aspectj.weaver.bcel.BcelWorld \n" + 
+				"----------\n");
+	}
+	
 	public void testGrabError() {
 		this.runConformTest(new String[]{
 				"Printer.groovy",
 				"import groovy.lang.Grab;\n"+
 				"\n"+
-				"@Grab(group=\"joda-timex\", module=\"joda-time\", version=\"1.6\")\n"+
+				"@Grab(group=\"joda-time\", module=\"joda-time\", version=\"1.6\")\n"+
 				"def printDate() {\n"+
 				"      def dt = new org.joda.time.DateTime()\n"+
 				"}\n"+

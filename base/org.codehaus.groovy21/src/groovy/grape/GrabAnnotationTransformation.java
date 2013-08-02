@@ -175,7 +175,6 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
         List<Map<String,Object>> grabMaps = new ArrayList<Map<String,Object>>();
         List<Map<String,Object>> grabExcludeMaps = new ArrayList<Map<String,Object>>();
 
-        AnnotationNode firstNode = null;
         for (ClassNode classNode : sourceUnit.getAST().getClasses()) {
             grabAnnotations = new ArrayList<AnnotationNode>();
             grabExcludeAnnotations = new ArrayList<AnnotationNode>();
@@ -277,13 +276,9 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                 }
             }
 
-            
             if (!grabAnnotations.isEmpty()) {
                 grabAnnotationLoop:
                 for (AnnotationNode node : grabAnnotations) {
-                	if (firstNode == null) {
-                		firstNode = node;
-                	}
                     Map<String, Object> grabMap = new HashMap<String, Object>();
                     checkForConvenienceForm(node, false);
                     for (String s : GRAB_ALL) {
@@ -297,7 +292,6 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                         }
                         if (node.getMember(s) != null)
                             grabMap.put(s, ((ConstantExpression)member).getValue());
-                        
                     }
                     grabMaps.add(grabMap);
                     callGrabAsStaticInitIfNeeded(classNode, grapeClassNode, node, grabExcludeMaps);
@@ -314,31 +308,24 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
             if (!grabExcludeMaps.isEmpty()) basicArgs.put("excludes", grabExcludeMaps);
 
         	// GRECLIPSE was:
-//            try {
-//                Grape.grab(basicArgs, grabMaps.toArray(new Map[grabMaps.size()]));
-//                // grab may have added more transformations through new URLs added to classpath, so do one more scan
-//                if (compilationUnit!=null) {
-//                    ASTTransformationVisitor.addGlobalTransformsAfterGrab(compilationUnit.getASTTransformationsContext());
-//                }
-//            } catch (RuntimeException re) {
-//            	// GRECLIPSE was:
-//            	// source.addException(re);
-//            	// GRECLIPSE now:
-//                // Decided against syntax exception since this is not a syntax error.
-//                // The down side is we lose line number information for the offending
-//                // @Grab annotation.
-//            	// Error grabbing Grapes -- [unresolved dependency: joda-timxxe#joda-time;1.6: not found]
-//            	String msg = re.getMessage();re.printStackTrace();
-//            	System.out.println(">>"+msg+"<<");
-//            	if (firstNode!=null) {
-//            		addError(msg, firstNode);
-//            	} else {
-//            		source.addException(re);
-//            	}
-//            	// GRECLIPSE end            	
-//            }
+            /*
+            try {
+                Grape.grab(basicArgs, grabMaps.toArray(new Map[grabMaps.size()]));
+                // grab may have added more transformations through new URLs added to classpath, so do one more scan
+                if (compilationUnit!=null) {
+                    ASTTransformationVisitor.addGlobalTransformsAfterGrab(compilationUnit.getASTTransformationsContext());
+                }
+            } catch (RuntimeException re) {
+                // Decided against syntax exception since this is not a syntax error.
+                // The down side is we lose line number information for the offending
+                // @Grab annotation.
+                source.addException(re);
+            }
+            */
             // GRECLIPSE now:
-        	Map[] grabMapsAsMapArray = grabMaps.toArray(new Map[grabMaps.size()]);
+            // This grabs one thing at a time (so the errors are discovered individually), they are recorded
+            // against the first node
+        	Map<String,Object>[] grabMapsAsMapArray = grabMaps.toArray(new Map[grabMaps.size()]);
         	for (int i=0;i<grabMapsAsMapArray.length;i++) {
 	            try {
 	           		Grape.grab(new HashMap<String,Object>(basicArgs),grabMapsAsMapArray[i]);
@@ -347,17 +334,10 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
 	                    ASTTransformationVisitor.addGlobalTransformsAfterGrab(compilationUnit.getASTTransformationsContext());
 	                }
 	            } catch (RuntimeException re) {
-	            	// GRECLIPSE was:
-	            	// source.addException(re);
-	            	// GRECLIPSE now:
-	                // Decided against syntax exception since this is not a syntax error.
-	                // The down side is we lose line number information for the offending
-	                // @Grab annotation.
-	            	// Error grabbing Grapes -- [unresolved dependency: joda-timxxe#joda-time;1.6: not found]
-	            	String msg = re.getMessage();re.printStackTrace();
-	            	System.out.println(">>"+msg+"<<");
-	            	if (firstNode!=null) {
-	            		addError(msg, firstNode);
+	               	// Error grabbing Grapes -- [unresolved dependency: joda-timxxe#joda-time;1.6: not found]
+	            	String msg = re.getMessage();
+	            	if (grabAnnotations.size()>i) {
+	            		addError(msg, grabAnnotations.get(i));
 	            	} else {
 	            		source.addException(re);
 	            	}
