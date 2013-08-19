@@ -273,7 +273,6 @@ public class GroovyParser {
 		this.groovyCompilationUnit.tweak(isReconcile);
 		this.groovyCompilationUnit.removeOutputPhaseOperation();
 		String s = options.groovyCustomizerClassesList;
-		System.out.println("Customizer classes list is " + s);
 		if ((options.groovyFlags & CompilerUtils.IsGrails) != 0) {
 			// its probably grails!
 			// nothing up my sleeve, abracadabra!
