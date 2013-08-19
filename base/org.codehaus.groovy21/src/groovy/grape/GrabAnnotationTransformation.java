@@ -172,7 +172,11 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
             }
         }
 
-        List<Map<String,Object>> grabMaps = new ArrayList<Map<String,Object>>();
+        // GRECLIPSE - if this is a list and not a set then you can duplicates when multiple classes
+        // are visited in the same source file. The same grabs are accumulated. There is maybe a
+        // better fix but this is easy.  If there are duplicates it will work but we are calling
+        // grab with unnecessary dup info.
+        Collection<Map<String,Object>> grabMaps = new LinkedHashSet<Map<String,Object>>();
         List<Map<String,Object>> grabExcludeMaps = new ArrayList<Map<String,Object>>();
 
         for (ClassNode classNode : sourceUnit.getAST().getClasses()) {
