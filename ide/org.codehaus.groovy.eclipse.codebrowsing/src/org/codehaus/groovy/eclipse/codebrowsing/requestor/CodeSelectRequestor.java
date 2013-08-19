@@ -284,7 +284,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
             MethodNode maybeDeclaration = (MethodNode) declaration.getDeclaringClass().getMethods(getterName).get(0);
             declaration = maybeDeclaration == null ? declaration : maybeDeclaration;
         }
-        if (declaration instanceof ConstructorNode && declaration.getEnd() <= 0) {
+        if (declaration instanceof ConstructorNode && maybeRequested.getElementType() == IJavaElement.TYPE) {
             // implicit default constructor. use type instead
             declaration = declaration.getDeclaringClass();
         }

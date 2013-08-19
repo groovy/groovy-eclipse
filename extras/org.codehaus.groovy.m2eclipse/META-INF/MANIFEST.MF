@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Groovy-Eclipse m2eclipse integration
 Bundle-SymbolicName: org.codehaus.groovy.m2eclipse;singleton:=true
-Bundle-Version: 2.8.0.qualifier
+Bundle-Version: 2.9.0.qualifier
 Bundle-Activator: org.codehaus.groovy.m2eclipse.Activator
 Bundle-Vendor: Codehaus.org
 Require-Bundle: org.eclipse.core.runtime,

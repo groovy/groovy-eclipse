@@ -21,6 +21,7 @@ import java.util.TreeSet;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -87,7 +88,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             } else {
                 pos = new HighlightedTypedPosition(p, HighlightKind.FIELD);
             }
-        } else if (result.declaration instanceof MethodNode) {
+        } else if (result.declaration instanceof MethodNode && !(result.declaration instanceof ConstructorNode)) {
             Position p = getPosition(node);
             if (isStatic(result.declaration)) {
                 pos = new HighlightedTypedPosition(p, HighlightKind.STATIC_METHOD);

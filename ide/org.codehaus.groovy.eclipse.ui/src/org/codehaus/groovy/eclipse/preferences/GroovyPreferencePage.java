@@ -103,7 +103,7 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         // JUnit Monospace
         final BooleanFieldEditor monospaceEditor = new MonospaceFieldEditor();
         monospaceEditor.setPreferenceStore(getPreferenceStore());
-        monospaceEditor.setEnabled(false, getFieldEditorParent());
+        monospaceEditor.setEnabled(true, getFieldEditorParent());
         addField(monospaceEditor);
         Label monoLabel = new Label(getFieldEditorParent(), SWT.LEFT | SWT.WRAP);
         monoLabel.setText(

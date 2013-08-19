@@ -27,6 +27,8 @@ import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPo
 import java.util.Arrays;
 import java.util.Comparator;
 
+import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.editor.highlighting.GatherSemanticReferences;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
@@ -43,11 +45,22 @@ import org.eclipse.ui.PartInitException;
  */
 public class SemanticHighlightingTests extends EclipseTestCase {
     
+    boolean semanticHightlightOriginalValue;
+    
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         testProject.addNature(GroovyNature.GROOVY_NATURE);
+        semanticHightlightOriginalValue = GroovyPlugin.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING);
+        GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, true);
+
         testProject.createJavaTypeAndPackage("other", "Java.java", "public @Deprecated class Java { \n @Deprecated public static final String CONST = \"\"; }");
+    }
+    
+    @Override
+    protected void tearDown() throws Exception {
+      GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, semanticHightlightOriginalValue);
+      super.tearDown();
     }
     
     public void testStaticFieldRanges() throws Exception {

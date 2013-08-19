@@ -123,7 +123,7 @@ public class DSLDStoreManager {
                 if (timeLeft > 0) {
                     wait(timeLeft);
                 } else {
-                    GroovyDSLCoreActivator.logException("Avoiding potential deadlock", new RuntimeException());
+//                    GroovyDSLCoreActivator.logException("Avoiding potential deadlock", new RuntimeException());
                     break;
                 }
             } catch (InterruptedException e) {

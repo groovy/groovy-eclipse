@@ -7,10 +7,8 @@
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,ide/Feature org.codehaus.groovy.eclipse.sdk"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,ide/Feature org.codehaus.groovy.headless.feature"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,extras/Feature org.codehaus.groovy.m2eclipse"/>
-<project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,ide/Feature org.codehaus.groovy17.feature"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,ide/Feature org.codehaus.groovy18.feature"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,ide/Feature org.codehaus.groovy20.feature"/>
-<project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,base/org.codehaus.groovy"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,ide-test/org.codehaus.groovy.alltests"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,ide/org.codehaus.groovy.eclipse"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,ide/org.codehaus.groovy.eclipse.ant"/>
@@ -35,7 +33,9 @@
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,extras/org.codehaus.groovy.m2eclipse"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,base/org.codehaus.groovy18"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,base/org.codehaus.groovy20"/>
+<project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,base/org.codehaus.groovy22"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,jdt-patch/e42/org.eclipse.jdt.core"/>
+<project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,jdt-patch/e42/Feature org.codehaus.groovy.jdt.patch"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,base/org.eclipse.jdt.groovy.core"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,base-test/org.eclipse.jdt.groovy.core.tests.builder"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,base-test/org.eclipse.jdt.groovy.core.tests.compiler"/>
@@ -69,7 +69,8 @@
 <item elementID="=org.codehaus.groovy.eclipse.refactoring" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
 <item elementID="=org.codehaus.groovy.alltests" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
 <item factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/Feature org.codehaus.groovy20.feature" type="4"/>
-<item factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/Feature org.codehaus.groovy17.feature" type="4"/>
+<item factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/Feature org.codehaus.groovy21.feature" type="4"/>
+<item factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/Feature org.codehaus.groovy.jdt.patch" type="4"/>
 <item elementID="=org.eclipse.jdt.groovy.core.tests.builder" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
 <item elementID="=org.codehaus.groovy.eclipse.codeassist.completion.test" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
 <item elementID="=org.codehaus.groovy.eclipse.codebrowsing.test" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>

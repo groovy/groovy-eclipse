@@ -1691,25 +1691,26 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 							}
 						}
 					}
-					if (binding == null) {
-						RuntimeException rEx = new RuntimeException("Couldn't find binding for '" + classname
-								+ "': do you maybe have a duplicate type around?");
-						rEx.printStackTrace();
-						Util.log(rEx, "Couldn't find binding for '" + classname + "': do you maybe have a duplicate type around?");
-					} else {
-						// Suppress class file output if it is a script
-						boolean isScript = false;
-						if (binding.scope != null && (binding.scope.parent instanceof GroovyCompilationUnitScope)) {
-							GroovyCompilationUnitScope gcuScope = (GroovyCompilationUnitScope) binding.scope.parent;
-							if (gcuScope.isScript()) {
-								isScript = true;
-							}
+
+					boolean isScript = false;
+					// Suppress class file output if it is a script
+					// null binding implies synthetic type, which we assume cannot be a script
+					if (binding != null && binding.scope != null && (binding.scope.parent instanceof GroovyCompilationUnitScope)) {
+						GroovyCompilationUnitScope gcuScope = (GroovyCompilationUnitScope) binding.scope.parent;
+						if (gcuScope.isScript()) {
+							isScript = true;
 						}
-						if (!isScript) {
-							byte[] classbytes = clazz.getBytes();
-							String path = clazz.getName().replace('.', '/');
-							compilationResult.record(classname.toCharArray(), new GroovyClassFile(classname, classbytes, binding,
-									path));
+					}
+					if (!isScript) {
+						byte[] classbytes = clazz.getBytes();
+						String path = clazz.getName().replace('.', '/');
+						GroovyClassFile classFile = new GroovyClassFile(classname, classbytes, binding, path);
+						char[] classNameChars = classname.toCharArray();
+						if (binding == null) {
+							// GRECLIPSE-1653 this type likely added by AST transform and is synthetic
+							compilationResult.compiledTypes.put(classNameChars, classFile);
+						} else {
+							compilationResult.record(classNameChars, classFile);
 						}
 					}
 				}
