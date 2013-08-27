@@ -46,12 +46,7 @@ public class ASTNode {
     private int columnNumber = -1;
     private int lastLineNumber = -1;
     private int lastColumnNumber = -1;
-    // GRECLIPSE: start set to null initially
     private ListHashMap metaDataMap = null;
-    /*orig{
-    private ListHashMap metaDataMap = new ListHashMap();
-    }*/ 
-    // GRECLIPSE: end
     
     // GRECLIPSE: start
     private int start = 0;

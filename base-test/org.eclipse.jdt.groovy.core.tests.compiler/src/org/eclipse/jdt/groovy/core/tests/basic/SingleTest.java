@@ -118,7 +118,7 @@ public class SingleTest extends AbstractRegressionTest {
         String[] newcps = new String[cps.length+2];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.1.5.jar");
+        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.1.6.jar");
         	if (groovyJar==null) {
 	            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.0.7.jar");
 	            if (groovyJar==null) {

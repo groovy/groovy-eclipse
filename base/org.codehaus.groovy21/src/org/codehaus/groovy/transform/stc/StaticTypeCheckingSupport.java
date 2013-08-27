@@ -1148,6 +1148,9 @@ public abstract class StaticTypeCheckingSupport {
                     // there are three case for vargs
                     // (1) varg part is left out
                     if (params.length == args.length + 1) {
+                        if (dist>=0) {
+                            dist += 256-params.length; // ensure exact matches are preferred over vargs
+                        }
                         if (bestDist > 1+dist) {
                             bestChoices.clear();
                             bestChoices.add(m);
@@ -1464,10 +1467,11 @@ public abstract class StaticTypeCheckingSupport {
 
     public static boolean missesGenericsTypes(ClassNode cn) {
         if (cn.isArray()) return missesGenericsTypes(cn.getComponentType());
-        if (cn.redirect().isUsingGenerics() && !cn.isUsingGenerics()) return true;
-        if (cn.isUsingGenerics()) {
-            if (cn.getGenericsTypes()==null) return true;
-            for (GenericsType genericsType : cn.getGenericsTypes()) {
+        GenericsType[] cnTypes = cn.getGenericsTypes();
+        GenericsType[] rnTypes = cn.redirect().getGenericsTypes();
+        if (rnTypes!=null && cnTypes==null) return true;
+        if (cnTypes!=null) {
+            for (GenericsType genericsType : cnTypes) {
                 if (genericsType.isPlaceholder()) return true;
             }
         }
