@@ -272,7 +272,7 @@ public class GroovyParser {
 		this.groovyCompilationUnit = makeCompilationUnit(grabbyLoader, gcl, isReconcile, allowTransforms);
 		this.groovyCompilationUnit.tweak(isReconcile);
 		this.groovyCompilationUnit.removeOutputPhaseOperation();
-		String s = options.groovyCustomizerClassesList;
+
 		if ((options.groovyFlags & CompilerUtils.IsGrails) != 0) {
 			// its probably grails!
 			// nothing up my sleeve, abracadabra!
@@ -548,15 +548,21 @@ public class GroovyParser {
 			List<CompilationCustomizer> customizers = new ArrayList<CompilationCustomizer>();
 			if (loader != null) {
 				StringTokenizer tokenizer = new StringTokenizer(compilerOptions.groovyCustomizerClassesList, ",");
-				while (tokenizer.hasMoreTokens()) {
-					String classname = tokenizer.nextToken();
-					try {
-						Class<?> clazz = transformLoader.loadClass(classname);
-						CompilationCustomizer cc = (CompilationCustomizer) clazz.newInstance();
-						customizers.add(cc);
-					} catch (Exception e) {
-						e.printStackTrace();
+				ClassLoader savedLoader = Thread.currentThread().getContextClassLoader();
+				try {
+					Thread.currentThread().setContextClassLoader(transformLoader);
+					while (tokenizer.hasMoreTokens()) {
+						String classname = tokenizer.nextToken();
+						try {
+							Class<?> clazz = transformLoader.loadClass(classname);
+							CompilationCustomizer cc = (CompilationCustomizer) clazz.newInstance();
+							customizers.add(cc);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
 					}
+				} finally {
+					Thread.currentThread().setContextClassLoader(savedLoader);
 				}
 				compilerConfiguration.addCompilationCustomizers(customizers.toArray(new CompilationCustomizer[customizers.size()]));
 			}
