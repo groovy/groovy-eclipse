@@ -1819,9 +1819,6 @@ public class CompilerOptions {
 				this.groovyCustomizerClassesList = sysPropConfiguredCustomizerClassesList;
 			}
 		}
-		if ((optionValue = optionsMap.get(OPTIONG_GroovyProjectName)) != null) {
-			this.groovyProjectName = (String)optionValue;
-		}
 		optionValue = optionsMap.get(OPTIONG_GroovyTransformsToRunOnReconcile);
 		if (optionValue!=null && ((String)optionValue).length()!=0) {
 			this.groovyTransformsToRunOnReconcile = (String)optionValue;
@@ -1829,6 +1826,9 @@ public class CompilerOptions {
 			if (sysPropConfiguredGroovyTransforms!=null) {
 				this.groovyTransformsToRunOnReconcile = sysPropConfiguredGroovyTransforms;
 			}
+		}
+		if ((optionValue = optionsMap.get(OPTIONG_GroovyProjectName)) != null) {
+			this.groovyProjectName = (String)optionValue;
 		}
 		// GROOVY end
 	}
