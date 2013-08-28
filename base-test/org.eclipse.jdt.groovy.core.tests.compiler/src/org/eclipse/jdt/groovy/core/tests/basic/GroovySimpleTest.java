@@ -8557,7 +8557,8 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 //	 org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:77) at ...
 	// With grab improvements we get two errors - the missing dependency and the missing type (which is at the right version of that dependency!)
 	public void testGrabWithErrors() {
-		this.runNegativeTest(new String[]{
+    	if (GroovyUtils.isGroovy21()) {
+    		this.runNegativeTest(new String[]{
 				"Grab1.groovy",
 				"\n"+
 				"@Grab(group=\"joda-time\", module=\"joda-time\", version=\"1.6\")\n"+
@@ -8584,6 +8585,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 				"	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 				"Groovy:unable to resolve class org.aspectj.weaver.bcel.BcelWorld \n" + 
 				"----------\n");
+    	}
 	}
 	
 	public void testGrabError() {
