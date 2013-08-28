@@ -244,6 +244,19 @@ public class CompilerUtils {
         throw new RuntimeException("Could not find groovy all jar");
     }
 
+    private static boolean includeServlet = true;
+
+    static {
+        try {
+            String p = System.getProperty("greclipse.includeServletInClasspathContainer","true");
+            if (p.equalsIgnoreCase("false")) {
+                includeServlet = false;
+            }
+        } catch (Exception e) {
+            // likely security related
+        }
+    }
+
     /**
      * finds and returns the extra jars that belong inside the Groovy Classpath
      * Container
@@ -263,9 +276,11 @@ public class CompilerUtils {
             while (enu.hasMoreElements()) {
                 URL jar = enu.nextElement();
                 if (!jar.getFile().contains("groovy")) {
-                    // remove the "reference:/" protocol
-                    jar = resolve(jar);
-                    urls.add(jar);
+                    if (includeServlet || jar.getFile().indexOf("servlet") == -1) {
+                        // remove the "reference:/" protocol
+                        jar = resolve(jar);
+                        urls.add(jar);
+                    }
                 }
             }
             return urls.toArray(new URL[urls.size()]);
