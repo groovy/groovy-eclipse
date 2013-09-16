@@ -71,7 +71,7 @@ public class TemplateProposalComputer implements
 
     public List<IContextInformation> computeContextInformation(
             ContentAssistInvocationContext context, IProgressMonitor monitor) {
-        return null;
+        return Collections.emptyList();
     }
 
     public String getErrorMessage() {
