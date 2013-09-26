@@ -100,12 +100,15 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         String[] newcps = new String[cps.length+2];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.1.6.jar");
+        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.2.0-beta-2.jar");
         	if (groovyJar==null) {
-	            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.0.7.jar");
-	            if (groovyJar==null) {
-					groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-1.8.6.jar");
-	            }
+	        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.1.6.jar");
+	        	if (groovyJar==null) {
+		            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.0.7.jar");
+		            if (groovyJar==null) {
+						groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-1.8.6.jar");
+		            }
+	        	}
         	}
             newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
 	        // FIXASC think more about why this is here... the tests that need it specify the option but that is just for
@@ -8557,7 +8560,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 //	 org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:77) at ...
 	// With grab improvements we get two errors - the missing dependency and the missing type (which is at the right version of that dependency!)
 	public void testGrabWithErrors() {
-    	if (GroovyUtils.isGroovy21()) {
+    	if (GroovyUtils.isGroovy21() || GroovyUtils.isGroovy22()) {
     		this.runNegativeTest(new String[]{
 				"Grab1.groovy",
 				"\n"+

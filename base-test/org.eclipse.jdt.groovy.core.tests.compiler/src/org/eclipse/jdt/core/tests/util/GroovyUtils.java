@@ -42,4 +42,8 @@ public class GroovyUtils {
         return GROOVY_LEVEL == 21;
     }
 
+    public static boolean isGroovy22() {
+        return GROOVY_LEVEL == 22;
+    }
+
 }

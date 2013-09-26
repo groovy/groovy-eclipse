@@ -70,7 +70,10 @@ public class SanityTest extends TestCase {
             assertEquals(0, groovyVersion.getMinor());
         } else if (jdtVersion.getMinor() == 9) {
             assertEquals(2, groovyVersion.getMajor());
-            assertEquals(1, groovyVersion.getMinor());
+            if (groovyVersion.getMinor()==0) {
+            	fail("Should not be testing 2.0");
+            }
+//            assertEquals(1, groovyVersion.getMinor());
         }
     }
     
