@@ -29,10 +29,11 @@
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,ide-test/org.codehaus.groovy.eclipse.refactoring.test"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,ide-test/org.codehaus.groovy.eclipse.tests"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,ide/org.codehaus.groovy.eclipse.ui"/>
-<project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,base/org.codehaus.groovy.frameworkadapter"/>
+<!-- <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,base/org.codehaus.groovy.frameworkadapter"/> -->
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,extras/org.codehaus.groovy.m2eclipse"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,base/org.codehaus.groovy18"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,base/org.codehaus.groovy20"/>
+<project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,base/org.codehaus.groovy21"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,base/org.codehaus.groovy22"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,jdt-patch/e42/org.eclipse.jdt.core"/>
 <project reference="1.0,git@github.com:groovy/groovy-eclipse.git,master,jdt-patch/e42/Feature org.codehaus.groovy.jdt.patch"/>
@@ -64,6 +65,8 @@
 <item elementID="=org.codehaus.groovy.frameworkadapter" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
 <item elementID="=org.codehaus.groovy.eclipse.codeassist.completion" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
 <item elementID="=org.codehaus.groovy20" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
+<item elementID="=org.codehaus.groovy21" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
+<item elementID="=org.codehaus.groovy22" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
 <item elementID="=org.codehaus.groovy.eclipse.ant" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
 <item elementID="=org.codehaus.groovy.eclipse.quickfix.test" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>
 <item elementID="=org.codehaus.groovy.eclipse.refactoring" factoryID="org.eclipse.jdt.ui.PersistableJavaElementFactory"/>

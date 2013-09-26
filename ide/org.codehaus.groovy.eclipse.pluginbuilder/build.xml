@@ -126,9 +126,9 @@
   			<param name="theDir" value="${build.eclipse.dir}" />
   		</antcall>
     	<!-- force building with 1.7 -->
-			<install-feature eclipse.loc="${build.eclipse.dir}/eclipse" feature.id="org.codehaus.groovy17.feature" updatesite.url="http://dist.springsource.org/release/GRECLIPSE/e4.2/" />
-  		<install-feature eclipse.loc="${build.eclipse.dir}/eclipse" feature.id="org.codehaus.groovy.headless.feature" updatesite.url="http://dist.springsource.org/release/GRECLIPSE/e4.2/" />
-  		<install-bundle eclipse.loc="${build.eclipse.dir}/eclipse" bundle.id="org.codehaus.groovy.eclipse.ant" updatesite.url="http://dist.springsource.org/release/GRECLIPSE/e4.2/" />
+			<install-feature eclipse.loc="${build.eclipse.dir}/eclipse" feature.id="org.codehaus.groovy17.feature" updatesite.url="${greclipse.update.site}" />
+  		<install-feature eclipse.loc="${build.eclipse.dir}/eclipse" feature.id="org.codehaus.groovy.headless.feature" updatesite.url="${greclipse.update.site}" />
+  		<install-bundle eclipse.loc="${build.eclipse.dir}/eclipse" bundle.id="org.codehaus.groovy.eclipse.ant" updatesite.url="${greclipse.update.site}" />
    	</target>
 
 	

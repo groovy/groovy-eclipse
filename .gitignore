@@ -2,5 +2,7 @@ target
 bin
 bin-trace
 antbin
+build
+workspace-build
 .buildpath
 org.ebayopensource.vjet.eclipse.core.prefs
