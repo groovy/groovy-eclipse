@@ -46,11 +46,11 @@
           target: install.groovy.21      
           only install groovy 2.1 on E4.3
          - - - - - - - - - - - - - - - - - -->
-	<target name="-install.groovy.latest.version" depends="-initCompilerLevel" if="compiler.level.is.21">
+	<target name="-install.groovy.latest.version" depends="-initCompilerLevel" if="compiler.level.is.latest">
 		<install-feature 
 			eclipse.loc="${test.eclipse.base}/eclipse" 
 			updatesite.url="${updateSiteURL}" 
-			feature.id="org.codehaus.groovy21.feature" />
+			feature.id="org.codehaus.groovy22.feature" />
 	</target>
 
 
@@ -84,10 +84,10 @@
 	</target>
 
 	<target name="-initCompilerLevel">
-		<condition property="compiler.level" value="21" else="20">
+		<condition property="compiler.level" value="22" else="21">
 			<equals arg1="${eclipse.target.version}" arg2="e43"/>
 		</condition>
-		<condition property="compiler.level.is.21">
+		<condition property="compiler.level.is.latest">
 			<equals arg1="${eclipse.target.version}" arg2="e43" />
 		</condition>
 	</target>

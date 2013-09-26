@@ -45,6 +45,10 @@
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy.headless.feature">
 			</fileset>
 		</copy>
+		<copy todir="${featuresDestDir}/org.codehaus.groovy22.feature">
+			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy22.feature">
+			</fileset>
+		</copy>
 		<copy todir="${featuresDestDir}/org.codehaus.groovy21.feature">
 			<fileset dir="${workspaceDirIde}/Feature org.codehaus.groovy21.feature">
 			</fileset>

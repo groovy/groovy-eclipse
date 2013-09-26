@@ -127,6 +127,12 @@
 			<property name="zipargs" value="" />
 		</ant>
 	</target>
+	<target name="assemble.org.codehaus.groovy22.feature">
+		<echo message="Assembling org.codehaus.groovy22.feature"/>
+		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
+			<property name="zipargs" value="" />
+		</ant>
+	</target>
 	<target name="assemble.org.codehaus.groovy.m2eclipse">
 		<echo message="Assembling org.codehaus.groovy.m2eclipse"/>
 		<ant antfile="${assembleScriptName}" dir="${buildDirectory}">
