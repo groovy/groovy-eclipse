@@ -5,31 +5,31 @@ import org.codehaus.groovy.antlr.*;
 import java.util.*;
 import java.io.InputStream;
 import java.io.Reader;
-import antlr.InputBuffer;
-import antlr.LexerSharedInputState;
-import antlr.CommonToken;
+import groovyjarjarantlr.InputBuffer;
+import groovyjarjarantlr.LexerSharedInputState;
+import groovyjarjarantlr.CommonToken;
 import org.codehaus.groovy.GroovyBugError;
-import antlr.TokenStreamRecognitionException;
+import groovyjarjarantlr.TokenStreamRecognitionException;
 import org.codehaus.groovy.ast.Comment;
 
-import antlr.TokenBuffer;
-import antlr.TokenStreamException;
-import antlr.TokenStreamIOException;
-import antlr.ANTLRException;
-import antlr.LLkParser;
-import antlr.Token;
-import antlr.TokenStream;
-import antlr.RecognitionException;
-import antlr.NoViableAltException;
-import antlr.MismatchedTokenException;
-import antlr.SemanticException;
-import antlr.ParserSharedInputState;
-import antlr.collections.impl.BitSet;
-import antlr.collections.AST;
+import groovyjarjarantlr.TokenBuffer;
+import groovyjarjarantlr.TokenStreamException;
+import groovyjarjarantlr.TokenStreamIOException;
+import groovyjarjarantlr.ANTLRException;
+import groovyjarjarantlr.LLkParser;
+import groovyjarjarantlr.Token;
+import groovyjarjarantlr.TokenStream;
+import groovyjarjarantlr.RecognitionException;
+import groovyjarjarantlr.NoViableAltException;
+import groovyjarjarantlr.MismatchedTokenException;
+import groovyjarjarantlr.SemanticException;
+import groovyjarjarantlr.ParserSharedInputState;
+import groovyjarjarantlr.collections.impl.BitSet;
+import groovyjarjarantlr.collections.AST;
 import java.util.Hashtable;
-import antlr.ASTFactory;
-import antlr.ASTPair;
-import antlr.collections.impl.ASTArray;
+import groovyjarjarantlr.ASTFactory;
+import groovyjarjarantlr.ASTPair;
+import groovyjarjarantlr.collections.impl.ASTArray;
 
 /** JSR-241 Groovy Recognizer.
  *
@@ -215,7 +215,7 @@ import antlr.collections.impl.ASTArray;
  *
  * This grammar is in the PUBLIC DOMAIN
  */
-public class GroovyRecognizer extends antlr.LLkParser       implements GroovyTokenTypes
+public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implements GroovyTokenTypes
  {
 
         /** This factory is the correct way to wire together a Groovy parser and lexer. */

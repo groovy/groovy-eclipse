@@ -5,11 +5,11 @@ import org.codehaus.groovy.antlr.*;
 import java.util.*;
 import java.io.InputStream;
 import java.io.Reader;
-import antlr.InputBuffer;
-import antlr.LexerSharedInputState;
-import antlr.CommonToken;
+import groovyjarjarantlr.InputBuffer;
+import groovyjarjarantlr.LexerSharedInputState;
+import groovyjarjarantlr.CommonToken;
 import org.codehaus.groovy.GroovyBugError;
-import antlr.TokenStreamRecognitionException;
+import groovyjarjarantlr.TokenStreamRecognitionException;
 import org.codehaus.groovy.ast.Comment;
 
 public interface GroovyTokenTypes {

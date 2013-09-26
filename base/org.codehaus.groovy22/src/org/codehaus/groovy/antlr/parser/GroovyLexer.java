@@ -5,38 +5,38 @@ import org.codehaus.groovy.antlr.*;
 import java.util.*;
 import java.io.InputStream;
 import java.io.Reader;
-import antlr.InputBuffer;
-import antlr.LexerSharedInputState;
-import antlr.CommonToken;
+import groovyjarjarantlr.InputBuffer;
+import groovyjarjarantlr.LexerSharedInputState;
+import groovyjarjarantlr.CommonToken;
 import org.codehaus.groovy.GroovyBugError;
-import antlr.TokenStreamRecognitionException;
+import groovyjarjarantlr.TokenStreamRecognitionException;
 import org.codehaus.groovy.ast.Comment;
 
 import java.io.InputStream;
-import antlr.TokenStreamException;
-import antlr.TokenStreamIOException;
-import antlr.TokenStreamRecognitionException;
-import antlr.CharStreamException;
-import antlr.CharStreamIOException;
-import antlr.ANTLRException;
+import groovyjarjarantlr.TokenStreamException;
+import groovyjarjarantlr.TokenStreamIOException;
+import groovyjarjarantlr.TokenStreamRecognitionException;
+import groovyjarjarantlr.CharStreamException;
+import groovyjarjarantlr.CharStreamIOException;
+import groovyjarjarantlr.ANTLRException;
 import java.io.Reader;
 import java.util.Hashtable;
-import antlr.CharScanner;
-import antlr.InputBuffer;
-import antlr.ByteBuffer;
-import antlr.CharBuffer;
-import antlr.Token;
-import antlr.CommonToken;
-import antlr.RecognitionException;
-import antlr.NoViableAltForCharException;
-import antlr.MismatchedCharException;
-import antlr.TokenStream;
-import antlr.ANTLRHashString;
-import antlr.LexerSharedInputState;
-import antlr.collections.impl.BitSet;
-import antlr.SemanticException;
+import groovyjarjarantlr.CharScanner;
+import groovyjarjarantlr.InputBuffer;
+import groovyjarjarantlr.ByteBuffer;
+import groovyjarjarantlr.CharBuffer;
+import groovyjarjarantlr.Token;
+import groovyjarjarantlr.CommonToken;
+import groovyjarjarantlr.RecognitionException;
+import groovyjarjarantlr.NoViableAltForCharException;
+import groovyjarjarantlr.MismatchedCharException;
+import groovyjarjarantlr.TokenStream;
+import groovyjarjarantlr.ANTLRHashString;
+import groovyjarjarantlr.LexerSharedInputState;
+import groovyjarjarantlr.collections.impl.BitSet;
+import groovyjarjarantlr.SemanticException;
 
-public class GroovyLexer extends antlr.CharScanner implements GroovyTokenTypes, TokenStream
+public class GroovyLexer extends groovyjarjarantlr.CharScanner implements GroovyTokenTypes, TokenStream
  {
 
     /** flag for enabling the "assert" keyword */
