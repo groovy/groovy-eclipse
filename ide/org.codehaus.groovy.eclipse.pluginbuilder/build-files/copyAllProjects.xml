@@ -90,6 +90,11 @@
 					<exclude name="**/bin"/>
 			</fileset>
 		</copy>
+		<copy todir="${pluginsDestDir}/org.codehaus.groovy22">
+			<fileset dir="${workspaceDirBase}/org.codehaus.groovy22">
+					<exclude name="**/bin"/>
+			</fileset>
+		</copy>
 		<copy todir="${pluginsDestDir}/org.eclipse.jdt.groovy.core">
 			<fileset dir="${workspaceDirBase}/org.eclipse.jdt.groovy.core">
 					<exclude name="**/bin"/>
