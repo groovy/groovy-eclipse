@@ -39,6 +39,11 @@
 			<property name="type" value="feature" />
 			<property name="id" value="org.codehaus.groovy21.feature" />
 		</ant>
+		<echo message="Delegating to org.codehaus.groovy22.feature"/>
+		<ant antfile="${genericTargets}" target="${target}">
+			<property name="type" value="feature" />
+			<property name="id" value="org.codehaus.groovy22.feature" />
+		</ant>
 		<echo message="Delegating to org.codehaus.groovy.jdt.patch"/>
 		<ant antfile="${genericTargets}" target="${target}">
 			<property name="type" value="feature" />
