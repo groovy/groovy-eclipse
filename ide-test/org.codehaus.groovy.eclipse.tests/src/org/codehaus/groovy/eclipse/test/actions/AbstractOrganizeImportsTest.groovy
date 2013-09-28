@@ -15,9 +15,12 @@
  */
 package org.codehaus.groovy.eclipse.test.actions;
 
+import groovy.transform.CompileStatic;
+
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports
 import org.codehaus.groovy.eclipse.test.EclipseTestCase
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.jdt.core.ISourceRange
@@ -66,8 +69,7 @@ class AbstractOrganizeImportsTest extends EclipseTestCase {
     """
 
 
-    
-    void doAddImportTest(String contents, List<TextEdit> expectedImports = [ ]) {
+    void doAddImportTest(String contents, List<String> expectedImports = [ ]) {
         def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)
         def unit = JavaCore.createCompilationUnitFrom(file)
         testProject.waitForIndexer()
@@ -122,11 +124,11 @@ class AbstractOrganizeImportsTest extends EclipseTestCase {
         }
     }
     
-    
-    void doDeleteImportTest(contents, numDeletes) {
+    @CompileStatic
+    void doDeleteImportTest(String contents, numDeletes) {
         def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)
         testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
-        def unit = JavaCore.createCompilationUnitFrom(file)
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file)
         testProject.waitForIndexer()
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
         TextEdit edit = organize.calculateMissingImports()

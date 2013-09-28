@@ -1,6 +1,8 @@
 
 package org.codehaus.groovy.eclipse.test.actions
 
+import groovy.transform.CompileStatic;
+
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase 
@@ -20,6 +22,7 @@ import org.eclipse.core.resources.IncrementalProjectBuilder
  * @created Aug 18, 2009
  *
  */
+@CompileStatic
 public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     
     void testAddImport1() {
