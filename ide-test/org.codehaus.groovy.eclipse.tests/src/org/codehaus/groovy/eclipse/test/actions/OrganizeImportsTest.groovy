@@ -176,54 +176,54 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
         doAddImportTest(contents, expectedImports)
     }
     
-    void testRemoveImport1() {
-        String contents = 
-                """ 
-            import other.SecondClass
-            """
-        doDeleteImportTest(contents, 1)
-    }
-    void testRemoveImport1a() {
-        String contents = 
-                """ 
-            import other.SecondClass
-            a
-            """
-        doDeleteImportTest(contents, 1)
-    }
+//    void testRemoveImport1() {
+//        String contents = 
+//                """ 
+//            import other.SecondClass
+//            """
+//        doDeleteImportTest(contents, 1)
+//    }
+//    void testRemoveImport1a() {
+//        String contents = 
+//                """ 
+//            import other.SecondClass
+//            a
+//            """
+//        doDeleteImportTest(contents, 1)
+//    }
+//    
+//    void testRemoveImport2() {
+//        String contents = 
+//                """ 
+//            import other.SecondClass
+//            import javax.swing.text.html.HTML
+//            class Main {
+//                HTML f = null
+//            }
+//            """
+//        doDeleteImportTest(contents, 1)
+//    }
+//    
+//    void testRemoveImport3() {
+//        String contents = 
+//                """ 
+//            import other.ThirdClass
+//            import javax.swing.text.html.HTML
+//            import other.SecondClass
+//            class Main {
+//                HTML f = null
+//            }
+//            """
+//        doDeleteImportTest(contents, 2)
+//    }
     
-    void testRemoveImport2() {
-        String contents = 
-                """ 
-            import other.SecondClass
-            import javax.swing.text.html.HTML
-            class Main {
-                HTML f = null
-            }
-            """
-        doDeleteImportTest(contents, 1)
-    }
-    
-    void testRemoveImport3() {
-        String contents = 
-                """ 
-            import other.ThirdClass
-            import javax.swing.text.html.HTML
-            import other.SecondClass
-            class Main {
-                HTML f = null
-            }
-            """
-        doDeleteImportTest(contents, 2)
-    }
-    
-    void testChoices1() {
-        String contents = 
-                """ 
-            FourthClass f = null
-            """
-        doChoiceTest(contents, ["other2.FourthClass", "other3.FourthClass", "other4.FourthClass"])    
-    }
+//    void testChoices1() {
+//        String contents = 
+//                """ 
+//            FourthClass f = null
+//            """
+//        doChoiceTest(contents, ["other2.FourthClass", "other3.FourthClass", "other4.FourthClass"])    
+//    }
     
     void testGRECLISPE506() {
         String contents = 
@@ -548,15 +548,15 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
                 """
         doAddImportTest(contents)
     }
-    // GRECLIPSE-1219
-    void testAnnotationsOnImports2() {
-        String contents =
-                """
-                @Deprecated
-                import javax.swing.text.html.HTML
-                """
-        doDeleteImportTest(contents, 1)
-    }
+//    // GRECLIPSE-1219
+//    void testAnnotationsOnImports2() {
+//        String contents =
+//                """
+//                @Deprecated
+//                import javax.swing.text.html.HTML
+//                """
+//        doDeleteImportTest(contents, 1)
+//    }
     void testAnnotationsOnImports3() {
         String contents =
                 """
@@ -567,98 +567,98 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
         doAddImportTest(contents)
     }
     
-    // GRECLIPSE-1392
-    void testDefaultImport1() {
-        // test a simple default import is removed
-        String contents =
-                """
-                import java.util.List
-                import groovy.util.Proxy
-                List
-                Proxy
-                """
-        // only 1 delete edit since the imports are all deleted together
-        doDeleteImportTest(contents, 1)
-    }
-    // GRECLIPSE-1392
-    void testDefaultImport2() {
-        // test that star default imports are removed
-        String contents =
-                """
-                import java.util.*
-                import groovy.util.*
-                List
-                Proxy
-                """
-        // only 1 delete edit since the imports are all deleted together
-        doDeleteImportTest(contents, 1)
-    }
-    // GRECLIPSE-1392
-    void testDefaultImport3() {
-        // test that BigInteger and BigDecimal are removed
-        String contents =
-                """
-                import java.math.BigDecimal
-                import java.math.BigInteger
-                BigDecimal
-                BigInteger
-                """
-        // only 1 delete edit since the imports are all deleted together
-        doDeleteImportTest(contents, 1)
-    }
-    // GRECLIPSE-1392
-    void testDefaultImport4() {
-        // test that aliased default import not removed
-        doContentsCompareTest(
-"""import java.util.List as LL
-import groovy.util.Proxy as PP
-LL
-PP"""
-, 
-"""import groovy.util.Proxy as PP
+//    // GRECLIPSE-1392
+//    void testDefaultImport1() {
+//        // test a simple default import is removed
+//        String contents =
+//                """
+//                import java.util.List
+//                import groovy.util.Proxy
+//                List
+//                Proxy
+//                """
+//        // only 1 delete edit since the imports are all deleted together
+//        doDeleteImportTest(contents, 1)
+//    }
+//    // GRECLIPSE-1392
+//    void testDefaultImport2() {
+//        // test that star default imports are removed
+//        String contents =
+//                """
+//                import java.util.*
+//                import groovy.util.*
+//                List
+//                Proxy
+//                """
+//        // only 1 delete edit since the imports are all deleted together
+//        doDeleteImportTest(contents, 1)
+//    }
+//    // GRECLIPSE-1392
+//    void testDefaultImport3() {
+//        // test that BigInteger and BigDecimal are removed
+//        String contents =
+//                """
+//                import java.math.BigDecimal
+//                import java.math.BigInteger
+//                BigDecimal
+//                BigInteger
+//                """
+//        // only 1 delete edit since the imports are all deleted together
+//        doDeleteImportTest(contents, 1)
+//    }
+//    // GRECLIPSE-1392
+//    void testDefaultImport4() {
+//        // test that aliased default import not removed
+//        doContentsCompareTest(
+//"""import java.util.List as LL
+//import groovy.util.Proxy as PP
+//LL
+//PP"""
+//, 
+//"""import groovy.util.Proxy as PP
+//
+//import java.util.List as LL
+//LL
+//PP"""
+//)
+//    }
+//    // GRECLIPSE-1392
+//    void testDefaultImport5() {
+//        // test that static import whose container is default is not removed
+//        String contents =
+//                """
+//                import static java.util.Collections.swap
+//                swap
+//                """
+//        doDeleteImportTest(contents, 0)
+//    }
 
-import java.util.List as LL
-LL
-PP"""
-)
-    }
-    // GRECLIPSE-1392
-    void testDefaultImport5() {
-        // test that static import whose container is default is not removed
-        String contents =
-                """
-                import static java.util.Collections.swap
-                swap
-                """
-        doDeleteImportTest(contents, 0)
-    }
-
-    // GRECLIPSE-1553
-    void testCompileStaticAndMapStyleConstructor() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) {
-            return
-        }
-        
-        testProject.createGroovyTypeAndPackage("example2", "Bar", """
-package example2
-
-class Bar {
-    String name
-}""")
-        
-        String contents = """
-package example
-
-import groovy.transform.CompileStatic
-import example2.Bar
-
-@CompileStatic
-class Foo {
-  void apply() {
-      new Bar([name: "test"])
-  }
-}"""
-        doDeleteImportTest(contents, 0)
-    }
+//    // GRECLIPSE-1553
+//    void testCompileStaticAndMapStyleConstructor() {
+//        if (GroovyUtils.GROOVY_LEVEL < 20) {
+//            return
+//        }
+//        
+//        testProject.createGroovyTypeAndPackage("example2", "Bar", """
+//package example2
+//
+//class Bar {
+//    String name
+//}""")
+//        
+//        String contents = """
+//package example
+//
+//import groovy.transform.CompileStatic
+//import example2.Bar
+//
+//@CompileStatic
+//class Foo {
+//  void apply() {
+//      new Bar([name: "test"])
+//  }
+//}"""
+//        doDeleteImportTest(contents, 0)
+//    }
 }
 

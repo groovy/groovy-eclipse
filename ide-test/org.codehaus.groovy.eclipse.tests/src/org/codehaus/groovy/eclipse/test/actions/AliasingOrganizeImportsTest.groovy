@@ -31,36 +31,36 @@ public class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
                 """
         doAddImportTest(contents)
     }
-    // should be removed
-    void testSimpleAliasRemoval() {
-        String contents = 
-            """ 
-            import other.FirstClass as F
-            
-            def x
-            """
-            doDeleteImportTest(contents, 1)
-    }
-    // should not be removed
-    void testInnerTypeAlias() {
-        String contents = 
-            """ 
-            import other.Outer.Inner as F
-            
-            F
-            """
-            doAddImportTest(contents)
-    }
-    // should be removed
-    void testInnerTypeAliasRemoval() {
-        String contents = 
-            """ 
-            import other.Outer.Inner as F
-            
-            def x
-            """
-            doDeleteImportTest(contents, 1)
-    }
+//    // should be removed
+//    void testSimpleAliasRemoval() {
+//        String contents = 
+//            """ 
+//            import other.FirstClass as F
+//            
+//            def x
+//            """
+//            doDeleteImportTest(contents, 1)
+//    }
+//    // should not be removed
+//    void testInnerTypeAlias() {
+//        String contents = 
+//            """ 
+//            import other.Outer.Inner as F
+//            
+//            F
+//            """
+//            doAddImportTest(contents)
+//    }
+//    // should be removed
+//    void testInnerTypeAliasRemoval() {
+//        String contents = 
+//            """ 
+//            import other.Outer.Inner as F
+//            
+//            def x
+//            """
+//            doDeleteImportTest(contents, 1)
+//    }
     // should be removed
     // this test really should be moved to OrganizeImportsTest
     void testInnerTypeRemoval() {
@@ -134,38 +134,38 @@ class TypeHelper {
 """
         doAddImportTest(contents)
     }
-    void testMultiAliasing2() {
-        String contents =
-                """
-import other2.FourthClass
-import other3.FourthClass as FourthClass2
-import other4.FourthClass as FourthClass3
-
-class TypeHelper {
-    FourthClass f1
-    FourthClass2 f2
-//    FourthClass3 f3
-}
-"""
-                doDeleteImportTest(contents, 1)
-    }
-    
-    // TODO failing on build server...disabled
-    void _testMultiAliasing2a() {
-        String contents =
-                """
-import other3.FourthClass as FourthClass2
-import other4.FourthClass as FourthClass3
-import other2.FourthClass
-
-class TypeHelper {
-    FourthClass f1
-    FourthClass2 f2
-//    FourthClass3 f3
-}
-                """
-                doDeleteImportTest(contents, 1)
-    }
+//    void testMultiAliasing2() {
+//        String contents =
+//                """
+//import other2.FourthClass
+//import other3.FourthClass as FourthClass2
+//import other4.FourthClass as FourthClass3
+//
+//class TypeHelper {
+//    FourthClass f1
+//    FourthClass2 f2
+////    FourthClass3 f3
+//}
+//"""
+//                doDeleteImportTest(contents, 1)
+//    }
+//    
+//    // TODO failing on build server...disabled
+//    void _testMultiAliasing2a() {
+//        String contents =
+//                """
+//import other3.FourthClass as FourthClass2
+//import other4.FourthClass as FourthClass3
+//import other2.FourthClass
+//
+//class TypeHelper {
+//    FourthClass f1
+//    FourthClass2 f2
+////    FourthClass3 f3
+//}
+//                """
+//                doDeleteImportTest(contents, 1)
+//    }
     void testMultiAliasing3() {
         String contents =
                 """
