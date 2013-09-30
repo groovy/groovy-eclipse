@@ -63,15 +63,15 @@ public class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
 //    }
     // should be removed
     // this test really should be moved to OrganizeImportsTest
-    void testInnerTypeRemoval() {
-        String contents = 
-            """ 
-            import other.Outer.Inner as F
-            
-            def x
-            """
-            doDeleteImportTest(contents, 1)
-    }
+//    void testInnerTypeRemoval() {
+//        String contents = 
+//            """ 
+//            import other.Outer.Inner as F
+//            
+//            def x
+//            """
+//            doDeleteImportTest(contents, 1)
+//    }
     // should not be removed
     void testStaticAlias() {
         String contents = 
@@ -166,19 +166,19 @@ class TypeHelper {
 //                """
 //                doDeleteImportTest(contents, 1)
 //    }
-    void testMultiAliasing3() {
-        String contents =
-                """
-import other2.FourthClass
-import other3.FourthClass as FourthClass2
-import other4.FourthClass as FourthClass3
-
-class TypeHelper {
-//    FourthClass f1
-    FourthClass2 f2
-//    FourthClass3 f3
-}
-                """
-                doDeleteImportTest(contents, 2)
-    }
+//    void testMultiAliasing3() {
+//        String contents =
+//                """
+//import other2.FourthClass
+//import other3.FourthClass as FourthClass2
+//import other4.FourthClass as FourthClass3
+//
+//class TypeHelper {
+////    FourthClass f1
+//    FourthClass2 f2
+////    FourthClass3 f3
+//}
+//                """
+//                doDeleteImportTest(contents, 2)
+//    }
 }
