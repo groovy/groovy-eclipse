@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.test.actions;
 
-import groovy.transform.CompileStatic;
-
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports
 import org.codehaus.groovy.eclipse.test.EclipseTestCase
@@ -124,7 +122,6 @@ class AbstractOrganizeImportsTest extends EclipseTestCase {
         }
     }
     
-    @CompileStatic
     void doDeleteImportTest(String contents, numDeletes) {
         def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)
         testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
