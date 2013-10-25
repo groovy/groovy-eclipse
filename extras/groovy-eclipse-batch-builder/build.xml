@@ -114,7 +114,7 @@
           target: -init   
           create properties and filesets                   
          - - - - - - - - - - - - - - - - - -->
-	<target name="-init" depends="-fail-if-no-version-specified,-init17,-init18,-init20,-init21">
+	<target name="-init" depends="-fail-if-no-version-specified,-init17,-init18,-init20,-init21,-init22">
 		<property file="build.properties"/>
 		<property name="jar.prefix" value="groovy-eclipse-batch"/>
 
@@ -198,6 +198,15 @@
        <property name="version" value="${version2.1}"/>
     	 <property name="groovy.folder" value="org.codehaus.groovy21"/>
     </target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: -init22
+         - - - - - - - - - - - - - - - - - -->
+    <target name="-init22" if="do-22-build">
+    	<echo message="Building groovy 2.2.x"/>
+       <property name="version" value="${version2.2}"/>
+    	 <property name="groovy.folder" value="org.codehaus.groovy22"/>
+    </target>
 	
 	<target name="-check-build-version">
 		<property file="build.properties"/>
@@ -208,6 +217,7 @@
 				<isset property="do-18-build"/>
 				<isset property="do-20-build"/>
 				<isset property="do-21-build"/>
+				<isset property="do-22-build"/>
 			</or>
 			</not>
 		</condition>
