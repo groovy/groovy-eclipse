@@ -102,7 +102,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         try {
         	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.2.0-beta-2.jar");
         	if (groovyJar==null) {
-	        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.1.6.jar");
+	        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.1.8.jar");
 	        	if (groovyJar==null) {
 		            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.0.7.jar");
 		            if (groovyJar==null) {

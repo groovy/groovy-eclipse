@@ -247,7 +247,7 @@ class GrapeIvy implements GrapeEngine {
                 classLoader:args.remove('classLoader'),
                 refObject:args.remove('refObject'),
                 calleeDepth:args.calleeDepth?:DEFAULT_DEPTH,
-                )
+            )
 
             // check for non-fail null.
             // If we were in fail mode we would have already thrown an exception

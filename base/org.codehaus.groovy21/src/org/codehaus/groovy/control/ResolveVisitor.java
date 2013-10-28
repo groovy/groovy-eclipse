@@ -1396,7 +1396,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 	type.setName(oldTypeName);
                 }
                 addError("unable to resolve class " + type.getName(), type);
-            	importNode.markAsUnresolvable();
+            	importNode.markAsUnresolvable(); // GRECLIPSE
             }
             for (ImportNode importNode : module.getStaticImports().values()) {
                 ClassNode type = importNode.getType();
@@ -1406,7 +1406,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             for (ImportNode importNode : module.getStaticStarImports().values()) {
                 ClassNode type = importNode.getType();
                 if (resolve(type, true, true, true)) continue;
-                if (!importNode.isUnresolvable()) {
+                if (!importNode.isUnresolvable()) { // GRECLIPSE
                 	addError("unable to resolve class " + type.getName(), type);
                 }
             }
@@ -1436,14 +1436,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             if(parentToCompare == null) return;
             if(originalNode == parentToCompare.redirect()) {
                 addError("Cyclic inheritance involving " + parentToCompare.getName() + " in class " + originalNode.getName(), originalNode);
-                originalNode.redirect().setHasInconsistentHierarchy(true);
+                originalNode.redirect().setHasInconsistentHierarchy(true); // GRECLIPSE
                 return;
             }
             if(interfacesToCompare != null && interfacesToCompare.length > 0) {
                 for(ClassNode intfToCompare : interfacesToCompare) {
                     if(originalNode == intfToCompare.redirect()) {
                         addError("Cycle detected: the type " + originalNode.getName() + " cannot implement itself" , originalNode);
-                        originalNode.redirect().setHasInconsistentHierarchy(true);
+                        originalNode.redirect().setHasInconsistentHierarchy(true); // GRECLIPSE
                         return;
                     }
                 }
@@ -1456,7 +1456,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 for(ClassNode intfToCompare : interfacesToCompare) {
                     if(originalNode == intfToCompare.redirect()) {
                         addError("Cyclic inheritance involving " + intfToCompare.getName() + " in interface " + originalNode.getName(), originalNode);
-                        originalNode.redirect().setHasInconsistentHierarchy(true);
+                        originalNode.redirect().setHasInconsistentHierarchy(true); // GRECLIPSE
                         return;
                     }
                 }

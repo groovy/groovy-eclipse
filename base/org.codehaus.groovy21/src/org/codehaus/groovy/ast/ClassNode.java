@@ -867,7 +867,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public List<Statement> getObjectInitializerStatements() {
         if (objectInitializers == null)
-            objectInitializers = new ArrayList<Statement> ();
+            objectInitializers = new LinkedList<Statement> ();
         return objectInitializers;
     }
 
@@ -1244,7 +1244,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             return componentType.toString(showRedirect)+"[]";
         }
         String ret = getName();
-        if (genericsTypes != null) {
+        if (placeholder) ret = getUnresolvedName();
+        if (!placeholder && genericsTypes != null) {
             ret += " <";
             for (int i = 0; i < genericsTypes.length; i++) {
                 if (i != 0) ret += ", ";
@@ -1417,7 +1418,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return (getModifiers() & Opcodes.ACC_INTERFACE) > 0;
     }
 
-    // GRECLIPSE: start: dirty hack
+    // GRECLIPSE: start: TODO clean all this up 
     /*{
     public boolean isResolved(){
         return redirect().clazz!=null || (componentType != null && componentType.isResolved());
@@ -1466,7 +1467,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             setRedirect(cn);
             return redirect().clazz;
         }
-        // GRECLIPSE
+        // GRECLIPSE - very bad way to do this
         if (redirect().getClass().getName().endsWith("JDTClassNode")) {
         	// special!
         	return redirect().getTypeClass();

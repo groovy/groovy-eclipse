@@ -534,15 +534,18 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
             } else if ("power".equals(message)) {
                 writePowerCall(receiver, arguments, rType, aType);
                 return;
+            } else if ("mod".equals(message)) {
+                writeModCall(receiver, arguments, rType, aType);
+                return;
             }
         } else if (STRING_TYPE.equals(rType) && "plus".equals(message)) {
             writeStringPlusCall(receiver, message, arguments);
             return;
-        } else if (rType.isArray() && "getAt".equals(message) && getWrapper(aType).isDerivedFrom(Number_TYPE)) {
+        } else if ("getAt".equals(message)) {
+            if (rType.isArray() && getWrapper(aType).isDerivedFrom(Number_TYPE)) {
             writeArrayGet(receiver, arguments, rType, aType);
             return;
-        }
-
+            } else {
         // check if a getAt method can be found on the receiver
         ClassNode current = rType;
         MethodNode getAtNode = null;
@@ -596,6 +599,8 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
             call.visit(controller.getAcg());
             return;
         }
+            }
+        }
         // todo: more cases
         throw new GroovyBugError(
                 "At line "+receiver.getLineNumber() + " column " + receiver.getColumnNumber() + "\n" +
@@ -618,6 +623,19 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         operandStack.replace(rType.getComponentType(), m2-m1);
     }
 
+    private void writeModCall(Expression receiver, Expression arguments, ClassNode rType, ClassNode aType) {
+        prepareSiteAndReceiver(receiver, "mod", false, controller.getCompileStack().isLHS());
+        controller.getOperandStack().doGroovyCast(Number_TYPE);
+        visitBoxedArgument(arguments);
+        controller.getOperandStack().doGroovyCast(Number_TYPE);
+        MethodVisitor mv = controller.getMethodVisitor();
+        mv.visitMethodInsn(INVOKESTATIC,
+                "org/codehaus/groovy/runtime/typehandling/NumberMath",
+                "mod",
+                "(Ljava/lang/Number;Ljava/lang/Number;)Ljava/lang/Number;");
+        controller.getOperandStack().replace(Number_TYPE, 2);
+    }
+    
     private void writePowerCall(Expression receiver, Expression arguments, final ClassNode rType, ClassNode aType) {
         OperandStack operandStack = controller.getOperandStack();
         int m1 = operandStack.getStackLength();

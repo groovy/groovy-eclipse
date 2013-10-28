@@ -426,11 +426,11 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
                 new IfStatement(
                         equalsNullExpr(initExpr),
                         new EmptyStatement(),
-                        assignStatement(fieldExpr, checkUnresolved(cNode, fNode, initExpr))),
-                assignStatement(fieldExpr, checkUnresolved(cNode, fNode, unknown)));
+                        assignStatement(fieldExpr, checkUnresolved(fNode, initExpr))),
+                assignStatement(fieldExpr, checkUnresolved(fNode, unknown)));
     }
 
-    private Expression checkUnresolved(ClassNode cNode, FieldNode fNode, Expression value) {
+    private Expression checkUnresolved(FieldNode fNode, Expression value) {
         Expression args = new TupleExpression(new MethodCallExpression(new VariableExpression("this"), "getClass", ArgumentListExpression.EMPTY_ARGUMENTS), new ConstantExpression(fNode.getName()), value);
         return new StaticMethodCallExpression(SELF_TYPE, "checkImmutable", args);
     }
