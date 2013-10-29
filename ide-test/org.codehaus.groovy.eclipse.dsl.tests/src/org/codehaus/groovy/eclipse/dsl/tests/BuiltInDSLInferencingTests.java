@@ -201,7 +201,8 @@ public class BuiltInDSLInferencingTests extends AbstractDSLInferencingTest {
         assertDeclaringType(contents, start, end, "FlyingAbility", true);
     }
     
-    public void testSwingBuilder1() throws Exception {
+    
+    public void xtestSwingBuilder1() throws Exception {
         String contents = "new groovy.swing.SwingBuilder().edt { frame }";
         int start = contents.lastIndexOf("frame");
         int end = start + "frame".length();
