@@ -47,7 +47,7 @@
           target: publish
           publish to the codehaus repository as well as install locally
          =================================  -->
-	<target name="publish" depends="-init,extract-create-install,-forceUploadSettings,-deployDefault"
+	<target name="publish" depends="-init,extract-create-install,-deployDefault"
       description="Deploy jars to maven repository on codehaus.org.">
 	</target>
 
@@ -241,11 +241,13 @@
 	</target>
 
 	<!-- does the deploy and updates the username and pass -->
-	<target name="-deployDefault" depends="-forceUploadSettings,-init,-mavenDeployInit">
-		<mavenDeploy version="${version}" prefix="${jar.prefix}" settings="${jar.dest}/settings.xml"/>
+	<target name="-deployDefault" depends="-init,-mavenDeployInit">
+		<mavenDeploy version="${version}" prefix="${jar.prefix}"/>
 	</target>
 
-	<!-- updates username and pass to the specified properties -->
+	<!-- updates username and pass to the specified properties 
+	     Commented out. It is assumed settings are taken from ~/.m2/settings.xml
+	     So it doesn't have to be specified in the build
 	<target name="-forceUploadSettings" depends="-init,-mavenDeployInit">
 		<copy tofile="${jar.dest}/settings.xml">
 			<fileset file="maven/settings.xml"/>
@@ -255,4 +257,5 @@
 			</filterset>
 		</copy>
 	</target>
+	-->
 </project>

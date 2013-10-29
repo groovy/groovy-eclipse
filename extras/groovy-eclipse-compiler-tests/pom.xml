@@ -9,11 +9,16 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<groovy.xx.version>2.1.8-01-SNAPSHOT</groovy.xx.version>
+		<!-- only one of the below is actually used at any time and needs to be replaced
+		   to run tests with different compiler. So we it it changed to use just one property
+		   groovy.xx.version to represent all of them 
 		<groovy.22.version>2.2.0-01-SNAPSHOT</groovy.22.version>
 		<groovy.21.version>2.1.5-03</groovy.21.version>
 		<groovy.20.version>2.0.7-03</groovy.20.version>
 		<groovy.18.version>1.8.4-01</groovy.18.version>
 		<groovy.17.version>1.7.10-06</groovy.17.version>
+		-->
 		<maven-compiler-plugin.version>3.0</maven-compiler-plugin.version>
 	</properties>
 
@@ -36,6 +41,11 @@
 			<id>werdna</id>
 			<name>Andrew Eisenberg</name>
 			<email>andrew@eisenberg.as</email>
+		</developer>
+		<developer>
+			<id>kdvolder</id>
+			<name>Kris De Volder</name>
+			<email>kdvolder@gmail.com</email>
 		</developer>
 	</developers>
 
@@ -111,7 +121,7 @@
           <execution>
             <id>integration-test</id>
             <goals>
-              <goal>install</goal>
+              <goal>integration-test</goal>
               <goal>run</goal>
             </goals>
           </execution>

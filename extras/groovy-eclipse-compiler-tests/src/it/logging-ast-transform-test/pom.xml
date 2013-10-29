@@ -60,7 +60,7 @@
           <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-eclipse-batch</artifactId>
-            <version>@groovy.22.version@</version>
+            <version>@groovy.xx.version@</version>
           </dependency>
         </dependencies>
       </plugin>

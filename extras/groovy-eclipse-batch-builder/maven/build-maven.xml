@@ -28,6 +28,7 @@ $Date: 2010-05-29 06:47:51 +0200 (Sat, 29 May 2010) $
 		</sequential>
 	</macrodef>
 
+	<!-- for now only snapshot deployable. Figure out later how to deploy to a release staging repo -->
 	<target name="-mavenInit" depends="-mavenTaskdef,-mavenPomDefinitions">
 		<property file="build.properties" />
 	</target>
@@ -45,18 +46,26 @@ $Date: 2010-05-29 06:47:51 +0200 (Sat, 29 May 2010) $
 	</target>
 
 	<target name="-mavenDeployInit" depends="-mavenInit">
-		<artifact:install-provider artifactId="wagon-webdav" version="1.0-beta-2" />
+		<property name="deploy.repo.id" value="codehaus-nexus-snapshots"/>
+		<property name="deploy.repo.url" value="https://nexus.codehaus.org/content/repositories/snapshots/"/>
+		<!-- <artifact:install-provider artifactId="wagon-webdav" version="1.0-beta-2" /> -->
+		<!-- Commented out, no longer using webdav to deploy. 
+		     Use the simple http install provider that seems to work well and we can
+		     use the urls described here 
+		     http://docs.codehaus.org/display/HAUSMATES/Codehaus+Maven+Repository+Usage+Guide#CodehausMavenRepositoryUsageGuide-3.MavenRepositories
+		     together with settings.xml file to provide credentials as described here:
+		     http://docs.codehaus.org/display/HAUSMATES/Codehaus+Maven+Repository+Usage+Guide#CodehausMavenRepositoryUsageGuide-6.POMandsettingsconfig -->
 	</target>
 
 	<macrodef name="mavenDeploy">
 		<attribute name="version" />
 		<attribute name="prefix" />
-		<attribute name="settings" />
 		<sequential>
+			<echo message="Deploying "/>
 			<artifact:pom id="groovy_pom" file="${jar.dest}/@{prefix}.pom" />
-			<artifact:deploy file="${jar.dest}/@{prefix}-@{version}.jar" settingsFile="@{settings}">
+			<artifact:deploy file="${jar.dest}/@{prefix}-@{version}.jar">
 				<pom refid="groovy_pom" />
-				<remoteRepository id="codehaus.org" url="dav:https://dav.codehaus.org/repository/groovy/" />
+				<remoteRepository id="${deploy.repo.id}" url="${deploy.repo.url}" />
 			</artifact:deploy>
 		</sequential>
 	</macrodef>
