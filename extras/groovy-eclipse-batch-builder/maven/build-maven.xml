@@ -46,8 +46,6 @@ $Date: 2010-05-29 06:47:51 +0200 (Sat, 29 May 2010) $
 	</target>
 
 	<target name="-mavenDeployInit" depends="-mavenInit">
-		<property name="deploy.repo.id" value="codehaus-nexus-snapshots"/>
-		<property name="deploy.repo.url" value="https://nexus.codehaus.org/content/repositories/snapshots/"/>
 		<!-- <artifact:install-provider artifactId="wagon-webdav" version="1.0-beta-2" /> -->
 		<!-- Commented out, no longer using webdav to deploy. 
 		     Use the simple http install provider that seems to work well and we can
@@ -61,12 +59,31 @@ $Date: 2010-05-29 06:47:51 +0200 (Sat, 29 May 2010) $
 		<attribute name="version" />
 		<attribute name="prefix" />
 		<sequential>
-			<echo message="Deploying "/>
+			<local name="deploy.repo.id"/>			
+			<local name="deploy.repo.url"/>
+			<!-- choose snapshot or staging repo to deploy to, depending on version string -->
+			<condition property="deploy.repo.id" 
+					value="${deploy.repo.snapshot.id}" 
+					else= "${deploy.repo.release.id}">
+				<contains string="@{version}" substring="-SNAPSHOT"/>
+			</condition>
+			<condition property="deploy.repo.url" 
+					value="${deploy.repo.snapshot.url}" 
+					else= "${deploy.repo.release.url}">
+				<contains string="@{version}" substring="-SNAPSHOT"/>
+			</condition>
+			
+			<echo message="Deploying file: @{prefix}-@{version}.jar "/>
+			<echo message="            to: ${deploy.repo.id} (${deploy.repo.url}) "/>
+						
+			<!--- commented out to avoid accidental deploy until kinks in script are ironed out -->
+			<!-- 
 			<artifact:pom id="groovy_pom" file="${jar.dest}/@{prefix}.pom" />
 			<artifact:deploy file="${jar.dest}/@{prefix}-@{version}.jar">
 				<pom refid="groovy_pom" />
 				<remoteRepository id="${deploy.repo.id}" url="${deploy.repo.url}" />
 			</artifact:deploy>
+			-->
 		</sequential>
 	</macrodef>
 
