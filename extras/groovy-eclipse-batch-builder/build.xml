@@ -84,7 +84,7 @@
 		</copy>
 
 		<!-- now unzip the jdt compiler adapter jar.  It is a jar within a jar -->
-		<unzip dest="${extract.loc}" src="${git.repo.loc}/jdt-patch/e42/org.eclipse.jdt.core/jdtCompilerAdapter.jar" />
+		<unzip dest="${extract.loc}" src="${git.repo.loc}/jdt-patch/e43/org.eclipse.jdt.core/jdtCompilerAdapter.jar" />
 
 	</target>
 	
