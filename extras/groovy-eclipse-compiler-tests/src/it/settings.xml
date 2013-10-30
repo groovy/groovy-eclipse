@@ -29,6 +29,22 @@
 					<layout>default</layout>
 				</pluginRepository>
 				<pluginRepository>
+				   <id>codehaus-staging</id>
+				   <name>codehaus-staging</name>
+				   <url>https://nexus.codehaus.org/content/groups/staging/</url>
+					<releases>
+						<enabled>true</enabled>
+						<updatePolicy>always</updatePolicy>
+						<checksumPolicy>warn</checksumPolicy>
+					</releases>
+					<snapshots>
+						<enabled>false</enabled>
+						<updatePolicy>always</updatePolicy>
+						<checksumPolicy>warn</checksumPolicy>
+					</snapshots>
+					<layout>default</layout>
+				</pluginRepository>
+				<pluginRepository>
 				   <id>codehaus-snapshots</id>
 				   <name>codehaus-snapshots</name>
 				   <url>https://nexus.codehaus.org/content/repositories/snapshots/</url>
@@ -60,6 +76,22 @@
 						<checksumPolicy>warn</checksumPolicy>
 					</snapshots>
 					<url>file://${user.home}/.m2/repository</url>
+					<layout>default</layout>
+				</repository>
+				<repository>
+				   <id>codehaus-staging</id>
+				   <name>codehaus-staging</name>
+				   <url>https://nexus.codehaus.org/content/groups/staging/</url>
+					<releases>
+						<enabled>true</enabled>
+						<updatePolicy>always</updatePolicy>
+						<checksumPolicy>warn</checksumPolicy>
+					</releases>
+					<snapshots>
+						<enabled>false</enabled>
+						<updatePolicy>always</updatePolicy>
+						<checksumPolicy>warn</checksumPolicy>
+					</snapshots>
 					<layout>default</layout>
 				</repository>
 				<repository>

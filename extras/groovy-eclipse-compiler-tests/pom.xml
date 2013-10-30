@@ -9,7 +9,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<groovy.xx.version>2.1.8-01-SNAPSHOT</groovy.xx.version>
+		<groovy.xx.version>2.1.8-01</groovy.xx.version>
 		<!-- only one of the below is actually used at any time and needs to be replaced
 		   to run tests with different compiler. So we it it changed to use just one property
 		   groovy.xx.version to represent all of them 
