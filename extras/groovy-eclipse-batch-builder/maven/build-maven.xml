@@ -45,7 +45,7 @@ $Date: 2010-05-29 06:47:51 +0200 (Sat, 29 May 2010) $
 		<maven.pom file="${jar.dest}/${pom.name}" id="groovy.pom" />
 	</target>
 
-	<target name="-mavenDeployInit" depends="-mavenInit">
+	<target name="-mavenDeployInit" depends="-mavenInit,-fake.jar">
 		<!-- <artifact:install-provider artifactId="wagon-webdav" version="1.0-beta-2" /> -->
 		<!-- Commented out, no longer using webdav to deploy. 
 		     Use the simple http install provider that seems to work well and we can
@@ -55,13 +55,18 @@ $Date: 2010-05-29 06:47:51 +0200 (Sat, 29 May 2010) $
 		     http://docs.codehaus.org/display/HAUSMATES/Codehaus+Maven+Repository+Usage+Guide#CodehausMavenRepositoryUsageGuide-6.POMandsettingsconfig -->
 	</target>
 
+	<target name="-fake.jar">
+		<jar destfile="${jar.dest}/fakejar.jar" basedir="fakejar"/>
+	</target>
+
+	<!--
 	<macrodef name="mavenDeploy">
 		<attribute name="version" />
 		<attribute name="prefix" />
 		<sequential>
 			<local name="deploy.repo.id"/>			
 			<local name="deploy.repo.url"/>
-			<!-- choose snapshot or staging repo to deploy to, depending on version string -->
+			<- choose snapshot or staging repo to deploy to, depending on version string ->
 			<condition property="deploy.repo.id" 
 					value="${deploy.repo.snapshot.id}" 
 					else= "${deploy.repo.release.id}">
@@ -76,16 +81,88 @@ $Date: 2010-05-29 06:47:51 +0200 (Sat, 29 May 2010) $
 			<echo message="Deploying file: @{prefix}-@{version}.jar "/>
 			<echo message="            to: ${deploy.repo.id} (${deploy.repo.url}) "/>
 						
-			<!--- commented out to avoid accidental deploy until kinks in script are ironed out -->
-			<!-- 
 			<artifact:pom id="groovy_pom" file="${jar.dest}/@{prefix}.pom" />
 			<artifact:deploy file="${jar.dest}/@{prefix}-@{version}.jar">
 				<pom refid="groovy_pom" />
 				<remoteRepository id="${deploy.repo.id}" url="${deploy.repo.url}" />
+				
+				<- attach gpg signature for main jar ->
+				<attach file="${jar.dest}/@{prefix}-@{version}.jar.asc" type="jar.asc"/>
+				
+				<- attach a fake javadoc and sources jar to satisfy codehaus nexus staging rules ->
+				<attach file="${jar.dest}/fakejar.jar" type="jar" classifier="sources"/>
+				<attach file="${jar.dest}/fakejar.jar.asc" type="jar.asc" classifier="sources"/>
+				<attach file="${jar.dest}/fakejar.jar" type="jar" classifier="javadoc"/>
+				<attach file="${jar.dest}/fakejar.jar.asc" type="jar.asc" classifier="javadoc"/>
 			</artifact:deploy>
-			-->
 		</sequential>
 	</macrodef>
+	-->
+
+	<macrodef name="mavenDeploy">
+	
+		<!-- See https://docs.sonatype.org/display/Repository/Deploy+Snapshots+and+Stage+Releases+with+Ant -->
+	
+		<attribute name="version" />
+		<attribute name="prefix" />
+
+		<sequential>
+
+			<local name="deploy.repo.id"/>			
+			<local name="deploy.repo.url"/>
+
+			<condition property="deploy.repo.id" 
+					value="${deploy.repo.snapshot.id}" 
+					else= "${deploy.repo.release.id}">
+				<contains string="@{version}" substring="-SNAPSHOT"/>
+			</condition>
+			<condition property="deploy.repo.url" 
+					value="${deploy.repo.snapshot.url}" 
+					else= "${deploy.repo.release.url}">
+				<contains string="@{version}" substring="-SNAPSHOT"/>
+			</condition>
+			
+			<echo message="Deploying file: @{prefix}-@{version}.jar "/>
+			<echo message="            to: ${deploy.repo.id} (${deploy.repo.url}) "/>
+			
+			<artifact:mvn>
+				<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.4:sign-and-deploy-file" />
+				<arg value="-Durl=${deploy.repo.url}" />
+				<arg value="-Dgpg.passphrase=" />
+				<arg value="-DrepositoryId=${deploy.repo.id}" />
+				<arg value="-DpomFile=${jar.dest}/@{prefix}.pom" />
+				<arg value="-Dfile=${jar.dest}/@{prefix}-@{version}.jar" />
+				<arg value="-Dsources=${jar.dest}/fakejar.jar"/>
+				<arg value="-Djavadoc=${jar.dest}/fakejar.jar"/>
+			</artifact:mvn>
+	
+			<!-- sign and deploy the sources artifact 
+			<artifact:mvn>
+				<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.4:sign-and-deploy-file" />
+				<arg value="-Durl=${deploy.repo.url}" />
+				<arg value="-Dgpg.passphrase=" />
+				<arg value="-DrepositoryId=${deploy.repo.id}" />
+				<arg value="-DpomFile=${jar.dest}/@{prefix}.pom" />
+				<arg value="-Dfile=${jar.dest}/fakejar.jar" />
+				<arg value="-Dclassifier=sources" />
+			</artifact:mvn>
+			-->
+	
+			<!-- sign and deploy the javadoc artifact 
+			<artifact:mvn>
+				<arg value="org.apache.maven.plugins:maven-gpg-plugin:1.4:sign-and-deploy-file" />
+				<arg value="-Durl=${deploy.repo.url}" />
+				<arg value="-Dgpg.passphrase=" />
+				<arg value="-DrepositoryId=${deploy.repo.id}" />
+				<arg value="-DpomFile=${jar.dest}/@{prefix}.pom" />
+				<arg value="-Dfile=${jar.dest}/fakejar.jar" />
+				<arg value="-Dclassifier=javadoc" />
+			</artifact:mvn>
+	        -->
+		</sequential>
+	
+	</macrodef>
+
 
 	<macrodef name="mavenInstall">
 		<attribute name="version" />
