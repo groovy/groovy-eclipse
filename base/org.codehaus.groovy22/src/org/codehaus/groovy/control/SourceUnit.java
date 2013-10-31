@@ -305,6 +305,7 @@ public class SourceUnit extends ProcessingUnit {
         	}
         	// GRECLIPSE: end
             getErrorCollector().addError(new SyntaxErrorMessage(e,this));
+        // GRECLIPSE: start (was not marked but seems like  should be)
         } catch (CompilationFailedException cfe) {
         	if (this.ast==null) {
         		// Create a dummy ModuleNode to represent a failed parse - in case a later phase attempts to use the ast
@@ -312,6 +313,7 @@ public class SourceUnit extends ProcessingUnit {
         	}
         	throw cfe;
         }
+        // GRECLIPSE: end
 
         String property = (String) AccessController.doPrivileged(new PrivilegedAction() {
         	public Object run() {

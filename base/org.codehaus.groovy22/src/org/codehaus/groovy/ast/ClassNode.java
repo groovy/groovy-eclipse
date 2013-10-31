@@ -139,6 +139,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     protected boolean isPrimaryNode;
     protected List<InnerClassNode> innerClasses;
     
+	//GRECLIPSE start
     private int bitflags = 0x0000;
     private static final int BIT_INCONSISTENT_HIERARCHY = 0x0001;
     
@@ -153,7 +154,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     		redirect.bitflags&=~BIT_INCONSISTENT_HIERARCHY;
     	}
     }
-
+	//GRECLIPSE end
+	
     /**
      * The ASTTransformations to be applied to the Class
      */
@@ -302,7 +304,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     /*
      * Constructor used by makeArray() if a real class is available
      */
-    public ClassNode(Class c, ClassNode componentType) {
+    public ClassNode(Class c, ClassNode componentType) { //GRECLIPSE: public
         this(c);
         this.componentType = componentType;
         isPrimaryNode=false;
@@ -610,6 +612,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         r.fieldIndex.put(node.getName(), node);
     }
 
+    //GRECLIPSE: new method
     public void addPropertyWithoutField(PropertyNode node) {
         node.setDeclaringClass(redirect());
 //        FieldNode field = node.getField();
@@ -661,14 +664,16 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public PropertyNode getProperty(String name) {
-    	try {
+    	try { //GRECLIPSE
 	        for (PropertyNode pn : getProperties()) {
 	        	String pname = pn.getName();
 	            if (pname.equals(name)) return pn;
 	        }
+        //GRECIPSE: start
     	} catch (NullPointerException npe) {
     		throw new RuntimeException("greclipse-972 debug: null pointer in getProperty(), type is "+this.getName()+" props are "+getProperties(),npe);
     	}
+        //GRECIPSE: end
         return null;
     }
 
@@ -1069,9 +1074,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (!lazyInitDone && !isResolved()) {
             throw new GroovyBugError("ClassNode#getSuperClass for "+getName()+" called before class resolving");
         }
+        //GRECLIPSE start
         if (hasInconsistentHierarchy()) {
         	return ClassHelper.OBJECT_TYPE;
         }
+        //GRECLIPSE end
         ClassNode sn = redirect().getUnresolvedSuperClass();
         if (sn!=null) sn=sn.redirect();
         return sn;
@@ -1082,9 +1089,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public ClassNode getUnresolvedSuperClass(boolean useRedirect) { 
+        //GRECLIPSE start
     	if (hasInconsistentHierarchy()) {
 	    	return ClassHelper.OBJECT_TYPE;
 	    }
+        //GRECLIPSE end
         if (!useRedirect) return superClass;
         if (!redirect().lazyInitDone) redirect().lazyClassInit();
         return redirect().superClass;
@@ -1099,9 +1108,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public ClassNode [] getUnresolvedInterfaces(boolean useRedirect) {
+        //GRECLIPSE start
         if (hasInconsistentHierarchy()) {
         	return EMPTY_ARRAY;
         }
+        //GRECLIPSE end
         if (!useRedirect) return interfaces;
         if (!redirect().lazyInitDone) redirect().lazyClassInit();
         return redirect().interfaces;
@@ -1244,7 +1255,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             return componentType.toString(showRedirect)+"[]";
         }
         String ret = getName();
-        if (genericsTypes != null) {
+        if (placeholder) ret = getUnresolvedName();
+        if (!placeholder && genericsTypes != null) {
             ret += " <";
             for (int i = 0; i < genericsTypes.length; i++) {
                 if (i != 0) ret += ", ";
@@ -1466,11 +1478,12 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             setRedirect(cn);
             return redirect().clazz;
         }
-        // GRECLIPSE
+        // GRECLIPSE start
         if (redirect().getClass().getName().endsWith("JDTClassNode")) {
         	// special!
         	return redirect().getTypeClass();
         }
+        // GRECLIPSE end
         throw new GroovyBugError("ClassNode#getTypeClass for "+getName()+" is called before the type class is set ");
     }
 
@@ -1516,16 +1529,17 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         usesGenerics = b;
     }
     
-	// original:
-//    public ClassNode getPlainNodeReference() {
-//        if (ClassHelper.isPrimitiveType(this)) return this;
-//        ClassNode n = new ClassNode(getName(),getModifiers(),getSuperClass(),null,null);
-//        n.isPrimaryNode = false;
-//        n.setRedirect(redirect());
-//        n.componentType = redirect().getComponentType();
-//        return n;
-//    }
-
+// GRECLIPE start
+/*old:
+    public ClassNode getPlainNodeReference() {
+        if (ClassHelper.isPrimitiveType(this)) return this;
+        ClassNode n = new ClassNode(getName(),getModifiers(),getSuperClass(),null,null);
+        n.isPrimaryNode = false;
+        n.setRedirect(redirect());
+        n.componentType = redirect().getComponentType();
+        return n;
+    }
+new:*/
     public ClassNode getPlainNodeReference() {
         if (ClassHelper.isPrimitiveType(this)) return this;
 		ClassNode n = new ClassNode(getName(), getModifiers(), getSuperClass(),
@@ -1535,6 +1549,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         n.componentType = redirect().getComponentType();
         return n;
     }
+//end
 
 	public ClassNode[] getPlainNodeReferencesFor(ClassNode[] classNodes) {
 		if (classNodes == null) {

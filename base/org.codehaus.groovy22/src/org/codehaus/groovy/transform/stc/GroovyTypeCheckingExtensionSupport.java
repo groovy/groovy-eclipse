@@ -553,6 +553,81 @@ public class GroovyTypeCheckingExtensionSupport extends TypeCheckingExtension {
         return clone.call();
     }
 
+    /**
+     * Used to instruct the type checker that the call is a dynamic method call.
+     * Calling this method automatically sets the handled flag to true. The expected
+     * return type of the dynamic method call is Object.
+     * @param call the method call which is a dynamic method call
+     * @return a virtual method node with the same name as the expected call
+     */
+    public MethodNode makeDynamic(MethodCall call) {
+        return makeDynamic(call, ClassHelper.OBJECT_TYPE);
+    }
+
+    /**
+     * Used to instruct the type checker that the call is a dynamic method call.
+     * Calling this method automatically sets the handled flag to true.
+     * @param call the method call which is a dynamic method call
+     * @param returnType the expected return type of the dynamic call
+     * @return a virtual method node with the same name as the expected call
+     */
+    public MethodNode makeDynamic(MethodCall call, ClassNode returnType) {
+        TypeCheckingContext.EnclosingClosure enclosingClosure = context.getEnclosingClosure();
+        MethodNode enclosingMethod = context.getEnclosingMethod();
+        ((ASTNode)call).putNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION, returnType);
+        if (enclosingClosure!=null) {
+            enclosingClosure.getClosureExpression().putNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION, Boolean.TRUE);
+        } else {
+            enclosingMethod.putNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION, Boolean.TRUE);
+        }
+        setHandled(true);
+        return new MethodNode(call.getMethodAsString(), 0, returnType, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, EmptyStatement.INSTANCE);
+    }
+
+    /**
+     * Instructs the type checker that a property access is dynamic, returning an instance of an Object.
+     * Calling this method automatically sets the handled flag to true.
+     * @param pexp the property or attribute expression
+     */
+    public void makeDynamic(PropertyExpression pexp) {
+        makeDynamic(pexp, ClassHelper.OBJECT_TYPE);
+    }
+
+    /**
+     * Instructs the type checker that a property access is dynamic.
+     * Calling this method automatically sets the handled flag to true.
+     * @param pexp the property or attribute expression
+     * @param returnType the type of the property
+     */
+    public void makeDynamic(PropertyExpression pexp, ClassNode returnType) {
+        context.getEnclosingMethod().putNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION, Boolean.TRUE);
+        pexp.putNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION, returnType);
+        storeType(pexp, returnType);
+        setHandled(true);
+    }
+
+    /**
+     * Instructs the type checker that an unresolved variable is a dynamic variable of type Object.
+     * Calling this method automatically sets the handled flag to true.
+     * @param vexp the dynamic variable
+     */
+    public void makeDynamic(VariableExpression vexp) {
+        makeDynamic(vexp, ClassHelper.OBJECT_TYPE);
+    }
+
+    /**
+     * Instructs the type checker that an unresolved variable is a dynamic variable.
+     * @param returnType the type of the dynamic variable
+     * Calling this method automatically sets the handled flag to true.
+     * @param vexp the dynamic variable
+     */
+    public void makeDynamic(VariableExpression vexp, ClassNode returnType) {
+        context.getEnclosingMethod().putNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION, Boolean.TRUE);
+        vexp.putNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION, returnType);
+        storeType(vexp, returnType);
+        setHandled(true);
+    }
+
     // -------------------------------------
     // delegate to the type checking context
     // -------------------------------------

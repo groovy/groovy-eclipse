@@ -100,7 +100,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         String[] newcps = new String[cps.length+2];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.2.0-beta-2.jar");
+        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.2.0-rc-2.jar");
         	if (groovyJar==null) {
 	        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.1.8.jar");
 	        	if (groovyJar==null) {
@@ -858,7 +858,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"1. ERROR in Foo.groovy (at line 1)\n" + 
     			"	class Foo {}\n" + 
     			"	 ^"+(isGE20()?"^^^^^^^^^^":"")+"\n" + 
-    			"Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy are containing both a class of the name Foo.\n" + 
+    			"Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy each contain a class with the name Foo.\n" + 
     			"----------\n" + 
     			"2. ERROR in Foo.groovy (at line 1)\n" + 
     			"	class Foo {}\n" + 

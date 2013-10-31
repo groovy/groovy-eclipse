@@ -6,6 +6,6 @@
 	<classpathentry kind="src" output="bin-trace" path="src-trace"/>
 	<classpathentry exported="true" kind="lib" path="lib/ivy-2.3.0.jar" sourcepath="lib/ivy-2.3.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/bsf-2.4.0.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/groovy-all-2.2.0-beta-2.jar" sourcepath="lib/groovy-2.2.0-beta-2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/groovy-all-2.2.0-rc-2.jar" sourcepath="/groovy-core/src/main"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -33,7 +33,7 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
 
     public void visitBlockStatement(BlockStatement block) {
         for (Statement statement : block.getStatements() ) {
-        	if (statement!=null) 
+        	if (statement!=null) //GRECLIPSE
             statement.visit(this);
         }
     }

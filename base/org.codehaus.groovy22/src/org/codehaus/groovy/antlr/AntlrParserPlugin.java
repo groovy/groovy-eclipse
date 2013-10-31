@@ -441,7 +441,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // end
         if (isType(LITERAL_as, node)) {
             //import is like "import Foo as Bar"
-            node = node.getFirstChild();
+            /*ECLIPE AST*/ node = node.getFirstChild();
             aliasNode = node.getNextSibling();
             alias = identifier(aliasNode);
         }
@@ -913,8 +913,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             element = element.getNextSibling();
         }
         String identifier = identifier(element);
+        //GRECLIPSE: start
         int savedLine = element.getLine();
         int savedColumn = element.getColumn();
+        //GRECLIPSE: end
         Expression init = null;
         element = element.getNextSibling();
         if (element!=null) {

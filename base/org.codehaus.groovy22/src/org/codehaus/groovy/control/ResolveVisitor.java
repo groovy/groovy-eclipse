@@ -56,6 +56,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     public static final String[] DEFAULT_IMPORTS = {"java.lang.", "java.io.", "java.net.", "java.util.", "groovy.lang.", "groovy.util."};
     // GRECLIPSE: start: to public (was private)
     public CompilationUnit compilationUnit;
+    //GRECLIPSE: 2 new fields
     private Map cachedClasses = new HashMap();
     private static final Object NO_CLASS = new Object();
     private SourceUnit source;
@@ -80,7 +81,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
      * part. There is also the case of a imported class, so this logic
      * can't be done in these cases...
      */
-	public static class ConstructedClassWithPackage extends ClassNode {
+	public static class ConstructedClassWithPackage extends ClassNode { //GRECLIPSE made public
         String prefix;
         String className;
         public ConstructedClassWithPackage(String pkg, String name) {
@@ -116,7 +117,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
      * name foo and bar for being classes. Instead we will ask the module
      * for an alias for this name which is much faster.
      */
-	public static class LowerCaseClass extends ClassNode {
+	public static class LowerCaseClass extends ClassNode { //GRECLIPSE made public
         String className;
         public LowerCaseClass(String name) {
             super(name, Opcodes.ACC_PUBLIC,ClassHelper.OBJECT_TYPE);
@@ -434,87 +435,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return false;   
     }
     
-    // GRECLIPSE: from private to protected
-    protected boolean resolveFromClassCache(ClassNode type) {
-        String name = type.getName();
-        Object val = cachedClasses.get(name);
-        if (val == null || val == NO_CLASS) {
-            return false;
-        } else {
-            type.setRedirect((ClassNode)val);
-            return true;
-        }
-    }
-
-    // NOTE: copied from GroovyClassLoader
-    private long getTimeStamp(Class cls) {
-        return Verifier.getTimestamp(cls);
-    }
-
-    // NOTE: copied from GroovyClassLoader
-    private boolean isSourceNewer(URL source, Class cls) {
-        try {
-            long lastMod;
-
-            // Special handling for file:// protocol, as getLastModified() often reports
-            // incorrect results (-1)
-            if (source.getProtocol().equals("file")) {
-                // Coerce the file URL to a File
-                String path = source.getPath().replace('/', File.separatorChar).replace('|', ':');
-                File file = new File(path);
-                lastMod = file.lastModified();
-            } else {
-                URLConnection conn = source.openConnection();
-                lastMod = conn.getLastModified();
-                conn.getInputStream().close();
-            }
-            return lastMod > getTimeStamp(cls);
-        } catch (IOException e) {
-            // if the stream can't be opened, let's keep the old reference
-            return false;
-        }
-    }
-
-    // GRECLIPSE: from private to protected
-    protected boolean resolveToScript(ClassNode type) {
-        String name = type.getName();
-
-        
-        if (name.startsWith("java.")) return type.isResolved();
-        //TODO: don't ignore inner static classes completely
-        if (name.indexOf('$') != -1) return type.isResolved();
-        ModuleNode module = currentClass.getModule();
-        if (module.hasPackageName() && name.indexOf('.') == -1) return type.isResolved();
-        // try to find a script from classpath
-        GroovyClassLoader gcl = compilationUnit.getClassLoader();
-        URL url = null;
-        // GRECLIPSE: start: prevent classloader usage!
-        // oldcode
-        /* 
-        try {
-            url = gcl.getResourceLoader().loadGroovySource(name);
-        } catch (MalformedURLException e) {
-            // fall through and let the URL be null
-        }
-        if (url != null) {
-            if (type.isResolved()) {
-                Class cls = type.getTypeClass();
-                // if the file is not newer we don't want to recompile
-                if (!isSourceNewer(url, cls)) return true;
-                // since we came to this, we want to recompile
-                cachedClasses.remove(type.getName());
-                type.setRedirect(null);
-            }
-            SourceUnit su = compilationUnit.addSource(url);
-            currentClass.getCompileUnit().addClassNodeToCompile(type, su);
-            return true;
-        }*/
-        // newcode
-        // end
-        // type may be resolved through the classloader before
-        return type.isResolved();
-    }
-
     private String replaceLastPoint(String name) {
         int lastPoint = name.lastIndexOf('.');
         name = new StringBuffer()
@@ -564,17 +484,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         return false;
     }
-    // FIXASC (groovychange)
-    protected boolean resolveStaticInner(ClassNode type) {
-    	String name = type.getName();
-        String replacedPointType = replaceLastPoint(name);
-        type.setName(replacedPointType);
-        if (resolve(type, false, true, true)) return true;
-        type.setName(name);
-        return false;
-    }
-    // end
-
+    
     // GRECLIPSE: from private to protected
     protected boolean resolveFromDefaultImports(ClassNode type, boolean testDefaultImports) {
         // test default imports
@@ -610,7 +520,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         return false;
     }
-
+    
     // GRECLIPSE: from private to protected
     protected boolean resolveFromCompileUnit(ClassNode type) {
         // look into the compile unit if there is a class with that name
@@ -623,7 +533,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         return false;
     }
-
+    
     private void ambiguousClass(ClassNode type, ClassNode iType, String name) {
         if (type.getName().equals(iType.getName())) {
             addError("reference to " + name + " is ambiguous, both class " + type.getName() + " and " + iType.getName() + " match", type);
@@ -803,12 +713,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return false;
     }    
     
-    // GRECLIPSE: new method
-        protected ClassNode resolveNewName(String fullname) {
-		return null;
-	}
-	// end
-
     // GRECLIPSE: from private to protected
     protected boolean resolveToOuter(ClassNode type) {
         String name = type.getName();
@@ -1327,19 +1231,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return exp;
     }
     
-    // GRECLIPSE: new methods
-    /**
-     * @return true if resolution should continue, false otherwise (because, for example, it previously succeeded for this unit)
-     */
-    protected boolean commencingResolution() {
-    	// template method
-    	return true;
-    }
-    protected void finishedResolution() {
-    	// template method
-    }
-    // end
-
     private void checkAnnotationMemberValue(Expression newValue) {
         if (newValue instanceof PropertyExpression) {
             PropertyExpression pe = (PropertyExpression) newValue;
@@ -1396,7 +1287,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 	type.setName(oldTypeName);
                 }
                 addError("unable to resolve class " + type.getName(), type);
-            	importNode.markAsUnresolvable();
+            	importNode.markAsUnresolvable(); //GRECLIPSE? wasn't marked but seems it sould be
             }
             for (ImportNode importNode : module.getStaticImports().values()) {
                 ClassNode type = importNode.getType();
@@ -1406,7 +1297,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             for (ImportNode importNode : module.getStaticStarImports().values()) {
                 ClassNode type = importNode.getType();
                 if (resolve(type, true, true, true)) continue;
-                if (!importNode.isUnresolvable()) {
+                if (!importNode.isUnresolvable()) { //GRECLIPSE? wasn't marked but seems it sould be
                 	addError("unable to resolve class " + type.getName(), type);
                 }
             }
@@ -1436,14 +1327,14 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             if(parentToCompare == null) return;
             if(originalNode == parentToCompare.redirect()) {
                 addError("Cyclic inheritance involving " + parentToCompare.getName() + " in class " + originalNode.getName(), originalNode);
-                originalNode.redirect().setHasInconsistentHierarchy(true);
+                originalNode.redirect().setHasInconsistentHierarchy(true); //GRECLIPSE? wasn't marked but seems it sould be
                 return;
             }
             if(interfacesToCompare != null && interfacesToCompare.length > 0) {
                 for(ClassNode intfToCompare : interfacesToCompare) {
                     if(originalNode == intfToCompare.redirect()) {
                         addError("Cycle detected: the type " + originalNode.getName() + " cannot implement itself" , originalNode);
-                        originalNode.redirect().setHasInconsistentHierarchy(true);
+                        originalNode.redirect().setHasInconsistentHierarchy(true); //GRECLIPSE? wasn't marked but seems it sould be
                         return;
                     }
                 }
@@ -1456,7 +1347,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 for(ClassNode intfToCompare : interfacesToCompare) {
                     if(originalNode == intfToCompare.redirect()) {
                         addError("Cyclic inheritance involving " + intfToCompare.getName() + " in interface " + originalNode.getName(), originalNode);
-                        originalNode.redirect().setHasInconsistentHierarchy(true);
+                        originalNode.redirect().setHasInconsistentHierarchy(true); //GRECLIPSE? wasn't marked but seems it sould be
                         return;
                     }
                 }
@@ -1563,4 +1454,121 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     public void setClassNodeResolver(ClassNodeResolver classNodeResolver) {
         this.classNodeResolver = classNodeResolver;
     }
+    
+    /// GRECLIPSE all stuff below seems 'added' for Greclipse
+	// although some of it may have been changed by us and then gotten deleted or moved in core.   
+	// I moved this all to the end of the file as it was confusing the file compare too much. 
+    
+    // GRECLIPSE: from private to protected
+    //  note: mehod actually doesn't exst (anymore?) in grooy-core 2.2
+    protected boolean resolveFromClassCache(ClassNode type) {
+        String name = type.getName();
+        Object val = cachedClasses.get(name);
+        if (val == null || val == NO_CLASS) {
+            return false;
+        } else {
+            type.setRedirect((ClassNode)val);
+            return true;
+        }
+    }
+
+    // NOTE: copied from GroovyClassLoader
+    private long getTimeStamp(Class cls) {
+        return Verifier.getTimestamp(cls);
+    }
+
+    // NOTE: copied from GroovyClassLoader
+    private boolean isSourceNewer(URL source, Class cls) {
+        try {
+            long lastMod;
+
+            // Special handling for file:// protocol, as getLastModified() often reports
+            // incorrect results (-1)
+            if (source.getProtocol().equals("file")) {
+                // Coerce the file URL to a File
+                String path = source.getPath().replace('/', File.separatorChar).replace('|', ':');
+                File file = new File(path);
+                lastMod = file.lastModified();
+            } else {
+                URLConnection conn = source.openConnection();
+                lastMod = conn.getLastModified();
+                conn.getInputStream().close();
+            }
+            return lastMod > getTimeStamp(cls);
+        } catch (IOException e) {
+            // if the stream can't be opened, let's keep the old reference
+            return false;
+        }
+    }
+
+    // GRECLIPSE: from private to protected
+    protected boolean resolveToScript(ClassNode type) {
+        String name = type.getName();
+
+        
+        if (name.startsWith("java.")) return type.isResolved();
+        //TODO: don't ignore inner static classes completely
+        if (name.indexOf('$') != -1) return type.isResolved();
+        ModuleNode module = currentClass.getModule();
+        if (module.hasPackageName() && name.indexOf('.') == -1) return type.isResolved();
+        // try to find a script from classpath
+        GroovyClassLoader gcl = compilationUnit.getClassLoader();
+        URL url = null;
+        // GRECLIPSE: start: prevent classloader usage!
+        // oldcode
+        /* 
+        try {
+            url = gcl.getResourceLoader().loadGroovySource(name);
+        } catch (MalformedURLException e) {
+            // fall through and let the URL be null
+        }
+        if (url != null) {
+            if (type.isResolved()) {
+                Class cls = type.getTypeClass();
+                // if the file is not newer we don't want to recompile
+                if (!isSourceNewer(url, cls)) return true;
+                // since we came to this, we want to recompile
+                cachedClasses.remove(type.getName());
+                type.setRedirect(null);
+            }
+            SourceUnit su = compilationUnit.addSource(url);
+            currentClass.getCompileUnit().addClassNodeToCompile(type, su);
+            return true;
+        }*/
+        // newcode
+        // end
+        // type may be resolved through the classloader before
+        return type.isResolved();
+    }
+
+    // FIXASC (groovychange)
+    protected boolean resolveStaticInner(ClassNode type) {
+    	String name = type.getName();
+        String replacedPointType = replaceLastPoint(name);
+        type.setName(replacedPointType);
+        if (resolve(type, false, true, true)) return true;
+        type.setName(name);
+        return false;
+    }
+    // end
+
+    // GRECLIPSE: new method
+    protected ClassNode resolveNewName(String fullname) {
+		return null;
+	}
+	// end
+    // GRECLIPSE: new methods
+    /**
+     * @return true if resolution should continue, false otherwise (because, for example, it previously succeeded for this unit)
+     */
+    protected boolean commencingResolution() {
+    	// template method
+    	return true;
+    }
+    protected void finishedResolution() {
+    	// template method
+    }
+    // end
+
+    
 }
