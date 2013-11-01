@@ -141,7 +141,7 @@ public class AsmClassGenerator extends ClassGenerator {
         try {
             cv.visit(
                     controller.getBytecodeVersion(),
-                    adjustedClassModifiers(classNode),
+                    adjustedClassModifiersForClassWriting(classNode),
                     controller.getInternalClassName(),
                     BytecodeHelper.getGenericsSignature(classNode),
                     controller.getInternalBaseClassName(),
@@ -222,7 +222,7 @@ public class AsmClassGenerator extends ClassGenerator {
             outerClassName = null;
             innerClassName = null;
         }
-        int mods = adjustedClassModifiers(cn);
+        int mods = adjustedClassModifiersForInnerClassTable(cn);
 
 
         cv.visitInnerClass(
@@ -231,16 +231,37 @@ public class AsmClassGenerator extends ClassGenerator {
                 innerClassName,
                 mods);
     }
+    
+    /*
+     * Classes but not interfaces should have ACC_SUPER set
+     * See http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.6-300-D.2-5
+     * for what flags are allowed depending on the fact we are writing the inner class table
+     * or the class itself
+     */
+    private int adjustedClassModifiersForInnerClassTable(ClassNode classNode) {
+        int modifiers = classNode.getModifiers();
+        modifiers = modifiers & ~ACC_SUPER;
+        // (JLS ¤9.1.1.1). Such a class file must not have its ACC_FINAL, ACC_SUPER or ACC_ENUM flags set.
+        if (classNode.isInterface()) {
+            modifiers = modifiers & ~ACC_ENUM;
+            modifiers = modifiers & ~ACC_FINAL;
+        }
+        return modifiers;
+    }
 
     /*
      * Classes but not interfaces should have ACC_SUPER set
+     * See http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.6-300-D.2-5
+     * for what flags are allowed depending on the fact we are writing the inner class table
+     * or the class itself
      */
-    private int adjustedClassModifiers(ClassNode classNode) {
+    private int adjustedClassModifiersForClassWriting(ClassNode classNode) {
         int modifiers = classNode.getModifiers();
-        boolean needsSuper = (modifiers & ACC_INTERFACE) == 0;
-        modifiers = needsSuper ? modifiers | ACC_SUPER : modifiers;
+        boolean needsSuper = !classNode.isInterface();
+        modifiers = needsSuper ? modifiers | ACC_SUPER : modifiers & ~ACC_SUPER;
         // eliminate static
         modifiers = modifiers & ~ACC_STATIC;
+        // on the inner class node itself, private/protected are not allowed
         if (classNode instanceof InnerClassNode) {
             if (Modifier.isPrivate(modifiers)) {
                 // GROOVY-6357 : The JVM does not allow private modifier on inner classes: should be package private
@@ -251,7 +272,11 @@ public class AsmClassGenerator extends ClassGenerator {
                 modifiers = (modifiers & ~Modifier.PROTECTED) | Modifier.PUBLIC;
             }
         }
-
+        // (JLS ¤9.1.1.1). Such a class file must not have its ACC_FINAL, ACC_SUPER or ACC_ENUM flags set.
+        if (classNode.isInterface()) {
+            modifiers = modifiers & ~ACC_ENUM;
+            modifiers = modifiers & ~ACC_FINAL;
+        }
         return modifiers;
     }
 
