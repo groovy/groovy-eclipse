@@ -157,7 +157,8 @@ public class CompilationUnit extends ProcessingUnit {
         this.optimizer = new OptimizerVisitor(this);
         // GRECLIPSE start
         if (localTransformsToRunOnReconcile==null) {    
-    		this.localTransformsToRunOnReconcile = Collections.emptyList();
+    		this.localTransformsToRunOnReconcile = new ArrayList<String>();//Collections.emptyList();
+			this.localTransformsToRunOnReconcile.add("*");
     	} else {
     		this.localTransformsToRunOnReconcile=new ArrayList<String>();
 	    	try {

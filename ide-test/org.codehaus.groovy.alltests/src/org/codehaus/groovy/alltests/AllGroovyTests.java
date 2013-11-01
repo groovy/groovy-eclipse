@@ -34,6 +34,13 @@ public class AllGroovyTests {
     public static Test suite() throws Exception {
         // ensure that the compiler chooser starts up
         ResolverActivator.getDefault().initializeChooser();
+        
+        //Must use sys err if you wanna see the messages in the build log. sysout seems to disapear without a trace on 
+        // the build server.
+        System.err.println("=========== AllGroovyTests ===============");
+        System.err.println("active Groovy version             = "+ResolverActivator.getDefault().getChooser().getActiveVersion());
+        System.err.println("active Groovy version (specified) = "+ResolverActivator.getDefault().getChooser().getActiveSpecifiedVersion());
+        System.err.println("------------------------------------------");
 
         TestSuite suite = new TestSuite("All Groovy Tests"); //$NON-NLS-1$
         suite.addTestSuite(SanityTest.class);

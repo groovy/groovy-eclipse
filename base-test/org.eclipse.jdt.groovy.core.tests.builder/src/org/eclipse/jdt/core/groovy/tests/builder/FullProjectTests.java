@@ -73,7 +73,7 @@ public class FullProjectTests extends GroovierBuilderTests {
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
 		fullBuild(projectPath);
-		// Slight change in behavior from around groovy 2.2beta2 onwards. If you don't say anything
+		// Slight change in behavior from around groovy 2.1.8/groovy 2.2beta2 onwards. If you don't say anything
 		// they are all on. If you do say something it is obeyed. You can say '*'
 		setTransformsOption(env.getJavaProject(projectPath), "Foo");
 

@@ -33,13 +33,21 @@
          version="0.0.0"/>
 
    <includes
-         id="org.codehaus.groovy18.feature"
-         version="0.0.0"/>
-
-   <includes
          id="org.codehaus.groovy20.feature"
          version="0.0.0"
          optional="true"/>
+
+   <includes
+         id="org.codehaus.groovy21.feature"
+         version="0.0.0"
+         optional="true"/>
+         
+   <!--- optional not included yet
+   <includes
+         id="org.codehaus.groovy22.feature"
+         version="0.0.0"
+         optional="true"/>
+   -->
 
    <requires>
       <import plugin="org.eclipse.jface"/>
