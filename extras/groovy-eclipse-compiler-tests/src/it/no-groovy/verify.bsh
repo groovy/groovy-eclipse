@@ -1,8 +1,8 @@
 import java.io.*;
 
 String[] expectedClasses = {
-	"GroovyHello",
-	"GroovyMain",
+//	"GroovyHello",
+//	"GroovyMain",
 	"Helloable",
 	"JavaHello",
 	"JavaMain"
@@ -10,10 +10,11 @@ String[] expectedClasses = {
 
 String[] expectedTestClasses = {
 	"JavaTest",
-	"GroovyTest"
+//	"GroovyTest"
 };
 
 for (String name : expectedClasses) {
+	System.out.println("Checking for expected class: "+name);
 	File file = new File( basedir, "target/classes/"+name+".class" );
 	if ( !file.isFile() )
 	{
@@ -22,6 +23,7 @@ for (String name : expectedClasses) {
 }
 
 for (String name : expectedTestClasses) {
+	System.out.println("Checking for expected test: "+name);
 	File file = new File( basedir, "target/test-classes/"+name+".class" );
 	if ( !file.isFile() )
 	{

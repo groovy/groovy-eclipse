@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.maven.testing
-
 import groovy.util.logging.Commons;
 
-
 @Commons
-class Log4jExample {
+class CommonsExample {
 }
