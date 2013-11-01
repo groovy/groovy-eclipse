@@ -5,6 +5,9 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <artifactId>org.codehaus.groovy</artifactId>
   <version>0.1-SNAPSHOT</version>
   <name>Hello</name>
+  
+  <!--  This test is called 'no-java' so why does it have java code in src/main/java nad src/test/java? -->
+  
   <build>
     <plugins>
       <plugin>
@@ -19,12 +22,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-eclipse-compiler</artifactId>
             <version>@project.version@</version>
-            <exclusions>
-              <exclusion>
-                <groupId>org.codehaus.groovy</groupId>
-                <artifactId>groovy-eclipse-batch</artifactId>
-              </exclusion>
-            </exclusions>
           </dependency>
           <dependency>
             <groupId>org.codehaus.groovy</groupId>
