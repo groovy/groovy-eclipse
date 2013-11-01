@@ -158,7 +158,7 @@ public enum SpecifiedVersion {
                     case 1:
                         return _21; 
                     case 2:
-                        return _20; 
+                        return _22; 
                 }                
         }
         return UNSPECIFIED;
