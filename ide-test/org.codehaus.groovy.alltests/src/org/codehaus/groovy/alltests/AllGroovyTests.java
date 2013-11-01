@@ -34,6 +34,11 @@ public class AllGroovyTests {
     public static Test suite() throws Exception {
         // ensure that the compiler chooser starts up
         ResolverActivator.getDefault().initializeChooser();
+        
+        System.out.println("=========== AllGroovyTests ===============");
+        System.out.println("active Groovy version             = "+ResolverActivator.getDefault().getChooser().getActiveVersion());
+        System.out.println("active Groovy version (specified) = "+ResolverActivator.getDefault().getChooser().getActiveSpecifiedVersion());
+        System.out.println("------------------------------------------");
 
         TestSuite suite = new TestSuite("All Groovy Tests"); //$NON-NLS-1$
         suite.addTestSuite(SanityTest.class);
