@@ -858,7 +858,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     			"1. ERROR in Foo.groovy (at line 1)\n" + 
     			"	class Foo {}\n" + 
     			"	 ^"+(isGE20()?"^^^^^^^^^^":"")+"\n" + 
-    			"Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy each contain a class with the name Foo.\n" + 
+    			"Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy "+(isGE21()?"are containing both a class of the name":"each contain a class with the name")+" Foo.\n" + 
     			"----------\n" + 
     			"2. ERROR in Foo.groovy (at line 1)\n" + 
     			"	class Foo {}\n" + 
@@ -1347,6 +1347,10 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     // is greater than or equal to 20
     private boolean isGE20() {
     		return GroovyUtils.GROOVY_LEVEL>=20;
+    }
+    
+    private boolean isGE21() {
+		return GroovyUtils.GROOVY_LEVEL==21;
     }
 
     public void testGRE830_2() {
