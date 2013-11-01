@@ -127,14 +127,6 @@ public class ClassHelper {
         GROOVY_OBJECT_TYPE, GROOVY_INTERCEPTABLE_TYPE, Enum_Type, Annotation_TYPE
     };
 
-    
-    private static ClassNode[] numbers = new ClassNode[] {
-        char_TYPE, byte_TYPE, short_TYPE, int_TYPE, long_TYPE, 
-        double_TYPE, float_TYPE, Short_TYPE, Byte_TYPE, Character_TYPE,
-        Integer_TYPE, Float_TYPE, Long_TYPE, Double_TYPE, BigInteger_TYPE,
-        BigDecimal_TYPE
-    };
-
     protected static final ClassNode[] EMPTY_TYPE_ARRAY = {};
     
     public static final String OBJECT = "java.lang.Object";

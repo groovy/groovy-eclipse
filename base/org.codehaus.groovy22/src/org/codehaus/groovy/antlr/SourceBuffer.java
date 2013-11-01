@@ -26,8 +26,8 @@ import java.util.List;
  * @version $Revision$
  */
 public class SourceBuffer {
-    private final List<StringBuilder> lines;
-    private StringBuilder current;
+    private final List<StringBuilder> lines; //GRECLIPSE: type was List (raw)
+    private StringBuilder current; //GRECLIPSE: type was StringBuffer
     // GRECLIPSE: start
     private final List<Integer> lineEndings;
 

@@ -86,13 +86,6 @@ public class ModuleNode extends ASTNode implements Opcodes {
         return classes;
     }
     
-    // GRECLIPSE: start: faster
-    // old
-	//    private boolean isPackageInfo() {
-	//    	return context != null && context.getName() != null && context.getName().endsWith("package-info.groovy");
-	//    }
-    // new
-    private int knowIfPackageInfo = 0; // 0=dontknow 1=yes 2=no
     // GRECLIPSE:
     private boolean encounteredUnrecoverableError;
     
@@ -107,6 +100,14 @@ public class ModuleNode extends ASTNode implements Opcodes {
 	    return encounteredUnrecoverableError;
     }
     // end
+    
+    // GRECLIPSE: start: faster
+    // old
+	//    private boolean isPackageInfo() {
+	//    	return context != null && context.getName() != null && context.getName().endsWith("package-info.groovy");
+	//    }
+    // new
+    private int knowIfPackageInfo = 0; // 0=dontknow 1=yes 2=no
     
     private boolean isPackageInfo() {
     	if (knowIfPackageInfo==0) {

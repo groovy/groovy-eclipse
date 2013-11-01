@@ -26,6 +26,16 @@
 -->
 <project name="Build the groovy-eclipse-batch jar" basedir="." default="extract-create-install">
 
+	<!-- add the ant libs needed for gpg singing 
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+	  <classpath>
+	    <pathelement location="antlibs/ant-contrib-1.0b3.jar"/>
+	  </classpath>
+	</taskdef>
+	-->
+
+	<property file="build.properties"/>
+	
 	<import file="maven/build-maven.xml"/> 
 
 	<!-- ================================= 
@@ -47,7 +57,7 @@
           target: publish
           publish to the codehaus repository as well as install locally
          =================================  -->
-	<target name="publish" depends="-init,extract-create-install,-forceUploadSettings,-deployDefault"
+	<target name="publish" depends="-init,extract-create-install,-deployDefault"
       description="Deploy jars to maven repository on codehaus.org.">
 	</target>
 
@@ -84,7 +94,7 @@
 		</copy>
 
 		<!-- now unzip the jdt compiler adapter jar.  It is a jar within a jar -->
-		<unzip dest="${extract.loc}" src="${git.repo.loc}/jdt-patch/e42/org.eclipse.jdt.core/jdtCompilerAdapter.jar" />
+		<unzip dest="${extract.loc}" src="${git.repo.loc}/jdt-patch/e43/org.eclipse.jdt.core/jdtCompilerAdapter.jar" />
 
 	</target>
 	
@@ -114,8 +124,7 @@
           target: -init   
           create properties and filesets                   
          - - - - - - - - - - - - - - - - - -->
-	<target name="-init" depends="-fail-if-no-version-specified,-init17,-init18,-init20,-init21">
-		<property file="build.properties"/>
+	<target name="-init" depends="-fail-if-no-version-specified,-init17,-init18,-init20,-init21,-init22">
 		<property name="jar.prefix" value="groovy-eclipse-batch"/>
 
 		<property name="jar.name" value="${jar.prefix}-${version}.jar"/>
@@ -198,6 +207,15 @@
        <property name="version" value="${version2.1}"/>
     	 <property name="groovy.folder" value="org.codehaus.groovy21"/>
     </target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: -init22
+         - - - - - - - - - - - - - - - - - -->
+    <target name="-init22" if="do-22-build">
+    	<echo message="Building groovy 2.2.x"/>
+       <property name="version" value="${version2.2}"/>
+    	 <property name="groovy.folder" value="org.codehaus.groovy22"/>
+    </target>
 	
 	<target name="-check-build-version">
 		<property file="build.properties"/>
@@ -208,6 +226,7 @@
 				<isset property="do-18-build"/>
 				<isset property="do-20-build"/>
 				<isset property="do-21-build"/>
+				<isset property="do-22-build"/>
 			</or>
 			</not>
 		</condition>
@@ -231,11 +250,35 @@
 	</target>
 
 	<!-- does the deploy and updates the username and pass -->
-	<target name="-deployDefault" depends="-forceUploadSettings,-init,-mavenDeployInit">
-		<mavenDeploy version="${version}" prefix="${jar.prefix}" settings="${jar.dest}/settings.xml"/>
+	<target name="-deployDefault" depends="-init,-mavenDeployInit">
+		<mavenDeploy version="${version}" prefix="${jar.prefix}"/>
 	</target>
+	
+	<!--
+	<target name="-gpgSign" depends="-init,-create.jar,-fake.jar,-copy-pom" description="Use GPS to sign all the jars" >
+		<path id="files.to.sign">
+			<fileset dir="${jar.dest}">
+				<include name="*.jar"/>	
+				<include name="pom.xml"/>
+			</fileset>
+		</path>
+		<echo message="Singing jars in ${jar.dest}"/>
+		<foreach target="-gpgSignOne" param="file.to.sign">
+			<path refid="files.to.sign"/>
+		</foreach>
+	</target>
+	<target name="-gpgSignOne">
+		<echo message="Singing: ${file.to.sign}"/>
+		<exec executable="gpg" dir="${jar.dest}">
+			<arg value="-ab"/>
+			<arg value="${file.to.sign}"/>
+		</exec>
+	</target>
+	-->
 
-	<!-- updates username and pass to the specified properties -->
+	<!-- updates username and pass to the specified properties 
+	     Commented out. It is assumed settings are taken from ~/.m2/settings.xml
+	     So it doesn't have to be specified in the build
 	<target name="-forceUploadSettings" depends="-init,-mavenDeployInit">
 		<copy tofile="${jar.dest}/settings.xml">
 			<fileset file="maven/settings.xml"/>
@@ -245,4 +288,5 @@
 			</filterset>
 		</copy>
 	</target>
+	-->
 </project>

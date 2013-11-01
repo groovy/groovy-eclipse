@@ -8,6 +8,8 @@
   <packaging>jar</packaging>
   <version>REPLACE_WITH_VERSION</version>
   <name>Groovy-Eclipse Batch Compiler</name>
+  <description>Groovy Eclipse Compiler wrapped for Batch Use from Maven</description>
+  <url>http://groovy.codehaus.org/Groovy-Eclipse+compiler+plugin+for+Maven</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>

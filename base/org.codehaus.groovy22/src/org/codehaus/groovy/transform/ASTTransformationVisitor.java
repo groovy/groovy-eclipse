@@ -133,6 +133,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             // second pass, call visit on all of the collected nodes
             for (ASTNode[] node : targetNodes) {
                 for (ASTTransformation snt : transforms.get(node[0])) {
+                //GRECLIPSE start was unmarked (but looks like logging crap, but uses greclipse logger se must be greclipse
                 	try {
                 		long stime = System.nanoTime();
                 		boolean okToSet = source!=null && source.getErrorCollector()!=null;
@@ -140,10 +141,12 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 			if (okToSet) {
                 				source.getErrorCollector().transformActive=true; 
                 			}
+                //GRECLIPSE end
                 			if (snt instanceof CompilationUnitAware) {
                         		((CompilationUnitAware)snt).setCompilationUnit(context.getCompilationUnit());
                    			}
 	                		snt.visit(node, source);
+                //GRECLIPSE start was unmarked (but looks like logging crap, but uses greclipse logger se must be greclipse
                 		} finally {
                 			if (okToSet) {
                 				source.getErrorCollector().transformActive=false;
@@ -157,6 +160,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
 	            				t.printStackTrace();
 	            			}
                 		}
+                //GRECLIPSE end
                 	// GRECLIPSE-977 - start
                 	} catch (NoClassDefFoundError ncdfe) {
                 		String transformName = snt.getClass().getName();
@@ -199,7 +203,9 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         compilationUnit.addPhaseOperation(new CompilationUnit.PrimaryClassNodeOperation() {
             public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
                 ASTTransformationCollectorCodeVisitor collector = 
+                	//GRECLIPSE? (was unmarked but looks like added params to control AST transform execution)
                     new ASTTransformationCollectorCodeVisitor(source, compilationUnit.getTransformLoader(),compilationUnit.allowTransforms,compilationUnit.localTransformsToRunOnReconcile);
+                    //GRECLIPSE end
                 collector.visitClass(classNode);
             }
         }, Phases.SEMANTIC_ANALYSIS);
@@ -397,7 +403,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             Map<String, URL> transformNames, boolean isFirstScan) {
         GroovyClassLoader transformLoader = compilationUnit.getTransformLoader();
         for (Map.Entry<String, URL> entry : transformNames.entrySet()) {
-            try {
+            try { //Greclipse?
                 Class gTransClass = transformLoader.loadClass(entry.getKey(), false, true, false);
                 //no inspection unchecked
                 GroovyASTTransformation transformAnnotation = (GroovyASTTransformation) gTransClass.getAnnotation(GroovyASTTransformation.class);
@@ -422,10 +428,9 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                     	private boolean isBuggered = false;
                 		// end
                         public void call(SourceUnit source) throws CompilationFailedException {
-                    		// // GRECLIPSE: start
+                    		// GRECLIPSE: start
                         	if (isBuggered) return;
                         	try { 
-                              // end
                             long stime = System.nanoTime();
                             boolean okToSet = source!=null && source.getErrorCollector()!=null;
 
@@ -433,7 +438,9 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                     			if (okToSet) {
                     				source.getErrorCollector().transformActive=true; 
                     			}
+                            // end
                                 instance.visit(new ASTNode[] {source.getAST()}, source);
+                    		// GRECLIPSE: start
                     		} finally {
                     			if (okToSet) {
                     				source.getErrorCollector().transformActive=false;
@@ -450,7 +457,6 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
 	                    			}
                     			}
                     		}
-                    		// GRECLIPSE: start
                         	} catch (NoClassDefFoundError ncdfe) {
                         		// Suggests that the transform is written in Java but has dependencies on Groovy source
                         		// within the same project - as this has yet to be compiled, we can't find the class.
@@ -468,6 +474,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                     } else {
                         compilationUnit.addNewPhaseOperation(suOp, transformAnnotation.phase().getPhaseNumber());
                     }
+                    //GRECLIPSE? start
                 	} catch (Throwable t) {
                 		// unexpected problem with the transformation. Could be:
                 		// - problem instantiating the transformation class
@@ -475,6 +482,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 				"Unexpected problem with AST transform: "+t.getMessage(),null));
                 		t.printStackTrace(); // temporary...
                 	}
+                    //GRECLIPSE? end
                 } else {
                     compilationUnit.getErrorCollector().addError(new SimpleMessage(
                         "Transform Class " + entry.getKey() + " specified at "

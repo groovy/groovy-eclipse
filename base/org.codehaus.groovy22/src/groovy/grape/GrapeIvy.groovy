@@ -42,6 +42,7 @@ import org.apache.ivy.util.Message
 import org.codehaus.groovy.reflection.ReflectionUtils
 import java.util.zip.ZipFile
 import java.util.zip.ZipEntry
+import java.util.zip.ZipException
 import javax.xml.parsers.DocumentBuilderFactory
 import org.codehaus.groovy.runtime.metaclass.MetaClassRegistryImpl
 import java.util.jar.JarFile
@@ -87,13 +88,13 @@ class GrapeIvy implements GrapeEngine {
         // configure settings
         def grapeConfig = getLocalGrapeConfig()
         if (!grapeConfig.exists()) {
-            grapeConfig = GrapeIvy.class.getResource("defaultGrapeConfig.xml")
+            grapeConfig = GrapeIvy.getResource("defaultGrapeConfig.xml")
         }
         try {
             settings.load(grapeConfig) // exploit multi-methods for convenience
         } catch (java.text.ParseException ex) {
             System.err.println "Local Ivy config file '$grapeConfig.canonicalPath' appears corrupt - ignoring it and using default config instead\nError was: " + ex.message
-            grapeConfig = GrapeIvy.class.getResource("defaultGrapeConfig.xml")
+            grapeConfig = GrapeIvy.getResource("defaultGrapeConfig.xml")
             settings.load(grapeConfig)
         }
 
@@ -131,9 +132,7 @@ class GrapeIvy implements GrapeEngine {
         if(grapeConfig) {
             return new File(grapeConfig)
         }
-        else {
-            return new File(getGrapeDir(), 'grapeConfig.xml')
-        }
+        return new File(getGrapeDir(), 'grapeConfig.xml')
     }
 
     public File getGrapeDir() {
@@ -141,15 +140,13 @@ class GrapeIvy implements GrapeEngine {
         if(root == null) {
             return getGroovyRoot()
         }
-        else {
-            File grapeRoot = new File(root)
-            try {
-                grapeRoot = grapeRoot.canonicalFile
-            } catch (IOException e) {
-                // skip canonicalization then, it may not exist yet
-            }
-            return grapeRoot
+        File grapeRoot = new File(root)
+        try {
+            grapeRoot = grapeRoot.canonicalFile
+        } catch (IOException e) {
+            // skip canonicalization then, it may not exist yet
         }
+        return grapeRoot
     }
 
     public File getGrapeCacheDir() {
@@ -239,7 +236,7 @@ class GrapeIvy implements GrapeEngine {
     }
 
     public grab(Map args, Map... dependencies) {
-        def loader
+        ClassLoader loader = null
         grabRecordsForCurrDependencies.clear()
         try {
             // identify the target classloader early, so we fail before checking repositories
@@ -247,17 +244,21 @@ class GrapeIvy implements GrapeEngine {
                 classLoader:args.remove('classLoader'),
                 refObject:args.remove('refObject'),
                 calleeDepth:args.calleeDepth?:DEFAULT_DEPTH,
-                )
+            )
 
             // check for non-fail null.
             // If we were in fail mode we would have already thrown an exception
             if (!loader) return
 
-            for (URI uri in resolve(loader, args, dependencies)) {
+            def uris = resolve(loader, args, dependencies)
+            for (URI uri in uris) {
+                loader.addURL(uri.toURL())
+            }
+            for (URI uri in uris) {
                 //TODO check artifact type, jar vs library, etc
                 File file = new File(uri)
-                processCategoryMethods(uri, loader, file)
-                processOtherServices(file, loader);
+                processCategoryMethods(loader, file)
+                processOtherServices(loader, file)
             }
         } catch (Exception e) {
             // clean-up the state first
@@ -267,60 +268,65 @@ class GrapeIvy implements GrapeEngine {
 
             if (args.noExceptions) {
                 return e
-            } else {
-                throw e
             }
+            throw e
         }
         return null
     }
 
-    private processCategoryMethods(URI uri, ClassLoader loader, File file) {
-        URL url = uri.toURL()
-        loader.addURL(url)
+    private processCategoryMethods(ClassLoader loader, File file) {
         // register extension methods if jar
         if (file.name.toLowerCase().endsWith(".jar")) {
             def mcRegistry = GroovySystem.metaClassRegistry
             if (mcRegistry instanceof MetaClassRegistryImpl) {
-                // should always be the case
-                JarFile jar = new JarFile(file)
-                def entry = jar.getEntry(MetaClassRegistryImpl.MODULE_META_INF_FILE)
-                if (entry) {
-                    Properties props = new Properties()
-                    props.load(jar.getInputStream(entry))
-                    Map<CachedClass, List<MetaMethod>> metaMethods = new HashMap<CachedClass, List<MetaMethod>>()
-                    mcRegistry.registerExtensionModuleFromProperties(props, loader, metaMethods)
-                    // add old methods to the map
-                    metaMethods.each { CachedClass c, List<MetaMethod> methods ->
-                        // GROOVY-5543: if a module was loaded using grab, there are chances that subclasses
-                        // have their own ClassInfo, and we must change them as well!
-                        def classesToBeUpdated = ClassInfo.allClassInfo.findAll {
-                            boolean found = false
-                            CachedClass current = it.cachedClass
-                            while (!found && current != null) {
-                                if (current == c || current.interfaces.contains(c)) {
-                                    found = true
+                try {
+                    JarFile jar = new JarFile(file)
+                    def entry = jar.getEntry(MetaClassRegistryImpl.MODULE_META_INF_FILE)
+                    if (entry) {
+                        Properties props = new Properties()
+                        props.load(jar.getInputStream(entry))
+                        Map<CachedClass, List<MetaMethod>> metaMethods = new HashMap<CachedClass, List<MetaMethod>>()
+                        mcRegistry.registerExtensionModuleFromProperties(props, loader, metaMethods)
+                        // add old methods to the map
+                        metaMethods.each { CachedClass c, List<MetaMethod> methods ->
+                            // GROOVY-5543: if a module was loaded using grab, there are chances that subclasses
+                            // have their own ClassInfo, and we must change them as well!
+                            def classesToBeUpdated = ClassInfo.allClassInfo.findAll {
+                                boolean found = false
+                                CachedClass current = it.cachedClass
+                                while (!found && current != null) {
+                                    if (current == c || current.interfaces.contains(c)) {
+                                        found = true
+                                    }
+                                    current = current.cachedSuperClass
                                 }
-                                current = current.cachedSuperClass
-                            }
-                            found
-                        }.collect { it.cachedClass }
-                        classesToBeUpdated*.addNewMopMethods(methods)
+                                found
+                            }.collect { it.cachedClass }
+                            classesToBeUpdated*.addNewMopMethods(methods)
+                        }
                     }
                 }
-
+                catch(ZipException zipException) {
+                    throw new RuntimeException("Grape could not load jar '$file'", zipException)
+                }
             }
         }
     }
 
-    void processOtherServices(File f, ClassLoader loader) {
-        ZipFile zf = new ZipFile(f)
-        ZipEntry serializedCategoryMethods = zf.getEntry("META-INF/services/org.codehaus.groovy.runtime.SerializedCategoryMethods")
-        if (serializedCategoryMethods != null) {
-            processSerializedCategoryMethods(zf.getInputStream(serializedCategoryMethods))
-        }
-        ZipEntry pluginRunners = zf.getEntry("META-INF/services/org.codehaus.groovy.plugins.Runners")
-        if (pluginRunners != null) {
-            processRunners(zf.getInputStream(pluginRunners), f.getName(), loader)
+    void processOtherServices(ClassLoader loader, File f) {
+        try {
+            ZipFile zf = new ZipFile(f)
+            ZipEntry serializedCategoryMethods = zf.getEntry("META-INF/services/org.codehaus.groovy.runtime.SerializedCategoryMethods")
+            if (serializedCategoryMethods != null) {
+                processSerializedCategoryMethods(zf.getInputStream(serializedCategoryMethods))
+            }
+            ZipEntry pluginRunners = zf.getEntry("META-INF/services/org.codehaus.groovy.plugins.Runners")
+            if (pluginRunners != null) {
+                processRunners(zf.getInputStream(pluginRunners), f.getName(), loader)
+            }
+        } catch(ZipException ignore) {
+            // ignore files we can't process, e.g. non-jar/zip artifacts
+            // TODO log a warning
         }
     }
 
@@ -368,6 +374,9 @@ class GrapeIvy implements GrapeEngine {
             .setValidate(args.containsKey('validate') ? args.validate : false)
 
         ivyInstance.settings.defaultResolver = args.autoDownload ? 'downloadGrapes' : 'cachedGrapes'
+        if (args.disableChecksums) {
+            ivyInstance.settings.setVariable('ivy.checksums', '')
+        }
         boolean reportDownloads = System.getProperty('groovy.grape.report.downloads', 'false') == 'true'
         if (reportDownloads) {
             ivyInstance.eventManager.addIvyListener([progress:{ ivyEvent -> switch(ivyEvent) {
@@ -609,9 +618,8 @@ class GrapeIvy implements GrapeEngine {
                 results << dep
             }
             return results
-        } else {
-            return null
         }
+        return null
     }
 
     public void addResolver(Map<String, Object> args) {

@@ -138,7 +138,9 @@ public class CompilationUnit extends ProcessingUnit {
                            GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean allowTransforms, String localTransformsToRunOnReconcile) {
         super(configuration, loader, null);
 
+		//GRECLISE start
         this.allowTransforms = allowTransforms;
+		//GRECLISE end
         this.astTransformationsContext = new ASTTransformationsContext(this, transformLoader);
         this.names = new ArrayList<String>();
         this.queuedSources = new LinkedList<SourceUnit>();
