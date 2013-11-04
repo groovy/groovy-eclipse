@@ -32,8 +32,8 @@
 				<artifactId>groovy-eclipse-compiler</artifactId>
 				<version>@project.version@</version>
 				<extensions>true</extensions>
-			</plugin>	
-  		<plugin>
+			</plugin>
+			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>@maven-compiler-plugin.version@</version>
 				<configuration>
@@ -51,9 +51,14 @@
 						<version>@project.version@</version>
 					</dependency>
 					<dependency>
+						<groupId>org.codehaus.groovy</groupId>
+						<artifactId>groovy-eclipse-batch</artifactId>
+						<version>@groovy.xx.version@</version>
+					</dependency>
+					<dependency>
 						<groupId>org.projectlombok</groupId>
 						<artifactId>lombok</artifactId>
-						<version>0.10.4</version>
+						<version>1.12.2</version>
 					</dependency>
 				</dependencies>
 			</plugin>
