@@ -54,14 +54,15 @@ public class SanityTest extends TestCase {
         Version jdtVersion = getEclipseVersion();
         Version groovyVersion = getGroovyCompilerVersion();
         
-        System.out.println("---------------------------------------");
-        System.out.println("SanityTest.testCompilerVersion()");
-        System.out.println("Using JDT version " + jdtVersion);
-        System.out.println("Using Groovy version " + groovyVersion);
-        System.out.println("Classloader location" + GroovyActivator.class.getClassLoader().getResource("."));
-        System.out.println("Groovy bundle status "+ (Platform.getBundle("org.codehaus.groovy").getState() == Bundle.ACTIVE ? "ACTIVE" : "NOT ACTIVE"));
-        System.out.println("Groovy bundle version "+ Platform.getBundle("org.codehaus.groovy").getVersion());
-        System.out.println("---------------------------------------");
+        //use sys *err* because build run on bamboo eats the sys out
+        System.err.println("---------------------------------------");
+        System.err.println("SanityTest.testCompilerVersion()");
+        System.err.println("Using JDT version " + jdtVersion);
+        System.err.println("Using Groovy version " + groovyVersion);
+        System.err.println("Classloader location" + GroovyActivator.class.getClassLoader().getResource("."));
+        System.err.println("Groovy bundle status "+ (Platform.getBundle("org.codehaus.groovy").getState() == Bundle.ACTIVE ? "ACTIVE" : "NOT ACTIVE"));
+        System.err.println("Groovy bundle version "+ Platform.getBundle("org.codehaus.groovy").getVersion());
+        System.err.println("---------------------------------------");
         
         // JDT 3.7 test against Groovy 2.0
         // JDT 3.8 test against Groovy 2.1
