@@ -2706,6 +2706,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		env.addGroovyClass(root, "", "script", "print Outer.Inner.VAR\n");
 
 		incrementalBuild(projectPath);
+		try { Thread.sleep(1000); } catch (Exception e) {}
 		expectingCompiledClassesV("Outer", "Outer$Inner", "script");
 		expectingNoProblems();
 		executeClass(projectPath, "script", "value", "");
