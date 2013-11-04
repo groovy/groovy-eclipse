@@ -96,7 +96,11 @@ public class GroovyActivator extends Plugin {
 
     public static void initialize() throws IOException {
         Bundle bundle = Platform.getBundle("org.codehaus.groovy");
-        GROOVY_ALL_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.GROOVY_ALL_JAR));
+        URL entry = bundle.getEntry(GroovyActivator.GROOVY_ALL_JAR);
+        if (entry==null) {
+        	throw new RuntimeException("Couldn't find '"+GroovyActivator.GROOVY_ALL_JAR+"' in bundle "+bundle.getSymbolicName()+" "+bundle.getVersion());
+        }
+        GROOVY_ALL_JAR_URL = FileLocator.resolve(entry);
     }
 
     @Override
