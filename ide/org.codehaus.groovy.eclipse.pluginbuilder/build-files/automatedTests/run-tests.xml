@@ -90,7 +90,7 @@
 		<condition property="compiler.level" value="21">
 			<equals arg1="${eclipse.target.version}" arg2="e42"/>
 		</condition>
-		<condition property="compiler.level" value="20">
+		<condition property="compiler.level" value="21">
 			<equals arg1="${eclipse.target.version}" arg2="e37"/>
 		</condition>
 
