@@ -63,12 +63,18 @@ public class SanityTest extends TestCase {
         System.out.println("Groovy bundle version "+ Platform.getBundle("org.codehaus.groovy").getVersion());
         System.out.println("---------------------------------------");
         
-        // JDT 3.7 and 3.8 test against Groovy 2.0
-        // JDT 3.9 test against Groovy 2.1
-        if (jdtVersion.getMinor() == 8 || jdtVersion.getMinor() == 7) {
+        // JDT 3.7 test against Groovy 2.0
+        // JDT 3.8 test against Groovy 2.1
+        // JDT 3.9 test against Groovy 2.2
+        if (jdtVersion.getMinor() == 7) {
             assertEquals(2, groovyVersion.getMajor());
             assertEquals(0, groovyVersion.getMinor());
-        } else if (jdtVersion.getMinor() == 9) {
+        }
+        if (jdtVersion.getMinor() == 8) {
+            assertEquals(2, groovyVersion.getMajor());
+            assertEquals(1, groovyVersion.getMinor());
+        }
+        else if (jdtVersion.getMinor() == 9) {
             assertEquals(2, groovyVersion.getMajor());
             if (groovyVersion.getMinor()==0) {
             	fail("Should not be testing 2.0");
