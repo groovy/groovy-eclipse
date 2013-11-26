@@ -235,11 +235,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     	return redirect().isPrimaryNode || (componentType!= null && componentType.isPrimaryClassNode());
     }
 
-    // GRECLIPSE: from private to public
+    
     /*
      * Constructor used by makeArray() if no real class is available
      */
-    public ClassNode(ClassNode componentType) {
+    public ClassNode(ClassNode componentType) { // GRECLIPSE: from private to public
     	// GRECLIPSE: start
     	/*{
         this(componentType.getName()+"[]", ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
