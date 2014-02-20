@@ -8708,7 +8708,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n",
 			
 			"Wibble.groovy",
-			"@Singleton(lazy=false) class Wibble {" +
+			"@Singleton(lazy=false, strict=false) class Wibble {" +
 			"  public String field = 'abcd';\n"+
 			"  private Wibble() { print \"ctor \";}\n"+
 			"  static void run() {}\n"+
@@ -8735,7 +8735,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"}\n",
 			
 			"Wibble.groovy",
-			"@Singleton(lazy=true) class Wibble {" +
+			"@Singleton(lazy=true, strict=false) class Wibble {" +
 			"  public String field = 'abcd';\n"+
 			"  private Wibble() { print \"ctor \";}\n"+
 			"  static void run() {}\n"+
