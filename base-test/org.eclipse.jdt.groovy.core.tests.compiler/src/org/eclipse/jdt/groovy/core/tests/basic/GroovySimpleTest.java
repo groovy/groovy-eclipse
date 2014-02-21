@@ -40,6 +40,7 @@ import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
+import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
@@ -56,7 +57,6 @@ import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-
 
 public class GroovySimpleTest extends AbstractRegressionTest {
 
@@ -8690,57 +8690,63 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	
 	// lazy option set in Singleton
 	public void testBuiltInTransforms_Singleton2() {
-		this.runConformTest(new String[] {
-			"Goo.groovy", 
-			"class Goo {\n"+
-			"  public static void main(String[] argv) {\n"+
-			"    Run.main(argv);\n"+
-			"  }\n"+			
-			"}\n",
-
-			"Run.groovy",
-			"public class Run {\n"+
-			"  public static void main(String[] argv) {\n"+
-			"    Wibble.run();\n"+
-			"    System.out.print(\"running \");\n"+
-			"    System.out.print(Wibble.getInstance().field);\n"+
-			"  }\n"+			
-			"}\n",
-			
-			"Wibble.groovy",
-			"@Singleton(lazy=false, strict=false) class Wibble {" +
-			"  public String field = 'abcd';\n"+
-			"  private Wibble() { print \"ctor \";}\n"+
-			"  static void run() {}\n"+
-			"}\n"
-		},"ctor running abcd");
+		//This test breaks on Groovy < 2.2.1 because the 'strict' flag was introduced in that version.
+		if (GroovyUtils.isAtLeastGroovy22()) {
+			this.runConformTest(new String[] {
+				"Goo.groovy", 
+				"class Goo {\n"+
+				"  public static void main(String[] argv) {\n"+
+				"    Run.main(argv);\n"+
+				"  }\n"+			
+				"}\n",
+	
+				"Run.groovy",
+				"public class Run {\n"+
+				"  public static void main(String[] argv) {\n"+
+				"    Wibble.run();\n"+
+				"    System.out.print(\"running \");\n"+
+				"    System.out.print(Wibble.getInstance().field);\n"+
+				"  }\n"+			
+				"}\n",
+				
+				"Wibble.groovy",
+				"@Singleton(lazy=false, strict=false) class Wibble {" +
+				"  public String field = 'abcd';\n"+
+				"  private Wibble() { print \"ctor \";}\n"+
+				"  static void run() {}\n"+
+				"}\n"
+			},"ctor running abcd");
+		}
 	}
 	
 	public void testBuiltInTransforms_Singleton3() {
-		this.runConformTest(new String[] {
-			"Goo.groovy", 
-			"class Goo {\n"+
-			"  public static void main(String[] argv) {\n"+
-			"    Run.main(argv);\n"+
-			"  }\n"+			
-			"}\n",
-
-			"Run.groovy",
-			"public class Run {\n"+
-			"  public static void main(String[] argv) {\n"+
-			"    Wibble.run();\n"+
-			"    System.out.print(\"running \");\n"+
-			"    System.out.print(Wibble.getInstance().field);\n"+
-			"  }\n"+			
-			"}\n",
-			
-			"Wibble.groovy",
-			"@Singleton(lazy=true, strict=false) class Wibble {" +
-			"  public String field = 'abcd';\n"+
-			"  private Wibble() { print \"ctor \";}\n"+
-			"  static void run() {}\n"+
-			"}\n"
-		},"running ctor abcd");
+		//This test breaks on Groovy < 2.2.1 because the 'strict' flag was introduced in that version.
+		if (GroovyUtils.isAtLeastGroovy22()) {
+			this.runConformTest(new String[] {
+				"Goo.groovy", 
+				"class Goo {\n"+
+				"  public static void main(String[] argv) {\n"+
+				"    Run.main(argv);\n"+
+				"  }\n"+			
+				"}\n",
+	
+				"Run.groovy",
+				"public class Run {\n"+
+				"  public static void main(String[] argv) {\n"+
+				"    Wibble.run();\n"+
+				"    System.out.print(\"running \");\n"+
+				"    System.out.print(Wibble.getInstance().field);\n"+
+				"  }\n"+			
+				"}\n",
+				
+				"Wibble.groovy",
+				"@Singleton(lazy=true, strict=false) class Wibble {" +
+				"  public String field = 'abcd';\n"+
+				"  private Wibble() { print \"ctor \";}\n"+
+				"  static void run() {}\n"+
+				"}\n"
+			},"running ctor abcd");
+		}
 	}
 
 	// http://groovy.codehaus.org/Category+and+Mixin+transformations
