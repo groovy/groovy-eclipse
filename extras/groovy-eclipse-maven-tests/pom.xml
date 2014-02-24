@@ -27,7 +27,7 @@
 		<dependency>
 			<groupId>org.codehaus.groovy</groupId>
 			<artifactId>groovy-all</artifactId>
-			<version>2.0.6</version>
+			<version>2.2.1</version>
 			<type>jar</type>
 			<!-- <classifier>indy</classifier> -->
 		</dependency>
@@ -61,7 +61,7 @@
 		            <!-- force a newer version of Groovy -->
 		            <groupId>org.codehaus.groovy</groupId>
 		            <artifactId>groovy-eclipse-batch</artifactId>
-		            <version>2.1.8-01</version>
+		            <version>2.2.1-01-SNAPSHOT</version>
 		          </dependency>
 		        </dependencies>
 		      </plugin>		
