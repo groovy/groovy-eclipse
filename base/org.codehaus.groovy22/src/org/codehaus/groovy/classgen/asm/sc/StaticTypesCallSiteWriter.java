@@ -34,9 +34,7 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 
 import static org.codehaus.groovy.ast.ClassHelper.*;
-import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.chooseBestMethod;
-import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findDGMMethodsByNameAndArguments;
-import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.*;
 
 /**
  * A call site writer which replaces call site caching with static calls. This means that the generated code
@@ -93,9 +91,7 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
             receiverType = (ClassNode) type;
         }
         boolean isClassReceiver = false;
-        if (receiverType.equals(CLASS_Type)
-                && receiverType.getGenericsTypes()!=null
-                && !receiverType.getGenericsTypes()[0].isPlaceholder()) {
+        if (isClassClassNodeWrappingConcreteType(receiverType)) {
             isClassReceiver = true;
             receiverType = receiverType.getGenericsTypes()[0].getType();
         }
@@ -551,6 +547,11 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         MethodNode getAtNode = null;
         while (current!=null && getAtNode==null) {
             getAtNode = current.getMethod("getAt", new Parameter[]{new Parameter(aType, "index")});
+            if (getAtNode==null && isPrimitiveType(aType)) {
+                getAtNode = current.getMethod("getAt", new Parameter[]{new Parameter(getWrapper(aType), "index")});
+            } else if (getAtNode==null && aType.isDerivedFrom(Number_TYPE)) {
+            	getAtNode = current.getMethod("getAt", new Parameter[]{new Parameter(getUnwrapper(aType), "index")});
+            }
             current = current.getSuperClass();
         }
         if (getAtNode!=null) {
@@ -572,6 +573,11 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
                 MAP_TYPE.equals(rType) || rType.implementsInterface(MAP_TYPE)
                 || LIST_TYPE.equals(rType) || rType.implementsInterface(LIST_TYPE);
         List<MethodNode> nodes = StaticTypeCheckingSupport.findDGMMethodsByNameAndArguments(controller.getSourceUnit().getClassLoader(), rType, message, args);
+                if (nodes.isEmpty()) {
+                    // retry with raw types
+                    rType = rType.getPlainNodeReference();
+                    nodes = StaticTypeCheckingSupport.findDGMMethodsByNameAndArguments(controller.getSourceUnit().getClassLoader(), rType, message, args);
+                }
         nodes = StaticTypeCheckingSupport.chooseBestMethod(rType, nodes, args);
         if (nodes.size()==1 || nodes.size()>1 && acceptAnyMethod) {
             MethodNode methodNode = nodes.get(0);

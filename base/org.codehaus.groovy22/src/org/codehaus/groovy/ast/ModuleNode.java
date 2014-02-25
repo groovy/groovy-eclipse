@@ -17,6 +17,17 @@ package org.codehaus.groovy.ast;
 
 
 import groovy.lang.Binding;
+import groovyjarjarasm.asm.Opcodes;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -24,12 +35,10 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.InvokerHelper;
-import groovyjarjarasm.asm.Opcodes;
-
-import java.io.File;
-import java.util.*;
+import org.codehaus.groovy.syntax.SyntaxException;
 
 /**
  * Represents a module, which consists typically of a class declaration
@@ -327,8 +336,17 @@ public class ModuleNode extends ASTNode implements Opcodes {
                                 new ClassExpression(classNode),
                                 new VariableExpression("args"))))));
 
-        classNode.addMethod(
-            new MethodNode("run", ACC_PUBLIC, ClassHelper.OBJECT_TYPE, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, statementBlock));
+        MethodNode methodNode = hasRunMethod();
+        if (methodNode!=null) {
+            ErrorCollector ec = context.getErrorCollector();
+            ec.addError(new SyntaxException("You cannot define a 'run()' method in a script because it is used to wrap the script body. Please choose another name.",
+                        methodNode.getLineNumber(),
+                        methodNode.getLineNumber()),
+                    context);
+        } else {
+            classNode.addMethod(
+                    new MethodNode("run", ACC_PUBLIC, ClassHelper.OBJECT_TYPE, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, statementBlock));
+        }
 
         classNode.addConstructor(ACC_PUBLIC, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, new BlockStatement());
         Statement stmt = new ExpressionStatement(
@@ -358,6 +376,17 @@ public class ModuleNode extends ASTNode implements Opcodes {
             classNode.addMethod(node);
         }
         return classNode;
+    }
+
+    private MethodNode hasRunMethod() {
+        MethodNode methodNode = null;
+        for (MethodNode method : methods) {
+            if ("run".equals(method.getName()) && method.getParameters().length==0) {
+                methodNode = method;
+                break;
+            }
+        }
+        return methodNode;
     }
 
     /*

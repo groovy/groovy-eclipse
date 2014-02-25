@@ -44,7 +44,6 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
     private VariableScope headScope = new VariableScope();
     private ClassNode currentClass = null;
     private SourceUnit source;
-    private boolean inPropertyExpression = false;
     private boolean isSpecialConstructorCall = false;
     private boolean inConstructor = false;
 
@@ -290,7 +289,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
     }
 
     private void checkVariableContextAccess(Variable v, Expression expr) {
-        if (inPropertyExpression || v.isInStaticContext() || !currentScope.isInStaticContext()) return;
+        if (v.isInStaticContext() || !currentScope.isInStaticContext()) return;
 
         String msg = v.getName() +
                 " is declared in a dynamic context, but you tried to" +
@@ -405,13 +404,9 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
     }
 
     public void visitPropertyExpression(PropertyExpression expression) {
-        boolean ipe = inPropertyExpression;
-        inPropertyExpression = true;
         expression.getObjectExpression().visit(this);
-        inPropertyExpression = false;
         expression.getProperty().visit(this);
         checkPropertyOnExplicitThis(expression);
-        inPropertyExpression = ipe;
     }
 
     public void visitClosureExpression(ClosureExpression expression) {
