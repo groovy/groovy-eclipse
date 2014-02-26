@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) 2005, 2009 IBM Corporation and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+    
+    Contributors:
+        IBM Corporation - initial API and implementation
+ -->
+
+<component xmlns="http://eclipse.org/component"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://eclipse.org/component ../component.xsd "
+   name="org.eclipse.jdt.core">
+ <plugin id="org.eclipse.jdt.core" />
+
+ <package name="org.eclipse.jdt.core.compiler.batch">
+   <type name="BatchCompiler" subclass="false" instantiate="false" /> 
+ </package>
+ <package name="org.eclipse.jdt.core">
+   <type name="BindingKey" subclass="false" />
+   <type name="BufferChangedEvent" subclass="false" instantiate="false"/>
+   <type name="ClasspathContainerInitializer" instantiate="false"/>
+   <type name="ClasspathVariableInitializer" instantiate="false"/>
+   <type name="CompletionContext" subclass="false" instantiate="false"/>
+   <type name="CompletionProposal" subclass="false" instantiate="false"/>
+   <type name="CompletionRequestor" instantiate="false"/>
+   <type name="CompletionRequestorAdapter"/>
+   <type name="CorrectionEngine" subclass="false"/>
+   <type name="ElementChangedEvent" subclass="false" instantiate="false"/>
+   <type name="Flags" subclass="false" instantiate="false"/>
+   <type name="IAccessRule"/>
+   <type name="IBuffer"/>
+   <type name="IBufferChangedListener"/>
+   <type name="IBufferFactory"/>
+   <type name="IClassFile" implement="false"/>
+   <type name="IClasspathAttribute" implement="false"/>
+   <type name="IClasspathContainer"/>
+   <type name="IClasspathEntry" implement="false"/>
+   <type name="ICodeAssist" implement="false"/>
+   <type name="ICodeCompletionRequestor"/>
+   <type name="ICodeFormatter"/>
+   <type name="ICompilationUnit" implement="false"/>
+   <type name="ICompletionRequestor"/>
+   <type name="ICorrectionRequestor"/>
+   <type name="IElementChangedListener"/>
+   <type name="IField" implement="false"/>
+   <type name="IImportContainer" implement="false"/>
+   <type name="IImportDeclaration" implement="false"/>
+   <type name="IInitializer" implement="false"/>
+   <type name="IJavaElement" implement="false"/>
+   <type name="IJavaElementDelta" implement="false"/>
+   <type name="IJavaModel" implement="false"/>
+   <type name="IJavaModelMarker" implement="false"/>
+   <type name="IJavaModelStatus" implement="false"/>
+   <type name="IJavaModelStatusConstants" implement="false"/>
+   <type name="IJavaProject" implement="false"/>
+   <type name="ILocalVariable" implement="false"/>
+   <type name="IMember" implement="false"/>
+   <type name="IMethod" implement="false"/>
+   <type name="IOpenable" implement="false"/>
+   <type name="IPackageDeclaration" implement="false"/>
+   <type name="IPackageFragment" implement="false"/>
+   <type name="IPackageFragmentRoot" implement="false"/>
+   <type name="IParent" implement="false"/>
+   <type name="IProblemRequestor"/>
+   <type name="IRegion" implement="false"/>
+   <type name="ISourceManipulation" implement="false"/>
+   <type name="ISourceRange" implement="false"/>
+   <type name="ISourceReference" implement="false"/>
+   <type name="IType" implement="false"/>
+   <type name="ITypeHierarchy" implement="false"/>
+   <type name="ITypeHierarchyChangedListener"/>
+   <type name="ITypeParameter" implement="false"/>
+   <type name="IWorkingCopy" implement="false"/>
+   <type name="JavaConventions" subclass="false" instantiate="false"/>
+   <type name="JavaCore" subclass="false" instantiate="false"/>
+   <type name="JavaModelException" subclass="false" instantiate="false"/>
+   <type name="NamingConventions" subclass="false" instantiate="false"/>
+   <type name="Signature" subclass="false" instantiate="false"/>
+   <type name="ToolFactory" subclass="false" instantiate="false"/>
+   <type name="WorkingCopyOwner" instantiate="false"/>
+ </package>
+ <package name="org.eclipse.jdt.core.compiler">
+   <type name="BuildContext" subclass="false" instantiate="false"/>
+   <type name="CategorizedProblem" instantiate="false"/>
+   <type name="CharOperation" subclass="false" instantiate="false"/>
+   <type name="CompilationParticipant" instantiate="false"/>
+   <type name="InvalidInputException" subclass="false" instantiate="false"/>
+   <type name="IProblem" implement="false"/>
+   <type name="IScanner" implement="false"/>
+   <type name="ITerminalSymbols" implement="false"/>
+   <type name="ReconcileContext" subclass="false" instantiate="false"/>
+ </package>
+ <package name="org.eclipse.jdt.core.dom">
+   <type name="AbstractTypeDeclaration" instantiate="false"/>
+   <type name="Annotation" instantiate="false"/>
+   <type name="AnnotationBinding" reference="false"/>
+   <type name="AnnotationTypeDeclaration" instantiate="false"/>
+   <type name="AnnotationTypeMemberDeclaration" instantiate="false"/>
+   <type name="AnonymousClassDeclaration" instantiate="false"/>
+   <type name="ArrayAccess" instantiate="false"/>
+   <type name="ArrayCreation" instantiate="false"/>
+   <type name="ArrayInitializer" instantiate="false"/>
+   <type name="ArrayType" instantiate="false"/>
+   <type name="AssertStatement" instantiate="false"/>
+   <type name="Assignment" instantiate="false"/>
+   <type name="AST" subclass="false" instantiate="false"/>
+   <type name="ASTConverter" reference="false"/>
+   <type name="ASTMatcher"/>
+   <type name="ASTNode" subclass="false" instantiate="false"/>
+   <type name="ASTParser" instantiate="false"/>
+   <type name="ASTRecoveryPropagator" reference="false"/>  
+   <type name="ASTRequestor" instantiate="false"/>
+   <type name="ASTSyntaxErrorPropagator" reference="false"/>
+   <type name="ASTVisitor"/>
+   <type name="BindingComparator" reference="false"/>
+   <type name="BindingResolver" reference="false"/>
+   <type name="Block" instantiate="false"/>
+   <type name="BlockComment" subclass="false" instantiate="false"/>
+   <type name="BodyDeclaration" instantiate="false"/>
+   <type name="BooleanLiteral" instantiate="false"/>
+   <type name="BreakStatement" instantiate="false"/>
+   <type name="CastExpression" instantiate="false"/>
+   <type name="CatchClause" instantiate="false"/>
+   <type name="CharacterLiteral" instantiate="false"/>
+   <type name="ChildListPropertyDescriptor" subclass="false" instantiate="false"/>
+   <type name="ChildPropertyDescriptor" subclass="false" instantiate="false"/>
+   <type name="ClassInstanceCreation" instantiate="false"/>
+   <type name="Comment" instantiate="false"/>
+   <type name="CompilationUnit" instantiate="false"/>
+   <type name="CompilationUnitResolver" reference="false"/>
+   <type name="ConditionalExpression" instantiate="false"/>
+   <type name="ConstructorInvocation" instantiate="false"/>
+   <type name="ContinueStatement" instantiate="false"/>
+   <type name="DefaultASTVisitor" reference="false"/>
+   <type name="DefaultBindingResolver" reference="false"/>
+   <type name="DefaultCommentMapper" reference="false"/>
+   <type name="DefaultValuePairBinding" reference="false"/>
+   <type name="DocCommentParser" reference="false"/>
+   <type name="DoStatement" instantiate="false"/>
+   <type name="EmptyStatement" instantiate="false"/>
+   <type name="EnhancedForStatement" instantiate="false"/>
+   <type name="EnumConstantDeclaration" instantiate="false"/>
+   <type name="EnumDeclaration" instantiate="false"/>
+   <type name="Expression" instantiate="false"/>
+   <type name="ExpressionStatement" instantiate="false"/>
+   <type name="FieldAccess" instantiate="false"/>
+   <type name="FieldDeclaration" instantiate="false"/>
+   <type name="ForStatement" instantiate="false"/>
+   <type name="IAnnotationBinding" instantiate="false" implement="false"/>
+   <type name="IBinding" instantiate="false" implement="false"/>
+   <type name="IDocElement" reference="false"/>
+   <type name="IExtendedModifier" instantiate="false"/>
+   <type name="IfStatement" instantiate="false"/>
+   <type name="IMemberValuePairBinding" instantiate="false" implement="false"/>
+   <type name="IMethodBinding" instantiate="false" implement="false"/>
+   <type name="ImportDeclaration" instantiate="false"/>
+   <type name="InfixExpression" instantiate="false"/>
+   <type name="Initializer" instantiate="false"/>
+   <type name="InstanceofExpression" instantiate="false"/>
+   <type name="InternalASTRewrite" reference="false"/>
+   <type name="IPackageBinding" implement="false"/>
+   <type name="ITypeBinding" implement="false"/>
+   <type name="IVariableBinding" implement="false"/>
+   <type name="Javadoc" instantiate="false"/>
+   <type name="LabeledStatement" instantiate="false"/>
+   <type name="LineComment" instantiate="false" subclass="false"/>
+   <type name="MarkerAnnotation" instantiate="false"/>
+   <type name="MemberRef" instantiate="false"/>
+   <type name="MemberValuePair" instantiate="false"/>
+   <type name="MemberValuePairBinding" reference="false"/>
+   <type name="Message"/>
+   <type name="MethodBinding" reference="false"/>
+   <type name="MethodDeclaration" instantiate="false"/>
+   <type name="MethodInvocation" instantiate="false"/>
+   <type name="MethodRef" instantiate="false"/>
+   <type name="MethodRefParameter" instantiate="false"/>
+   <type name="Modifier" instantiate="false" subclass="false"/>
+   <type name="Name" instantiate="false" subclass="false"/>
+   <type name="NodeEventHandler" reference="false"/>
+   <type name="NodeSearcher" reference="false"/>
+   <type name="NormalAnnotation" instantiate="false"/>
+   <type name="NullLiteral" instantiate="false"/>
+   <type name="NumberLiteral" instantiate="false"/>
+   <type name="PackageBinding" reference="false"/>
+   <type name="PackageDeclaration" instantiate="false"/>
+   <type name="ParameterizedType" instantiate="false"/>
+   <type name="ParenthesizedExpression" instantiate="false"/>
+   <type name="PostfixExpression" instantiate="false"/>
+   <type name="PrefixExpression" instantiate="false"/>
+   <type name="PrimitiveType" instantiate="false"/>
+   <type name="QualifiedName" instantiate="false"/>
+   <type name="QualifiedType" instantiate="false"/>
+   <type name="ReturnStatement" instantiate="false"/>
+   <type name="SimpleName" instantiate="false"/>
+   <type name="SimplePropertyDescriptor" subclass="false" instantiate="false"/>
+   <type name="SimpleType" instantiate="false"/>
+   <type name="SingleMemberAnnotation" instantiate="false"/>
+   <type name="SingleVariableDeclaration" instantiate="false"/>
+   <type name="Statement" instantiate="false"/>
+   <type name="StringLiteral" instantiate="false"/>
+   <type name="StructuralPropertyDescriptor" subclass="false" instantiate="false"/>
+   <type name="SuperConstructorInvocation" instantiate="false"/>
+   <type name="SuperFieldAccess" instantiate="false"/>
+   <type name="SuperMethodInvocation" instantiate="false"/>
+   <type name="SwitchCase" instantiate="false"/>
+   <type name="SwitchStatement" instantiate="false"/>
+   <type name="SynchronizedStatement" instantiate="false"/>
+   <type name="TagElement" instantiate="false" subclass="false"/>
+   <type name="TextElement" instantiate="false" subclass="false"/>
+   <type name="ThisExpression" instantiate="false"/>
+   <type name="ThrowStatement" instantiate="false"/>
+   <type name="TryStatement" instantiate="false"/>
+   <type name="Type" instantiate="false"/>
+   <type name="TypeBinding" reference="false"/>
+   <type name="TypeDeclaration" instantiate="false"/>
+   <type name="TypeDeclarationStatement" instantiate="false"/>
+   <type name="TypeLiteral" instantiate="false"/>
+   <type name="TypeParameter" instantiate="false"/>
+   <type name="VariableBinding" reference="false"/>
+   <type name="VariableDeclaration" instantiate="false"/>
+   <type name="VariableDeclarationExpression" instantiate="false"/>
+   <type name="VariableDeclarationFragment" instantiate="false"/>
+   <type name="VariableDeclarationStatement" instantiate="false"/>
+   <type name="WhileStatement" instantiate="false"/>
+   <type name="WildcardType" instantiate="false"/>
+ </package>
+ <package name="org.eclipse.jdt.core.dom.rewrite">
+   <type name="ASTRewrite" subclass="false" instantiate="false"/>
+   <type name="ImportRewrite" subclass="false"/>
+   <type name="ITrackedNodePosition" implement="false"/>
+   <type name="ListRewrite" subclass="false"/>
+   <type name="TargetSourceRangeComputer"/> 
+ </package>
+ <package name="org.eclipse.jdt.core.eval">
+   <type name="ICodeSnippetRequestor"/>
+   <type name="IEvaluationContext" implement="false"/>
+   <type name="IGlobalVariable" implement="false"/>   
+ </package>
+ <package name="org.eclipse.jdt.core.formatter">
+   <type name="CodeFormatter" subclass="false" instantiate="false"/>
+   <type name="CodeFormatterApplication" subclass="false" instantiate="false"/>
+   <type name="DefaultCodeFormatterConstants" subclass="false" instantiate="false"/>
+   <type name="IndentManipulation" subclass="false" instantiate="false"/>
+ </package>
+ <package name="org.eclipse.jdt.core.jdom">
+   <type name="DOMException"/>
+   <type name="DOMFactory" subclass="false"/>
+   <type name="IDOMCompilationUnit" implement="false"/>
+   <type name="IDOMFactory" implement="false"/>
+   <type name="IDOMField" implement="false"/>
+   <type name="IDOMImport" implement="false"/>
+   <type name="IDOMInitializer" implement="false"/>
+   <type name="IDOMMember" implement="false"/>
+   <type name="IDOMMethod" implement="false"/>
+   <type name="IDOMNode" implement="false"/>
+   <type name="IDOMPackage" implement="false"/>
+   <type name="IDOMType" implement="false"/> 
+ </package>
+ <package name="org.eclipse.jdt.core.search">
+   <type name="FieldDeclarationMatch"/>
+   <type name="FieldReferenceMatch"/>
+   <type name="IJavaSearchConstants" implement="false"/>
+   <type name="IJavaSearchResultCollector"/>
+   <type name="IJavaSearchScope"/>
+   <type name="ISearchPattern"/>
+   <type name="ITypeNameRequestor"/>
+   <type name="LocalVariableDeclarationMatch"/>
+   <type name="LocalVariableReferenceMatch"/>
+   <type name="MethodDeclarationMatch"/>
+   <type name="MethodReferenceMatch"/>
+   <type name="PackageDeclarationMatch"/>
+   <type name="PackageReferenceMatch"/>
+   <type name="SearchDocument" instantiate="false"/>
+   <type name="SearchEngine" subclass="false"/>
+   <type name="SearchMatch"/>
+   <type name="SearchParticipant" instantiate="false"/>
+   <type name="SearchPattern" instantiate="false"/>
+   <type name="SearchRequestor" instantiate="false"/>
+   <type name="TypeDeclarationMatch"/>
+   <type name="TypeNameRequestor" instantiate="false"/>
+   <type name="TypeParameterDeclarationMatch"/>
+   <type name="TypeParameterReferenceMatch"/>
+   <type name="TypeReferenceMatch"/>
+ </package>
+ <package name="org.eclipse.jdt.core.util">
+   <type name="ByteCodeVisitorAdapter"/>
+   <type name="ClassFileBytesDisassembler"/>
+   <type name="ClassFormatException"/>
+   <type name="CompilationUnitSorter" subclass="false" instantiate="false"/>
+   <type name="IAnnotation"/>
+   <type name="IAnnotationComponent"/>
+   <type name="IAnnotationComponentValue"/>
+   <type name="IAnnotationDefaultAttribute"/>
+   <type name="IAttributeNamesConstants" implement="false"/>
+   <type name="IBytecodeVisitor" implement="false"/>
+   <type name="IClassFileAttribute"/>
+   <type name="IClassFileDisassembler"/>
+   <type name="IClassFileReader"/>
+   <type name="ICodeAttribute"/>
+   <type name="IConstantPool"/>
+   <type name="IConstantPoolConstant" implement="false"/>
+   <type name="IConstantPoolEntry"/>
+   <type name="IConstantValueAttribute"/>
+   <type name="IEnclosingMethodAttribute"/>
+   <type name="IExceptionAttribute"/>
+   <type name="IExceptionTableEntry"/>
+   <type name="IFieldInfo"/>
+   <type name="IInnerClassesAttribute"/>
+   <type name="IInnerClassesAttributeEntry"/>
+   <type name="ILineNumberAttribute"/>
+   <type name="ILocalVariableAttribute"/>
+   <type name="ILocalVariableTableEntry"/>
+   <type name="ILocalVariableTypeTableAttribute"/>
+   <type name="ILocalVariableTypeTableEntry"/>
+   <type name="IMethodInfo"/>
+   <type name="IModifierConstants" implement="false"/>
+   <type name="IOpcodeMnemonics" implement="false"/>
+   <type name="IParameterAnnotation"/>
+   <type name="IRuntimeInvisibleAnnotationsAttribute"/>
+   <type name="IRuntimeInvisibleParameterAnnotationsAttribute"/>
+   <type name="IRuntimeVisibleAnnotationsAttribute"/>
+   <type name="IRuntimeVisibleParameterAnnotationsAttribute"/>
+   <type name="ISignatureAttribute"/>
+   <type name="ISourceAttribute"/>
+   <type name="IStackMapAttribute"/>
+   <type name="IStackMapFrame"/>
+   <type name="IStackMapTableAttribute"/>
+   <type name="IVerificationTypeInfo"/>
+   <type name="OpcodeStringValues" subclass="false" instantiate="false"/>
+ </package>
+ 
+<component-depends unrestricted="true"/>
+</component>

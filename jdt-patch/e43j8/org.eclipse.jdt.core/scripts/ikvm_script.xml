@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) 2007, 2009 IBM Corporation and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+    
+    Contributors:
+        IBM Corporation - initial API and implementation
+ -->
+
+<project name="ecj" default="all" basedir="..">
+	<!-- target name="checkout">
+     <exec program="cvs" commandline="-z3 -d:pserver:anonymous@dev.eclipse.org:/home/eclipse co org.eclipse.jdt.core" />
+   </target>
+   <target name="allsources">
+     <exec program="cmd" commandline="/c dir /s/b org.eclipse.jdt.core\batch\*.java > allsources.lst" />
+     <exec program="cmd" commandline="/c dir /s/b org.eclipse.jdt.core\compiler\*.java >> allsources.lst" />
+   </target>
+   <target name="classes">
+     <exec program="../bin/ikvmstub.exe" commandline="IKVM.GNU.Classpath" useruntimeengine="true" />
+     <exec program="jikes" commandline="-nowarn -classpath IKVM.GNU.Classpath.jar;org.eclipse.jdt.core/compiler;org.eclipse.jdt.core/batch @allsources.lst" />
+     <delete file="IKVM.GNU.Classpath.jar" />
+   </target -->
+	<property name="ikvm_home" value="D:\java_tools\ikvm" />
+	<property name="dest" value="../../bingcj" />
+	<property name="work" value="${dest}/tmp" />
+	<property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
+	<property name="source" value="D:/eclipse/workspaces/head/org.eclipse.jdt.core" />
+
+    <target name="clean">
+		<echo message="target: ${dest}" />
+		<delete dir="${dest}" failonerror="no"/>
+		<mkdir dir="${dest}" />
+	</target>	
+
+	<target name="retrieve_class_files">
+		<copy todir="${work}">
+		    <fileset dir="${source}/batch/" includes='**/*.java' />
+		</copy>
+		<copy todir="${work}">
+		    <fileset dir="${source}/compiler/" includes='**/*.java' />
+		</copy>
+
+		<echo message="copy resource files"/>
+		<copy todir="${dest}">
+		    <fileset dir="${source}/compiler/" includes='**/*.rsc' />
+		</copy>
+
+		<echo message="copy properties files from compiler"/>
+		<copy todir="${dest}">
+		    <fileset dir="${source}/compiler/" includes='**/*.properties' />
+		    <fileset dir="${source}/batch/" includes='**/*.properties' />
+		</copy>
+
+		<javac srcdir="${work}" destdir="${dest}" nowarn="off" deprecation="off" source="1.4" debug="off" verbose="on">
+			<classpath>
+				<path location="${work}"/>
+			</classpath>
+		</javac>
+
+		<delete dir="${work}" failonerror="no"/>
+	</target>
+
+	<target name="ecj">
+		<exec dir="${dest}" executable="${ikvm_home}/bin/ikvmc.exe" output="${dest}/log.txt">
+			<arg line="-out:ecj.exe -main:org.eclipse.jdt.internal.compiler.batch.Main -recurse:./*.class -recurse:./*.properties -recurse:./*.rsc"/>
+		</exec>
+		<copy file="${ikvm_home}/bin/IKVM.Runtime.dll" todir="${dest}" />
+		<copy file="${ikvm_home}/bin/IKVM.GNU.Classpath.dll" todir="${dest}" />
+	</target>
+
+	<target name="all" depends="clean, retrieve_class_files, ecj">
+	</target>
+</project>
