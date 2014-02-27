@@ -16,7 +16,7 @@
  *							  Bug 405066 - [1.8][compiler][codegen] Implement code generation infrastructure for JSR335             
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
-
+// GROOVY PATCHED
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -33,6 +33,7 @@ import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LocalTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
@@ -739,4 +740,16 @@ public void traverse(ASTVisitor visitor, CompilationUnitScope unitScope, boolean
 		// ignore
 	}
 }
+
+// GROOVY start
+// new method so that other compilation unit declarations can built alternative scopes
+public CompilationUnitScope buildCompilationUnitScope(LookupEnvironment lookupEnvironment) {
+	return new CompilationUnitScope(this,lookupEnvironment);
+}
+
+// If a special dom CompilationUnit is needed return it, otherwise return null (and a default one will be created)
+public org.eclipse.jdt.core.dom.CompilationUnit getSpecialDomCompilationUnit(org.eclipse.jdt.core.dom.AST ast) {
+	return null;
+}
+// GROOVY end
 }

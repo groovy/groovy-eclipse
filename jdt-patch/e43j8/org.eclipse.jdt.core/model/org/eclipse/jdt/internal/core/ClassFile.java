@@ -9,6 +9,8 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
+// GROOVY PATCHED
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -166,7 +168,18 @@ public IJavaElement[] codeSelect(int offset, int length, WorkingCopyOwner owner)
 	char[] contents;
 	if (buffer != null && (contents = buffer.getCharacters()) != null) {
 	    BinaryType type = (BinaryType) getType();
+		// GROOVY start
+		/*old{
 		BasicCompilationUnit cu = new BasicCompilationUnit(contents, null, type.sourceFileName((IBinaryType) type.getElementInfo()));
+		}new*/
+		
+		// handle code select for Groovy files differently
+		IBinaryType typeInfo = (IBinaryType) type.getElementInfo();
+		if (LanguageSupportFactory.isInterestingBinary(type, typeInfo)) {
+		    return LanguageSupportFactory.binaryCodeSelect(this, offset, length, owner);
+		}
+		BasicCompilationUnit cu = new BasicCompilationUnit(contents, null, type.sourceFileName(typeInfo));
+		// GROOVY end
 		return super.codeSelect(cu, offset, length, owner);
 	} else {
 		//has no associated souce

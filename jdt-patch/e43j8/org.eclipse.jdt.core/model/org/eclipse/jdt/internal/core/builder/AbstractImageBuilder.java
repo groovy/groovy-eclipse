@@ -9,12 +9,13 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
-
+// GROOVY PATCHED
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.*;
 import org.eclipse.core.resources.*;
-
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.*;
+import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.*;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -46,7 +47,8 @@ protected State newState;
 // local copies
 protected NameEnvironment nameEnvironment;
 protected ClasspathMultiDirectory[] sourceLocations;
-protected BuildNotifier notifier;
+public // GROOVY patched: from protected to public
+BuildNotifier notifier;
 
 protected Compiler compiler;
 protected WorkQueue workQueue;
@@ -210,7 +212,11 @@ protected void acceptSecondaryType(ClassFile classFile) {
 }
 
 protected void addAllSourceFiles(final ArrayList sourceFiles) throws CoreException {
-	for (int i = 0, l = this.sourceLocations.length; i < l; i++) {
+    // GROOVY start
+    // determine if this is a Groovy project
+    final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(this.javaBuilder.getProject());
+    // GROOVY end
+    for (int i = 0, l = this.sourceLocations.length; i < l; i++) {
 		final ClasspathMultiDirectory sourceLocation = this.sourceLocations[i];
 		final char[][] exclusionPatterns = sourceLocation.exclusionPatterns;
 		final char[][] inclusionPatterns = sourceLocation.inclusionPatterns;
@@ -223,7 +229,15 @@ protected void addAllSourceFiles(final ArrayList sourceFiles) throws CoreExcepti
 				public boolean visit(IResourceProxy proxy) throws CoreException {
 					switch(proxy.getType()) {
 						case IResource.FILE :
-							if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName())) {
+							// GROOVY start
+						    /* old {
+						    if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName())) {
+						    } new */
+							// GRECLIPSE-404 must call 'isJavaLikeFile' directly in order to make the Scala-Eclipse plugin's weaving happy
+						    String resourceName = proxy.getName();
+							if ((!isInterestingProject && org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(resourceName) && !LanguageSupportFactory.isInterestingSourceFile(resourceName)) ||
+						    		(isInterestingProject && LanguageSupportFactory.isSourceFile(resourceName, isInterestingProject))) {
+	                        // GROOVY end
 								IResource resource = proxy.requestResource();
 								if (exclusionPatterns != null || inclusionPatterns != null)
 									if (Util.isExcluded(resource.getFullPath(), inclusionPatterns, exclusionPatterns, false))
@@ -296,6 +310,15 @@ protected void compile(SourceFile[] units) {
 
 	int unitsLength = units.length;
 	this.compiledAllAtOnce = MAX_AT_ONCE == 0 || unitsLength <= MAX_AT_ONCE;
+
+	// GROOVY start
+	// currently can't easily fault in files from the other group.  Easier to
+	// do this than fix that right now.
+	if (this.compiler!=null && this.compiler.options!=null && this.compiler.options.buildGroovyFiles==2) {
+		// System.out.println("although more than "+MAX_AT_ONCE+" still compiling "+unitsLength+" files at once");
+		this.compiledAllAtOnce = true;
+	}
+	// GROOVY end
 	if (this.compiledAllAtOnce) {
 		// do them all now
 		if (JavaBuilder.DEBUG)
@@ -533,6 +556,9 @@ protected Compiler newCompiler() {
 	CompilerOptions compilerOptions = new CompilerOptions(projectOptions);
 	compilerOptions.performMethodsFullRecovery = true;
 	compilerOptions.performStatementsRecovery = true;
+	// GROOVY start: make it behave in a groovier way if this project has the right nature
+	CompilerUtils.configureOptionsBasedOnNature(compilerOptions, this.javaBuilder.javaProject);
+	// GROOVY end
 	Compiler newCompiler = new Compiler(
 		this.nameEnvironment,
 		DefaultErrorHandlingPolicies.proceedWithAllProblems(),

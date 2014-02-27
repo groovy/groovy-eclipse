@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry output="antbin" kind="src" path="antadapter"/>
+	<classpathentry kind="src" path="groovy"/>
 	<classpathentry kind="src" path="batch"/>
 	<classpathentry kind="src" path="codeassist"/>
 	<classpathentry kind="src" path="compiler"/>

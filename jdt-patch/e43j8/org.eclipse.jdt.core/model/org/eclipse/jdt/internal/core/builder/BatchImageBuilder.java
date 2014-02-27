@@ -9,7 +9,8 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
-
+// GROOVY PATCHED
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
 
@@ -164,6 +165,9 @@ protected void cleanOutputFolders(boolean copyBack) throws CoreException {
 			this.notifier.checkCancel();
 		}
 	}
+	// GROOVY start
+	LanguageSupportFactory.getEventHandler().handle(this.javaBuilder.javaProject,"cleanOutputFolders");
+	// GROOVY end
 }
 
 protected void cleanUp() {
@@ -189,14 +193,27 @@ protected void copyExtraResourcesBack(ClasspathMultiDirectory sourceLocation, fi
 	final char[][] inclusionPatterns = sourceLocation.inclusionPatterns;
 	final IContainer outputFolder = sourceLocation.binaryFolder;
 	final boolean isAlsoProject = sourceLocation.sourceFolder.equals(this.javaBuilder.currentProject);
+	// GROOVY start
+	final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(this.javaBuilder.getProject());
+	// GROOVY end
 	sourceLocation.sourceFolder.accept(
 		new IResourceProxyVisitor() {
 			public boolean visit(IResourceProxy proxy) throws CoreException {
 				IResource resource = null;
 				switch(proxy.getType()) {
 					case IResource.FILE :
+						// GROOVY start
+						/* old {
 						if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName()) ||
 							org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(proxy.getName())) return false;
+						} new */
+						// copy groovy files if not in a groovy project
+						// Also, must keep the call to 'isJavaLikeFileName' to keep Scala plugin happy: GRECLIPSE-404
+						// here it is the same test as above, except 
+						if ((LanguageSupportFactory.isSourceFile(proxy.getName(), isInterestingProject) && org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName())) ||
+							org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(proxy.getName()))
+								return false;
+						// GROOVY end						
 
 						resource = proxy.requestResource();
 						if (BatchImageBuilder.this.javaBuilder.filterExtraResource(resource)) return false;

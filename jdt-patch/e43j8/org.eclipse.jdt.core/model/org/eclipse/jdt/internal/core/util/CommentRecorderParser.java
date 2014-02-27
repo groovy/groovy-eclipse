@@ -9,7 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.util;
-
+// GROOVY PATCHED
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -228,6 +228,9 @@ public class CommentRecorderParser extends Parser {
 				this.options.taskTags/*taskTags*/,
 				this.options.taskPriorities/*taskPriorities*/,
 				this.options.isTaskCaseSensitive/*taskCaseSensitive*/);
+		// GROOVY start - workaround JDT bug where it sorts the tasks but not the priorities!
+		this.options.taskPriorities = this.scanner.taskPriorities;
+		// GROOVY end	
 	}
 
 	/*

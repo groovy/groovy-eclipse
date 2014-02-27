@@ -2464,7 +2464,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				"Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed.");
 		Assert.isTrue(dependentTypeStack.isEmpty(),
 				"Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed.");
-		Assert.isTrue(scopes.isEmpty(),
-				"Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed.");
+		Assert.isTrue(
+				scopes.isEmpty(),
+				"Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed - there are still variable scopes");
 	}
 }

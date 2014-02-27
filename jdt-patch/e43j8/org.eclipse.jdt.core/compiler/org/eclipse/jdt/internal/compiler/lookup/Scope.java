@@ -50,7 +50,7 @@
  *                          	Bug 405104 - [1.8][compiler][codegen] Implement support for serializeable lambdas
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-
+// GROOVY PATCHED
 import java.util.*;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -1668,6 +1668,18 @@ public abstract class Scope {
 		return method;
 	}	
 	
+	// GROOVY start
+	// put thought into this approach
+	public MethodBinding oneLastLook(ReferenceBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite) {
+		MethodBinding[] extraMethods = receiverType.getAnyExtraMethods(selector);
+		if (extraMethods!=null) {
+			return extraMethods[0];
+		} else {
+			return null;
+		}
+	}
+	// GROOVY end		
+	
 	public MethodBinding findMethod0(ReferenceBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite, boolean inStaticContext) {
 		ReferenceBinding currentType = receiverType;
 		boolean receiverTypeIsInterface = receiverType.isInterface();
@@ -2923,6 +2935,12 @@ public abstract class Scope {
 			if (methodBinding != null) return methodBinding;
 
 			methodBinding = findMethod(currentType, selector, argumentTypes, invocationSite, false);
+			// GROOVY start: give it one more chance as the ast transform may have introduced it
+			// is this the right approach?  Requires ast transforms running before this is done
+			if (methodBinding == null) {
+				methodBinding = oneLastLook(currentType, selector, argumentTypes, invocationSite);
+			}
+			// GROOVY end
 			if (methodBinding == null)
 				return new ProblemMethodBinding(selector, argumentTypes, ProblemReasons.NotFound);
 			if (!methodBinding.isValidBinding())
@@ -3295,7 +3313,12 @@ public abstract class Scope {
 				nextImport : for (int i = 0, length = imports.length; i < length; i++) {
 					ImportBinding importBinding = imports[i];
 					if (!importBinding.onDemand) {
+						// GROOVY start
+						/* old {
 						if (CharOperation.equals(importBinding.compoundName[importBinding.compoundName.length - 1], name)) {
+						} new */						
+						if (CharOperation.equals(getSimpleName(importBinding), name)) {
+						// GROOVY end
 							Binding resolvedImport = unitScope.resolveSingleImport(importBinding, Binding.TYPE);
 							if (resolvedImport == null) continue nextImport;
 							if (resolvedImport instanceof TypeBinding) {
@@ -3346,19 +3369,39 @@ public abstract class Scope {
 						}
 						if (TypeBinding.notEquals(temp, type) && temp != null) {
 							if (temp.isValidBinding()) {
-								ImportReference importReference = someImport.reference;
-								if (importReference != null) {
-									importReference.bits |= ASTNode.Used;
+
+								// GROOVY - start - allow for imports expressed in source to override 'default' imports - GRECLIPSE-945
+								boolean conflict = true; // do we need to continue checking
+								if (this.parent!=null && foundInImport) {
+									CompilationUnitScope cuScope = compilationUnitScope();
+									if (cuScope!=null) {
+										ReferenceBinding chosenBinding = cuScope.selectBinding(temp,type,someImport.reference!=null);
+										if (chosenBinding!=null) {
+											// The new binding was selected as a valid answer
+											conflict = false;
+											foundInImport = true;
+											type = chosenBinding;
+										}
+									}
 								}
-								if (foundInImport) {
-									// Answer error binding -- import on demand conflict; name found in two import on demand packages.
-									temp = new ProblemReferenceBinding(new char[][]{name}, type, ProblemReasons.Ambiguous);
-									if (typeOrPackageCache != null)
-										typeOrPackageCache.put(name, temp);
-									return temp;
+								if (conflict) {
+								// GROOVY - end
+									ImportReference importReference = someImport.reference;
+									if (importReference != null) {
+										importReference.bits |= ASTNode.Used;
+									}
+									if (foundInImport) {
+										// Answer error binding -- import on demand conflict; name found in two import on demand packages.
+										temp = new ProblemReferenceBinding(new char[][]{name}, type, ProblemReasons.Ambiguous);
+										if (typeOrPackageCache != null)
+											typeOrPackageCache.put(name, temp);
+										return temp;
+									}
+									type = temp;
+									foundInImport = true;
+								// GROOVY - start
 								}
-								type = temp;
-								foundInImport = true;
+								// GROOVY - end
 							} else if (foundType == null) {
 								foundType = temp;
 							}
@@ -3498,6 +3541,16 @@ public abstract class Scope {
 		}
 		return false;
 	}
+
+	// GROOVY start
+	protected char[] getSimpleName(ImportBinding importBinding) {
+		if (importBinding.reference==null) {
+			return importBinding.compoundName[importBinding.compoundName.length - 1];
+		} else {
+			return importBinding.reference.getSimpleName();
+		}
+	}
+	// GROOVY end
 
 	/**
 	 * Returns the immediately enclosing switchCase statement (carried by closest blockScope),

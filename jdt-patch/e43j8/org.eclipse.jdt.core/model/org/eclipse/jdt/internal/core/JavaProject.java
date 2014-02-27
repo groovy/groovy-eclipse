@@ -12,7 +12,8 @@
  *     						Bug 346010 - [model] strange initialization dependency in OptionTests
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-
+//GROOVY PATCHED
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
@@ -488,6 +489,9 @@ public class JavaProject
 				}
 			}
 		}
+		// GROOVY start
+		LanguageSupportFactory.getEventHandler().handle(this,"close");
+		// GROOVY end
 		super.close();
 	}
 

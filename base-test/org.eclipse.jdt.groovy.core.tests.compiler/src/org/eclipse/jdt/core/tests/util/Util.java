@@ -184,6 +184,9 @@ public static void compile(String[] pathsAndContents, Map options, String[] clas
                 public boolean stopOnFirstError() {
                     return false;
                 }
+				public boolean ignoreAllErrors() {
+					return false;
+				}
             };
         CompilerOptions compilerOptions = new CompilerOptions(options);
         compilerOptions.performMethodsFullRecovery = false;

@@ -32,20 +32,22 @@ public class LongLiteral extends NumberLiteral {
 	public static LongLiteral buildLongLiteral(char[] token, int s, int e) {
 		// remove '_' and prefix '0' first
 		char[] longReducedToken = removePrefixZerosAndUnderscores(token, true);
-		switch(longReducedToken.length) {
-			case 19 :
-				// 0x8000000000000000L
-				if (CharOperation.equals(longReducedToken, HEXA_MIN_VALUE)) {
-					return new LongLiteralMinValue(token, longReducedToken != token ? longReducedToken : null, s, e);
-				}
-				break;
-			case 24 :
-				// 01000000000000000000000L
-				if (CharOperation.equals(longReducedToken, OCTAL_MIN_VALUE)) {
-					return new LongLiteralMinValue(token, longReducedToken != token ? longReducedToken : null, s, e);
-				}
-				break;
-		}
+		// GROOVY - formatting issue GRECLIPSE-1216 - need proper fix from Eclipse 3.7.2: start
+//		switch(longReducedToken.length) {
+//			case 19 :
+//				// 0x8000000000000000L
+//				if (CharOperation.equals(longReducedToken, HEXA_MIN_VALUE)) {
+//					return new LongLiteralMinValue(token, longReducedToken != token ? longReducedToken : null, s, e);
+//				}
+//				break;
+//			case 24 :
+//				// 01000000000000000000000L
+//				if (CharOperation.equals(longReducedToken, OCTAL_MIN_VALUE)) {
+//					return new LongLiteralMinValue(token, longReducedToken != token ? longReducedToken : null, s, e);
+//				}
+//				break;
+//		}
+		// GROOVY
 		return new LongLiteral(token, longReducedToken != token ? longReducedToken : null, s, e);
 	}
 

@@ -14,7 +14,7 @@
  *     Stephan Herrmann - Contribution for bug 363858 - [dom] early throwing of AbortCompilation causes NPE in CompilationUnitResolver
  *******************************************************************************/
 package org.eclipse.jdt.core.dom;
-
+// GROOVY PATCHED
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -32,6 +33,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
@@ -70,6 +72,7 @@ import org.eclipse.jdt.internal.core.util.CommentRecorderParser;
 import org.eclipse.jdt.internal.core.util.DOMFinder;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
+public // GROOVY patched: made public
 class CompilationUnitResolver extends Compiler {
 	public static final int RESOLVE_BINDING = 0x1;
 	public static final int PARTIAL = 0x2;
@@ -343,7 +346,12 @@ class CompilationUnitResolver extends Compiler {
 	 * @see org.eclipse.jdt.internal.compiler.Compiler#initializeParser()
 	 */
 	public void initializeParser() {
+		// GROOVY start
+		/* old {
 		this.parser = new CommentRecorderParser(this.problemReporter, false);
+		} new */
+		this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, false, LanguageSupportFactory.CommentRecorderParserVariant);
+		// GROOVY end
 	}
 	public void process(CompilationUnitDeclaration unit, int i) {
 		// don't resolve a second time the same unit (this would create the same binding twice)
@@ -501,12 +509,22 @@ class CompilationUnitResolver extends Compiler {
 		compilerOptions.performMethodsFullRecovery = statementsRecovery;
 		compilerOptions.performStatementsRecovery = statementsRecovery;
 		compilerOptions.ignoreMethodBodies = (flags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0;
+		// GROOVY Start
+		/* old {
 		Parser parser = new CommentRecorderParser(
 			new ProblemReporter(
 					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
 					compilerOptions,
 					new DefaultProblemFactory()),
 			false);
+		} new */
+		Parser parser = LanguageSupportFactory.getParser(null, 
+				compilerOptions, new ProblemReporter(
+						DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+						compilerOptions,
+						new DefaultProblemFactory()),
+						false, 2 /* comment recorder parser */);
+		// GROOVY End
 		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, compilerOptions.maxProblemsPerUnit);
 		CompilationUnitDeclaration compilationUnitDeclaration = parser.dietParse(sourceUnit, compilationResult);
 
@@ -577,6 +595,9 @@ class CompilationUnitResolver extends Compiler {
 			problemFactory = new CancelableProblemFactory(monitor);
 			CompilerOptions compilerOptions = getCompilerOptions(options, (flags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0);
 			compilerOptions.ignoreMethodBodies = (flags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0;
+			// GROOVY start
+			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject);
+			// GROOVY end
 			CompilationUnitResolver resolver =
 				new CompilationUnitResolver(
 					environment,
@@ -679,6 +700,9 @@ class CompilationUnitResolver extends Compiler {
 			CompilerOptions compilerOptions = getCompilerOptions(options, (flags & ICompilationUnit.ENABLE_STATEMENTS_RECOVERY) != 0);
 			boolean ignoreMethodBodies = (flags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0;
 			compilerOptions.ignoreMethodBodies = ignoreMethodBodies;
+			// GROOVY start	
+			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, javaProject); 
+			// GROOVY end
 			resolver =
 				new CompilationUnitResolver(
 					environment,

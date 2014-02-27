@@ -28,7 +28,7 @@
  *								Bug 417295 - [1.8[[null] Massage type annotated null analysis to gel well with deep encoded type bindings.
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-
+// GROOVY PATCHED
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -186,7 +186,12 @@ ReferenceBinding askForType(PackageBinding packageBinding, char[] name) {
 * NOTE: This method can be called multiple times as additional source files are needed
 */
 public void buildTypeBindings(CompilationUnitDeclaration unit, AccessRestriction accessRestriction) {
+	// GROOVY start
+	/* old {
 	CompilationUnitScope scope = new CompilationUnitScope(unit, this);
+	} new */
+	CompilationUnitScope scope = unit.buildCompilationUnitScope(this);
+	// GROOVY end
 	scope.buildTypeBindings(accessRestriction);
 	int unitsLength = this.units.length;
 	if (++this.lastUnitIndex >= unitsLength)
@@ -226,6 +231,10 @@ public void completeTypeBindings() {
 
 	for (int i = this.lastCompletedUnitIndex + 1; i <= this.lastUnitIndex; i++) {
 	    (this.unitBeingCompleted = this.units[i]).scope.connectTypeHierarchy();
+		// GROOVY start: extra step, augment type hierarchy, may bring in GroovyObject as source (if in groovycore) and that
+	    // will then need its type hierarchy connecting
+	    (this.unitBeingCompleted = this.units[i]).scope.augmentTypeHierarchy();
+		// GROOVY end
 	}
 	this.stepCompleted = CONNECT_TYPE_HIERARCHY;
 

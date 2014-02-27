@@ -15,6 +15,8 @@
  *								Bug 377883 - NPE on open Call Hierarchy
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
+// GROOVY PATCHED
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipFile;
 
 import org.eclipse.core.resources.IResource;
@@ -1143,6 +1146,11 @@ public void initialize(JavaProject project, int possibleMatchSize) throws JavaMo
 protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMatches, int start, int length) throws CoreException {
 	initialize(javaProject, length);
 
+	// GROOVY start
+	boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(javaProject.getProject());
+	Set alreadyMatched = new HashSet();
+	// GROOVY end
+	
 	// create and resolve binding (equivalent to beginCompilation() in Compiler)
 	boolean mustResolvePattern = this.pattern.mustResolve;
 	boolean mustResolve = mustResolvePattern;
@@ -1151,6 +1159,14 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 	try {
 		for (int i = start, maxUnits = start + length; i < maxUnits; i++) {
 			PossibleMatch possibleMatch = possibleMatches[i];
+			// GROOVY start
+			if (isInterestingProject && possibleMatch.isInterestingSourceFile()) {
+				boolean matchPerformed = LanguageSupportFactory.maybePerformDelegatedSearch(possibleMatch, this.pattern, this.requestor);
+				if (matchPerformed) {
+					alreadyMatched.add(possibleMatch);
+				}
+			}
+			// GROOVY end
 			try {
 				if (!parseAndBuildBindings(possibleMatch, mustResolvePattern)) continue;
 				// Currently we only need to resolve over pattern flag if there's potential parameterized types
@@ -1239,9 +1255,25 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 							new String(possibleMatch.parsedUnit.getFileName())
 						}));
 			// cleanup compilation unit result
+			// GROOVY Start
+			// delay cleanup of groovy possible matches until later
+			// the clean up will null-out back pointers to scopes used by other CompilationUnitDeclarations
+			/* old {
 			possibleMatch.cleanUp();
+			} *///new
+			if (!alreadyMatched.contains(possibleMatch)) {
+				possibleMatch.cleanUp();
+			}
+			// GROOVY End
 		}
 	}
+	// GROOVY Start
+	// now do the clean up of groovy matches
+	for (Iterator iterator = alreadyMatched.iterator(); iterator.hasNext();) {
+		PossibleMatch match = (PossibleMatch) iterator.next();
+		match.cleanUp();
+	}
+	// GROOVY End	
 }
 /**
  * Locate the matches amongst the possible matches.
@@ -1732,7 +1764,16 @@ protected boolean parseAndBuildBindings(PossibleMatch possibleMatch, boolean mus
 					this.lookupEnvironment.buildTypeBindings(parsedUnit, null /*no access restriction*/);
 				}
 				if (hasAlreadyDefinedType(parsedUnit)) return false; // skip type has it is hidden so not visible
-				getMethodBodies(parsedUnit, possibleMatch.nodeSet);
+				
+				// GROOVY Start
+				// old
+				// getMethodBodies(parsedUnit, possibleMatch.nodeSet);
+				// new
+				// Only getMethodBodies for Java files
+				if (!possibleMatch.isInterestingSourceFile()) {
+					getMethodBodies(parsedUnit, possibleMatch.nodeSet);
+				}
+				// GROOVY End
 				if (this.patternLocator.mayBeGeneric && !mustResolve && possibleMatch.nodeSet.mustResolve) {
 					// special case: possible match node set force resolution although pattern does not
 					// => we need to build types for this compilation unit
@@ -1756,6 +1797,19 @@ protected boolean parseAndBuildBindings(PossibleMatch possibleMatch, boolean mus
  * Process a compilation unit already parsed and build.
  */
 protected void process(PossibleMatch possibleMatch, boolean bindingsWereCreated) throws CoreException {
+	// GROOVY Start
+	// Do not process non-Java files.  They use a separate delegated search
+	if (possibleMatch.isInterestingSourceFile()) {
+		try {
+			this.lookupEnvironment.buildTypeBindings(possibleMatch.parsedUnit, null /*no access restriction*/);
+		} catch (Throwable t) {
+			t.printStackTrace();
+		}
+		possibleMatch.parsedUnit.resolve();
+		return;
+	}
+	// GROOVY End
+	
 	this.currentPossibleMatch = possibleMatch;
 	CompilationUnitDeclaration unit = possibleMatch.parsedUnit;
 	try {

@@ -19,6 +19,8 @@
  *     Thirumala Reddy Mutchukota <thirumala@google.com> - Contribution to bug: https://bugs.eclipse.org/bugs/show_bug.cgi?id=411423
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
+//GROOVY PATCHED
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 
 import java.io.*;
 import java.net.URI;
@@ -2626,7 +2628,12 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			if (primaryWCs != null) {
 				for (int i = 0; i < primaryLength; i++) {
 					ICompilationUnit primaryWorkingCopy = primaryWCs[i];
-					ICompilationUnit workingCopy = new CompilationUnit((PackageFragment) primaryWorkingCopy.getParent(), primaryWorkingCopy.getElementName(), owner);
+				    // GROOVY start
+			        /* old {
+			        ICompilationUnit workingCopy = new CompilationUnit((PackageFragment) primaryWorkingCopy.getParent(), primaryWorkingCopy.getElementName(), owner);
+			        } new */
+					ICompilationUnit workingCopy = LanguageSupportFactory.newCompilationUnit((PackageFragment) primaryWorkingCopy.getParent(), primaryWorkingCopy.getElementName(), owner);
+			        // GROOVY end
 					if (!workingCopyToInfos.containsKey(workingCopy))
 						result[index++] = primaryWorkingCopy;
 				}

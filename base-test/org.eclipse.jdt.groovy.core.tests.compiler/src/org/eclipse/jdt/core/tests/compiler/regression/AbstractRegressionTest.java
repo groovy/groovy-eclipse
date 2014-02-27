@@ -1006,6 +1006,9 @@ protected static class JavacTestOptions {
 			public boolean proceedOnErrors() {
 				return true;
 			}
+			public boolean ignoreAllErrors() {
+				return false;
+			}
 		};
 	}
 	/*

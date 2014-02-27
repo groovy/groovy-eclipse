@@ -37,20 +37,22 @@ public class IntLiteral extends NumberLiteral {
 	public static IntLiteral buildIntLiteral(char[] token, int s, int e) {
 		// remove '_' and prefix '0' first
 		char[] intReducedToken = removePrefixZerosAndUnderscores(token, false);
-		switch(intReducedToken.length) {
-			case 10 :
-				// 0x80000000
-				if (CharOperation.equals(intReducedToken, HEXA_MIN_VALUE)) {
-					return new IntLiteralMinValue(token, intReducedToken != token ? intReducedToken : null, s, e);
-				}
-				break;
-			case 12 :
-				// 020000000000
-				if (CharOperation.equals(intReducedToken, OCTAL_MIN_VALUE)) {
-					return new IntLiteralMinValue(token, intReducedToken != token ? intReducedToken : null, s, e);
-				}
-				break;
-		}
+		// GROOVY - formatting issue GRECLIPSE-1216 - need proper fix from Eclipse 3.7.2: start
+//		switch(intReducedToken.length) {
+//			case 10 :
+//				// 0x80000000
+//				if (CharOperation.equals(intReducedToken, HEXA_MIN_VALUE)) {
+//					return new IntLiteralMinValue(token, intReducedToken != token ? intReducedToken : null, s, e);
+//				}
+//				break;
+//			case 12 :
+//				// 020000000000
+//				if (CharOperation.equals(intReducedToken, OCTAL_MIN_VALUE)) {
+//					return new IntLiteralMinValue(token, intReducedToken != token ? intReducedToken : null, s, e);
+//				}
+//				break;
+//		}
+		// GROOVY: end
 		return new IntLiteral(token, intReducedToken != token ? intReducedToken : null, s, e);
 	}
 IntLiteral(char[] token, char[] reducedForm, int start, int end) {

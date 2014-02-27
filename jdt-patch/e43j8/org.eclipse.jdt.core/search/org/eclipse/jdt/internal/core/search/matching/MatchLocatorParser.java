@@ -13,7 +13,8 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
-
+// GROOVY PATCHED
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ast.*;
@@ -32,10 +33,19 @@ public class MatchLocatorParser extends Parser {
 	final int patternFineGrain;
 
 public static MatchLocatorParser createParser(ProblemReporter problemReporter, MatchLocator locator) {
+	// GROOVY Start
+	/* old {
 	if ((locator.matchContainer & PatternLocator.COMPILATION_UNIT_CONTAINER) != 0) {
 		return new ImportMatchLocatorParser(problemReporter, locator);
 	}
 	return new MatchLocatorParser(problemReporter, locator);
+	} new */
+	// use multiplexing parsers instead
+	if ((locator.matchContainer & PatternLocator.COMPILATION_UNIT_CONTAINER) != 0) {
+		return LanguageSupportFactory.getImportMatchLocatorParser(problemReporter, locator);
+	}
+	return LanguageSupportFactory.getMatchLocatorParser(problemReporter, locator);
+	// GROOVY End
 }
 
 /**
@@ -94,7 +104,8 @@ public class ClassAndMethodDeclarationVisitor extends ClassButNoMethodDeclaratio
 	}
 }
 
-protected MatchLocatorParser(ProblemReporter problemReporter, MatchLocator locator) {
+public // GROOVY PATCHED: protected to public
+MatchLocatorParser(ProblemReporter problemReporter, MatchLocator locator) {
 	super(problemReporter, true);
 	this.reportOnlyOneSyntaxError = true;
 	this.patternLocator = locator.patternLocator;

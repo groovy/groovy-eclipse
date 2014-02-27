@@ -85,6 +85,11 @@ public class GroovyCompilationUnit extends CompilationUnit {
 			return stopOnFirst;
 		}
 
+		public boolean ignoreAllErrors() {
+			// TODO is this the right decision here? New method with java8 support
+			return false;
+		}
+
 	}
 
 	public GroovyCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner) {

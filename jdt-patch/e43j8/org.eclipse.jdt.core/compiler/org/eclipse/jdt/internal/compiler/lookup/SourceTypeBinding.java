@@ -42,7 +42,7 @@
  *                          	Bug 405104 - [1.8][compiler][codegen] Implement support for serializeable lambdas
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-
+// GROOVY PATCHED
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -1177,6 +1177,13 @@ public FieldBinding getField(char[] fieldName, boolean needResolve) {
 	return null;
 }
 
+//GROOVY start
+//FIXASC (M3) is this the right approach to adding extra methods? Probably not - they should be forced on when created
+public MethodBinding[] getAnyExtraMethods(char[] selector) {
+	return (this.scope==null?null:this.scope.getAnyExtraMethods(selector));
+}
+//GROOVY end
+
 // NOTE: the return type, arg & exception types of each method of a source type are resolved when needed
 public MethodBinding[] getMethods(char[] selector) {
 	if (!isPrototype())
@@ -1783,7 +1790,30 @@ public MethodBinding resolveTypesFor(MethodBinding method) {
 		method.modifiers |= ExtraCompilerModifiers.AccRestrictedAccess;
 
 	AbstractMethodDeclaration methodDecl = method.sourceMethod();
+	// GROOVY
+	/* old {
 	if (methodDecl == null) return null; // method could not be resolved in previous iteration
+    } new*/
+	if (methodDecl == null) {
+		if (method instanceof LazilyResolvedMethodBinding) {
+			LazilyResolvedMethodBinding lrMethod = (LazilyResolvedMethodBinding)method;
+			// the rest is a copy of the code below but doesn't depend on the method declaration
+			// nothing to do for method type parameters (there are none)
+			// nothing to do for method exceptions (there are none)
+			TypeBinding ptb = lrMethod.getParameterTypeBinding();
+			if (ptb==null) {
+				method.parameters = Binding.NO_PARAMETERS;
+			} else {
+				method.parameters = new TypeBinding[]{ptb};
+			}
+			method.returnType = lrMethod.getReturnTypeBinding();
+			method.modifiers &= ~ExtraCompilerModifiers.AccUnresolved;
+			return method;
+		}
+		// returning null is what this clause would have done anyway
+		return null;
+	}
+	// FIXASC - end
 
 
 	TypeParameter[] typeParameters = methodDecl.typeParameters();

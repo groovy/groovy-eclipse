@@ -38,7 +38,7 @@
  *								bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
-
+// GROOVY PATCHED
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -335,6 +335,11 @@ public boolean canBeSeenBy(ReferenceBinding receiverType, ReferenceBinding invoc
  * Answer true if the receiver is visible to the type provided by the scope.
  */
 public boolean canBeSeenBy(Scope scope) {
+	// GROOVY start
+	if (scope.compilationUnitScope()!=null && scope.compilationUnitScope().canSeeEverything()) {
+		return true;
+	}
+	// GROOVY end
 	if (isPublic()) return true;
 
 	SourceTypeBinding invocationType = scope.enclosingSourceType();
@@ -2051,4 +2056,10 @@ public MethodBinding getSingleAbstractMethod(Scope scope, boolean replaceWildcar
 	}
 	return this.singleAbstractMethod[index] = samProblemBinding;
 }
+//GROOVY start
+//more thought required - is this in the right place?
+public MethodBinding[] getAnyExtraMethods(char[] selector) {
+	return null;
+}
+//GROOVY end
 }

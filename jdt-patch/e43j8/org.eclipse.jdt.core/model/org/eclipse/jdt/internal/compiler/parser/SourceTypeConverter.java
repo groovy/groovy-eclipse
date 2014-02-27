@@ -16,7 +16,7 @@
  *     								Bug 353474 - type converters should include more annotations
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.parser;
-
+// GROOVY PATCHED
 /**
  * Converter from source element type to parsed compilation unit.
  *
@@ -30,6 +30,7 @@ package org.eclipse.jdt.internal.compiler.parser;
  *
  */
 
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IImportDeclaration;
@@ -46,7 +47,6 @@ import org.eclipse.jdt.internal.compiler.ast.Initializer;
 import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.*;
-
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.*;
@@ -112,7 +112,12 @@ public class SourceTypeConverter extends TypeConverter {
 	 * at least contain one type.
 	 */
 	private CompilationUnitDeclaration convert(ISourceType[] sourceTypes, CompilationResult compilationResult) throws JavaModelException {
+		// GROOVY start
+        /* old {
 		this.unit = new CompilationUnitDeclaration(this.problemReporter, compilationResult, 0);
+        } new */
+		this.unit = LanguageSupportFactory.newCompilationUnitDeclaration((ICompilationUnit) ((SourceTypeElementInfo) sourceTypes[0]).getHandle().getCompilationUnit(), this.problemReporter, compilationResult, 0);
+        // GROOVY end
 		// not filled at this point
 
 		if (sourceTypes.length == 0) return this.unit;
@@ -120,6 +125,23 @@ public class SourceTypeConverter extends TypeConverter {
 		org.eclipse.jdt.core.ICompilationUnit cuHandle = topLevelTypeInfo.getHandle().getCompilationUnit();
 		this.cu = (ICompilationUnit) cuHandle;
 
+		// GROOVY start
+		// trying to avoid building an incorrect TypeDeclaration below (when it should be a GroovyTypeDeclaration).
+		// similar to code below that creates the Parser and calls dietParse
+		// FIXASC think about doing the necessary rewrite below rather than this - does it make things too slow?
+
+//		final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(compilationResult.getCompilationUnit().getjavaBuilder.getProject());
+		// GROOVY should be 'true' here?
+		if (LanguageSupportFactory.isInterestingSourceFile(new String(compilationResult.getFileName()))) {
+			try {
+				return LanguageSupportFactory.getParser(this, this.problemReporter.options, this.problemReporter, true, 3).dietParse(this.cu, compilationResult);
+			} catch (Throwable t) {
+				t.printStackTrace();
+			}
+		}
+		// GROOVY end
+
+		
 		if (this.has1_5Compliance && 
 				((CompilationUnitElementInfo) ((JavaElement) this.cu).getElementInfo()).annotationNumber >= CompilationUnitElementInfo.ANNOTATION_THRESHOLD_FOR_DIET_PARSE) {
 			// If more than 10 annotations, diet parse as this is faster, but not if

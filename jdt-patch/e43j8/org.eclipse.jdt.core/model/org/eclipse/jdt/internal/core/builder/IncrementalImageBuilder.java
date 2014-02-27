@@ -9,7 +9,8 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
-
+// GROOVY PATCHED
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
 
@@ -590,7 +591,20 @@ protected boolean findSourceFiles(IResourceDelta sourceDelta, ClasspathMultiDire
 			if (isExcluded) return true;
 
 			String resourceName = resource.getName();
-			if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(resourceName)) {
+			// GROOVY start
+		    // determine if this is a Groovy project
+		    final boolean isInterestingProject = LanguageSupportFactory.isInterestingProject(this.javaBuilder.getProject());
+		    // GROOVY end
+
+		    
+		    // GROOVY start
+		    /* old {
+		    if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(resourceName)) {
+		    } new */
+			// GRECLIPSE-404 must call 'isJavaLikeFile' directly in order to make the Scala-Eclipse plugin's weaving happy
+		    if ((!isInterestingProject && org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(resourceName) && !LanguageSupportFactory.isInterestingSourceFile(resourceName)) ||
+		    		(isInterestingProject && LanguageSupportFactory.isSourceFile(resourceName, isInterestingProject))) {
+		    // GROOVY end	
 				IPath typePath = resource.getFullPath().removeFirstSegments(segmentCount).removeFileExtension();
 				String typeLocator = resource.getProjectRelativePath().toString();
 				switch (sourceDelta.getKind()) {

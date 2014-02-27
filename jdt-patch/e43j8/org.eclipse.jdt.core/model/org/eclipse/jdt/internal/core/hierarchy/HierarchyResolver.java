@@ -14,7 +14,7 @@
  *     Stephan Herrmann - contribution for Bug 300576 - NPE Computing type hierarchy when compliance doesn't match libraries
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.hierarchy;
-
+//GROOVY PATCHED
 /**
  * This is the public entry point to resolve type hierarchies.
  *
@@ -28,6 +28,8 @@ package org.eclipse.jdt.internal.core.hierarchy;
  * implements I & J?
  */
 
+
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -636,7 +638,12 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 		}
 
 		// build type bindings
+		// GROOVY start: ensure downstream groovy parses share the same compilationunit
+		/* old {
 		Parser parser = new Parser(this.lookupEnvironment.problemReporter, true);
+		} new */
+		Parser parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment.globalOptions, this.lookupEnvironment.problemReporter, true, 1);
+		// GROOVY end
 		for (int i = 0; i < openablesLength; i++) {
 			Openable openable = openables[i];
 			if (openable instanceof org.eclipse.jdt.core.ICompilationUnit) {

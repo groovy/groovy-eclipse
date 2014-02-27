@@ -1163,10 +1163,10 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_SyntacticNullAnalysisForFields, this.enableSyntacticNullAnalysisForFields ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_InheritNullAnnotations, this.inheritNullAnnotations ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportNonnullParameterAnnotationDropped, getSeverityString(NonnullParameterAnnotationDropped));
-		// GRECLIPSE start
+		// GROOVY start
 		// if not supplied here it isn't seen as something that can be set from elsewhere
 		optionsMap.put(OPTIONG_GroovyTransformsToRunOnReconcile,"");
-		// GRECLIPSE end
+		// GROOVY end
 		return optionsMap;
 	}
 

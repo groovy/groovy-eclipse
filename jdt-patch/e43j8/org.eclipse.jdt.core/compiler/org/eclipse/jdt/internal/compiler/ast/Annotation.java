@@ -33,7 +33,7 @@
  *                          Bug 419209 - [1.8] Repeating container annotations should be rejected in the presence of annotation it contains
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
-
+// GROOVY PATCHED
 import java.util.Stack;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -969,6 +969,11 @@ public abstract class Annotation extends Expression {
 	}
 
 	static void checkAnnotationTarget(Annotation annotation, BlockScope scope, ReferenceBinding annotationType, int kind) {
+		// GROOVY start
+		if (!scope.compilationUnitScope().checkTargetCompatibility()) {
+			return;
+		}
+		// GROOVY end
 		// check (meta)target compatibility
 		if (!annotationType.isValidBinding()) {
 			// no need to check annotation usage if missing

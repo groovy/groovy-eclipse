@@ -9,6 +9,9 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
+// GROOVY PATCHED
+
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 
 import java.util.*;
 
@@ -33,6 +36,10 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.util.Messages;
 import org.eclipse.jdt.internal.core.util.Util;
+import org.eclipse.text.edits.DeleteEdit;
+import org.eclipse.text.edits.InsertEdit;
+import org.eclipse.text.edits.MultiTextEdit;
+import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 
 /**
@@ -319,7 +326,12 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 		// copy resource
 		IContainer destFolder = (IContainer)dest.getResource(); // can be an IFolder or an IProject
 		IFile destFile = destFolder.getFile(new Path(destName));
+		// GROOVY start
+	    /* old {
 		org.eclipse.jdt.internal.core.CompilationUnit destCU = new org.eclipse.jdt.internal.core.CompilationUnit(dest, destName, DefaultWorkingCopyOwner.PRIMARY);
+	    } new */
+		org.eclipse.jdt.internal.core.CompilationUnit destCU = LanguageSupportFactory.newCompilationUnit(dest, destName, DefaultWorkingCopyOwner.PRIMARY);
+	    // GROOVY end
 		if (!destFile.equals(sourceResource)) {
 			try {
 				if (!destCU.isWorkingCopy()) {
@@ -627,6 +639,14 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 		} else {
 			// ensure cu is consistent (noop if already consistent)
 			cu.makeConsistent(this.progressMonitor);
+
+		    // GROOVY start
+			// don't use the ASTParser if not a Java compilation unit
+			if (LanguageSupportFactory.isInterestingSourceFile(cu.getElementName())) {
+				return updateNonJavaContent(cu, destPackageName, currPackageName, newName);
+			}
+		    // GROOVY end
+			
 			this.parser.setSource(cu);
 			CompilationUnit astCU = (CompilationUnit) this.parser.createAST(this.progressMonitor);
 			AST ast = astCU.getAST();
@@ -636,6 +656,62 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 			return rewrite.rewriteAST();
 		}
 	}
+	// GROOVY start
+	// create the content for non-Java files 
+	private TextEdit updateNonJavaContent(ICompilationUnit cu, String[] destPackageName, String[] currPackageName, String newName) throws JavaModelException {
+		// package statement
+		IPackageDeclaration[] packageDecls = cu.getPackageDeclarations();
+		boolean doPackage = !Util.equalArraysOrNull(currPackageName, destPackageName);
+		boolean doName = newName != null;
+		MultiTextEdit multiEdit = new MultiTextEdit();
+		if (doPackage) {
+			if (packageDecls.length == 1) {
+				ISourceRange packageRange = packageDecls[0].getSourceRange();
+				if (destPackageName == null || destPackageName.length == 0) {
+					// move to default package
+					multiEdit.addChild(new DeleteEdit(packageRange.getOffset(), packageRange.getLength()));
+				} else {
+					multiEdit.addChild(new ReplaceEdit(packageRange.getOffset(), packageRange.getLength(), "package " + Util.concatWith(destPackageName, '.'))); //$NON-NLS-1$
+				}
+			} else {
+				// move from default package
+				// we don't keep track of comments, so we don't know where they start.  Just add the package declaration at location 0
+				multiEdit.addChild(new InsertEdit(0, "package " + Util.concatWith(destPackageName, '.') + "\n"));  //$NON-NLS-1$//$NON-NLS-2$
+			}
+		}		
+
+		if (doName) {
+			int dotIndex = cu.getElementName().indexOf('.');
+			dotIndex = dotIndex == -1 ? cu.getElementName().length() : dotIndex;
+			String oldTypeName = cu.getElementName().substring(0, dotIndex);
+			dotIndex = newName.indexOf('.');
+			dotIndex = dotIndex == -1 ? newName.length() : dotIndex;
+			String newTypeName = newName.substring(0, dotIndex);
+			IType type = cu.getType(oldTypeName);
+			if (type.exists()) {
+				ISourceRange nameRange = type.getNameRange();
+				// main type can be implicitly defined, so check offsets
+				if (nameRange.getOffset() > 0 && nameRange.getLength() > 0 && oldTypeName.length() == nameRange.getLength()) {
+					multiEdit.addChild(new ReplaceEdit(nameRange.getOffset(), nameRange.getLength(), newTypeName));
+				}
+				IJavaElement[] children = type.getChildren();
+				for (int i = 0; i < children.length; i++) {
+					if (children[i].getElementType() == IJavaElement.METHOD) {
+						IMethod method = (IMethod) children[i];
+						if (method.isConstructor()) {
+							nameRange = method.getNameRange();
+							// main type can be implicitly defined, so check offsets
+							if (nameRange.getOffset() > 0 && nameRange.getLength() > 0) {
+								multiEdit.addChild(new ReplaceEdit(nameRange.getOffset(), nameRange.getLength(), newTypeName));
+							}
+						}
+					}
+				}
+			}
+		}
+		return multiEdit;
+	}
+	// GROOVY end
 	private void updatePackageStatement(CompilationUnit astCU, String[] pkgName, ASTRewrite rewriter, ICompilationUnit cu) throws JavaModelException {
 		boolean defaultPackage = pkgName.length == 0;
 		AST ast = astCU.getAST();

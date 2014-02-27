@@ -14,7 +14,7 @@
  *								Bug 392727 - Cannot compile project when a java file contains $ in its file name
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
-
+// GROOVY PATCHED
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
 
@@ -262,6 +262,11 @@ private void createParentFolder(IContainer parent) throws CoreException {
 	}
 }
 
+//GROOVY GRECLIPSE-1594
+public boolean avoidAdditionalGroovyAnswers = false;
+private static char[] groovySuffixAsChars = ".groovy".toCharArray(); //$NON-NLS-1$
+//GROOVY end
+
 private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeName) {
 	if (this.notifier != null)
 		this.notifier.checkCancelWithinCompiler();
@@ -282,12 +287,26 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 		// Also take care of $ in the name of the class (https://bugs.eclipse.org/377401)
 		// and prefer name with '$' if unit exists rather than failing to search for nested class (https://bugs.eclipse.org/392727)
 		SourceFile unit = (SourceFile) this.additionalUnits.get(qualifiedTypeName); // doesn't have file extension
+		// GROOVY patch
+		if (this.avoidAdditionalGroovyAnswers && unit!=null) {
+			if (CharOperation.endsWith(unit.getFileName(),groovySuffixAsChars)) {
+				unit = null;
+			}
+		}
+		// GROOVY end
 		if (unit != null)
 			return new NameEnvironmentAnswer(unit, null /*no access restriction*/);
 		int index = qualifiedTypeName.indexOf('$');
 		if (index > 0) {
 			String enclosingTypeName = qualifiedTypeName.substring(0, index);
 			unit = (SourceFile) this.additionalUnits.get(enclosingTypeName); // doesn't have file extension
+			// GROOVY start
+			if (this.avoidAdditionalGroovyAnswers && unit!=null) {
+				if (CharOperation.endsWith(unit.getFileName(),groovySuffixAsChars)) {
+					unit = null;
+				}
+			}
+			// GROOVY end
 			if (unit != null)
 				return new NameEnvironmentAnswer(unit, null /*no access restriction*/);
 		}

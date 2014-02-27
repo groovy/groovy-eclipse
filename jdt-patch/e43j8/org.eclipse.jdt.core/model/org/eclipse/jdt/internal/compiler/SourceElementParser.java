@@ -13,7 +13,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler;
-
+// GROOVY PATCHED
 import java.util.HashMap;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -993,7 +993,8 @@ private void rememberCategories() {
 		}
 	}
 }
-private void reset() {
+public // GROOVY patched: private to public
+void reset() {
 	this.sourceEnds = new HashtableOfObjectToInt();
 	this.nodesToCategories = new HashMap();
 }

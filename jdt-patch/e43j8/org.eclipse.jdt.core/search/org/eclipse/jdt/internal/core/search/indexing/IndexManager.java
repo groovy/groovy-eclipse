@@ -13,6 +13,8 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.indexing;
+// GROOVY PATCHED
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 
 import java.io.*;
 import java.net.URL;
@@ -230,13 +232,25 @@ public SourceElementParser getSourceElementParser(IJavaProject project, ISourceE
 	Map options = project.getOptions(true);
 	options.put(JavaCore.COMPILER_TASK_TAGS, ""); //$NON-NLS-1$
 
-	SourceElementParser parser = new IndexingParser(
-		requestor,
-		new DefaultProblemFactory(Locale.getDefault()),
-		new CompilerOptions(options),
-		true, // index local declarations
-		true, // optimize string literals
-		false); // do not use source javadoc parser to speed up parsing
+	// GROOVY start
+    /* old {
+		SourceElementParser parser = new IndexingParser(
+				requestor,
+				new DefaultProblemFactory(Locale.getDefault()),
+				new CompilerOptions(options),
+				true, // index local declarations
+				true, // optimize string literals
+				false); // do not use source javadoc parser to speed up parsing
+    } new */
+	SourceElementParser parser = LanguageSupportFactory.getIndexingParser(
+			requestor,
+			new DefaultProblemFactory(Locale.getDefault()),
+			new CompilerOptions(options),
+			true, // index local declarations
+			true, // optimize string literals
+			false); // do not use source javadoc parser to speed up parsing
+	// GROOVY end
+	
 	parser.reportOnlyOneSyntaxError = true;
 
 	// Always check javadoc while indexing

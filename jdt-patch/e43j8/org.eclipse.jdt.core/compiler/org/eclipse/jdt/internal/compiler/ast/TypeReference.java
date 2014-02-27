@@ -25,7 +25,7 @@
  *                          Bug 415399 - [1.8][compiler] Type annotations on constructor results dropped by the code generator
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
-
+// GROOVY PATCHED
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +40,7 @@ import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
+import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
@@ -530,6 +531,14 @@ protected void reportDeprecatedType(TypeBinding type, Scope scope) {
 }
 
 protected void reportInvalidType(Scope scope) {
+	// GROOVY start: don't report this, let groovy do it
+	if (scope!=null) {
+		CompilationUnitScope cuScope = scope.compilationUnitScope();
+		if (!cuScope.reportInvalidType(this, this.resolvedType)) {
+			return;
+		}
+	}
+	// GROOVY end
 	scope.problemReporter().invalidType(this, this.resolvedType);
 }
 

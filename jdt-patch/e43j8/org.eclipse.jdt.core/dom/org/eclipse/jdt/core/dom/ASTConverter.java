@@ -16,7 +16,7 @@
  *******************************************************************************/
 
 package org.eclipse.jdt.core.dom;
-
+// GROOVY PATCHED
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -59,7 +59,9 @@ import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
+import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
+import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.parser.RecoveryScanner;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
@@ -88,6 +90,10 @@ class ASTConverter {
 	Scanner scanner;
 	private DefaultCommentMapper commentMapper;
 
+	// GROOVY start
+	private boolean scannerUsable = true;
+	// GROOVY end
+	
 	public ASTConverter(Map options, boolean resolveBindings, IProgressMonitor monitor) {
 		this.resolveBindings = resolveBindings;
 		this.referenceContext = null;
@@ -196,7 +202,18 @@ class ASTConverter {
 				case 1 :
 					methodsIndex++;
 					if (!nextMethodDeclaration.isDefaultConstructor() && !nextMethodDeclaration.isClinit()) {
-						typeDecl.bodyDeclarations().add(convert(isInterface, nextMethodDeclaration));
+						// GROOVY start - a little ugly, but allows the conversion of the method declaration
+						// to know if it is occurring within a pure java type or not
+						boolean originalValue = this.scannerUsable;
+						try {
+							this.scannerUsable = typeDeclaration.isScannerUsableOnThisDeclaration();
+							// GROOVY end
+							typeDecl.bodyDeclarations().add(convert(isInterface, nextMethodDeclaration));
+						// GROOVY start
+						} finally {
+							this.scannerUsable = originalValue;
+						}
+						// GROOVY end
 					}
 					break;
 				case 2 :
@@ -506,7 +523,13 @@ class ASTConverter {
 		final SimpleName methodName = new SimpleName(this.ast);
 		methodName.internalSetIdentifier(new String(methodDeclaration.selector));
 		int start = methodDeclaration.sourceStart;
+		// GROOVY start
+		// why does this do what it does?
+		/* old {
 		int end = retrieveIdentifierEndPosition(start, methodDeclaration.sourceEnd);
+		} new */
+ 		int end = (scannerAvailable(methodDeclaration.scope)?retrieveIdentifierEndPosition(start, methodDeclaration.sourceEnd):methodDeclaration.sourceEnd);
+		// GROOVY end
 		methodName.setSourceRange(start, end - start + 1);
 		methodDecl.setName(methodName);
 		org.eclipse.jdt.internal.compiler.ast.TypeReference[] thrownExceptions = methodDeclaration.thrownExceptions;
@@ -517,6 +540,7 @@ class ASTConverter {
 				Name thrownException;
 				int i = 0;
 				do {
+				    
 					TypeReference typeRef = thrownExceptions[i++];
 					thrownException = convert(typeRef);
 					if (typeRef.annotations != null && typeRef.annotations.length > 0) {
@@ -549,7 +573,23 @@ class ASTConverter {
 			SingleVariableDeclaration parameter;
 			int i = 0;
 			do {
+				// GROOVY start
+			    // make sure the scope is available just in case it is necessary for varargs
+		        // new code
+			    BlockScope origScope = null;
+			    if (parameters[i].binding != null) {
+			        origScope = parameters[i].binding.declaringScope;
+			        parameters[i].binding.declaringScope = methodDeclaration.scope;
+			    }
+		        // GROOVY end
 				parameter = convert(parameters[i++]);
+				// GROOVY start
+                // unset the scope
+                // new code
+				if (parameters[i-1].binding != null) {
+				    parameters[i-1].binding.declaringScope = origScope;
+				}
+                // GROOVY end
 				methodDecl.parameters().add(parameter);
 			} while (i < parametersLength);
 			if (thrownExceptionsLength == 0) {
@@ -702,6 +742,21 @@ class ASTConverter {
 		this.referenceContext = oldReferenceContext;
 		return methodDecl;
 	}
+
+	// GROOVY start
+	private boolean scannerAvailable(Scope scope) {
+		if (!this.scannerUsable) {
+			return false;
+		}
+		if (scope!=null) {
+			CompilationUnitScope cuScope = scope.compilationUnitScope();
+			if (cuScope!=null) {
+				return cuScope.scannerAvailable();	
+			}
+		}
+		return true;
+	}
+	// GROOVY end
 
 	public ClassInstanceCreation convert(org.eclipse.jdt.internal.compiler.ast.AllocationExpression expression) {
 		ClassInstanceCreation classInstanceCreation = new ClassInstanceCreation(this.ast);
@@ -916,7 +971,14 @@ class ASTConverter {
 			internalSetExtraDimensions(variableDecl, extraDimensions);
 		}
 		final boolean isVarArgs = argument.isVarArgs();
-		if (isVarArgs && extraDimensions == 0) {
+		// GROOVY start
+		// Do not try to change source ends for var args.  Groovy assumes that
+		// all methods that have an array as the last param are varargs
+        /* old {
+        if (isVarArgs && extraDimensions == 0) {
+        } new */
+		if (argument.binding != null && scannerAvailable(argument.binding.declaringScope) && isVarArgs && extraDimensions == 0) {
+	    // GROOVY end
 			// remove the ellipsis from the type source end
 			argument.type.sourceEnd = retrieveEllipsisStartPosition(argument.type.sourceStart, typeSourceEnd);
 		}
@@ -1339,7 +1401,15 @@ class ASTConverter {
 			this.compilationUnitSource = source;
 			this.compilationUnitSourceLength = source.length;
 			this.scanner.setSource(source, unit.compilationResult);
+			// GROOVY start
+			/* old {
 			CompilationUnit compilationUnit = new CompilationUnit(this.ast);
+		 	} new */
+			CompilationUnit compilationUnit = unit.getSpecialDomCompilationUnit(this.ast);
+			if (compilationUnit==null ) {
+				compilationUnit = new CompilationUnit(this.ast);
+			}
+			// GROOVY end
 			compilationUnit.setStatementsRecoveryData(unit.compilationResult.recoveryScannerData);
 	
 			// Parse comments
