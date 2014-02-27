@@ -6,14 +6,17 @@
 # To use this script... define the following variables according to your environment
 
 #The tag of the previous new groovy version
-TAG_OLD=GROOVY_2_2_1
-TAG_NEW=GRECLIPS_2_2_2
+#TAG_OLD=GROOVY_2_2_1
+#TAG_NEW=GRECLIPS_2_2_2
+
+TAG_OLD=GRECLIPS_2_2_2
+TAG_NEW=GROOVY_2_2_2
 
 #Path to the root of groovy-core git clone
-GROOVY_CORE_REPO=/home/kdvolder/git/groovy-core
+GROOVY_CORE_REPO=${HOME}/git/groovy-core
 
 # Run the script from the dir you found it in with
-# bash <script-name>
+# bash <script-name> > <file-to-save-the-diff-into>
 
 ### Shouldn't need to change anything below this line
 cd src
@@ -26,7 +29,8 @@ do
     # Filter further: Only files that exist in both trees are actually interesting.
     if [ -f $f ]
     then
-        echo "================" $f
+        # Leave out the echo command for shorter output.
+        # echo "================" $f
         git diff $TAG_OLD $TAG_NEW -- $f
     fi
 done

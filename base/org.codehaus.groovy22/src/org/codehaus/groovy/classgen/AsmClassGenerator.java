@@ -744,7 +744,7 @@ public class AsmClassGenerator extends ClassGenerator {
 
     private static String makeFieldClassName(ClassNode type) {
         String internalName = BytecodeHelper.getClassInternalName(type);
-        StringBuffer ret = new StringBuffer(internalName.length());
+        StringBuilder ret = new StringBuilder(internalName.length());
         for (int i = 0; i < internalName.length(); i++) {
             char c = internalName.charAt(i);
             if (c == '/') {
