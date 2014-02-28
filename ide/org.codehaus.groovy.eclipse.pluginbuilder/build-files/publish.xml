@@ -78,6 +78,9 @@
 		<property name="updateSiteDir" value="${workDir}/build/updateSite" />
   	<property name="archive.name" value="archive-${org.codehaus.groovy.eclipse.ui}.zip"/>
 
+		<condition property="upload.dir.postfix" value="e4.3-j8">
+			<equals arg1="${eclipse.target.version}" arg2="e43j8" />
+		</condition>
 		<condition property="upload.dir.postfix" value="e4.3">
 			<equals arg1="${eclipse.target.version}" arg2="e43" />
 		</condition>
