@@ -85,6 +85,9 @@
 
 	<target name="-initCompilerLevel">
 		<condition property="compiler.level" value="22">
+			<equals arg1="${eclipse.target.version}" arg2="e43j8"/>
+		</condition>
+		<condition property="compiler.level" value="22">
 			<equals arg1="${eclipse.target.version}" arg2="e43"/>
 		</condition>
 		<condition property="compiler.level" value="21">
@@ -94,6 +97,9 @@
 			<equals arg1="${eclipse.target.version}" arg2="e37"/>
 		</condition>
 
+		<condition property="compiler.level.is.latest">
+			<equals arg1="${eclipse.target.version}" arg2="e43j8"/>
+		</condition>
 		<condition property="compiler.level.is.latest">
 			<equals arg1="${eclipse.target.version}" arg2="e43"/>
 		</condition>
