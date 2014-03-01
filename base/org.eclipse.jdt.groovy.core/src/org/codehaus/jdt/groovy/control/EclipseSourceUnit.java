@@ -16,6 +16,7 @@ import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.resources.IFile;
 
 /**
@@ -28,11 +29,13 @@ import org.eclipse.core.resources.IFile;
 public class EclipseSourceUnit extends SourceUnit {
 
 	final private IFile file;
+	final public JDTResolver resolver;
 
 	public EclipseSourceUnit(IFile resource, String filepath, String string, CompilerConfiguration groovyCompilerConfig,
-			GroovyClassLoader classLoader, ErrorCollector errorCollector) {
+			GroovyClassLoader classLoader, ErrorCollector errorCollector, JDTResolver resolver) {
 		super(filepath, string, groovyCompilerConfig, classLoader, errorCollector);
 		this.file = resource;
+		this.resolver = resolver;
 	}
 
 	/**

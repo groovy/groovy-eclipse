@@ -569,4 +569,8 @@ public class JDTResolver extends ResolveVisitor {
 		}
 	}
 
+	public void cleanUp() {
+		// this.nodeCache.clear();
+	}
+
 }

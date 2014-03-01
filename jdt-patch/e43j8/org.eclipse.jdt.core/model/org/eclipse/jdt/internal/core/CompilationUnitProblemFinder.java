@@ -176,6 +176,7 @@ public class CompilationUnitProblemFinder extends Compiler {
 		CancelableProblemFactory problemFactory = null;
 		CompilationUnitProblemFinder problemFinder = null;
 		CompilationUnitDeclaration unit = null;
+		boolean reset = true;
 		try {
 			environment = new CancelableNameEnvironment(project, workingCopyOwner, monitor);
 			problemFactory = new CancelableProblemFactory(monitor);
@@ -185,6 +186,9 @@ public class CompilationUnitProblemFinder extends Compiler {
 			// GROOVY start
 			// options fetched prior to building problem finder then configured based on project
 			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, project);
+			if (compilerOptions.buildGroovyFiles == 2) {
+				reset = false;
+			}
 			// GROOVY end
 			problemFinder = new CompilationUnitProblemFinder(
 				environment,
@@ -259,7 +263,7 @@ public class CompilationUnitProblemFinder extends Compiler {
 			if (problemFactory != null)
 				problemFactory.monitor = null; // don't hold a reference to this external object
 			// NB: unit.cleanUp() is done by caller
-			if (problemFinder != null && !creatingAST)
+			if (problemFinder != null && !creatingAST && reset)
 				problemFinder.lookupEnvironment.reset();
 		}
 		return unit;

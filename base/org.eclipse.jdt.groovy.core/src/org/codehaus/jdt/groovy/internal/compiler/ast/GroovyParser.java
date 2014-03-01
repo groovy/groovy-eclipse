@@ -432,7 +432,7 @@ public class GroovyParser {
 		}
 
 		SourceUnit groovySourceUnit = new EclipseSourceUnit(eclipseFile, filepath, new String(sourceCode),
-				groovyCompilationUnit.getConfiguration(), groovyCompilationUnit.getClassLoader(), errorCollector);
+				groovyCompilationUnit.getConfiguration(), groovyCompilationUnit.getClassLoader(), errorCollector, this.resolver);
 		groovySourceUnit.isReconcile = isReconcile;
 		GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult,
 				sourceCode.length, groovyCompilationUnit, groovySourceUnit, compilerOptions);

@@ -61,6 +61,7 @@ import org.codehaus.groovy.syntax.RuntimeParserException;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.tools.GroovyClass;
+import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
@@ -2196,6 +2197,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	public void cleanUp() {
 		// FIXASC any tidy up for us to do?
 		super.cleanUp();
+		if (this.groovySourceUnit instanceof EclipseSourceUnit) {
+			((EclipseSourceUnit) this.groovySourceUnit).resolver.cleanUp();
+		}
 	}
 
 	@Override
