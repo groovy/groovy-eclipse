@@ -19,14 +19,15 @@ package org.codehaus.groovy.eclipse.quickassist;
 
 
 import org.codehaus.groovy.eclipse.refactoring.core.convert.AssignStatementToNewLocalRefactoring;
-
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ContextInformation;
+import org.eclipse.jface.text.contentassist.ICompletionProposalExtension6;
 import org.eclipse.jface.text.contentassist.IContextInformation;
+import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.swt.graphics.Point;
 
 /**
@@ -36,7 +37,7 @@ import org.eclipse.swt.graphics.Point;
  * @created April 12, 2012
  */
 public class AssignStatementToNewLocalProposal extends
-		AbstractGroovyCompletionProposal {
+		AbstractGroovyCompletionProposal implements ICompletionProposalExtension6 {
 
 	private final GroovyCompilationUnit unit;
 	private final int length;
@@ -95,4 +96,11 @@ public class AssignStatementToNewLocalProposal extends
 		assignStatementRefactoring = new AssignStatementToNewLocalRefactoring(unit, offset);
         return assignStatementRefactoring.isApplicable();
 	}
+	
+	public StyledString getStyledDisplayString() {
+		StyledString styledString = new StyledString();
+		styledString.append(getDisplayString());
+		return styledString;
+	}
+
 }
