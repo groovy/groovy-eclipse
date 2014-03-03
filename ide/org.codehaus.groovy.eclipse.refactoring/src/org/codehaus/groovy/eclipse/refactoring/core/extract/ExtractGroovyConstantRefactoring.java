@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2003-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.refactoring.core.extract;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -109,6 +110,8 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     private FieldNode toInsertAfter;
 
     private String constantText;
+
+    private String[] fExcludedVariableNames = null;
 
     public ExtractGroovyConstantRefactoring(JavaRefactoringArguments arguments,
             RefactoringStatus status) {
@@ -295,6 +298,9 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         IJavaProject javaProject = getCu().getJavaProject();
 
         sb.append(CodeFormatterUtil.createIndentString(getIndentLevel(), javaProject));
+        if (!getVisibility().isEmpty()) {
+            sb.append(getVisibility()).append(" ");
+        }
         sb.append(MODIFIER).append(" ").append(getConstantTypeName()).append(constantName).append(" = ").append(
                 createExpressionText());
 
@@ -384,7 +390,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         arguments.put(JavaRefactoringDescriptorUtil.ATTRIBUTE_SELECTION, new Integer(start).toString() + " " + new Integer(length).toString()); //$NON-NLS-1$
         arguments.put("replace", Boolean.valueOf(getReplaceAllOccurrences()).toString());
         arguments.put("qualify", Boolean.valueOf(getQualifyReferencesWithDeclaringClassName()).toString());
-        arguments.put("visibility", new Integer(JdtFlags.getVisibilityCode("")).toString());
+        arguments.put("visibility", new Integer(JdtFlags.getVisibilityCode(getVisibility())).toString());
 
         ExtractConstantDescriptor descriptor= RefactoringSignatureDescriptorFactory.createExtractConstantDescriptor(project, description, comment.asString(), arguments, flags);
         return descriptor;
@@ -396,6 +402,11 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
 
     private boolean getQualifyReferencesWithDeclaringClassName() {
         return ((Boolean) ReflectionUtils.getPrivateField(ExtractConstantRefactoring.class, "fQualifyReferencesWithDeclaringClassName", this)).booleanValue();
+    }
+
+    @Override
+    public String getName() {
+        return super.getName() + (getReplaceAllOccurrences() ? " (all occurrences)" : "");
     }
 
     private void computeConstantDeclarationLocation() {
@@ -468,8 +479,14 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         if(result.hasFatalError())
             return result;
         checkAllStaticFinal();
+        if (!selectionAllStaticFinal()) {
+            result.merge(RefactoringStatus
+                    .createFatalErrorStatus(RefactoringCoreMessages.ExtractConstantRefactoring_not_load_time_constant));
+        }
 
-        if ((selectedFragment instanceof ConstantExpression) && ((ConstantExpression) selectedFragment).isNullExpression()) {
+        Expression expression = selectedFragment.getAssociatedExpression();
+
+        if ((expression instanceof ConstantExpression) && ((ConstantExpression) expression).isNullExpression()) {
             result.merge(RefactoringStatus.createFatalErrorStatus(RefactoringCoreMessages.ExtractConstantRefactoring_null_literals));
         }
 
@@ -561,7 +578,21 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         } catch (NumberFormatException e) {
             // ignore
         }
-        return NamingConventions.suggestVariableNames(NamingConventions.VK_STATIC_FINAL_FIELD, NamingConventions.BK_NAME, text, getCu().getJavaProject(), getContainingClassNode().isArray() ? 1 : 0, null, true);
+        return NamingConventions.suggestVariableNames(NamingConventions.VK_STATIC_FINAL_FIELD, NamingConventions.BK_NAME, text,
+                getCu().getJavaProject(), getContainingClassNode().isArray() ? 1 : 0, getExcludedVariableNames(), true);
+    }
+
+    private String[] getExcludedVariableNames() {
+        if (fExcludedVariableNames == null) {
+            HashSet<String> usedNames = new HashSet<String>();
+            for (ClassNode classNode : unit.getModuleNode().getClasses()) {
+                for (FieldNode fieldNode : classNode.getFields()) {
+                    usedNames.add(fieldNode.getName());
+                }
+            }
+            fExcludedVariableNames = usedNames.toArray(new String[usedNames.size()]);
+        }
+        return fExcludedVariableNames;
     }
 
     private static final String[] KNOWN_METHOD_NAME_PREFIXES= { "get", "is", "to", "set" }; //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-1$

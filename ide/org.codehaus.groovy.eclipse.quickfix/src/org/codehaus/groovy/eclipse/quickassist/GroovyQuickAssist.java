@@ -27,11 +27,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.internal.corext.template.java.CompilationUnitContextType;
 import org.eclipse.jdt.internal.corext.template.java.JavaContext;
-import org.eclipse.jdt.internal.corext.template.java.JavaDocContextType;
-import org.eclipse.jdt.internal.ui.JavaPlugin;
-import org.eclipse.jdt.internal.ui.text.correction.AssistContext;
 import org.eclipse.jdt.internal.ui.text.template.contentassist.TemplateProposal;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
@@ -44,7 +40,6 @@ import org.eclipse.jface.text.quickassist.IQuickAssistInvocationContext;
 import org.eclipse.jface.text.templates.ContextTypeRegistry;
 import org.eclipse.jface.text.templates.GlobalTemplateVariables;
 import org.eclipse.jface.text.templates.Template;
-import org.eclipse.jface.text.templates.TemplateContext;
 import org.eclipse.jface.text.templates.TemplateContextType;
 import org.eclipse.jface.text.templates.persistence.TemplateStore;
 
@@ -62,7 +57,10 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
                     new RemoveUnnecessarySemicolonsCompletionProposal(context).hasProposals() ||
                     new SwapOperandsCompletionProposal(context).hasProposals() ||
                     new SplitAssigmentCompletionProposal(context).hasProposals() ||
-                    new AssignStatementToNewLocalProposal(context).hasProposals();
+                    new AssignStatementToNewLocalProposal(context).hasProposals() ||
+                    new ExtractToLocalProposal(context).hasProposals() ||
+                    new ExtractToConstantProposal(context).hasProposals() ||
+                    new ConvertLocalToFieldProposal(context).hasProposals();
 		}
 		return false;
 	}
@@ -128,6 +126,30 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
 		    proposalList.add(assignStatement);
 		}
 		
+		ExtractToLocalProposal extractToLocal = new ExtractToLocalProposal(context, false);
+		if (extractToLocal.hasProposals()) {
+		    proposalList.add(extractToLocal);
+		}
+		
+		ExtractToLocalProposal extractToLocalAllOccurences = new ExtractToLocalProposal(context, true);
+		if (extractToLocalAllOccurences.hasProposals()) {
+		    proposalList.add(extractToLocalAllOccurences);
+		}
+		
+		ExtractToConstantProposal extractToConstant = new ExtractToConstantProposal(context, false);
+		if (extractToConstant.hasProposals()) {
+			proposalList.add(extractToConstant);
+		}
+		
+		ExtractToConstantProposal extractToConstantAllOccurrences = new ExtractToConstantProposal(context, true);
+		if (extractToConstantAllOccurrences.hasProposals()) {
+			proposalList.add(extractToConstantAllOccurrences);
+		}
+		
+		ConvertLocalToFieldProposal convertToField = new ConvertLocalToFieldProposal(context);
+		if (convertToField.hasProposals()) {
+			proposalList.add(convertToField);
+		}
 		
 		return proposalList.toArray(new IJavaCompletionProposal[0]);
 	}

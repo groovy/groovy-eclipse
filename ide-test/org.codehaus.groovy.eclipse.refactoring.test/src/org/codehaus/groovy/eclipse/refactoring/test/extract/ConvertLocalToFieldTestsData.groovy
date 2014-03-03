@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2003-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -259,14 +259,13 @@ class Test {
 			""",
 			"""
 class Test {
-	private def renamed
+	private def target
 	def test() {
-		renamed = false
-		!renamed/**/
+		target = false
+		!target/**/
 	}
 }
-			""",
-			"renamed"
+			"""
 		),
 		testMethodInvocation:
 		new TestCase(
@@ -280,14 +279,13 @@ class Test {
 			""",
 			"""
 class Test {
-	private def renamed
+	private def target
 	def test() {
-		renamed = new Object()
-		renamed/**/.toString()
+		target = new Object()
+		target/**/.toString()
 	}
 }
-			""",
-			"renamed"
+			"""
 		),
 		testParameterList:
 		new TestCase(
@@ -310,14 +308,13 @@ class Test {
 			""",
 			"""
 class Test {
-	private def renamed
+	private def target
 	def test() {
-		renamed = "Hello, World!"
-		println(renamed/**/)
+		target = "Hello, World!"
+		println(target/**/)
 	}
 }
-			""",
-			"renamed"
+			"""
 		),
 		testInnerClass:
 		new TestCase(
@@ -336,15 +333,14 @@ class Test {
 class Test {
 	def test() {
 		new Object() {
-			private def renamed
+			private def target
 			def test() {
-				renamed/**/
+				target/**/
 			}
 		}
 	}
 }
-			""",
-			"renamed"
+			"""
 		),
 		testInnerFieldConflict:
 		new TestCase(
@@ -490,6 +486,6 @@ class Test {
 			""",
 			"it",
 			true
-		)
+		),
 	]
 }
