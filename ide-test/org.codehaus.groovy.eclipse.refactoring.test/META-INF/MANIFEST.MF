@@ -3,7 +3,8 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Groovy refactoring plugin tests
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.refactoring.test;singleton:=true
 Bundle-Version: 2.9.0.qualifier
-Export-Package: org.codehaus.groovy.eclipse.refactoring.test
+Export-Package: org.codehaus.groovy.eclipse.refactoring.test,
+ org.codehaus.groovy.eclipse.refactoring.test.extract
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.resources,
  org.eclipse.ltk.core.refactoring,

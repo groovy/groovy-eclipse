@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2012 the original author or authors.
+ * Copyright 2003-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -106,28 +107,37 @@ public class AssignStatementToNewLocalRefactoring {
 
         ClassCodeVisitorSupport visitor = new ClassCodeVisitorSupport() {
 
+            private void processExpression(Expression statementExpression) {
+                if (statementExpression instanceof org.codehaus.groovy.ast.expr.BinaryExpression) {
+                    BinaryExpression bexp = (BinaryExpression) statementExpression;
+
+                    if (!bexp.getOperation().getText().equals("=")) {
+                        expression = statementExpression;
+                        atExpressionStatement = true;
+                    } else {
+                        throw new VisitCompleteException();
+                    }
+
+                } else {
+                    expression = statementExpression;
+                    atExpressionStatement = true;
+                }
+            }
+
             @Override
             public void visitExpressionStatement(ExpressionStatement statement) {
-
                 if (region.regionIsCoveredByNode(statement)) {
-
-                    if (statement.getExpression() instanceof org.codehaus.groovy.ast.expr.BinaryExpression) {
-                        BinaryExpression bexp = (BinaryExpression) statement.getExpression();
-
-                        if (!bexp.getOperation().getText().equals("=")) {
-                            expression = statement.getExpression();
-                            atExpressionStatement = true;
-                        } else {
-                            throw new VisitCompleteException();
-                        }
-
-                    } else {
-                        expression = statement.getExpression();
-                        atExpressionStatement = true;
-                    }
+                    processExpression(statement.getExpression());
                 }
-
                 super.visitExpressionStatement(statement);
+            }
+
+            @Override
+            public void visitReturnStatement(ReturnStatement statement) {
+                if (region.regionIsCoveredByNode(statement)) {
+                    processExpression(statement.getExpression());
+                }
+                super.visitReturnStatement(statement);
             }
 
             @Override

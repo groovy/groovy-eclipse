@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2003-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,10 +31,8 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Variable;
-import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -55,6 +52,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.selection.FindAllOccurrencesVisi
 import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode.VisitKind;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
+import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
 import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferences;
 import org.codehaus.groovy.syntax.Types;
@@ -140,6 +138,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         this.unit = unit;
         this.start = offset;
         this.length = length;
+        this.module = unit.getModuleNode();
     }
 
 
@@ -150,6 +149,11 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
             pm.beginTask("", 6); //$NON-NLS-1$
 
             IASTFragment expr = getSelectedFragment();
+            if (expr == null) {
+                return RefactoringStatus.createFatalErrorStatus("Must select a full expression",
+                        JavaStatusContext.create(unit, new SourceRange(start, length)));
+            }
+
             int trimmedLength = expr.getTrimmedLength(unit);
             int exprLength = expr.getLength();
             // problem is that some expressions include whitespace in the end of
@@ -157,7 +161,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
             // need to handle this case.
             // the selected length must be somewhere >= the trimmed (no
             // whitespace) length and <= the non-trimeed (w/ whitespace) length
-            if (expr == null || expr.getStart() != start || length > exprLength || length < trimmedLength) {
+            if (expr.getStart() != start || length > exprLength || length < trimmedLength) {
                 return RefactoringStatus.createFatalErrorStatus("Must select a full expression", JavaStatusContext.create(unit,
                         new SourceRange(start, length)));
             }
@@ -168,16 +172,15 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
                 return result;
             }
 
-            module = unit.getModuleNode();
             if (module == null) {
                 result.addFatalError("Cannot build module node for file.  Possible syntax error.");
                 return result;
             }
 
             result.merge(checkSelection(new SubProgressMonitor(pm, 3)));
-            if (!result.hasFatalError() && isLiteralNodeSelected()) {
-                replaceAllOccurrences = false;
-            }
+            // if (!result.hasFatalError() && isLiteralNodeSelected()) {
+            // replaceAllOccurrences = false;
+            // }
             return result;
 
         } finally {
@@ -213,25 +216,10 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
      * in the scope
      */
     private Set<String> getExcludedVariableNames() {
-        List<IASTFragment> parentStack = getParentStack(getSelectedFragment());
         Set<String> usedNames = new HashSet<String>();
-        for (IASTFragment astNode : parentStack) {
-            VariableScope scope;
-            if (astNode instanceof BlockStatement) {
-                scope = ((BlockStatement) astNode).getVariableScope();
-            } else if (astNode instanceof MethodNode) {
-                scope = ((MethodNode) astNode).getVariableScope();
-            } else if (astNode instanceof ClosureExpression) {
-                scope = ((ClosureExpression) astNode).getVariableScope();
-            } else {
-                scope = null;
-            }
-            if (scope != null) {
-                Iterator<Variable> declared = scope.getDeclaredVariablesIterator();
-                while (declared.hasNext()) {
-                    usedNames.add(declared.next().getName());
-                }
-            }
+        Set<Variable> vars = ASTTools.getVariablesInScope(module, getSelectedFragment().getAssociatedNode());
+        for (Variable v : vars) {
+            usedNames.add(v.getName());
         }
 
         // now check to see if the selected expression itself is a keyword
@@ -670,9 +658,10 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     }
 
     public String[] guessLocalNames() {
-		String text = getBaseNameFromExpression(getSelectedFragment());
-        return NamingConventions.suggestVariableNames(NamingConventions.VK_LOCAL, NamingConventions.BK_NAME, text, unit
-                .getJavaProject(), 0, null, true);
+        String text = getBaseNameFromExpression(getSelectedFragment());
+        String[] excludedNames = getExcludedVariableNames().toArray(new String[0]);
+        return NamingConventions.suggestVariableNames(NamingConventions.VK_LOCAL, NamingConventions.BK_NAME, text,
+                unit.getJavaProject(), 0, excludedNames, true);
     }
 
 	class GuessBaseNameVisitor extends FragmentVisitor {
@@ -799,7 +788,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
 
     @Override
     public String getName() {
-        return "Extract local variable";
+        return "Extract to local variable" + (isReplaceAllOccurrences() ? " (all occurrences)" : "");
     }
 
     @Override
