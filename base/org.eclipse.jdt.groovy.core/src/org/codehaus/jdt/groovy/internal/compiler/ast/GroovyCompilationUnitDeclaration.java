@@ -1029,10 +1029,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			// parameterTypeReference = new ArrayTypeReference("String".toCharArray(), 1,
 			// (parameterTypeReference.sourceStart << 32) | parameterTypeReference.sourceEnd);
 			// }
-
-			arguments[i] = new Argument(parameter.getName().toCharArray(), toPos(parameter.getStart(), parameter.getEnd() - 1),
-					parameterTypeReference, ClassFileConstants.AccPublic);
-			arguments[i].declarationSourceStart = parameter.getStart();
+			long pos;
+			int pstart = parameter.getStart();
+			if (parameter.getStart() == 0 && parameter.getEnd() == 0) {
+				pos = toPos(-1, -2);
+				pstart = -1;
+			} else {
+				pos = toPos(parameter.getStart(), parameter.getEnd() - 1);
+			}
+			arguments[i] = new Argument(parameter.getName().toCharArray(), pos, parameterTypeReference,
+					ClassFileConstants.AccPublic);
+			arguments[i].declarationSourceStart = pstart;
 		}
 		if (isVargs(ps) /* && !isMain */) {
 			arguments[ps.length - 1].type.bits |= ASTNode.IsVarArgs;
@@ -1373,6 +1380,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	// if the reference in particular needed creating at all in the first place...
 	private long[] positionsFor(char[][] reference, long start, long end) {
 		long[] result = new long[reference.length];
+		if (start == -1 && end == -2) {
+			for (int i = 0, max = result.length; i < max; i++) {
+				result[i] = ((((long) -1) << 32) | ((long) -2));
+			}
+			return result;
+		}
 		if (start < end) {
 			// Do the right thing
 			long pos = start;
@@ -1745,7 +1758,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		// int l = fromLineColumnToOffset(astnode.getLineNumber(),
 		// astnode.getColumnNumber()) - 1;
 		// return l;
-		return (Math.max(astnode.getStart(), 0));
+		int s = astnode.getStart();
+		int e = astnode.getEnd();
+		if (s == 0 && e == 0) {
+			return -1;
+		} else {
+			return s;
+		}
+		// return (Math.max(astnode.getStart(), 0));
 	}
 
 	private int endOffset(org.codehaus.groovy.ast.ASTNode astnode) {
@@ -1753,7 +1773,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		// return fromLineColumnToOffset(astnode.getLineNumber(),
 		// astnode.getLastColumnNumber()) - 2;
 		// return astnode.getEnd();
-		return (Math.max(astnode.getEnd(), 0));
+		int s = astnode.getStart();
+		int e = astnode.getEnd();
+		if (s == 0 && e == 0) {
+			return -2;
+		} else {
+			return e;
+		}
+		// return (Math.max(astnode.getEnd(), 0));
 	}
 
 	// here be dragons
@@ -2356,8 +2383,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			int start, int end) {
 		char[][] compoundName = CharOperation.splitOn('.', arrayComponentTypename.toCharArray());
 		ArrayQualifiedTypeReference aqtr = new ArrayQualifiedTypeReference(compoundName, dimensions, positionsFor(compoundName,
-				start, end - dimensions * 2));
-		aqtr.sourceEnd = end - 1;
+				start, (end == -2 ? -2 : end - dimensions * 2)));
+		aqtr.sourceEnd = end == -2 ? -2 : end - 1;
 		return aqtr;
 	}
 

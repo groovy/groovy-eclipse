@@ -833,7 +833,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
                             public void accept(CompletionProposal proposal) {
 
                             }
-                        }, null, null, null, null);
+                }, null, this.javaContext.getProject(), null, null);
             }
             proposal.setCompletionEngine(mockEngine);
         }
