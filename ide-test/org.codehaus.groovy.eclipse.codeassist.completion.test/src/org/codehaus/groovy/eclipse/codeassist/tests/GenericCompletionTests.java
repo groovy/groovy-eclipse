@@ -11,9 +11,6 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
-
-
-
 /**
  * @author Andrew Eisenberg
  * @created Dec 20, 2010
@@ -21,7 +18,6 @@ package org.codehaus.groovy.eclipse.codeassist.tests;
  * Tests completions of generic lists, maps, etc.
  */
 public class GenericCompletionTests extends CompletionTestCase {
-
 
     public GenericCompletionTests(String name) {
         super(name);

@@ -157,7 +157,11 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         }
         // with no arguments, there is nothing groovy to do.
         if ((!hasParameters() || !hasArgumentList()) && !hasWhitespace) {
-            return super.computeReplacementString();
+            String replacementString = super.computeReplacementString();
+            if (replacementString.endsWith(");")) {
+                replacementString = replacementString.substring(0, replacementString.length() - 1);
+            }
+            return replacementString;
         }
 
         // we're inserting a method plus the argument list - respect formatter

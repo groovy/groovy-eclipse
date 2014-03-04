@@ -235,7 +235,6 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
      */
     @Override
     protected String computeReplacementString() {
-
         if (!hasParameters() || !hasArgumentList()) {
             if (proposalOptions.noParens) {
                 // command chain expression with no known arguments
@@ -254,7 +253,8 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
                 }
                 return newProposalName;
             } else {
-                return super.computeReplacementString();
+                String replacementString = super.computeReplacementString();
+                return replacementString;
             }
         }
 

@@ -4935,6 +4935,16 @@ class ASTConverter {
 	}
 
 	protected int retrieveProperRightBracketPosition(int bracketNumber, int start) {
+		// GROOVY
+		if (!this.scannerUsable) { // effectively a check for "is this groovy?"
+			if (start==-1) {
+				return -2;
+			}
+			else {
+				return -1;
+			}
+		}
+		// GROOVY
 		this.scanner.resetTo(start, this.compilationUnitSourceLength);
 		try {
 			int token, count = 0, lParentCount = 0, balance = 0;
