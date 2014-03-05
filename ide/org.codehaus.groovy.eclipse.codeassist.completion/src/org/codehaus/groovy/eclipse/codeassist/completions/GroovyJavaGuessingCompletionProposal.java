@@ -64,7 +64,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
      * core context isn't available or extended.
      *
      * @param proposal the original completion proposal
-     * @param context the currrent context
+     * @param context the current context
      * @param fillBestGuess if set, the best guess will be filled in
      *
      * @return a proposal or <code>null</code>
@@ -254,6 +254,11 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
                 return newProposalName;
             } else {
                 String replacementString = super.computeReplacementString();
+                // JDT now seems to add the trailing ';' automatically if
+                // calling a method that returns void
+                if (replacementString.endsWith(");")) {
+                    replacementString = replacementString.substring(0, replacementString.length() - 1);
+                }
                 return replacementString;
             }
         }
