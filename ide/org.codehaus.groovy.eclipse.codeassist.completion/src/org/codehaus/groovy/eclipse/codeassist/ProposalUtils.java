@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2011 the original author or authors.
+ * Copyright 2003-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -314,8 +314,20 @@ public class ProposalUtils {
     public static String createMockFieldName(String methodName) {
         int prefix = methodName.startsWith("is") ? 2 : 3;
 
-        return methodName.length() > prefix ? Character.toLowerCase(methodName.charAt(prefix)) + methodName.substring(prefix + 1)
-                : "$$$$$";
+        if (methodName.length() > prefix) {
+            /*
+             * Check if second character of the field name is upper case and
+             * then return the field name without converting first character to
+             * lower case.
+             */
+            if (methodName.length() > prefix + 1 && Character.isUpperCase(methodName.charAt(prefix + 1))) {
+                return methodName.substring(prefix);
+            } else {
+                return Character.toLowerCase(methodName.charAt(prefix)) + methodName.substring(prefix + 1);
+            }
+        } else {
+            return "$$$$$";
+        }
     }
     /**
      * Create a name for a field if this is a getter or a setter method name The resulting name is
