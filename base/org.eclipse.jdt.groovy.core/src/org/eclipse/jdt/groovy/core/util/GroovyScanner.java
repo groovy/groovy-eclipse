@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2003-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.io.Reader;
 import java.io.StringReader;
 
 import org.codehaus.groovy.antlr.parser.GroovyLexer;
+import org.codehaus.groovy.antlr.parser.GroovyRecognizer;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 
@@ -49,7 +50,11 @@ public class GroovyScanner {
 		this.whiteSpaceIncluded = whiteSpaceIncluded;
 		lexer = new GroovyLexer(input);
 		lexer.setWhitespaceIncluded(whiteSpaceIncluded);
-		this.stream = (TokenStream) lexer.plumb();
+		this.stream = lexer.plumb();
+		/*
+		 * TODO Remove ones http://jira.codehaus.org/browse/GROOVY-6608 is fixed Initializes the parser to avoid NPE in Groovy code
+		 */
+		GroovyRecognizer.make(lexer);
 	}
 
 	public GroovyScanner(String text) {
