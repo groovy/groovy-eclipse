@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
+ * Copyright (c) 2009-2014 SpringSource and others.
  * All rights reserved. This program and the accompanying materials 
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -219,6 +219,42 @@ public class FieldCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "getxx", 1);
         proposalExists(proposals, "xx", 0);
+    }
+    
+    // GRECLIPSE-1698
+    public void testProperties10() throws Exception {
+        String contents = "class Other { boolean getXXxx() {} } \n def o = new Other()\no.x";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "getXXxx", 1);
+        proposalExists(proposals, "XXxx", 1);
+    }
+    
+    // GRECLIPSE-1698
+    public void testProperties11() throws Exception {
+        String contents = "class Other { boolean isXXxx() {} } \n def o = new Other()\no.x";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "isXXxx", 1);
+        proposalExists(proposals, "XXxx", 1);
+    }
+    
+    // GRECLIPSE-1698
+    public void testProperties12() throws Exception {
+        String contents = "class Other { boolean getxXxx() {} } \n def o = new Other()\no.x";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "getxXxx", 1);
+        proposalExists(proposals, "xXxx", 0);
+    }
+    
+    // GRECLIPSE-1698
+    public void testProperties13() throws Exception {
+        String contents = "class Other { boolean isxXxx() {} } \n def o = new Other()\no.x";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "isxXxx", 1);
+        proposalExists(proposals, "xXxx", 0);
     }
     
     public void testClosure1() throws Exception {
