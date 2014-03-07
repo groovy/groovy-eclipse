@@ -177,6 +177,10 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
                 return result;
             }
 
+            if (getSelectedFragment() == null) {
+                result.addFatalError("Illegal expression selected");
+            }
+
             result.merge(checkSelection(new SubProgressMonitor(pm, 3)));
             // if (!result.hasFatalError() && isLiteralNodeSelected()) {
             // replaceAllOccurrences = false;
@@ -217,15 +221,17 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
      */
     private Set<String> getExcludedVariableNames() {
         Set<String> usedNames = new HashSet<String>();
-        Set<Variable> vars = ASTTools.getVariablesInScope(module, getSelectedFragment().getAssociatedNode());
-        for (Variable v : vars) {
-            usedNames.add(v.getName());
-        }
+        if (getSelectedFragment() != null) {
+            Set<Variable> vars = ASTTools.getVariablesInScope(module, getSelectedFragment().getAssociatedNode());
+            for (Variable v : vars) {
+                usedNames.add(v.getName());
+            }
 
-        // now check to see if the selected expression itself is a keyword
-        String selectedText = getTextAt(getSelectedFragment().getStart(), getSelectedFragment().getEnd());
-        if (JavaConventionsUtil.validateIdentifier(selectedText, null) == Status.OK_STATUS) {
-            usedNames.add(selectedText);
+            // now check to see if the selected expression itself is a keyword
+            String selectedText = getTextAt(getSelectedFragment().getStart(), getSelectedFragment().getEnd());
+            if (JavaConventionsUtil.validateIdentifier(selectedText, null) == Status.OK_STATUS) {
+                usedNames.add(selectedText);
+            }
         }
 
         return usedNames;

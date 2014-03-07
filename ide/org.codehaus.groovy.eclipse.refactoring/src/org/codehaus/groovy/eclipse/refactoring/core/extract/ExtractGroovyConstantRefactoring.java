@@ -166,6 +166,10 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
                 setVisibility(JdtFlags.VISIBILITY_STRING_PUBLIC);
             }
 
+            if (getSelectedFragment() == null) {
+                result.merge(RefactoringStatus.createFatalErrorStatus("Illegal expression selected"));
+            }
+
             return result;
         } finally {
             pm.done();
@@ -572,6 +576,9 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     public String[] guessConstantNames() {
         String text = getBaseNameFromExpression(getCu().getJavaProject(), getSelectedFragment(),
                 NamingConventions.VK_STATIC_FINAL_FIELD);
+        if (text == null) {
+            return new String[0];
+        }
         try {
             Integer.parseInt(text);
             text = "_" + text;
@@ -598,6 +605,9 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     private static final String[] KNOWN_METHOD_NAME_PREFIXES= { "get", "is", "to", "set" }; //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-1$
 
     private static String getBaseNameFromExpression(IJavaProject project, IASTFragment assignedFragment, int variableKind) {
+        if (assignedFragment == null) {
+            return null;
+        }
         String name = null;
         Expression assignedExpression = assignedFragment.getAssociatedExpression();
         if (assignedExpression instanceof CastExpression) {
