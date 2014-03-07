@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
@@ -114,6 +115,8 @@ public class AssignStatementToNewLocalRefactoring {
                     if (!bexp.getOperation().getText().equals("=")) {
                         expression = statementExpression;
                         atExpressionStatement = true;
+                    } else if (bexp.getRightExpression() instanceof ClosureExpression) {
+                        return;
                     } else {
                         throw new VisitCompleteException();
                     }

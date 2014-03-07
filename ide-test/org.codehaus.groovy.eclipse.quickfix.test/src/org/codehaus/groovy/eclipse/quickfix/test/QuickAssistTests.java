@@ -382,6 +382,13 @@ public class QuickAssistTests extends EclipseTestCase {
 				AssignStatementToNewLocalProposal.class);
 	}
 	
+	public void testAssignStatementLocalRefactoring10() throws Exception {
+		assertConversion("class Foo {def myClosure = {'foo'.indexOf('qwerty')}}",
+				"class Foo {def myClosure = {def indexOf = 'foo'.indexOf('qwerty')}}",
+				"'foo'.indexOf('qwerty')",
+				AssignStatementToNewLocalProposal.class);
+	}
+	
 	public void test_ExtractToLocalRefactoring_1() throws Exception {
 		assertConversionAllOccurrences(ExtractLocalTestsData.getTest1In(),
 				ExtractLocalTestsData.getTest1Out(),
