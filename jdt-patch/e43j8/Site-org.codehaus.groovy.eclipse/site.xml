@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.codehaus.groovy.jdt.patch_2.9.0.qualifier.jar" id="org.codehaus.groovy.jdt.patch" version="2.9.0.qualifier" patch="true">
+      <category name="jdt.patch"/>
+   </feature>
+   <category-def name="jdt.patch" label="JDT Patch"/>
+</site>
