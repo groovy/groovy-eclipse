@@ -43,6 +43,13 @@ public void cleanup() {
 }
 
 String[] directoryList(String qualifiedPackageName) {
+	// GROOVY - temporary to investigate an issue building grails-async. It appears to be asking for types after
+	// cleanup has occurred.
+	if (this.directoryCache == null) {
+		// cleanup() has already occurred, let's partially reinitialize ourselves - does it help?
+		this.directoryCache = new SimpleLookupTable(5);
+	}
+	// GROOVY
 	String[] dirList = (String[]) this.directoryCache.get(qualifiedPackageName);
 	if (dirList == this.missingPackageHolder) return null; // package exists in another classpath directory or jar
 	if (dirList != null) return dirList;
