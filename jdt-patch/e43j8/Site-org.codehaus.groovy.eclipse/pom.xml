@@ -14,19 +14,19 @@
 
 
 	<build>
-		<plugins>
+		<plugins>		
 			<!-- for debugging purposes -->
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<executions>
 					<execution>
-						<phase>generate-resources</phase>
+						<phase>deploy</phase>
 						<goals>
 							<goal>run</goal>
 						</goals>
 						<configuration>
 							<tasks>
-								<echo>==== dist props are set ? ===</echo>
+								<echo>==== dist props are set so we can deploy? ===</echo>
 								<echo>bamboo.s3.properties=${bamboo.s3.properties}</echo>
 								<echo>env.dist_properties=${env.dist_properties}</echo>
 							</tasks>
