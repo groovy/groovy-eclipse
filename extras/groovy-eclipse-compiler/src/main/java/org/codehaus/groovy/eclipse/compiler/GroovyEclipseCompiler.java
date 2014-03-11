@@ -493,26 +493,33 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                     StringBuilder sb = new StringBuilder();
                     for (String extraMsg : extraMsgs) {
                         if (extraMsg.indexOf(". WARNING") > 0 || extraMsg.indexOf(". ERROR") > 0) {
-                            if (sb.length() > 0) {
-                                message = parseMessage(sb.toString(), showWarnings, true);
-                                if (showWarnings || message.getKind() == Kind.ERROR) {
-                                    parsedMessages.add(message);
-                                }
-                            }
-                            sb = new StringBuilder(extraMsg);
+                            handleCurrentMessage(showWarnings, parsedMessages, sb);
+                            sb = new StringBuilder("\n").append(extraMsg).append("\n");
                         } else {
                             if (!PROB_SEPARATOR.equals(extraMsg)) {
-                                sb.append(extraMsg);
+                                sb.append(extraMsg).append("\n");
                             }
                         }
                     }
+                    handleCurrentMessage(showWarnings, parsedMessages, sb);
                 }
             }
         }
         return parsedMessages;
     }
 
-    /**
+    private void handleCurrentMessage(final boolean showWarnings, final List<CompilerMessage> parsedMessages, final StringBuilder sb)
+    {
+    	final CompilerMessage message;
+    	if (sb.length() > 0) {
+    	    message = parseMessage(sb.toString(), showWarnings, true);
+    	    if (showWarnings || message.getKind() == Kind.ERROR) {
+    	        parsedMessages.add(message);
+    	    }
+    	}
+    }
+
+	/**
      * Construct a CompilerError object from a line of the compiler output
      *
      * @param msgText
