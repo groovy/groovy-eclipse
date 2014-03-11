@@ -35,6 +35,9 @@
 									<target>
 
 										<echo>Uploading main update site to s3..."</echo>
+										
+										<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+										<taskdef resource="org/springframework/build/aws/ant/antlib.xml" />
 
 										<echo>==== dist props are set so we can deploy? ===</echo>
 										<echo>bamboo.s3.properties=${bamboo.s3.properties}</echo>
