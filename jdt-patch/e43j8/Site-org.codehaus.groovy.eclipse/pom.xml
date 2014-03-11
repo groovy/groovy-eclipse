@@ -1,13 +1,39 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-  	<relativePath>../pom.xml</relativePath>
-    <groupId>org.codehaus.groovy.eclipse</groupId>
-    <artifactId>org.codehaus.groovy.eclipse.jdt-patch.e43j8</artifactId>
-    <version>2.9.0-SNAPSHOT</version>
-  </parent>
-  <groupId>org.codehaus.groovy.eclipse</groupId>
-  <artifactId>org.codehaus.groovy.eclipse.e43j8.site</artifactId>
-  <version>2.9.0-SNAPSHOT</version>
-  <packaging>eclipse-update-site</packaging>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<relativePath>../pom.xml</relativePath>
+		<groupId>org.codehaus.groovy.eclipse</groupId>
+		<artifactId>org.codehaus.groovy.eclipse.jdt-patch.e43j8</artifactId>
+		<version>2.9.0-SNAPSHOT</version>
+	</parent>
+	<groupId>org.codehaus.groovy.eclipse</groupId>
+	<artifactId>org.codehaus.groovy.eclipse.e43j8.site</artifactId>
+	<version>2.9.0-SNAPSHOT</version>
+	<packaging>eclipse-update-site</packaging>
+
+
+	<build>
+		<plugins>
+			<!-- for debugging purposes -->
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<tasks>
+								<echo>==== dist props are set ? ===</echo>
+								<echo>bamboo.s3.properties=${bamboo.s3.properties}</echo>
+								<echo>env.dist_properties=${env.dist_properties}</echo>
+							</tasks>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>
