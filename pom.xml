@@ -9,38 +9,38 @@
 	<properties>
 		<tycho-version>0.19.0</tycho-version>
 	</properties>
-	
+
 	<profiles>
-	  <profile>
-	  	<id>e43j8</id>
-	  	<activation>
-		  	<activeByDefault>true</activeByDefault>
-	  	</activation>
-		<repositories>
-			<repository>
-			    <id>eclipse-java8</id>
-				<layout>p2</layout>
-				<url>http://build.eclipse.org/eclipse/builds/4P/siteDir/updates/4.3-P-builds</url>
-			</repository>
-			<repository>
-			  <id>e43</id>
-			  <layout>p2</layout>
-			  <url>http://download.eclipse.org/eclipse/updates/4.3</url>
-			</repository>		
- 			<repository>
-				<id>kepler</id>
-				<layout>p2</layout>
-				<url>http://download.eclipse.org/releases/kepler</url>
-			</repository>
-		</repositories>
-		<modules>
-		  <module>jdt-patch/e43j8</module>
-		</modules>
-	  </profile>
+		<profile>
+			<id>e43j8</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<repositories>
+				<repository>
+					<id>eclipse-java8</id>
+					<layout>p2</layout>
+					<url>http://build.eclipse.org/eclipse/builds/4P/siteDir/updates/4.3-P-builds</url>
+				</repository>
+				<repository>
+					<id>e43</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/eclipse/updates/4.3</url>
+				</repository>
+				<repository>
+					<id>kepler</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/releases/kepler</url>
+				</repository>
+			</repositories>
+			<modules>
+				<module>jdt-patch/e43j8</module>
+			</modules>
+		</profile>
 	</profiles>
 
 	<modules>
-	  <module>ide/org.codehaus.groovy.eclipse</module>
+		<module>ide/org.codehaus.groovy.eclipse</module>
 	</modules>
 
 	<build>
@@ -86,6 +86,15 @@
 					</environments>
 				</configuration>
 			</plugin>
+
+			<plugin>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<version>2.5</version>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+
 		</plugins>
 	</build>
 </project>
