@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2010, 2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import greclipse.org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import greclipse.org.eclipse.jdt.ui.CodeStyleConfiguration;
+import groovy.transform.Field;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,6 +32,7 @@ import java.util.SortedSet;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.DynamicVariable;
@@ -74,6 +76,8 @@ import org.eclipse.text.edits.TextEdit;
  * Organize import operation for groovy files
  */
 public class OrganizeGroovyImports {
+
+    private static final ClassNode CLASS_NODE_FIELD = ClassHelper.make(Field.class);
 
     /**
      * From {@link OrganizeImportsOperation.TypeReferenceProcessor.UnresolvedTypeData}
@@ -147,6 +151,10 @@ public class OrganizeGroovyImports {
             // it seems that non-synthetic nodes are being marked as synthetic
             if (! node.getName().startsWith("_") && !node.getName().startsWith("$")) {
                 handleType(node.getType(), false);
+                // Fields in a script would have Field annotation
+                if (node.getOwner().isScript()) {
+                    handleType(CLASS_NODE_FIELD, false);
+                }
             }
             super.visitField(node);
         }
