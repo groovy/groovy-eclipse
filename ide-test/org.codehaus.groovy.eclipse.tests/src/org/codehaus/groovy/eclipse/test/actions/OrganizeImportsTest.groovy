@@ -548,6 +548,18 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
                 """
         doAddImportTest(contents)
     }
+	
+	// GRECLIPSE-1692
+	void testFieldAnnotationImport() {
+		String contents = 
+				"""
+				import groovy.transform.Field
+				@Field
+                def x = 0
+                """
+		doAddImportTest(contents);
+	}
+	
 //    // GRECLIPSE-1219
 //    void testAnnotationsOnImports2() {
 //        String contents =
