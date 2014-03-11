@@ -40,24 +40,28 @@
 										<echo>bamboo.s3.properties=${bamboo.s3.properties}</echo>
 										<echo>env.dist_properties=${env.dist_properties}</echo>
 										<echo>env.bamboo_s3_properties=${env.bamboo_s3_properties}</echo>
-
-										<!-- 
 										
-										<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
-										<taskdef resource="org/springframework/build/aws/ant/antlib.xml" />
-
+										<echo>Various properties used by the deploymen code:</echo>
+										
 										<property name="site.target.dir" value="${project.build.directory}" />
+										<echo>site.target.dir=${site.target.dir}</echo>
+										
+										<echo>unqualifiedVersion=${unqualifiedVersion}</echo>
+										<echo>buildQualifier=${buildQualifier}</echo>
 										<property name="dist.full.version"
 											value="${unqualifiedVersion}.${buildQualifier}" />
+										<echo>dist.full.version=${dist.full.version}</echo>
 
 										<property name="dist.file.name"
 											value="${dist.project}-${dist.full.version}-updatesite.zip" />
+										<echo>dist.file.name=${dist.file.name}</echo>
+										
 										<property name="dist.full.path"
-											value="${site.target.dir}/repository/${dist.file.name}" />
+											value="${site.target.dir}/site/${dist.file.name}" />
 
 										<delete file="${dist.full.path}" />
 										<zip zipfile="${dist.full.path}" filesonly="true">
-											<zipfileset dir="${site.target.dir}/repository">
+											<zipfileset dir="${site.target.dir}/site">
 												<exclude name="*.zip" />
 												<exclude name="**/*.gz" />
 											</zipfileset>
@@ -67,9 +71,15 @@
 										<checksum file="${dist.full.path}" algorithm="MD5"
 											fileext=".md5" />
 
-										<s3 accessKey="${dist.accessKey}" secretKey="${dist.secretKey}">
+										<echo>Upload should happen here... but is disabled.</echo>
 
-											<delete bucketName="${dist.bucket}">
+										<s3 accessKey="${dist.accessKey}" secretKey="${dist.secretKey}">
+											<echo>WOULD Delete: </echo>
+											<echo>  dist.bucket=${dist.bucket}</echo>
+											<echo>  dist.path=${dist.path}</echo>
+											<!-- 											<delete bucketName="${dist.bucket}">
+											
+<!-- 											<delete bucketName="${dist.bucket}">
 												<fileset dir="${dist.path}">
 													<include name="site.xml" />
 													<include name="content.jar" />
@@ -78,16 +88,34 @@
 													<include name="features/**" />
 												</fileset>
 											</delete>
+ -->
+											<echo>WOULD Upload: </echo>
+											<echo>  dist.bucket=${dist.bucket}</echo>
+											<echo>  toDir=${dist.path}</echo>
+											<echo>  fromDir=${site.target.dir}/site</echo>
 
+<!-- 
 											<upload bucketName="${dist.bucket}" toDir="${dist.path}"
 												publicRead="true">
-												<fileset dir="${site.target.dir}/repository">
+												<fileset dir="${site.target.dir}/site">
 													<include name="**/*" />
 													<include name="**" />
 													<exclude name="*.zip" />
 												</fileset>
 											</upload>
+											
+											-->
 
+											<echo>WOULD Upload: </echo>
+											<echo>  dist.bucket=${dist.bucket}</echo>
+											<echo>  toFile=${dist.path}/${dist.file.name}</echo>
+											<echo>  fromFile=${dist.path}/${dist.file.name}</echo>
+											<echo>  metadata project.name=${dist.name}"</echo>
+											<echo>  metadata release.type=${dist.type}"</echo>
+											<echo>  metadata bundle.version=${dist.full.version}</echo>
+											<echo>  metadata package.file.name=${dist.file.name}</echo>
+
+<!-- 
 											<upload bucketName="${dist.bucket}" file="${dist.full.path}"
 												toFile="${dist.path}/${dist.file.name}" publicRead="true">
 												<metadata name="project.name" value="${dist.name}" />
