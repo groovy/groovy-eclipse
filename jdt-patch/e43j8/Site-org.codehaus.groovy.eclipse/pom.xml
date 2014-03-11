@@ -12,28 +12,119 @@
 	<version>2.9.0-SNAPSHOT</version>
 	<packaging>eclipse-update-site</packaging>
 
+	<profiles>
+		<profile>
+			<id>s3-deploy</id>
+			<activation>
+				<property>
+					<name>env.dist_properties</name>
+				</property>
+			</activation>
 
-	<build>
-		<plugins>		
-			<!-- for debugging purposes -->
-			<plugin>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<executions>
-					<execution>
-						<phase>deploy</phase>
-						<goals>
-							<goal>run</goal>
-						</goals>
-						<configuration>
-							<tasks>
-								<echo>==== dist props are set so we can deploy? ===</echo>
-								<echo>bamboo.s3.properties=${bamboo.s3.properties}</echo>
-								<echo>env.dist_properties=${env.dist_properties}</echo>
-							</tasks>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<version>1.6</version>
+						<executions>
+							<execution>
+								<id>upload-dist</id>
+								<phase>deploy</phase>
+								<configuration>
+									<target>
+
+										<echo>Uploading main update site to s3..."</echo>
+
+										<echo>==== dist props are set so we can deploy? ===</echo>
+										<echo>bamboo.s3.properties=${bamboo.s3.properties}</echo>
+										<echo>env.dist_properties=${env.dist_properties}</echo>
+										<echo>env.bamboo_s3_properties=${env.bamboo_s3_properties}</echo>
+
+										<!-- 
+										
+										<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+										<taskdef resource="org/springframework/build/aws/ant/antlib.xml" />
+
+										<property name="site.target.dir" value="${project.build.directory}" />
+										<property name="dist.full.version"
+											value="${unqualifiedVersion}.${buildQualifier}" />
+
+										<property name="dist.file.name"
+											value="${dist.project}-${dist.full.version}-updatesite.zip" />
+										<property name="dist.full.path"
+											value="${site.target.dir}/repository/${dist.file.name}" />
+
+										<delete file="${dist.full.path}" />
+										<zip zipfile="${dist.full.path}" filesonly="true">
+											<zipfileset dir="${site.target.dir}/repository">
+												<exclude name="*.zip" />
+												<exclude name="**/*.gz" />
+											</zipfileset>
+										</zip>
+										<checksum file="${dist.full.path}" algorithm="SHA1"
+											fileext=".sha1" />
+										<checksum file="${dist.full.path}" algorithm="MD5"
+											fileext=".md5" />
+
+										<s3 accessKey="${dist.accessKey}" secretKey="${dist.secretKey}">
+
+											<delete bucketName="${dist.bucket}">
+												<fileset dir="${dist.path}">
+													<include name="site.xml" />
+													<include name="content.jar" />
+													<include name="artifacts.jar" />
+													<include name="plugins/**" />
+													<include name="features/**" />
+												</fileset>
+											</delete>
+
+											<upload bucketName="${dist.bucket}" toDir="${dist.path}"
+												publicRead="true">
+												<fileset dir="${site.target.dir}/repository">
+													<include name="**/*" />
+													<include name="**" />
+													<exclude name="*.zip" />
+												</fileset>
+											</upload>
+
+											<upload bucketName="${dist.bucket}" file="${dist.full.path}"
+												toFile="${dist.path}/${dist.file.name}" publicRead="true">
+												<metadata name="project.name" value="${dist.name}" />
+												<metadata name="release.type" value="${dist.type}" />
+												<metadata name="bundle.version" value="${dist.full.version}" />
+												<metadata name="package.file.name" value="${dist.file.name}" />
+											</upload>
+										</s3>
+										-->
+									</target>
+								</configuration>
+								<goals>
+									<goal>run</goal>
+								</goals>
+							</execution>
+						</executions>
+						<dependencies>
+							<dependency>
+								<groupId>org.springframework.build</groupId>
+								<artifactId>org.springframework.build.aws.ant</artifactId>
+								<version>3.0.5.RELEASE</version>
+							</dependency>
+							<dependency>
+								<groupId>net.java.dev.jets3t</groupId>
+								<artifactId>jets3t</artifactId>
+								<version>0.7.2</version>
+							</dependency>
+							<dependency>
+								<groupId>ant-contrib</groupId>
+								<artifactId>ant-contrib</artifactId>
+								<version>20020829</version>
+							</dependency>
+						</dependencies>
+					</plugin>
+				</plugins>
+			</build>
+
+		</profile>
+	</profiles>
 </project>
