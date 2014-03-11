@@ -38,7 +38,7 @@
 
 										<echo>==== dist props are set so we can deploy? ===</echo>
 										<echo>bamboo.s3.properties=${bamboo.s3.properties}</echo>
-										<echo>env.dist_properties=${env.dist_properties}</echo>
+										<echo>dist_properties=${env.dist_properties}</echo>
 										<echo>env.bamboo_s3_properties=${env.bamboo_s3_properties}</echo>
 										
 										<echo>Various properties used by the deploymen code:</echo>
@@ -77,7 +77,6 @@
 											<echo>WOULD Delete: </echo>
 											<echo>  dist.bucket=${dist.bucket}</echo>
 											<echo>  dist.path=${dist.path}</echo>
-											<!-- 											<delete bucketName="${dist.bucket}">
 											
 <!-- 											<delete bucketName="${dist.bucket}">
 												<fileset dir="${dist.path}">
@@ -123,8 +122,8 @@
 												<metadata name="bundle.version" value="${dist.full.version}" />
 												<metadata name="package.file.name" value="${dist.file.name}" />
 											</upload>
-										</s3>
 										-->
+										</s3>
 									</target>
 								</configuration>
 								<goals>
