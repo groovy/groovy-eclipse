@@ -15,11 +15,6 @@
 	<profiles>
 		<profile>
 			<id>s3-deploy</id>
-			<activation>
-				<property>
-					<name>env.dist_properties</name>
-				</property>
-			</activation>
 
 			<build>
 				<plugins>
@@ -42,7 +37,7 @@
 										<echo>==== dist props are set so we can deploy? ===</echo>
 										<echo>bamboo.s3.properties=${bamboo.s3.properties}</echo>
 										<echo>dist_properties=${env.dist_properties}</echo>
-										<echo>env.bamboo_s3_properties=${env.bamboo_s3_properties}</echo>
+										<echo>env.bamboo_s3_properties_rel=${env.bamboo_s3_properties}</echo>
 										
 										<echo>Various properties used by the deploymen code:</echo>
 										
@@ -76,10 +71,25 @@
 
 										<echo>Upload should happen here... but is disabled.</echo>
 
-										<s3 accessKey="${dist.accessKey}" secretKey="${dist.secretKey}">
 											<echo>WOULD Delete: </echo>
 											<echo>  dist.bucket=${dist.bucket}</echo>
 											<echo>  dist.path=${dist.path}</echo>
+
+											<echo>WOULD Upload: </echo>
+											<echo>  dist.bucket=${dist.bucket}</echo>
+											<echo>  toDir=${dist.path}</echo>
+											<echo>  fromDir=${site.target.dir}/site</echo>
+
+											<echo>WOULD Upload: </echo>
+											<echo>  dist.bucket=${dist.bucket}</echo>
+											<echo>  toFile=${dist.path}/${dist.file.name}</echo>
+											<echo>  fromFile=${dist.path}/${dist.file.name}</echo>
+											<echo>  metadata project.name=${dist.name}"</echo>
+											<echo>  metadata release.type=${dist.type}"</echo>
+											<echo>  metadata bundle.version=${dist.full.version}</echo>
+											<echo>  metadata package.file.name=${dist.file.name}</echo>
+
+										<s3 accessKey="${dist.accessKey}" secretKey="${dist.secretKey}">
 											
 <!-- 											<delete bucketName="${dist.bucket}">
 												<fileset dir="${dist.path}">
@@ -91,10 +101,6 @@
 												</fileset>
 											</delete>
  -->
-											<echo>WOULD Upload: </echo>
-											<echo>  dist.bucket=${dist.bucket}</echo>
-											<echo>  toDir=${dist.path}</echo>
-											<echo>  fromDir=${site.target.dir}/site</echo>
 
 <!-- 
 											<upload bucketName="${dist.bucket}" toDir="${dist.path}"
@@ -107,15 +113,6 @@
 											</upload>
 											
 											-->
-
-											<echo>WOULD Upload: </echo>
-											<echo>  dist.bucket=${dist.bucket}</echo>
-											<echo>  toFile=${dist.path}/${dist.file.name}</echo>
-											<echo>  fromFile=${dist.path}/${dist.file.name}</echo>
-											<echo>  metadata project.name=${dist.name}"</echo>
-											<echo>  metadata release.type=${dist.type}"</echo>
-											<echo>  metadata bundle.version=${dist.full.version}</echo>
-											<echo>  metadata package.file.name=${dist.file.name}</echo>
 
 <!-- 
 											<upload bucketName="${dist.bucket}" file="${dist.full.path}"

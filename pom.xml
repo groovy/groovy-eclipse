@@ -8,9 +8,9 @@
 
 	<properties>
 		<tycho-version>0.19.0</tycho-version>
-		
+
 		<dist.bucket>dist.springsource.com</dist.bucket>
-		
+
 		<dist.project>greclipse</dist.project>
 		<dist.name>Groovy Eclipse</dist.name>
 		<dist.key>TOOLS</dist.key>
@@ -46,26 +46,59 @@
 				<module>jdt-patch/e43j8</module>
 			</modules>
 			<properties>
-			  <dist.target>e43j8</dist.target>
+				<dist.target>e43j8</dist.target>
 			</properties>
 		</profile>
+
+		<profile>
+			<id>s3-deploy</id>
+			<activation>
+				<property>
+					<name>env.dist_properties</name>
+				</property>
+			</activation>
+
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>properties-maven-plugin</artifactId>
+						<version>1.0-alpha-2</version>
+						<executions>
+							<execution>
+								<phase>initialize</phase>
+								<goals>
+									<goal>read-project-properties</goal>
+								</goals>
+								<configuration>
+									<quiet>true</quiet>
+									<files>
+										<file>${env.dist_properties}</file>
+									</files>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
-	
+
 	<repositories>
-	    <!-- required for Maven and Ant AWS dependency -->
-	    <repository>
-	      <id>springsource-maven-release</id>
-	      <name>SpringSource Maven Release Repository</name>
-	      <url>http://repository.springsource.com/maven/bundles/release</url>
-	    </repository>
+		<!-- required for Maven and Ant AWS dependency -->
+		<repository>
+			<id>springsource-maven-release</id>
+			<name>SpringSource Maven Release Repository</name>
+			<url>http://repository.springsource.com/maven/bundles/release</url>
+		</repository>
 	</repositories>
 	<pluginRepositories>
-	    <!-- required for Maven and Ant AWS dependency -->
-	    <pluginRepository>
-	      <id>springsource-maven-release</id>
-	      <name>SpringSource Maven Release Repository</name>
-	      <url>http://repository.springsource.com/maven/bundles/release</url>
-	    </pluginRepository>
+		<!-- required for Maven and Ant AWS dependency -->
+		<pluginRepository>
+			<id>springsource-maven-release</id>
+			<name>SpringSource Maven Release Repository</name>
+			<url>http://repository.springsource.com/maven/bundles/release</url>
+		</pluginRepository>
 	</pluginRepositories>
 
 	<modules>
@@ -115,7 +148,7 @@
 					</environments>
 				</configuration>
 			</plugin>
-			
+
 			<!-- We'll be doing our own deployment by antrun task uploading to s3 -->
 			<plugin>
 				<artifactId>maven-deploy-plugin</artifactId>
