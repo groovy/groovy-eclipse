@@ -6,3 +6,4 @@ build
 workspace-build
 .buildpath
 org.ebayopensource.vjet.eclipse.core.prefs
+/s3.properties

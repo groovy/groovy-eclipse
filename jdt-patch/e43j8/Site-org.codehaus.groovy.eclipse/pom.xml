@@ -44,6 +44,9 @@
 										<echo>dist_properties=${env.dist_properties}</echo>
 										<echo>env.bamboo_s3_properties_rel=${env.bamboo_s3_properties}</echo>
 										
+										<echo>dist.accessKey=${dist.accessKey}</echo>
+										<echo>accessKey=${accessKey}</echo>
+										
 										<property name="site.target.dir" value="${project.build.directory}" />
 										<echo>site.target.dir=${site.target.dir}</echo>
 										

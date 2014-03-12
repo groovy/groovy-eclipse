@@ -15,7 +15,6 @@
 		<dist.name>Groovy Eclipse</dist.name>
 		<dist.key>GRECLIPSE</dist.key>
 		<dist.type>snapshot</dist.type>
-		<dist.pathpostfix>nightly</dist.pathpostfix>
 		<dist.path>${dist.type}/${dist.key}/${dist.target}</dist.path>
 	</properties>
 
@@ -58,7 +57,7 @@
 			<properties>
 			   <!-- accessKey and secretKey properties should be set by the properties-maven-plugin
 			        from the dist_properties file. 
-			     -->
+			        -->
 			   <dist.accessKey>${accessKey}</dist.accessKey>
 			   <dist.secretKey>${secretKey}</dist.secretKey>
 			</properties>
