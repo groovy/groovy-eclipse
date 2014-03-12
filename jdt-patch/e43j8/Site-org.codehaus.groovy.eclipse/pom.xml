@@ -44,8 +44,6 @@
 										<echo>dist_properties=${env.dist_properties}</echo>
 										<echo>env.bamboo_s3_properties_rel=${env.bamboo_s3_properties}</echo>
 										
-										<echo>Various properties used by the deploymen code:</echo>
-										
 										<property name="site.target.dir" value="${project.build.directory}" />
 										<echo>site.target.dir=${site.target.dir}</echo>
 										
@@ -74,29 +72,29 @@
 										<checksum file="${dist.full.path}" algorithm="MD5"
 											fileext=".md5" />
 
-										<echo>Upload should happen here... but is disabled.</echo>
+										<echo>Preparing for upload... This will happen:</echo>
 
-											<echo>WOULD Delete: </echo>
+											<echo>Will Delete: </echo>
 											<echo>  dist.bucket=${dist.bucket}</echo>
 											<echo>  dist.path=${dist.path}</echo>
 
-											<echo>WOULD Upload: </echo>
+											<echo>Will Upload: </echo>
 											<echo>  dist.bucket=${dist.bucket}</echo>
 											<echo>  toDir=${dist.path}</echo>
 											<echo>  fromDir=${site.target.dir}/site</echo>
 
-											<echo>WOULD Upload: </echo>
+											<echo>Will Upload: </echo>
 											<echo>  dist.bucket=${dist.bucket}</echo>
 											<echo>  toFile=${dist.path}/${dist.file.name}</echo>
 											<echo>  fromFile=${dist.path}/${dist.file.name}</echo>
-											<echo>  metadata project.name=${dist.name}"</echo>
-											<echo>  metadata release.type=${dist.type}"</echo>
+											<echo>  metadata project.name=${dist.name}</echo>
+											<echo>  metadata release.type=${dist.type}</echo>
 											<echo>  metadata bundle.version=${dist.full.version}</echo>
 											<echo>  metadata package.file.name=${dist.file.name}</echo>
 
 										<s3 accessKey="${dist.accessKey}" secretKey="${dist.secretKey}">
 											
-<!-- 											<delete bucketName="${dist.bucket}">
+ 											<delete bucketName="${dist.bucket}">
 												<fileset dir="${dist.path}">
 													<include name="site.xml" />
 													<include name="content.jar" />
@@ -105,9 +103,7 @@
 													<include name="features/**" />
 												</fileset>
 											</delete>
- -->
 
-<!-- 
 											<upload bucketName="${dist.bucket}" toDir="${dist.path}"
 												publicRead="true">
 												<fileset dir="${site.target.dir}/site">
@@ -117,9 +113,6 @@
 												</fileset>
 											</upload>
 											
-											-->
-
-<!-- 
 											<upload bucketName="${dist.bucket}" file="${dist.full.path}"
 												toFile="${dist.path}/${dist.file.name}" publicRead="true">
 												<metadata name="project.name" value="${dist.name}" />
@@ -127,7 +120,7 @@
 												<metadata name="bundle.version" value="${dist.full.version}" />
 												<metadata name="package.file.name" value="${dist.file.name}" />
 											</upload>
-										-->
+
 										</s3>
 									</target>
 								</configuration>

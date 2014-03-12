@@ -55,6 +55,14 @@
 				</property>
 			</activation>
 
+			<properties>
+			   <!-- accessKey and secretKey properties should be set by the properties-maven-plugin
+			        from the dist_properties file. 
+			     -->
+			   <dist.accessKey>${accessKey}</dist.accessKey>
+			   <dist.secretKey>${secretKey}</dist.secretKey>
+			</properties>
+
 			<build>
 				<plugins>
 					<plugin>
