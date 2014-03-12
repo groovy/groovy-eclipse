@@ -67,6 +67,13 @@ public class MethodScope extends BlockScope {
 	// remember suppressed warning re missing 'default:' to give hints on possibly related flow problems
 	public boolean hasMissingSwitchDefault; // TODO(stephan): combine flags to a bitset?
 
+//GRECLIPSE Added to preserve binary compatibility with e43 
+public MethodScope(ClassScope parent, ReferenceContext context, boolean isStatic) {
+	this((Scope)parent, context, isStatic);
+}
+//GRECLIPS END
+	
+	
 public MethodScope(Scope parent, ReferenceContext context, boolean isStatic) {
 	super(METHOD_SCOPE, parent);
 	this.locals = new LocalVariableBinding[5];
