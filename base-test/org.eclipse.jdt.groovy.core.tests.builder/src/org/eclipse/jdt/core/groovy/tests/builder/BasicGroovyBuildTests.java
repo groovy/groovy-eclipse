@@ -254,6 +254,36 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		executeClass(projectPath, "p1.Hello", "Hello world", "");
 
 	}
+	
+	public void testGenericsDefaultParams_1717() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addClass(root, "p1", "Demo", "package p1;\n"
+				+ "public class Demo {\n"
+				+ "   public static void main(String[] args) {\n"
+				+ "      SomeGroovyHelper.doit(String.class,null);\n"
+				+ "   }\n"
+				+ "}\n");
+		
+		env.addGroovyClass(root, "p1", "SomeGroovyHelper", "package p1;\n"
+				+ "class SomeGroovyHelper {\n"
+				+ "   static <T> List<T> doit(Class<T> factoryClass, ClassLoader classLoader = SomeGroovyHelper.class.classLoader) {\n"
+				+ "      null\n"
+				+ "   }\n"
+				+ "}\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("p1.Demo","p1.SomeGroovyHelper");
+		expectingNoProblems();
+	}
 
 	public void testNPEAnno_1398() throws Exception {
 		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$ //$NON-NLS-2$
