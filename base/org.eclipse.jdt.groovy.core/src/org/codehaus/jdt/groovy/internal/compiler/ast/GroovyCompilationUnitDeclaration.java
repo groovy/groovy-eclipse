@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Codehaus.org, SpringSource, and others.
+ * Copyright (c) 2009-2014 Codehaus.org, SpringSource, and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1070,7 +1070,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			MethodDeclaration methodDeclaration = createMethodDeclaration(classNode, methodNode, isEnum, compilationResult);
 			// methodDeclaration.javadoc = new Javadoc(0, 20);
 			if (methodNode.hasDefaultValue()) {
-				createMethodVariants(methodNode, methodDeclaration, accumulatedDeclarations, compilationResult);
+				createMethodVariants(classNode, methodNode, isEnum, methodDeclaration, accumulatedDeclarations, compilationResult);
 			} else {
 				accumulatedDeclarations.add(methodDeclaration);
 			}
@@ -1083,12 +1083,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	/**
 	 * Called if a method has some 'defaulting' arguments and will compute all the variants (including the one with all parameters).
 	 */
-	private void createMethodVariants(MethodNode method, MethodDeclaration methodDecl,
+	private void createMethodVariants(ClassNode classNode, MethodNode method, boolean isEnum, MethodDeclaration methodDecl,
 			List<AbstractMethodDeclaration> accumulatedDeclarations, CompilationResult compilationResult) {
 		List<Argument[]> variants = getVariantsAllowingForDefaulting(method.getParameters(), methodDecl.arguments);
 		for (Argument[] variant : variants) {
-			MethodDeclaration variantMethodDeclaration = genMethodDeclarationVariant(method, variant, methodDecl.returnType,
-					compilationResult);
+			MethodDeclaration variantMethodDeclaration = genMethodDeclarationVariant(classNode, method, isEnum, variant,
+					methodDecl.returnType, compilationResult);
 			addUnlessDuplicate(accumulatedDeclarations, variantMethodDeclaration);
 		}
 	}
@@ -1285,16 +1285,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	/**
 	 * Create a JDT representation of a groovy MethodNode - but with some parameters defaulting
 	 */
-	private MethodDeclaration genMethodDeclarationVariant(MethodNode methodNode, Argument[] alternativeArguments,
-			TypeReference returnType, CompilationResult compilationResult) {
-		MethodDeclaration methodDeclaration = new MethodDeclaration(compilationResult);
-		int modifiers = methodNode.getModifiers();
-		modifiers &= ~(ClassFileConstants.AccSynthetic | ClassFileConstants.AccTransient);
-		methodDeclaration.annotations = transformAnnotations(methodNode.getAnnotations());
-		methodDeclaration.modifiers = modifiers;
-		methodDeclaration.selector = methodNode.getName().toCharArray();
+	private MethodDeclaration genMethodDeclarationVariant(ClassNode classNode, MethodNode methodNode, boolean isEnum,
+			Argument[] alternativeArguments, TypeReference returnType, CompilationResult compilationResult) {
+		MethodDeclaration methodDeclaration = createMethodDeclaration(classNode, methodNode, isEnum, compilationResult);
 		methodDeclaration.arguments = alternativeArguments;
-		methodDeclaration.returnType = returnType;
 		fixupSourceLocationsForMethodDeclaration(methodDeclaration, methodNode);
 		return methodDeclaration;
 	}
