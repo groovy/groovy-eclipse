@@ -11,7 +11,7 @@
 
 		<dist.bucket>dist.springsource.org</dist.bucket>
 
-		<dist.project>Greclipse</dist.project>
+		<dist.project>org.codehaus.groovy</dist.project>
 		<dist.name>Groovy Eclipse</dist.name>
 		<dist.key>GRECLIPSE</dist.key>
 		<dist.type>snapshot</dist.type>
