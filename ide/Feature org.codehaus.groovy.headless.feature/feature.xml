@@ -27,13 +27,14 @@
       %license
    </license>
 
+   <includes
+         id="org.codehaus.groovy.jdt.patch"
+         version="0.0.0"/>
+
    <requires>
       <!-- this will choose the latest compiler available unless specified differently elsewhere -->
       <import plugin="org.codehaus.groovy" version="1.7.0" match="greaterOrEqual"/>
-      <import feature="org.codehaus.groovy.jdt.patch" version="2.9.0" match="equivalent" />
-      
    </requires>
-   
 
    <plugin
          id="org.codehaus.groovy.eclipse.compilerResolver"
