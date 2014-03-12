@@ -9,22 +9,19 @@
 	<properties>
 		<tycho-version>0.19.0</tycho-version>
 
-		<dist.bucket>dist.springsource.com</dist.bucket>
+		<dist.bucket>dist.springsource.org</dist.bucket>
 
-		<dist.project>greclipse</dist.project>
+		<dist.project>Greclipse</dist.project>
 		<dist.name>Groovy Eclipse</dist.name>
-		<dist.key>TOOLS</dist.key>
+		<dist.key>GRECLIPSE</dist.key>
 		<dist.type>snapshot</dist.type>
 		<dist.pathpostfix>nightly</dist.pathpostfix>
-		<dist.path>${dist.type}/${dist.key}/${dist.project}/${dist.pathpostfix}/${dist.target}</dist.path>
+		<dist.path>${dist.type}/${dist.key}/${dist.target}</dist.path>
 	</properties>
 
 	<profiles>
 		<profile>
 			<id>e43j8</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
 			<repositories>
 				<repository>
 					<id>eclipse-java8</id>
@@ -46,7 +43,7 @@
 				<module>jdt-patch/e43j8</module>
 			</modules>
 			<properties>
-				<dist.target>e43j8</dist.target>
+				<dist.target>e4.3-j8</dist.target>
 			</properties>
 		</profile>
 

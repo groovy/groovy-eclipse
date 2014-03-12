@@ -15,6 +15,11 @@
 	<profiles>
 		<profile>
 			<id>s3-deploy</id>
+			<activation>
+				<property>
+					<name>env.dist_properties</name>
+				</property>
+			</activation>
 
 			<build>
 				<plugins>
