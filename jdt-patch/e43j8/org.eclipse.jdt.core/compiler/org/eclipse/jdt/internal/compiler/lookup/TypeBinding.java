@@ -89,9 +89,13 @@ abstract public class TypeBinding extends Binding {
 	public final static BaseTypeBinding BOOLEAN = new BaseTypeBinding(
 			TypeIds.T_boolean, TypeConstants.BOOLEAN, new char[] { 'Z' });
 
-	public final static NullTypeBinding NULL = new NullTypeBinding();
+	//GRECIPLSE: changed to maintain binary compatibility with e43 without j8 patch
+	//public final static NullTypeBinding NULL = new NullTypeBinding();
+	public final static BaseTypeBinding NULL = new NullTypeBinding();
 
-	public final static VoidTypeBinding VOID = new VoidTypeBinding();
+	//GRECIPLSE: changed to maintain binary compatibility with e43 without j8 patch
+	//public final static VoidTypeBinding VOID = new VoidTypeBinding();
+	public final static BaseTypeBinding VOID = new VoidTypeBinding();
 
 
 public TypeBinding() {
