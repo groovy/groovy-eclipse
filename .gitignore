@@ -11,3 +11,5 @@ org.ebayopensource.vjet.eclipse.core.prefs
 /base/org.codehaus.groovy22/groovy-eclipse.jar
 /base/org.codehaus.groovy22/eclipse-trace.jar
 /s3-access.properties
+/base/org.codehaus.groovy21/eclipse-trace.jar
+/base/org.codehaus.groovy21/groovy-eclipse.jar
