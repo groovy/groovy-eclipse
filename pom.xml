@@ -23,7 +23,22 @@
 		
 		<module>ide/Feature-org.codehaus.groovy.eclipse.feature</module>
 		<module>ide/Feature-org.codehaus.groovy22.feature</module>
-		<module>base/org.codehaus.groovy22</module>		
+		<module>ide/Feature-org.codehaus.groovy.headless.feature</module>
+		
+		<module>base/org.eclipse.jdt.groovy.core</module>
+		<module>base/org.codehaus.groovy22</module>
+		<module>base/org.codehaus.groovy.eclipse.compilerResolver</module>
+		
+		<module>ide/org.codehaus.groovy.eclipse.ant</module>
+		<module>ide/org.codehaus.groovy.eclipse.astviews</module>
+		<module>ide/org.codehaus.groovy.eclipse.core</module>
+		<module>ide/org.codehaus.groovy.eclipse.codeassist.completion</module>
+		<module>ide/org.codehaus.groovy.eclipse.codebrowsing</module>
+		<module>ide/org.codehaus.groovy.eclipse.dsl</module>
+		<module>ide/org.codehaus.groovy.eclipse.quickfix</module>
+		<module>ide/org.codehaus.groovy.eclipse.refactoring</module>
+		<module>ide/org.codehaus.groovy.eclipse.ui</module>
+		
 		<!-- 
 		     note: These are not all the modules.
 		     There are are also some profile-specific ones declared below! 
