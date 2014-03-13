@@ -72,6 +72,7 @@
 			</modules>
 			<properties>
 				<dist.target>e4.3-j8</dist.target>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e43j8'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -185,7 +186,16 @@
 					<skip>true</skip>
 				</configuration>
 			</plugin>
-
+			
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-packaging-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<configuration>
+					<format>${greclipse.build.qualifier}</format>
+				</configuration>
+			</plugin>
+			
 		</plugins>
 	</build>
 </project>
