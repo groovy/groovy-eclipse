@@ -22,11 +22,13 @@
 		<module>ide/org.codehaus.groovy.eclipse</module>
 		
 		<module>ide/Feature-org.codehaus.groovy.eclipse.feature</module>
+		<module>ide/Feature-org.codehaus.groovy20.feature</module>		
 		<module>ide/Feature-org.codehaus.groovy21.feature</module>		
 		<module>ide/Feature-org.codehaus.groovy22.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.headless.feature</module>
 		
 		<module>base/org.eclipse.jdt.groovy.core</module>
+		<module>base/org.codehaus.groovy20</module>
 		<module>base/org.codehaus.groovy21</module>
 		<module>base/org.codehaus.groovy22</module>
 		<module>base/org.codehaus.groovy.eclipse.compilerResolver</module>
@@ -68,7 +70,11 @@
 				</repository>
 			</repositories>
 			<modules>
-				<module>jdt-patch/e43j8</module>
+				<module>jdt-patch/e43j8/Feature-org.codehaus.groovy.jdt.patch</module>
+				<module>jdt-patch/e43j8/org.eclipse.jdt.core</module>
+				
+				<!-- TODO: find a way not to have to duplicate the Site for different target platforms -->
+				<module>jdt-patch/e43j8/Site-org.codehaus.groovy.eclipse</module>
 			</modules>
 			<properties>
 				<dist.target>e4.3-j8</dist.target>

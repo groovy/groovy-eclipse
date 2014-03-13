@@ -2,9 +2,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<relativePath>../pom.xml</relativePath>
+		<relativePath>../../../pom.xml</relativePath>
 		<groupId>org.codehaus.groovy.eclipse</groupId>
-		<artifactId>org.codehaus.groovy.eclipse.jdt-patch.e43j8</artifactId>
+		<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
 		<version>2.9.0-SNAPSHOT</version>
 	</parent>
 	<groupId>org.codehaus.groovy.eclipse</groupId>
@@ -35,7 +35,7 @@
 									<target>
 
 										<echo>Uploading main update site to s3..."</echo>
-										
+
 										<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
 										<taskdef resource="org/springframework/build/aws/ant/antlib.xml" />
 
@@ -43,13 +43,13 @@
 										<echo>bamboo.s3.properties=${bamboo.s3.properties}</echo>
 										<echo>dist_properties=${env.dist_properties}</echo>
 										<echo>env.bamboo_s3_properties_rel=${env.bamboo_s3_properties}</echo>
-										
-										<echo>dist.accessKey=${dist.accessKey}</echo> <!--  on bamboo this is !@#!@# -->
+
+										<echo>dist.accessKey=${dist.accessKey}</echo> <!-- on bamboo this is !@#!@# -->
 										<echo>accessKey=${accessKey}</echo> <!-- so be sure to only use this property directly! -->
-										
+
 										<property name="site.target.dir" value="${project.build.directory}" />
 										<echo>site.target.dir=${site.target.dir}</echo>
-										
+
 										<echo>unqualifiedVersion=${unqualifiedVersion}</echo>
 										<echo>buildQualifier=${buildQualifier}</echo>
 										<property name="dist.full.version"
@@ -59,7 +59,7 @@
 										<property name="dist.file.name"
 											value="${dist.project}-${dist.full.version}-updatesite.zip" />
 										<echo>dist.file.name=${dist.file.name}</echo>
-										
+
 										<property name="dist.full.path"
 											value="${site.target.dir}/site/${dist.file.name}" />
 
@@ -77,27 +77,27 @@
 
 										<echo>Preparing for upload... This will happen:</echo>
 
-											<echo>Will Delete: </echo>
-											<echo>  dist.bucket=${dist.bucket}</echo>
-											<echo>  dist.path=${dist.path}</echo>
+										<echo>Will Delete: </echo>
+										<echo> dist.bucket=${dist.bucket}</echo>
+										<echo> dist.path=${dist.path}</echo>
 
-											<echo>Will Upload: </echo>
-											<echo>  dist.bucket=${dist.bucket}</echo>
-											<echo>  toDir=${dist.path}</echo>
-											<echo>  fromDir=${site.target.dir}/site</echo>
+										<echo>Will Upload: </echo>
+										<echo> dist.bucket=${dist.bucket}</echo>
+										<echo> toDir=${dist.path}</echo>
+										<echo> fromDir=${site.target.dir}/site</echo>
 
-											<echo>Will Upload: </echo>
-											<echo>  dist.bucket=${dist.bucket}</echo>
-											<echo>  toFile=${dist.path}/${dist.file.name}</echo>
-											<echo>  fromFile=${dist.path}/${dist.file.name}</echo>
-											<echo>  metadata project.name=${dist.name}</echo>
-											<echo>  metadata release.type=${dist.type}</echo>
-											<echo>  metadata bundle.version=${dist.full.version}</echo>
-											<echo>  metadata package.file.name=${dist.file.name}</echo>
+										<echo>Will Upload: </echo>
+										<echo> dist.bucket=${dist.bucket}</echo>
+										<echo> toFile=${dist.path}/${dist.file.name}</echo>
+										<echo> fromFile=${dist.path}/${dist.file.name}</echo>
+										<echo> metadata project.name=${dist.name}</echo>
+										<echo> metadata release.type=${dist.type}</echo>
+										<echo> metadata bundle.version=${dist.full.version}</echo>
+										<echo> metadata package.file.name=${dist.file.name}</echo>
 
 										<s3 accessKey="${accessKey}" secretKey="${secretKey}">
-											
- 											<delete bucketName="${dist.bucket}">
+
+											<delete bucketName="${dist.bucket}">
 												<fileset dir="${dist.path}">
 													<include name="site.xml" />
 													<include name="content.jar" />
@@ -115,7 +115,7 @@
 													<exclude name="*.zip" />
 												</fileset>
 											</upload>
-											
+
 											<upload bucketName="${dist.bucket}" file="${dist.full.path}"
 												toFile="${dist.path}/${dist.file.name}" publicRead="true">
 												<metadata name="project.name" value="${dist.name}" />

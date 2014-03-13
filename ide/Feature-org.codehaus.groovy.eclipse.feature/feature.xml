@@ -39,12 +39,10 @@
          optional="true"/>
  -->
  
- <!-- temporarily disabled: less things to convert for tycho build
    <includes
          id="org.codehaus.groovy20.feature"
          version="0.0.0"
          optional="true"/>
-  -->         
    <includes
          id="org.codehaus.groovy21.feature"
          version="0.0.0"
