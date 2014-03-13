@@ -21,7 +21,7 @@
 	<modules>
 		<module>ide/org.codehaus.groovy.eclipse</module>
 		
-		<module>ide/Feature org.codehaus.groovy.eclipse.feature</module>
+		<module>ide/Feature-org.codehaus.groovy.eclipse.feature</module>
 		<module>ide/Feature-org.codehaus.groovy22.feature</module>
 		<module>base/org.codehaus.groovy22</module>		
 		<!-- 
