@@ -19,10 +19,9 @@
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>tycho-compiler-plugin</artifactId>
 				<version>${tycho-version}</version>
-				<!-- Assuming that ttycho compiler is configure same way as regular maven compiler.
-				     Then the stuff below was taken from 
-				     http://docs.codehaus.org/display/GROOVY/Groovy-Eclipse+compiler+plugin+for+Maven
-				     and should work.
+				<!-- Assuming that tycho compiler is configured same way as regular maven compiler.
+				     Then the stuff below should just work. 
+				     Note: see http://docs.codehaus.org/display/GROOVY/Groovy-Eclipse+compiler+plugin+for+Maven
 				  -->
 				<configuration>
 					<compilerId>groovy-eclipse-compiler</compilerId>

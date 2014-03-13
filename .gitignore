@@ -10,3 +10,4 @@ org.ebayopensource.vjet.eclipse.core.prefs
 /jdt-patch/e43j8/org.eclipse.jdt.core/jdtCompilerAdapter.jar
 /base/org.codehaus.groovy22/groovy-eclipse.jar
 /base/org.codehaus.groovy22/eclipse-trace.jar
+/s3-access.properties

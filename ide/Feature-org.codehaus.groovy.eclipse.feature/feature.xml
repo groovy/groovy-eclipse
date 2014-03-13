@@ -39,6 +39,7 @@
          optional="true"/>
  -->
  
+ <!-- temporarily only including groovy22 feature revert this change later!
    <includes
          id="org.codehaus.groovy20.feature"
          version="0.0.0"
@@ -48,13 +49,13 @@
          id="org.codehaus.groovy21.feature"
          version="0.0.0"
          optional="true"/>
-
-   <!--- optional not included yet
+  -->
+  
+   <!--- optional not included yet -->
    <includes
          id="org.codehaus.groovy22.feature"
          version="0.0.0"
          optional="true"/>
-   -->
 
    <requires>
       <import plugin="org.eclipse.jface"/>
