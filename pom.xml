@@ -18,6 +18,18 @@
 		<dist.path>${dist.type}/${dist.key}/${dist.target}</dist.path>
 	</properties>
 
+	<modules>
+		<module>ide/org.codehaus.groovy.eclipse</module>
+		
+		<module>ide/Feature org.codehaus.groovy.eclipse.feature</module>
+		<module>ide/Feature-org.codehaus.groovy22.feature</module>
+		<module>base/org.codehaus.groovy22</module>		
+		<!-- 
+		     note: These are not all the modules.
+		     There are are also some profile-specific ones declared below! 
+		  -->
+	</modules>
+
 	<profiles>
 		<profile>
 			<id>e43j8</id>
@@ -82,6 +94,12 @@
 	</profiles>
 
 	<repositories>
+	 	<repository>
+		  <id>orbit</id>
+		  <layout>p2</layout>
+		  <url>http://download.eclipse.org/tools/orbit/downloads/drops/R20120526062928/repository/</url>
+		</repository>
+	
 		<!-- required for Maven and Ant AWS dependency -->
 		<repository>
 			<id>springsource-maven-release</id>
@@ -97,10 +115,6 @@
 			<url>http://repository.springsource.com/maven/bundles/release</url>
 		</pluginRepository>
 	</pluginRepositories>
-
-	<modules>
-		<module>ide/org.codehaus.groovy.eclipse</module>
-	</modules>
 
 	<build>
 		<plugins>
