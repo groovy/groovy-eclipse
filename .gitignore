@@ -15,3 +15,5 @@ org.ebayopensource.vjet.eclipse.core.prefs
 /base/org.codehaus.groovy21/groovy-eclipse.jar
 /base/org.codehaus.groovy20/eclipse-trace.jar
 /base/org.codehaus.groovy20/groovy-eclipse.jar
+/base-test/org.eclipse.jdt.groovy.core.tests.builder/jdtcoretestsbuilder.jar
+/base-test/org.eclipse.jdt.groovy.core.tests.compiler/jdtcoretestscompiler.jar
