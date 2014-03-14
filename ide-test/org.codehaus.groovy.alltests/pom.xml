@@ -63,15 +63,15 @@
 		            <useUIHarness>true</useUIHarness>
 		            <forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
 		            <showEclipseLog>true</showEclipseLog>
-<!-- Uncomment to run all the tests ...
+<!-- Uncomment to run all the tests ... -->
 		            <includes>
 		            	<include>**/alltests/*Tests.java</include>
 		            </includes>
-		            -->
-<!-- Uncomment to run just the JDT tests (faster :-) -->
+<!-- Uncomment to run just the JDT tests (faster :-) 
 		            <includes>
 		            	<include>**/alltests/GroovyJDTTests.java</include>
 		            </includes>
+-->
 				</configuration>
 <!-- Note: these deactivated bits are meant to ensure all of the 'default' groovy eclipse stuff is in the test target platform and additionally
      A specific compiler support feature is installed as well.		
