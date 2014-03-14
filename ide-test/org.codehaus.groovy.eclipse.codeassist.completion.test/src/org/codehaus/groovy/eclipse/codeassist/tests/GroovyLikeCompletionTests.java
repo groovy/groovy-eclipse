@@ -278,7 +278,8 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
         fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, " substring"), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "substring(arg0)", 1);
+        checkReplacementRegexp(proposals, "substring\\(\\p{Alnum}*\\)", 1);
+        //checkReplacementString(proposals, "substring(arg0)", 1);
     }
     // accessing members of super types in closures
     public void testClosureCompletion2() throws Exception {
@@ -299,7 +300,8 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
         fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "delegate.substring"), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "substring(arg0)", 1);
+        checkReplacementRegexp(proposals, "substring\\(\\p{Alnum}*\\)", 1);
+        //checkReplacementString(proposals, "substring(arg0)", 1);
     }
     // accessing members of super types in closures
     public void testClosureCompletion5() throws Exception {
@@ -320,7 +322,8 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         ICompilationUnit groovyUnit = create(CLOSURE_CONTENTS);
         fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(CLOSURE_CONTENTS, "this.substring"), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "substring", 0);
+        checkReplacementRegexp(proposals, "substring\\(\\p{Alnum}*\\)", 0);
+        //checkReplacementString(proposals, "substring", 0);
     }
     // accessing members of super types in closures
     public void testClosureCompletion8() throws Exception {

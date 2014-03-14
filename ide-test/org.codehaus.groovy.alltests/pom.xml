@@ -58,39 +58,40 @@
 				<artifactId>tycho-surefire-plugin</artifactId>
 				<version>${tycho-version}</version>
 				<configuration>
-		            <skip>${maven.test.skip}</skip> 
-		            <useUIThread>true</useUIThread>
-		            <useUIHarness>true</useUIHarness>
-		            <forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
-		            <showEclipseLog>true</showEclipseLog>
-		            <argLine>-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M</argLine>
-<!-- Uncomment to run all the tests ... -->
-		            <includes>
-		            	<include>**/alltests/*Tests.java</include>
-		            </includes>
-<!-- Uncomment to run just the JDT tests (faster :-) 
-		            <includes>
-		            	<include>**/alltests/GroovyJDTTests.java</include>
-		            </includes>
--->
+					<skip>${maven.test.skip}</skip>
+					<useUIThread>true</useUIThread>
+					<useUIHarness>true</useUIHarness>
+					<forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
+					<showEclipseLog>true</showEclipseLog>
+					<argLine>-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M</argLine>
+	
+					<includes>
+						<include>**/alltests/GroovyJDTTests.java</include>
+						<include>**/alltests/AllGroovyTests.java</include>
+					</includes>
+	
+					<!-- Note: these deactivated bits are meant to ensure all of the 'default' 
+						groovy eclipse stuff is in the test target platform and additionally A specific 
+						compiler support feature is installed as well. I haven't gotten this to work 
+						yet.... but for some reason its not needed now as the 22 compiler seems to 
+						be already on the target platform by default. I am guessing this is because 
+						tycho looks for any compiler bundle to satisfy deps and finds more than one.. 
+						So it picks the most recent one available. This may pose problems if we want 
+						to run tests with older compilers. -->
+					<dependencies>
+						<dependency>
+							<type>eclipse-feature</type>
+							<artifactId>org.codehaus.groovy.eclipse.feature</artifactId>
+							<version>0.0.0</version>
+						</dependency>
+						<dependency>
+							<type>eclipse-feature</type>
+							<artifactId>org.codehaus.groovy22.feature</artifactId>
+							<version>0.0.0</version>
+						</dependency>
+					</dependencies>
+	
 				</configuration>
-<!-- Note: these deactivated bits are meant to ensure all of the 'default' groovy eclipse stuff is in the test target platform and additionally
-     A specific compiler support feature is installed as well.		
-     I haven't gotten this to work yet.... but for some reason its not needed now as the 22 compiler seems to be already on the 
-     target platform by default. I am guessing this is because tycho looks for any compiler bundle to satisfy deps and finds more than one..
-     So it picks the most recent one available. This may pose problems if we want to run tests with older compilers.
-      <dependencies>
-				  <dependency>
-				    <type>eclipse-feature</type>
-				    <artifactId>org.codehaus.groovy.eclipse.feature</artifactId>
-				    <version>0.0.0</version>
-				  </dependency>
-				  <dependency>
-				    <type>eclipse-feature</type>
-				    <artifactId>${greclipse.test.compiler.feature}</artifactId>
-				    <version>0.0.0</version>
-				  </dependency>
-				</dependencies> -->
 			</plugin>
 		</plugins>
 	</build>
