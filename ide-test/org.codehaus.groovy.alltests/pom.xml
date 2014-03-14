@@ -9,5 +9,88 @@
   <groupId>org.codehaus.groovy.eclipse</groupId>
   <artifactId>org.codehaus.groovy.alltests</artifactId>
   <version>2.9.0-SNAPSHOT</version>
-  <packaging>eclipse-plugin</packaging>
+  <packaging>eclipse-test-plugin</packaging>
+  
+  <!--Most useful and readable info on configure tycho I found is here:
+      https://wiki.eclipse.org/Tycho/Packaging_Types#eclipse-test-plugin
+      
+      A more comprehensive but less readable description of options for tycho test target:
+      http://www.eclipse.org/tycho/sitedocs/tycho-surefire/tycho-surefire-plugin/test-mojo.html
+   -->
+  
+  <!-- For reference. This is what was in the PDE build before: -->
+  
+  <!-- 
+	<target name="-runTestSuite">
+		<ant target="ui-test" antfile="${test.library.xml}" dir="${test.eclipse.host}" inheritall="false">
+			<property name="data-dir" value="${test.workspace} -clean" />
+			<property name="plugin-name" value="org.codehaus.groovy.alltests" />
+			<property name="classname" value="org.codehaus.groovy.alltests.AllGroovyTests" />
+			<property name="test-output" value="${test.eclipse.host}/org.codehaus.groovy.alltests.AllGroovyTests.xml" />
+			<property name="eclipse-home" value="${test.eclipse.host}" />
+			<property name="junit-stylesheet" value="${test.eclipse.base}/eclipse/plugins/org.eclipse.test_3.3.100/JUNIT.XSL" />
+			<property name="org.eclipse.test" value="3.3.100"/>
+			<property name="arch" value="${test_arch}"/>
+			<property name="os" value="${test_os}"/>
+			<property name="ws" value="${test_ws}"/>
+			<property name="vmargs" value="-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M -Dgroovy.compiler.level=${compiler.level}"/>
+		</ant>
+		<ant target="core-test" antfile="${test.library.xml}" dir="${test.eclipse.host}" inheritall="false">
+			<property name="data-dir" value="${test.workspace} -clean" />
+			<property name="plugin-name" value="org.codehaus.groovy.alltests" />
+			<property name="classname" value="org.codehaus.groovy.alltests.GroovyJDTTests" />
+			<property name="test-output" value="${test.eclipse.host}/org.codehaus.groovy.alltests.GroovyJDTTests.xml" />
+			<property name="eclipse-home" value="${test.eclipse.host}" />
+			<property name="junit-stylesheet" value="${test.eclipse.base}/eclipse/plugins/org.eclipse.test_3.3.100/JUNIT.XSL" />
+			<property name="org.eclipse.test" value="3.3.100"/>
+			<property name="arch" value="${test_arch}"/>
+			<property name="os" value="${test_os}"/>
+			<property name="ws" value="${test_ws}"/>
+			<property name="vmargs" value="-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M -Dgroovy.compiler.level=${compiler.level}"/>
+		</ant>
+	</target>
+   -->
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-surefire-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<configuration>
+		            <skip>${maven.test.skip}</skip> 
+		            <useUIThread>true</useUIThread>
+		            <useUIHarness>true</useUIHarness>
+		            <forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
+		            <showEclipseLog>true</showEclipseLog>
+<!-- Uncomment to run all the tests ...
+		            <includes>
+		            	<include>**/alltests/*Tests.java</include>
+		            </includes>
+		            -->
+<!-- Uncomment to run just the JDT tests (faster :-) -->
+		            <includes>
+		            	<include>**/alltests/GroovyJDTTests.java</include>
+		            </includes>
+				</configuration>
+<!-- Note: these deactivated bits are meant to ensure all of the 'default' groovy eclipse stuff is in the test target platform and additionally
+     A specific compiler support feature is installed as well.		
+     I haven't gotten this to work yet.... but for some reason its not needed now as the 22 compiler seems to be already on the 
+     target platform by default. I am guessing this is because tycho looks for any compiler bundle to satisfy deps and finds more than one..
+     So it picks the most recent one available. This may pose problems if we want to run tests with older compilers.
+      <dependencies>
+				  <dependency>
+				    <type>eclipse-feature</type>
+				    <artifactId>org.codehaus.groovy.eclipse.feature</artifactId>
+				    <version>0.0.0</version>
+				  </dependency>
+				  <dependency>
+				    <type>eclipse-feature</type>
+				    <artifactId>${greclipse.test.compiler.feature}</artifactId>
+				    <version>0.0.0</version>
+				  </dependency>
+				</dependencies> -->
+			</plugin>
+		</plugins>
+	</build>
 </project>
