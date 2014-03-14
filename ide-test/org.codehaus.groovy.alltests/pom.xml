@@ -63,6 +63,7 @@
 		            <useUIHarness>true</useUIHarness>
 		            <forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
 		            <showEclipseLog>true</showEclipseLog>
+		            <argLine>-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M</argLine>
 <!-- Uncomment to run all the tests ... -->
 		            <includes>
 		            	<include>**/alltests/*Tests.java</include>
