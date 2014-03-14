@@ -6,6 +6,13 @@
 	<version>2.9.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
+	<!-- To run this build use the following commands (depending on what you 
+		are trying to do) mvn clean install -Pe43j8 mvn clean deploy -Pe43j8 Running 
+		a deploy requires s3 accesskey and secret to be provided in a properties 
+		file. The properties file must be specified via an env variable 'dist_properties'. 
+		The presences of this env variable enables the deployment profile automatically 
+		and will allow the 'deploy' -->
+
 	<properties>
 		<tycho-version>0.19.0</tycho-version>
 
@@ -19,20 +26,41 @@
 	</properties>
 
 	<modules>
+
+		<!-- SDK and test bits -->
+
+		<module>ide-test</module>
+		<module>ide-test/org.codehaus.groovy.alltests</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.codeassist.completion.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.codebrowsing.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.core.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.dsl.tests</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.junit.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.quickfix.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.refactoring.test</module>
+		<module>ide-test/org.codehaus.groovy.eclipse.tests</module>
+
+		<module>ide-test/Feature-org.codehaus.groovy.alltests.feature</module>
+
+		<module>base-test/org.eclipse.jdt.groovy.core.tests.builder</module>
+		<module>base-test/org.eclipse.jdt.groovy.core.tests.compiler</module>
+
+		<!-- 'Real' Bits -->
+
 		<module>ide/org.codehaus.groovy.eclipse</module>
-		
+
 		<module>ide/Feature-org.codehaus.groovy.eclipse.feature</module>
-		<module>ide/Feature-org.codehaus.groovy20.feature</module>		
-		<module>ide/Feature-org.codehaus.groovy21.feature</module>		
+		<module>ide/Feature-org.codehaus.groovy20.feature</module>
+		<module>ide/Feature-org.codehaus.groovy21.feature</module>
 		<module>ide/Feature-org.codehaus.groovy22.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.headless.feature</module>
-		
+
 		<module>base/org.eclipse.jdt.groovy.core</module>
 		<module>base/org.codehaus.groovy20</module>
 		<module>base/org.codehaus.groovy21</module>
 		<module>base/org.codehaus.groovy22</module>
 		<module>base/org.codehaus.groovy.eclipse.compilerResolver</module>
-		
+
 		<module>ide/org.codehaus.groovy.eclipse.ant</module>
 		<module>ide/org.codehaus.groovy.eclipse.astviews</module>
 		<module>ide/org.codehaus.groovy.eclipse.core</module>
@@ -42,11 +70,10 @@
 		<module>ide/org.codehaus.groovy.eclipse.quickfix</module>
 		<module>ide/org.codehaus.groovy.eclipse.refactoring</module>
 		<module>ide/org.codehaus.groovy.eclipse.ui</module>
-		
-		<!-- 
-		     note: These are not all the modules.
-		     There are are also some profile-specific ones declared below! 
-		  -->
+
+
+		<!-- note: These are not all the modules. There are are also some profile-specific 
+			ones declared below! -->
 	</modules>
 
 	<profiles>
@@ -72,8 +99,9 @@
 			<modules>
 				<module>jdt-patch/e43j8/Feature-org.codehaus.groovy.jdt.patch</module>
 				<module>jdt-patch/e43j8/org.eclipse.jdt.core</module>
-				
-				<!-- TODO: find a way not to have to duplicate the Site for different target platforms -->
+
+				<!-- TODO: find a way not to have to duplicate the Site for different 
+					target platforms -->
 				<module>jdt-patch/e43j8/Site-org.codehaus.groovy.eclipse</module>
 			</modules>
 			<properties>
@@ -92,7 +120,8 @@
 
 			<build>
 				<plugins>
-					<!-- This will define ${accessKey} and ${secretKey} properties to use for uploading to s3. -->
+					<!-- This will define ${accessKey} and ${secretKey} properties to use 
+						for uploading to s3. -->
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>properties-maven-plugin</artifactId>
@@ -118,12 +147,12 @@
 	</profiles>
 
 	<repositories>
-	 	<repository>
-		  <id>orbit</id>
-		  <layout>p2</layout>
-		  <url>http://download.eclipse.org/tools/orbit/downloads/drops/R20120526062928/repository/</url>
+		<repository>
+			<id>orbit</id>
+			<layout>p2</layout>
+			<url>http://download.eclipse.org/tools/orbit/downloads/drops/R20120526062928/repository/</url>
 		</repository>
-	
+
 		<!-- required for Maven and Ant AWS dependency -->
 		<repository>
 			<id>springsource-maven-release</id>
@@ -192,7 +221,7 @@
 					<skip>true</skip>
 				</configuration>
 			</plugin>
-			
+
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>tycho-packaging-plugin</artifactId>
@@ -201,7 +230,7 @@
 					<format>${greclipse.build.qualifier}</format>
 				</configuration>
 			</plugin>
-			
+
 		</plugins>
 	</build>
 </project>

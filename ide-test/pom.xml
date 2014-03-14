@@ -1,0 +1,49 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<relativePath>../pom.xml</relativePath>
+		<groupId>org.codehaus.groovy.eclipse</groupId>
+		<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
+		<version>2.9.0-SNAPSHOT</version>
+	</parent>
+	<groupId>org.codehaus.groovy.eclipse</groupId>
+	<artifactId>org.codehaus.groovy.eclipse.ide-test.parent</artifactId>
+	<version>2.9.0-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-compiler-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<!-- Assuming that tycho compiler is configured same way as regular maven 
+					compiler. Then the stuff below should just work. Note: see http://docs.codehaus.org/display/GROOVY/Groovy-Eclipse+compiler+plugin+for+Maven -->
+				<configuration>
+					<compilerId>groovy-eclipse-compiler</compilerId>
+					<!-- set verbose to be true if you want lots of uninteresting messages -->
+					<!-- <verbose>true</verbose> -->
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.codehaus.groovy</groupId>
+						<artifactId>groovy-eclipse-compiler</artifactId>
+						<version>2.8.0-01</version>
+					</dependency>
+					<!-- for 2.8.0-01 and later you must have an explicit dependency on 
+						groovy-eclipse-batch -->
+					<dependency>
+						<groupId>org.codehaus.groovy</groupId>
+						<artifactId>groovy-eclipse-batch</artifactId>
+						<version>2.1.8-01</version>
+						<!-- or choose a different compiler version -->
+						<!-- <version>1.8.6-01</version> -->
+						<!-- <version>1.7.10-06</version> -->
+					</dependency>
+				</dependencies>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
