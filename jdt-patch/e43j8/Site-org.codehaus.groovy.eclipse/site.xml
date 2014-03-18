@@ -33,10 +33,10 @@
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
    
-   <!--
-   <feature url="features/org.codehaus.groovy.m2eclipse_2.9.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse" version="2.9.0.qualifier">
+   <feature url="features/org.codehaus.groovy.m2eclipse.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse.feature" version="2.9.0.qualifier">
       <category name="org.codehaus.groovy.m2eclipse"/>
    </feature>
+   <!--
    <feature url="features/org.codehaus.groovy.m2eclipse.source_2.9.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse.source" version="2.9.0.qualifier">
       <category name="org.codehaus.groovy.m2eclipse"/>
    </feature>

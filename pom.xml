@@ -38,7 +38,10 @@
 	</properties>
 
 	<modules>
-
+	
+		<!-- m2e integration -->
+		<module>extras/Feature-org.codehaus.groovy.m2eclipse</module>
+		<module>extras/org.codehaus.groovy.m2eclipse</module>
 		<!-- SDK and test bits -->
 
 		<module>ide-test</module> <!-- parent pom for all the ide-test modules -->
