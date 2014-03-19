@@ -97,11 +97,6 @@
 			<id>e43j8</id>
 			<repositories>
 				<repository>
-					<id>eclipse-java8</id>
-					<layout>p2</layout>
-					<url>http://build.eclipse.org/eclipse/builds/4P/siteDir/updates/4.3-P-builds</url>
-				</repository>
-				<repository>
 					<id>e43</id>
 					<layout>p2</layout>
 					<url>http://download.eclipse.org/eclipse/updates/4.3</url>
@@ -110,6 +105,11 @@
 					<id>kepler</id>
 					<layout>p2</layout>
 					<url>http://download.eclipse.org/releases/kepler</url>
+				</repository>
+				<repository>
+					<id>eclipse-java8</id>
+					<layout>p2</layout>
+					<url>http://build.eclipse.org/eclipse/builds/4P/siteDir/updates/4.3-P-builds</url>
 				</repository>
 			</repositories>
 			<modules>
