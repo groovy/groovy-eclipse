@@ -336,6 +336,7 @@ public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento,
 			params.toArray(parameters);
 			JavaElement method = (JavaElement)getMethod(selector, parameters);
 			switch (token.charAt(0)) {
+				case JEM_LAMBDA_EXPRESSION:
 				case JEM_TYPE:
 				case JEM_TYPE_PARAMETER:
 				case JEM_LOCALVARIABLE:

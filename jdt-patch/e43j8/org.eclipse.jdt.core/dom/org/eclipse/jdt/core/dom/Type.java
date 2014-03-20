@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  * 
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -123,7 +119,7 @@ public abstract class Type extends ASTNode {
 	 *
 	 * @return <code>true</code> if this is a name qualified type, and
 	 *    <code>false</code> otherwise
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public final boolean isNameQualifiedType() {
 		return (this instanceof NameQualifiedType);
@@ -187,7 +183,7 @@ public abstract class Type extends ASTNode {
 	 *
 	 * @return <code>true</code> if this is an intersection type, and
 	 * 		<code>false</code> otherwise
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public final boolean isIntersectionType() {
 		return (this instanceof IntersectionType);
@@ -216,7 +212,7 @@ public abstract class Type extends ASTNode {
 	 * @return <code>true</code> if this type is an instance of {@link AnnotatableType}, and
 	 * <code>false</code> otherwise
 	 * 			
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public boolean isAnnotatable() {
 		return (this instanceof AnnotatableType);

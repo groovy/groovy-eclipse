@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *	   Stephan Herrmann - Contribution for
+ *								Bug 425183 - [1.8][inference] make CaptureBinding18 safe
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.util;
 
@@ -60,6 +62,12 @@ public class KeyToSignature extends BindingKeyParser {
 	public void consumeCapture(int position) {
 		this.signature.append('!');
 		this.signature.append(((KeyToSignature) this.arguments.get(0)).signature);
+	}
+
+	@Override
+	public void consumeCapture18ID(int id, int position) {
+		// see https://bugs.eclipse.org/429264
+		this.signature.append("!*"); // pretend a 'capture-of ?' //$NON-NLS-1$
 	}
 
 	public void consumeLocalType(char[] uniqueKey) {

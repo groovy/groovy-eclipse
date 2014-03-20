@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  * 
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -537,8 +533,20 @@ protected void consumePrimaryNoNewArrayWithName() {
 @Override
 protected void consumeReferenceExpression(ReferenceExpression referenceExpression) {
 	super.consumeReferenceExpression(referenceExpression);
-	if (this.patternFineGrain == 0 || (this.patternFineGrain & IJavaSearchConstants.THIS_REFERENCE) != 0) {
+	if (this.patternFineGrain == 0) {
 		this.patternLocator.match(referenceExpression, this.nodeSet);
+	} else if (referenceExpression.lhs.isThis()) {
+		if ((this.patternFineGrain & IJavaSearchConstants.THIS_REFERENCE) != 0) {
+			this.patternLocator.match(referenceExpression, this.nodeSet);
+		}
+	} else if (referenceExpression.lhs.isSuper()) {
+		if ((this.patternFineGrain & IJavaSearchConstants.SUPER_REFERENCE) != 0) {
+			this.patternLocator.match(referenceExpression, this.nodeSet);
+		}
+	} else if (referenceExpression.lhs instanceof QualifiedNameReference || referenceExpression.lhs instanceof QualifiedTypeReference) {
+		if ((this.patternFineGrain & IJavaSearchConstants.QUALIFIED_REFERENCE) != 0) {
+			this.patternLocator.match(referenceExpression, this.nodeSet);
+		} 
 	}
 }
 
@@ -662,6 +670,11 @@ protected void consumeTypeArguments() {
             }
 		}
 	}
+}
+
+protected void consumeTypeElidedLambdaParameter(boolean parenthesized) {
+	super.consumeTypeElidedLambdaParameter(parenthesized);
+	this.patternLocator.match((LocalDeclaration) this.astStack[this.astPtr], this.nodeSet);
 }
 
 protected void consumeTypeParameter1WithExtends() {

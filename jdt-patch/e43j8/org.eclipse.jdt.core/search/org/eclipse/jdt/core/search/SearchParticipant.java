@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -160,7 +156,7 @@ public abstract class SearchParticipant {
 	 * @param document the document to index
 	 * @param indexLocation the location in the file system to the index
 	 * 
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public void indexResolvedDocument(SearchDocument document, IPath indexLocation) {
 		// do nothing, subtypes should do the "appropriate thing"
@@ -221,7 +217,7 @@ public abstract class SearchParticipant {
 	 * </p>
 	 *
 	 * @param document the document to resolve
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 * @see SearchParticipant#indexResolvedDocument
 	 * @see SearchDocument#requireIndexingResolvedDocument
 	 */

@@ -1,0 +1,21 @@
+***************
+*** 30,39 ****
+  import org.eclipse.jdt.internal.core.util.MementoTokenizer;
+  import org.eclipse.jdt.internal.core.util.Messages;
+  import org.eclipse.jdt.internal.core.util.Util;
+- 
+  import org.eclipse.jface.text.BadLocationException;
+  import org.eclipse.jface.text.IDocument;
+- 
+  import org.eclipse.text.edits.MalformedTreeException;
+  import org.eclipse.text.edits.TextEdit;
+  import org.eclipse.text.edits.UndoEdit;
+--- 30,37 ----
+  import org.eclipse.jdt.internal.core.util.MementoTokenizer;
+  import org.eclipse.jdt.internal.core.util.Messages;
+  import org.eclipse.jdt.internal.core.util.Util;
+  import org.eclipse.jface.text.BadLocationException;
+  import org.eclipse.jface.text.IDocument;
+  import org.eclipse.text.edits.MalformedTreeException;
+  import org.eclipse.text.edits.TextEdit;
+  import org.eclipse.text.edits.UndoEdit;

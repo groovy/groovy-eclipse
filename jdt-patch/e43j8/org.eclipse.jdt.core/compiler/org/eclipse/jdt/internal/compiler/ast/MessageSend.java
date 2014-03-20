@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Nick Teryaev - fix for bug (https://bugs.eclipse.org/bugs/show_bug.cgi?id=40752)
@@ -50,6 +46,7 @@
  *								Bug 427438 - [1.8][compiler] NPE at org.eclipse.jdt.internal.compiler.ast.ConditionalExpression.generateCode(ConditionalExpression.java:280)
  *								Bug 426996 - [1.8][inference] try to avoid method Expression.unresolve()? 
  *								Bug 428352 - [1.8][compiler] Resolution errors don't always surface
+ *								Bug 429430 - [1.8] Lambdas and method reference infer wrong exception type with generics (RuntimeException instead of IOException)
  *     Jesper S Moller - Contributions for
  *								Bug 378674 - "The method can be declared as static" is wrong
  *        Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
@@ -853,6 +850,7 @@ public TypeBinding resolveType(BlockScope scope) {
 	if (this.typeArguments != null && this.binding.original().typeVariables == Binding.NO_TYPE_VARIABLES) {
 		scope.problemReporter().unnecessaryTypeArgumentsForMethodInvocation(this.binding, this.genericTypeArguments, this.typeArguments);
 	}
+	recordExceptionsForEnclosingLambda(scope, this.binding.thrownExceptions);
 	return (this.resolvedType.tagBits & TagBits.HasMissingType) == 0
 				? this.resolvedType
 				: null;
@@ -868,6 +866,51 @@ protected void findMethodBinding(BlockScope scope, TypeBinding[] argumentTypes) 
 			? scope.getImplicitMethod(this.selector, argumentTypes, this)
 			: scope.getMethod(this.actualReceiverType, this.selector, argumentTypes, this);
 	resolvePolyExpressionArguments(this, this.binding, argumentTypes, scope);
+	
+	/* There are embedded assumptions in the JLS8 type inference scheme that a successful solution of the type equations results in an
+	   applicable method. This appears to be a tenuous assumption, at least one not made by the JLS7 engine or the reference compiler and 
+	   there are cases where this assumption would appear invalid: See https://bugs.eclipse.org/bugs/show_bug.cgi?id=426537, where we allow 
+	   certain compatibility constrains around raw types to be violated. 
+       
+       Here, we filter out such inapplicable methods with raw type usage that may have sneaked past overload resolution and type inference, 
+       playing the devils advocate, blaming the invocations with raw arguments that should not go blameless. At this time this is in the 
+       nature of a point fix and is not a general solution which needs to come later (that also includes AE, QAE and ECC)
+    */
+	final CompilerOptions compilerOptions = scope.compilerOptions();
+	if (compilerOptions.sourceLevel >= ClassFileConstants.JDK1_8 && this.binding instanceof ParameterizedGenericMethodBinding && this.binding.isValidBinding()) {
+		if (!compilerOptions.postResolutionRawTypeCompatibilityCheck)
+			return;
+		ParameterizedGenericMethodBinding pgmb = (ParameterizedGenericMethodBinding) this.binding;
+		InferenceContext18 ctx = getInferenceContext(pgmb);
+		if (ctx == null || ctx.stepCompleted < InferenceContext18.BINDINGS_UPDATED)
+			return;
+		int length = pgmb.typeArguments == null ? 0 : pgmb.typeArguments.length;
+		boolean sawRawType = false;
+		for (int i = 0;  i < length; i++) {
+			/* Must check compatibility against capture free method. Formal parameters cannot have captures, but our machinery is not up to snuff to
+			   construct a PGMB without captures at the moment - for one thing ITCB does not support uncapture() yet, for another, INTERSECTION_CAST_TYPE
+			   does not appear fully hooked up into isCompatibleWith and isEquivalent to everywhere. At the moment, bail out if we see capture.
+			*/   
+			if (pgmb.typeArguments[i].isCapture())
+				return;
+			if (pgmb.typeArguments[i].isRawType())
+				sawRawType = true;
+		}
+		if (!sawRawType)
+			return;
+		length = this.arguments == null ? 0 : this.arguments.length;
+		if (length == 0)
+			return;
+		TypeBinding [] finalArgumentTypes = new TypeBinding[length];
+		for (int i = 0; i < length; i++) {
+			TypeBinding finalArgumentType = this.arguments[i].resolvedType;
+			if (finalArgumentType == null || !finalArgumentType.isValidBinding())  // already sided with the devil.
+				return;
+			finalArgumentTypes[i] = finalArgumentType; 
+		}
+		if (scope.parameterCompatibilityLevel(this.binding, finalArgumentTypes, false) == Scope.NOT_COMPATIBLE)
+			this.binding = new ProblemMethodBinding(this.binding.original(), this.binding.selector, finalArgumentTypes, ProblemReasons.NotFound);
+	}
 }
 
 @Override

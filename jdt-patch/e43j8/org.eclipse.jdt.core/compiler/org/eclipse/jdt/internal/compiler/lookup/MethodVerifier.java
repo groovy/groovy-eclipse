@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Benjamin Muskalla - Contribution for bug 239066
@@ -83,7 +79,7 @@ static boolean areMethodsCompatible(MethodBinding one, MethodBinding two, Lookup
 boolean areReturnTypesCompatible(MethodBinding one, MethodBinding two) {
 	return areReturnTypesCompatible(one, two, this.type.scope.environment());
 }
-static boolean areReturnTypesCompatible(MethodBinding one, MethodBinding two, LookupEnvironment environment) {
+public static boolean areReturnTypesCompatible(MethodBinding one, MethodBinding two, LookupEnvironment environment) {
 	if (TypeBinding.equalsEquals(one.returnType, two.returnType)) return true;
 	if (environment.globalOptions.sourceLevel >= ClassFileConstants.JDK1_5) {
 		// short is compatible with int, but as far as covariance is concerned, its not
@@ -667,7 +663,7 @@ MethodBinding computeSubstituteMethod(MethodBinding inheritedMethod, MethodBindi
 	return computeSubstituteMethod(inheritedMethod, currentMethod, this.environment);
 }
 
-static MethodBinding computeSubstituteMethod(MethodBinding inheritedMethod, MethodBinding currentMethod, LookupEnvironment environment) {
+public static MethodBinding computeSubstituteMethod(MethodBinding inheritedMethod, MethodBinding currentMethod, LookupEnvironment environment) {
 	if (inheritedMethod == null) return null;
 	if (currentMethod.parameters.length != inheritedMethod.parameters.length) return null; // no match
 
@@ -857,7 +853,7 @@ boolean isSubstituteParameterSubsignature(MethodBinding method, MethodBinding su
 	return isSubstituteParameterSubsignature(method, substituteMethod, this.environment);
 }
 
-static boolean isSubstituteParameterSubsignature(MethodBinding method, MethodBinding substituteMethod, LookupEnvironment environment) {
+public static boolean isSubstituteParameterSubsignature(MethodBinding method, MethodBinding substituteMethod, LookupEnvironment environment) {
 	if (!areParametersEqual(method, substituteMethod)) {
 		// method can still override substituteMethod in cases like :
 		// <U extends Number> void c(U u) {}

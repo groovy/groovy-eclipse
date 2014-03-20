@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  * 
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for
@@ -21,6 +17,7 @@
  *								Bug 415850 - [1.8] Ensure RunJDTCoreTests can cope with null annotations enabled
  *								Bug 417295 - [1.8[[null] Massage type annotated null analysis to gel well with deep encoded type bindings.
  *								Bug 424728 - [1.8][null] Unexpected error: The nullness annotation 'XXXX' is not applicable at this location
+ *								Bug 392245 - [1.8][compiler][null] Define whether / how @NonNullByDefault applies to TYPE_USE locations
  *        Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
  *                          Bug 383624 - [1.8][compiler] Revive code generation support for type annotations (from Olivier's work)
  *                          Bug 409517 - [1.8][compiler] Type annotation problems on more elaborate array references
@@ -391,12 +388,21 @@ public abstract class Annotation extends Expression {
 				tagBits |= TagBits.AnnotationNonNull;
 				break;
 			case TypeIds.T_ConfiguredAnnotationNonNullByDefault :
-				if (valueAttribute != null 
-					&& valueAttribute.value instanceof FalseLiteral) 
-				{
-					// parameter 'false' means: this annotation cancels any defaults
-					tagBits |= TagBits.AnnotationNullUnspecifiedByDefault;
-					break;
+				if (valueAttribute != null) {
+					if (valueAttribute.value instanceof FalseLiteral) {
+						// parameter 'false' means: this annotation cancels any defaults
+						tagBits |= TagBits.AnnotationNullUnspecifiedByDefault;
+						break;
+					} else if (valueAttribute.compilerElementPair != null) {
+						Object value = valueAttribute.compilerElementPair.value;
+						if (value instanceof Object[] && ((Object[])value).length == 0) {
+							// empty parameter means: this annotation cancels any defaults
+							tagBits |= TagBits.AnnotationNullUnspecifiedByDefault;
+							break;
+						} else {
+							scope.problemReporter().nonNullDefaultDetailNotEvaluated(valueAttribute);
+						}
+					}
 				}
 				tagBits |= TagBits.AnnotationNonNullByDefault;
 				break;
@@ -899,6 +905,10 @@ public abstract class Annotation extends Expression {
 			case Binding.TYPE_USE :
 				if ((metaTagBits & TagBits.AnnotationForTypeUse) != 0) {
 					// jsr 308
+					return true;
+				}
+				if (scope.compilerOptions().sourceLevel < ClassFileConstants.JDK1_8) {
+					// already reported as syntax error; don't report secondary problems
 					return true;
 				}
 				break;

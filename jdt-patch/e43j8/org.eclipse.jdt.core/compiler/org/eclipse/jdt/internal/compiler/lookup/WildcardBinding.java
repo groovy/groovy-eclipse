@@ -4,10 +4,6 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -669,7 +665,7 @@ public class WildcardBinding extends ReferenceBinding {
             case Wildcard.EXTENDS :
             	if (this.otherBounds == null) {
             		buffer.append(TypeConstants.WILDCARD_NAME).append(TypeConstants.WILDCARD_EXTENDS);
-            		buffer.append(shortNames ? this.bound.shortReadableName(): this.bound.readableName());
+            		buffer.append(this.bound.nullAnnotatedReadableName(options, shortNames));
             	} else {
 	            	buffer.append(this.bound.nullAnnotatedReadableName(options, shortNames));
 	            	for (int i = 0, length = this.otherBounds.length; i < length; i++) {

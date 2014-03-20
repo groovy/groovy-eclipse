@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *        Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
@@ -248,6 +244,7 @@ public final class Messages extends NLS {
 	public static String disassembler_opentypedeclaration;
 	public static String disassembler_closetypedeclaration;
 	public static String disassembler_parametername;
+	public static String disassembler_anonymousparametername;
 	public static String disassembler_localvariablename;
 	public static String disassembler_endofmethodheader;
 	public static String disassembler_begincommentline;

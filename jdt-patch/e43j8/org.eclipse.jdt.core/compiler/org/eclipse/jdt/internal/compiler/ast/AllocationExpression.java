@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  * 
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for
@@ -38,6 +34,8 @@
  *							Bug 427438 - [1.8][compiler] NPE at org.eclipse.jdt.internal.compiler.ast.ConditionalExpression.generateCode(ConditionalExpression.java:280)
  *							Bug 426996 - [1.8][inference] try to avoid method Expression.unresolve()? 
  *							Bug 428352 - [1.8][compiler] Resolution errors don't always surface
+ *							Bug 429203 - [1.8][compiler] NPE in AllocationExpression.binding
+ *							Bug 429430 - [1.8] Lambdas and method reference infer wrong exception type with generics (RuntimeException instead of IOException)
  *     Jesper S Moller <jesper@selskabet.org> - Contributions for
  *							bug 378674 - "The method can be declared as static" is wrong
  *     Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
@@ -554,6 +552,7 @@ TypeBinding resolvePart3(ResolutionState state) {
 		new ImplicitNullAnnotationVerifier(state.scope.environment(), compilerOptions.inheritNullAnnotations)
 				.checkImplicitNullAnnotations(this.binding, null/*srcMethod*/, false, state.scope);
 	}
+	recordExceptionsForEnclosingLambda(state.scope, this.binding.thrownExceptions);
 	return allocationType;
 }
 
@@ -716,8 +715,10 @@ public MethodBinding binding(TypeBinding targetType, boolean reportErrors, Scope
 	if (reportErrors && this.binding != null && !this.binding.isValidBinding()) {
 		if (this.binding.declaringClass == null)
 			this.binding.declaringClass = (ReferenceBinding) this.resolvedType;
-		scope.problemReporter().invalidConstructor(this, this.binding);
-		this.suspendedResolutionState.hasReportedError = true;
+		if (this.suspendedResolutionState != null) {
+			scope.problemReporter().invalidConstructor(this, this.binding);
+			this.suspendedResolutionState.hasReportedError = true;
+		}
 	}
 	return this.binding;
 }

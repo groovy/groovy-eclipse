@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     IBM Corporation - added constant AccDefault
@@ -161,7 +157,7 @@ public final class Flags {
 	 * Note that this flag's value is internal and is not defined in the
 	 * Virtual Machine specification.
 	 * </p>
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public static final int AccDefaultMethod = ExtraCompilerModifiers.AccDefaultMethod;
 
@@ -172,7 +168,7 @@ public final class Flags {
 	 * Note that this flag's value is internal and is not defined in the
 	 * Virtual Machine specification.
 	 * </p>
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public static final int AccAnnotationDefault = ClassFileConstants.AccAnnotationDefault;
 	
@@ -392,7 +388,7 @@ public final class Flags {
 	 *
 	 * @return <code>true</code> if the <code>AccDefaultMethod</code> flag is included
 	 * @see #AccDefaultMethod
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public static boolean isDefaultMethod(int flags) {
 		return (flags & AccDefaultMethod) != 0;
@@ -404,7 +400,7 @@ public final class Flags {
 	 *
 	 * @return <code>true</code> if the <code>AccAnnotationDefault</code> flag is included
 	 * @see #AccAnnotationDefault
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public static boolean isAnnnotationDefault(int flags) {
 		return (flags & AccAnnotationDefault) != 0;

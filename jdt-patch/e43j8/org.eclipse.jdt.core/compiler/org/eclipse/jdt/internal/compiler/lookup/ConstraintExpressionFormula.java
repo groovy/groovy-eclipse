@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     Stephan Herrmann - initial API and implementation
  *******************************************************************************/
@@ -100,7 +96,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 			TypeBinding exprType = this.left.resolvedType;
 			if (exprType == null || !exprType.isValidBinding())
 				return FALSE;
-			return new ConstraintTypeFormula(exprType, this.right, COMPATIBLE, this.isSoft);
+			return ConstraintTypeFormula.create(exprType, this.right, COMPATIBLE, this.isSoft);
 		} else {
 			// shapes of poly expressions (18.2.1)
 			// - parenthesized expression : these are transparent in our AST
@@ -129,7 +125,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 							TypeBinding exprType = this.left.resolvedType;
 							if (exprType == null || !exprType.isValidBinding())
 								return FALSE;
-							return new ConstraintTypeFormula(exprType, this.right, COMPATIBLE, this.isSoft);
+							return ConstraintTypeFormula.create(exprType, this.right, COMPATIBLE, this.isSoft);
 						}
 						inferenceContext.inferenceKind = innerCtx.inferenceKind;
 						innerCtx.outerContext = inferenceContext;
@@ -185,10 +181,10 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 				if (!lambda.argumentsTypeElided()) {
 					Argument[] arguments = lambda.arguments();
 					for (int i = 0; i < parameters.length; i++)
-						result.add(new ConstraintTypeFormula(parameters[i], arguments[i].type.resolveType(lambda.enclosingScope), SAME));
+						result.add(ConstraintTypeFormula.create(parameters[i], arguments[i].type.resolveType(lambda.enclosingScope), SAME));
 					// in addition, ⟨T' <: T⟩:
 					if (lambda.resolvedType != null)
-						result.add(new ConstraintTypeFormula(lambda.resolvedType, this.right, SUBTYPE));
+						result.add(ConstraintTypeFormula.create(lambda.resolvedType, this.right, SUBTYPE));
 				}
 				if (functionType.returnType != TypeBinding.VOID) {
 					TypeBinding r = functionType.returnType;
@@ -204,10 +200,10 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 							TypeBinding exprType = expr.resolvedType;
 							// "not compatible in an assignment context with R"?
 							if (!(expr.isConstantValueOfTypeAssignableToType(exprType, r)
-									|| exprType.isCompatibleWith(r)))
+									|| exprType.isCompatibleWith(r) || expr.isBoxingCompatible(exprType, r, expr, scope)))
 								return FALSE;
 						} else {
-							result.add(new ConstraintExpressionFormula(expr, r, COMPATIBLE));
+							result.add(new ConstraintExpressionFormula(expr, r, COMPATIBLE, this.isSoft));
 						}
 					}
 				}
@@ -270,18 +266,18 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 			int k = pPrime.length;
 			int offset = 0;
 			if (n == k+1) {
-				newConstraints.add(new ConstraintTypeFormula(p[0], reference.lhs.resolvedType, COMPATIBLE));
+				newConstraints.add(ConstraintTypeFormula.create(p[0], reference.lhs.resolvedType, COMPATIBLE));
 				offset = 1;
 			}
 			for (int i = offset; i < n; i++)
-				newConstraints.add(new ConstraintTypeFormula(p[i], pPrime[i-offset], COMPATIBLE));
+				newConstraints.add(ConstraintTypeFormula.create(p[i], pPrime[i-offset], COMPATIBLE));
 			TypeBinding r = functionType.returnType;
 			if (r != TypeBinding.VOID) {
 				TypeBinding rAppl = potentiallyApplicable.isConstructor() && !reference.isArrayConstructorReference() ? potentiallyApplicable.declaringClass : potentiallyApplicable.returnType;
 				if (rAppl == TypeBinding.VOID)
 					return FALSE;
 				TypeBinding rPrime = rAppl.capture(inferenceContext.scope, 14); // FIXME capture position??
-				newConstraints.add(new ConstraintTypeFormula(rPrime, r, COMPATIBLE));
+				newConstraints.add(ConstraintTypeFormula.create(rPrime, r, COMPATIBLE));
 			}
 			return newConstraints.toArray(new ConstraintFormula[newConstraints.size()]);
 		} else { // inexact
@@ -302,7 +298,9 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 			MethodBinding original = compileTimeDecl.original();
 			if (reference.typeArguments == null
 					&& ((original.typeVariables() != Binding.NO_TYPE_VARIABLES && r.mentionsAny(original.typeVariables(), -1))
-						|| (original.isConstructor() && original.declaringClass.typeVariables() != Binding.NO_TYPE_VARIABLES && r.mentionsAny(original.declaringClass.typeVariables(), -1)))) 
+						|| (original.isConstructor() && original.declaringClass.typeVariables() != Binding.NO_TYPE_VARIABLES)))
+							// not checking r.mentionsAny for constructors, because A::new resolves to the raw type
+							// whereas in fact the type of all expressions of this shape depends on their type variable (if any)
 			{
 				SuspendedInferenceRecord prevInvocation = inferenceContext.enterPolyInvocation(reference, null/*no invocation arguments available*/);
 
@@ -311,7 +309,11 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 					inferInvocationApplicability(inferenceContext, original, functionType.parameters, original.isConstructor()/*mimic a diamond?*/, inferenceContext.inferenceKind);
 					if (!inferPolyInvocationType(inferenceContext, reference, r, original))
 						return FALSE;
-					return null; // already incorporated
+					if (!original.isConstructor() 
+							|| reference.receiverType.isRawType()  // note: rawtypes may/may not have typeArguments() depending on initialization state
+							|| reference.receiverType.typeArguments() == null)
+						return null; // already incorporated
+					// for Foo<Bar>::new we need to (illegally) add one more constraint below to get to the Bar
 				} catch (InferenceFailureException e) {
 					return FALSE;
 				} finally {
@@ -321,7 +323,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 			TypeBinding rPrime = compileTimeDecl.isConstructor() ? compileTimeDecl.declaringClass : compileTimeDecl.returnType;
 			if (rPrime.id == TypeIds.T_void)
 				return FALSE;
-			return new ConstraintTypeFormula(rPrime, r, COMPATIBLE, this.isSoft);
+			return ConstraintTypeFormula.create(rPrime, r, COMPATIBLE, this.isSoft);
 		}
 	}
 
@@ -367,7 +369,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 			if (inferenceContext.usesUncheckedConversion()) {
 				// spec says erasure, but we don't really have compatibility rules for erasure, use raw type instead:
 				TypeBinding erasure = inferenceContext.environment.convertToRawType(returnType, false);
-				ConstraintTypeFormula newConstraint = new ConstraintTypeFormula(erasure, targetType, COMPATIBLE);
+				ConstraintTypeFormula newConstraint = ConstraintTypeFormula.create(erasure, targetType, COMPATIBLE);
 				if (!inferenceContext.reduceAndIncorporate(newConstraint))
 					return false;
 				// continuing at true is not spec'd but needed for javac-compatibility,
@@ -382,7 +384,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 				ParameterizedTypeBinding gbeta = inferenceContext.environment.createParameterizedType(
 						parameterizedType.genericType(), betas, parameterizedType.enclosingType(), parameterizedType.getTypeAnnotations());
 				inferenceContext.currentBounds.captures.put(gbeta, parameterizedType); // established: both types have nonnull arguments
-				ConstraintTypeFormula newConstraint = new ConstraintTypeFormula(gbeta, targetType, COMPATIBLE);
+				ConstraintTypeFormula newConstraint = ConstraintTypeFormula.create(gbeta, targetType, COMPATIBLE);
 				return inferenceContext.reduceAndIncorporate(newConstraint);
 			}
 			if (rTheta instanceof InferenceVariable) {
@@ -398,13 +400,15 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 						toResolve = true;
 				}
 				if (toResolve) {
-					BoundSet solution = inferenceContext.solve(); // TODO: minimal resolving for only α
-					TypeBinding u = solution.getInstantiation(alpha).capture(inferenceContext.scope, invocationSite.sourceStart()); // TODO make position unique?
-					ConstraintTypeFormula newConstraint = new ConstraintTypeFormula(u, targetType, COMPATIBLE);
+					BoundSet solution = inferenceContext.solve(new InferenceVariable[]{alpha});
+					if (solution == null)
+						return false;
+					TypeBinding u = solution.getInstantiation(alpha, null).capture(inferenceContext.scope, invocationSite.sourceStart()); // TODO make position unique?
+					ConstraintTypeFormula newConstraint = ConstraintTypeFormula.create(u, targetType, COMPATIBLE);
 					return inferenceContext.reduceAndIncorporate(newConstraint);
 				}
 			}
-			ConstraintTypeFormula newConstraint = new ConstraintTypeFormula(rTheta, targetType, COMPATIBLE);
+			ConstraintTypeFormula newConstraint = ConstraintTypeFormula.create(rTheta, targetType, COMPATIBLE);
 			if (!inferenceContext.reduceAndIncorporate(newConstraint))
 				return false;
 		}

@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for
@@ -32,6 +28,7 @@
  *								Bug 424415 - [1.8][compiler] Eventual resolution of ReferenceExpression is not seen to be happening.
  *								Bug 418537 - [1.8][null] Fix null type annotation analysis for poly conditional expressions
  *								Bug 428352 - [1.8][compiler] Resolution errors don't always surface
+ *								Bug 429430 - [1.8] Lambdas and method reference infer wrong exception type with generics (RuntimeException instead of IOException)
  *        Andy Clement - Contributions for
  *                          Bug 383624 - [1.8][compiler] Revive code generation support for type annotations (from Olivier's work)
  *                          Bug 409250 - [1.8][compiler] Various loose ends in 308 code generation
@@ -293,7 +290,7 @@ public void generateArguments(MethodBinding binding, Expression[] arguments, Blo
 
 public abstract void generateCode(BlockScope currentScope, CodeStream codeStream);
 
-protected boolean isBoxingCompatible(TypeBinding expressionType, TypeBinding targetType, Expression expression, Scope scope) {
+public boolean isBoxingCompatible(TypeBinding expressionType, TypeBinding targetType, Expression expression, Scope scope) {
 	if (scope.isBoxingCompatibleWith(expressionType, targetType))
 		return true;
 
@@ -365,5 +362,17 @@ protected MethodBinding findConstructorBinding(BlockScope scope, Invocation site
 	MethodBinding ctorBinding = scope.getConstructor(receiverType, argumentTypes, site);
 	resolvePolyExpressionArguments(site, ctorBinding, argumentTypes, scope);
 	return ctorBinding;
+}
+/**
+ * If an exception-throwing statement is resolved within the scope of a lambda, record the exception type(s).
+ * It is likely wrong to do this during resolve, should probably use precise flow information.
+ */
+protected void recordExceptionsForEnclosingLambda(BlockScope scope, TypeBinding... thrownExceptions) {
+	MethodScope methodScope = scope.methodScope();
+	if (methodScope != null && methodScope.referenceContext instanceof LambdaExpression) {
+		LambdaExpression lambda = (LambdaExpression) methodScope.referenceContext;
+		for (int i = 0; i < thrownExceptions.length; i++)
+			lambda.throwsException(thrownExceptions[i]);
+	}
 }
 }

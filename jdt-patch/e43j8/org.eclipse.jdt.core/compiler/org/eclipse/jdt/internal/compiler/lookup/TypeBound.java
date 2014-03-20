@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     Stephan Herrmann - initial API and implementation
  *     IBM Corporation - bug fixes
@@ -52,7 +48,7 @@ public class TypeBound extends ReductionResult {
 	private TypeBinding safeType(TypeBinding type) {
 		if (type != null && type.isLocalType()) {
 			MethodBinding enclosingMethod = ((LocalTypeBinding) type).enclosingMethod;
-			if (enclosingMethod != null && CharOperation.equals(TypeConstants.ANONYMOUS_METHOD, enclosingMethod.selector))
+			if (enclosingMethod != null && CharOperation.prefixEquals(TypeConstants.ANONYMOUS_METHOD, enclosingMethod.selector))
 				return type.superclass(); // don't use local class inside lambda: lambda is copied, type will be re-created and thus is unmatchable
 		}
 		return type;

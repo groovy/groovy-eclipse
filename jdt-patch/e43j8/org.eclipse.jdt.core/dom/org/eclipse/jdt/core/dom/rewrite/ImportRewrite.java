@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -430,7 +426,7 @@ public final class ImportRewrite {
 	 * @return an annotation node. The returned annotation contains unqualified type names where
 	 * an import could be added or was already known. Type names are fully qualified if an import conflict prevented an import.
 	 * 
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public Annotation addAnnotation(IAnnotationBinding annotation, AST ast, ImportRewriteContext context) {
 		Type type = addImport(annotation.getAnnotationType(), ast, context);

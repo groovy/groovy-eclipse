@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -38,7 +34,7 @@ public class WildcardType extends AnnotatableType {
 
 	/**
 	 * The "annotations" structural property of this node type (element type: {@link Annotation}).
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public static final ChildListPropertyDescriptor ANNOTATIONS_PROPERTY =
 			internalAnnotationsPropertyFactory(WildcardType.class);
@@ -65,7 +61,7 @@ public class WildcardType extends AnnotatableType {
 	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	private static final List PROPERTY_DESCRIPTORS_8_0;
 
@@ -134,7 +130,7 @@ public class WildcardType extends AnnotatableType {
 
 	/* (omit javadoc for this method)
 	 * Method declared on AnnotatableType.
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	final ChildListPropertyDescriptor internalAnnotationsProperty() {
 		return ANNOTATIONS_PROPERTY;

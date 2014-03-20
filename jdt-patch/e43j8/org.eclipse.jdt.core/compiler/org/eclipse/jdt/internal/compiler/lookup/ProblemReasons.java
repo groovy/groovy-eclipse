@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Jesper S Moller - Contributions for
@@ -16,6 +12,7 @@
  *	   Stephan Herrmann - Contribution for
  *								bug 404649 - [1.8][compiler] detect illegal reference to indirect or redundant super
  *								Bug 400874 - [1.8][compiler] Inference infrastructure should evolve to meet JLS8 18.x (Part G of JSR335 spec)
+ *								Bug 416182 - [1.8][compiler][null] Contradictory null annotations not rejected
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -45,4 +42,5 @@ public interface ProblemReasons {
 	final int DefectiveContainerAnnotationType = 22;
 	final int ParameterizedMethodExpectedTypeProblem = 23;
 	final int ApplicableMethodOverriddenByInapplicable = 24;
+	final int ContradictoryNullAnnotations = 25;
 }

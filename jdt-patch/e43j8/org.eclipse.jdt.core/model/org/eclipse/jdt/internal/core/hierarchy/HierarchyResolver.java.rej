@@ -1,0 +1,16 @@
+***************
+*** 639,644 ****
+  
+  		// build type bindings
+  		Parser parser = new Parser(this.lookupEnvironment.problemReporter, true);
+  		for (int i = 0; i < openablesLength; i++) {
+  			Openable openable = openables[i];
+  			if (openable instanceof org.eclipse.jdt.core.ICompilationUnit) {
+--- 664,670 ----
+  
+  		// build type bindings
+  		Parser parser = new Parser(this.lookupEnvironment.problemReporter, true);
++ 		final boolean isJava8 = this.options.sourceLevel >= ClassFileConstants.JDK1_8;
+  		for (int i = 0; i < openablesLength; i++) {
+  			Openable openable = openables[i];
+  			if (openable instanceof org.eclipse.jdt.core.ICompilationUnit) {

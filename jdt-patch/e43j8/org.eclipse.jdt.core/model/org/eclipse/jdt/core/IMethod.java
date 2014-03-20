@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -258,6 +258,15 @@ boolean isConstructor() throws JavaModelException;
  * @return true if this method is a main method, false otherwise
  */
 boolean isMainMethod() throws JavaModelException;
+
+/**
+ * Returns whether this method represents a lambda expression.
+ *
+ * @since 3.10
+ * @return true if this method represents a lambda expression, false otherwise.
+ */
+boolean isLambdaMethod();
+
 /**
  * Returns whether this method represents a resolved method.
  * If a method is resolved, its key contains resolved information.

@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  * 
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for
@@ -175,7 +171,7 @@ public interface TagBits {
 				| AnnotationRepeatable;
 	
 	long AnnotationNullMASK = AnnotationNullable | AnnotationNonNull;
-	/** @since 3.9_BETA_JAVA8 marks a type that has a nullness annotation directly or on a detail (array dimension/type argument). */
+	/** @since 3.10 marks a type that has a nullness annotation directly or on a detail (array dimension/type argument). */
 	long HasNullTypeAnnotation = ASTNode.Bit21;
 
 	long HasTypeAnnotations = ASTNode.Bit22;

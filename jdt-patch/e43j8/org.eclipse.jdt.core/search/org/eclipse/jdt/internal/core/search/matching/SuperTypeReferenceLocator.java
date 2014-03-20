@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,6 +29,13 @@ public SuperTypeReferenceLocator(SuperTypeReferencePattern pattern) {
 //public int match(ConstructorDeclaration node, MatchingNodeSet nodeSet) - SKIP IT
 //public int match(Expression node, MatchingNodeSet nodeSet) - SKIP IT
 //public int match(FieldDeclaration node, MatchingNodeSet nodeSet) - SKIP IT
+
+public int match(LambdaExpression node, MatchingNodeSet nodeSet) {
+	if (this.pattern.superRefKind != SuperTypeReferencePattern.ONLY_SUPER_INTERFACES)
+		return IMPOSSIBLE_MATCH;
+	nodeSet.mustResolve = true;
+	return nodeSet.addMatch(node, POSSIBLE_MATCH);
+}
 //public int match(MethodDeclaration node, MatchingNodeSet nodeSet) - SKIP IT
 //public int match(MessageSend node, MatchingNodeSet nodeSet) - SKIP IT
 //public int match(Reference node, MatchingNodeSet nodeSet) - SKIP IT
@@ -75,10 +82,16 @@ protected int referenceType() {
 	return IJavaElement.TYPE;
 }
 public int resolveLevel(ASTNode node) {
-	if (!(node instanceof TypeReference)) return IMPOSSIBLE_MATCH;
+	TypeBinding typeBinding = null;
+	if (node instanceof LambdaExpression) {
+		LambdaExpression lambda = (LambdaExpression) node;
+		typeBinding = lambda.resolvedType;
+	} else {
+		if (!(node instanceof TypeReference)) return IMPOSSIBLE_MATCH;
+		TypeReference typeRef = (TypeReference) node;
+		typeBinding = typeRef.resolvedType;
+	}
 
-	TypeReference typeRef = (TypeReference) node;
-	TypeBinding typeBinding = typeRef.resolvedType;
 	if (typeBinding instanceof ArrayBinding)
 		typeBinding = ((ArrayBinding) typeBinding).leafComponentType;
 	if (typeBinding instanceof ProblemReferenceBinding)

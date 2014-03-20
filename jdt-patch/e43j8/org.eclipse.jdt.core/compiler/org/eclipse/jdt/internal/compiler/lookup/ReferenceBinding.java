@@ -4,10 +4,6 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -1872,48 +1868,29 @@ private MethodBinding [] getInterfaceAbstractContracts(Scope scope) throws Inval
 	int contractsCount = 0;
 	int contractsLength = 0;
 	
-	// -- the following are used for early termination.
-	MethodBinding aContract = null;
-	int contractParameterLength = 0;
-	char [] contractSelector = null;
-	// ---
-	
 	ReferenceBinding [] superInterfaces = superInterfaces();
 	for (int i = 0, length = superInterfaces.length; i < length; i++) {
 		MethodBinding [] superInterfaceContracts = superInterfaces[i].getInterfaceAbstractContracts(scope);
 		final int superInterfaceContractsLength = superInterfaceContracts == null  ? 0 : superInterfaceContracts.length;
-		
 		if (superInterfaceContractsLength == 0) continue;
-		if (aContract == null) {
-			aContract = superInterfaceContracts[0];
-			contractParameterLength = aContract.parameters.length;
-			contractSelector = aContract.selector;
-			contracts = superInterfaceContracts;
-			contractsCount = contractsLength = superInterfaceContractsLength;
-		} else {
-			if (superInterfaceContracts[0].parameters.length != contractParameterLength || !CharOperation.equals(contractSelector, superInterfaceContracts[0].selector)) {
-				throw new InvalidInputException("Not a functional interface"); //$NON-NLS-1$
-			}
-			if (contractsLength < contractsCount + superInterfaceContractsLength) {
-				System.arraycopy(contracts, 0, contracts = new MethodBinding[contractsLength = contractsCount + superInterfaceContractsLength], 0, contractsCount);
-			}
-			System.arraycopy(superInterfaceContracts, 0, contracts, contractsCount,	superInterfaceContractsLength);
-			contractsCount += superInterfaceContractsLength;
+		if (contractsLength < contractsCount + superInterfaceContractsLength) {
+			System.arraycopy(contracts, 0, contracts = new MethodBinding[contractsLength = contractsCount + superInterfaceContractsLength], 0, contractsCount);
 		}
+		System.arraycopy(superInterfaceContracts, 0, contracts, contractsCount,	superInterfaceContractsLength);
+		contractsCount += superInterfaceContractsLength;
 	}
+
 	for (int i = 0, length = methods == null ? 0 : methods.length; i < length; i++) {
 		final MethodBinding method = methods[i];
-		if (method.isStatic() || method.redeclaresPublicObjectMethod(scope)) continue;
+		if (method == null || method.isStatic() || method.redeclaresPublicObjectMethod(scope)) 
+			continue;
+		if (!method.isValidBinding()) 
+			throw new InvalidInputException("Not a functional interface"); //$NON-NLS-1$
 		if (method.isDefaultMethod()) {
 			for (int j = 0; j < contractsCount; j++) {
 				if (contracts[j] == null)
 					continue;
 				if (MethodVerifier.doesMethodOverride(method, contracts[j], scope.environment())) {
-					if (aContract == contracts[j]) {
-						aContract = null;
-						contractParameterLength = 0;
-						contractSelector = null;
-					}
 					contractsCount--;
 					// abstract method from super type rendered default by present interface ==> contracts[j] = null;
 					if (j < contractsCount)
@@ -1921,16 +1898,6 @@ private MethodBinding [] getInterfaceAbstractContracts(Scope scope) throws Inval
 				}
 			}
 			continue; // skip default method itself
-		}
-		final boolean validBinding = method.isValidBinding();
-		if (aContract == null && validBinding) {
-			aContract = method;
-			contractParameterLength = aContract.parameters.length;
-			contractSelector = aContract.selector;
-		} else {
-			if (!validBinding || method.parameters.length != contractParameterLength || !CharOperation.equals(contractSelector, method.selector)) {
-				throw new InvalidInputException("Not a functional interface"); //$NON-NLS-1$
-			}
 		}
 		if (contractsCount == contractsLength) {
 			System.arraycopy(contracts, 0, contracts = new MethodBinding[contractsLength += 16], 0, contractsCount);
@@ -1957,15 +1924,33 @@ public MethodBinding getSingleAbstractMethod(Scope scope, boolean replaceWildcar
 	MethodBinding[] methods = null;
 	try {
 		methods = getInterfaceAbstractContracts(scope);
+		if (methods == null || methods.length == 0)
+			return this.singleAbstractMethod[index] = samProblemBinding;
+		int contractParameterLength = 0;
+		char [] contractSelector = null;
+		for (int i = 0, length = methods.length; i < length; i++) {
+			MethodBinding method = methods[i];
+			if (method == null) continue;
+			if (contractSelector == null) {
+				contractSelector = method.selector;
+				contractParameterLength = method.parameters == null ? 0 : method.parameters.length;
+			} else {
+				int methodParameterLength = method.parameters == null ? 0 : method.parameters.length;
+				if (methodParameterLength != contractParameterLength || !CharOperation.equals(method.selector, contractSelector))
+					return this.singleAbstractMethod[index] = samProblemBinding;
+			}
+		}
 	} catch (InvalidInputException e) {
 		return this.singleAbstractMethod[index] = samProblemBinding;
 	}
-	if (methods != null && methods.length == 1)
+	if (methods.length == 1)
 		return this.singleAbstractMethod[index] = methods[0];
 	
 	final LookupEnvironment environment = scope.environment();
 	boolean genericMethodSeen = false;
-	next:for (int i = 0, length = methods.length; i < length; i++) {
+	int length = methods.length;
+	
+	next:for (int i = length - 1; i >= 0; --i) {
 		MethodBinding method = methods[i], otherMethod = null;
 		if (method.typeVariables != Binding.NO_TYPE_VARIABLES)
 			genericMethodSeen = true;
@@ -2045,7 +2030,7 @@ public MethodBinding getSingleAbstractMethod(Scope scope, boolean replaceWildcar
 		if (exceptionsCount != exceptionsLength) {
 			System.arraycopy(exceptions, 0, exceptions = new ReferenceBinding[exceptionsCount], 0, exceptionsCount);
 		}
-		this.singleAbstractMethod[index] = new MethodBinding(theAbstractMethod.modifiers, 
+		this.singleAbstractMethod[index] = new MethodBinding(theAbstractMethod.modifiers | ClassFileConstants.AccSynthetic, 
 				theAbstractMethod.selector, 
 				theAbstractMethod.returnType, 
 				theAbstractMethod.parameters, 

@@ -38,6 +38,12 @@ import org.eclipse.jdt.internal.core.search.matching.MethodPattern;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class IndexSelector {
+	
+	//TODO: Bug 386113: "Search references" and "Type hierarchy" show inconsistent results with "External Plug-in Libraries" project
+	public static final int PROJECT_CAN_SEE_FOCUS= 0;
+	public static final int PROJECT_SOURCE_CAN_NOT_SEE_FOCUS= 1;
+	public static final int PROJECT_CAN_NOT_SEE_FOCUS= 2;
+	
 	IJavaSearchScope searchScope;
 	SearchPattern pattern;
 	IndexLocation[] indexLocations; // cache of the keys for looking index up
@@ -54,44 +60,52 @@ public IndexSelector(
  * a JarPackageFragmentRot) either because the focus is part of the project or the jar, or because it is
  * accessible throught the project's classpath
  */
-public static boolean canSeeFocus(SearchPattern pattern, IPath projectOrJarPath) {
+public static int canSeeFocus(SearchPattern pattern, IPath projectOrJarPath) {
 	try {
 		IJavaModel model = JavaModelManager.getJavaModelManager().getJavaModel();
 		IJavaProject project = getJavaProject(projectOrJarPath, model);
 		IJavaElement[] focuses = getFocusedElementsAndTypes(pattern, project, null);
-		if (focuses.length == 0) return false;
+		if (focuses.length == 0) return PROJECT_CAN_NOT_SEE_FOCUS;
 		if (project != null) {
 			return canSeeFocus(focuses, (JavaProject) project, null);
 		}
 
 		// projectOrJarPath is a jar
 		// it can see the focus only if it is on the classpath of a project that can see the focus
+		int result = PROJECT_CAN_NOT_SEE_FOCUS;
 		IJavaProject[] allProjects = model.getJavaProjects();
 		for (int i = 0, length = allProjects.length; i < length; i++) {
 			JavaProject otherProject = (JavaProject) allProjects[i];
 			IClasspathEntry entry = otherProject.getClasspathEntryFor(projectOrJarPath);
 			if (entry != null && entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
-				if (canSeeFocus(focuses, otherProject, null)) {
-					return true;
-				}
+				int canSeeFocus = canSeeFocus(focuses, otherProject, null);
+				if (canSeeFocus == PROJECT_CAN_SEE_FOCUS)
+					return PROJECT_CAN_SEE_FOCUS;
+				if (canSeeFocus == PROJECT_SOURCE_CAN_NOT_SEE_FOCUS)
+					result = PROJECT_SOURCE_CAN_NOT_SEE_FOCUS;
 			}
 		}
-		return false;
+		return result;
 	} catch (JavaModelException e) {
-		return false;
+		return PROJECT_CAN_NOT_SEE_FOCUS;
 	}
 }
-private static boolean canSeeFocus(IJavaElement[] focuses, JavaProject javaProject, char[][][] focusQualifiedNames) {
+private static int canSeeFocus(IJavaElement[] focuses, JavaProject javaProject, char[][][] focusQualifiedNames) {
+	int result = PROJECT_CAN_NOT_SEE_FOCUS;
 	int length = focuses.length;
 	for (int i=0; i<length; i++) {
-		if (canSeeFocus(focuses[i], javaProject, focusQualifiedNames)) return true;
+		int canSeeFocus = canSeeFocus(focuses[i], javaProject, focusQualifiedNames);
+		if (canSeeFocus == PROJECT_CAN_SEE_FOCUS)
+			return PROJECT_CAN_SEE_FOCUS;
+		if (canSeeFocus == PROJECT_SOURCE_CAN_NOT_SEE_FOCUS)
+			result = PROJECT_SOURCE_CAN_NOT_SEE_FOCUS;
 	}
-	return false;
+	return result;
 }
-private static boolean canSeeFocus(IJavaElement focus, JavaProject javaProject, char[][][] focusQualifiedNames) {
+private static int canSeeFocus(IJavaElement focus, JavaProject javaProject, char[][][] focusQualifiedNames) {
 	try {
-		if (focus == null) return false;
-		if (focus.equals(javaProject)) return true;
+		if (focus == null) return PROJECT_CAN_NOT_SEE_FOCUS;
+		if (focus.equals(javaProject)) return PROJECT_CAN_SEE_FOCUS;
 
 		if (focus instanceof JarPackageFragmentRoot) {
 			// focus is part of a jar
@@ -100,9 +114,9 @@ private static boolean canSeeFocus(IJavaElement focus, JavaProject javaProject, 
 			for (int i = 0, length = entries.length; i < length; i++) {
 				IClasspathEntry entry = entries[i];
 				if (entry.getEntryKind() == IClasspathEntry.CPE_LIBRARY && entry.getPath().equals(focusPath))
-					return true;
+					return PROJECT_CAN_SEE_FOCUS;
 			}
-			return false;
+			return PROJECT_CAN_NOT_SEE_FOCUS;
 		}
 		// look for dependent projects
 		IPath focusPath = ((JavaProject) focus).getProject().getFullPath();
@@ -119,18 +133,18 @@ private static boolean canSeeFocus(IJavaElement focus, JavaProject javaProject, 
 							if (values[j] == null) continue;
 							ReferenceCollection references = (ReferenceCollection) values[j];
 							if (references.includes(focusQualifiedNames, null, null)) {
-								return true;
+								return PROJECT_CAN_SEE_FOCUS;
 							}
 						}
-						return false;
+						return PROJECT_SOURCE_CAN_NOT_SEE_FOCUS;
 					}
 				}
-				return true;
+				return PROJECT_CAN_SEE_FOCUS;
 			}
 		}
-		return false;
+		return PROJECT_CAN_NOT_SEE_FOCUS;
 	} catch (JavaModelException e) {
-		return false;
+		return PROJECT_CAN_NOT_SEE_FOCUS;
 	}
 }
 
@@ -218,8 +232,11 @@ private void initializeIndexLocations() {
 				JavaProject project = (JavaProject) getJavaProject(path, model);
 				if (project != null) {
 					visitedProjects.add(project);
-					if (canSeeFocus(focuses, project, focusQualifiedNames)) {
+					int canSeeFocus = canSeeFocus(focuses, project, focusQualifiedNames);
+					if (canSeeFocus == PROJECT_CAN_SEE_FOCUS) {
 						locations.add(manager.computeIndexLocation(path));
+					}
+					if (canSeeFocus != PROJECT_CAN_NOT_SEE_FOCUS) {
 						projectsCanSeeFocus[projectIndex++] = project;
 					}
 				} else {

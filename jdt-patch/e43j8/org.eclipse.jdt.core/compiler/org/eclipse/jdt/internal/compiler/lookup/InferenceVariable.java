@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     Stephan Herrmann - initial API and implementation
  *******************************************************************************/
@@ -32,7 +28,17 @@ public class InferenceVariable extends TypeVariableBinding {
 				null/*declaringElement*/, variableRank, environment);
 		this.site = site;
 		this.typeParameter = typeParameter;
-		this.nullHints |= typeParameter.tagBits & TagBits.AnnotationNullMASK;
+		this.tagBits |= typeParameter.tagBits & TagBits.AnnotationNullMASK;
+		if (typeParameter.isTypeVariable()) {
+			TypeVariableBinding typeVariable = (TypeVariableBinding) typeParameter;
+			if (typeVariable.firstBound != null) {
+				long boundBits = typeVariable.firstBound.tagBits & TagBits.AnnotationNullMASK;
+				if (boundBits == TagBits.AnnotationNonNull)
+					this.tagBits |= boundBits; // @NonNull must be preserved
+				else
+					this.nullHints |= boundBits; // @Nullable is only a hint
+			}
+		}
 		this.superclass = object;
 	}
 

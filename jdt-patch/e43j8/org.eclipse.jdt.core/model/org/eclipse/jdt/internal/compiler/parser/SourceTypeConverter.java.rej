@@ -1,0 +1,37 @@
+***************
+*** 46,52 ****
+  import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
+  import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+  import org.eclipse.jdt.internal.compiler.env.*;
+- 
+  import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
+  import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
+  import org.eclipse.jdt.internal.core.*;
+--- 42,47 ----
+  import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
+  import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+  import org.eclipse.jdt.internal.compiler.env.*;
+  import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
+  import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
+  import org.eclipse.jdt.internal.core.*;
+***************
+*** 120,127 ****
+  		org.eclipse.jdt.core.ICompilationUnit cuHandle = topLevelTypeInfo.getHandle().getCompilationUnit();
+  		this.cu = (ICompilationUnit) cuHandle;
+  
+  		if (this.has1_5Compliance && 
+- 				((CompilationUnitElementInfo) ((JavaElement) this.cu).getElementInfo()).annotationNumber >= CompilationUnitElementInfo.ANNOTATION_THRESHOLD_FOR_DIET_PARSE) {
+  			// If more than 10 annotations, diet parse as this is faster, but not if
+  			// the client wants local and anonymous types to be converted (https://bugs.eclipse.org/bugs/show_bug.cgi?id=254738)
+  			// Also see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=405843
+--- 115,124 ----
+  		org.eclipse.jdt.core.ICompilationUnit cuHandle = topLevelTypeInfo.getHandle().getCompilationUnit();
+  		this.cu = (ICompilationUnit) cuHandle;
+  
++ 		final CompilationUnitElementInfo compilationUnitElementInfo = (CompilationUnitElementInfo) ((JavaElement) this.cu).getElementInfo();
+  		if (this.has1_5Compliance && 
++ 				(compilationUnitElementInfo.annotationNumber >= CompilationUnitElementInfo.ANNOTATION_THRESHOLD_FOR_DIET_PARSE ||
++ 				(compilationUnitElementInfo.hasFunctionalTypes && (this.flags & LOCAL_TYPE) != 0))) {
+  			// If more than 10 annotations, diet parse as this is faster, but not if
+  			// the client wants local and anonymous types to be converted (https://bugs.eclipse.org/bugs/show_bug.cgi?id=254738)
+  			// Also see bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=405843

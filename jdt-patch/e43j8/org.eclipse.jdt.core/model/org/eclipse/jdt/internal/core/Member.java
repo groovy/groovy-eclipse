@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -176,6 +172,26 @@ public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento,
 	switch (token.charAt(0)) {
 		case JEM_COUNT:
 			return getHandleUpdatingCountFromMemento(memento, workingCopyOwner);
+		case JEM_LAMBDA_EXPRESSION:
+			if (!memento.hasMoreTokens()) return this;
+			String name = memento.nextToken();
+			if (!memento.hasMoreTokens() || memento.nextToken() != MementoTokenizer.STRING)
+				return this;
+			if (!memento.hasMoreTokens()) return this;
+			String interphase = memento.nextToken();
+			if (!memento.hasMoreTokens() || memento.nextToken() != MementoTokenizer.COUNT) 
+				return this;
+			int sourceStart = Integer.parseInt(memento.nextToken());
+			if (!memento.hasMoreTokens() || memento.nextToken() != MementoTokenizer.COUNT) 
+				return this;
+			int sourceEnd = Integer.parseInt(memento.nextToken());
+			if (!memento.hasMoreTokens() || memento.nextToken() != MementoTokenizer.COUNT) 
+				return this;
+			int arrowPosition = Integer.parseInt(memento.nextToken());
+			LambdaExpression expression = new LambdaExpression(this, name, interphase, sourceStart, sourceEnd, arrowPosition);
+			if (!memento.hasMoreTokens() || (token = memento.nextToken()) != MementoTokenizer.LAMBDA_METHOD) 
+				return expression;
+			return expression.getHandleFromMemento(token, memento, workingCopyOwner);
 		case JEM_TYPE:
 			String typeName;
 			if (memento.hasMoreTokens()) {

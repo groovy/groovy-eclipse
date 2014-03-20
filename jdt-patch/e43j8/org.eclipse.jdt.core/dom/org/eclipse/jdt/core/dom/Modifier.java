@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -102,7 +98,7 @@ public final class Modifier extends ASTNode implements IExtendedModifier {
 		 * Note that the value of this modifier is
 		 * internal and is not specified in the Java Virtual Machine Specification.
 		 * </p>
-		 * @since 3.9 BETA_JAVA8
+		 * @since 3.10
 		 */
 		public static final ModifierKeyword DEFAULT_KEYWORD = new ModifierKeyword("default", DEFAULT);//$NON-NLS-1$
 
@@ -318,7 +314,7 @@ public final class Modifier extends ASTNode implements IExtendedModifier {
 	 * Note that the value of this flag is internal and is not
 	 * specified in the Java Virtual Machine Specification.
 	 * </p>
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public static final int DEFAULT = 0x10000;
 
@@ -479,7 +475,7 @@ public final class Modifier extends ASTNode implements IExtendedModifier {
 	 * @param flags the modifier flags
 	 * @return <code>true</code> if the <code>DEFAULT</code> bit is set
 	 * and <code>false</code> otherwise
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public static boolean isDefault(int flags) {
 		return (flags & DEFAULT) != 0;
@@ -709,7 +705,7 @@ public final class Modifier extends ASTNode implements IExtendedModifier {
 	/**
 	 * Answer true if the receiver is the default modifier, false otherwise.
 	 * @return true if the receiver is the default modifier, false otherwise
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public boolean isDefault() {
 		return this.modifierKeyword == ModifierKeyword.DEFAULT_KEYWORD;

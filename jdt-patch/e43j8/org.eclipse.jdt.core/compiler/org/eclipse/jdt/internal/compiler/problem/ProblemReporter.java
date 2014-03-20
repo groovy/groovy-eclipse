@@ -4,10 +4,6 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -49,6 +45,8 @@
  *								Bug 424637 - [1.8][compiler][null] AIOOB in ReferenceExpression.resolveType with a method reference to Files::walk
  *								Bug 428294 - [1.8][compiler] Type mismatch: cannot convert from List<Object> to Collection<Object[]>
  *								Bug 428366 - [1.8] [compiler] The method valueAt(ObservableList<Object>, int) is ambiguous for the type Bindings
+ *								Bug 416190 - [1.8][null] detect incompatible overrides due to null type annotations
+ *								Bug 392245 - [1.8][compiler][null] Define whether / how @NonNullByDefault applies to TYPE_USE locations
  *      Jesper S Moller <jesper@selskabet.org> -  Contributions for
  *								bug 382701 - [1.8][compiler] Implement semantic analysis of Lambda expressions & Reference expression
  *								bug 382721 - [1.8][compiler] Effectively final variables needs special treatment
@@ -56,6 +54,8 @@
  *								bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
  *								bug 412151 - [1.8][compiler] Check repeating annotation's collection type
  *								bug 419209 - [1.8] Repeating container annotations should be rejected in the presence of annotation it contains
+ *								Bug 429384 - [1.8][null] implement conformance rules for null-annotated lower / upper type bounds
+ *								Bug 416182 - [1.8][compiler][null] Contradictory null annotations not rejected
  ********************************************************************************/
 package org.eclipse.jdt.internal.compiler.problem;
 // GROOVY PATCHED
@@ -4284,6 +4284,10 @@ public void invalidMethod(MessageSend messageSend, MethodBinding method) {
 				(int) (messageSend.nameSourcePosition >>> 32),
 				(int) messageSend.nameSourcePosition);
 			return;
+		case ProblemReasons.ContradictoryNullAnnotations:
+			problemMethod = (ProblemMethodBinding) method;
+			contradictoryNullAnnotationsInferred(problemMethod.closestMatch, (ASTNode)messageSend);
+			return;
 		case ProblemReasons.NoError : // 0
 		default :
 			needImplementation(messageSend); // want to fail to see why we were here...
@@ -6198,7 +6202,26 @@ public void missingTypeInConstructor(ASTNode location, MethodBinding constructor
 			start,
 			end);
 }
-
+public void missingTypeInLambda(LambdaExpression lambda, MethodBinding method) {
+	int nameSourceStart = lambda.sourceStart();
+	int nameSourceEnd = lambda.diagnosticsSourceEnd();
+	List missingTypes = method.collectMissingTypes(null);
+	if (missingTypes == null) {
+		System.err.println("The lambda expression " + method + " is wrongly tagged as containing missing types"); //$NON-NLS-1$ //$NON-NLS-2$
+		return;
+	}
+	TypeBinding missingType = (TypeBinding) missingTypes.get(0);
+	this.handle(
+			IProblem.MissingTypeInLambda,
+			new String[] {
+			        new String(missingType.readableName()),
+			},
+			new String[] {
+			        new String(missingType.shortReadableName()),
+			},
+			nameSourceStart,
+			nameSourceEnd);
+}
 public void missingTypeInMethod(ASTNode astNode, MethodBinding method) {
 	int nameSourceStart, nameSourceEnd;
 	if (astNode instanceof MessageSend) {
@@ -9162,12 +9185,15 @@ public void nullityMismatchIsNull(Expression expression, TypeBinding requiredTyp
 			requiredType = capture.wildcard;
 	}
 	int problemId = IProblem.RequiredNonNullButProvidedNull;
-	String[] arguments = new String[] {
-			annotatedTypeName(requiredType, this.options.nonNullAnnotationName)
-	};
-	String[] argumentsShort = new String[] {
-			shortAnnotatedTypeName(requiredType, this.options.nonNullAnnotationName)
-	};
+	String[] arguments;
+	String[] argumentsShort;
+	if (this.options.sourceLevel < ClassFileConstants.JDK1_8) {
+		arguments      = new String[] { annotatedTypeName(requiredType, this.options.nonNullAnnotationName) };
+		argumentsShort = new String[] { shortAnnotatedTypeName(requiredType, this.options.nonNullAnnotationName) };
+	} else {
+		arguments      = new String[] { new String(requiredType.nullAnnotatedReadableName(this.options, false)) };
+		argumentsShort = new String[] { new String(requiredType.nullAnnotatedReadableName(this.options, true)) };
+	}
 	this.handle(problemId, arguments, argumentsShort, expression.sourceStart, expression.sourceEnd);
 }
 public void nullityMismatchSpecdNullable(Expression expression, TypeBinding requiredType, char[][] annotationName) {
@@ -9377,19 +9403,27 @@ public void expressionPotentialNullReference(ASTNode location) {
 		location.sourceEnd);
 }
 
-public void cannotImplementIncompatibleNullness(MethodBinding currentMethod, MethodBinding inheritedMethod) {
+public void cannotImplementIncompatibleNullness(MethodBinding currentMethod, MethodBinding inheritedMethod, boolean showReturn) {
 	int sourceStart = 0, sourceEnd = 0;
 	if (this.referenceContext instanceof TypeDeclaration) {
 		sourceStart = ((TypeDeclaration) this.referenceContext).sourceStart;
 		sourceEnd =   ((TypeDeclaration) this.referenceContext).sourceEnd;
 	}
 	String[] problemArguments = {
-			new String(currentMethod.readableName()),
+			showReturn 
+				? new String(currentMethod.returnType.nullAnnotatedReadableName(this.options, false))+' '
+				: "", //$NON-NLS-1$
+			new String(currentMethod.selector),
+			typesAsString(currentMethod, false, true),
 			new String(currentMethod.declaringClass.readableName()),
 			new String(inheritedMethod.declaringClass.readableName())
 		};
 	String[] messageArguments = {
-			new String(currentMethod.shortReadableName()),
+			showReturn 
+				? new String(currentMethod.returnType.nullAnnotatedReadableName(this.options, true))+' '
+				: "", //$NON-NLS-1$
+			new String(currentMethod.selector),
+			typesAsString(currentMethod, true, true),
 			new String(currentMethod.declaringClass.shortReadableName()),
 			new String(inheritedMethod.declaringClass.shortReadableName())
 		};
@@ -9442,6 +9476,10 @@ public void nullDefaultAnnotationIsRedundant(ASTNode location, Annotation[] anno
 		problemId = IProblem.RedundantNullDefaultAnnotationMethod;
 	}
 	this.handle(problemId, args, shortArgs, start, end);
+}
+
+public void nonNullDefaultDetailNotEvaluated(ASTNode location) {
+	this.handle(IProblem.NonNullDefaultDetailIsNotEvaluated, NoArgument, NoArgument, ProblemSeverities.Warning, location.sourceStart, location.sourceEnd);
 }
 
 public void contradictoryNullAnnotations(Annotation annotation) {

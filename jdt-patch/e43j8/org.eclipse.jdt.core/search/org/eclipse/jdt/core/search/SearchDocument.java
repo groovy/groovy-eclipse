@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -173,13 +169,16 @@ public abstract class SearchDocument {
 	 *  to resolve the document via {@link SearchParticipant#resolveDocument} and to index the document adding 
 	 *  additional entries via {@link SearchParticipant#indexResolvedDocument} 
 	 *  
-	 * @since 3.9 BETA_JAVA8 
+	 * @since 3.10 
 	 */
 	public void requireIndexingResolvedDocument() {
 		this.shouldIndexResolvedDocument = true;
 	}
 	
-	/* non API */
+	/**
+	 * @nooverride This method is not intended to be re-implemented or extended by clients.
+	 * @noreference This method is not intended to be referenced by clients.
+	 */
 	public boolean shouldIndexResolvedDocument() {
 		return this.shouldIndexResolvedDocument;
 	}

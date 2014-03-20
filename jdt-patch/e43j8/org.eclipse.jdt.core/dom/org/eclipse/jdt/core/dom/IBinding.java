@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -217,6 +213,7 @@ public interface IBinding {
 	 * <li>the default constructor of a source class</li>
 	 * <li>the constructor of an anonymous class</li>
 	 * <li>member value pairs</li>
+	 * <li>synthetic bindings</li>
 	 * </ul>
 	 * For all other kind of type, method, variable, annotation and package bindings,
 	 * this method returns non-<code>null</code>.

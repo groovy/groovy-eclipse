@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2013 IBM Corporation and others.
+ * Copyright (c) 2005, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *     							Bug 425183 - [1.8][inference] make CaptureBinding18 safe
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.util;
 
@@ -29,8 +31,9 @@ public class BindingKeyParser {
 		static final int FLAGS = 6;
 		static final int WILDCARD = 7;
 		static final int CAPTURE = 8;
-		static final int BASE_TYPE = 9;
-		static final int END = 10;
+		static final int CAPTURE18 = 9;
+		static final int BASE_TYPE = 10;
+		static final int END = 11;
 
 		static final int START = -1;
 
@@ -59,6 +62,12 @@ public class BindingKeyParser {
 			return
 				this.index < this.source.length
 				&& this.source[this.index] == '!';
+		}
+
+		boolean isAtCapture18Start() {
+			return
+				this.index < this.source.length
+				&& this.source[this.index] == '^';
 		}
 
 		boolean isAtFieldOrMethodStart() {
@@ -305,6 +314,10 @@ public class BindingKeyParser {
 						this.index++;
 						this.token = CAPTURE;
 						return this.token;
+					case '^':
+						this.index++;
+						this.token = CAPTURE18;
+						return this.token;
 				}
 				this.index++;
 			}
@@ -377,6 +390,12 @@ public class BindingKeyParser {
 			this.start = this.index;
 		}
 
+		void skipCapture18Delim() {
+			if (this.index < this.source.length && this.source[this.index] == '#')
+				this.index++;
+			this.start = this.index;
+		}
+
 		public String toString() {
 			StringBuffer buffer = new StringBuffer();
 			switch (this.token) {
@@ -409,6 +428,9 @@ public class BindingKeyParser {
 					break;
 				case CAPTURE:
 					buffer.append("CAPTURE: "); //$NON-NLS-1$
+					break;
+				case CAPTURE18:
+					buffer.append("CAPTURE18: "); //$NON-NLS-1$
 					break;
 				case BASE_TYPE:
 					buffer.append("BASE TYPE: "); //$NON-NLS-1$
@@ -471,6 +493,10 @@ public class BindingKeyParser {
 
 	public void consumeCapture(int position) {
 		// default is to do nothing
+	}
+
+	public void consumeCapture18ID(int id, int position) {
+		// default is to do nothing		
 	}
 
 	public void consumeException() {
@@ -673,6 +699,11 @@ public class BindingKeyParser {
 			this.hasTypeName = false;
 			return;
 		}
+		if (this.scanner.isAtCapture18Start()) {
+			parseCapture18();
+			this.hasTypeName = false;
+			return;
+		}
 		switch(this.scanner.nextToken()) {
 			case Scanner.PACKAGE:
 				this.keyStart = 0;
@@ -832,6 +863,26 @@ public class BindingKeyParser {
 		char[] positionChars = this.scanner.getTokenSource();
 		int position = Integer.parseInt(new String(positionChars));
 		consumeCapture(position);
+		this.scanner.skipTypeEnd();
+	}
+
+	private void parseCapture18() {
+		// syntax: ^{int#int}
+		if (this.scanner.nextToken() != Scanner.CAPTURE18) return;
+
+		this.scanner.skipRankStart(); // {
+		this.scanner.skipRank();
+		char[] source = this.scanner.getTokenSource();
+		int position = Integer.parseInt(new String(source));
+
+		this.scanner.skipCapture18Delim(); // #
+		this.scanner.skipRank();
+		source = this.scanner.getTokenSource();
+		int id = Integer.parseInt(new String(source));
+		this.scanner.skipRankEnd(); // }
+		
+		consumeCapture18ID(id, position);
+		
 		this.scanner.skipTypeEnd();
 	}
 

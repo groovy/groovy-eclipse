@@ -28,6 +28,9 @@ public class MementoTokenizer {
 	public static final String LOCALVARIABLE = Character.toString(JavaElement.JEM_LOCALVARIABLE);
 	public static final String TYPE_PARAMETER = Character.toString(JavaElement.JEM_TYPE_PARAMETER);
 	public static final String ANNOTATION = Character.toString(JavaElement.JEM_ANNOTATION);
+	public static final String LAMBDA_EXPRESSION = Character.toString(JavaElement.JEM_LAMBDA_EXPRESSION);
+	public static final String LAMBDA_METHOD = Character.toString(JavaElement.JEM_LAMBDA_METHOD);
+	public static final String STRING = Character.toString(JavaElement.JEM_STRING);
 
 	private final char[] memento;
 	private final int length;
@@ -54,6 +57,24 @@ public class MementoTokenizer {
 			case JavaElement.JEM_COUNT:
 				return COUNT;
 			case JavaElement.JEM_JAVAPROJECT:
+				// Also covers JavaElement#JEM_DELIMITER_ESCAPE, in which case, 
+				// we seek ahead by one char and check if it's an escaped delimiter
+				// and if that's true, we return that as the token. 
+				// Else, we decide that JEM_JAVAPROJECT is the current token.
+				if (this.index < this.length) {
+					char nextChar = this.memento[this.index++];
+					switch(nextChar) {
+						case JavaElement.JEM_LAMBDA_EXPRESSION:
+							return LAMBDA_EXPRESSION;
+						case JavaElement.JEM_LAMBDA_METHOD:
+							return LAMBDA_METHOD;
+						case JavaElement.JEM_STRING:
+							return STRING;
+						default:
+							this.index--;
+							break;
+					}
+				}
 				return JAVAPROJECT;
 			case JavaElement.JEM_PACKAGEFRAGMENTROOT:
 				return PACKAGEFRAGMENTROOT;

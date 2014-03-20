@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -20,15 +16,19 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.SearchDocument;
-import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
+import org.eclipse.jdt.internal.compiler.ast.ASTNode;
+import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.FunctionalExpression;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
@@ -36,7 +36,6 @@ import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.env.ISourceType;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.ITypeRequestor;
-import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
@@ -153,12 +152,13 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 			// Re-parse using normal parser, IndexingParser swallows several nodes, see comment above class.
 			this.basicParser = new Parser(problemReporter, false);
 			this.basicParser.reportOnlyOneSyntaxError = true;
+			this.basicParser.scanner.taskTags = null;
 			this.cud = this.basicParser.parse(this.compilationUnit, new CompilationResult(this.compilationUnit, 0, 0, this.options.maxProblemsPerUnit));
 
 			// Use a non model name environment to avoid locks, monitors and such.
 			INameEnvironment nameEnvironment = new JavaSearchNameEnvironment(javaProject, JavaModelManager.getJavaModelManager().getWorkingCopies(DefaultWorkingCopyOwner.PRIMARY, true/*add primary WCs*/));
 			this.lookupEnvironment = new LookupEnvironment(this, this.options, problemReporter, nameEnvironment);
-
+			reduceParseTree(this.cud);
 			this.lookupEnvironment.buildTypeBindings(this.cud, null);
 			this.lookupEnvironment.completeTypeBindings();
 			this.cud.scope.faultInTypes();
@@ -170,33 +170,67 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 		}
 	}
 
+	/**
+	 * Called prior to the unit being resolved. Reduce the parse tree where possible.
+	 */
+	private void reduceParseTree(CompilationUnitDeclaration unit) {
+		// remove statements from methods that have no functional interface types.
+		TypeDeclaration[] types = unit.types;
+		for (int i = 0, l = types == null ? 0 : types.length; i < l; i++)
+			purgeMethodStatements(types[i]);
+	}
+
+	private void purgeMethodStatements(TypeDeclaration type) {
+		AbstractMethodDeclaration[] methods = type.methods;
+		for (int j = 0, length = methods == null ? 0 : methods.length; j < length; j++) {
+			AbstractMethodDeclaration method = methods[j];
+			if (method != null && (method.bits & ASTNode.HasFunctionalInterfaceTypes) == 0) {
+				method.statements = null;
+				method.javadoc = null;
+			}
+		}
+
+		TypeDeclaration[] memberTypes = type.memberTypes;
+		if (memberTypes != null)
+			for (int i = 0, l = memberTypes.length; i < l; i++)
+				purgeMethodStatements(memberTypes[i]);
+	}
+
 	public void indexResolvedDocument() {
 		try {
-			if (DEBUG) {
-				System.out.println(new String(this.cud.compilationResult.fileName) + ':');
-			}
-			final ASTVisitor visitor = new ASTVisitor() {
-				public boolean visit(LambdaExpression lambdaExpression, BlockScope blockScope) {
+			if (DEBUG) System.out.println(new String(this.cud.compilationResult.fileName) + ':');
+			for (int i = 0, length = this.cud.functionalExpressionsCount; i < length; i++) {
+				FunctionalExpression expression = this.cud.functionalExpressions[i];
+				if (expression instanceof LambdaExpression) {
+					LambdaExpression lambdaExpression = (LambdaExpression) expression;
 					if (lambdaExpression.binding != null && lambdaExpression.binding.isValidBinding()) {
+						final char[] superinterface = lambdaExpression.resolvedType.sourceName();
 						if (DEBUG) {
-							System.out.println('\t' + new String(lambdaExpression.descriptor.declaringClass.sourceName()) + '.' + 
+							System.out.println('\t' + new String(superinterface) + '.' + 
 									new String(lambdaExpression.descriptor.selector) + "-> {}"); //$NON-NLS-1$
 						}
 						SourceIndexer.this.addIndexEntry(IIndexConstants.METHOD_DECL, MethodPattern.createIndexKey(lambdaExpression.descriptor.selector, lambdaExpression.descriptor.parameters.length));
+					
+						addClassDeclaration(0,  // most entries are blank, that is fine, since lambda type/method cannot be searched.
+								CharOperation.NO_CHAR, // package name
+								ONE_ZERO,
+								ONE_ZERO_CHAR, // enclosing types.
+								CharOperation.NO_CHAR, // super class
+								new char[][] { superinterface },
+								CharOperation.NO_CHAR_CHAR,
+								true); // not primary.
+
 					} else {
-						if (DEBUG) {
-							System.out.println("\tnull/bad binding in lambda"); //$NON-NLS-1$
-						}
+						if (DEBUG) System.out.println("\tnull/bad binding in lambda"); //$NON-NLS-1$
 					}
-					return true;
-				}
-				public boolean visit(ReferenceExpression referenceExpression, BlockScope blockScope) {
+				} else {
+					ReferenceExpression referenceExpression = (ReferenceExpression) expression;
 					if (referenceExpression.isArrayConstructorReference())
-						return true;
+						continue;
 					MethodBinding binding = referenceExpression.getMethodBinding();
 					if (binding != null && binding.isValidBinding()) {
 						if (DEBUG) {
-							System.out.println('\t' + new String(referenceExpression.descriptor.declaringClass.sourceName()) + "::"  //$NON-NLS-1$
+							System.out.println('\t' + new String(referenceExpression.resolvedType.sourceName()) + "::"  //$NON-NLS-1$
 									+ new String(referenceExpression.descriptor.selector) + " == " + new String(binding.declaringClass.sourceName()) + '.' + //$NON-NLS-1$
 									new String(binding.selector));
 						}
@@ -205,14 +239,10 @@ public class SourceIndexer extends AbstractIndexer implements ITypeRequestor, Su
 						else
 							SourceIndexer.this.addConstructorReference(binding.declaringClass.sourceName(), binding.parameters.length);
 					} else {
-						if (DEBUG) {
-							System.out.println("\tnull/bad binding in reference expression"); //$NON-NLS-1$
-						}
+						if (DEBUG) System.out.println("\tnull/bad binding in reference expression"); //$NON-NLS-1$
 					}
-					return true;
 				}
-			};
-			this.cud.traverse(visitor , this.cud.scope, false);
+			}
 		} catch (Exception e) {
 			if (JobManager.VERBOSE) {
 				e.printStackTrace();

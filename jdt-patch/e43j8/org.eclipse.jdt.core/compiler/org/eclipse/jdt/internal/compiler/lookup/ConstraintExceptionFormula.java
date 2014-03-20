@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     Stephan Herrmann - initial API and implementation
  *******************************************************************************/
@@ -69,16 +65,25 @@ public class ConstraintExceptionFormula extends ConstraintFormula {
 			}
 		}
 		TypeBinding[] thrown = sam.thrownExceptions;
-		TypeBinding[] e = new TypeBinding[thrown.length];
+		InferenceVariable[] e = new InferenceVariable[thrown.length];
 		int n = 0;
 		for (int i = 0; i < thrown.length; i++)
 			if (!thrown[i].isProperType(true))
-				e[n++] = thrown[i];
+				e[n++] = (InferenceVariable) thrown[i]; // thrown[i] is not a proper type, since it's an exception it must be an inferenceVariable, right?
+		
+		/* If throw specification does not encode any type parameters, there are no constraints to be gleaned/gathered from the throw sites.
+		   See also that thrown exceptions are not allowed to influence compatibility and overload resolution.
+		*/
+		if (n == 0)
+			return TRUE;
+		
 		TypeBinding[] ePrime = null;
 		if (this.left instanceof LambdaExpression) {
-// TODO find exceptions thrown by the lambda's body, see 18.2.5 bullet 5
-//				((LambdaExpression)this.left).
-//				InferenceContext18.missingImplementation("NYI");
+			LambdaExpression lambda = ((LambdaExpression) this.left).getResolvedCopyForInferenceTargeting(this.right);
+			if (lambda == null)
+				return TRUE; // cannot make use of this buggy constraint
+			Set<TypeBinding> ePrimeSet = lambda.getThrownExceptions();
+			ePrime = ePrimeSet.toArray(new TypeBinding[ePrimeSet.size()]);
 		} else {
 			ReferenceExpression referenceExpression = (ReferenceExpression)this.left;
 			MethodBinding method = referenceExpression.findCompileTimeMethodTargeting(this.right, scope);
@@ -86,29 +91,21 @@ public class ConstraintExceptionFormula extends ConstraintFormula {
 				ePrime = method.thrownExceptions;
 		}
 		if (ePrime == null)
-			return TRUE; // TODO is it a bug if we actually get here?
-		int m = ePrime.length;
-		if (n == 0) {
-			actual: for (int i = 0; i < m; i++) {
-				for (int j = 0; j < thrown.length; j++)
-					if (ePrime[i].isCompatibleWith(thrown[j]))
-						continue actual;
-				return FALSE;
-			}
 			return TRUE;
-		} else {
-			List<ConstraintFormula> result = new ArrayList<ConstraintFormula>();
-			actual: for (int i = 0; i < m; i++) {
-				for (int j = 0; j < thrown.length; j++)
-					if (thrown[j].isProperType(true) && ePrime[i].isCompatibleWith(thrown[j]))
-						continue actual;
-				for (int j = 0; j < n; j++)
-					result.add(new ConstraintTypeFormula(ePrime[i], e[j], SUBTYPE));
-			}				
+		int m = ePrime.length;
+		List<ConstraintFormula> result = new ArrayList<ConstraintFormula>();
+		actual: for (int i = 0; i < m; i++) {
+			if (ePrime[i].isUncheckedException(false))
+				continue;
+			for (int j = 0; j < thrown.length; j++)
+				if (thrown[j].isProperType(true) && ePrime[i].isCompatibleWith(thrown[j]))
+					continue actual;
 			for (int j = 0; j < n; j++)
-				result.add(new ConstraintExceptionFormula(this.left, e[j]));
-			return result.toArray(new ConstraintFormula[result.size()]);
-		}
+				result.add(ConstraintTypeFormula.create(ePrime[i], e[j], SUBTYPE));
+		}				
+		for (int j = 0; j < n; j++)
+			inferenceContext.currentBounds.inThrows.add(e[j]);
+		return result.toArray(new ConstraintFormula[result.size()]);
 	}
 
 	Collection<InferenceVariable> inputVariables(final InferenceContext18 context) {

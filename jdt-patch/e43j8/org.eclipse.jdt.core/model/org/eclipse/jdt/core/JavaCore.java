@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     IBM Corporation - added the following constants:
@@ -283,7 +279,7 @@ public final class JavaCore extends Plugin {
 	 * <dt>Possible values:</dt><dd><code>{ "generate", "do not generate" }</code></dd>
 	 * <dt>Default:</dt><dd><code>"do not generate"</code></dd>
 	 * </dl>
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 * @category CompilerOptionID
 	 */
 	public static final String COMPILER_CODEGEN_METHOD_PARAMETERS_ATTR = PLUGIN_ID + ".compiler.codegen.methodParameters"; //$NON-NLS-1$
@@ -2664,7 +2660,7 @@ public final class JavaCore extends Plugin {
 	public static final String VERSION_1_7 = "1.7"; //$NON-NLS-1$
 	/**
 	 * Configurable option value: {@value}.
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 * @category OptionValue
 	 */
 	public static final String VERSION_1_8 = "1.8"; //$NON-NLS-1$

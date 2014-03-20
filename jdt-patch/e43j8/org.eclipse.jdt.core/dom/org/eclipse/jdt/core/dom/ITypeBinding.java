@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -90,6 +86,7 @@ public interface ITypeBinding extends IBinding {
 	 * @return the bound of this wildcard type, or <code>null</code> if none
 	 * @see #isWildcardType()
 	 * @see #isUpperbound()
+	 * @see #getTypeBounds()
 	 * @since 3.1
 	 */
 	public ITypeBinding getBound();
@@ -118,10 +115,12 @@ public interface ITypeBinding extends IBinding {
 	/**
 	 * Returns the binding representing the component type of this array type,
 	 * or <code>null</code> if this is not an array type binding. The component
-	 * type of an array might be an array type.
+	 * type of an array might be an array type (with one dimension less than
+	 * this array type).
 	 *
 	 * @return the component type binding, or <code>null</code> if this is
 	 *   not an array type
+	 * @see #getElementType()
 	 * @since 3.2
 	 */
 	public ITypeBinding getComponentType();
@@ -176,6 +175,10 @@ public interface ITypeBinding extends IBinding {
 	 * @return the bit-wise or of <code>Modifier</code> constants
 	 * @see #getModifiers()
 	 * @see Modifier
+	 * @deprecated  Use {@link #getModifiers()} instead.
+	 * This method was never implemented properly and historically has simply
+	 * delegated to the method <code>getModifiers</code>. Clients should call
+	 * <code>getModifiers</code> method directly.
 	 */
 	public int getDeclaredModifiers();
 
@@ -259,7 +262,7 @@ public interface ITypeBinding extends IBinding {
 	/**
 	 * Returns the binding representing the element type of this array type,
 	 * or <code>null</code> if this is not an array type binding. The element
-	 * type of an array is never itself an array type.
+	 * type of an array type is never itself an array type.
 	 *
 	 * @return the element type binding, or <code>null</code> if this is
 	 *   not an array type
@@ -297,15 +300,17 @@ public interface ITypeBinding extends IBinding {
 	/**
 	 * Returns the single abstract method that constitutes the single function 
 	 * contract (aside from any redeclarations of methods of <code>java.lang.Object</code>) 
-	 * of the receiver interface type or null if there no such contract or if the receiver 
-	 * is not an interface. 
+	 * of the receiver interface type or <code>null</code> if there is no such contract or if the receiver 
+	 * is not an interface.
+	 * <p>
+	 * The returned method binding may be synthetic and its {@link #getDeclaringClass() declaring type}
+	 * may be a super interface type of this type binding.
+	 * </p>
 	 * 
-	 * @return the single abstract method that represents the single function contract 
-	 * (aside from any redeclarations of methods of <code>java.lang.Object</code>) of 
-	 * this interface type or null if the receiver is not an interface or if the receiver 
-	 * has more than one abstract method or no abstract methods.
+	 * @return the single abstract method that represents the single function contract, or
+	 * <code>null</code> if the receiver is not a functional interface type
 	 *
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public IMethodBinding getFunctionalInterfaceMethod();
 
@@ -346,15 +351,13 @@ public interface ITypeBinding extends IBinding {
 	 * or annotation type binding.
 	 * The result may not correspond to the modifiers as declared in the
 	 * original source, since the compiler may change them (in particular,
-	 * for inner class emulation). The <code>getDeclaredModifiers</code> method
-	 * should be used if the original modifiers are needed.
+	 * for inner class emulation).
 	 * Returns 0 if this type does not represent a class, an interface, an enum, an annotation
 	 * type or a recovered type.
 	 *
 	 * @return the compiled modifiers for this type binding or 0
 	 * if this type does not represent a class, an interface, an enum, an annotation
 	 * type or a recovered type.
-	 * @see #getDeclaredModifiers()
 	 */
 	public int getModifiers();
 
@@ -528,7 +531,7 @@ public interface ITypeBinding extends IBinding {
 	 * no type use annotations are found.
 	 * @see #getTypeDeclaration()
 	 * @see #getKey()
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public IAnnotationBinding[] getTypeAnnotations();
 
@@ -568,8 +571,9 @@ public interface ITypeBinding extends IBinding {
 	 *
 	 * @return the list of upper bounds for this type variable, wildcard, or capture,
      * or otherwise the empty list
+     * @see #isTypeVariable()
+     * @see #isWildcardType()
 	 * @see #isCapture()
-	 * @see #isTypeVariable()
 	 * @since 3.1
 	 */
 	public ITypeBinding[] getTypeBounds();
@@ -778,15 +782,6 @@ public interface ITypeBinding extends IBinding {
 	public boolean isGenericType();
 
 	/**
-	 * Returns whether this type binding represents a functional interface type.
-	 *
-	 * @return <code>true</code> if this object represents a functional interface,
-	 *    and <code>false</code> otherwise
-	 * @since 3.9 BETA_JAVA8
-	 */
-	public boolean isFunctionalInterface();
-
-	/**
 	 * Returns whether this type binding represents an interface type.
 	 * <p>
 	 * Note that an interface can also be an annotation type.
@@ -990,10 +985,10 @@ public interface ITypeBinding extends IBinding {
 	 * Returns whether this type binding represents a wildcard type. A wildcard
 	 * type occurs only as an argument to a parameterized type reference.
 	 * <p>
-	 * For example, a AST type like
-	 * <code>Collection&lt;? extends Object&gt;</code> typically resolves to a
+	 * For example, an AST type like
+	 * <code>Collection&lt;? extends Number&gt;</code> typically resolves to a
 	 * parameterized type binding whose type argument is a wildcard type
-	 * with upper type bound <code>java.util.Object</code>.
+	 * with upper type bound <code>java.lang.Number</code>.
 	 * </p>
 	 *
 	 * @return <code>true</code> if this object represents a wildcard type,
