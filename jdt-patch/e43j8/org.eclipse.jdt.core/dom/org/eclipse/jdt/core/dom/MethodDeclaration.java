@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -122,7 +118,7 @@ public class MethodDeclaration extends BodyDeclaration {
 	
 	/**
 	 * The "extraDimensions2" structural property of this node type (element type: {@link Dimension}) (added in JLS8 API).
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public static final ChildListPropertyDescriptor EXTRA_DIMENSIONS2_PROPERTY =
 			new ChildListPropertyDescriptor(MethodDeclaration.class, "extraDimensions2", Dimension.class, NO_CYCLE_RISK); //$NON-NLS-1$
@@ -143,14 +139,14 @@ public class MethodDeclaration extends BodyDeclaration {
 
 	/**
 	 * The "receiverType" structural property of this node type (child type: {@link Type}) (added in JLS8 API).
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public static final ChildPropertyDescriptor RECEIVER_TYPE_PROPERTY =
 			new ChildPropertyDescriptor(MethodDeclaration.class, "receiverType", Type.class, OPTIONAL, NO_CYCLE_RISK); //$NON-NLS-1$
 	
 	/**
 	 * The "receiverQualifier" structural property of this node type (child type: {@link SimpleName}) (added in JLS8 API).
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public static final ChildPropertyDescriptor RECEIVER_QUALIFIER_PROPERTY =
 			new ChildPropertyDescriptor(MethodDeclaration.class, "receiverQualifier", SimpleName.class, OPTIONAL, NO_CYCLE_RISK); //$NON-NLS-1$
@@ -165,7 +161,7 @@ public class MethodDeclaration extends BodyDeclaration {
 
 	/**
 	 * The "thrownExceptionTypes" structural property of this node type (element type: {@link Type}) (added in JLS8 API).
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public static final ChildListPropertyDescriptor THROWN_EXCEPTION_TYPES_PROPERTY =
 		new ChildListPropertyDescriptor(MethodDeclaration.class, "thrownExceptionTypes", Type.class, NO_CYCLE_RISK); //$NON-NLS-1$
@@ -197,7 +193,7 @@ public class MethodDeclaration extends BodyDeclaration {
 	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	private static final List PROPERTY_DESCRIPTORS_8_0;
 
@@ -280,14 +276,14 @@ public class MethodDeclaration extends BodyDeclaration {
 	/**
 	 * The explicit receiver type, or <code>null</code> if none.
 	 * Defaults to none.
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	private Type optionalReceiverType = null;
 	
 	/**
 	 * Qualifying name of the explicit </code>this</code> parameter, or <code>null</code> if none.
 	 * Defaults to none.
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	private SimpleName optionalReceiverQualifier = null;
 
@@ -336,7 +332,7 @@ public class MethodDeclaration extends BodyDeclaration {
 	 * Null before JLS8. Added in JLS8; defaults to an empty list
 	 * (see constructor).
 	 * 
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	private ASTNode.NodeList extraDimensions = null;
 
@@ -353,7 +349,7 @@ public class MethodDeclaration extends BodyDeclaration {
 	 * Null before JLS8. Added in JLS8; defaults to an empty list
 	 * (see constructor).
 	 * 
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	private ASTNode.NodeList thrownExceptionTypes = null;
 
@@ -733,7 +729,7 @@ public class MethodDeclaration extends BodyDeclaration {
 	 *
 	 * @return the receiver type or <code>null</code> if receiver is not declared explicitly
 	 * @exception UnsupportedOperationException if this operation is used below JLS8
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public Type getReceiverType() {
 		unsupportedIn2_3_4();
@@ -748,7 +744,7 @@ public class MethodDeclaration extends BodyDeclaration {
 	 * 
 	 * @param receiverType type of the explicit receiver parameter, or <code>null</code> if there is none
 	 * @exception UnsupportedOperationException if this operation is used below JLS8
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public void setReceiverType(Type receiverType) {
 		unsupportedIn2_3_4();
@@ -766,7 +762,7 @@ public class MethodDeclaration extends BodyDeclaration {
 	 * 
 	 * @returns the qualifying name or <code>null</code> if a qualifier was not specified
 	 * @exception UnsupportedOperationException if this operation is used below JLS8
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public SimpleName getReceiverQualifier() {
 		unsupportedIn2_3_4();
@@ -778,7 +774,7 @@ public class MethodDeclaration extends BodyDeclaration {
 	 * 
 	 * @param receiverQualifier explicit receiver parameter to be added to the method declaration
 	 * @exception UnsupportedOperationException if this operation is used below JLS8
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public void setReceiverQualifier(SimpleName receiverQualifier) {
 		unsupportedIn2_3_4();
@@ -843,7 +839,7 @@ public class MethodDeclaration extends BodyDeclaration {
 	 * deprecation warnings.
 	 * @exception UnsupportedOperationException if this operation is used in
 	 *    a JLS8 or later AST
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	/*package*/	List internalThrownExceptions() {
 		// more efficient than just calling supportedOnlyIn2_3_4() to check
@@ -861,7 +857,7 @@ public class MethodDeclaration extends BodyDeclaration {
 	 *    (element type: {@link Type})
 	 * @exception UnsupportedOperationException if this operation is used
 	 *            in a JLS2, JLS3 or JLS4 AST    
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public List thrownExceptionTypes()  {
 		if (this.thrownExceptionTypes == null) {
@@ -1086,7 +1082,7 @@ public class MethodDeclaration extends BodyDeclaration {
 	 * 
 	 * @return the live list of extra dimensions with optional annotations (element type: {@link Dimension})
 	 * @exception UnsupportedOperationException if this operation is used below JLS8
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public List extraDimensions() {
 		// more efficient than just calling unsupportedIn2_3_4() to check

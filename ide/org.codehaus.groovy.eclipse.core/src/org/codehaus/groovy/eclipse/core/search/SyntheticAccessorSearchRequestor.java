@@ -320,6 +320,12 @@ public class SyntheticAccessorSearchRequestor {
             return delegate.exists();
         }
 
+        public boolean isLambdaMethod() {
+            // don't do this right now as it won't be in all versions of IMethod
+            // return delegate.isLambdaMethod();
+            return false;
+        }
+
     }
 
     private class Requestor extends SearchRequestor {

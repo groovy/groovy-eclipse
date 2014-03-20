@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     Stephan Herrmann - initial API and implementation
  *******************************************************************************/
@@ -69,7 +65,7 @@ abstract class ConstraintFormula extends ReductionResult {
 	public boolean applySubstitution(BoundSet solutionSet, InferenceVariable[] variables) {
 		for (int i=0; i<variables.length; i++) {
 			InferenceVariable variable = variables[i];
-			TypeBinding instantiation = solutionSet.getInstantiation(variables[i]);
+			TypeBinding instantiation = solutionSet.getInstantiation(variables[i], null);
 			if (instantiation == null)
 				return false;
 			this.right = this.right.substituteInferenceVariable(variable, instantiation);

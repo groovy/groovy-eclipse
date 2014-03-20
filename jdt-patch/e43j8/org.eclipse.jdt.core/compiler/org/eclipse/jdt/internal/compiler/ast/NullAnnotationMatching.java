@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     Stephan Herrmann - initial API and implementation
  *******************************************************************************/
@@ -20,9 +16,12 @@ import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
+import org.eclipse.jdt.internal.compiler.lookup.CaptureBinding;
 import org.eclipse.jdt.internal.compiler.lookup.InvocationSite;
-import org.eclipse.jdt.internal.compiler.lookup.ParameterizedGenericMethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemMethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.RawTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
@@ -37,7 +36,7 @@ import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
 /**
  * Performs matching of null type annotations.
  * Instances are used to encode result from this analysis.
- * @since 3.9 BETA_JAVA8
+ * @since 3.10
  */
 public class NullAnnotationMatching {
 	
@@ -110,6 +109,10 @@ public class NullAnnotationMatching {
 	 * @return a status object representing the severity of mismatching plus optionally a supertype hint
 	 */
 	public static NullAnnotationMatching analyse(TypeBinding requiredType, TypeBinding providedType, int nullStatus) {
+		return analyse(requiredType, providedType, nullStatus, false);
+	}
+	// additional parameter strict: if true we do not tolerate incompatibly missing annotations on type parameters (for overriding analysis)
+	public static NullAnnotationMatching analyse(TypeBinding requiredType, TypeBinding providedType, int nullStatus, boolean strict) {
 		int severity = 0;
 		TypeBinding superTypeHint = null;
 		if (requiredType instanceof ArrayBinding) {
@@ -126,7 +129,7 @@ public class NullAnnotationMatching {
 							long providedBits = validNullTagBits(providedDimsTagBits[i]);
 							if (i > 0)
 								nullStatus = -1; // don't use beyond the outermost dimension
-							severity = Math.max(severity, computeNullProblemSeverity(requiredBits, providedBits, nullStatus));
+							severity = Math.max(severity, computeNullProblemSeverity(requiredBits, providedBits, nullStatus, strict));
 							if (severity == 2)
 								return NullAnnotationMatching.NULL_ANNOTATIONS_MISMATCH;
 						}
@@ -137,12 +140,12 @@ public class NullAnnotationMatching {
 				}
 			}
 		} else if (requiredType.hasNullTypeAnnotations() || providedType.hasNullTypeAnnotations()) {
-			long requiredBits = validNullTagBits(requiredType.tagBits);
+			long requiredBits = requiredNullTagBits(requiredType);
 			if (requiredBits != TagBits.AnnotationNullable // nullable lhs accepts everything, ...
 					|| nullStatus == -1) // only at detail/recursion even nullable must be matched exactly
 			{
-				long providedBits = validNullTagBits(providedType.tagBits);
-				severity = computeNullProblemSeverity(requiredBits, providedBits, nullStatus);
+				long providedBits = providedNullTagBits(providedType);
+				severity = computeNullProblemSeverity(requiredBits, providedBits, nullStatus, strict && nullStatus == -1);
 			}
 			if (severity < 2) {
 				TypeBinding providedSuper = providedType.findSuperTypeOriginatingFrom(requiredType);
@@ -153,24 +156,17 @@ public class NullAnnotationMatching {
 					TypeBinding[] providedArguments = ((ParameterizedTypeBinding) providedSuper).arguments;
 					if (requiredArguments != null && providedArguments != null && requiredArguments.length == providedArguments.length) {
 						for (int i = 0; i < requiredArguments.length; i++) {
-							NullAnnotationMatching status = analyse(requiredArguments[i], providedArguments[i], -1);
+							NullAnnotationMatching status = analyse(requiredArguments[i], providedArguments[i], -1, strict);
 							severity = Math.max(severity, status.severity);
 							if (severity == 2)
 								return new NullAnnotationMatching(severity, superTypeHint);
 						}
 					}
-				} else 	if (requiredType instanceof WildcardBinding) {
-					WildcardBinding wildcardBinding = (WildcardBinding) requiredType;
-					if (wildcardBinding.bound != null) {
-						NullAnnotationMatching status = analyse(wildcardBinding.bound, providedType, nullStatus);
-						severity = Math.max(severity, status.severity);
-					}
-					// TODO(stephan): what about otherBounds? Do we accept "? extends @NonNull I1 & @Nullable I2" in the first place??
 				}
 				TypeBinding requiredEnclosing = requiredType.enclosingType();
 				TypeBinding providedEnclosing = providedType.enclosingType();
 				if (requiredEnclosing != null && providedEnclosing != null) {
-					NullAnnotationMatching status = analyse(requiredEnclosing, providedEnclosing, -1);
+					NullAnnotationMatching status = analyse(requiredEnclosing, providedEnclosing, -1, strict);
 					severity = Math.max(severity, status.severity);
 				}
 			}
@@ -178,6 +174,109 @@ public class NullAnnotationMatching {
 		if (severity == 0)
 			return NullAnnotationMatching.NULL_ANNOTATIONS_OK;
 		return new NullAnnotationMatching(severity, superTypeHint);
+	}
+
+	// interpreting 'type' as a required type, compute the required null bits
+	// we inspect the main type plus bounds of type variables and wildcards
+	static long requiredNullTagBits(TypeBinding type) {
+
+		long tagBits = type.tagBits & TagBits.AnnotationNullMASK;
+		if (tagBits != 0)
+			return validNullTagBits(tagBits);
+
+		if (type.isWildcard()) {
+			WildcardBinding wildcard = (WildcardBinding)type;
+			if (wildcard.boundKind == Wildcard.UNBOUND)
+				return 0;
+			tagBits = wildcard.bound.tagBits & TagBits.AnnotationNullMASK;
+			if (tagBits == 0)
+				return 0;
+			switch (wildcard.boundKind) {
+				case Wildcard.EXTENDS :
+					if (tagBits == TagBits.AnnotationNonNull)
+						return TagBits.AnnotationNonNull;
+					return TagBits.AnnotationNullMASK; // wildcard accepts @Nullable or better
+				case Wildcard.SUPER :
+					if (tagBits == TagBits.AnnotationNullable)
+						return TagBits.AnnotationNullable;
+					return TagBits.AnnotationNullMASK; // wildcard accepts @NonNull or worse
+			}
+			return 0;
+		} 
+		
+		if (type.isTypeVariable()) {
+			// assume we must require @NonNull, unless: (1) lower @Nullable bound, or (2) no nullness specified
+			TypeVariableBinding typeVariable = (TypeVariableBinding)type;
+			boolean haveNullBits = false;
+			if (type.isCapture()) {
+				TypeBinding lowerBound = ((CaptureBinding) type).lowerBound;
+				if (lowerBound != null) {
+					tagBits = lowerBound.tagBits & TagBits.AnnotationNullMASK;
+					if (tagBits == TagBits.AnnotationNullable)
+						return TagBits.AnnotationNullable; // (1) type cannot require @NonNull
+					haveNullBits = tagBits != 0;
+				}
+			}
+			if (typeVariable.firstBound != null)
+				haveNullBits |= (typeVariable.firstBound.tagBits & TagBits.AnnotationNullMASK) != 0;
+			if (haveNullBits)
+				return TagBits.AnnotationNonNull; // could require @NonNull (unless (2) unspecified nullness)
+		}
+
+		return 0;
+	}
+
+	// interpreting 'type' as a provided type, compute the provide null bits
+	// we inspect the main type plus bounds of type variables and wildcards
+	static long providedNullTagBits(TypeBinding type) {
+
+		long tagBits = type.tagBits & TagBits.AnnotationNullMASK;
+		if (tagBits != 0)
+			return validNullTagBits(tagBits);
+		
+		if (type.isWildcard()) { // wildcard can be 'provided' during inheritance checks
+			WildcardBinding wildcard = (WildcardBinding)type;
+			if (wildcard.boundKind == Wildcard.UNBOUND)
+				return 0;
+			tagBits = wildcard.bound.tagBits & TagBits.AnnotationNullMASK;
+			if (tagBits == 0)
+				return 0;
+			switch (wildcard.boundKind) {
+				case Wildcard.EXTENDS :
+					if (tagBits == TagBits.AnnotationNonNull)
+						return TagBits.AnnotationNonNull;
+					return TagBits.AnnotationNullMASK; // @Nullable or better
+				case Wildcard.SUPER :
+					if (tagBits == TagBits.AnnotationNullable)
+						return TagBits.AnnotationNullable;
+					return TagBits.AnnotationNullMASK; // @NonNull or worse
+			}
+			return 0;
+		}
+	
+		if (type.isTypeVariable()) { // incl. captures
+			TypeVariableBinding typeVariable = (TypeVariableBinding)type;
+			boolean haveNullBits = false;
+			if (typeVariable.isCapture()) {
+				TypeBinding lowerBound = ((CaptureBinding) typeVariable).lowerBound;
+				if (lowerBound != null) {
+					tagBits = lowerBound.tagBits & TagBits.AnnotationNullMASK;
+					if (tagBits == TagBits.AnnotationNullable)
+						return TagBits.AnnotationNullable; // cannot be @NonNull
+					haveNullBits |= (tagBits != 0);
+				}
+			}
+			if (typeVariable.firstBound != null) {
+				long boundBits = typeVariable.firstBound.tagBits & TagBits.AnnotationNullMASK;
+				if (boundBits == TagBits.AnnotationNonNull)
+					return TagBits.AnnotationNonNull; // cannot be @Nullable
+				haveNullBits |= (boundBits != 0);
+			}
+			if (haveNullBits)
+				return TagBits.AnnotationNullMASK; // could be either, can only match to a wildcard accepting both
+		}
+
+		return 0;
 	}
 
 	public static long validNullTagBits(long bits) {
@@ -206,11 +305,13 @@ public class NullAnnotationMatching {
 		return one;
 	}
 
-	private static int computeNullProblemSeverity(long requiredBits, long providedBits, int nullStatus) {
-		if (requiredBits != 0 && requiredBits != providedBits) {
+	private static int computeNullProblemSeverity(long requiredBits, long providedBits, int nullStatus, boolean strict) {
+		if ((requiredBits != 0 || strict) && requiredBits != providedBits) {
 			if (requiredBits == TagBits.AnnotationNonNull && nullStatus == FlowInfo.NON_NULL) {
 				return 0; // OK by flow analysis
 			}
+			if (requiredBits == TagBits.AnnotationNullMASK)
+				return 0; // OK since LHS accepts either
 			if (providedBits != 0) {
 				return 2; // mismatching annotations
 			} else {
@@ -220,8 +321,12 @@ public class NullAnnotationMatching {
 		return 0; // OK by tagBits
 	}
 
-	public static ParameterizedGenericMethodBinding checkForContraditions(
-			final ParameterizedGenericMethodBinding method, final InvocationSite invocationSite, final Scope scope) {
+	/**
+	 * After a method has substituted type parameters, check if this resulted in any contradictory null annotations.
+	 * Problems are either reported directly (if scope != null) or by returning a ProblemMethodBinding.
+	 */
+	public static MethodBinding checkForContraditions(
+			final MethodBinding method, final InvocationSite invocationSite, final Scope scope) {
 		
 		class SearchContradictions extends TypeBindingVisitor {
 			ReferenceBinding typeWithContradiction;
@@ -246,6 +351,8 @@ public class NullAnnotationMatching {
 		SearchContradictions searchContradiction = new SearchContradictions();
 		TypeBindingVisitor.visit(searchContradiction, method.returnType);
 		if (searchContradiction.typeWithContradiction != null) {
+			if (scope == null)
+				return new ProblemMethodBinding(method, method.selector, method.parameters, ProblemReasons.ContradictoryNullAnnotations);
 			scope.problemReporter().contradictoryNullAnnotationsInferred(method, invocationSite);
 			// note: if needed, we might want to update the method by removing the contradictory annotations??
 			return method;
@@ -257,6 +364,8 @@ public class NullAnnotationMatching {
 		for (int i = 0; i < method.parameters.length; i++) {
 			TypeBindingVisitor.visit(searchContradiction, method.parameters[i]);
 			if (searchContradiction.typeWithContradiction != null) {
+				if (scope == null)
+					return new ProblemMethodBinding(method, method.selector, method.parameters, ProblemReasons.ContradictoryNullAnnotations);
 				if (arguments != null && i < arguments.length)
 					scope.problemReporter().contradictoryNullAnnotationsInferred(method, arguments[i]);
 				else

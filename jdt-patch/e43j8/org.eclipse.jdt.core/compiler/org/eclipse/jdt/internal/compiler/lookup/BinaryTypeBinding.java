@@ -4,10 +4,6 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -27,6 +23,7 @@
  *								Bug 415850 - [1.8] Ensure RunJDTCoreTests can cope with null annotations enabled
  *								Bug 417295 - [1.8[[null] Massage type annotated null analysis to gel well with deep encoded type bindings.
  *								Bug 427199 - [1.8][resource] avoid resource leak warnings on Streams that have no resource
+ *								Bug 392245 - [1.8][compiler][null] Define whether / how @NonNullByDefault applies to TYPE_USE locations
  *    Jesper Steen Moller - Contributions for
  *								Bug 412150 [1.8] [compiler] Enable reflected parameter names during annotation processing
  *								Bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
@@ -488,7 +485,7 @@ void cachePartsFrom(IBinaryType binaryType, boolean needFieldsAndMethods) {
 
 				if (iFields != null) {
 					for (int i = 0; i < iFields.length; i++)
-						scanFieldForNullAnnotation(iFields[i], this.fields[i]);
+						scanFieldForNullAnnotation(iFields[i], this.fields[i], this.isEnum());
 				}
 				if (iMethods != null) {
 					for (int i = 0; i < iMethods.length; i++)
@@ -1484,7 +1481,7 @@ SimpleLookupTable storedAnnotations(boolean forceInitialize) {
 	return this.storedAnnotations;
 }
 
-private void scanFieldForNullAnnotation(IBinaryField field, FieldBinding fieldBinding) {
+private void scanFieldForNullAnnotation(IBinaryField field, FieldBinding fieldBinding, boolean isEnum) {
 	if (!isPrototype()) throw new IllegalStateException();
 	if (this.environment.globalOptions.sourceLevel >= ClassFileConstants.JDK1_8) {
 		TypeBinding fieldType = fieldBinding.type;
@@ -1528,6 +1525,11 @@ private void scanFieldForNullAnnotation(IBinaryField field, FieldBinding fieldBi
 	}
 	if (!explicitNullness && (this.tagBits & TagBits.AnnotationNonNullByDefault) != 0) {
 		fieldBinding.tagBits |= TagBits.AnnotationNonNull;
+	}
+	if (isEnum) {
+		if ((field.getModifiers() & ClassFileConstants.AccEnum) != 0) {
+			fieldBinding.tagBits |= TagBits.AnnotationNonNull;
+		}
 	}
 }
 
@@ -1627,6 +1629,11 @@ private void scanTypeForNullDefaultAnnotation(IBinaryType binaryType, PackageBin
 						&& !((BooleanConstant)value).booleanValue())
 					{
 						// parameter is 'false': this means we cancel defaults from outer scopes:
+						annotationBit = TagBits.AnnotationNullUnspecifiedByDefault;
+						nullness = NULL_UNSPECIFIED_BY_DEFAULT;
+						break;
+					} else if (value instanceof Object[] && ((Object[])value).length == 0) {
+						// parameter is '{}': this means we cancel defaults from outer scopes:
 						annotationBit = TagBits.AnnotationNullUnspecifiedByDefault;
 						nullness = NULL_UNSPECIFIED_BY_DEFAULT;
 						break;

@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     Stephan Herrmann - initial API and implementation
  *******************************************************************************/
@@ -20,12 +16,14 @@ package org.eclipse.jdt.internal.compiler.lookup;
  */
 public abstract class ReductionResult {
 
-	protected static final ReductionResult TRUE = new ReductionResult() {
+	protected static final ConstraintTypeFormula TRUE = new ConstraintTypeFormula() {
 		/* empty body just to make abstract class instantiable */
+		public Object reduce(InferenceContext18 context) { return this; }
 		public String toString() { return "TRUE"; } //$NON-NLS-1$
 	};
-	protected static final ReductionResult FALSE = new ReductionResult() { 
+	protected static final ConstraintTypeFormula FALSE = new ConstraintTypeFormula() { 
 		/* empty body just to make abstract class instantiable */ 
+		public Object reduce(InferenceContext18 context) { return this; }
 		public String toString() { return "FALSE"; } //$NON-NLS-1$
 	};
 	/** Used to accept unchecked conversion to make ecj conform with javac bug https://bugs.openjdk.java.net/browse/JDK-8026527 */

@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -93,7 +89,7 @@ public int match(MessageSend msgSend, MatchingNodeSet nodeSet)  {
 	return IMPOSSIBLE_MATCH;
 }
 public int match(ReferenceExpression node, MatchingNodeSet nodeSet) {
-	if (!this.pattern.findReferences) return IMPOSSIBLE_MATCH;
+	if (!this.pattern.findReferences || node.isMethodReference()) return IMPOSSIBLE_MATCH;
 	return nodeSet.addMatch(node, this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
 }
 

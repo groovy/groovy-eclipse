@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -169,7 +165,7 @@ public interface IVariableBinding extends IBinding {
 	 *
 	 * @return <code>true</code> if this is an effectively final local variable
 	 * 				and <code>false</code> otherwise
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public boolean isEffectivelyFinal();
 }

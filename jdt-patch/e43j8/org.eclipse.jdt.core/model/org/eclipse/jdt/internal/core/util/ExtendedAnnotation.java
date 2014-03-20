@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *        Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
@@ -54,7 +50,7 @@ import org.eclipse.jdt.core.util.ILocalVariableReferenceInfo;
    } element_value_pairs[num_element_value_pairs];
 */
 /**
- * @since 3.9 BETA_JAVA8
+ * @since 3.10
  */
 public class ExtendedAnnotation extends ClassFileStruct implements IExtendedAnnotation {
 

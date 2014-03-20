@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     Stephan Herrmann - initial API and implementation
  *******************************************************************************/
@@ -244,6 +240,49 @@ class BoundSet {
 					boundTypes[i] = environment.createAnnotatedType(boundTypes[i], annot);
 			}
 		}
+		TypeBinding combineAndUseNullHints(TypeBinding type, long nullHints, LookupEnvironment environment) {
+			// precondition: only called when null annotations are enabled.
+			// TODO(optimization): may want to collect all nullHints in the ThreeSets, which, however,
+			// needs a reference TypeBound->ThreeSets to propagate the bits as they are added.
+			if (this.sameBounds != null) {
+				Iterator<TypeBound> it = this.sameBounds.iterator();
+				while(it.hasNext())
+					nullHints |= it.next().nullHints;
+			}
+			if (this.superBounds != null) {
+				Iterator<TypeBound> it = this.superBounds.iterator();
+				while(it.hasNext())
+					nullHints |= it.next().nullHints;
+			}
+			if (this.subBounds != null) {
+				Iterator<TypeBound> it = this.subBounds.iterator();
+				while(it.hasNext())
+					nullHints |= it.next().nullHints;
+			}
+			AnnotationBinding[] annot = environment.nullAnnotationsFromTagBits(nullHints);
+			if (annot != null)
+				// only get here if exactly one of @NonNull or @Nullable was hinted; now apply this hint:
+				return environment.createAnnotatedType(type, annot);
+			return type;
+		}
+		public void setInstantiation(TypeBinding type, InferenceVariable variable, LookupEnvironment environment) {
+			if (environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
+				long oldBits = ((this.instantiation != null) ? this.instantiation.tagBits : variable.tagBits)
+								& TagBits.AnnotationNullMASK;
+				long requestedBits = type.tagBits & TagBits.AnnotationNullMASK;
+				long newBits = (oldBits == TagBits.AnnotationNonNull) ? oldBits : requestedBits; // need to preserve @NonNull
+				if (this.instantiation != null && oldBits == newBits) {
+					return; // no update needed
+				}
+				if (requestedBits != newBits) {
+					// adjust 'type' to fit the newBits
+					AnnotationBinding[] annot = environment.nullAnnotationsFromTagBits(newBits);
+					if (annot != null)
+						type = environment.createAnnotatedType(type.unannotated(), annot);
+				}
+			}
+			this.instantiation = type;
+		}
 	}
 	// main storage of type bounds:
 	HashMap<InferenceVariable, ThreeSets> boundsPerVariable = new HashMap<InferenceVariable, ThreeSets>();
@@ -270,9 +309,9 @@ class BoundSet {
 			TypeBound[] someBounds = typeParameter.getTypeBounds(variable, context);
 			boolean hasProperBound = false;
 			if (someBounds.length > 0)
-				hasProperBound = addBounds(someBounds);
+				hasProperBound = addBounds(someBounds, context.environment);
 			if (!hasProperBound)
-				addBound(new TypeBound(variable, context.object, ReductionResult.SUBTYPE));
+				addBound(new TypeBound(variable, context.object, ReductionResult.SUBTYPE), context.environment);
 		}
 	}
 
@@ -307,7 +346,7 @@ class BoundSet {
 		return copy;
 	}
 
-	public void addBound(TypeBound bound) {
+	public void addBound(TypeBound bound, LookupEnvironment environment) {
 		ThreeSets three = this.boundsPerVariable.get(bound.left);
 		if (three == null)
 			this.boundsPerVariable.put(bound.left, (three = new ThreeSets()));
@@ -315,7 +354,7 @@ class BoundSet {
 		// check if this makes the inference variable instantiated:
 		TypeBinding typeBinding = bound.right;
 		if (bound.relation == ReductionResult.SAME && typeBinding.isProperType(true))
-			three.instantiation = typeBinding;
+			three.setInstantiation(typeBinding, bound.left, environment);
 		if (bound.right instanceof InferenceVariable) {
 			// for a dependency between two IVs make a note about the inverse bound.
 			// this should be needed to determine IV dependencies independent of direction.
@@ -330,10 +369,10 @@ class BoundSet {
 		}
 	}
 
-	private boolean addBounds(TypeBound[] newBounds) {
+	private boolean addBounds(TypeBound[] newBounds, LookupEnvironment environment) {
 		boolean hasProperBound = false;
 		for (int i = 0; i < newBounds.length; i++) {
-			addBound(newBounds[i]);
+			addBound(newBounds[i], environment);
 			hasProperBound |= newBounds[i].isBound();
 		}
 		return hasProperBound;
@@ -346,10 +385,15 @@ class BoundSet {
 		return false;
 	}
 
-	public TypeBinding getInstantiation(InferenceVariable inferenceVariable) {
+	public TypeBinding getInstantiation(InferenceVariable inferenceVariable, LookupEnvironment environment) {
 		ThreeSets three = this.boundsPerVariable.get(inferenceVariable);
-		if (three != null)
-			return three.instantiation;
+		if (three != null) {
+			TypeBinding instantiation = three.instantiation;
+			if (environment != null && environment.globalOptions.isAnnotationBasedNullAnalysisEnabled 
+					&& instantiation != null && (instantiation.tagBits & TagBits.AnnotationNullMASK) == 0)
+				return three.combineAndUseNullHints(instantiation, inferenceVariable.nullHints, environment);
+			return instantiation;
+		}
 		return null;
 	}
 
@@ -464,7 +508,7 @@ class BoundSet {
 					// A set of bounds on α1, ..., αn, constructed from the declared bounds of P1, ..., Pn as described in 18.1.3, is immediately implied.
 					TypeVariableBinding pi = parameters[i];
 					InferenceVariable alpha = (InferenceVariable) gAlpha.arguments[i];
-					addBounds(pi.getTypeBounds(alpha, context));
+					addBounds(pi.getTypeBounds(alpha, context), context.environment);
 
 					TypeBinding ai = gA.arguments[i];
 					if (ai instanceof WildcardBinding) {
@@ -521,7 +565,7 @@ class BoundSet {
 									TypeBound bound = it.next();
 									if (!(bound.right instanceof InferenceVariable)) {
 										if (wildcardBinding.boundKind == Wildcard.SUPER)
-											reduceOneConstraint(context, new ConstraintTypeFormula(bound.right, t, ReductionResult.SUBTYPE));
+											reduceOneConstraint(context, ConstraintTypeFormula.create(bound.right, t, ReductionResult.SUBTYPE));
 										else
 											return false;
 									}
@@ -529,7 +573,7 @@ class BoundSet {
 							}
 						}
 					} else {
-						addBound(new TypeBound(alpha, ai, ReductionResult.SAME));
+						addBound(new TypeBound(alpha, ai, ReductionResult.SAME), context.environment);
 					}
 				}
 			}
@@ -543,11 +587,11 @@ class BoundSet {
 		ConstraintFormula formula = null;
 		if (boundKind == Wildcard.EXTENDS) {
 			if (bi.id == TypeIds.T_JavaLangObject)
-				formula = new ConstraintTypeFormula(t, r, ReductionResult.SUBTYPE);
+				formula = ConstraintTypeFormula.create(t, r, ReductionResult.SUBTYPE);
 			if (t.id == TypeIds.T_JavaLangObject)
-				formula = new ConstraintTypeFormula(context.substitute(bi), r, ReductionResult.SUBTYPE);
+				formula = ConstraintTypeFormula.create(context.substitute(bi), r, ReductionResult.SUBTYPE);
 		} else {
-			formula = new ConstraintTypeFormula(context.substitute(bi), r, ReductionResult.SUBTYPE);
+			formula = ConstraintTypeFormula.create(context.substitute(bi), r, ReductionResult.SUBTYPE);
 		}
 		if (formula != null)
 			reduceOneConstraint(context, formula);
@@ -557,7 +601,7 @@ class BoundSet {
 		
 		// α = S and α = T imply ⟨S = T⟩
 		if (boundS.left == boundT.left) //$IDENTITY-COMPARISON$ InferenceVariable
-			return new ConstraintTypeFormula(boundS.right, boundT.right, ReductionResult.SAME, boundS.isSoft||boundT.isSoft);
+			return ConstraintTypeFormula.create(boundS.right, boundT.right, ReductionResult.SAME, boundS.isSoft||boundT.isSoft);
 
 		// match against more shapes:
 		ConstraintTypeFormula newConstraint;
@@ -578,7 +622,7 @@ class BoundSet {
 			InferenceVariable alpha = boundLeft.left;
 			TypeBinding left = boundRight.left; // no substitution since S inference variable and (S != α) per precondition
 			TypeBinding right = boundRight.right.substituteInferenceVariable(alpha, u);
-			return new ConstraintTypeFormula(left, right, ReductionResult.SAME, boundLeft.isSoft||boundRight.isSoft);
+			return ConstraintTypeFormula.create(left, right, ReductionResult.SAME, boundLeft.isSoft||boundRight.isSoft);
 		}
 		return null;
 	}
@@ -589,18 +633,18 @@ class BoundSet {
 		InferenceVariable alpha = boundS.left;
 		TypeBinding s = boundS.right;
 		if (alpha == boundT.left) //$IDENTITY-COMPARISON$ InferenceVariable
-			return new ConstraintTypeFormula(s, boundT.right, boundT.relation, boundT.isSoft||boundS.isSoft);
+			return ConstraintTypeFormula.create(s, boundT.right, boundT.relation, boundT.isSoft||boundS.isSoft);
 		if (alpha == boundT.right) //$IDENTITY-COMPARISON$ InferenceVariable
-			return new ConstraintTypeFormula(boundT.right, s, boundT.relation, boundT.isSoft||boundS.isSoft);
+			return ConstraintTypeFormula.create(boundT.right, s, boundT.relation, boundT.isSoft||boundS.isSoft);
 
 		if (boundS.right instanceof InferenceVariable) {
 			// reverse:
 			alpha = (InferenceVariable) boundS.right;
 			s = boundS.left;
 			if (alpha == boundT.left) //$IDENTITY-COMPARISON$ InferenceVariable
-				return new ConstraintTypeFormula(s, boundT.right, boundT.relation, boundT.isSoft||boundS.isSoft);
+				return ConstraintTypeFormula.create(s, boundT.right, boundT.relation, boundT.isSoft||boundS.isSoft);
 			if (alpha == boundT.right) //$IDENTITY-COMPARISON$ InferenceVariable
-				return new ConstraintTypeFormula(boundT.right, s, boundT.relation, boundT.isSoft||boundS.isSoft);			
+				return ConstraintTypeFormula.create(boundT.right, s, boundT.relation, boundT.isSoft||boundS.isSoft);			
 		}
 		
 		//  α = U and S <: T imply ⟨S[α:=U] <: T[α:=U]⟩ 
@@ -608,7 +652,7 @@ class BoundSet {
 		if (u.isProperType(true)) {
 			TypeBinding left = (alpha == boundT.left) ? u : boundT.left; //$IDENTITY-COMPARISON$ InferenceVariable
 			TypeBinding right = boundT.right.substituteInferenceVariable(alpha, u);
-			return new ConstraintTypeFormula(left, right, boundT.relation, boundT.isSoft||boundS.isSoft);
+			return ConstraintTypeFormula.create(left, right, boundT.relation, boundT.isSoft||boundS.isSoft);
 		}
 		return null;
 	}
@@ -618,13 +662,13 @@ class BoundSet {
 		InferenceVariable alpha = boundS.left;
 		if (alpha == boundT.left) //$IDENTITY-COMPARISON$ InferenceVariable
 			//  α >: S and α <: T imply ⟨S <: T⟩
-			return new ConstraintTypeFormula(boundS.right, boundT.right, ReductionResult.SUBTYPE, boundT.isSoft||boundS.isSoft);
+			return ConstraintTypeFormula.create(boundS.right, boundT.right, ReductionResult.SUBTYPE, boundT.isSoft||boundS.isSoft);
 		if (boundS.right instanceof InferenceVariable) {
 			// try reverse:
 			alpha = (InferenceVariable) boundS.right;
 			if (alpha == boundT.right) //$IDENTITY-COMPARISON$ InferenceVariable
 				// S :> α and T <: α  imply ⟨S :> T⟩
-				return new ConstraintTypeFormula(boundS.left, boundT.left, ReductionResult.SUPERTYPE, boundT.isSoft||boundS.isSoft);
+				return ConstraintTypeFormula.create(boundS.left, boundT.left, ReductionResult.SUPERTYPE, boundT.isSoft||boundS.isSoft);
 		}
 		return null;
 	}
@@ -633,10 +677,10 @@ class BoundSet {
 		//  more permutations of: S <: α and α <: T imply ⟨S <: T⟩
 		if (boundS.left == boundT.right) //$IDENTITY-COMPARISON$ InferenceVariable
 			// came in as: α REL S and T REL α imply ⟨T REL S⟩ 
-			return new ConstraintTypeFormula(boundT.left, boundS.right, boundS.relation, boundT.isSoft||boundS.isSoft);
+			return ConstraintTypeFormula.create(boundT.left, boundS.right, boundS.relation, boundT.isSoft||boundS.isSoft);
 		if (boundS.right == boundT.left) //$IDENTITY-COMPARISON$ InferenceVariable
 			// came in as: S REL α and α REL T imply ⟨S REL T⟩ 
-			return new ConstraintTypeFormula(boundS.left, boundT.right, boundS.relation, boundT.isSoft||boundS.isSoft);
+			return ConstraintTypeFormula.create(boundS.left, boundT.right, boundS.relation, boundT.isSoft||boundS.isSoft);
 		return null;
 	}
 
@@ -672,7 +716,7 @@ class BoundSet {
 			TypeBinding ti = tis[i];
 			if (si.isWildcard() || ti.isWildcard() || TypeBinding.equalsEquals(si, ti))
 				continue;
-			result.add(new ConstraintTypeFormula(si, ti, ReductionResult.SAME, isSoft));
+			result.add(ConstraintTypeFormula.create(si, ti, ReductionResult.SAME, isSoft));
 		}
 		if (result.size() > 0)
 			return result.toArray(new ConstraintTypeFormula[result.size()]);
@@ -686,14 +730,14 @@ class BoundSet {
 	 */
 	public boolean reduceOneConstraint(InferenceContext18 context, ConstraintFormula currentConstraint) throws InferenceFailureException {
 		Object result = currentConstraint.reduce(context);
-		if (result == currentConstraint) {
-			// not reduceable
-			throw new IllegalStateException("Failed to reduce constraint formula"); //$NON-NLS-1$
-		}
 		if (result == ReductionResult.FALSE)
 			return false;
 		if (result == ReductionResult.TRUE)
 			return true;
+		if (result == currentConstraint) {
+			// not reduceable
+			throw new IllegalStateException("Failed to reduce constraint formula"); //$NON-NLS-1$
+		}
 		if (result != null) {
 			if (result instanceof ConstraintFormula) {
 				if (!reduceOneConstraint(context, (ConstraintFormula) result))
@@ -704,7 +748,7 @@ class BoundSet {
 					if (!reduceOneConstraint(context, resultArray[i]))
 						return false;
 			} else {
-				this.addBound((TypeBound)result);
+				addBound((TypeBound)result, context.environment);
 			}
 		}
 		return true; // no FALSE encountered

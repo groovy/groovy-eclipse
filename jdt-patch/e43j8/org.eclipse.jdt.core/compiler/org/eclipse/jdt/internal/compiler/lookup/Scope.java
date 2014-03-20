@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for
@@ -43,6 +39,8 @@
  *								Bug 428352 - [1.8][compiler] Resolution errors don't always surface
  *								Bug 428366 - [1.8] [compiler] The method valueAt(ObservableList<Object>, int) is ambiguous for the type Bindings
  *								Bug 424728 - [1.8][null] Unexpected error: The nullness annotation 'XXXX' is not applicable at this location 
+ *								Bug 428811 - [1.8][compiler] Type witness unnecessarily required
+ *								Bug 429424 - [1.8][inference] Problem inferring type of method's parameter
  *     Jesper S Moller - Contributions for
  *								Bug 378674 - "The method can be declared as static" is wrong
  *  							Bug 405066 - [1.8][compiler][codegen] Implement code generation infrastructure for JSR335
@@ -60,7 +58,6 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
-import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 import org.eclipse.jdt.internal.compiler.util.ObjectVector;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
@@ -791,7 +788,8 @@ public abstract class Scope {
 				isVarArgs[0] = method.isVarargs() && argLen != method.parameters.length; // if same lengths, isVarArgs can still be updated below
 				int level = COMPATIBLE;
 				for (int i = 0; i < argLen; i++) {
-					int nextLevel = compatibilityLevel18FromInner(method, innerInferenceHelper, invocationArguments[i], argLen, i, isVarArgs);
+					TypeBinding argumentType = i < arguments.length ? arguments[i] : null; // length mismatch may happen from CodeSnippetMessageSend.resolveType() in the if (argHasError) block.
+					int nextLevel = compatibilityLevel18FromInner(method, innerInferenceHelper, invocationArguments[i], argumentType, argLen, i, isVarArgs);
 					if (nextLevel == NOT_COMPATIBLE)
 						return nextLevel;
 					if (nextLevel == -2)
@@ -805,7 +803,7 @@ public abstract class Scope {
 		return parameterCompatibilityLevel(method, arguments, tiebreakingVarargsMethods);
 	}
 
-	private int compatibilityLevel18FromInner(MethodBinding method, InnerInferenceHelper innerInferenceHelper, Expression invocArg, int argLen, int i, boolean[] isVarArgs)
+	private int compatibilityLevel18FromInner(MethodBinding method, InnerInferenceHelper innerInferenceHelper, Expression invocArg, TypeBinding argType, int argLen, int i, boolean[] isVarArgs)
 	{
 		int compatible = isVarArgs[0] ? VARARGS_COMPATIBLE : COMPATIBLE;
 		TypeBinding resolvedType = invocArg.resolvedType;
@@ -821,6 +819,8 @@ public abstract class Scope {
 			Invocation innerPoly = (Invocation) invocArg;
 			level = parameterCompatibilityLevel(resolvedType, targetType);
 			if (level != NOT_COMPATIBLE) {
+				if (TypeBinding.notEquals(argType, resolvedType) && innerInferenceHelper != null)
+					innerInferenceHelper.registerInnerResult(method, resolvedType, argLen, i);
 				return Math.max(compatible, level);
 			} else {
 				MethodBinding innerBinding = innerPoly.binding(null, false, null); // 1. try without update
@@ -873,10 +873,10 @@ public abstract class Scope {
 		} else if (invocArg.isPolyExpression()) {
 			if (invocArg instanceof ConditionalExpression) {
 				ConditionalExpression ce = (ConditionalExpression) invocArg;
-				int level1 = compatibilityLevel18FromInner(method, innerInferenceHelper, ce.valueIfTrue, argLen, i, isVarArgs);
+				int level1 = compatibilityLevel18FromInner(method, innerInferenceHelper, ce.valueIfTrue, argType, argLen, i, isVarArgs);
 				if (level1 == NOT_COMPATIBLE)
 					return NOT_COMPATIBLE;
-				int level2 = compatibilityLevel18FromInner(method, innerInferenceHelper, ce.valueIfFalse, argLen, i, isVarArgs);
+				int level2 = compatibilityLevel18FromInner(method, innerInferenceHelper, ce.valueIfFalse, argType, argLen, i, isVarArgs);
 				if (level2 == NOT_COMPATIBLE)
 					return NOT_COMPATIBLE;
 				return Math.max(level1, level2);
@@ -4434,9 +4434,10 @@ public abstract class Scope {
 				compatibleCount++;
 			}
 		}
-		if (compatibleCount != visibleSize) {
-			problemReporter().genericInferenceProblem("(Recovered) Internal inconsistency while checking invocation ambiguity", invocationSite, ProblemSeverities.Warning); //$NON-NLS-1$
-		}
+// TODO: Disabled, because we know a situation where this is expected, see https://bugs.eclipse.org/429490
+//		if (compatibleCount != visibleSize) {
+//			problemReporter().genericInferenceProblem("(Recovered) Internal inconsistency while checking invocation ambiguity", invocationSite, ProblemSeverities.Warning); //$NON-NLS-1$
+//		}
 		if (compatibleCount == 0) {
 			return new ProblemMethodBinding(visible[0].selector, argumentTypes, ProblemReasons.NotFound);
 		} else if (compatibleCount == 1) {
@@ -4851,7 +4852,7 @@ public abstract class Scope {
 		
 		if (arg == null || param == null)
 			return NOT_COMPATIBLE;
-		
+
 		if (arg.isCompatibleWith(param, this))
 			return COMPATIBLE;
 		
@@ -4905,6 +4906,32 @@ public abstract class Scope {
 			switch(current.kind) {
 				case METHOD_SCOPE :
 					return ((MethodScope) current).referenceContext;
+				case CLASS_SCOPE :
+					return ((ClassScope) current).referenceContext;
+				case COMPILATION_UNIT_SCOPE :
+					return ((CompilationUnitScope) current).referenceContext;
+			}
+		} while ((current = current.parent) != null);
+		return null;
+	}
+	
+	/**
+	 * Returns the nearest original reference context, starting from current scope.
+	 * If starting on a class, it will return current class. If starting on unitScope, returns unit.
+	 */
+	public ReferenceContext originalReferenceContext() {
+		Scope current = this;
+		do {
+			switch(current.kind) {
+				case METHOD_SCOPE :
+					ReferenceContext context = ((MethodScope) current).referenceContext;
+					if (context instanceof LambdaExpression) {
+						LambdaExpression expression = (LambdaExpression) context;
+						while (expression != expression.original)
+							expression = expression.original;
+						return expression;
+					}
+					return context; 
 				case CLASS_SCOPE :
 					return ((ClassScope) current).referenceContext;
 				case COMPILATION_UNIT_SCOPE :

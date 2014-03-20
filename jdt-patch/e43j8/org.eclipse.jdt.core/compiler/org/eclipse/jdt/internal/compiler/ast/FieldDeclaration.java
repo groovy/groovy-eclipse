@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contribution for
@@ -16,6 +12,7 @@
  *								bug 331649 - [compiler][null] consider null annotations for fields
  *								bug 400761 - [compiler][null] null may be return as boolean without a diagnostic
  *								Bug 427438 - [1.8][compiler] NPE at org.eclipse.jdt.internal.compiler.ast.ConditionalExpression.generateCode(ConditionalExpression.java:280)
+ *								Bug 429403 - [1.8][null] null mismatch from type arguments is not reported at field initializer
  *        Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
  *								Bug 409250 - [1.8][compiler] Various loose ends in 308 code generation
  *******************************************************************************/
@@ -92,13 +89,12 @@ public FlowInfo analyseCode(MethodScope initializationScope, FlowContext flowCon
 				.unconditionalInits();
 		flowInfo.markAsDefinitelyAssigned(this.binding);
 	}
-	if (this.initialization != null) {
-		if (this.binding.isNonNull()) {
-			int nullStatus = this.initialization.nullStatus(flowInfo, flowContext);
-			// check against annotation @NonNull:
-			if (nullStatus != FlowInfo.NON_NULL) {
-				char[][] annotationName = initializationScope.environment().getNonNullAnnotationName();
-				initializationScope.problemReporter().nullityMismatch(this.initialization, this.initialization.resolvedType, this.binding.type, nullStatus, annotationName);
+	if (this.initialization != null && this.binding != null) {
+		CompilerOptions options = initializationScope.compilerOptions();
+		if (options.isAnnotationBasedNullAnalysisEnabled) {
+			if (this.binding.isNonNull() || options.sourceLevel >= ClassFileConstants.JDK1_8) {
+				int nullStatus = this.initialization.nullStatus(flowInfo, flowContext);
+				NullAnnotationMatching.checkAssignment(initializationScope, flowContext, this.binding, nullStatus, this.initialization, this.initialization.resolvedType);
 			}
 		}
 		this.initialization.checkNPEbyUnboxing(initializationScope, flowContext, flowInfo);

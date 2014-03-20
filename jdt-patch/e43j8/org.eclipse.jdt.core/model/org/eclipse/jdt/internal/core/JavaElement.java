@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -69,6 +69,26 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 	public static final char JEM_LOCALVARIABLE = '@';
 	public static final char JEM_TYPE_PARAMETER = ']';
 	public static final char JEM_ANNOTATION = '}';
+	public static final char JEM_LAMBDA_EXPRESSION = ')';
+	public static final char JEM_LAMBDA_METHOD = '&';
+	public static final char JEM_STRING = '"';
+	
+	/**
+	 * Before ')', '&' and '"' became the newest additions as delimiters, the former two
+	 * were allowed as part of element attributes and possibly stored. Trying to recreate 
+	 * elements from such memento would cause undesirable results. Consider the following 
+	 * valid project name: (abc)
+	 * If we were to use ')' alone as the delimiter and decode the above name, the memento
+	 * would be wrongly identified to contain a lambda expression.  
+	 *
+	 * In order to differentiate delimiters from characters that are part of element attributes, 
+	 * the following escape character is being introduced and all the new delimiters must 
+	 * be escaped with this. So, a lambda expression would be written as: "=)..."
+	 * 
+	 * @see JavaElement#appendEscapedDelimiter(StringBuffer, char)
+	 */
+	public static final char JEM_DELIMITER_ESCAPE = JEM_JAVAPROJECT;
+	
 
 	/**
 	 * This element's parent, or <code>null</code> if this
@@ -129,6 +149,16 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		return getElementName().equals(other.getElementName()) &&
 				this.parent.equals(other.parent);
 	}
+	/**
+	 * @see #JEM_DELIMITER_ESCAPE
+	 */
+	protected void appendEscapedDelimiter(StringBuffer buffer, char delimiter) {
+		buffer.append(JEM_DELIMITER_ESCAPE);
+		buffer.append(delimiter);
+	}
+	/*
+	 * Do not add new delimiters here
+	 */
 	protected void escapeMementoName(StringBuffer buffer, String mementoName) {
 		for (int i = 0, length = mementoName.length(); i < length; i++) {
 			char character = mementoName.charAt(i);
@@ -727,9 +757,9 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		if (arrayLength < toBeFoundLength)
 			return -1;
 		loop: for (int i = start, max = arrayLength - toBeFoundLength + 1; i < max; i++) {
-			if (array[i] == toBeFound[0]) {
+			if (isSameCharacter(array[i], toBeFound[0])) {
 				for (int j = 1; j < toBeFoundLength; j++) {
-					if (array[i + j] != toBeFound[j])
+					if (!isSameCharacter(array[i + j], toBeFound[j]))
 						continue loop;
 				}
 				return i;
@@ -737,6 +767,13 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		}
 		return -1;
 	}
+	boolean isSameCharacter(byte b1, byte b2) {
+		if (b1 == b2 || Character.toUpperCase((char) b1) == Character.toUpperCase((char) b2)) {
+			return true;
+		}
+		return false;
+	}
+	
 	/*
 	 * We don't use getContentEncoding() on the URL connection, because it might leave open streams behind.
 	 * See https://bugs.eclipse.org/bugs/show_bug.cgi?id=117890

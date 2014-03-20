@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  * 
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -542,8 +538,9 @@ protected void consumeInterfaceHeader() {
 	super.consumeInterfaceHeader();
 	pushOnElementStack(K_TYPE_DELIMITER);
 }
-protected void consumeLambdaHeader() {
-	super.consumeLambdaHeader();
+@Override
+protected void consumeNestedLambda() {
+	super.consumeNestedLambda();
 	LambdaExpression lexp = (LambdaExpression) this.astStack[this.astPtr];
 	pushOnElementStack(K_LAMBDA_EXPRESSION_DELIMITER, EXPRESSION_BODY, lexp);
 }

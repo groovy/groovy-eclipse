@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -61,14 +57,14 @@ public class ArrayType extends Type {
 	/**
 	 * The "elementType" structural property of this node type (child type: {@link Type}) (added in JLS8 API).
 	 * Cannot be an array type.
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public static final ChildPropertyDescriptor ELEMENT_TYPE_PROPERTY =
 			new ChildPropertyDescriptor(ArrayType.class, "elementType", Type.class, MANDATORY, CYCLE_RISK); //$NON-NLS-1$	
 	
 	/**
 	 * The "dimensions" structural property of this node type (element type: {@link Dimension}) (added in JLS8 API).
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public static final ChildListPropertyDescriptor DIMENSIONS_PROPERTY =
 			new ChildListPropertyDescriptor(ArrayType.class, "dimensions", Dimension.class, CYCLE_RISK); //$NON-NLS-1$	
@@ -82,7 +78,7 @@ public class ArrayType extends Type {
 	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	private static final List PROPERTY_DESCRIPTORS_8_0;
 
@@ -133,7 +129,7 @@ public class ArrayType extends Type {
 	 * Null before JLS8. Added in JLS8; defaults to a list with one element
 	 * (see constructor).
 	 * 
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	private ASTNode.NodeList dimensions = null;
 
@@ -164,7 +160,7 @@ public class ArrayType extends Type {
 	* @param ast the AST that is to own this node
 	* @param dimensions no of dimensions - can be zero
 	*
-	* @since 3.9 BETA_JAVA8
+	* @since 3.10
 	*/
 	ArrayType(AST ast, int dimensions) {
 		super(ast);
@@ -273,6 +269,7 @@ public class ArrayType extends Type {
 	 * @return the component type node
 	 * @exception UnsupportedOperationException if this operation is used in
 	 * an AST later than JLS4
+	 * @see #dimensions()
 	 * @deprecated In the JLS8 API, the recursive structure is not valid.
 	 */
 	public Type getComponentType() {
@@ -356,7 +353,7 @@ public class ArrayType extends Type {
 	 * <li>the node is an array type</li>
 	 * </ul>
 	 * @exception UnsupportedOperationException if this operation is used below JLS8
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public void setElementType(Type type) {
 		unsupportedIn2_3_4();
@@ -399,7 +396,7 @@ public class ArrayType extends Type {
 	 * 
 	 * @return the live list of dimensions with optional annotations (element type: {@link Dimension})
 	 * @exception UnsupportedOperationException if this operation is used below JLS8
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public List dimensions() {
 		// more efficient than just calling unsupportedIn2_3_4() to check

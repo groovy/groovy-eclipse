@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -131,6 +127,7 @@ class RecoveredTypeBinding implements ITypeBinding {
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.core.dom.ITypeBinding#getDeclaredModifiers()
+	 * @deprecated Use ITypeBinding#getModifiers() instead
 	 */
 	public int getDeclaredModifiers() {
 		return 0;
@@ -449,13 +446,6 @@ class RecoveredTypeBinding implements ITypeBinding {
 	 * @see org.eclipse.jdt.core.dom.ITypeBinding#isGenericType()
 	 */
 	public boolean isGenericType() {
-		return false;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.dom.ITypeBinding#isFunctionalInterface()
-	 */
-	public boolean isFunctionalInterface() {
 		return false;
 	}
 

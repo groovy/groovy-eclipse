@@ -163,7 +163,7 @@ public org.eclipse.jdt.core.dom.CompilationUnit getAST4() throws JavaModelExcept
  * <ul>
  * <li> The working copy does not exist (ELEMENT_DOES_NOT_EXIST)</li>
  * </ul>
- * @since 3.9 BETA_JAVA8
+ * @since 3.10
  */
 public org.eclipse.jdt.core.dom.CompilationUnit getAST8() throws JavaModelException {
 	if (this.operation.astLevel != AST.JLS8 || !this.operation.resolveBindings) {

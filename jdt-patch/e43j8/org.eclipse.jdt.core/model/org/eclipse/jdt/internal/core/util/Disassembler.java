@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *        Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
@@ -601,7 +597,10 @@ public class Disassembler extends ClassFileBytesDisassembler {
 			writeNewLine(buffer, lineSeparator, tabNumber + 1);
 			short accessFlags = methodParametersAttribute.getAccessFlags(i);
 			decodeModifiersForMethodParameters(buffer, accessFlags);
-			buffer.append(methodParametersAttribute.getParameterName(i));
+			char [] parameterName = methodParametersAttribute.getParameterName(i);
+			if (parameterName == null)
+				parameterName = Messages.disassembler_anonymousparametername.toCharArray();
+			buffer.append(parameterName);
 		}
 	}
 
@@ -2448,7 +2447,7 @@ public class Disassembler extends ClassFileBytesDisassembler {
 				if (i < parameterCount && parametersAttribute.getParameterName(i) != null) {
 					parameterNames[i] = parametersAttribute.getParameterName(i);
 				} else {
-					parameterNames[i] = CharOperation.concat(Messages.disassembler_parametername.toCharArray(), Integer.toString(i).toCharArray());
+					parameterNames[i] = Messages.disassembler_anonymousparametername.toCharArray();
 				}
 			}
 		} else if (codeAttribute != null) {

@@ -4,10 +4,6 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -35,6 +31,7 @@
  *								Bug 426792 - [1.8][inference][impl] generify new type inference engine
  *								Bug 428294 - [1.8][compiler] Type mismatch: cannot convert from List<Object> to Collection<Object[]>
  *								Bug 427199 - [1.8][resource] avoid resource leak warnings on Streams that have no resource
+ *								Bug 416182 - [1.8][compiler][null] Contradictory null annotations not rejected
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -43,8 +40,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 /**
@@ -88,6 +87,10 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 	 */
 	public ReferenceBinding actualType() {
 		return this.type;
+	}
+
+	public boolean isParameterizedType() {
+		return true;
 	}
 
 	/**
@@ -664,9 +667,14 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 		    if (length == 0) return Binding.NO_METHODS;
 
 		    parameterizedMethods = new MethodBinding[length];
-		    for (int i = 0; i < length; i++)
+		    CompilerOptions options = this.environment.globalOptions;
+			boolean useNullTypeAnnotations = options.isAnnotationBasedNullAnalysisEnabled && options.sourceLevel >= ClassFileConstants.JDK1_8;
+		    for (int i = 0; i < length; i++) {
 		    	// substitute methods, so as to get updated declaring class at least
 	            parameterizedMethods[i] = createParameterizedMethod(originalMethods[i]);
+	            if (useNullTypeAnnotations)
+	            	parameterizedMethods[i] = NullAnnotationMatching.checkForContraditions(parameterizedMethods[i], null, null);
+		    }
 		    if (this.methods == null) {
 				MethodBinding[] temp = new MethodBinding[length];
 				System.arraycopy(parameterizedMethods, 0, temp, 0, length);
@@ -932,9 +940,15 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 		    MethodBinding[] originalMethods = this.type.methods();
 		    int length = originalMethods.length;
 		    MethodBinding[] parameterizedMethods = new MethodBinding[length];
-		    for (int i = 0; i < length; i++)
+		    CompilerOptions options = this.environment.globalOptions;
+			boolean useNullTypeAnnotations = options.isAnnotationBasedNullAnalysisEnabled && options.sourceLevel >= ClassFileConstants.JDK1_8;
+		    for (int i = 0; i < length; i++) {
 		    	// substitute all methods, so as to get updated declaring class at least
 	            parameterizedMethods[i] = createParameterizedMethod(originalMethods[i]);
+	            if (useNullTypeAnnotations)
+	            	parameterizedMethods[i] = NullAnnotationMatching.checkForContraditions(parameterizedMethods[i], null, null);
+		    }
+
 		    this.methods = parameterizedMethods;
 		} finally {
 			// if the original methods cannot be retrieved (ex. AbortCompilation), then assume we do not have any methods

@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -34,7 +30,7 @@ public class TypeParameter extends ASTNode {
 
 	/**
 	 * The "modifiers" structural property of this node type (element type: {@link IExtendedModifier}) (added in JLS8 API).
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public static final ChildListPropertyDescriptor MODIFIERS_PROPERTY =
 			new ChildListPropertyDescriptor(TypeParameter.class, "modifiers", IExtendedModifier.class, CYCLE_RISK); //$NON-NLS-1$
@@ -61,7 +57,7 @@ public class TypeParameter extends ASTNode {
 	 * A list of property descriptors (element type:
 	 * {@link StructuralPropertyDescriptor}),
 	 * or null if uninitialized.
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	private static final List PROPERTY_DESCRIPTORS_8_0;
 
@@ -297,7 +293,7 @@ public class TypeParameter extends ASTNode {
 	 * @return the live list of modifiers (element type: {@link IExtendedModifier})
 	 * @exception UnsupportedOperationException if this operation is used
 	 *            in a JLS2, JLS3 or JLS4 AST
-	 * @since 3.9 BETA_JAVA8
+	 * @since 3.10
 	 */
 	public List modifiers() {
 		// more efficient than just calling unsupportedIn2_3_4() to check

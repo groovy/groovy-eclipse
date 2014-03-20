@@ -4,10 +4,6 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -35,9 +31,15 @@ import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
+import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
+import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
+import org.eclipse.jdt.internal.compiler.lookup.IntersectionCastTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
+import org.eclipse.jdt.internal.compiler.lookup.MethodVerifier;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.RawTypeBinding;
@@ -49,7 +51,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 
 public abstract class FunctionalExpression extends Expression {
 	
-	TypeBinding expectedType;
+	protected TypeBinding expectedType;
 	public MethodBinding descriptor;
 	public MethodBinding binding;                 // Code generation binding. May include synthetics. See getMethodBinding()
 	protected MethodBinding actualMethodBinding;  // void of synthetics.
@@ -57,7 +59,7 @@ public abstract class FunctionalExpression extends Expression {
 	protected ExpressionContext expressionContext = VANILLA_CONTEXT;
 	static Expression [] NO_EXPRESSIONS = new Expression[0];
 	protected Expression [] resultExpressions = NO_EXPRESSIONS;
-	protected CompilationResult compilationResult;
+	public CompilationResult compilationResult;
 	public BlockScope enclosingScope;
 	protected boolean ellipsisArgument;
 	public int bootstrapMethodNumber = -1;
@@ -142,8 +144,30 @@ public abstract class FunctionalExpression extends Expression {
 	
 	public boolean argumentsTypeElided() { return true; /* only exception: lambda with explicit argument types. */ }
 
+	// Notify the compilation unit that it contains some functional types, taking care not to add any transient copies. this is assumed not to be a copy
+	public int recordFunctionalType(Scope scope) {
+		while (scope != null) {
+			switch (scope.kind) {
+				case Scope.METHOD_SCOPE :
+					ReferenceContext context = ((MethodScope) scope).referenceContext;
+					if (context instanceof LambdaExpression) {
+						LambdaExpression expression = (LambdaExpression) context;
+						if (expression != expression.original) // fake universe.
+							return 0;
+					}
+					break; 
+				case Scope.COMPILATION_UNIT_SCOPE :
+					CompilationUnitDeclaration unit = ((CompilationUnitScope) scope).referenceContext;
+					return unit.record(this);
+			}
+			scope = scope.parent;
+		}
+		return 0; // not reached.
+	}
+
 	public TypeBinding resolveType(BlockScope blockScope) {
 		this.constant = Constant.NotAConstant;
+		this.enclosingScope = blockScope;
 		MethodBinding sam = this.expectedType == null ? null : this.expectedType.getSingleAbstractMethod(blockScope, argumentsTypeElided());
 		if (sam == null) {
 			blockScope.problemReporter().targetTypeIsNotAFunctionalInterface(this);
@@ -257,5 +281,77 @@ public abstract class FunctionalExpression extends Expression {
 
 	public int diagnosticsSourceEnd() {
 		return this.sourceEnd;
+	}
+
+	public MethodBinding[] getRequiredBridges() {
+
+		class BridgeCollector {
+			
+			MethodBinding [] bridges;
+			MethodBinding method;
+			char [] selector;
+			LookupEnvironment environment;
+			Scope scope;
+
+			BridgeCollector(ReferenceBinding functionalType, MethodBinding method) {
+				this.method = method;
+				this.selector = method.selector;
+				this.environment = FunctionalExpression.this.enclosingScope.environment();
+				this.scope = FunctionalExpression.this.enclosingScope;
+				collectBridges(functionalType.superInterfaces());
+			}
+			
+			void collectBridges(ReferenceBinding[] interfaces) {
+				int length = interfaces == null ? 0 : interfaces.length;
+				for (int i = 0; i < length; i++) {
+					ReferenceBinding superInterface = interfaces[i];
+					if (superInterface == null) 
+						continue;
+					MethodBinding [] methods = superInterface.getMethods(this.selector);
+					for (int j = 0, count = methods == null ? 0 : methods.length; j < count; j++) {
+						MethodBinding inheritedMethod = methods[j];
+						if (inheritedMethod == null || this.method == inheritedMethod)  // descriptor declaring class may not be same functional interface target type.
+							continue;
+						if (inheritedMethod.isStatic() || inheritedMethod.isDefaultMethod() || inheritedMethod.redeclaresPublicObjectMethod(this.scope)) 
+							continue;
+						inheritedMethod = MethodVerifier.computeSubstituteMethod(inheritedMethod, this.method, this.environment);
+						if (inheritedMethod == null || !MethodVerifier.isSubstituteParameterSubsignature(this.method, inheritedMethod, this.environment) ||
+								   !MethodVerifier.areReturnTypesCompatible(this.method, inheritedMethod, this.environment))
+							continue;
+						final MethodBinding originalInherited = inheritedMethod.original();
+						if (!this.method.areParameterErasuresEqual(originalInherited) || TypeBinding.notEquals(this.method.returnType.erasure(), originalInherited.returnType.erasure()))
+							add(originalInherited);
+					}
+					collectBridges(superInterface.superInterfaces());
+				}
+			}
+			void add(MethodBinding inheritedMethod) {
+				if (this.bridges == null) {
+					this.bridges = new MethodBinding[] { inheritedMethod };
+					return;
+				}
+				int length = this.bridges.length;
+				for (int i = 0; i < length; i++) {
+					if (this.bridges[i].areParameterErasuresEqual(inheritedMethod) && TypeBinding.equalsEquals(this.bridges[i].returnType.erasure(), inheritedMethod.returnType.erasure()))
+						return;
+				}
+				System.arraycopy(this.bridges, 0, this.bridges = new MethodBinding[length + 1], 0, length);
+				this.bridges[length] = inheritedMethod;
+			}
+			MethodBinding [] getBridges () {
+				return this.bridges;
+			}
+		}
+		
+		ReferenceBinding functionalType;
+		if (this.expectedType instanceof IntersectionCastTypeBinding) {
+			functionalType = (ReferenceBinding) ((IntersectionCastTypeBinding)this.expectedType).getSAMType(this.enclosingScope);
+		} else {
+			functionalType = (ReferenceBinding) this.expectedType;
+		}
+		return new BridgeCollector(functionalType, this.descriptor).getBridges();
+	}
+	boolean requiresBridges() {
+		return getRequiredBridges() != null; 
 	}
 }

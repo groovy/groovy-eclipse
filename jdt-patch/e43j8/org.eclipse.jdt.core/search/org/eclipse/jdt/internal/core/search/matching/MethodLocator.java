@@ -4,10 +4,6 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -26,7 +22,6 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.*;
 import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.core.search.BasicSearchEngine;
@@ -176,7 +171,7 @@ public int match(ASTNode node, MatchingNodeSet nodeSet) {
 
 public int match(LambdaExpression node, MatchingNodeSet nodeSet) {
 	if (!this.pattern.findDeclarations) return IMPOSSIBLE_MATCH;
-	if (this.pattern.parameterSimpleNames.length != node.arguments().length) return IMPOSSIBLE_MATCH;
+	if (this.pattern.parameterSimpleNames != null && this.pattern.parameterSimpleNames.length != node.arguments().length) return IMPOSSIBLE_MATCH;
 
 	nodeSet.mustResolve = true;
 	return nodeSet.addMatch(node, POSSIBLE_MATCH);
@@ -244,13 +239,14 @@ public int match(MessageSend node, MatchingNodeSet nodeSet) {
 
 	return nodeSet.addMatch(node, this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
 }
-//public int match(Reference node, MatchingNodeSet nodeSet) - SKIP IT
+
 public int match(ReferenceExpression node, MatchingNodeSet nodeSet) {
 	if (!this.pattern.findReferences) return IMPOSSIBLE_MATCH;
 	if (!matchesName(this.pattern.selector, node.selector)) return IMPOSSIBLE_MATCH;
 	nodeSet.mustResolve = true;
 	return nodeSet.addMatch(node, this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
 }
+
 public int match(Annotation node, MatchingNodeSet nodeSet) {
 	if (!this.pattern.findReferences) return IMPOSSIBLE_MATCH;
 	MemberValuePair[] pairs = node.memberValuePairs();
@@ -275,8 +271,6 @@ protected int matchContainer() {
 		// need to look almost everywhere to find in javadocs and static import
 		return ALL_CONTAINER;
 	}
-	if (CompilerOptions.versionToJdkLevel(JavaCore.getOption(JavaCore.COMPILER_SOURCE)) >= 8)
-		return ALL_CONTAINER;
 	return CLASS_CONTAINER;
 }
 /* (non-Javadoc)
@@ -288,6 +282,7 @@ protected void matchLevelAndReportImportRef(ImportReference importRef, Binding b
 		super.matchLevelAndReportImportRef(importRef, binding, locator);
 	}
 }
+
 protected int matchMethod(MethodBinding method, boolean skipImpossibleArg) {
 	if (!matchesName(this.pattern.selector, method.selector)) return IMPOSSIBLE_MATCH;
 
@@ -765,7 +760,7 @@ protected int resolveLevel(MessageSend messageSend) {
 
 protected int resolveLevel(ReferenceExpression referenceExpression) {
 	MethodBinding method = referenceExpression.getMethodBinding();
-	if (method == null || referenceExpression.resolvedType == null)
+	if (method == null || !method.isValidBinding())
 		return INACCURATE_MATCH;
 
 	int methodLevel = matchMethod(method, false);

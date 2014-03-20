@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  * 
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for
@@ -21,6 +17,7 @@
  *								Bug 423505 - [1.8] Implement "18.5.4 More Specific Method Inference"
  *								Bug 427438 - [1.8][compiler] NPE at org.eclipse.jdt.internal.compiler.ast.ConditionalExpression.generateCode(ConditionalExpression.java:280)
  *								Bug 418743 - [1.8][null] contradictory annotations on invocation of generic method not reported
+ *								Bug 416182 - [1.8][compiler][null] Contradictory null annotations not rejected
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -157,14 +154,14 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 						if (solutions != null) {
 							
 							methodSubstitute = scope.environment().createParameterizedGenericMethod(originalMethod, solutions);
-							if (compilerOptions.isAnnotationBasedNullAnalysisEnabled)
-								methodSubstitute = NullAnnotationMatching.checkForContraditions(methodSubstitute, invocationSite, scope);
 							if (hasReturnProblem) { // illegally working from the provisional result?
 								MethodBinding problemMethod = infCtx18.getReturnProblemMethodIfNeeded(expectedType, methodSubstitute);
 								if (problemMethod instanceof ProblemMethodBinding)
 									return problemMethod;
 							}
 							if (invocationTypeInferred) {
+								if (compilerOptions.isAnnotationBasedNullAnalysisEnabled)
+									NullAnnotationMatching.checkForContraditions(methodSubstitute, invocationSite, scope);
 								infCtx18.rebindInnerPolies(result, methodSubstitute.parameters);
 								return methodSubstitute.boundCheck18(scope, arguments);
 							} else {

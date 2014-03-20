@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     Stephan Herrmann - initial API and implementation
  *******************************************************************************/
@@ -74,6 +70,8 @@ public class InferenceSubstitution extends Scope.Substitutor implements Substitu
 			typeVariable.superclass = superclass;
 			typeVariable.superInterfaces = superInterfaces;
 			typeVariable.firstBound = superclass != null ? superclass : superInterfaces[0];
+			if (typeVariable.firstBound.hasNullTypeAnnotations())
+				typeVariable.tagBits |= TagBits.HasNullTypeAnnotation;
 		}
 		return typeVariable;
 	}

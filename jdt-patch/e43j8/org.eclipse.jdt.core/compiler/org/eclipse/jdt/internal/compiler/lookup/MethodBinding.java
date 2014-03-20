@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for
@@ -531,13 +527,12 @@ protected void fillInDefaultNonNullness18(AbstractMethodDeclaration sourceMethod
 	}
 	if (added)
 		this.tagBits |= TagBits.HasParameterAnnotations;
-	if (   this.returnType != null
-		&& !this.returnType.isBaseType()
-		&& (this.returnType.tagBits & TagBits.AnnotationNullMASK) == 0)
-	{
-		this.returnType = env.createAnnotatedType(this.returnType, new AnnotationBinding[]{env.getNonNullAnnotation()});
-	} else if (sourceMethod != null && (this.returnType.tagBits & TagBits.AnnotationNonNull) != 0) {
-		sourceMethod.scope.problemReporter().nullAnnotationIsRedundant(sourceMethod, -1/*signifies method return*/);
+	if (this.returnType != null) {
+		if (!this.returnType.isBaseType() && (this.returnType.tagBits & TagBits.AnnotationNullMASK) == 0) {
+			this.returnType = env.createAnnotatedType(this.returnType, new AnnotationBinding[]{env.getNonNullAnnotation()});
+		} else if (sourceMethod != null && (this.returnType.tagBits & TagBits.AnnotationNonNull) != 0) {
+			sourceMethod.scope.problemReporter().nullAnnotationIsRedundant(sourceMethod, -1/*signifies method return*/);
+		}
 	}
 }
 

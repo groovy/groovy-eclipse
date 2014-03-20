@@ -4,10 +4,6 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -674,8 +670,8 @@ public final boolean isNumericType() {
  * Note that some instances of ParameterizedTypeBinding have no arguments, like for non-generic members 
  * of a parameterized type. Use {@link #isParameterizedTypeWithActualArguments()} instead to find out.
  */
-public final boolean isParameterizedType() {
-	return kind() == Binding.PARAMETERIZED_TYPE;
+public boolean isParameterizedType() {
+	return false;
 }
 
 /**
@@ -1409,7 +1405,7 @@ public TypeBinding unannotated() {
 	return this;
 }
 
-public boolean hasTypeAnnotations() {
+public final boolean hasTypeAnnotations() {
 	return (this.tagBits & TagBits.HasTypeAnnotations) != 0;
 }
 

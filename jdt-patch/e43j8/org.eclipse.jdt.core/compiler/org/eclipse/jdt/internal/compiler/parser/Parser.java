@@ -5,10 +5,6 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  * 
- * This is an implementation of an early-draft specification developed under the Java
- * Community Process (JCP) and is made available for testing and evaluation purposes
- * only. The code is not compatible with any specification of the JCP.
- * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Tom Tromey - patch for readTable(String) as described in http://bugs.eclipse.org/bugs/show_bug.cgi?id=32196
@@ -229,6 +225,12 @@ public class Parser extends CommitRollbackParser implements ConflictedParser, Op
 
 	private static final String UNEXPECTED_EOF = "Unexpected End Of File" ; //$NON-NLS-1$
 	public static boolean VERBOSE_RECOVERY = false;
+	
+	private static enum LocalTypeKind {
+		LOCAL,
+		METHOD_REFERENCE,
+		LAMBDA,
+	}
 
 	static {
 		try{
@@ -957,6 +959,7 @@ public class Parser extends CommitRollbackParser implements ConflictedParser, Op
 	protected int lParenPos,rParenPos; //accurate only when used !
 	protected int modifiers;
 	protected int modifiersSourceStart;
+	protected int colonColonStart = -1;
 	protected int[] nestedMethod; //the ptr is nestedType
 
 	protected int nestedType, dimensions;
@@ -5697,18 +5700,23 @@ private void rejectIllegalTypeAnnotations(TypeReference typeReference, boolean t
 		}
 	}
 	annotations = typeReference.getAnnotationsOnDimensions(true);
+	boolean tolerated = false;
 	for (int i = 0, length = annotations == null ? 0 : annotations.length; i < length; i++) {
 		misplacedAnnotations = annotations[i];
 		if (misplacedAnnotations != null) {
-			if (tolerateAnnotationsOnDimensions)
+			if (tolerateAnnotationsOnDimensions) {
 				problemReporter().toleratedMisplacedTypeAnnotations(misplacedAnnotations[0], misplacedAnnotations[misplacedAnnotations.length - 1]);
+				tolerated = true;
+			}
 			else 
 				problemReporter().misplacedTypeAnnotations(misplacedAnnotations[0], misplacedAnnotations[misplacedAnnotations.length - 1]);
 		}
 	}
-	typeReference.annotations = null;
-	typeReference.setAnnotationsOnDimensions(null);
-	typeReference.bits &= ~ASTNode.HasTypeAnnotations;
+	if (!tolerated) {
+		typeReference.annotations = null;
+		typeReference.setAnnotationsOnDimensions(null);
+		typeReference.bits &= ~ASTNode.HasTypeAnnotations;
+	}
 }
 protected void consumePrimaryNoNewArrayNameSuper() {
 	// PrimaryNoNewArray ::= Name '.' 'super'
@@ -7977,6 +7985,7 @@ protected void consumeLambdaExpression() {
 		this.lastCheckPoint = body.sourceEnd + 1;
 	}
 	this.referenceContext.compilationResult().hasFunctionalTypes = true;
+	markEnclosingMemberWithLocalOrFunctionalType(LocalTypeKind.LAMBDA);
 }
 
 protected Argument typeElidedArgument() {
@@ -8163,6 +8172,7 @@ protected void consumeReferenceExpression(ReferenceExpression referenceExpressio
 		problemReporter().referenceExpressionsNotBelow18(referenceExpression);
 	}
 	this.referenceContext.compilationResult().hasFunctionalTypes = true;
+	markEnclosingMemberWithLocalOrFunctionalType(LocalTypeKind.METHOD_REFERENCE);
 }
 protected void consumeReferenceExpressionTypeArgumentsAndTrunk(boolean qualified) {
 	// ReferenceExpressionTypeArgumentsAndTrunk ::= OnlyTypeArguments Dimsopt ==> qualified == false
@@ -8792,6 +8802,9 @@ protected void consumeToken(int type) {
 	switch (type) {
 		case TokenNameARROW:
 			consumeLambdaHeader();
+			break;
+		case TokenNameCOLON_COLON:
+			this.colonColonStart = this.scanner.currentPosition - 2;
 			break;
 		case TokenNameBeginLambda:
 			flushCommentsDefinedPriorTo(this.scanner.currentPosition);
@@ -10615,6 +10628,9 @@ private void jumpOverType(){
 }
 protected void markEnclosingMemberWithLocalType() {
 	if (this.currentElement != null) return; // this is already done in the recovery code
+	markEnclosingMemberWithLocalOrFunctionalType(LocalTypeKind.LOCAL);
+}
+protected void markEnclosingMemberWithLocalOrFunctionalType(LocalTypeKind context) {
 	for (int i = this.astPtr; i >= 0; i--) {
 		ASTNode node = this.astStack[i];
 		if (node instanceof AbstractMethodDeclaration
@@ -10622,14 +10638,33 @@ protected void markEnclosingMemberWithLocalType() {
 				|| (node instanceof TypeDeclaration // mark type for now: all initializers will be marked when added to this type
 						// and enclosing type must not be closed (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=147485)
 						&& ((TypeDeclaration) node).declarationSourceEnd == 0)) {
-			node.bits |= ASTNode.HasLocalType;
+			switch (context) {
+				case METHOD_REFERENCE:
+					node.bits |= ASTNode.HasFunctionalInterfaceTypes;
+					break;
+				case LAMBDA:
+					node.bits |= ASTNode.HasFunctionalInterfaceTypes;
+					//$FALL-THROUGH$
+				case LOCAL:
+					node.bits |= ASTNode.HasLocalType;
+			}
 			return;
 		}
 	}
 	// default to reference context (case of parse method body)
 	if (this.referenceContext instanceof AbstractMethodDeclaration
 			|| this.referenceContext instanceof TypeDeclaration) {
-		((ASTNode)this.referenceContext).bits |= ASTNode.HasLocalType;
+		ASTNode node = (ASTNode)this.referenceContext;
+		switch (context) {
+			case METHOD_REFERENCE:
+				node.bits |= ASTNode.HasFunctionalInterfaceTypes;
+				break;
+			case LAMBDA:
+				node.bits |= ASTNode.HasFunctionalInterfaceTypes;
+				//$FALL-THROUGH$
+			case LOCAL:
+				node.bits |= ASTNode.HasLocalType;
+		}
 	}
 }
 
