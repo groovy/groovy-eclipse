@@ -35,6 +35,18 @@
 		<dist.key>GRECLIPSE</dist.key>
 		<dist.type>snapshot</dist.type>
 		<dist.path>${dist.type}/${dist.key}/${dist.target}</dist.path>
+		
+		<!-- signing properties:
+		   Note these properties here are only 'documentation'. The real values are
+		   furnished by the 'bamboo-signing' profile. When not running on bamboo,
+		   singing is disabled by default
+		  -->
+		<signing.skip>true</signing.skip>
+		<signing.alias>vmware</signing.alias>
+		<signing.keystore></signing.keystore>
+		<signing.store.password></signing.store.password>
+		<signing.key.password></signing.key.password>
+		
 	</properties>
 
 	<modules>
@@ -160,6 +172,26 @@
 				</plugins>
 			</build>
 		</profile>
+		
+		<!-- 
+		  profile to sign jars. Enabled automatically on bamboo when detecting 
+		  'bamboo_signing_key_password' env variable is defined 
+		  -->
+		<profile>
+			<activation>
+				<property>
+					<name>env.bamboo_signing_key_password</name>
+				</property>
+			</activation>
+			<id>bamboo-signing</id>
+			<properties>
+				<signing.skip>false</signing.skip>
+				<signing.alias>vmware</signing.alias>
+				<signing.store.password>${env.bamboo_signing_store_password}</signing.store.password>
+				<signing.key.password>${env.bamboo_signing_key_password}</signing.key.password>
+				<signing.keystore>~/.keytool/springsource.jks</signing.keystore>
+			</properties>
+		</profile>
 	</profiles>
 
 	<repositories>
@@ -192,6 +224,27 @@
 				<artifactId>tycho-maven-plugin</artifactId>
 				<version>${tycho-version}</version>
 				<extensions>true</extensions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jarsigner-plugin</artifactId>
+				<version>1.2</version>
+				<executions>
+					<execution>
+						<id>sign</id>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<skip>${signing.skip}</skip>
+					<alias>${signing.alias}</alias>
+					<keystore>${signing.keystore}</keystore>
+					<storepass>${signing.store.password}</storepass>
+					<keypass>${signing.key.password}</keypass>
+				</configuration>
 			</plugin>
 
 			<plugin>
