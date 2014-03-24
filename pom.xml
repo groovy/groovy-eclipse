@@ -109,7 +109,7 @@
 				<repository>
 					<id>eclipse-java8</id>
 					<layout>p2</layout>
-					<url>http://build.eclipse.org/eclipse/builds/4P/siteDir/updates/4.3-P-builds</url>
+					<url>http://download.eclipse.org/eclipse/updates/4.3-P-builds/</url>
 				</repository>
 			</repositories>
 			<modules>

@@ -60,42 +60,41 @@
    
    <includes id="org.eclipse.jdt.a2.java8patch" version="0.0.0" />
    
-   <!-- TODO: To force tycho to include same versions as in eclipse java 8 patch... 
-        I used specific version with qualifiers below. 
-        This might be fragile... Is there a better way?
-        (Note: leaving the version # open we end up with unpatched bundles)
+   <!-- How to force tycho to include same versions as in eclipse java 8 patch?
+        Using version '0.0.0'...
+        This now seems to work because JDT patched versions have higher minor version numbers 
+        for Java 8 patched versions of jdt.ui jdt.debug etc.
         -->
       
-
    <plugin
          id="org.eclipse.jdt.apt.core"
          download-size="0"
-         version="3.3.500.v20140128-0244"
+         version="0.0.0"
          unpack="false"/>
 
    <plugin
          id="org.eclipse.jdt.apt.ui"
          download-size="0"
-         version="3.3.300.v20131121-1422"
+         version="0.0.0"
          unpack="false"/>
 
    <plugin
          id="org.eclipse.jdt.apt.pluggable.core"
          download-size="0"
-         version="1.0.400.v20131113-0353"
+         version="0.0.0"
          unpack="false"/>
 
    <plugin
          id="org.eclipse.jdt.compiler.apt"
          download-size="0"
-         version="1.0.600.v20140305-0739"
+         version="0.0.0"
          fragment="true"
          unpack="false"/>
 
    <plugin
          id="org.eclipse.jdt.compiler.tool"
          download-size="0"
-         version="1.0.200.v20140127-0757"
+         version="0.0.0"
          fragment="true"
          unpack="false"/>
 
@@ -103,49 +102,49 @@
    <plugin
          id="org.eclipse.jdt.core"
          download-size="0"
-         version="3.9.2.v20140309-1413"
+         version="3.9.50.v20140317-1741"
          unpack="false"/>
     -->
 
    <plugin
          id="org.eclipse.jdt.annotation"
          download-size="0"
-         version="1.1.0.v20140129-1625"
+         version="0.0.0"
          unpack="false"/>
 
    <plugin
          id="org.eclipse.jdt.debug.ui"
          download-size="0"
-         version="3.6.200.v20140307-1556"
+         version="0.0.0"
          unpack="false"/>
 
    <plugin
          id="org.eclipse.jdt.debug"
          download-size="0"
-         version="3.8.0.v20140307-1556"/>
+         version="0.0.0"/>
 
    <plugin
          id="org.eclipse.jdt.launching"
          download-size="0"
-         version="3.7.0.v20140307-1556"
+         version="0.0.0"
          unpack="false"/>
 
    <plugin
          id="org.eclipse.jdt.ui"
          download-size="0"
-         version="3.9.1.v20140306-2106"
+         version="0.0.0"
          unpack="false"/>
 
    <plugin
          id="org.eclipse.jdt.junit"
          download-size="0"
-         version="3.7.201.v20140218-1138"
+         version="0.0.0"
          unpack="false"/>
 
    <plugin
          id="org.eclipse.jdt.junit.core"
          download-size="0"
-         version="3.7.200.v20130514-1154"
+         version="0.0.0"
          unpack="false"/>
 
 </feature>
