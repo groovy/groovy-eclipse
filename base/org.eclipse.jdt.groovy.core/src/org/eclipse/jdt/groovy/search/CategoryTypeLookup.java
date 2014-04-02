@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2003-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,8 +87,8 @@ public class CategoryTypeLookup implements ITypeLookup {
 				if (params != null && params.length > 0
 						&& isAssignableFrom(VariableScope.maybeConvertFromPrimitive(currentType), params[0].getType())) {
 					ClassNode declaringClass = methodNode.getDeclaringClass();
-					return new TypeLookupResult(methodNode.getReturnType(), declaringClass, methodNode,
-							getConfidence(declaringClass), scope);
+					ClassNode returnType = SimpleTypeLookup.typeFromDeclaration(methodNode, currentType);
+					return new TypeLookupResult(returnType, declaringClass, methodNode, getConfidence(declaringClass), scope);
 				}
 			}
 		}
