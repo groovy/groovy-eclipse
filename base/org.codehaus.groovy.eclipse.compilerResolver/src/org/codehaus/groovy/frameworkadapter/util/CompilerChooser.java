@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
+ * Copyright 2011-2014 Pivotal Software Inc
  * 
  * andrew - Initial API and implementation
  *
@@ -19,16 +19,17 @@ package org.codehaus.groovy.frameworkadapter.util;
 
 import static org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion.UNSPECIFIED;
 
+import java.lang.reflect.Method;
+
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.eclipse.osgi.framework.internal.core.BundleContextImpl;
-import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.Version;
+import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.prefs.BackingStoreException;
 
 /**
@@ -80,10 +81,9 @@ public class CompilerChooser {
 
         System.out.println("Starting Groovy-Eclipse compiler resolver.  Specified compiler level: " + specifiedVersion.toReadableVersionString());
         
-        Bundle[] bundles = ((BundleContextImpl) context)
-                .getFramework()
-                .getPackageAdmin()
-                .getBundles(GROOVY_PLUGIN_ID, null);
+        PackageAdmin pkgAdmin = context.getService(context.getServiceReference(org.osgi.service.packageadmin.PackageAdmin.class));
+        
+        Bundle[] bundles = pkgAdmin.getBundles(GROOVY_PLUGIN_ID, null);
 
         if (bundles == null || bundles.length == 0) {
             System.out.println("No Groovy bundles found...this will cause some problems.");
@@ -114,8 +114,17 @@ public class CompilerChooser {
                         bundle.uninstall();
                     }
                 }
-                ((BundleContextImpl) context).getFramework().getPackageAdmin().refreshPackages(bundles, true, (FrameworkListener[]) null);
-//                ((BundleContextImpl) context).getFramework().getPackageAdmin().refreshPackages(bundles);
+                try {
+					Method method = pkgAdmin.getClass().getMethod("refreshPackages", Bundle[].class, boolean.class, FrameworkListener[].class);
+					if (method == null) {
+		                pkgAdmin.refreshPackages(bundles);
+					} else {
+						method.setAccessible(true);
+						method.invoke(pkgAdmin, bundles, true, null);
+					}
+				} catch (Exception e) {
+	                pkgAdmin.refreshPackages(bundles);
+				}
             } else {
                 if (!found) {
                     System.out.println("Specified version not found, using " + allVersions[0] + " instead.");
@@ -137,10 +146,10 @@ public class CompilerChooser {
      * Finds the compiler version that is specified in the system properties
      */
     private SpecifiedVersion findSysPropVersion() {
-        SpecifiedVersion version = SpecifiedVersion.findVersionFromString(FrameworkProperties.getProperty(GROOVY_COMPILER_LEVEL));
+        SpecifiedVersion version = SpecifiedVersion.findVersionFromString(System.getProperty(GROOVY_COMPILER_LEVEL));
         if (version == UNSPECIFIED) {
             // now look at the non vmwargs
-            version = internalFindCommandLineVersion(FrameworkProperties.getProperty(ECLIPSE_COMMANDS));
+            version = internalFindCommandLineVersion(System.getProperty(ECLIPSE_COMMANDS));
         }
         return version;
     }

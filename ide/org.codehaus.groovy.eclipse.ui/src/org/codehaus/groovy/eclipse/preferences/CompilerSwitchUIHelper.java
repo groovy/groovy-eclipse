@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2003-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -184,7 +183,7 @@ public class CompilerSwitchUIHelper {
      * @return a string of command line options or null on error
      */
     private static String buildCommandLine(Shell shell) {
-        String property = FrameworkProperties.getProperty(PROP_VM);
+        String property = System.getProperty(PROP_VM);
         if (property == null) {
             MessageDialog
             .openError(
