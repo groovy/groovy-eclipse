@@ -13,7 +13,7 @@
       id="org.codehaus.groovy.alltests.feature"
       label="%featureName"
       version="2.9.0.qualifier"
-      provider-name="%Codehaus.org">
+      provider-name="Codehaus.org">
 
    <description url="%descriptionURL">
       %description
