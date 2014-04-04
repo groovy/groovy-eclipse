@@ -16,7 +16,8 @@
 		profile automatically and will allow the 'deploy' to execute. -->
 
 	<properties>
-		<tycho-version>0.19.0</tycho-version>
+		<tycho-version>0.20.0</tycho-version>
+		<tycho-extras-version>0.20.0</tycho-extras-version>
 
 		<!-- Version of greclipse maven compiler to use for building. (Some bundles, 
 			mostly test related, have groovy code that can't be compiled with standard 
@@ -50,8 +51,6 @@
 	</properties>
 
 	<modules>
-	
-		<module>Site-org.codehaus.groovy.eclipse</module>
 	
 		<!-- SDK and test bits -->
 
@@ -102,6 +101,9 @@
 		
 		<module>extras/Feature-org.codehaus.groovy.m2eclipse</module>
 		<module>extras/org.codehaus.groovy.m2eclipse</module>
+		
+		<!-- update site -->
+		<module>Site-org.codehaus.groovy.eclipse</module>
 
 		<!-- note: Beware: these are not all the modules. There are are also some 
 			profile-specific ones declared below! -->
@@ -134,6 +136,30 @@
 			<properties>
 				<dist.target>e4.3-j8</dist.target>
 				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e43j8'</greclipse.build.qualifier>
+			</properties>
+		</profile>
+		
+		<profile>
+			<id>e43</id>
+			<repositories>
+				<repository>
+					<id>e43</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/eclipse/updates/4.3</url>
+				</repository>
+				<repository>
+					<id>kepler</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/releases/kepler</url>
+				</repository>
+			</repositories>
+			<modules>
+				<module>jdt-patch/e43/Feature-org.codehaus.groovy.jdt.patch</module>
+				<module>jdt-patch/e43/org.eclipse.jdt.core</module>
+			</modules>
+			<properties>
+				<dist.target>e4.3</dist.target>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e43'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -325,6 +351,50 @@
 				</configuration>
 			</plugin>
 
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-source-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<executions>
+					<execution>
+						<id>plugin-source</id>
+						<goals>
+							<goal>plugin-source</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.eclipse.tycho.extras</groupId>
+				<artifactId>tycho-source-feature-plugin</artifactId>
+				<version>${tycho-extras-version}</version>
+				<executions>
+					<execution>
+						<id>source-feature</id>
+						<phase>package</phase>
+						<goals>
+							<goal>source-feature</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-p2-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<executions>
+					<execution>
+						<id>attach-p2-metadata</id>
+						<phase>package</phase>
+						<goals>
+							<goal>p2-metadata</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+    
+    	
 		</plugins>
 	</build>
 </project>

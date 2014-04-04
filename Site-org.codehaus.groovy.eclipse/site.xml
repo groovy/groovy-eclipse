@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <site>
-<!--
+
    <feature url="features/org.codehaus.groovy.eclipse.feature.source_2.9.0.qualifier.jar" id="org.codehaus.groovy.eclipse.feature.source" version="2.9.0.qualifier">
       <category name="org.codehaus.groovy.eclipse.sdk"/>
    </feature>
    <feature url="features/org.codehaus.groovy.jdt.patch.source_2.9.0.qualifier.jar" id="org.codehaus.groovy.jdt.patch.source" version="2.9.0.qualifier">
       <category name="org.codehaus.groovy.eclipse.sdk"/>
    </feature>
-   -->
+
    <feature url="features/org.codehaus.groovy.eclipse.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy.eclipse.feature" version="2.9.0.qualifier">
       <category name="org.codehaus.groovy.eclipse"/>
    </feature>
@@ -47,13 +47,13 @@
    <feature url="features/org.codehaus.groovy.alltests.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy.alltests.feature" version="2.9.0.qualifier">
       <!-- <category name="org.codehaus.groovy.sdk"/> -->
    </feature>
-   <!--
+   
    <category-def name="org.codehaus.groovy.eclipse.sdk" label="Groovy Eclipse SDK (Optional)">
       <description>
          Optional feature that provides source code for the Groovy-Eclipse plugin
       </description>
    </category-def>
-    -->
+   
    <category-def name="org.codehaus.groovy.eclipse" label="Groovy-Eclipse (Required)">
       <description>
          The required feature that provides Groovy support in Eclipse.
