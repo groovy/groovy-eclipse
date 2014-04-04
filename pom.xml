@@ -16,8 +16,8 @@
 		profile automatically and will allow the 'deploy' to execute. -->
 
 	<properties>
-		<tycho-version>0.20.0</tycho-version>
-		<tycho-extras-version>0.20.0</tycho-extras-version>
+		<tycho-version>0.19.0</tycho-version>
+		<tycho-extras-version>0.19.0</tycho-extras-version>
 
 		<!-- Version of greclipse maven compiler to use for building. (Some bundles, 
 			mostly test related, have groovy code that can't be compiled with standard 
