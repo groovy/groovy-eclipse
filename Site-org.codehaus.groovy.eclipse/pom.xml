@@ -1,0 +1,158 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<relativePath>../pom.xml</relativePath>
+		<groupId>org.codehaus.groovy.eclipse</groupId>
+		<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
+		<version>2.9.0-SNAPSHOT</version>
+	</parent>
+	<groupId>org.codehaus.groovy.eclipse</groupId>
+	<artifactId>org.codehaus.groovy.eclipse.site</artifactId>
+	<version>2.9.0-SNAPSHOT</version>
+	<packaging>eclipse-update-site</packaging>
+
+	<profiles>
+		<profile>
+			<id>s3-deploy</id>
+			<activation>
+				<property>
+					<name>env.dist_properties</name>
+				</property>
+			</activation>
+
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<version>1.6</version>
+						<executions>
+							<execution>
+								<id>upload-dist</id>
+								<phase>deploy</phase>
+								<configuration>
+									<target>
+
+										<echo>Uploading main update site to s3..."</echo>
+
+										<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+										<taskdef resource="org/springframework/build/aws/ant/antlib.xml" />
+
+										<echo>==== dist props are set so we can deploy? ===</echo>
+										<echo>bamboo.s3.properties=${bamboo.s3.properties}</echo>
+										<echo>dist_properties=${env.dist_properties}</echo>
+										<echo>env.bamboo_s3_properties_rel=${env.bamboo_s3_properties}</echo>
+
+										<echo>dist.accessKey=${dist.accessKey}</echo> <!-- on bamboo this is !@#!@# -->
+										<echo>accessKey=${accessKey}</echo> <!-- so be sure to only use this property directly! -->
+
+										<property name="site.target.dir" value="${project.build.directory}" />
+										<echo>site.target.dir=${site.target.dir}</echo>
+
+										<echo>unqualifiedVersion=${unqualifiedVersion}</echo>
+										<echo>buildQualifier=${buildQualifier}</echo>
+										<property name="dist.full.version"
+											value="${unqualifiedVersion}.${buildQualifier}" />
+										<echo>dist.full.version=${dist.full.version}</echo>
+
+										<property name="dist.file.name"
+											value="${dist.project}-${dist.full.version}-updatesite.zip" />
+										<echo>dist.file.name=${dist.file.name}</echo>
+
+										<property name="dist.full.path"
+											value="${site.target.dir}/site/${dist.file.name}" />
+
+										<delete file="${dist.full.path}" />
+										<zip zipfile="${dist.full.path}" filesonly="true">
+											<zipfileset dir="${site.target.dir}/site">
+												<exclude name="*.zip" />
+												<exclude name="**/*.gz" />
+											</zipfileset>
+										</zip>
+										<checksum file="${dist.full.path}" algorithm="SHA1"
+											fileext=".sha1" />
+										<checksum file="${dist.full.path}" algorithm="MD5"
+											fileext=".md5" />
+
+										<echo>Preparing for upload... This will happen:</echo>
+
+										<echo>Will Delete: </echo>
+										<echo> dist.bucket=${dist.bucket}</echo>
+										<echo> dist.path=${dist.path}</echo>
+
+										<echo>Will Upload: </echo>
+										<echo> dist.bucket=${dist.bucket}</echo>
+										<echo> toDir=${dist.path}</echo>
+										<echo> fromDir=${site.target.dir}/site</echo>
+
+										<echo>Will Upload: </echo>
+										<echo> dist.bucket=${dist.bucket}</echo>
+										<echo> toFile=${dist.path}/${dist.file.name}</echo>
+										<echo> fromFile=${dist.path}/${dist.file.name}</echo>
+										<echo> metadata project.name=${dist.name}</echo>
+										<echo> metadata release.type=${dist.type}</echo>
+										<echo> metadata bundle.version=${dist.full.version}</echo>
+										<echo> metadata package.file.name=${dist.file.name}</echo>
+
+<!-- 										<s3 accessKey="${accessKey}" secretKey="${secretKey}"> -->
+
+<!-- 											<delete bucketName="${dist.bucket}"> -->
+<!-- 												<fileset dir="${dist.path}"> -->
+<!-- 													<include name="site.xml" /> -->
+<!-- 													<include name="content.jar" /> -->
+<!-- 													<include name="artifacts.jar" /> -->
+<!-- 													<include name="plugins/**" /> -->
+<!-- 													<include name="features/**" /> -->
+<!-- 												</fileset> -->
+<!-- 											</delete> -->
+
+<!-- 											<upload bucketName="${dist.bucket}" toDir="${dist.path}" -->
+<!-- 												publicRead="true"> -->
+<!-- 												<fileset dir="${site.target.dir}/site"> -->
+<!-- 													<include name="**/*" /> -->
+<!-- 													<include name="**" /> -->
+<!-- 													<exclude name="*.zip" /> -->
+<!-- 												</fileset> -->
+<!-- 											</upload> -->
+
+<!-- 											<upload bucketName="${dist.bucket}" file="${dist.full.path}" -->
+<!-- 												toFile="${dist.path}/${dist.file.name}" publicRead="true"> -->
+<!-- 												<metadata name="project.name" value="${dist.name}" /> -->
+<!-- 												<metadata name="release.type" value="${dist.type}" /> -->
+<!-- 												<metadata name="bundle.version" value="${dist.full.version}" /> -->
+<!-- 												<metadata name="package.file.name" value="${dist.file.name}" /> -->
+<!-- 											</upload> -->
+
+<!-- 										</s3> -->
+									</target>
+								</configuration>
+								<goals>
+									<goal>run</goal>
+								</goals>
+							</execution>
+						</executions>
+						<dependencies>
+							<dependency>
+								<groupId>org.springframework.build</groupId>
+								<artifactId>org.springframework.build.aws.ant</artifactId>
+								<version>3.0.5.RELEASE</version>
+							</dependency>
+							<dependency>
+								<groupId>net.java.dev.jets3t</groupId>
+								<artifactId>jets3t</artifactId>
+								<version>0.7.2</version>
+							</dependency>
+							<dependency>
+								<groupId>ant-contrib</groupId>
+								<artifactId>ant-contrib</artifactId>
+								<version>20020829</version>
+							</dependency>
+						</dependencies>
+					</plugin>
+				</plugins>
+			</build>
+
+		</profile>
+	</profiles>
+</project>

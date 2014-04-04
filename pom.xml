@@ -51,6 +51,8 @@
 
 	<modules>
 	
+		<module>Site-org.codehaus.groovy.eclipse</module>
+	
 		<!-- SDK and test bits -->
 
 		<module>ide-test</module> <!-- parent pom for all the ide-test modules -->
@@ -128,16 +130,37 @@
 			<modules>
 				<module>jdt-patch/e43j8/Feature-org.codehaus.groovy.jdt.patch</module>
 				<module>jdt-patch/e43j8/org.eclipse.jdt.core</module>
-
-				<!-- TODO: find a way not to have to duplicate the Site for different 
-					target platforms -->
-				<module>jdt-patch/e43j8/Site-org.codehaus.groovy.eclipse</module>
 			</modules>
 			<properties>
 				<dist.target>e4.3-j8</dist.target>
 				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e43j8'</greclipse.build.qualifier>
 			</properties>
 		</profile>
+
+		<profile>
+			<id>e42</id>
+			<repositories>
+				<repository>
+					<id>e42</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/eclipse/updates/4.2</url>
+				</repository>
+				<repository>
+					<id>juno</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/releases/juno</url>
+				</repository>
+			</repositories>
+			<modules>
+				<module>jdt-patch/e42/Feature-org.codehaus.groovy.jdt.patch</module>
+				<module>jdt-patch/e42/org.eclipse.jdt.core</module>
+			</modules>
+			<properties>
+				<dist.target>e4.2</dist.target>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e42'</greclipse.build.qualifier>
+			</properties>
+		</profile>
+		
 
 		<profile>
 			<id>s3-deploy</id>
