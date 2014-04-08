@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009-2011 SpringSource and others.
+ * Copyright (c) 2009-2014 SpringSource and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -465,7 +465,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		}
 	}
 
-	private ClassNode declaringTypeFromDeclaration(ASTNode declaration, ClassNode resolvedTypeOfDeclaration) {
+	static ClassNode declaringTypeFromDeclaration(ASTNode declaration, ClassNode resolvedTypeOfDeclaration) {
 		ClassNode typeOfDeclaration;
 		if (declaration instanceof FieldNode) {
 			typeOfDeclaration = ((FieldNode) declaration).getDeclaringClass();
@@ -490,7 +490,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 	 * @param resolvedType the unredirected type that declares this declaration somewhere in its hierarchy
 	 * @return class node with generics replaced by actual types
 	 */
-	private ClassNode typeFromDeclaration(ASTNode declaration, ClassNode resolvedType) {
+	static ClassNode typeFromDeclaration(ASTNode declaration, ClassNode resolvedType) {
 		ClassNode typeOfDeclaration, declaringType = declaringTypeFromDeclaration(declaration, resolvedType);
 		if (declaration instanceof PropertyNode) {
 			FieldNode field = ((PropertyNode) declaration).getField();
