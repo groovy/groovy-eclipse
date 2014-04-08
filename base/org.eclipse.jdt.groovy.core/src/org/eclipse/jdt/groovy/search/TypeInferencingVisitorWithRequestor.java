@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009-2011 SpringSource and others.
+ * Copyright (c) 2009-2014 SpringSource and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -951,7 +951,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		// don't visit binary expressions in a constructor that have no source location.
 		// the reason is that these were copied from the field initializer.
 		// we want to visit them under the field initializer, not the construcor
-		if (node.getEnd() == 0) {
+		if (node instanceof DeclarationExpression && node.getEnd() == 0) {
 			return;
 		}
 

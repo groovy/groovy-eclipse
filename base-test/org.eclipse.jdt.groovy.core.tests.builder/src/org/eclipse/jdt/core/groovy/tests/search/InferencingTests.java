@@ -594,7 +594,20 @@ public class InferencingTests extends AbstractInferencingTest {
         int end = start + "xxx".length();
         assertType(contents, start, end, "java.lang.String");
     }
-    
+    public void testGRECLIPSE1720() throws Exception {
+        String contents = "import groovy.transform.CompileStatic\n" +
+        			"@CompileStatic\n" +
+        			"public class Bug {\n" +
+        			"enum Letter { A,B,C }\n" +  
+        			"boolean bug(Letter l) {\n" +
+        			"boolean isEarly = l in [Letter.A,Letter.B]\n" +
+        			"isEarly\n" +
+    				"}\n" +
+    				"}";
+        int start = contents.lastIndexOf("isEarly");
+        int end = start + "isEarly".length();
+        assertType(contents, start, end, "java.lang.Boolean");
+    }
     
     private final static String catchString = "try {     } catch (NullPointerException e) { e }";
     private final static String catchString2 = "try {     } catch (e) { e }";
