@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2010 Codehaus.org, SpringSource, and others.
+ * Copyright (c) 2009, 2014 Codehaus.org, SpringSource, and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -32,6 +32,7 @@ import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaModelException;
@@ -46,6 +47,7 @@ import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeRequestorFactory;
+import org.eclipse.jdt.internal.codeassist.complete.CompletionParser;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
@@ -76,11 +78,10 @@ import org.eclipse.jdt.internal.core.util.Util;
 /**
  * The groovy implementation of LanguageSupport. This class is dynamically loaded by jdt.core (so referenced by name from jdt.core)
  * - and then invoked to get a parser that can handle either groovy or java.
- * 
+ *
  * @author Andy Clement
- * 
+ *
  */
-@SuppressWarnings("restriction")
 public class GroovyLanguageSupport implements LanguageSupport {
 
 	public Parser getParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter,
@@ -94,6 +95,11 @@ public class GroovyLanguageSupport implements LanguageSupport {
 			return new MultiplexingCommentRecorderParser(requestor, compilerOptions, problemReporter,
 					parseLiteralExpressionsAsConstants, false);
 		}
+	}
+
+	public CompletionParser getCompletionParser(CompilerOptions compilerOptions, ProblemReporter problemReposrter,
+			boolean storeExtraSourceEnds, IProgressMonitor monitor) {
+		return new MultiplexingCompletionParser(compilerOptions, problemReposrter, storeExtraSourceEnds, monitor);
 	}
 
 	public IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory,
