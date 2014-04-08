@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2003-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -337,6 +337,17 @@ public class DGMInferencingTests extends AbstractInferencingTest {
         String str = "it";
         int start = contents.lastIndexOf(str);
         int end = start + str.length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+    public void testDGM_JIRA1695() throws Exception {
+    	String contents = "List<String> myList = new ArrayList<String>()\n" + 
+    		"myList.sort { a, b ->\n" + 
+    		"a.trim() <=> b.trim()\n" + 
+    		"}.each {\n" +
+    		"it\n" +
+    		"}\n";
+        int start = contents.lastIndexOf("it");
+        int end = start + "it".length();
         assertType(contents, start, end, "java.lang.String");
     }
     // with groovy 2.0, there are some new DGM classes.  need to ensure that we are using those classes as the declaring type, but only for 2.0 or later

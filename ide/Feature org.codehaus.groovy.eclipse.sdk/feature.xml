@@ -23,7 +23,7 @@
       %copyright
    </copyright>
 
-   <license url="%license.html">
+   <license url="license.html">
       %license
    </license>
 

@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!--
   Copyright (c) 2012, 2013 Eclipse Foundation and others.
   All rights reserved. This program and the accompanying materials
@@ -8,18 +7,21 @@
  
   Contributors:
      Igor Fedorenko - initial implementation
+     Kris De Volder - adapted for greclipse build.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <artifactId>eclipse.jdt.core</artifactId>
-    <groupId>eclipse.jdt.core</groupId>
-    <version>4.3.0-SNAPSHOT</version>
-  </parent>
-  <groupId>org.eclipse.jdt</groupId>
-  <artifactId>org.eclipse.jdt.core</artifactId>
-  <version>3.9.50-SNAPSHOT</version>
-  <packaging>eclipse-plugin</packaging>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<relativePath>../../../pom.xml</relativePath>
+		<groupId>org.codehaus.groovy.eclipse</groupId>
+		<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
+		<version>2.9.0-SNAPSHOT</version>
+	</parent>
+	<groupId>org.codehaus.groovy.eclipse</groupId>
+	<artifactId>org.eclipse.jdt.core</artifactId>
+	<version>3.9.50-SNAPSHOT</version>
+	<packaging>eclipse-plugin</packaging>
 
   <properties>
     <defaultSigning-excludeInnerJars>true</defaultSigning-excludeInnerJars>
@@ -73,7 +75,7 @@
       <plugin>
         <groupId>org.eclipse.tycho.extras</groupId>
         <artifactId>tycho-custom-bundle-plugin</artifactId>
-        <version>${tycho-extras.version}</version>
+        <version>${tycho-version}</version>
         <executions>
           <execution>
             <id>antadapter</id>
@@ -98,48 +100,7 @@
               </fileSets>
             </configuration>
           </execution>
-          <execution>
-            <id>batch-compiler-src</id>
-            <phase>package</phase>
-            <goals>
-              <goal>custom-bundle</goal>
-            </goals>
-            <configuration>
-				<archive>
-					<addMavenDescriptor>false</addMavenDescriptor>
-				</archive>
-              <bundleLocation>${project.build.directory}/scripts/source</bundleLocation>
-              <classifier>batch-compiler-src</classifier>
-              <fileSets>
-                <fileSet>
-                  <directory>${project.basedir}/batch</directory>
-                </fileSet>
-                <fileSet>
-                  <directory>${project.basedir}/compiler</directory>
-                </fileSet>
-                <fileSet>
-                  <directory>${project.basedir}/antadapter</directory>
-                  <excludes>
-				    <exclude>org/eclipse/jdt/core/CheckDebugAttributes.java</exclude>
-					<exclude>org/eclipse/jdt/core/BuildJarIndex.java</exclude>
-                  </excludes>
-                </fileSet>
-				<fileSet>
-                  <directory>${project.basedir}/../org.eclipse.jdt.compiler.tool/src</directory>
-                </fileSet>
-				<fileSet>
-                  <directory>${project.basedir}/../org.eclipse.jdt.compiler.apt/src</directory>
-                </fileSet>
-				<fileSet>
-                  <directory>${project.basedir}/scripts</directory>
-                  <includes>
-				    <include>about.html</include>
-					<include>build.xml</include>
-                  </includes>
-                </fileSet>
-              </fileSets>
-            </configuration>
-          </execution>
+          
           <execution>
             <id>batch-compiler</id>
             <phase>package</phase>
@@ -195,7 +156,7 @@
       <plugin>
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-p2-plugin</artifactId>
-        <version>${tycho.version}</version>
+        <version>${tycho-version}</version>
         <configuration>
           <baselineMode>warn</baselineMode>
           <baselineReplace>common</baselineReplace>
@@ -212,4 +173,5 @@
       </plugin>
     </plugins>
   </build>
+
 </project>

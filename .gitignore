@@ -6,3 +6,13 @@ build
 workspace-build
 .buildpath
 org.ebayopensource.vjet.eclipse.core.prefs
+/s3.properties
+/base/org.codehaus.groovy22/groovy-eclipse.jar
+/base/org.codehaus.groovy22/eclipse-trace.jar
+/s3-access.properties
+/base/org.codehaus.groovy21/eclipse-trace.jar
+/base/org.codehaus.groovy21/groovy-eclipse.jar
+/base/org.codehaus.groovy20/eclipse-trace.jar
+/base/org.codehaus.groovy20/groovy-eclipse.jar
+/base-test/org.eclipse.jdt.groovy.core.tests.builder/jdtcoretestsbuilder.jar
+/base-test/org.eclipse.jdt.groovy.core.tests.compiler/jdtcoretestscompiler.jar

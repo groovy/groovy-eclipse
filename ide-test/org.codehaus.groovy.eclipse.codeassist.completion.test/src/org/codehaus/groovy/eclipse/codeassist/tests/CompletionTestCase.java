@@ -14,6 +14,8 @@ package org.codehaus.groovy.eclipse.codeassist.tests;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext;
@@ -239,7 +241,27 @@ public abstract class CompletionTestCase extends BuilderTests {
         assertEquals("Completion proposal applied but different results found.", expected, document.get());
     }
     
-    
+
+    protected void checkReplacementRegexp(ICompletionProposal[] proposals, String expectedReplacement, int expectedCount) {
+        int foundCount = 0;
+        for (ICompletionProposal proposal : proposals) {
+            AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal;
+            String replacement = javaProposal.getReplacementString();
+            if (Pattern.matches(expectedReplacement, replacement)) {
+                foundCount ++;
+            }
+        }
+        
+        if (foundCount != expectedCount) {
+            StringBuffer sb = new StringBuffer();
+            for (ICompletionProposal proposal : proposals) {
+                AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal;
+                sb.append("\n" + javaProposal.getReplacementString());
+            }
+            fail("Expected to find proposal '" + expectedReplacement + "' " + expectedCount + " times, but found it " + foundCount + " times.\nAll Proposals:" + sb);
+        }
+    }
+
     protected void checkReplacementString(ICompletionProposal[] proposals, String expectedReplacement, int expectedCount) {
         int foundCount = 0;
         for (ICompletionProposal proposal : proposals) {

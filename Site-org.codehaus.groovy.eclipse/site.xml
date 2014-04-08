@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<site>
+
+   <feature url="features/org.codehaus.groovy.eclipse.feature.source_2.9.0.qualifier.jar" id="org.codehaus.groovy.eclipse.feature.source" version="2.9.0.qualifier">
+      <category name="org.codehaus.groovy.eclipse.sdk"/>
+   </feature>
+   <feature url="features/org.codehaus.groovy.jdt.patch.source_2.9.0.qualifier.jar" id="org.codehaus.groovy.jdt.patch.source" version="2.9.0.qualifier">
+      <category name="org.codehaus.groovy.eclipse.sdk"/>
+   </feature>
+
+   <feature url="features/org.codehaus.groovy.eclipse.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy.eclipse.feature" version="2.9.0.qualifier">
+      <category name="org.codehaus.groovy.eclipse"/>
+   </feature>
+   
+   <feature url="features/org.codehaus.groovy.jdt.patch_2.9.0.qualifier.jar" id="org.codehaus.groovy.jdt.patch" version="2.9.0.qualifier" patch="true"/>
+   
+   <!-- Not yet ported to tycho build:
+   <feature url="features/org.codehaus.groovy17.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy17.feature" version="2.9.0.qualifier">
+      <category name="org.codehaus.groovy.compilers"/>
+   </feature>
+   <feature url="features/org.codehaus.groovy18.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy18.feature" version="2.9.0.qualifier">
+      <category name="org.codehaus.groovy.compilers"/>
+   </feature>
+    -->
+    
+   <feature url="features/org.codehaus.groovy20.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy20.feature" version="2.9.0.qualifier">
+      <category name="org.codehaus.groovy.compilers"/>
+   </feature>
+   <feature url="features/org.codehaus.groovy21.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy21.feature" version="2.9.0.qualifier">
+      <category name="org.codehaus.groovy.compilers"/>
+   </feature>
+   <feature url="features/org.codehaus.groovy22.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy22.feature" version="2.9.0.qualifier">
+      <category name="org.codehaus.groovy.compilers"/>
+   </feature>
+   
+   <feature url="features/org.codehaus.groovy.m2eclipse.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse.feature" version="2.9.0.qualifier">
+      <category name="org.codehaus.groovy.m2eclipse"/>
+   </feature>
+   <!--
+   <feature url="features/org.codehaus.groovy.m2eclipse.source_2.9.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse.source" version="2.9.0.qualifier">
+      <category name="org.codehaus.groovy.m2eclipse"/>
+   </feature>
+   <feature url="features/org.codehaus.groovy.alltests.feature.source_2.9.0.qualifier.jar" id="org.codehaus.groovy.alltests.feature.source" version="2.9.0.qualifier">
+      <category name="org.codehaus.groovy.sdk"/>
+   </feature> -->
+   <feature url="features/org.codehaus.groovy.alltests.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy.alltests.feature" version="2.9.0.qualifier">
+      <!-- <category name="org.codehaus.groovy.sdk"/> -->
+   </feature>
+   
+   <category-def name="org.codehaus.groovy.eclipse.sdk" label="Groovy Eclipse SDK (Optional)">
+      <description>
+         Optional feature that provides source code for the Groovy-Eclipse plugin
+      </description>
+   </category-def>
+   
+   <category-def name="org.codehaus.groovy.eclipse" label="Groovy-Eclipse (Required)">
+      <description>
+         The required feature that provides Groovy support in Eclipse.
+      </description>
+   </category-def>
+   <category-def name="org.codehaus.groovy.compilers" label="Extra Groovy compilers (Optional)">
+      <description>
+         The Groovy 2.1 compiler is installed automatically, but you may optionally install the Groovy 2.2 compiler as well.
+      </description>
+   </category-def>
+
+   <category-def name="org.codehaus.groovy.m2eclipse" label="m2e Configurator for Groovy-Eclipse (Optional)">
+      <description>
+         Provides support for Groovy-Eclipse in m2eclipse. This is only compatible with m2eclipse v1.0 and greater.
+      </description>
+   </category-def>
+
+</site>
