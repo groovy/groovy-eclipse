@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2009-2011 SpringSource and others.
+ * Copyright (c) 2009-2014 SpringSource and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     SpringSource - initial API and implementation
  *******************************************************************************/
@@ -102,7 +102,7 @@ import org.eclipse.jdt.internal.core.util.Util;
 /**
  * @author Andrew Eisenberg
  * @created Aug 29, 2009
- * 
+ *
  *          Visits a GroovyCompilationUnit in order to determine the type of expressions contained in it.
  */
 @SuppressWarnings("nls")
@@ -571,7 +571,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	/**
 	 * visit the class itself
-	 * 
+	 *
 	 * @param node
 	 */
 	@SuppressWarnings("cast")
@@ -951,7 +951,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		// don't visit binary expressions in a constructor that have no source location.
 		// the reason is that these were copied from the field initializer.
 		// we want to visit them under the field initializer, not the construcor
-		if (node.getEnd() == 0) {
+		if (node instanceof DeclarationExpression && node.getEnd() == 0) {
 			return;
 		}
 
@@ -1048,7 +1048,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	/**
 	 * Make assumption that no one has overloaded the basic arithmetic operations on numbers These operations will bypass the mop in
 	 * most situations anyway
-	 * 
+	 *
 	 * @param text
 	 * @param primaryExprType
 	 * @param dependentExprType
@@ -1121,7 +1121,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	/**
 	 * Not used yet, but could be used for PostFix and PreFix operators
-	 * 
+	 *
 	 * @param text
 	 * @return the method name associated with this unary operator
 	 */
@@ -1213,10 +1213,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					}
 				}
 			} else
-			// it variable only exists if there are no explicit parameters
-			if (implicitParamType[0] != VariableScope.OBJECT_CLASS_NODE && !scope.containsInThisScope("it")) {
-				scope.addVariable("it", implicitParamType[0], VariableScope.OBJECT_CLASS_NODE);
-			}
+				// it variable only exists if there are no explicit parameters
+				if (implicitParamType[0] != VariableScope.OBJECT_CLASS_NODE && !scope.containsInThisScope("it")) {
+					scope.addVariable("it", implicitParamType[0], VariableScope.OBJECT_CLASS_NODE);
+				}
 
 			// Delegate is the declaring type of the enclosing call if one exists, or it is 'this'
 			CallAndType cat = scope.getEnclosingMethodCallExpression();
@@ -1271,7 +1271,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	/**
 	 * Determine if the parameter type can be implicitly determined We look for DGM method calls that take closures and see what
 	 * kind of type they expect.
-	 * 
+	 *
 	 * @param scope
 	 * @return am array of {@link ClassNode}s specifying the inferred type of each of the closure's parameters
 	 */
@@ -1924,7 +1924,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	/**
 	 * Finds the number of arguments of the current method call. Returns -1 if not a method call. Returns 0 if no arguments else
 	 * returns the number of arguments.
-	 * 
+	 *
 	 * @return
 	 */
 	private int getMethodCallArgs() {
@@ -2155,7 +2155,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	/**
 	 * Since AST transforms are turned off for reconcile operations, this method will always return null. But keep it here just in
 	 * case we decide to re-enable transforms for reconciles.
-	 * 
+	 *
 	 * @param field
 	 * @return
 	 */
@@ -2189,7 +2189,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * Get the module node. Potentially forces creation of a new module node if the working copy owner is non-default. This is
 	 * necessary because a non-default working copy owner implies that this may be a search related to refactoring and therefore,
 	 * the ModuleNode must be based on the most recent working copies.
-	 * 
+	 *
 	 */
 	private ModuleNodeInfo createModuleNode(GroovyCompilationUnit unit) {
 		if (unit.getOwner() == null || unit.owner == DefaultWorkingCopyOwner.PRIMARY) {
@@ -2230,7 +2230,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * <li>The expression of a {@link PrefixExpression}, a {@link PostfixExpression}, a {@link UnaryMinusExpression}, a
 	 * {@link UnaryPlusExpression}, or a {@link BitwiseNegationExpression}
 	 * </ul>
-	 * 
+	 *
 	 * @param node expression node to check
 	 * @return true iff the node is the primary expression in an expression pair.
 	 */
@@ -2290,7 +2290,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	/**
 	 * Dependent expressions are expressions whose type depends on another expression.
-	 * 
+	 *
 	 * Dependent expressions are:
 	 * <ul>
 	 * <li>right part of a non-assignment binary expression
@@ -2299,10 +2299,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * <li>method (ie- right part) of a method call expression
 	 * <li>property/field (ie- right part) of an attribute expression
 	 * </ul>
-	 * 
+	 *
 	 * Note that for statements and ternary expressions do not have any dependent expression even though they have primary
 	 * expressions
-	 * 
+	 *
 	 * @param node expression node to check
 	 * @return true iff the node is the primary expression in an expression pair.
 	 */
@@ -2327,7 +2327,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	}
 
 	/**
-	 * 
+	 *
 	 * @param node
 	 * @return true iff the object expression associated with node is a static reference to a class declaration
 	 */
@@ -2337,17 +2337,17 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			if (maybeProperty instanceof PropertyExpression) {
 				PropertyExpression prop = (PropertyExpression) maybeProperty;
 				return prop.getObjectExpression() instanceof ClassExpression ||
-				// check to see if in a static scope
+						// check to see if in a static scope
 						(prop.isImplicitThis() && scopes.peek().isStatic());
 			} else if (maybeProperty instanceof MethodCallExpression) {
 				MethodCallExpression prop = (MethodCallExpression) maybeProperty;
 				return prop.getObjectExpression() instanceof ClassExpression ||
-				// check to see if in a static scope
+						// check to see if in a static scope
 						(prop.isImplicitThis() && scopes.peek().isStatic());
 			} else if (maybeProperty instanceof AttributeExpression) {
 				AttributeExpression prop = (AttributeExpression) maybeProperty;
 				return prop.getObjectExpression() instanceof ClassExpression ||
-				// check to see if in a static scope
+						// check to see if in a static scope
 						(prop.isImplicitThis() && scopes.peek().isStatic());
 			} else {
 				return false;
@@ -2359,7 +2359,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	/**
 	 * Only handle operations that are not handled in {@link #findBinaryOperatorName(String)}
-	 * 
+	 *
 	 * @param operation the operation of this binary expression
 	 * @param lhs the type of the lhs of the binary expression
 	 * @param rhs the type of the rhs of the binary expression
