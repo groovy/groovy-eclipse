@@ -127,6 +127,9 @@ public enum SpecifiedVersion {
         if ("22".equals(compilerLevel) || "2.2".equals(compilerLevel)) {
             return _22;
         }
+        if ("23".equals(compilerLevel) || "2.3".equals(compilerLevel)) {
+            return _23;
+        }
         if ("0".equals(compilerLevel)) {
             return UNSPECIFIED;
         }
@@ -135,7 +138,7 @@ public enum SpecifiedVersion {
         }
         
         System.out.println("Invalid Groovy compiler level specified: " + compilerLevel + 
-                        "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, or 2.2");
+                        "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, 2.2, 23 or 2.3");
         return UNSPECIFIED;
     }
 
@@ -159,6 +162,8 @@ public enum SpecifiedVersion {
                         return _21; 
                     case 2:
                         return _22; 
+                    case 3:
+                        return _23; 
                 }                
         }
         return UNSPECIFIED;

@@ -100,14 +100,17 @@ public class GroovySimpleTest extends AbstractRegressionTest {
         String[] newcps = new String[cps.length+2];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.2.2.jar");
+        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.3.0-beta-1.jar");
         	if (groovyJar==null) {
-	        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.1.8.jar");
+	        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.2.2.jar");
 	        	if (groovyJar==null) {
-		            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.0.7.jar");
-		            if (groovyJar==null) {
-						groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-1.8.6.jar");
-		            }
+		        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.1.8.jar");
+		        	if (groovyJar==null) {
+			            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.0.7.jar");
+			            if (groovyJar==null) {
+							groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-1.8.6.jar");
+			            }
+		        	}
 	        	}
         	}
             newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
