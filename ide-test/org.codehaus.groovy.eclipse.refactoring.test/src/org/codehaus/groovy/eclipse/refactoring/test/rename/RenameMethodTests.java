@@ -118,6 +118,10 @@ public class RenameMethodTests extends RefactoringTest {
                 "package o;\npublic class Other { public static int FOO() { return 0; }\n }");
         helper2_0("o.Other", "FOO", "BAR", new String[0], true, false);
     }
+    // GRECLIPSE-1538
+	public void test11() throws Exception {
+        helper2_0("R", "getFoo", "foo", new String[] { }, true, false);
+	}
     public void testInitializer1() throws Exception {
         helper2();
     }
