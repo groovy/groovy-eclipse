@@ -112,6 +112,40 @@
 	</modules>
 
 	<profiles>
+	    <profile>
+	       <id>e44</id>
+			<repositories>
+				<repository>
+					<id>e44-I</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/eclipse/updates/4.4-I-builds </url>
+				</repository>
+<!-- 			<repository>
+					<id>kepler</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/releases/luna</url>
+				</repository>
+				 -->
+				<!-- luna simul release update site doesn't exist yet. Add individual sites. When 4.4 is 
+					released. Replace with luna site -->
+				<repository>
+				   <id>m2e</id>
+				   <layout>p2</layout>
+				   <url>http://download.eclipse.org/technology/m2e/milestones/1.5</url>
+				</repository>
+			</repositories>
+			<modules>
+				<module>jdt-patch/e44/Feature-org.codehaus.groovy.jdt.patch</module>
+				<!-- for now the e44 doesn't have its onw jdt.core bundle. It is the same
+				     as the e43j8 one -->
+				<module>jdt-patch/e43j8/org.eclipse.jdt.core</module>
+			</modules>
+			<properties>
+				<dist.target>e4.4</dist.target>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e44'</greclipse.build.qualifier>
+			</properties>
+	    </profile>
+	
 		<profile>
 			<id>e43j8</id>
 			<repositories>
@@ -381,7 +415,7 @@
 						<configuration>
 							<excludes>
 						  		<plugin id="org.codehaus.groovy.eclipse"/>
-						  		<!--  <feature id="feature.nosource"/> -->
+						  		<feature id="org.eclipse.jdt.a2.java8patch"/>
 							</excludes>
 						</configuration>
 					</execution>
