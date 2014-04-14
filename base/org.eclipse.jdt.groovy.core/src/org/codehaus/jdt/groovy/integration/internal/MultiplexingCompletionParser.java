@@ -26,7 +26,7 @@ public class MultiplexingCompletionParser extends CompletionParser {
 
 	public MultiplexingCompletionParser(CompilerOptions compilerOptions, ProblemReporter problemReporter,
 			boolean storeExtraSourceEnds, IProgressMonitor monitor) {
-		super(problemReporter, storeExtraSourceEnds, monitor);
+		super(problemReporter, storeExtraSourceEnds);
 		// The superclass that is extended is in charge of parsing .java files
 		groovyParser = new GroovyParser(compilerOptions, problemReporter, true, false);
 	}
