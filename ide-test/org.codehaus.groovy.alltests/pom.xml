@@ -86,7 +86,7 @@
 						</dependency>
 						<dependency>
 							<type>eclipse-feature</type>
-							<artifactId>org.codehaus.groovy22.feature</artifactId>
+							<artifactId>org.codehaus.groovy23.feature</artifactId>
 							<version>0.0.0</version>
 						</dependency>
 					</dependencies>
