@@ -33,6 +33,9 @@
    <feature url="features/org.codehaus.groovy22.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy22.feature" version="2.9.0.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
+   <feature url="features/org.codehaus.groovy23.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy23.feature" version="2.9.0.qualifier">
+      <category name="org.codehaus.groovy.compilers"/>
+   </feature>
    
    <feature url="features/org.codehaus.groovy.m2eclipse.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse.feature" version="2.9.0.qualifier">
       <category name="org.codehaus.groovy.m2eclipse"/>
@@ -61,7 +64,7 @@
    </category-def>
    <category-def name="org.codehaus.groovy.compilers" label="Extra Groovy compilers (Optional)">
       <description>
-         The Groovy 2.1 compiler is installed automatically, but you may optionally install the Groovy 2.2 compiler as well.
+         The Groovy 2.1 compiler is installed automatically, but you may optionally install the Groovy 2.2 and 2.3 compiler as well.
       </description>
    </category-def>
 
