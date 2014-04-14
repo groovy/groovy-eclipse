@@ -1,6 +1,6 @@
-package b;
+package p;
 
-enum R {
+enum A {
 
 	A() {
 		@Override

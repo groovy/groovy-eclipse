@@ -120,7 +120,7 @@ public class RenameMethodTests extends RefactoringTest {
     }
     // GRECLIPSE-1538
 	public void test11() throws Exception {
-        helper2_0("R", "getFoo", "foo", new String[] { }, true, false);
+        helper2_0("A", "getFoo", "foo", new String[] { }, true, false);
 	}
     public void testInitializer1() throws Exception {
         helper2();
