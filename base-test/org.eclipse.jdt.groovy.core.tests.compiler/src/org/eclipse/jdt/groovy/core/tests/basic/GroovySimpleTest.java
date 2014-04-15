@@ -37,6 +37,7 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
+import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
@@ -3454,10 +3455,10 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"		return str.put(arg0, arg1);\n"+
 			"	}\n"+
 			"	\n"+
-			"	public Object put(Object key, Object value) {\n"+
-			"		return str.put(key, value)\n"+
-			"	}\n"+
-			"\n"+
+//			"	public Object put(Object key, Object value) {\n"+
+//			"		return str.put(key, value)\n"+
+//			"	}\n"+
+//			"\n"+
 			"	public void putAll(Map<? extends String, ? extends Field<?>> arg0) {\n"+
 			"		str.putAll(arg0);\n"+
 			"	}\n"+
@@ -3572,20 +3573,90 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"\n"+
 			"}\n",
 
-		},"----------\n" + 
-		"1. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-		"	public class StructureBase implements Structure {\n" + 
-		"	             ^^^^^^^^^^^^^\n" + 
-		"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void setup(java.nio.ByteBuffer)\' must be implemented.\n" + 
-		"----------\n" + 
-		"2. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-		"	public class StructureBase implements Structure {\n" + 
-		"	             ^^^^^^^^^^^^^\n" + 
-		"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void reset()\' must be implemented.\n" + 
-		"----------\n");		
+		},isJRELevel(AbstractCompilerTest.F_1_8)?
+			"----------\n" + 
+			"1. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object putIfAbsent(java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
+			"----------\n" + 
+			"2. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'boolean remove(java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
+			"----------\n" + 
+			"3. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object computeIfAbsent(java.lang.Object, java.util.function.Function)\' must be implemented.\n" + 
+			"----------\n" + 
+			"4. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object computeIfPresent(java.lang.Object, java.util.function.BiFunction)\' must be implemented.\n" + 
+			"----------\n" + 
+			"5. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void forEach(java.util.function.BiConsumer)\' must be implemented.\n" + 
+			"----------\n" + 
+			"6. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object getOrDefault(java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
+			"----------\n" + 
+			"7. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void setup(java.nio.ByteBuffer)\' must be implemented.\n" + 
+			"----------\n" + 
+			"8. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'boolean replace(java.lang.Object, java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
+			"----------\n" + 
+			"9. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object merge(java.lang.Object, java.lang.Object, java.util.function.BiFunction)\' must be implemented.\n" + 
+			"----------\n" + 
+			"10. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void replaceAll(java.util.function.BiFunction)\' must be implemented.\n" + 
+			"----------\n" + 
+			"11. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object replace(java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
+			"----------\n" + 
+			"12. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void reset()\' must be implemented.\n" + 
+			"----------\n" + 
+			"13. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object compute(java.lang.Object, java.util.function.BiFunction)\' must be implemented.\n" + 
+			"----------\n":
+			"----------\n" + 
+			"1. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void setup(java.nio.ByteBuffer)\' must be implemented.\n" + 
+			"----------\n" + 
+			"2. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void reset()\' must be implemented.\n" + 
+			"----------\n");		
 	}
 
 	public void testGenericsAndGroovyJava_GRE278_2() {
+		if (isJRELevel(AbstractCompilerTest.F_1_8)) {
+			return;
+		}
 		this.runConformTest(new String[] {
 			"Main.java",
 			"public class Main {\n"+
@@ -3656,10 +3727,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"\n"+
 			"	public Field<?> put(String arg0, Field<?> arg1) {\n"+
 			"		return str.put(arg0, arg1);\n"+
-			"	}\n"+
-			"	\n"+
-			"	public Object put(Object key, Object value) {\n"+
-			"		return str.put(key, value)\n"+
 			"	}\n"+
 			"\n"+
 			"	public void putAll(Map<? extends String, ? extends Field<?>> arg0) {\n"+
@@ -6546,6 +6613,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	// see comments in worklog on 8-Jun-09
 	// note this also tests that qualified references are converted correctly (generics info intact)
 	public void testExtendingGenerics_GroovyExtendsJava4() {
+		if (isJRELevel(AbstractCompilerTest.F_1_8)) {
+			return;
+		}
 		this.runConformTest(new String[] {
 				"p/B.groovy",
 				"package p;\n" + 
@@ -6562,6 +6632,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 	public void testExtendingGenerics_GroovyExtendsJava5() {
+		if (isJRELevel(AbstractCompilerTest.F_1_8)) {
+			return;
+		}
 		this.runConformTest(new String[] {
 				"p/B.groovy",
 				"package p;\n" + 
@@ -6575,6 +6648,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 
 	public void testExtendingGenerics_GroovyExtendsJava5a() {
+		if (isJRELevel(AbstractCompilerTest.F_1_8)) {
+			return;
+		}
 		this.runConformTest(new String[] {
 				"p/B.groovy",
 				"package p;\n" + 
@@ -10471,6 +10547,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     
     // See https://jira.codehaus.org/browse/GRECLIPSE-1639
     public void testTransforms_Gaelyk() throws IOException {
+		if (isJRELevel(AbstractCompilerTest.F_1_8)) {
+			return;
+		}
         float classVersion = Float.parseFloat(System.getProperty("java.class.version"));
         if (classVersion < 51.0f) {
             System.out.println("TEST DISABLED: Gaelyk requires a java.class.version of 51.0 or greater. This JRE is java.class.version " + classVersion + 
