@@ -75,9 +75,10 @@ public class AbstractCompilerTest extends TestCase {
 			suite.addTest(buildUniqueComplianceTestSuite(evaluationTestClass, ClassFileConstants.JDK1_7));
 		}
 		if ((complianceLevels & AbstractCompilerTest.F_1_8) != 0) {
-			suite.addTest(buildUniqueComplianceTestSuite(evaluationTestClass, ClassFileConstants.JDK1_8));
+			suite.addTest(buildUniqueComplianceTestSuite(evaluationTestClass, JDK1_8));
 		}
 	}
+	
 
 	/**
 	 * Build a test suite made of test suites for all possible running VM compliances .
@@ -108,7 +109,7 @@ public class AbstractCompilerTest extends TestCase {
 			suite.addTest(buildComplianceTestSuite(testClasses, setupClass, ClassFileConstants.JDK1_7));
 		}
 		if ((complianceLevels & AbstractCompilerTest.F_1_8) != 0) {
-			suite.addTest(buildComplianceTestSuite(testClasses, setupClass, ClassFileConstants.JDK1_8));
+			suite.addTest(buildComplianceTestSuite(testClasses, setupClass, JDK1_8));
 		}
 		return suite;
 	}
@@ -224,9 +225,9 @@ public class AbstractCompilerTest extends TestCase {
 		int level18 = complianceLevels & AbstractCompilerTest.F_1_8;
 		if (level18 != 0) {
 			if (level18 < minimalCompliance) {
-				System.err.println("Cannot run "+evaluationTestClass.getName()+" at compliance "+CompilerOptions.versionFromJdkLevel(ClassFileConstants.JDK1_8)+"!");
+				System.err.println("Cannot run "+evaluationTestClass.getName()+" at compliance "+CompilerOptions.versionFromJdkLevel(JDK1_8)+"!");
 			} else {
-				suite.addTest(buildUniqueComplianceTestSuite(evaluationTestClass, ClassFileConstants.JDK1_8));
+				suite.addTest(buildUniqueComplianceTestSuite(evaluationTestClass, JDK1_8));
 			}
 		}
 		return suite;
@@ -261,7 +262,7 @@ public class AbstractCompilerTest extends TestCase {
 	public static long highestComplianceLevels() {
 		int complianceLevels = AbstractCompilerTest.getPossibleComplianceLevels();
 		if ((complianceLevels & AbstractCompilerTest.F_1_8) != 0) {
-			return ClassFileConstants.JDK1_8;
+			return JDK1_8;
 		}
 		if ((complianceLevels & AbstractCompilerTest.F_1_7) != 0) {
 			return ClassFileConstants.JDK1_7;
@@ -280,7 +281,9 @@ public class AbstractCompilerTest extends TestCase {
 
 	// here for now as CompilerOptions.version_1_8 exists only if using the java8 patched jdt
 	public static final String VERSION_1_8 = "1.8"; //$NON-NLS-1$
-	
+	private static int MAJOR_VERSION_1_8 = 52;
+	private static long JDK1_8 = ((long)MAJOR_VERSION_1_8 << 16) + ClassFileConstants.MINOR_VERSION_0;
+
 	/*
 	 * Returns the possible compliance levels this VM instance can run.
 	 */
