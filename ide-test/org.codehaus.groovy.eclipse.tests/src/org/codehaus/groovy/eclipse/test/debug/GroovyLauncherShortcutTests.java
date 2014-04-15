@@ -228,30 +228,37 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         
         String classpath = new MockGroovyScriptLaunchShortcut().generateClasspath(p1.getJavaProject());
         
-        assertEquals("Wrong classpath", createClassPathString2(runtimeJarPath.toPortableString()), classpath);
+        String createClassPathString2 = createClassPathString2(runtimeJarPath.toPortableString());
+		assertEquals("Wrong classpath", createClassPathString2, classpath);
         
         p1.dispose();
         p2.dispose();
     }
 
     private String createClassPathString1() {
-        String classpath = "\"${workspace_loc:/P1}\\src:${workspace_loc:/P2}\\src:"
-                + "${workspace_loc:/P3}\\src:${workspace_loc:/P3}\\src2:${workspace_loc:/P4}\\src:${workspace_"
-                + "loc:/P4}\\src2:${workspace_loc:/P1}\\bin:${workspace_loc:/P2}\\bin:${workspace_loc:/P3}\\bin"
-                + ":${workspace_loc:/P3}\\bin2:${workspace_loc:/P4}\\bin:${workspace_loc:/P4}\\bin2\"";
-        if (File.separatorChar == '/') {
-            classpath = classpath.replace('\\', '/');
-        }
+        String classpath = "\"${workspace_loc:" + File.separator + "P1}" + File.separator + "src" + File.pathSeparator + 
+        		"${workspace_loc:" + File.separator + "P2}" + File.separator + "src" + File.pathSeparator + 
+        		"${workspace_loc:" + File.separator + "P3}" + File.separator + "src" + File.pathSeparator + 
+        		"${workspace_loc:" + File.separator + "P3}" + File.separator + "src2" + File.pathSeparator + 
+        		"${workspace_loc:" + File.separator + "P4}" + File.separator + "src" + File.pathSeparator + 
+        		"${workspace_loc:" + File.separator + "P4}" + File.separator + "src2" + File.pathSeparator + 
+        		"${workspace_loc:" + File.separator + "P1}" + File.separator + "bin" + File.pathSeparator + 
+        		"${workspace_loc:" + File.separator + "P2}" + File.separator + "bin" + File.pathSeparator + 
+        		"${workspace_loc:" + File.separator + "P3}" + File.separator + "bin" + File.pathSeparator + 
+        		"${workspace_loc:" + File.separator + "P3}" + File.separator + "bin2" + File.pathSeparator + 
+        		"${workspace_loc:" + File.separator + "P4}" + File.separator + "bin" + File.pathSeparator + 
+        		"${workspace_loc:" + File.separator + "P4}" + File.separator + "bin2\"";
         return classpath;
     }
     private String createClassPathString2(String groovyRuntimePath) {
-        String classpath = "\"${workspace_loc:/P1a}/empty.jar:" +
-        		"${workspace_loc:/P1a}/src:${workspace_loc:/P2a}/empty2.jar:" +
-        		groovyRuntimePath + ":" +
-        		"${workspace_loc:/P1a}/bin\"";
-        if (File.separatorChar == '/') {
-            classpath = classpath.replace('\\', '/');
-        }
+    	if (File.separatorChar == '\\') {
+    		groovyRuntimePath = groovyRuntimePath.replace('/', File.separatorChar);
+    	}
+        String classpath = "\"${workspace_loc:" + File.separator + "P1a}" + File.separator + "empty.jar" + File.pathSeparator + 
+        		"${workspace_loc:" + File.separator + "P1a}" + File.separator + "src" + File.pathSeparator + 
+        		"${workspace_loc:" + File.separator + "P2a}" + File.separator + "empty2.jar" + File.pathSeparator + 
+        		groovyRuntimePath + File.pathSeparator +        		
+        		"${workspace_loc:" + File.separator + "P1a}" + File.separator + "bin\"";
         return classpath;
     }
 
