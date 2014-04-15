@@ -15,7 +15,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
-
 import java.util.List;
 import java.util.Map;
 
@@ -279,6 +278,9 @@ public class AbstractCompilerTest extends TestCase {
 		return ClassFileConstants.JDK1_3;
 	}
 
+	// here for now as CompilerOptions.version_1_8 exists only if using the java8 patched jdt
+	public static final String VERSION_1_8 = "1.8"; //$NON-NLS-1$
+	
 	/*
 	 * Returns the possible compliance levels this VM instance can run.
 	 */
@@ -296,7 +298,7 @@ public class AbstractCompilerTest extends TestCase {
 					possibleComplianceLevels = F_1_6;
 				} else if (CompilerOptions.VERSION_1_7.equals(compliance)) {
 					possibleComplianceLevels = F_1_7;
-				} else if (CompilerOptions.VERSION_1_8.equals(compliance)) {
+				} else if (VERSION_1_8.equals(compliance)) {
 					possibleComplianceLevels = F_1_8;
 				} else {
 					System.out.println("Invalid compliance specified (" + compliance + ")");
@@ -306,7 +308,7 @@ public class AbstractCompilerTest extends TestCase {
 					System.out.print(CompilerOptions.VERSION_1_5 + ", ");
 					System.out.print(CompilerOptions.VERSION_1_6 + ", ");
 					System.out.print(CompilerOptions.VERSION_1_7 + ", ");
-					System.out.println(CompilerOptions.VERSION_1_8);
+					System.out.println(VERSION_1_8);
 					System.out.println("Defaulting to all possible compliances");
 				}
 			}
