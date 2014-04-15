@@ -282,6 +282,31 @@ public abstract class CompletionTestCase extends BuilderTests {
         }
     }
 
+    /**
+     * The build machine sometimes seems to be running on a JDK with different local variable tables for
+     * system classes.  This variant of checkReplacementString() can take a couple of options rather
+     * than just one when asserting what is expected to be found.
+     */
+    protected void checkReplacementString(ICompletionProposal[] proposals, String[] expectedReplacementOptions, int expectedCount) {
+        int foundCount = 0;
+        for (ICompletionProposal proposal : proposals) {
+            AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal;
+            String replacement = javaProposal.getReplacementString();
+            if (replacement.equals(expectedReplacementOptions[0]) || replacement.equals(expectedReplacementOptions[1])) {
+                foundCount ++;
+            }
+        }
+        
+        if (foundCount != expectedCount) {
+            StringBuffer sb = new StringBuffer();
+            for (ICompletionProposal proposal : proposals) {
+                AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal;
+                sb.append("\n" + javaProposal.getReplacementString());
+            }
+            fail("Expected to find proposal '" + expectedReplacementOptions[0] + "' or '"+expectedReplacementOptions[1]+"' " + expectedCount + " times, but found them " + foundCount + " times.\nAll Proposals:" + sb);
+        }
+    }
+
     
     protected void validateProposal(CompletionProposal proposal, String name) {
         assertEquals(proposal.getName(), name);
