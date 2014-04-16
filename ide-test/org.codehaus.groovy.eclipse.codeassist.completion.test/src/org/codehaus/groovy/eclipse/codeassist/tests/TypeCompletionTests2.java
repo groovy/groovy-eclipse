@@ -11,6 +11,8 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import java.io.File;
+
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 
 
@@ -36,7 +38,12 @@ public class TypeCompletionTests2 extends CompletionTestCase {
 
     public void testSimpleCompletionTypesInScript1() throws Exception {
     	String contents = HTML;
-        String expected = "import javax.swing.text.html.HTML;\n\nHTML";
+    	String expected;
+        if (File.separatorChar == '\\') { // Windows
+        	expected = "import javax.swing.text.html.HTML;\r\n\r\nHTML";
+        } else { // Other
+        	expected = "import javax.swing.text.html.HTML;\n\nHTML";
+        }
         checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML),
                 HTML_PROPOSAL);
     }
@@ -50,7 +57,12 @@ public class TypeCompletionTests2 extends CompletionTestCase {
 
     public void testBrokenScript1() throws Exception {
         String contents = "def x(HTML";
-        String expected = "import javax.swing.text.html.HTML;\n\ndef x(HTML";
+        String expected;
+        if (File.separatorChar == '\\') { // Windows
+        	expected = "import javax.swing.text.html.HTML;\r\n\r\ndef x(HTML";
+        } else { // Other
+        	expected = "import javax.swing.text.html.HTML;\n\ndef x(HTML";
+        }
         tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
     }
 
