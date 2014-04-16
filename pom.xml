@@ -222,6 +222,30 @@
 				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e42'</greclipse.build.qualifier>
 			</properties>
 		</profile>
+
+		<profile>
+			<id>e37</id>
+			<repositories>
+				<repository>
+					<id>e37</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/eclipse/updates/3.7</url>
+				</repository>
+				<repository>
+					<id>juno</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/releases/indigo</url>
+				</repository>
+			</repositories>
+			<modules>
+				<module>jdt-patch/e37/Feature-org.codehaus.groovy.jdt.patch</module>
+				<module>jdt-patch/e37/org.eclipse.jdt.core</module>
+			</modules>
+			<properties>
+				<dist.target>e3.7</dist.target>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e37'</greclipse.build.qualifier>
+			</properties>
+		</profile>
 		
 
 		<profile>
