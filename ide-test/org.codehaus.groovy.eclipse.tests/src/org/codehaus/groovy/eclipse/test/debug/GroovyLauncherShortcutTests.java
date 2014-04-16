@@ -33,6 +33,8 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.debug.core.IStreamListener;
+import org.eclipse.debug.core.model.IStreamMonitor;
 import org.eclipse.debug.internal.ui.DebugUIPlugin;
 import org.eclipse.debug.internal.ui.IInternalDebugUIConstants;
 import org.eclipse.debug.internal.ui.preferences.IDebugPreferenceConstants;
@@ -298,6 +300,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
     protected void launchScriptAndAssertExitValue(IType launchType) throws InterruptedException, CoreException {
         launchScriptAndAssertExitValue(launchType, 20);
     }
+    
     protected void launchScriptAndAssertExitValue(final IType launchType, final int timeoutSeconds) throws InterruptedException, CoreException {
 
         String problems = testProject.getProblems();
@@ -313,6 +316,18 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
                             launchType.getJavaProject()), launchType.getFullyQualifiedName());
                     assertTrue(launchType.exists());
                     ILaunch launch = config.launch("run", new NullProgressMonitor());
+                    final StringBuilder stdout = new StringBuilder();
+                    final StringBuilder stderr = new StringBuilder();
+                    launch.getProcesses()[0].getStreamsProxy().getOutputStreamMonitor().addListener(new IStreamListener() {						
+						public void streamAppended(String text, IStreamMonitor monitor) {
+							stdout.append(text);
+						}
+					});
+                    launch.getProcesses()[0].getStreamsProxy().getErrorStreamMonitor().addListener(new IStreamListener() {						
+						public void streamAppended(String text, IStreamMonitor monitor) {
+							stderr.append(text);
+						}
+					});
                     synchronized (launch) {
                         int i = 0;
                         System.out.println("Waiting for launch to complete " + i + " sec...");
@@ -323,13 +338,16 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
                         }
                     }
                     if (launch.isTerminated()) {
+                        assertEquals(1,launch.getProcesses().length);
                         System.out.println("Process output:");
                         System.out.println("==================");
-                        System.out.println(launch.getProcesses()[0].getStreamsProxy().getOutputStreamMonitor().getContents());
+                        System.out.println(stdout);
+ //                       System.out.println(launch.getProcesses()[0].getStreamsProxy().getOutputStreamMonitor().getContents());
                         System.out.println("==================");
                         System.out.println("Process err:");
                         System.out.println("==================");
-                        System.out.println(launch.getProcesses()[0].getStreamsProxy().getErrorStreamMonitor().getContents());
+                        System.out.println(stderr);
+//                        System.out.println(launch.getProcesses()[0].getStreamsProxy().getErrorStreamMonitor().getContents());
                         System.out.println("==================");
                     }
                     assertTrue("Process not terminated after timeout has been reached", launch.isTerminated());
