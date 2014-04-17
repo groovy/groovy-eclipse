@@ -96,6 +96,8 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
     // script references other script
     public void testScriptLaunch2() throws Exception {
         ICompilationUnit unit1 = createGroovyCompilationUnit("Other.groovy", "class Other{ def foo() { return \"hi!\" } }");
+        testProject.waitForIndexer();
+        testProject.fullBuild();
         IType otherType = unit1.getType("Other");
         assertTrue(otherType.exists());
         ICompilationUnit unit = createGroovyCompilationUnit("Launch.groovy", "print new Other().foo()");
