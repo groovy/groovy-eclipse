@@ -95,7 +95,9 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
 
     // script references other script
     public void testScriptLaunch2() throws Exception {
-        createGroovyCompilationUnit("Other.groovy", "class Other{ def foo() { return \"hi!\" } }");
+        ICompilationUnit unit1 = createGroovyCompilationUnit("Other.groovy", "class Other{ def foo() { return \"hi!\" } }");
+        IType otherType = unit1.getType("Other");
+        assertTrue(otherType.exists());
         ICompilationUnit unit = createGroovyCompilationUnit("Launch.groovy", "print new Other().foo()");
         IType launchType = unit.getType("Launch");
         launchScriptAndAssertExitValue(launchType);
@@ -323,7 +325,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
                     MockGroovyScriptLaunchShortcut shortcut = new MockGroovyScriptLaunchShortcut();
                     ILaunchConfiguration config = shortcut.findOrCreateLaunchConfig(shortcut.createLaunchProperties(launchType,
                             launchType.getJavaProject()), launchType.getFullyQualifiedName());
-                    assertTrue(launchType.exists());
+                    assertTrue(launchType.exists());                    
                     ILaunch launch = config.launch("run", new NullProgressMonitor());
                     final StringBuilder stdout = new StringBuilder();
                     final StringBuilder stderr = new StringBuilder();
