@@ -38,6 +38,7 @@ import org.eclipse.debug.core.model.IStreamMonitor;
 import org.eclipse.debug.internal.ui.DebugUIPlugin;
 import org.eclipse.debug.internal.ui.IInternalDebugUIConstants;
 import org.eclipse.debug.internal.ui.preferences.IDebugPreferenceConstants;
+import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
@@ -289,6 +290,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
     private ICompilationUnit createGroovyCompilationUnit(String unitName, String contents) throws CoreException {
         return createGroovyCompilationUnit("", unitName, contents);
     }
+    
     private ICompilationUnit createGroovyCompilationUnit(String packageName, String unitName, String contents) throws CoreException {
         IFile file = testProject.createGroovyTypeAndPackage(packageName, unitName, contents);
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
@@ -322,6 +324,8 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
                     ILaunchConfiguration config = shortcut.findOrCreateLaunchConfig(shortcut.createLaunchProperties(launchType,
                             launchType.getJavaProject()), launchType.getFullyQualifiedName());
                     assertTrue(launchType.exists());
+                    IClassFile icf = launchType.getClassFile();
+                    System.out.println("ClassFile bytes? "+icf.getBytes());
                     ILaunch launch = config.launch("run", new NullProgressMonitor());
                     final StringBuilder stdout = new StringBuilder();
                     final StringBuilder stderr = new StringBuilder();
