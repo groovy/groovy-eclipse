@@ -97,7 +97,6 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
     public void testScriptLaunch2() throws Exception {
         ICompilationUnit unit1 = createGroovyCompilationUnit("Other.groovy", "class Other{ def foo() { return \"hi!\" } }");
         testProject.waitForIndexer();
-        testProject.fullBuild();
         IType otherType = unit1.getType("Other");
         assertTrue(otherType.exists());
         ICompilationUnit unit = createGroovyCompilationUnit("Launch.groovy", "print new Other().foo()");
@@ -298,6 +297,7 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
     private ICompilationUnit createGroovyCompilationUnit(String packageName, String unitName, String contents) throws CoreException {
         IFile file = testProject.createGroovyTypeAndPackage(packageName, unitName, contents);
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
+        testProject.fullBuild();
         return unit;
     }
 
