@@ -169,7 +169,9 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
             GroovyRuntime.addGroovyRuntime(otherProject.getProject());
             testProject.addProjectReference(otherProject.getJavaProject());
             otherProject.createGroovyTypeAndPackage("pack", "Other.groovy", "class Other { String foo() { return \"hi!\"; } }");
+            otherProject.fullBuild();
             ICompilationUnit unit = createGroovyCompilationUnit("thisPack", "Launch.groovy", "print new pack.Other().foo()");
+            testProject.fullBuild();
             IType launchType = unit.getType("Launch");
             launchScriptAndAssertExitValue(launchType);
         } finally {
@@ -183,7 +185,9 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
         try {
             testProject.addProjectReference(otherProject.getJavaProject());
             otherProject.createJavaTypeAndPackage("pack", "Other.java", "public class Other { public String foo() { return \"hi!\"; } }");
+            otherProject.fullBuild();
             ICompilationUnit unit = createGroovyCompilationUnit("thisPack", "Launch.groovy", "print new pack.Other().foo()");
+            testProject.fullBuild();
             IType launchType = unit.getType("Launch");
             launchScriptAndAssertExitValue(launchType);
         } finally {
