@@ -48,25 +48,38 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         }
     }
     
-    // FIXADE Disabled...failing on build server
-    public void _testConstructorCompletion1() throws Exception {
-        String contents = "package f\n\nclass YY { YY() { } }\nnew Y\nkkk";
-        String expected = "package f\n\nclass YY { YY() { } }\nnew YY()\nkkk";
-        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new Y"), "YY");
+    public void testConstructorCompletion1() throws Exception {
+        String contents = "package f\n\nclass YYY { YYY() { } }\nnew YY\nkkk";
+        String expected = "package f\n\nclass YYY { YYY() { } }\nnew YYY()\nkkk";
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
     
-    // FIXADE Disabled...failing on build server
-    public void _testConstructorCompletion2() throws Exception {
-        String contents = "package f\n\nclass YY { YY(x) { } }\nnew Y\nkkk";
-        String expected = "package f\n\nclass YY { YY(x) { } }\nnew YY(x)\nkkk";
-        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new Y"), "YY");
+    public void testConstructorCompletion2() throws Exception {
+        String contents = "package f\n\nclass YYY { YYY(x) { } }\nnew YY\nkkk";
+        String expected = "package f\n\nclass YYY { YYY(x) { } }\nnew YYY(x)\nkkk";
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
     
-    // FIXADE Disabled...failing on build server
-    public void _testConstructorCompletion3() throws Exception {
-        String contents = "package f\n\nclass YY { YY(x, y) { } }\nnew Y\nkkk";
-        String expected = "package f\n\nclass YY { YY(x, y) { } }\nnew YY(x, y)\nkkk";
-        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new Y"), "YY");
+    public void testConstructorCompletion3() throws Exception {
+        String contents = "package f\n\nclass YYY { YYY(x, y) { } }\nnew YY\nkkk";
+        String expected = "package f\n\nclass YYY { YYY(x, y) { } }\nnew YYY(x, y)\nkkk";
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
+    }
+    
+    public void testContructorCompletionWithinEnumDeclaration1() throws Exception {
+    	String contents = "package f\nclass YYY { YYY() { } }\nenum F {\n"
+    			+ "	Aaa() {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}";
+    	String expected = "package f\nclass YYY { YYY() { } }\nenum F {\n"
+    			+ "	Aaa() {\n@Override int foo() {\nnew YYY()\n}\n}\nint foo() {\n	}\n}";
+    	checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
+    }
+    
+    public void testContructorCompletionWithinEnumDeclaration2() throws Exception {
+    	String contents = "package f\nclass YYY { YYY() { } }\nenum F {\n"
+    			+ "	Aaa {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}";
+    	String expected = "package f\nclass YYY { YYY() { } }\nenum F {\n"
+    			+ "	Aaa {\n@Override int foo() {\nnew YYY()\n}\n}\nint foo() {\n	}\n}";
+    	checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
     
     /**
