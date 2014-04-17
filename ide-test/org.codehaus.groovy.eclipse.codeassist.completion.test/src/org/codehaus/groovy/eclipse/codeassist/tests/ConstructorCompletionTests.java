@@ -67,14 +67,18 @@ public class ConstructorCompletionTests extends CompletionTestCase {
     }
     
     public void testContructorCompletionWithinEnumDeclaration1() throws Exception {
-    	String contents = "package f\nclass YYY { YYY() { } }\nenum F {\n	Aaa() {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}";
-    	String expected = "package f\nclass YYY { YYY() { } }\nenum F {\n	Aaa() {\n@Override int foo() {\nnew YYY()\n}\n}\nint foo() {\n	}\n}";
+    	String contents = "package f\nclass YYY { YYY() { } }\nenum F {\n"
+    			+ "	Aaa() {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}";
+    	String expected = "package f\nclass YYY { YYY() { } }\nenum F {\n"
+    			+ "	Aaa() {\n@Override int foo() {\nnew YYY()\n}\n}\nint foo() {\n	}\n}";
     	checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
     
     public void testContructorCompletionWithinEnumDeclaration2() throws Exception {
-    	String contents = "package f\nclass YYY { YYY() { } }\nenum F {\n	Aaa {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}";
-    	String expected = "package f\nclass YYY { YYY() { } }\nenum F {\n	Aaa {\n@Override int foo() {\nnew YYY()\n}\n}\nint foo() {\n	}\n}";
+    	String contents = "package f\nclass YYY { YYY() { } }\nenum F {\n"
+    			+ "	Aaa {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}";
+    	String expected = "package f\nclass YYY { YYY() { } }\nenum F {\n"
+    			+ "	Aaa {\n@Override int foo() {\nnew YYY()\n}\n}\nint foo() {\n	}\n}";
     	checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
     
