@@ -281,4 +281,8 @@ public class RenameTypeTests extends RefactoringTest {
     public void testInner1() throws Exception {
         helperWithTextual("Outer", "A", "B", "Outer", true, false);
     }
+    
+    public void testJavadoc1() throws Exception {
+    	helperWithTextual("A", "A", "B", "B", true, true);
+    }
 }

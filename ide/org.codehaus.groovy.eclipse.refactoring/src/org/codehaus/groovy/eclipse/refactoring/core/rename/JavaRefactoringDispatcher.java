@@ -78,14 +78,15 @@ public class JavaRefactoringDispatcher {
     }
 
     private RenameSupport createTypeRefactoring(IType type) throws CoreException {
-		return RenameSupport.create(type, getNewName(), RenameSupport.UPDATE_REFERENCES);
+		return RenameSupport.create(type, getNewName(), RenameSupport.UPDATE_REFERENCES | RenameSupport.UPDATE_TEXTUAL_MATCHES);
 	}
 
 	private RenameSupport createFieldRefactoring(IField field) throws CoreException {
 		return RenameSupport.create(field, getNewName(), 
 				RenameSupport.UPDATE_REFERENCES | 
 				RenameSupport.UPDATE_GETTER_METHOD |
-				RenameSupport.UPDATE_SETTER_METHOD);
+				RenameSupport.UPDATE_SETTER_METHOD |
+				RenameSupport.UPDATE_TEXTUAL_MATCHES);
 	}
 	
 	private RenameSupport createMethodRefactoring(IMethod method) throws CoreException {
