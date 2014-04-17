@@ -324,8 +324,6 @@ public class GroovyLauncherShortcutTests extends EclipseTestCase {
                     ILaunchConfiguration config = shortcut.findOrCreateLaunchConfig(shortcut.createLaunchProperties(launchType,
                             launchType.getJavaProject()), launchType.getFullyQualifiedName());
                     assertTrue(launchType.exists());
-                    IClassFile icf = launchType.getClassFile();
-                    System.out.println("ClassFile bytes? "+icf.getBytes());
                     ILaunch launch = config.launch("run", new NullProgressMonitor());
                     final StringBuilder stdout = new StringBuilder();
                     final StringBuilder stderr = new StringBuilder();
