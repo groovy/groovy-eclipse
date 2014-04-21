@@ -180,10 +180,10 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 
     void testInheritance() {
         String contents = """
-            class Child extends Parent {
+            class Child extends FirstClass {
             }
             """
-        def expectedImports = ["other.Parent"]
+        def expectedImports = ["other.FirstClass"]
         doAddImportTest(contents, expectedImports)
     }
 
@@ -191,11 +191,22 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
         String contents = """
             class Foo<T> {
             }
-            class Boo extends Foo<Bar> {
-            }
             """
-        def expectedImports = ["other.Bar"]
-        doAddImportTest(contents, expectedImports)
+        doAddImportTest("p1", "Foo", contents)
+		
+		contents = """
+			class GroovyBar {
+			}
+			"""
+		doAddImportTest("p2", "GroovyBar", contents)
+		
+        def expectedImports = ["p2.GroovyBar"]
+		contents = """
+			import p1.Foo
+			class Boo extends Foo<GroovyBar> {
+            }
+			"""
+		doAddImportTest("p3", "Boo", contents, expectedImports)
     }
 
 //    void testRemoveImport1() {
