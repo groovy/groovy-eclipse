@@ -282,12 +282,12 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
 
 
     private String getProjectLocation(IJavaElement elt) {
-        return "${workspace_loc:/" + elt.getJavaProject().getProject().getName() + "}";
+        return "${workspace_loc:" + File.separator + elt.getJavaProject().getProject().getName() + "}";
     }
 
     private String getProjectLocation(IPath path) {
         if (path.segmentCount() > 0) {
-            return "${workspace_loc:/" + path.segment(0) + "}";
+            return "${workspace_loc:" + File.separator + path.segment(0) + "}";
         } else {
             return "${workspace_loc}";
         }

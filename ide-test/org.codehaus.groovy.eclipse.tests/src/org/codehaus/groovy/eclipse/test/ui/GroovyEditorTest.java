@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.test.ui;
 
+import java.io.File;
+
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
@@ -157,6 +159,9 @@ public abstract class GroovyEditorTest extends EclipseTestCase {
         if (expected.contains(CARET)) {
             int cursor = getCaret();
             actual = actual.substring(0, cursor) + CARET + actual.substring(cursor);
+        }
+        if (File.separatorChar == '\\') { // Windows
+        	actual = actual.replace("\r\n", "\n");
         }
         assertEquals(expected, actual);
     }

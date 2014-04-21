@@ -58,7 +58,7 @@ public class RenameFieldTests extends RefactoringTest {
     private void helper2_0(String typeName, String fieldName,
             String newFieldName, boolean updateReferences,
             boolean createDelegates, boolean renameGetter, boolean renameSetter, 
-            boolean performOnError)
+            boolean performOnError, boolean updateTextual)
             throws Exception {
         ICompilationUnit cu = createCUfromTestFile(getPackageP(), "A");
         try {
@@ -79,6 +79,7 @@ public class RenameFieldTests extends RefactoringTest {
                 descriptor.setRenameGetters(renameGetter);
                 descriptor.setRenameSetters(renameSetter);
                 descriptor.setKeepOriginal(createDelegates);
+                descriptor.setUpdateTextualOccurrences(updateTextual);
                 descriptor.setDeprecateDelegate(true);
             }
             RenameRefactoring refactoring = (RenameRefactoring) createRefactoring(descriptor);
@@ -137,13 +138,13 @@ public class RenameFieldTests extends RefactoringTest {
     }
 
     private void helper2(boolean updateReferences) throws Exception {
-        helper2_0("A", "f", "g", updateReferences, false, false, false, false);
+        helper2_0("A", "f", "g", updateReferences, false, false, false, false, false);
     }
     private void helperPerformOnError(boolean updateReferences) throws Exception {
-        helper2_0("A", "f", "g", updateReferences, false, false, false, true);
+        helper2_0("A", "f", "g", updateReferences, false, false, false, true, false);
     }
     private void helperScript() throws Exception {
-        helper2_0("B", "f", "g", true, false, false, false, false);
+        helper2_0("B", "f", "g", true, false, false, false, false, false);
     }
 
     private void helper2() throws Exception {
@@ -195,12 +196,15 @@ public class RenameFieldTests extends RefactoringTest {
     public void test11() throws Exception {
         createCU(((IPackageFragmentRoot) getPackageP().getParent()).createPackageFragment("o", true, null), "Other.java", 
                 "package o;\npublic class Other { public static int FOO;\n }");
-        helper2_0("o.Other", "FOO", "BAR", true, false, false, false, false);
+        helper2_0("o.Other", "FOO", "BAR", true, false, false, false, false, false);
     }
     public void testScript1() throws Exception {
         helperScript();
     }
     public void testScript2() throws Exception {
         helperScript();
+    }
+    public void test12() throws Exception {
+    	helper2_0("A", "f", "g", true, false, false, false, false, true);
     }
 }

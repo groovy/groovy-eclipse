@@ -100,7 +100,11 @@ public class BuilderTests extends TestCase {
 		actualError = new String(CharOperation.replace(error, System.getProperty("line.separator").toCharArray(), new char[] { '\n' })); //$NON-NLS-1$
 
 		if (expectedError==null && actualError.length()!=0) {
-			fail("unexpected error : " + actualError);
+			if (actualError.trim().endsWith("WARNING: Module [groovy-all] - Unable to load extension class [org.codehaus.groovy.runtime.NioGroovyMethods]")) {
+				// Allow this it indicates (usually) running the tests with groovy 2.3 on a pre 1.7 vm
+			} else {
+				fail("unexpected error : " + actualError);
+			}
 		}
 		if (expectedError!=null && actualError.indexOf(expectedError) == -1) {
 			System.out.println("ERRORS\n"); //$NON-NLS-1$

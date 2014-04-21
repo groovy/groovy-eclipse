@@ -245,7 +245,7 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompilationUnit groovyUnit = create(groovyClass);
         fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "."), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "removeAll(arg0)", 1);
+        checkReplacementString(proposals, new String[]{"removeAll(arg0)","removeAll(c)"}, 1);
     }
     
     public void testListCompletion2() throws Exception {
@@ -253,7 +253,7 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompilationUnit groovyUnit = create(groovyClass);
         fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".re"), GroovyCompletionProposalComputer.class);
-        checkReplacementString(proposals, "removeAll(arg0)", 1);
+        checkReplacementString(proposals, new String[]{"removeAll(arg0)","removeAll(c)"}, 1);
     }
     
     // GRECLIPSE-1165

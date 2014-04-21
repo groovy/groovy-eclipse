@@ -21,11 +21,13 @@ package org.codehaus.groovy.eclipse.test.actions;
  */
 public class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
 
+	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+	
     // should not be removed
     void testSimpleAlias() {
         String contents = 
                 """ 
-                import other.FirstClass as F
+                import other.FirstClass as F${LINE_SEPARATOR}
                 
                 F
                 """
@@ -76,7 +78,7 @@ public class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     void testStaticAlias() {
         String contents = 
             """ 
-            import static other2.FourthClass.m as j
+            import static other2.FourthClass.m as j${LINE_SEPARATOR}
             
             j
             """
@@ -86,7 +88,7 @@ public class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     void testStaticAlias2() {
         String contents = 
             """ 
-            import static other2.FourthClass.m as j
+            import static other2.FourthClass.m as j${LINE_SEPARATOR}
             
             def x
             """
@@ -122,9 +124,9 @@ public class AliasingOrganizeImportsTest extends AbstractOrganizeImportsTest {
     void testMultiAliasing1() {
         String contents =
 """
-import other2.FourthClass
-import other3.FourthClass as FourthClass2
-import other4.FourthClass as FourthClass3
+import other2.FourthClass${LINE_SEPARATOR}
+import other3.FourthClass as FourthClass2${LINE_SEPARATOR}
+import other4.FourthClass as FourthClass3${LINE_SEPARATOR}
 
 class TypeHelper {
     FourthClass f1

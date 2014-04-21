@@ -408,7 +408,7 @@ public class TestProject {
     }
 
     
-    protected void fullBuild() throws CoreException {
+    public void fullBuild() throws CoreException {
         this.getProject().build(org.eclipse.core.resources.IncrementalProjectBuilder.FULL_BUILD, null);
     }
     

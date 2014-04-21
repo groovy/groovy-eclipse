@@ -22,6 +22,8 @@ import org.eclipse.core.resources.IncrementalProjectBuilder
  */
 public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     
+	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+	
     void testAddImport1() {
         String contents = 
                 """ 
@@ -99,7 +101,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     void testAddImport9() {
         String contents = 
                 """
-        import javax.swing.text.html.HTML
+        import javax.swing.text.html.HTML${LINE_SEPARATOR}
         HTML.class
         """
         def expectedImports = []
@@ -129,7 +131,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     void testAddInnerImport3() {
         String contents = 
                 """ 
-        import other.Outer
+        import other.Outer${LINE_SEPARATOR}
         class Main {
         def x(Outer.Inner f) { }
         }
@@ -161,7 +163,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     // test that 'as' keyword works in list expressions
     void testGRECLIPSE470a() {
         String contents ="""
-	        import javax.xml.XMLConstants
+	        import javax.xml.XMLConstants${LINE_SEPARATOR}
 	        ['value':XMLConstants.XML_NS_URI] as Map
 	        """
         doAddImportTest(contents)
@@ -169,13 +171,33 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     
     void testGenerics() {
         String contents ="""
-            import java.util.Map.Entry
+            import java.util.Map.Entry${LINE_SEPARATOR}
 		    Entry<SecondClass, HTML> entry
             """
         def expectedImports = [ "import javax.swing.text.html.HTML", "import other.SecondClass"]
         doAddImportTest(contents, expectedImports)
     }
-    
+
+    void testInheritance() {
+        String contents = """
+            class Child extends Parent {
+            }
+            """
+        def expectedImports = ["other.Parent"]
+        doAddImportTest(contents, expectedImports)
+    }
+
+    void testGRECLIPSE1693() {
+        String contents = """
+            class Foo<T> {
+            }
+            class Boo extends Foo<Bar> {
+            }
+            """
+        def expectedImports = ["other.Bar"]
+        doAddImportTest(contents, expectedImports)
+    }
+
 //    void testRemoveImport1() {
 //        String contents = 
 //                """ 
@@ -228,7 +250,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     void testGRECLISPE506() {
         String contents = 
                 """ 
-            import java.text.DateFormat
+            import java.text.DateFormat${LINE_SEPARATOR}
         
             new String(DateFormat.getDateInstance())
             """
@@ -238,7 +260,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     void testGRECLISPE546a() {
         String contents = 
                 """ 
-            import java.text.DateFormat
+            import java.text.DateFormat${LINE_SEPARATOR}
             
             class Foo {
                 Foo(DateFormat arg) { }
@@ -300,7 +322,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     void testThrownExceptions() {
         String contents = 
                 """ 
-            import java.util.zip.ZipException
+            import java.util.zip.ZipException${LINE_SEPARATOR}
             
             def x() throws BadLocationException {
             }
@@ -315,7 +337,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     void testCatchClausesExceptions() {
         String contents =
                 """
-            import java.util.zip.ZipException
+            import java.util.zip.ZipException${LINE_SEPARATOR}
             
             try {
                 nothing
@@ -362,8 +384,8 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
             }"""
         
         String contents = """
-            import anns.NamedQueries
-            import anns.NamedQuery
+            import anns.NamedQueries${LINE_SEPARATOR}
+            import anns.NamedQuery${LINE_SEPARATOR}
             
             @NamedQueries(
                 @NamedQuery 
@@ -406,8 +428,8 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
             }"""
         
         String contents = """
-            import anns.NamedQueries
-            import anns.NamedQuery
+            import anns.NamedQueries${LINE_SEPARATOR}
+            import anns.NamedQuery${LINE_SEPARATOR}
             
             @NamedQueries(
                 [@NamedQuery]
@@ -442,7 +464,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
                 """
         String contents =
                 """
-            import inner.HasInner.InnerInner\n
+            import inner.HasInner.InnerInner${LINE_SEPARATOR}
             InnerInner f
             """
         doAddImportTest(contents)
@@ -472,7 +494,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
                 """
         String contents =
             """
-            import inner.HasInner\n
+            import inner.HasInner${LINE_SEPARATOR}
             HasInner.InnerInner f
             """
         doAddImportTest(contents)
@@ -483,7 +505,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     void testStaticImport() {
         String contents =
                 """
-                import static java.lang.String.format
+                import static java.lang.String.format${LINE_SEPARATOR}
                 format
                 """
         doAddImportTest(contents)
@@ -503,7 +525,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     void testStaticStarImport() {
         String contents =
             """
-            import static java.lang.String.*
+            import static java.lang.String.*${LINE_SEPARATOR}
             format
             """
             doAddImportTest(contents)
@@ -523,7 +545,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
     void testStarImport() {
         String contents =
             """
-            import javax.swing.text.html.*
+            import javax.swing.text.html.*${LINE_SEPARATOR}
             HTML
             """
             doAddImportTest(contents)
@@ -553,7 +575,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 	void testFieldAnnotationImport() {
 		String contents = 
 				"""
-				import groovy.transform.Field
+				import groovy.transform.Field${LINE_SEPARATOR}
 				@Field
                 def x = 0
                 """
