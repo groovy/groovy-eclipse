@@ -66,9 +66,12 @@ class AbstractOrganizeImportsTest extends EclipseTestCase {
         }
     """
 
-
     void doAddImportTest(String contents, List<String> expectedImports = [ ]) {
-        def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)
+		doAddImportTest("main", "Main", contents, expectedImports)
+	}
+
+    void doAddImportTest(String pkgName, String resourceName, String contents, List<String> expectedImports = [ ]) {
+        def file = testProject.createGroovyTypeAndPackage(pkgName, resourceName + ".groovy", contents)
         def unit = JavaCore.createCompilationUnitFrom(file)
         testProject.waitForIndexer()
         IChooseImportQuery query = new NoChoiceQuery()
