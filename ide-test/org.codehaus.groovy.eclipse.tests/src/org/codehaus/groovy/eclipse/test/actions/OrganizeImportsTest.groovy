@@ -177,7 +177,27 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
         def expectedImports = [ "import javax.swing.text.html.HTML", "import other.SecondClass"]
         doAddImportTest(contents, expectedImports)
     }
-    
+
+    void testInheritance() {
+        String contents = """
+            class Child extends Parent {
+            }
+            """
+        def expectedImports = ["other.Parent"]
+        doAddImportTest(contents, expectedImports)
+    }
+
+    void testGRECLIPSE1693() {
+        String contents = """
+            class Foo<T> {
+            }
+            class Boo extends Foo<Bar> {
+            }
+            """
+        def expectedImports = ["other.Bar"]
+        doAddImportTest(contents, expectedImports)
+    }
+
 //    void testRemoveImport1() {
 //        String contents = 
 //                """ 
