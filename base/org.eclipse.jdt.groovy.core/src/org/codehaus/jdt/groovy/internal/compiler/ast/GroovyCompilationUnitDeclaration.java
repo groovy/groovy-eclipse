@@ -664,6 +664,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			}
 
 			boolean isInterface = classNode.isInterface();
+			boolean isEnum = (classNode.getModifiers() & Opcodes.ACC_ENUM) != 0;
 			int mods = classNode.getModifiers();
 			if ((mods & Opcodes.ACC_ENUM) != 0) {
 				// remove final
@@ -679,7 +680,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 					mods = mods & ~(Opcodes.ACC_STATIC);
 				}
 			}
-			typeDeclaration.modifiers = mods & ~(isInterface ? Opcodes.ACC_ABSTRACT : 0);
+
+			typeDeclaration.modifiers = mods & ~((isInterface || isEnum) ? Opcodes.ACC_ABSTRACT : 0);
 
 			fixupSourceLocationsForTypeDeclaration(typeDeclaration, classNode);
 
@@ -706,10 +708,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				}
 			}
 
-			boolean isEnum = (classNode.getModifiers() & Opcodes.ACC_ENUM) != 0;
 			configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum);
 			configureSuperInterfaces(typeDeclaration, classNode);
-			typeDeclaration.methods = createMethodAndConstructorDeclarations(classNode, isEnum, compilationResult);
+			typeDeclaration.methods = createMethodAndConstructorDeclarations(typeDeclaration, classNode, isEnum, compilationResult);
 			typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
 			typeDeclaration.properties = classNode.getProperties();
 			if (classNode instanceof InnerClassNode) {
@@ -825,12 +826,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	/**
 	 * Build JDT representations of all the method/ctors on the groovy type
+	 * 
+	 * @param typeDeclaration
 	 */
-	private AbstractMethodDeclaration[] createMethodAndConstructorDeclarations(ClassNode classNode, boolean isEnum,
-			CompilationResult compilationResult) {
+	private AbstractMethodDeclaration[] createMethodAndConstructorDeclarations(GroovyTypeDeclaration typeDeclaration,
+			ClassNode classNode, boolean isEnum, CompilationResult compilationResult) {
 		List<AbstractMethodDeclaration> accumulatedDeclarations = new ArrayList<AbstractMethodDeclaration>();
 		createConstructorDeclarations(classNode, isEnum, accumulatedDeclarations);
-		createMethodDeclarations(classNode, isEnum, accumulatedDeclarations);
+		createMethodDeclarations(typeDeclaration, classNode, isEnum, accumulatedDeclarations);
 		return accumulatedDeclarations.toArray(new AbstractMethodDeclaration[accumulatedDeclarations.size()]);
 	}
 
@@ -1049,8 +1052,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	/**
 	 * Build JDT representations of all the methods on the groovy type
+	 * 
+	 * @param typeDeclaration the type declaration the method is being created for
 	 */
-	private void createMethodDeclarations(ClassNode classNode, boolean isEnum,
+	private void createMethodDeclarations(GroovyTypeDeclaration typeDeclaration, ClassNode classNode, boolean isEnum,
 			List<AbstractMethodDeclaration> accumulatedDeclarations) {
 		List<MethodNode> methods = classNode.getMethods();
 
@@ -1068,6 +1073,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				// }
 			}
 			MethodDeclaration methodDeclaration = createMethodDeclaration(classNode, methodNode, isEnum, compilationResult);
+			if (methodNode.isAbstract()) {
+				typeDeclaration.bits |= ASTNode.HasAbstractMethods;
+			}
 			// methodDeclaration.javadoc = new Javadoc(0, 20);
 			if (methodNode.hasDefaultValue()) {
 				createMethodVariants(classNode, methodNode, isEnum, methodDeclaration, accumulatedDeclarations, compilationResult);

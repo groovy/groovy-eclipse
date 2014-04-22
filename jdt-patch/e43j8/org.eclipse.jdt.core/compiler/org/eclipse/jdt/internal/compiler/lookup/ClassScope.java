@@ -586,7 +586,7 @@ public class ClassScope extends Scope {
 			} else if (sourceType.isLocalType()) {
 				// each enum constant is an anonymous local type and its modifiers were already checked as an enum constant field
 			} else {
-				final int UNEXPECTED_MODIFIERS = ~(ClassFileConstants.AccPublic | ClassFileConstants.AccStrictfp | ClassFileConstants.AccEnum | ClassFileConstants.AccAbstract);
+				final int UNEXPECTED_MODIFIERS = ~(ClassFileConstants.AccPublic | ClassFileConstants.AccStrictfp | ClassFileConstants.AccEnum);
 				if ((realModifiers & UNEXPECTED_MODIFIERS) != 0)
 					problemReporter().illegalModifierForEnum(sourceType);
 			}
