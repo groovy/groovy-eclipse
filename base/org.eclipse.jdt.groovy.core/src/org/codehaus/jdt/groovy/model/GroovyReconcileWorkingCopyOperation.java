@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
+ * Copyright (c) 2009-2013 SpringSource and others.
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     Andrew Eisenberg - initial API and implementation
  *******************************************************************************/
@@ -31,9 +31,9 @@ import org.eclipse.jdt.internal.core.ReconcileWorkingCopyOperation;
 
 /**
  * Overrides super type with a custom {@link #makeConsistent(org.eclipse.jdt.internal.core.CompilationUnit)} method.
- * 
+ *
  * Need to ensure that the {@link ModuleNode} is cached in the {@link ModuleNodeMapper} after a call to make consistent.
- * 
+ *
  * @author Andrew Eisenberg
  * @created Jun 29, 2009
  */
@@ -83,8 +83,10 @@ public class GroovyReconcileWorkingCopyOperation extends ReconcileWorkingCopyOpe
 				// GROOVY cache the ModuleNode in the ModuleNodeMapper
 				if (unit instanceof GroovyCompilationUnitDeclaration) {
 					// should always be true
-					ModuleNodeMapper.getInstance().maybeCacheModuleNode(workingCopy.getPerWorkingCopyInfo(),
-							(GroovyCompilationUnitDeclaration) unit);
+					if (!(workingCopy instanceof GroovyClassFileWorkingCopy)) {
+						ModuleNodeMapper.getInstance().maybeCacheModuleNode(workingCopy.getPerWorkingCopyInfo(),
+								(GroovyCompilationUnitDeclaration) unit);
+					}
 				}
 				// GROOVY end
 
@@ -94,10 +96,10 @@ public class GroovyReconcileWorkingCopyOperation extends ReconcileWorkingCopyOpe
 
 			// create AST if needed
 			if (this.astLevel != ICompilationUnit.NO_AST && unit != null/*
-																		 * unit is null if working copy is consistent && (problem
-																		 * detection not forced || non-Java project) -> don't create
-																		 * AST as per API
-																		 */) {
+			 * unit is null if working copy is consistent && (problem
+			 * detection not forced || non-Java project) -> don't create
+			 * AST as per API
+			 */) {
 				Map options = workingCopy.getJavaProject().getOptions(true);
 				// convert AST
 				this.ast = AST.convertCompilationUnit(this.astLevel, unit, options, this.resolveBindings, source,

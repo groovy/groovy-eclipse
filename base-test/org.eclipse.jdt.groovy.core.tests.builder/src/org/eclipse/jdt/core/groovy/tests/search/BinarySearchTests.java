@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
+ * Copyright 2011-2014 SpringSource, a division of VMware, Inc
  * 
  * andrew - Initial API and implementation
  *
@@ -60,18 +60,18 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
     		"\n" + 
     		"class OtherClass { }\n" + 
     		"class AGroovyClass {\n" + 
-    		"        String name\n" + 
-    		"        int age\n" + 
+    		"        String name_1\n" + 
+    		"        int age_1\n" + 
     		"        def referencedInInitializer() { }\n" + 
     		"        def fieldInInitializer\n" + 
     		"\n" + 
     		"        def doit() {\n" + 
-    		"                println name + age\n" + 
+    		"                println name_1 + age_1\n" + 
     		"                AGroovyClass\n" + 
     		"                OtherClass\n" + 
     		"                doit()\n" + 
     		"                def aClosure = {\n" + 
-    		"                        println name + age\n" + 
+    		"                        println name_1 + age_1\n" + 
     		"                        AGroovyClass\n" + 
     		"                        OtherClass\n" + 
     		"                        doit()\n" + 
@@ -89,12 +89,12 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
     		"\n" + 
     		"class AnotherGroovyClass {\n" + 
     		"        def doit() {\n" + 
-    		"                println new AGroovyClass().name + new AGroovyClass().age\n" + 
+    		"                println new AGroovyClass().name_1 + new AGroovyClass().age_1\n" + 
     		"                AGroovyClass\n" + 
     		"                OtherClass\n" + 
     		"                new AGroovyClass().doit()\n" + 
     		"                def aClosure = {\n" + 
-    		"                        println new AGroovyClass().name + new AGroovyClass().age\n" + 
+    		"                        println new AGroovyClass().name_1 + new AGroovyClass().age_1\n" + 
     		"                        AGroovyClass\n" + 
     		"                        OtherClass\n" + 
     		"                        new AGroovyClass().doit()\n" + 
@@ -121,7 +121,12 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
 		AnotherGroovyClassContents = javaProject.findType("pack.AnotherGroovyClass").getTypeRoot().getBuffer().getContents();
     }
     
-    public void testClassDecl1() throws Exception {
+    @Override
+	protected void tearDown() throws Exception {
+		super.tearDown();
+	}
+
+	public void testClassDecl1() throws Exception {
 		IType type = javaProject.findType("pack.AGroovyClass");
 		MockSearchRequestor requestor = performSearch(type);
 		assertMatches("AGroovyClass", requestor, 12, 2);
@@ -135,7 +140,7 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
     
     public void testFieldDecl1() throws Exception {
 		IType type = javaProject.findType("pack.AGroovyClass");
-		String toFind = "age";
+		String toFind = "age_1";
 		IField field = type.getField(toFind);
 		MockSearchRequestor requestor = performSearch(field);
 		assertMatches(toFind, requestor, 4, 2);
@@ -143,7 +148,7 @@ public class BinarySearchTests extends AbstractGroovySearchTest {
 
     public void testFieldDecl2() throws Exception {
     	IType type = javaProject.findType("pack.AGroovyClass");
-    	String toFind = "name";
+    	String toFind = "name_1";
     	IField field = type.getField(toFind);
     	MockSearchRequestor requestor = performSearch(field);
     	assertMatches(toFind, requestor, 4, 2);
