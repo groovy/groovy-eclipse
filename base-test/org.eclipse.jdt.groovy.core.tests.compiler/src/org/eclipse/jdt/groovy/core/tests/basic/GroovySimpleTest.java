@@ -10560,7 +10560,7 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     
     // See https://jira.codehaus.org/browse/GRECLIPSE-1639
     public void testTransforms_Gaelyk() throws IOException {
-		if (isJRELevel(AbstractCompilerTest.F_1_8)) {
+		if (isJRELevel(AbstractCompilerTest.F_1_8) || isJRELevel(AbstractCompilerTest.F_1_7)) {
 			return;
 		}
         float classVersion = Float.parseFloat(System.getProperty("java.class.version"));
