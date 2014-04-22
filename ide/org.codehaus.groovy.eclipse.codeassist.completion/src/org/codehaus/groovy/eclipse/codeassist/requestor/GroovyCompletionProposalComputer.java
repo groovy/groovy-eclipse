@@ -11,6 +11,7 @@ import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.codeassist.DocumentSourceBuffer;
 import org.codehaus.groovy.eclipse.codeassist.factories.ConstructorCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.ExpressionCompletionProcessorFactory;
+import org.codehaus.groovy.eclipse.codeassist.factories.GetSetMethodCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.IGroovyCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.LocalVariableCompletionProcessorFactory;
 import org.codehaus.groovy.eclipse.codeassist.factories.ModifiersCompletionProcessorFactory;
@@ -52,9 +53,10 @@ public class GroovyCompletionProposalComputer implements
 
         List<IGroovyCompletionProcessorFactory> factories = new ArrayList<IGroovyCompletionProcessorFactory>(1);
 
-        factories = new ArrayList<IGroovyCompletionProcessorFactory>(5);
+        factories = new ArrayList<IGroovyCompletionProcessorFactory>(7);
         factories.add(new ModifiersCompletionProcessorFactory());
         factories.add(new NewMethodCompletionProcessorFactory());
+        factories.add(new GetSetMethodCompletionProcessorFactory());
         factories.add(new NewFieldCompletionProcessorFactory());
         factories.add(new TypeCompletionProcessorFactory());
         factories.add(new PackageCompletionProcessorFactory());
@@ -90,9 +92,10 @@ public class GroovyCompletionProposalComputer implements
         factories.add(new NewVariableCompletionProcessorFactory());
         locationFactoryMap.put(ContentAssistLocation.STATEMENT, factories);
 
-        factories = new ArrayList<IGroovyCompletionProcessorFactory>(8);
+        factories = new ArrayList<IGroovyCompletionProcessorFactory>(9);
         factories.add(new ModifiersCompletionProcessorFactory());
         factories.add(new NewMethodCompletionProcessorFactory());
+        factories.add(new GetSetMethodCompletionProcessorFactory());
         factories.add(new NewFieldCompletionProcessorFactory());
         factories.add(new TypeCompletionProcessorFactory());
         factories.add(new ExpressionCompletionProcessorFactory());

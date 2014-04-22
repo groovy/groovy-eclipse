@@ -24,18 +24,14 @@ import groovyjarjarasm.asm.Opcodes;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -66,15 +62,11 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
 
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         List<MethodNode> unimplementedMethods = getAllUnimplementedMethods(getClassNode());
-        List<MethodNode> getSetMethods = getGetSetMethods(getClassNode());
         List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
         ContentAssistContext context = getContext();
         IType enclosingType = context.getEnclosingType();
         if (enclosingType != null) {
             for (MethodNode method : unimplementedMethods) {
-                proposals.add(createProposal(method, context, enclosingType));
-            }
-            for (MethodNode method : getSetMethods) {
                 proposals.add(createProposal(method, context, enclosingType));
             }
         }
@@ -393,95 +385,6 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
             for (int i = 0; i < arrayCount; i++) {
                 completion.append("[]");
             }
-        }
-    }
-
-    private List<MethodNode> getGetSetMethods(ClassNode declaring) {
-        // List<MethodNode> allMethods = declaring.getAllDeclaredMethods();
-        List<MethodNode> thisClassMethods = declaring.getMethods();
-        Set<ExtendedMethodNode> existingNodes = new HashSet<ExtendedMethodNode>();
-        for (MethodNode method : thisClassMethods) {
-            existingNodes.add(new ExtendedMethodNode(method));
-        }
-        List<MethodNode> getSetMethods = new ArrayList<MethodNode>();
-        for (FieldNode field : declaring.getFields()) {
-            if (!field.getName().contains("$")) {
-                MethodNode method = getGetMethod(field);
-                if (!existingNodes.contains(new ExtendedMethodNode(method))) {
-                    method.setDeclaringClass(declaring);
-                    getSetMethods.add(method);
-                }
-                if (!field.isFinal()) {
-                    method = getSetMethod(field);
-                    if (!existingNodes.contains(new ExtendedMethodNode(method))) {
-                        method.setDeclaringClass(declaring);
-                        getSetMethods.add(method);
-                    }
-                }
-            }
-        }
-        return getSetMethods;
-    }
-
-    private MethodNode getGetMethod(FieldNode field) {
-        String name = getName(field, "boolean".equals(field.getType().getName()) ? "is" : "get");
-        int modifiers = Opcodes.ACC_PUBLIC;
-        ClassNode returnType = field.getType();
-        Parameter[] parameters = {};
-        ClassNode[] exceptions = { new ClassNode(Exception.class) };
-        Statement code = null; // The code looks like to be ignored
-        return new MethodNode(name, modifiers, returnType, parameters, exceptions, code);
-    }
-
-    private MethodNode getSetMethod(FieldNode field) {
-        String name = getName(field, "set");
-        int modifiers = Opcodes.ACC_PUBLIC;
-        ClassNode returnType = new ClassNode(Void.TYPE);
-        Parameter[] parameters = { new Parameter(field.getType(), field.getName()) };
-        ClassNode[] exceptions = {};
-        Statement code = null; // The code looks like to be ignored
-        return new MethodNode(name, modifiers, returnType, parameters, exceptions, code);
-    }
-
-    private String getName(FieldNode field, String prefix) {
-        StringBuilder builder = new StringBuilder(field.getName());
-        char first = Character.toUpperCase(builder.charAt(0));
-        builder.setCharAt(0, first);
-        builder.insert(0, prefix);
-        return builder.toString();
-    }
-
-    private static class ExtendedMethodNode extends MethodNode {
-
-        private ExtendedMethodNode(MethodNode method) {
-            super(method.getName(), method.getModifiers(), method.getReturnType(), method.getParameters(), method.getExceptions(),
-                    method.getCode());
-        }
-
-        @Override
-        public boolean equals(Object object) {
-            if (!(object instanceof MethodNode)) {
-                return false;
-            }
-            MethodNode method = (MethodNode) object;
-            return getName().equals(method.getName()) && parametersEqual(getParameters(), method.getParameters());
-        }
-
-        @Override
-        public int hashCode() {
-            return getName().hashCode();
-        }
-
-        private boolean parametersEqual(Parameter[] a, Parameter[] b) {
-            if (a.length != b.length) {
-                return false;
-            }
-            for (int i = 0; i < a.length; i++) {
-                if (!a[i].getType().getName().equals(b[i].getType().getName())) {
-                    return false;
-                }
-            }
-            return true;
         }
     }
 }
