@@ -10465,6 +10465,19 @@ public class GroovySimpleTest extends AbstractRegressionTest {
    			"----------\n");
     }
 
+    public void testAbstractMethodWithinEnum_STS3803() {
+    	this.runConformTest(new String[] {
+	        "Bad.groovy",
+	        "enum Bad {\n" + 
+	        "	A() {\n" + 
+	        "		@Override\n" + 
+	        "		int foo() {\n" +
+	        "			1\n" +
+	        "		}\n" + 
+	        "	}\n" + 
+	        "	abstract int foo()\n" + 
+			"}"});
+    }
     
     // See https://jira.codehaus.org/browse/GRECLIPSE-1639
     public void testTransforms_Gaelyk() throws IOException {
