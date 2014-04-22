@@ -814,16 +814,6 @@ public class GroovyEditor extends CompilationUnitEditor {
         markAsStateDependentAction(INDENT_ON_TAB, true);
         markAsSelectionDependentAction(INDENT_ON_TAB, true);
 
-        // GRECLIPSE-1528 Do not remove some actions again :-)
-        //        // now remove some actions:
-        //        // GRECLIPSE-966 must dispose action to avoid memory leak
-        //        AddGetterSetterAction agsa = (AddGetterSetterAction) ReflectionUtils.getPrivateField(GenerateActionGroup.class,
-        //                "fAddGetterSetter", group);
-        //        if (agsa != null) {
-        //            ReflectionUtils.setPrivateField(AddGetterSetterAction.class, "fEditor", agsa, null);
-        //        }
-        //        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fAddGetterSetter", group, null);
-
         AllCleanUpsAction acua = (AllCleanUpsAction) ReflectionUtils.getPrivateField(GenerateActionGroup.class, "fCleanUp", group);
         // GRECLIPSE-966 must dispose action to avoid memory leak
         if (acua != null) {
