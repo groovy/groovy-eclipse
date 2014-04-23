@@ -11,6 +11,7 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -353,10 +354,18 @@ public abstract class CompletionTestCase extends BuilderTests {
         int maxCount = 15;
         ICompletionProposal[] proposals;
         do {
-            // intermitent failures on the build server
+            // intermittent failures on the build server
             if (count > 0) {
                 performDummySearch(unit.getJavaProject());
-                unit.reconcile(AST.JLS3, true, null, null);
+                
+                int astLevel = AST.JLS3;
+                try {
+                	AST.class.getDeclaredField("JLS8");
+                	astLevel = 8;
+                } catch (NoSuchFieldException nsfe) {
+                	// pre-java8
+                }
+                unit.reconcile(astLevel, true, null, null);
                 env.fullBuild();
                 SynchronizationUtils.joinBackgroudActivities();
                 SynchronizationUtils.waitForIndexingToComplete();
