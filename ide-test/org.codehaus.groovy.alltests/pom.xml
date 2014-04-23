@@ -89,6 +89,11 @@
 							<artifactId>org.codehaus.groovy23.feature</artifactId>
 							<version>0.0.0</version>
 						</dependency>
+						<dependency>
+							<type>eclipse-feature</type>
+							<artifactId>org.eclipse.rcp</artifactId>
+							<version>0.0.0</version>
+						</dependency>
 					</dependencies>
 	
 				</configuration>
