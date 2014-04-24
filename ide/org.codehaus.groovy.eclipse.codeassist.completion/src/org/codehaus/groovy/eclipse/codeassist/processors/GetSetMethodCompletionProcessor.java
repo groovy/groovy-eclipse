@@ -71,7 +71,7 @@ public class GetSetMethodCompletionProcessor extends AbstractGroovyCompletionPro
                     - context.completionExpression.length(), context.completionExpression.length(), true, relevance));
         }
         IMethod setter = GetterSetterUtil.getSetter(field);
-        if ((field.getFlags() & Flags.AccFinal) > 0 && (setter == null || !setter.exists())) {
+        if ((field.getFlags() & Flags.AccFinal) == 0 && (setter == null || !setter.exists())) {
             proposals.add(new GetterSetterCompletionProposal(field, context.completionLocation
                     - context.completionExpression.length(), context.completionExpression.length(), false, relevance));
         }
