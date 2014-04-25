@@ -14,6 +14,11 @@
 		in a properties file. The properties file must be specified via env variable 
 		'dist_properties'. The existence of this env variable enables the deployment 
 		profile automatically and will allow the 'deploy' to execute. -->
+		
+	<!-- Example commands to build and deploy a milestone or a release
+	     mvn clean deploy -Pe43j8 -Pmilestone
+	     mvn clean deploy -Pe43j8 -Prelease
+	   -->	
 
 	<properties>
 		<tycho-version>0.19.0</tycho-version>
@@ -35,6 +40,7 @@
 		<dist.name>Groovy Eclipse</dist.name>
 		<dist.key>GRECLIPSE</dist.key>
 		<dist.type>snapshot</dist.type>
+		<dist.qualifier></dist.qualifier> <!-- appended to the end of p2 qualifier, used to add stuff like 'M1', 'RELEASE' etc. -->
 		<dist.path>${dist.type}/${dist.key}/${dist.target}</dist.path>
 		
 		<!-- signing properties:
@@ -142,7 +148,7 @@
 			</modules>
 			<properties>
 				<dist.target>e4.4</dist.target>
-				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e44'</greclipse.build.qualifier>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e44${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 	    </profile>
 	
@@ -171,7 +177,7 @@
 			</modules>
 			<properties>
 				<dist.target>e4.3-j8</dist.target>
-				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e43j8'</greclipse.build.qualifier>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e43j8${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 		
@@ -195,7 +201,7 @@
 			</modules>
 			<properties>
 				<dist.target>e4.3</dist.target>
-				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e43'</greclipse.build.qualifier>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e43${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -219,7 +225,7 @@
 			</modules>
 			<properties>
 				<dist.target>e4.2</dist.target>
-				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e42'</greclipse.build.qualifier>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e42${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -243,10 +249,9 @@
 			</modules>
 			<properties>
 				<dist.target>e3.7</dist.target>
-				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e37'</greclipse.build.qualifier>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e37${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
-		
 
 		<profile>
 			<id>s3-deploy</id>
@@ -300,6 +305,21 @@
 				<signing.store.password>${env.bamboo_signing_store_password}</signing.store.password>
 				<signing.key.password>${env.bamboo_signing_key_password}</signing.key.password>
 				<signing.keystore>~/.keytool/springsource.jks</signing.keystore>
+			</properties>
+		</profile>
+
+		<!-- snaphshot builds are the default. Enable one of the profiles below to do a milestone or release build -->		
+		<profile>
+			<id>milestone</id>
+			<properties>
+				<dist.type>milestone</dist.type>
+			</properties>
+		</profile>
+		<profile>
+			<id>release</id>
+			<properties>
+				<dist.type>release</dist.type>
+				<dist.qualifier>-RELEASE</dist.qualifier>
 			</properties>
 		</profile>
 	</profiles>
