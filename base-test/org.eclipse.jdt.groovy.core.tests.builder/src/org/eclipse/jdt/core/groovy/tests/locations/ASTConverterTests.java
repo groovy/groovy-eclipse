@@ -62,9 +62,24 @@ public class ASTConverterTests extends TestCase {
         assertEquals("Invalid start position", start, name.getStartPosition());
         assertEquals("Invalid length position", length, name.getLength());
     }
+
+    public static int astlevel = -1;
+
+    public static int getAstLevel() {
+        if (astlevel == -1) {
+            astlevel = AST.JLS3;
+            try {
+                AST.class.getDeclaredField("JLS8");
+                astlevel = 8;
+            } catch (NoSuchFieldException nsfe) {
+                // pre-java8
+            }
+        }
+        return astlevel;
+    }
     
     private ASTNode findJavaNodeAt(String contents, int start, int length) {
-        ASTParser parser = ASTParser.newParser(AST.JLS3);
+        ASTParser parser = ASTParser.newParser(getAstLevel());
         Hashtable<String, String> options = JavaCore.getOptions();
         options.put(CompilerOptions.OPTION_Source, "1.5");
         parser.setCompilerOptions(options);

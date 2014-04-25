@@ -343,7 +343,7 @@ public abstract class CompletionTestCase extends BuilderTests {
         ICompilationUnit unit = getCompilationUnit(pathToGroovyClass);
         unit.becomeWorkingCopy(null);
         
-        // intermitent failures on build server.  proposals not found, so perform this part in a loop
+        // intermittent failures on build server.  proposals not found, so perform this part in a loop
         return createProposalsAtOffset(unit, completionOffset);
         
     }

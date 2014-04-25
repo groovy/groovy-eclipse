@@ -135,6 +135,21 @@ public class JavaValidParameterizedTypeRule extends AbstractJavaTypeVerifiedRule
         return false;
     }
 
+    public static int astlevel = -1;
+
+    public static int getAstLevel() {
+        if (astlevel == -1) {
+            astlevel = AST.JLS3;
+            try {
+                AST.class.getDeclaredField("JLS8");
+                astlevel = 8;
+            } catch (NoSuchFieldException nsfe) {
+                // pre-java8
+            }
+        }
+        return astlevel;
+    }
+
     protected Type getASTType(String typeToCheck, StringBuffer sourceBuffer) {
 
         sourceBuffer.append("class __C__ {"); //$NON-NLS-1$
@@ -145,7 +160,7 @@ public class JavaValidParameterizedTypeRule extends AbstractJavaTypeVerifiedRule
 
         sourceBuffer.append("}");
 
-        ASTParser parser = ASTParser.newParser(AST.JLS3);
+        ASTParser parser = ASTParser.newParser(getAstLevel());
         parser.setSource(sourceBuffer.toString().toCharArray());
 
         Map<String, String> options = new HashMap<String, String>();
