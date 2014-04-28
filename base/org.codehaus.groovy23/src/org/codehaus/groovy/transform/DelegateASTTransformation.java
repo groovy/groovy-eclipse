@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.control.CompilePhase;
@@ -58,6 +59,8 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
+import static org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpec;
+import static org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.createGenericsSpec;
 
 /**
@@ -144,7 +147,7 @@ public class DelegateASTTransformation extends AbstractASTTransformation {
                     final ClassNode[] newIfaces = new ClassNode[ifaces.length + 1];
                     for (int i = 0; i < ifaces.length; i++) {
                         final ClassNode classNode = ifaces[i];
-                        newIfaces[i] = GenericsUtils.correctToGenericsSpecRecurse(genericsSpec, classNode);
+                        newIfaces[i] = correctToGenericsSpecRecurse(genericsSpec, classNode);
                     }
                     newIfaces[ifaces.length] = iface;
                     owner.setInterfaces(newIfaces);
@@ -195,8 +198,9 @@ public class DelegateASTTransformation extends AbstractASTTransformation {
         genericsSpec = createGenericsSpec(fieldNode.getType(), genericsSpec);
 
         if (!excludeTypes.isEmpty() || !includeTypes.isEmpty()) {
-            String correctedTypeDescriptor = correctToGenericsSpec(genericsSpec, candidate).getTypeDescriptor();
-            if (shouldSkipOnDescriptor(genericsSpec, correctedTypeDescriptor, excludeTypes, includeTypes)) return;
+            MethodNode correctedMethodNode = correctToGenericsSpec(genericsSpec, candidate);
+            boolean checkReturn = fieldNode.getType().getMethods().contains(candidate);
+            if (shouldSkipOnDescriptor(checkReturn, genericsSpec, correctedMethodNode, excludeTypes, includeTypes)) return;
         }
 
         // ignore methods from GroovyObject
@@ -284,7 +288,7 @@ public class DelegateASTTransformation extends AbstractASTTransformation {
     private List<AnnotationNode> copyAnnotatedNodeAnnotations(final AnnotatedNode annotatedNode) {
         final ArrayList<AnnotationNode> delegateAnnotations = new ArrayList<AnnotationNode>();
         final ArrayList<AnnotationNode> notCopied = new ArrayList<AnnotationNode>();
-        copyAnnotatedNodeAnnotations(annotatedNode, delegateAnnotations, notCopied);
+        GeneralUtils.copyAnnotatedNodeAnnotations(annotatedNode, delegateAnnotations, notCopied);
         for (AnnotationNode annotation : notCopied) {
             addError(MY_TYPE_NAME + " does not support keeping Closure annotation members.", annotation);
         }

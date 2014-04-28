@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.makeDescriptorWithoutReturnType;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpec;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.createGenericsSpec;
 
@@ -201,15 +202,6 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         addCovariantMethods(node);
     }
 
-    private String makeDescriptorWithoutReturnType(MethodNode mn) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(mn.getName()).append(':');
-        for (Parameter p : mn.getParameters()) {
-            sb.append(p.getType()).append(',');
-        }
-        return sb.toString();
-    }
-    
     private void checkForDuplicateMethods(ClassNode cn) {
         HashSet<String> descriptors = new HashSet<String>();
         for (MethodNode mn : cn.getMethods()) {
@@ -1399,9 +1391,15 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     private Parameter[] cleanParameters(Parameter[] parameters) {
         Parameter[] params = new Parameter[parameters.length];
         for (int i = 0; i < params.length; i++) {
-            params[i] = new Parameter(parameters[i].getType().getPlainNodeReference(),parameters[i].getName());
+            params[i] = new Parameter(cleanType(parameters[i].getType()), parameters[i].getName());
         }
         return params;
+    }
+
+    private static ClassNode cleanType(ClassNode type) {
+        // todo: should this be directly handled by getPlainNodeReference?
+        if (type.isArray()) return cleanType(type.getComponentType()).makeArray();
+        return type.getPlainNodeReference();
     }
 
     private void storeMissingCovariantMethods(Collection methods, MethodNode method, Map methodsToAdd, Map genericsSpec) {
