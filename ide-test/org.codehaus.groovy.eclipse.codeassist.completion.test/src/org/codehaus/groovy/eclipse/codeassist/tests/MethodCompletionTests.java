@@ -196,6 +196,30 @@ public class MethodCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "abs", 1);
     }
 
+    // GRECLIPSE-1528
+    public void testGetterSetter1() throws Exception {
+        String contents = "class A {\n private int value\n }";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "\n"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "getValue", 1);
+        proposalExists(proposals, "setValue", 1);
+    }
+
+    public void testGetterSetter2() throws Exception {
+        String contents = "class A {\n private final int value\n }";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "\n"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "getValue", 1);
+        proposalExists(proposals, "setValue", 0);
+    }
+
+    public void testGetterSetter3() throws Exception {
+        String contents = "class A {\n private boolean value\n }";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "\n"), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "isValue", 1);
+        proposalExists(proposals, "setValue", 1);
+    }
 
     private List<MethodNode> delegateTestParameterNames(GroovyCompilationUnit unit) throws Exception {
         // for some reason, need to wait for indices to be built before this can work
