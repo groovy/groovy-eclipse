@@ -82,7 +82,6 @@ import org.eclipse.jdt.internal.ui.text.JavaWordFinder;
 import org.eclipse.jdt.internal.ui.text.Symbols;
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener;
 import org.eclipse.jdt.ui.PreferenceConstants;
-import org.eclipse.jdt.ui.actions.AddGetterSetterAction;
 import org.eclipse.jdt.ui.actions.GenerateActionGroup;
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds;
 import org.eclipse.jdt.ui.actions.RefactorActionGroup;
@@ -814,15 +813,6 @@ public class GroovyEditor extends CompilationUnitEditor {
         setAction(INDENT_ON_TAB, indentOnTabAction);
         markAsStateDependentAction(INDENT_ON_TAB, true);
         markAsSelectionDependentAction(INDENT_ON_TAB, true);
-
-        // now remove some actions:
-        // GRECLIPSE-966 must dispose action to avoid memory leak
-        AddGetterSetterAction agsa = (AddGetterSetterAction) ReflectionUtils.getPrivateField(GenerateActionGroup.class,
-                "fAddGetterSetter", group);
-        if (agsa != null) {
-            ReflectionUtils.setPrivateField(AddGetterSetterAction.class, "fEditor", agsa, null);
-        }
-        ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fAddGetterSetter", group, null);
 
         AllCleanUpsAction acua = (AllCleanUpsAction) ReflectionUtils.getPrivateField(GenerateActionGroup.class, "fCleanUp", group);
         // GRECLIPSE-966 must dispose action to avoid memory leak
