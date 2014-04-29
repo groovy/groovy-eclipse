@@ -45,10 +45,6 @@ public class UpdateExportedPackages {
 			TreeSet<String> packages = new TreeSet<String>();
 			readCurrentManifest(packages);
 			
-			//Some of our own packages that need to be exported as well!			
-			packages.add("org.codehaus.groovy.eclipse"); 
-			packages.add("org.codehaus.groovy.activator");
-
 			Enumeration<JarEntry> entries = jar.entries();
 			while (entries.hasMoreElements()) {
 				JarEntry el = entries.nextElement();
