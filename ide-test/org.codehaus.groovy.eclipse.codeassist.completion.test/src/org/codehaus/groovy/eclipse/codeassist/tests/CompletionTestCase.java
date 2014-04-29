@@ -31,6 +31,7 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -356,6 +357,7 @@ public abstract class CompletionTestCase extends BuilderTests {
         do {
             // intermittent failures on the build server
             if (count > 0) {
+            	System.out.println("In createProposalsAtOffset() count="+count);
                 performDummySearch(unit.getJavaProject());
                 
                 int astLevel = AST.JLS3;
@@ -365,7 +367,10 @@ public abstract class CompletionTestCase extends BuilderTests {
                 } catch (NoSuchFieldException nsfe) {
                 	// pre-java8
                 }
-                unit.reconcile(astLevel, true, null, null);
+                System.out.println("ast level = "+astLevel);
+                SimpleMonitor sm = new SimpleMonitor();
+                unit.reconcile(astLevel, true, null, sm);
+                waitForCompletion("unit reconcile",sm,10);
                 env.fullBuild();
                 SynchronizationUtils.joinBackgroudActivities();
                 SynchronizationUtils.waitForIndexingToComplete();
@@ -591,6 +596,7 @@ public abstract class CompletionTestCase extends BuilderTests {
     
     public void performDummySearch(IJavaElement element) throws Exception{
         JavaModelManager.getIndexManager().indexAll(element.getJavaProject().getProject());
+        SimpleMonitor sm = new SimpleMonitor();
         new SearchEngine().searchAllTypeNames(
             null,
             SearchPattern.R_EXACT_MATCH,
@@ -600,7 +606,55 @@ public abstract class CompletionTestCase extends BuilderTests {
             SearchEngine.createJavaSearchScope(new IJavaElement[]{element}),
             new Requestor(),
             IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
-            null);
+            sm);
+        waitForCompletion("Dummy search",sm,10);
+    }
+    
+    public static void waitForCompletion(String description, SimpleMonitor monitor, int timeoutSeconds) {
+        int count = 0;
+        while (!monitor.done) {
+        	try { Thread.sleep(250); } catch (Exception e) {}
+        	count++;
+        	if (count>(timeoutSeconds*4)) {
+        		throw new IllegalStateException(description+" timed out after "+timeoutSeconds+" seconds");
+        	}
+        }
+        if (monitor.done) {
+        	System.out.println(description+" completed");
+        }    	
+    }
+    
+    static class SimpleMonitor implements IProgressMonitor {
+
+    	public boolean done = false;
+    	
+		public void beginTask(String name, int totalWork) {
+		}
+
+		public void done() {
+			this.done = true;
+			
+		}
+
+		public void internalWorked(double work) {
+		}
+
+		public boolean isCanceled() {
+			return false;
+		}
+
+		public void setCanceled(boolean value) {
+		}
+
+		public void setTaskName(String name) {
+		}
+
+		public void subTask(String name) {
+		}
+
+		public void worked(int work) {
+		}
+    	
     }
     private static class Requestor extends TypeNameRequestor {
     }
