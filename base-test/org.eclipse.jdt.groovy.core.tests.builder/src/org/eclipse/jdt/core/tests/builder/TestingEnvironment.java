@@ -607,11 +607,60 @@ public void cleanBuild() {
 	public void fullBuild() {
 		checkAssertion("a workspace must be open", fIsOpen); //$NON-NLS-1$
 		try {
-			getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, null);
+			SimpleMonitor sm = new SimpleMonitor();
+			getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, sm);
+			waitForCompletion("full build", sm, 5);
 		} catch (CoreException e) {
 			handle(e);
 		}
 	}
+
+    public static void waitForCompletion(String description, SimpleMonitor monitor, int timeoutSeconds) {
+        int count = 0;
+        while (!monitor.done) {
+        	try { Thread.sleep(250); } catch (Exception e) {}
+        	count++;
+        	if (count>(timeoutSeconds*4)) {
+        		throw new IllegalStateException(description+" timed out after "+timeoutSeconds+" seconds");
+        	}
+        }
+        if (monitor.done) {
+        	System.err.println(description+" completed");
+        }    	
+    }
+    
+    static class SimpleMonitor implements IProgressMonitor {
+
+    	public boolean done = false;
+    	
+		public void beginTask(String name, int totalWork) {
+		}
+
+		public void done() {
+			this.done = true;
+			
+		}
+
+		public void internalWorked(double work) {
+		}
+
+		public boolean isCanceled() {
+			return false;
+		}
+
+		public void setCanceled(boolean value) {
+		}
+
+		public void setTaskName(String name) {
+		}
+
+		public void subTask(String name) {
+		}
+
+		public void worked(int work) {
+		}
+    	
+    }
 
 	/**
 	 * Batch builds a project.  A workspace must be open.
