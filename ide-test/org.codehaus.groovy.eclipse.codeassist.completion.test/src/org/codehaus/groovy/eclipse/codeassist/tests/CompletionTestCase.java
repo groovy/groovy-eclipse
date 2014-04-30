@@ -354,10 +354,11 @@ public abstract class CompletionTestCase extends BuilderTests {
         int count = 0;
         int maxCount = 15;
         ICompletionProposal[] proposals;
+        System.err.println("Attempting createProposalsAtOffset(unit="+unit.getElementName()+",completionOffset="+completionOffset);
         do {
             // intermittent failures on the build server
             if (count > 0) {
-            	System.out.println("In createProposalsAtOffset() count="+count);
+            	System.err.println("In createProposalsAtOffset() count="+count);
                 performDummySearch(unit.getJavaProject());
                 
                 int astLevel = AST.JLS3;
@@ -367,7 +368,7 @@ public abstract class CompletionTestCase extends BuilderTests {
                 } catch (NoSuchFieldException nsfe) {
                 	// pre-java8
                 }
-                System.out.println("ast level = "+astLevel);
+                System.err.println("ast level = "+astLevel);
                 SimpleMonitor sm = new SimpleMonitor();
                 unit.reconcile(astLevel, true, null, sm);
                 waitForCompletion("unit reconcile",sm,10);
@@ -386,6 +387,9 @@ public abstract class CompletionTestCase extends BuilderTests {
             count++;
         } while ((proposals == null || proposals.length == 0) && count < maxCount);
 
+        if (count>=maxCount) {
+        	throw new IllegalStateException("Reached maxcount("+maxCount+") attempts and still got no response");
+        }
         return proposals;
     }
     
@@ -620,7 +624,7 @@ public abstract class CompletionTestCase extends BuilderTests {
         	}
         }
         if (monitor.done) {
-        	System.out.println(description+" completed");
+        	System.err.println(description+" completed");
         }    	
     }
     
