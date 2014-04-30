@@ -91,8 +91,10 @@ public class ErrorLogTest extends TestCase {
             if (errorsAndWarnings.size() > 0) {
                 StringBuffer errors = new StringBuffer();
                 boolean ignore = false;
+                int count = 1;
                 for (AbstractEntry element : errorsAndWarnings) {
                     LogEntry log = (LogEntry) element;
+                	errors.append("=================== Log entry "+(count++)+" ===================");
                     errors.append(log.getMessage());
                     errors.append(" (" + log.getPluginId() + ")\n"); //$NON-NLS-1$ //$NON-NLS-2$
                     if (element.hasChildren()) {
@@ -108,6 +110,7 @@ public class ErrorLogTest extends TestCase {
                             }
                         }
                     }
+                	errors.append("===================");
                 }
                 if (!ignore) {
                     fail("There should be no unexpected entries in the error log. Found:\n"
