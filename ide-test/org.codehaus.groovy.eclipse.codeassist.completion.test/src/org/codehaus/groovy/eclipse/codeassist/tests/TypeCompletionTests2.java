@@ -72,8 +72,8 @@ public class TypeCompletionTests2 extends CompletionTestCase {
         int i;
         for (i = 0; i < MAX_TRIES; i++) {
             try {
-                checkProposalApplicationType(contents, expected, getIndexOf(contents, target),
-                        proposal);
+                checkProposalApplicationType(contents, expected, getIndexOf(contents, target), proposal);
+                break; // If succeeded, let's get on with things
             } catch (Exception e) {
                 last = e;
             }
