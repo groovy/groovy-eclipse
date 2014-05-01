@@ -343,9 +343,10 @@ public abstract class CompletionTestCase extends BuilderTests {
         // expectingNoProblems();
         
         ICompilationUnit unit = getCompilationUnit(pathToGroovyClass);
-        SimpleProgressMonitor spm = new SimpleProgressMonitor("become working copy for "+unit.getElementName());
-        unit.becomeWorkingCopy(spm);
-        spm.waitForCompletion();
+        // SimpleProgressMonitor spm = new SimpleProgressMonitor("become working copy for "+unit.getElementName());
+        unit.becomeWorkingCopy(null);
+        try { Thread.sleep(1000); } catch (Exception e) {}
+//        spm.waitForCompletion();
         
         // intermittent failures on build server.  proposals not found, so perform this part in a loop
         return createProposalsAtOffset(unit, completionOffset);
