@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009-2011 SpringSource and others.
+ * Copyright (c) 2009-2014 SpringSource and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,26 +13,14 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 import junit.framework.Test;
 
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.jdt.groovy.internal.compiler.ast.AliasImportReference;
 import org.codehaus.jdt.groovy.internal.compiler.ast.EventListener;
-import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
-import org.codehaus.jdt.groovy.internal.compiler.ast.IGroovyDebugRequestor;
-import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
-import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.ToolFactory;
@@ -40,22 +28,16 @@ import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
-import org.eclipse.jdt.internal.compiler.CompilationResult;
-import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 
 public class SingleTest extends AbstractRegressionTest {
@@ -194,25 +176,6 @@ public class SingleTest extends AbstractRegressionTest {
 	private GroovyCompilationUnitDeclaration getCUDeclFor(String filename) {
 		return (GroovyCompilationUnitDeclaration)((DebugRequestor)GroovyParser.debugRequestor).declarations.get(filename);
 	}
-
-	static class DebugRequestor implements IGroovyDebugRequestor {
-
-		Map declarations;
-		Map types;
-		
-		public DebugRequestor() {
-			declarations = new HashMap();
-		}
-
-		public void acceptCompilationUnitDeclaration(GroovyCompilationUnitDeclaration gcuDeclaration) {
-			System.out.println(gcuDeclaration);
-			String filename = new String(gcuDeclaration.getFileName());
-			filename=filename.substring(filename.lastIndexOf(File.separator)+1); // Filename now being just X.groovy or Foo.java
-			declarations.put(filename,gcuDeclaration);
-		}
-		
-	}
-	
 
 	private String stringify(TypeReference type) {
 		StringBuffer sb = new StringBuffer();

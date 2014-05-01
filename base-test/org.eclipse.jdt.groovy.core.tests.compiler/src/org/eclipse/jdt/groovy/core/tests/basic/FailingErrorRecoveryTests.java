@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2003-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
-import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTest.DebugRequestor;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 /**
