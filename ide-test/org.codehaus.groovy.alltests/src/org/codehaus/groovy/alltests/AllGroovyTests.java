@@ -33,7 +33,7 @@ import org.codehaus.groovy.frameworkadapter.util.ResolverActivator;
 public class AllGroovyTests {
     public static Test suite() throws Exception {
         // ensure that the compiler chooser starts up
-        ResolverActivator.getDefault().initializeChooser();
+    	GroovyTestSuiteSupport.initializeCompilerChooser();
         
         //Must use sys err if you wanna see the messages in the build log. sysout seems to disapear without a trace on 
         // the build server.
@@ -44,7 +44,7 @@ public class AllGroovyTests {
 
         TestSuite suite = new TestSuite("All Groovy Tests"); //$NON-NLS-1$
         suite.addTestSuite(SanityTest.class);
-        suite.addTest(AllUITests.suite());
+        suite.addTest(AllUITests.suite()); //This must be first because of 'ErrorLogTest' inside of it.
         suite.addTest(AllCoreTests.suite());
         suite.addTest(AllJUnitTests.suite());
         suite.addTest(AllCompletionTests.suite());
