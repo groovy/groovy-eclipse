@@ -47,7 +47,7 @@ public class GroovySimpleTests_Compliance_1_8 extends AbstractGroovyRegressionTe
 		assertTrue("JRE Compliance level is less than 1.8",
 				isJRELevel(AbstractCompilerTest.F_1_8));
 		Map customOptions= getCompilerOptions();
-		customOptions.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_8);		
+		customOptions.put(CompilerOptions.OPTION_Source, "1.8" /* CompilerOptions.VERSION_1_8 */);		
 		this.runConformTest(
 				// test directory preparation
 				true, /* flush output directory */
