@@ -2603,7 +2603,8 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				+ "    def x= new Runnable() {public void run() {}};\n"+
 				  "}\n"+
 				 "}\n");
-		executeClass(projectPath, "testpkg.TestCaseChannelPersistentStore", "running", "");
+		incrementalBuild();
+		executeClass(projectPath, "testpkg.TestCaseChannelPersistentStore", "", "");
 
 //		// whitespace change to groovy file
 //		env.addGroovyClass(root, "testpkg", "TestCaseChannelPersistentStore", "package testpkg\n"

@@ -94,7 +94,7 @@ public class ErrorLogTest extends TestCase {
                 int count = 1;
                 for (AbstractEntry element : errorsAndWarnings) {
                     LogEntry log = (LogEntry) element;
-                	errors.append("=================== Log entry "+(count++)+" ===================");
+                	errors.append("=================== Log entry "+(count++)+" ===================\n");
                     errors.append(log.getMessage());
                     errors.append(" (" + log.getPluginId() + ")\n"); //$NON-NLS-1$ //$NON-NLS-2$
                     if (element.hasChildren()) {
@@ -110,7 +110,7 @@ public class ErrorLogTest extends TestCase {
                             }
                         }
                     }
-                	errors.append("===================");
+                	errors.append("===================\n");
                 }
                 if (!ignore) {
                     fail("There should be no unexpected entries in the error log. Found:\n"
