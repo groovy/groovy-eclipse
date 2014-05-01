@@ -38,6 +38,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchPattern;
@@ -342,7 +343,9 @@ public abstract class CompletionTestCase extends BuilderTests {
         // expectingNoProblems();
         
         ICompilationUnit unit = getCompilationUnit(pathToGroovyClass);
-        unit.becomeWorkingCopy(null);
+        SimpleProgressMonitor spm = new SimpleProgressMonitor("become working copy for "+unit.getElementName());
+        unit.becomeWorkingCopy(spm);
+        spm.waitForCompletion();
         
         // intermittent failures on build server.  proposals not found, so perform this part in a loop
         return createProposalsAtOffset(unit, completionOffset);
@@ -369,9 +372,9 @@ public abstract class CompletionTestCase extends BuilderTests {
                 	// pre-java8
                 }
                 System.err.println("ast level = "+astLevel);
-                SimpleMonitor sm = new SimpleMonitor();
-                unit.reconcile(astLevel, true, null, sm);
-                waitForCompletion("unit reconcile",sm,10);
+                SimpleProgressMonitor spm = new SimpleProgressMonitor("unit reconcile");
+                unit.reconcile(astLevel, true, null, spm);
+                spm.waitForCompletion();
                 env.fullBuild();
                 SynchronizationUtils.joinBackgroudActivities();
                 SynchronizationUtils.waitForIndexingToComplete();
@@ -600,7 +603,7 @@ public abstract class CompletionTestCase extends BuilderTests {
     
     public void performDummySearch(IJavaElement element) throws Exception{
         JavaModelManager.getIndexManager().indexAll(element.getJavaProject().getProject());
-        SimpleMonitor sm = new SimpleMonitor();
+        SimpleProgressMonitor spm = new SimpleProgressMonitor("dummy search");
         new SearchEngine().searchAllTypeNames(
             null,
             SearchPattern.R_EXACT_MATCH,
@@ -610,56 +613,10 @@ public abstract class CompletionTestCase extends BuilderTests {
             SearchEngine.createJavaSearchScope(new IJavaElement[]{element}),
             new Requestor(),
             IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
-            sm);
-        waitForCompletion("Dummy search",sm,10);
+            spm);
+        spm.waitForCompletion();
     }
-    
-    public static void waitForCompletion(String description, SimpleMonitor monitor, int timeoutSeconds) {
-        int count = 0;
-        while (!monitor.done) {
-        	try { Thread.sleep(250); } catch (Exception e) {}
-        	count++;
-        	if (count>(timeoutSeconds*4)) {
-        		throw new IllegalStateException(description+" timed out after "+timeoutSeconds+" seconds");
-        	}
-        }
-        if (monitor.done) {
-        	System.err.println(description+" completed");
-        }    	
-    }
-    
-    static class SimpleMonitor implements IProgressMonitor {
 
-    	public boolean done = false;
-    	
-		public void beginTask(String name, int totalWork) {
-		}
-
-		public void done() {
-			this.done = true;
-			
-		}
-
-		public void internalWorked(double work) {
-		}
-
-		public boolean isCanceled() {
-			return false;
-		}
-
-		public void setCanceled(boolean value) {
-		}
-
-		public void setTaskName(String name) {
-		}
-
-		public void subTask(String name) {
-		}
-
-		public void worked(int work) {
-		}
-    	
-    }
     private static class Requestor extends TypeNameRequestor {
     }
 
