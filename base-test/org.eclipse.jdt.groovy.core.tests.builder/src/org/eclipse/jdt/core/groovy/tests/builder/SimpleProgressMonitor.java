@@ -24,7 +24,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
  */
 public class SimpleProgressMonitor implements IProgressMonitor {
 
-	private final static boolean debug = false;
+	private static boolean debug = false;
 	
 	public String description = null;
 	public boolean done = false;
@@ -59,10 +59,18 @@ public class SimpleProgressMonitor implements IProgressMonitor {
 	public void worked(int work) {
 	}
 	
+	/**
+	 * Wait up to 5seconds for this progress monitor to be called with 'done()'.
+	 * If it times out then an IllegalStateException is thrown.
+	 */
 	public void waitForCompletion() {
 		waitForCompletion(5);
 	}
 
+	/**
+	 * Wait up to the specified number of seconds for this progress monitor to be called with 'done()'.
+	 * If it times out then an IllegalStateException is thrown.
+	 */
 	public void waitForCompletion(int timeoutSeconds) {
 		int count = 0;
 		while (!this.done) {

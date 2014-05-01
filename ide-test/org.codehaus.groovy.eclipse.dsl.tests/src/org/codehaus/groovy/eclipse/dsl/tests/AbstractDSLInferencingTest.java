@@ -46,6 +46,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
 import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 
@@ -178,7 +179,9 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         GroovyRuntime.removeClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID, JavaCore.create(project));
         env.fullBuild();
         RefreshDSLDJob job = new RefreshDSLDJob(project);
-        job.run(new NullProgressMonitor());
+        SimpleProgressMonitor spm = new SimpleProgressMonitor("refreshing DSLDs");
+        job.run(spm);
+        spm.waitForCompletion();
         System.out.println("Finished RefreshDSLDJob");
         
         
