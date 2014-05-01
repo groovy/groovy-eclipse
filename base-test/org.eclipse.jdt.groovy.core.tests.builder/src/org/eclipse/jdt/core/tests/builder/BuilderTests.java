@@ -519,7 +519,7 @@ public class BuilderTests extends TestCase {
 			env.openEmptyWorkspace();
 		}
 		env.resetWorkspace();
-
+		env.setAutoBuilding(false);
 	}
 	/**
 	 * @see junit.framework.TestCase#tearDown()
