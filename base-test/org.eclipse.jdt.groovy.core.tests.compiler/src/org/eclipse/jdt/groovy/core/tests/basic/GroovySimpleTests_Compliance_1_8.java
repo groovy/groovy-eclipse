@@ -22,6 +22,8 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public class GroovySimpleTests_Compliance_1_8 extends AbstractGroovyRegressionTest {
+	
+	private static long JDK1_8 = 0x340000; /* ClassFileConstants.JDK1_8 */
 
 	public GroovySimpleTests_Compliance_1_8(String name) {
 		super(name);
@@ -29,7 +31,7 @@ public class GroovySimpleTests_Compliance_1_8 extends AbstractGroovyRegressionTe
 
 	public static Test suite() {
 		return buildUniqueComplianceTestSuite(testClass(),
-				ClassFileConstants.JDK1_8);
+				JDK1_8);
 	}
 
 	public static Class testClass() {
@@ -38,7 +40,7 @@ public class GroovySimpleTests_Compliance_1_8 extends AbstractGroovyRegressionTe
 
     protected void setUp() throws Exception {
 		super.setUp();
-		complianceLevel = ClassFileConstants.JDK1_8;
+		complianceLevel = JDK1_8;
 	}
 
     public void testDefaultAndStaticMethodInInterface() {
