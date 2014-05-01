@@ -24,7 +24,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
  */
 public class SimpleProgressMonitor implements IProgressMonitor {
 
-	private static boolean debug = false;
+	private static boolean debug = true;
 	
 	public String description = null;
 	public boolean done = false;

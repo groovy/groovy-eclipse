@@ -95,6 +95,7 @@ public class ProjectUtils {
             IWorkspaceRunnable populate = new IWorkspaceRunnable() {
                 public void run(IProgressMonitor monitor) throws CoreException {
                     project.create(monitor);
+                    System.err.println("after project create call");
                 }
             };
             getWorkspace().run(populate, spm);
