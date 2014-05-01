@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 Codehaus.org, SpringSource, and others.
+ * Copyright (c) 2009-2014 Codehaus.org, SpringSource, and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -330,7 +330,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		// FIXASC What value is there in getting the parameter names correct? (for methods and ctors)
 		// If they need to be correct we need to retrieve the method decl from the binding scope
 		int modifiers = methodBinding.modifiers;
-		if (jdtBinding.isInterface()) {
+		if (jdtBinding.isInterface() && (modifiers & 0x10000 /* Modifier.DEFAULT */) == 0 && (modifiers & Modifier.STATIC) == 0) {
 			modifiers |= Modifier.ABSTRACT;
 		}
 		ClassNode returnType = resolver.convertToClassNode(methodBinding.returnType);

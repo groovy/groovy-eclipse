@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,8 +18,8 @@ import junit.framework.TestSuite;
 import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTest;
+import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTests_Compliance_1_8;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
-import org.eclipse.jdt.internal.compiler.flow.UnconditionalFlowInfo;
 
 /**
  * Run all compiler regression tests
@@ -96,6 +96,9 @@ public static Test suite() {
 	// Tests to run when compliance is greater than 1.5
 	ArrayList since_1_6 = new ArrayList();
 //	since_1_6.add(StackMapAttributeTest.class);
+	
+	ArrayList since_1_8 = new ArrayList();
+	since_1_8.add(GroovySimpleTests_Compliance_1_8.class);
 
 	// Build final test suite
 	TestSuite all = new TestSuite(TestAll.class.getName());
@@ -165,6 +168,21 @@ public static Test suite() {
 		TestCase.RUN_ONLY_ID = null;
 		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK1_7, tests_1_7));
 	}
+	if ((possibleComplianceLevels & AbstractCompilerTest.F_1_8) != 0) {
+		ArrayList tests_1_8 = (ArrayList)standardTests.clone();
+		tests_1_8.addAll(since_1_4);
+		tests_1_8.addAll(since_1_5);
+		tests_1_8.addAll(since_1_6);
+		tests_1_8.addAll(since_1_8);
+		// Reset forgotten subsets tests
+		TestCase.TESTS_PREFIX = null;
+		TestCase.TESTS_NAMES = null;
+		TestCase.TESTS_NUMBERS= null;
+		TestCase.TESTS_RANGE = null;
+		TestCase.RUN_ONLY_ID = null;
+		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK1_8, tests_1_8));
+	}
+
 	return all;
 }
 }

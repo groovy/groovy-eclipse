@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
+ * Copyright (c) 2009-2014 SpringSource and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,6 +30,7 @@ import org.eclipse.jdt.core.groovy.tests.model.GroovyPartialModelTests;
 import org.eclipse.jdt.core.groovy.tests.model.MoveRenameCopyTests;
 import org.eclipse.jdt.core.groovy.tests.search.AllSearchTests;
 import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTest;
+import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTests_Compliance_1_8;
 
 /**
  * @author Andrew Eisenberg
@@ -66,6 +67,7 @@ public class GroovyJDTTests {
 
         // Compiler tests
         suite.addTest(GroovySimpleTest.suite());
+        suite.addTest(GroovySimpleTests_Compliance_1_8.suite());
         suite.addTest(ScriptFolderTests.suite());
 
         // Search tests

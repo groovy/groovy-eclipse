@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009-2011 SpringSource and others.
+ * Copyright (c) 2009-2014 SpringSource and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,8 +12,6 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,18 +28,15 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.EventListener;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
-import org.codehaus.jdt.groovy.internal.compiler.ast.IGroovyDebugRequestor;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.ToolFactory;
-import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
@@ -59,7 +54,7 @@ import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
-public class GroovySimpleTest extends AbstractRegressionTest {
+public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
 	public GroovySimpleTest(String name) {
 		super(name);
@@ -75,8 +70,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	
 	protected void setUp() throws Exception {
 		super.setUp();
-		GroovyCompilationUnitDeclaration.defaultCheckGenerics=true;
-		GroovyParser.debugRequestor = new DebugRequestor();
 		complianceLevel = ClassFileConstants.JDK1_5;
 	}
 
@@ -84,49 +77,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		return GroovySimpleTest.class;
 	}
 	
-	protected void tearDown() throws Exception {
-		super.tearDown();
-		GroovyCompilationUnitDeclaration.defaultCheckGenerics=false;
-		GroovyParser.debugRequestor = null; 
-	}
-
-	/** 
-     * Include the groovy runtime jars on the classpath that is used.
-     * Other classpath issues can be seen in TestVerifier/VerifyTests and only when
-     * the right prefixes are registered in there will it use the classloader with this
-     * classpath rather than the one it conjures up just to load the built code.
-     */
-    protected String[] getDefaultClassPaths() {
-        String[] cps = super.getDefaultClassPaths();
-        String[] newcps = new String[cps.length+2];
-        System.arraycopy(cps,0,newcps,0,cps.length);
-        try {
-        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.3.0-rc-2.jar");
-        	if (groovyJar==null) {
-	        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.2.2.jar");
-	        	if (groovyJar==null) {
-		        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.1.8.jar");
-		        	if (groovyJar==null) {
-			            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.0.7.jar");
-			            if (groovyJar==null) {
-							groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-1.8.6.jar");
-			            }
-		        	}
-	        	}
-        	}
-            newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
-	        // FIXASC think more about why this is here... the tests that need it specify the option but that is just for
-	        // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when
-	        // building the annotated source - and so I suspect that the groovyclassloaderpath does need merging onto the project
-	        // classpath for just this reason, hmm.
-	        newcps[newcps.length-2] = FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar")).getFile();
-	        // newcps[newcps.length-4] = new File("astTransformations/spock-core-0.1.jar").getAbsolutePath();
-        } catch (IOException e) {
-            fail("IOException thrown " + e.getMessage());
-        }
-        return newcps;
-    }
-    
     // demonstrates the incorrect use of closure syntax on groovy 1.6 that compiles OK.
     // On 1.7 it is recognized as incorrect (it is too similar to the inner class syntax)
     public void testClosureSyntax() {
@@ -5329,7 +5279,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"success");
 	}
 	
-
 	public void testNotMakingInterfacesImplementGroovyObject() {
 		this.runConformTest(new String[] {
 			"p/X.java",
@@ -10665,25 +10614,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	private GroovyCompilationUnitDeclaration getCUDeclFor(String filename) {
 		return (GroovyCompilationUnitDeclaration)((DebugRequestor)GroovyParser.debugRequestor).declarations.get(filename);
 	}
-
-	static class DebugRequestor implements IGroovyDebugRequestor {
-
-		Map declarations;
-		Map types;
-		
-		public DebugRequestor() {
-			declarations = new HashMap();
-		}
-
-		public void acceptCompilationUnitDeclaration(GroovyCompilationUnitDeclaration gcuDeclaration) {
-			System.out.println(gcuDeclaration);
-			String filename = new String(gcuDeclaration.getFileName());
-			filename=filename.substring(filename.lastIndexOf(File.separator)+1); // Filename now being just X.groovy or Foo.java
-			declarations.put(filename,gcuDeclaration);
-		}
-		
-	}
-	
 
 	private String stringify(TypeReference type) {
 		StringBuffer sb = new StringBuffer();
