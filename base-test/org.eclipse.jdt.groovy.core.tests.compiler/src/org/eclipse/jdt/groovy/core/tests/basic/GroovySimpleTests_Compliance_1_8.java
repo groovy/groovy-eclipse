@@ -14,11 +14,8 @@ import java.util.Map;
 
 import junit.framework.Test;
 
-import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
-import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
-import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public class GroovySimpleTests_Compliance_1_8 extends AbstractGroovyRegressionTest {
