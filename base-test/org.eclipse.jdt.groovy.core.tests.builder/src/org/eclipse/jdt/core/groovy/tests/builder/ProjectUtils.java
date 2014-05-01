@@ -91,15 +91,20 @@ public class ProjectUtils {
         // create project
         final IProject project = getWorkspaceRoot().getProject(projectName);
         if (! project.exists()) {
+        	SimpleProgressMonitor spm = new SimpleProgressMonitor("creation of project "+projectName);
             IWorkspaceRunnable populate = new IWorkspaceRunnable() {
                 public void run(IProgressMonitor monitor) throws CoreException {
-                    project.create(null);
+                    project.create(monitor);
                 }
             };
-            getWorkspace().run(populate, null);
+            getWorkspace().run(populate, spm);
+            spm.waitForCompletion();
         }       
+        
         // ensure open
-        project.open(null);
+        SimpleProgressMonitor spm = new SimpleProgressMonitor("opening project "+projectName);
+        project.open(spm);
+        spm.waitForCompletion();
         
         IJavaProject javaProject = JavaCore.create(project);
         return javaProject;
