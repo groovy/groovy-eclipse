@@ -114,7 +114,7 @@ import org.eclipse.jdt.internal.core.util.Util;
 /**
  * A subtype of JDT CompilationUnitDeclaration that represents a groovy source file. It overrides methods as appropriate, delegating
  * to the groovy infrastructure.
- * 
+ *
  * @author Andy Clement
  */
 @SuppressWarnings("restriction")
@@ -171,7 +171,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * processToPhase(), all the groovy files in the project proceed to that phase. This isn't ideal but doesn't necessarily cause a
 	 * problem. But it does mean progress reporting for the compilation is incorrect as it jumps rather than smoothly going from 1
 	 * to 100%.
-	 * 
+	 *
 	 * @param phase the phase to process up to
 	 * @return true if clean processing, false otherwise
 	 */
@@ -419,7 +419,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	/**
 	 * Convert groovy annotations into JDT annotations
-	 * 
+	 *
 	 * @return an array of annotations or null if there are none
 	 */
 	private Annotation[] transformAnnotations(List<AnnotationNode> groovyAnnotations) {
@@ -499,7 +499,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 								ArrayInitializer arrayInitializer = new ArrayInitializer();
 								arrayInitializer.expressions = new org.eclipse.jdt.internal.compiler.ast.Expression[listOfExpressions
-										.size()];
+								                                                                                    .size()];
 								for (int c = 0; c < listOfExpressions.size(); c++) {
 									ConstantExpression cExpression = (ConstantExpression) listOfExpressions.get(c);
 									String v = (String) cExpression.getValue();
@@ -805,7 +805,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	private boolean isAnon(ClassNode classNode) {
 		// FIXADE does Groovy support non-anon local types???
 		return classNode.getEnclosingMethod() != null
-		// check to see if anon type inside of a script
+				// check to see if anon type inside of a script
 				|| (classNode.getOuterClass() != null && classNode.getOuterClass().isScript());
 	}
 
@@ -826,7 +826,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	/**
 	 * Build JDT representations of all the method/ctors on the groovy type
-	 * 
+	 *
 	 * @param typeDeclaration
 	 */
 	private AbstractMethodDeclaration[] createMethodAndConstructorDeclarations(GroovyTypeDeclaration typeDeclaration,
@@ -864,7 +864,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * building declarations, if you want the SourceTypeBinding to correctly build an enum field binding (in
 	 * SourceTypeBinding.resolveTypeFor(FieldBinding)) then you need to: (1) avoid setting modifiers, the enum fields are not
 	 * expected to have any modifiers (2) leave the type as null, that is how these things are identified by JDT.
-	 * 
+	 *
 	 * @param isEnum
 	 */
 	private FieldDeclaration[] createFieldDeclarations(ClassNode classNode, boolean isEnum) {
@@ -1052,7 +1052,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	/**
 	 * Build JDT representations of all the methods on the groovy type
-	 * 
+	 *
 	 * @param typeDeclaration the type declaration the method is being created for
 	 */
 	private void createMethodDeclarations(GroovyTypeDeclaration typeDeclaration, ClassNode classNode, boolean isEnum,
@@ -1482,7 +1482,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	// because 'length' is computed as 'end-start+1' and start==-1 indicates it does not exist, then
 	// to have a length of 0 the end must be -2.
-	private static long NON_EXISTENT_POSITION = toPos(-1, -2);
+	private static long NON_EXISTENT_POSITION = ((-1L << 32) | -2L);
 
 	/**
 	 * Pack start and end positions into a long - no adjustments are made to the values passed in, the caller must make any required
@@ -1490,6 +1490,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	private static long toPos(long start, long end) {
 		if (start == 0 && end <= 0) {
+			return NON_EXISTENT_POSITION;
+		} else if (start < 0 || end < 0) {
 			return NON_EXISTENT_POSITION;
 		}
 		return ((start << 32) | end);
@@ -2016,13 +2018,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		// opening bracket
 		ctorDeclaration.bodyStart =
-		// try for opening bracket
-		ctorNode.getCode() != null ? ctorNode.getCode().getStart() :
-		// handle abstract constructor. not sure if this can ever happen, but you never know with Groovy
-				ctorNode.getNameEnd();
+				// try for opening bracket
+				ctorNode.getCode() != null ? ctorNode.getCode().getStart() :
+					// handle abstract constructor. not sure if this can ever happen, but you never know with Groovy
+					ctorNode.getNameEnd();
 
-		// closing bracket or ';' same as declarationSourceEnd
-		ctorDeclaration.bodyEnd = ctorNode.getEnd() - 1;
+				// closing bracket or ';' same as declarationSourceEnd
+				ctorDeclaration.bodyEnd = ctorNode.getEnd() - 1;
 	}
 
 	/**
@@ -2046,14 +2048,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		// opening bracket
 		methodDeclaration.bodyStart =
-		// try for opening bracket
-		methodNode.getCode() != null ? methodNode.getCode().getStart() :
-		// run() method for script has no opening bracket
-		// also need to handle abstract methods
-				Math.max(methodNode.getNameEnd(), methodNode.getStart());
+				// try for opening bracket
+				methodNode.getCode() != null ? methodNode.getCode().getStart() :
+					// run() method for script has no opening bracket
+					// also need to handle abstract methods
+					Math.max(methodNode.getNameEnd(), methodNode.getStart());
 
-		// closing bracket or ';' same as declarationSourceEnd
-		methodDeclaration.bodyEnd = methodNode.getEnd() - 1;
+				// closing bracket or ';' same as declarationSourceEnd
+				methodDeclaration.bodyEnd = methodNode.getEnd() - 1;
 	}
 
 	/**
@@ -2394,7 +2396,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * Check the supplied TypeReference. If there are problems with the construction of a TypeReference then these may not surface
 	 * until it is used later, perhaps when reconciling. The easiest way to check there will not be problems later is to check it at
 	 * construction time.
-	 * 
+	 *
 	 * @param toVerify the type reference to check
 	 * @param does the type reference really exist in the source or is it conjured up based on the source
 	 * @return the verified type reference

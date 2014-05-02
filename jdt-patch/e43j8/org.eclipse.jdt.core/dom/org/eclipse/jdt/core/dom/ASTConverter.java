@@ -3485,6 +3485,21 @@ class ASTConverter {
 		int start = elementType.getStartPosition();
 		int endElement = start + elementType.getLength();
 		int end = retrieveProperRightBracketPosition(dimensions.size(), endElement);
+		// GROOVY start
+		// retrieveProperRightBracketPosition will return -1 when start position is valid.
+		if (!this.scannerUsable) { // effectively a check for "is this groovy?"
+			if (end==-1) {
+				if (endElement>start) {
+					//endElement looks valid, use it
+					end = endElement;
+				} else {
+					start = -1;
+					end = -2;
+				}
+			}
+			//other case: end=-2 (and start=-1) nothing to do.
+		}
+		// GROOVY end
 		arrayType.setSourceRange(start, end - start + 1);
 		
 		start = endElement;
