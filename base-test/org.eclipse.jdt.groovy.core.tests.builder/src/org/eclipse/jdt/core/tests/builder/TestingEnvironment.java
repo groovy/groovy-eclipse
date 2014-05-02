@@ -53,6 +53,7 @@ import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -502,7 +503,9 @@ public void addLibrary(IPath projectPath, IPath libraryPath, IPath sourceAttachm
 public void cleanBuild() {
 	checkAssertion("a workspace must be open", fIsOpen); //$NON-NLS-1$
 	try {
-		getWorkspace().build(IncrementalProjectBuilder.CLEAN_BUILD, null);
+		SimpleProgressMonitor spm = new SimpleProgressMonitor("clean build");
+		getWorkspace().build(IncrementalProjectBuilder.CLEAN_BUILD, spm);
+		spm.waitForCompletion();
 	} catch (CoreException e) {
 		handle(e);
 	}

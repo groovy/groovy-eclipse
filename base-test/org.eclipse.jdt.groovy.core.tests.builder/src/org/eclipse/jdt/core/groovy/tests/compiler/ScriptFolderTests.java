@@ -192,6 +192,7 @@ public class ScriptFolderTests extends BuilderTests {
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS_ENABLED, "true");
         Activator.getDefault().setPreference(null, Activator.GROOVY_SCRIPT_FILTERS, "src1/**/*.groovy,y,src2/**/*.groovy,y,src3/**/*.groovy,y");
         ProjectUtils.createPredefinedProject("ScriptFoldersProject");
+        env.cleanBuild();
         env.fullBuild();
         
         // project root is a source folder, but it is not a script folder
