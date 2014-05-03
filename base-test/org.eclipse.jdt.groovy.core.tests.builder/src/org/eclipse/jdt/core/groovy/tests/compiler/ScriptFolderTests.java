@@ -195,6 +195,7 @@ public class ScriptFolderTests extends BuilderTests {
         env.cleanBuild();
         env.fullBuild();
         
+        
         // project root is a source folder, but it is not a script folder
         assertExists("ScriptFoldersProject/bin/NotAScript1.class");
         assertExists("ScriptFoldersProject/bin/p/NotAScript1.class");
@@ -411,6 +412,7 @@ public class ScriptFolderTests extends BuilderTests {
         assertNoExists("ScriptFoldersProject2/src3/Script3.class");
         assertNoExists("ScriptFoldersProject2/src3/p/Script3.class");
 
+        Activator.getDefault().setPreference(preferences, Activator.USING_PROJECT_PROPERTIES, "false");
 
     }
 
