@@ -305,6 +305,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 							ClassFileConstants.AccDefault);
 				}
 				ref.sourceEnd = Math.max(typeEndOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
+				if (ref.sourceEnd == -1) {
+					ref.sourceEnd = -2;
+				}
 				int start = importNode.getStart();
 				ref.declarationSourceStart = start;
 				int end = importNode.getEnd();
@@ -499,7 +502,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 								ArrayInitializer arrayInitializer = new ArrayInitializer();
 								arrayInitializer.expressions = new org.eclipse.jdt.internal.compiler.ast.Expression[listOfExpressions
-								                                                                                    .size()];
+										.size()];
 								for (int c = 0; c < listOfExpressions.size(); c++) {
 									ConstantExpression cExpression = (ConstantExpression) listOfExpressions.get(c);
 									String v = (String) cExpression.getValue();
