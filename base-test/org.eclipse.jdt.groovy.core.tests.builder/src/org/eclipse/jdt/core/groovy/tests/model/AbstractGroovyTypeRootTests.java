@@ -77,6 +77,7 @@ public class AbstractGroovyTypeRootTests extends BuilderTests {
                 "}\n"
                 );
         }
+        fullBuild(projectPath);
         
         IFile groovyFile = getFile("Project/src/p1/Hello.groovy");
     	return groovyFile;
