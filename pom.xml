@@ -142,9 +142,7 @@
 			</repositories>
 			<modules>
 				<module>jdt-patch/e44/Feature-org.codehaus.groovy.jdt.patch</module>
-				<!-- for now the e44 doesn't have its onw jdt.core bundle. It is the same
-				     as the e43j8 one -->
-				<module>jdt-patch/e43j8/org.eclipse.jdt.core</module>
+				<module>jdt-patch/e44/org.eclipse.jdt.core</module>
 			</modules>
 			<properties>
 				<dist.target>e4.4</dist.target>
