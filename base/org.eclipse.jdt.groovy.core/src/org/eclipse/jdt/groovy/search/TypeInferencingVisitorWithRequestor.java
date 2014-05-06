@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.groovy.search;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -1868,7 +1869,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				primaryType = null;
 			}
 			isStatic = hasStaticObjectExpression(node);
-			scope.setMethodCallNumberOfArguments(getMethodCallArgs());
+			scope.setMethodCallArgumentTypes(getMethodCallArgs());
 		} else {
 			primaryType = null;
 			isStatic = false;
@@ -1927,7 +1928,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 *
 	 * @return
 	 */
-	private int getMethodCallArgs() {
+	private int getMethodCallArgsCount() {
 		ASTNode peek = completeExpressionStack.peek();
 		if (peek instanceof MethodCallExpression) {
 			MethodCallExpression call = (MethodCallExpression) peek;
@@ -1941,6 +1942,29 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			}
 		}
 		return -1;
+	}
+
+	/**
+	 * Finds argument types of the current method call. Returns null if not a method call.
+	 *
+	 * @return
+	 */
+	private List<ClassNode> getMethodCallArgs() {
+		ASTNode peek = completeExpressionStack.peek();
+		if (peek instanceof MethodCallExpression) {
+			MethodCallExpression call = (MethodCallExpression) peek;
+			Expression arguments = call.getArguments();
+			if (arguments instanceof ArgumentListExpression) {
+				ArgumentListExpression list = (ArgumentListExpression) arguments;
+				List<Expression> expressions = list.getExpressions();
+				List<ClassNode> types = new ArrayList<ClassNode>();
+				for (Expression expression : expressions) {
+					types.add(expression.getType());
+				}
+				return types;
+			}
+		}
+		return null;
 	}
 
 	private boolean handleParameterList(Parameter[] params) {

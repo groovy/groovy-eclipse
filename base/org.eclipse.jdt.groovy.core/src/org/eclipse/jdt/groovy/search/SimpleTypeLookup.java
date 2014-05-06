@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     SpringSource - initial API and implementation
  *******************************************************************************/
@@ -17,6 +17,7 @@ import static org.eclipse.jdt.groovy.search.VariableScope.NO_GENERICS;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -57,7 +58,7 @@ import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
 /**
  * @author Andrew Eisenberg
  * @created Aug 29, 2009
- * 
+ *
  *          Looks at the type associated with the ASTNode for the type <br>
  */
 public class SimpleTypeLookup implements ITypeLookupExtension {
@@ -165,7 +166,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
 				ClassNode delegate = scope.getDelegate();
 				if (delegate != null) {
-					declaration = findDeclaration(var.getName(), delegate, scope.getMethodCallNumberOfArguments());
+					declaration = findDeclaration(var.getName(), delegate, scope.getMethodCallArgumentTypes());
 				}
 
 				ClassNode thiz = scope.getThis();
@@ -175,7 +176,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 				if (declaration == null) {
 					if (thiz != null && (delegate == null || !thiz.equals(delegate))) {
 						// don't go here if this and delegate are the same
-						declaration = findDeclaration(var.getName(), thiz, scope.getMethodCallNumberOfArguments());
+						declaration = findDeclaration(var.getName(), thiz, scope.getMethodCallArgumentTypes());
 					}
 				}
 
@@ -300,7 +301,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
 	/**
 	 * a little crude because will not find if there are spaces between '.' and 'class'
-	 * 
+	 *
 	 * @param node
 	 * @return
 	 */
@@ -321,9 +322,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
 	/**
 	 * look for a name within an object expression. It is either in the hierarchy, it is in the variable scope, or it is unknown.
-	 * 
+	 *
 	 * @param isPrimaryExpression
-	 * 
+	 *
 	 * @return
 	 */
 	private TypeLookupResult findTypeForNameWithKnownObjectExpression(String name, ClassNode type, ClassNode declaringType,
@@ -331,20 +332,20 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		ClassNode realDeclaringType;
 		VariableInfo varInfo;
 		TypeConfidence origConfidence = confidence;
-		ASTNode declaration = findDeclaration(name, declaringType, scope.getMethodCallNumberOfArguments());
+		ASTNode declaration = findDeclaration(name, declaringType, scope.getMethodCallArgumentTypes());
 
 		if (declaration == null && isPrimaryExpression) {
 			ClassNode thiz = scope.getThis();
 			if (thiz != null && !thiz.equals(declaringType)) {
 				// probably in a closure where the delegate has changed
-				declaration = findDeclaration(name, thiz, scope.getMethodCallNumberOfArguments());
+				declaration = findDeclaration(name, thiz, scope.getMethodCallArgumentTypes());
 			}
 		}
 
 		// GRECLIPSE-1079
 		if (declaration == null && isStaticObjectExpression) {
 			// we might have a reference to a property/method defined on java.lang.Class
-			declaration = findDeclaration(name, VariableScope.CLASS_CLASS_NODE, scope.getMethodCallNumberOfArguments());
+			declaration = findDeclaration(name, VariableScope.CLASS_CLASS_NODE, scope.getMethodCallArgumentTypes());
 		}
 
 		if (declaration != null) {
@@ -357,7 +358,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			// now try to find the declaration again
 			type = varInfo.type;
 			realDeclaringType = varInfo.declaringType;
-			declaration = findDeclaration(name, realDeclaringType, scope.getMethodCallNumberOfArguments());
+			declaration = findDeclaration(name, realDeclaringType, scope.getMethodCallArgumentTypes());
 			if (declaration == null) {
 				declaration = varInfo.declaringType;
 			}
@@ -424,7 +425,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			// this is likely a reference to a field or method in a type in the hierarchy
 			// find the declaration
 			ASTNode maybeDeclaration = findDeclaration(accessedVar.getName(), getMorePreciseType(declaringType, info),
-					scope.getMethodCallNumberOfArguments());
+					scope.getMethodCallArgumentTypes());
 			if (maybeDeclaration != null) {
 				declaration = maybeDeclaration;
 				// declaring type may have changed
@@ -542,29 +543,38 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
 	/**
 	 * Looks for the named member in the declaring type. Also searches super types. The result can be a field, method, or property.
-	 * 
+	 *
 	 * If numOfArgs is >= 0, then look for a method first, otherwise look for a property and then a field
-	 * 
+	 *
 	 * @param name
 	 * @param declaringType
-	 * @param numOfArgs number of arguments to the associated method call (or -1 if not a method call)
+	 * @param methodCallArgumentTypes types of arguments to the associated method call (or -1 if not a method call)
 	 * @return
 	 */
-	private ASTNode findDeclaration(String name, ClassNode declaringType, int numOfArgs) {
+	private ASTNode findDeclaration(String name, ClassNode declaringType, List<ClassNode> methodCallArgumentTypes) {
 		if (declaringType.isArray()) {
 			// only length exists on array type
 			if (name.equals("length")) {
 				return createLengthField(declaringType);
 			} else {
 				// otherwise search on object
-				return findDeclaration(name, VariableScope.OBJECT_CLASS_NODE, numOfArgs);
+				return findDeclaration(name, VariableScope.OBJECT_CLASS_NODE, methodCallArgumentTypes);
 			}
 		}
 
 		AnnotatedNode maybe = null;
-		if (numOfArgs >= 0) {
+		if (methodCallArgumentTypes == null) {
+			// this expression is not part of a method call expression and so, look for methods last
+			maybe = findMethodDeclaration(name, declaringType, methodCallArgumentTypes, true);
+			if (maybe != null) {
+				return maybe;
+			}
+			return null;
+		}
+
+		if (methodCallArgumentTypes.size() >= 0) {
 			// this expression is part of a method call expression and so, look for methods first
-			maybe = findMethodDeclaration(name, declaringType, numOfArgs, true);
+			maybe = findMethodDeclaration(name, declaringType, methodCallArgumentTypes, true);
 			if (maybe != null) {
 				return maybe;
 			}
@@ -589,28 +599,21 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			return constantFromSuper;
 		}
 
-		if (numOfArgs < 0) {
-			// this expression is not part of a method call expression and so, look for methods last
-			maybe = findMethodDeclaration(name, declaringType, numOfArgs, true);
-			if (maybe != null) {
-				return maybe;
-			}
-		}
-
 		return null;
 	}
 
 	/**
 	 * Finds a method with the given name in the declaring type. Will prioritize methods with the same number of arguments, but if
 	 * multiple methods exist with same name, then will return an arbitrary one.
-	 * 
+	 *
 	 * @param name
 	 * @param declaringType
-	 * @param numOfArgs
+	 * @param methodCallArgumentTypes
 	 * @param checkSuperInterfaces potentially look through super interfaces for a declaration to this method
 	 * @return
 	 */
-	private AnnotatedNode findMethodDeclaration(String name, ClassNode declaringType, int numOfArgs, boolean checkSuperInterfaces) {
+	private AnnotatedNode findMethodDeclaration(String name, ClassNode declaringType, List<ClassNode> methodCallArgumentTypes,
+			boolean checkSuperInterfaces) {
 		// if this is an interface, then we also need to check super interfaces
 		// super interface methods on an interface are not returned by getMethods(), so must explicitly look for them
 		// do this piece first since findAllInterfaces will return the current interface as well and this will avoid running this
@@ -619,7 +622,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			LinkedHashSet<ClassNode> allInterfaces = new LinkedHashSet<ClassNode>();
 			VariableScope.findAllInterfaces(declaringType, allInterfaces, true);
 			for (ClassNode interf : allInterfaces) {
-				AnnotatedNode candidate = findMethodDeclaration(name, interf, numOfArgs, false);
+				AnnotatedNode candidate = findMethodDeclaration(name, interf, methodCallArgumentTypes, false);
 				if (candidate != null) {
 					return candidate;
 				}
@@ -631,18 +634,45 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		if (maybeMethods != null && maybeMethods.size() > 0) {
 			// prefer retrieving the method with the same number of args as specified in the parameter.
 			// if none exists, or parameter is -1, then arbitrarily choose the first.
-			if (numOfArgs >= 0) {
-				for (MethodNode maybeMethod : maybeMethods) {
+			if (methodCallArgumentTypes != null && methodCallArgumentTypes.size() >= 0) {
+				for (Iterator<MethodNode> iterator = maybeMethods.iterator(); iterator.hasNext();) {
+					MethodNode maybeMethod = iterator.next();
 					Parameter[] parameters = maybeMethod.getParameters();
-					if ((parameters != null && parameters.length == numOfArgs) || (parameters == null && numOfArgs == 0)) {
+					if (parameters == null && methodCallArgumentTypes.size() == 0) {
 						return maybeMethod.getOriginal();
+					}
+					if (parameters != null && parameters.length == methodCallArgumentTypes.size()) {
+						boolean found = true;
+						boolean exactMatchFound = true;
+						for (int i = 0; i < parameters.length; i++) {
+							if (!methodCallArgumentTypes.get(i).equals(parameters[i].getType())) {
+								exactMatchFound = false;
+							}
+							if (parameters[i].getType().isInterface()) {
+								if (!methodCallArgumentTypes.get(i).declaresInterface(parameters[i].getType())) {
+									found = false;
+									break;
+								}
+							} else {
+								if (!methodCallArgumentTypes.get(i).isDerivedFrom(parameters[i].getType())) {
+									found = false;
+									break;
+								}
+							}
+						}
+						if (exactMatchFound) {
+							return maybeMethod.getOriginal();
+						}
+						if (!found) {
+							iterator.remove();
+						}
 					}
 				}
 			}
 			return maybeMethods.get(0);
 		}
 
-		if (numOfArgs < 0) {
+		if (methodCallArgumentTypes == null) {
 			return AccessorSupport.findAccessorMethodForPropertyName(name, declaringType, false);
 		} else {
 			return null;

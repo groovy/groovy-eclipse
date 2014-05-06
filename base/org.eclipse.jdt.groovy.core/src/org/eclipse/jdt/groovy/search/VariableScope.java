@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     SpringSource - initial API and implementation
  *******************************************************************************/
@@ -305,6 +305,7 @@ public class VariableScope {
 	 */
 	private int methodCallNumberOfArguments = -1;
 	private boolean isPrimaryNode;
+	private List<ClassNode> methodCallArgumentTypes;
 
 	public VariableScope(VariableScope parent, ASTNode enclosingNode, boolean isStatic) {
 		this.parent = parent;
@@ -335,7 +336,7 @@ public class VariableScope {
 
 	/**
 	 * Back door for storing and retrieving objects between lookup locations
-	 * 
+	 *
 	 * @return the wormhole object
 	 */
 	public Map<String, Object> getWormhole() {
@@ -377,7 +378,7 @@ public class VariableScope {
 
 	/**
 	 * The name of all categories in scope.
-	 * 
+	 *
 	 * @return
 	 */
 	public Set<ClassNode> getCategoryNames() {
@@ -406,7 +407,7 @@ public class VariableScope {
 
 	/**
 	 * Find the variable in the current environment, Look in this scope or parent scope if not found here
-	 * 
+	 *
 	 * @param name
 	 * @return the variable info or null if not found
 	 */
@@ -459,7 +460,7 @@ public class VariableScope {
 
 	/**
 	 * Looks up the name in the current scope. Does not recur up to parent scopes
-	 * 
+	 *
 	 * @param name
 	 * @return
 	 */
@@ -560,7 +561,7 @@ public class VariableScope {
 
 	/**
 	 * Updates the type info of this variable if it already exists in scope, or just adds it if it doesn't
-	 * 
+	 *
 	 * @param name
 	 * @param objectExpressionType
 	 * @param declaringType
@@ -573,7 +574,7 @@ public class VariableScope {
 
 	/**
 	 * Updates the identifier if it exists in this scope or a parent scope. Otherwise does nothing
-	 * 
+	 *
 	 * @param name identifier to update
 	 * @param type type of identifier
 	 * @param declaringType declaring type of identifier
@@ -585,7 +586,7 @@ public class VariableScope {
 
 	/**
 	 * Return true if the type has been udpated, false otherwise
-	 * 
+	 *
 	 * @param name
 	 * @param objectExpressionType
 	 * @param declaringType
@@ -667,7 +668,7 @@ public class VariableScope {
 
 	/**
 	 * Create a copy of this class, taking into account generics and redirects
-	 * 
+	 *
 	 * @param type type to copy
 	 * @return a copy of this type
 	 */
@@ -714,7 +715,7 @@ public class VariableScope {
 
 	/**
 	 * Internal variant of clone that ensures stack recursion never gets too large
-	 * 
+	 *
 	 * @param type class to clone
 	 * @param depth prevent recursion
 	 * @return
@@ -755,7 +756,7 @@ public class VariableScope {
 
 	/**
 	 * Create a copy of this {@link GenericsType}
-	 * 
+	 *
 	 * @param origgt the original {@link GenericsType} to copy
 	 * @param depth prevent infinite recursion on bad generics
 	 * @return a copy
@@ -809,7 +810,7 @@ public class VariableScope {
 	/**
 	 * @return the enclosing method call expression if one exists, or null otherwise. For example, when visiting the following
 	 *         closure, the enclosing method call is 'run'
-	 * 
+	 *
 	 *         <pre>
 	 * def runner = new Runner()
 	 * runner.run {
@@ -843,7 +844,7 @@ public class VariableScope {
 
 	/**
 	 * Does the following name exist in this scope (does not recur up to parent scopes).
-	 * 
+	 *
 	 * @param name
 	 * @return true iff in the {@link #nameVariableMap}
 	 */
@@ -861,6 +862,10 @@ public class VariableScope {
 
 	void setMethodCallNumberOfArguments(int methodCallNumberOfArguments) {
 		this.methodCallNumberOfArguments = methodCallNumberOfArguments;
+	}
+
+	void setMethodCallArgumentTypes(List<ClassNode> methodCallArgumentTypes) {
+		this.methodCallArgumentTypes = methodCallArgumentTypes;
 	}
 
 	public boolean isMethodCall() {
@@ -900,7 +905,7 @@ public class VariableScope {
 	 * Finds all interfaces transitively implemented by the type passed in (including <code>type</code> if it is an interface). The
 	 * ordering is that the interfaces closest to type are first (in declared order) and then interfaces declared on super
 	 * interfaces occur (if they are not duplicates).
-	 * 
+	 *
 	 * @param type the interface to look for
 	 * @param allInterfaces an accumulator set that will ensure that each interface exists at most once and in a predictible order
 	 * @param useResolved whether or not to use the resolved interfaces.
@@ -938,7 +943,7 @@ public class VariableScope {
 	 * Creates a type hierarchy for the <code>clazz</code>>, including self. Classes come first and then interfaces. FIXADE The
 	 * ordering of super interfaces will not be the same as in
 	 * {@link VariableScope#findAllInterfaces(ClassNode, LinkedHashSet, boolean)}. Should we make it the same?
-	 * 
+	 *
 	 * @param type
 	 * @param allClasses
 	 * @param useResolved
@@ -973,7 +978,7 @@ public class VariableScope {
 
 	/**
 	 * Extracts an element type from a collection
-	 * 
+	 *
 	 * @param collectionType a collection object, or an object that is iterable
 	 * @return
 	 */
@@ -1036,5 +1041,9 @@ public class VariableScope {
 	 */
 	public boolean inScriptRunMethod() {
 		return shared.isRunMethod;
+	}
+
+	public List<ClassNode> getMethodCallArgumentTypes() {
+		return methodCallArgumentTypes;
 	}
 }
