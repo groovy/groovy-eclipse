@@ -73,6 +73,8 @@ public class ReferenceExpression extends FunctionalExpression implements Invocat
 	public TypeReference [] typeArguments;
 	public char [] selector;
 	
+	public int nameSourceStart;
+
 	public TypeBinding receiverType;
 	private boolean haveReceiver;
 	public TypeBinding[] resolvedTypeArguments;
@@ -356,6 +358,7 @@ public class ReferenceExpression extends FunctionalExpression implements Invocat
     		this.lhs.bits |= ASTNode.IgnoreRawTypeCheck;
 
     		lhsType = this.lhs.resolveType(scope);
+    		this.lhs.computeConversion(scope, lhsType, lhsType);
     		if (this.typeArguments != null) {
     			int length = this.typeArguments.length;
     			this.typeArgumentsHaveErrors = compilerOptions.sourceLevel < ClassFileConstants.JDK1_5;
@@ -395,7 +398,6 @@ public class ReferenceExpression extends FunctionalExpression implements Invocat
 			lhsType = lhsType.closestMatch();	// improve resolving experience
     	if (!lhsType.isValidBinding()) 
 			return this.resolvedType = null;	// nope, no useful type found
-		
 		final TypeBinding[] descriptorParameters = this.descriptor != null ? this.descriptor.parameters : Binding.NO_PARAMETERS;
 		if (lhsType.isBaseType()) {
 			scope.problemReporter().errorNoMethodFor(this.lhs, lhsType, this.selector, descriptorParameters);
@@ -436,7 +438,7 @@ public class ReferenceExpression extends FunctionalExpression implements Invocat
         		scope.problemReporter().invalidArrayConstructorReference(this, lhsType, descriptorParameters);
         		return this.resolvedType = null;
         	}
-        	if (!lhsType.isCompatibleWith(this.descriptor.returnType) && this.descriptor.returnType.id != TypeIds.T_void) {
+        	if (this.descriptor.returnType.isProperType(true) && !lhsType.isCompatibleWith(this.descriptor.returnType) && this.descriptor.returnType.id != TypeIds.T_void) {
         		scope.problemReporter().constructedArrayIncompatible(this, lhsType, this.descriptor.returnType);
         		return this.resolvedType = null;
         	}
@@ -467,7 +469,7 @@ public class ReferenceExpression extends FunctionalExpression implements Invocat
         int someMethodDepth = this.depth, anotherMethodDepth = 0;
     	if (someMethod != null && someMethod.isValidBinding()) {
         	final boolean isStatic = someMethod.isStatic();
-        	if (isStatic && (this.haveReceiver || this.receiverType.isParameterizedType())) {
+        	if (isStatic && (this.haveReceiver || this.receiverType.isParameterizedTypeWithActualArguments())) {
     			scope.problemReporter().methodMustBeAccessedStatically(this, someMethod);
     			return this.resolvedType = null;
     		}
@@ -647,14 +649,10 @@ public class ReferenceExpression extends FunctionalExpression implements Invocat
 
 	/** During inference: Try to find an applicable method binding without causing undesired side-effects. */
 	public MethodBinding findCompileTimeMethodTargeting(TypeBinding targetType, Scope scope) {
-		if (this.exactMethodBinding != null) {
-			// TODO: shouldn't extactMethodBinding already be parameterized?
-			if (this.exactMethodBinding.typeVariables != Binding.NO_TYPE_VARIABLES && this.resolvedTypeArguments != null) {
-				return scope.environment().createParameterizedGenericMethod(this.exactMethodBinding, this.resolvedTypeArguments);
-			}
-			return this.exactMethodBinding;
-		}
-		return internalResolveTentatively(targetType, scope);
+		MethodBinding targetMethod = internalResolveTentatively(targetType, scope);
+		if (targetMethod == null || !targetMethod.isValidBinding())
+			return null;
+		return targetMethod;
 	}
 
 	MethodBinding internalResolveTentatively(TypeBinding targetType, Scope scope) {

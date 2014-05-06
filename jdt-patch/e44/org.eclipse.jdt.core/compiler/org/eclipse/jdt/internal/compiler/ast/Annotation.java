@@ -18,6 +18,7 @@
  *								Bug 417295 - [1.8[[null] Massage type annotated null analysis to gel well with deep encoded type bindings.
  *								Bug 424728 - [1.8][null] Unexpected error: The nullness annotation 'XXXX' is not applicable at this location
  *								Bug 392245 - [1.8][compiler][null] Define whether / how @NonNullByDefault applies to TYPE_USE locations
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *        Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
  *                          Bug 383624 - [1.8][compiler] Revive code generation support for type annotations (from Olivier's work)
  *                          Bug 409517 - [1.8][compiler] Type annotation problems on more elaborate array references
@@ -36,6 +37,7 @@ import java.util.Stack;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.env.EnumConstantSignature;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.impl.IrritantSet;
@@ -304,7 +306,8 @@ public abstract class Annotation extends Expression {
 	}
 
 	/**
-	 * Compute the bit pattern for recognized standard annotations the compiler may need to act upon
+	 * Compute the bit pattern for recognized standard annotations the compiler may need to act upon.
+	 * The lower bits (Binding.NullnessDefaultMASK) do not belong in tagBits, but in defaultNullness.
 	 */
 	private long detectStandardAnnotation(Scope scope, ReferenceBinding annotationType, MemberValuePair valueAttribute) {
 		long tagBits = 0;
@@ -388,28 +391,98 @@ public abstract class Annotation extends Expression {
 				tagBits |= TagBits.AnnotationNonNull;
 				break;
 			case TypeIds.T_ConfiguredAnnotationNonNullByDefault :
+				// seeing this id implies that null annotation analysis is enabled
+				Object value = null;
 				if (valueAttribute != null) {
 					if (valueAttribute.value instanceof FalseLiteral) {
 						// parameter 'false' means: this annotation cancels any defaults
 						tagBits |= TagBits.AnnotationNullUnspecifiedByDefault;
 						break;
 					} else if (valueAttribute.compilerElementPair != null) {
-						Object value = valueAttribute.compilerElementPair.value;
-						if (value instanceof Object[] && ((Object[])value).length == 0) {
-							// empty parameter means: this annotation cancels any defaults
-							tagBits |= TagBits.AnnotationNullUnspecifiedByDefault;
-							break;
-						} else {
-							scope.problemReporter().nonNullDefaultDetailNotEvaluated(valueAttribute);
+						value = valueAttribute.compilerElementPair.value;
 						}
+				} else if (scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_8) { // fetch default value  - TODO: cache it?
+					MethodBinding[] methods = annotationType.methods();
+					if (methods != null && methods.length == 1) {
+						Object defaultValue = methods[0].getDefaultValue();
+						if (defaultValue instanceof Object[])
+							value = defaultValue;
 					}
 				}
+				if (value != null) {
+					tagBits |= nullTagBitsFromAnnotationValue(value);
+				} else {
+					// neither explicit value, nor default value from DefaultLocation (1.8)
 				tagBits |= TagBits.AnnotationNonNullByDefault;
+				}
 				break;
 		}
 		return tagBits;
 	}
 
+	/**
+	 * Convert the value() attribute of @NonNullByDefault into a bitvector a la {@link Binding#NullnessDefaultMASK}.
+	 * This method understands value encodings from source and binary types.
+	 * 
+	 * <b>pre:</b> null annotation analysis is enabled
+	 */
+	public static int nullTagBitsFromAnnotationValue(Object value) {
+		if (value instanceof Object[]) {
+			if (((Object[]) value).length == 0) {
+				return Binding.NULL_UNSPECIFIED_BY_DEFAULT;
+			} else {
+				int bits = 0;
+				for (Object single : (Object[])value)
+					bits |= evaluateDefaultNullnessLocation(single);
+				return bits;
+			}
+		} else {
+			return evaluateDefaultNullnessLocation(value);
+		}
+	}
+
+	private static int evaluateDefaultNullnessLocation(Object value) {
+		char[] name = null;
+		if (value instanceof FieldBinding) {
+			name = ((FieldBinding) value).name;
+		} else if (value instanceof EnumConstantSignature) {
+			name = ((EnumConstantSignature) value).getEnumConstantName();
+		} else if (value instanceof ElementValuePair.UnresolvedEnumConstant) {
+			name = ((ElementValuePair.UnresolvedEnumConstant) value).getEnumConstantName();
+		}
+		if (name != null) {
+			switch (name.length) {
+				case 5:
+					if (CharOperation.equals(name, TypeConstants.DEFAULT_LOCATION__FIELD))
+						return Binding.DefaultLocationField;
+					break;
+				case 9:
+					if (CharOperation.equals(name, TypeConstants.DEFAULT_LOCATION__PARAMETER))
+						return Binding.DefaultLocationParameter;
+					break;
+				case 10:
+					if (CharOperation.equals(name, TypeConstants.DEFAULT_LOCATION__TYPE_BOUND))
+						return Binding.DefaultLocationTypeBound;
+					break;
+				case 11:
+					if (CharOperation.equals(name, TypeConstants.DEFAULT_LOCATION__RETURN_TYPE))
+						return Binding.DefaultLocationReturnType;
+					break;
+				case 13 :
+					if (CharOperation.equals(name, TypeConstants.DEFAULT_LOCATION__TYPE_ARGUMENT))
+						return Binding.DefaultLocationTypeArgument;
+					break;
+				case 14 :
+					if (CharOperation.equals(name, TypeConstants.DEFAULT_LOCATION__TYPE_PARAMETER))
+						return Binding.DefaultLocationTypeParameter;
+					if (CharOperation.equals(name, TypeConstants.DEFAULT_LOCATION__ARRAY_CONTENTS))
+						return Binding.DefaultLocationArrayContents;
+					break;
+			}
+		}
+		return 0;
+	}
+	
 	static String getRetentionName(long tagBits) {
 		if ((tagBits & TagBits.AnnotationRuntimeRetention) == TagBits.AnnotationRuntimeRetention) {
 			// TagBits.AnnotationRuntimeRetention combines both TagBits.AnnotationClassRetention & TagBits.AnnotationSourceRetention
@@ -516,6 +589,12 @@ public abstract class Annotation extends Expression {
 				StringBuffer targetBuffer = new StringBuffer();
 				void check(long targetMask, char[] targetName) {
 					if ((containerAnnotationTypeTargets & targetMask & ~targets) != 0) {
+						 // if targetMask equals TagBits.AnnotationForType implies
+						 // TagBits.AnnotationForType is part of containerAnnotationTypeTargets
+						if (targetMask == TagBits.AnnotationForType &&
+								(targets & TagBits.AnnotationForTypeUse) != 0) {
+							return;
+						}
 						add(targetName);
 					}
 				}
@@ -791,12 +870,14 @@ public abstract class Annotation extends Expression {
 		this.compilerAnnotation = scope.environment().createAnnotation((ReferenceBinding) this.resolvedType, computeElementValuePairs());
 		// recognize standard annotations ?
 		long tagBits = detectStandardAnnotation(scope, annotationType, valueAttribute);
+		int defaultNullness = (int)(tagBits & Binding.NullnessDefaultMASK);
+		tagBits &= ~Binding.NullnessDefaultMASK;
 
 		// record annotation positions in the compilation result
 		scope.referenceCompilationUnit().recordSuppressWarnings(IrritantSet.NLS, null, this.sourceStart, this.declarationSourceEnd);
 		if (this.recipient != null) {
 			int kind = this.recipient.kind();
-			if (tagBits != 0) {
+			if (tagBits != 0 || defaultNullness != 0) {
 				// tag bits onto recipient
 				switch (kind) {
 					case Binding.PACKAGE :
@@ -817,6 +898,7 @@ public abstract class Annotation extends Expression {
 							}
 							recordSuppressWarnings(scope, start, typeDeclaration.declarationSourceEnd, scope.compilerOptions().suppressWarnings);
 						}
+						sourceType.defaultNullness |= defaultNullness;
 						break;
 					case Binding.METHOD :
 						MethodBinding sourceMethod = (MethodBinding) this.recipient;
@@ -837,6 +919,7 @@ public abstract class Annotation extends Expression {
 							// for declaration annotations the inapplicability will be reported below
 							sourceMethod.tagBits &= ~TagBits.AnnotationNullMASK;
 						}
+						sourceMethod.defaultNullness |= defaultNullness;
 						break;
 					case Binding.FIELD :
 						FieldBinding sourceField = (FieldBinding) this.recipient;

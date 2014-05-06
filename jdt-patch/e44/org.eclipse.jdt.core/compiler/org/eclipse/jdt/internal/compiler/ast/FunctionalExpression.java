@@ -319,7 +319,8 @@ public abstract class FunctionalExpression extends Expression {
 								   !MethodVerifier.areReturnTypesCompatible(this.method, inheritedMethod, this.environment))
 							continue;
 						final MethodBinding originalInherited = inheritedMethod.original();
-						if (!this.method.areParameterErasuresEqual(originalInherited) || TypeBinding.notEquals(this.method.returnType.erasure(), originalInherited.returnType.erasure()))
+						final MethodBinding originalOverride = this.method.original();
+						if (!originalOverride.areParameterErasuresEqual(originalInherited) || TypeBinding.notEquals(originalOverride.returnType.erasure(), originalInherited.returnType.erasure()))
 							add(originalInherited);
 					}
 					collectBridges(superInterface.superInterfaces());

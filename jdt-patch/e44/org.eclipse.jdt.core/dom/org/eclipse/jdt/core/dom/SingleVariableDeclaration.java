@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -517,7 +517,13 @@ public class SingleVariableDeclaration extends VariableDeclaration {
 
 	/**
 	 * Returns the type of the variable declared in this variable declaration,
-	 * exclusive of any extra array dimensions.
+	 * exclusive of any extra array dimensions or the varargs dimension.
+	 * <p>
+	 * WARNING: For array-typed varargs, the {@link Type#resolveBinding() binding}
+	 * of the returned <code>Type</code> is not useful, since it represents
+	 * an unused type. It misses the last (innermost) dimension that carries the
+	 * {@link #varargsAnnotations()}.
+	 * </p>
 	 *
 	 * @return the type
 	 */
@@ -560,13 +566,19 @@ public class SingleVariableDeclaration extends VariableDeclaration {
 	 * Returns whether this declaration declares the last parameter of
 	 * a variable arity method (added in JLS3 API).
 	 * <p>
-	 * Note that the binding for the type <code>Foo</code>in the vararg method
+	 * Note that the binding for the type <code>Foo</code> in the vararg method
 	 * declaration <code>void fun(Foo... args)</code> is always for the type as
 	 * written; i.e., the type binding for <code>Foo</code>. However, if you
 	 * navigate from the method declaration to its method binding to the
 	 * type binding for its last parameter, the type binding for the vararg
 	 * parameter is always an array type (i.e., <code>Foo[]</code>) reflecting
 	 * the way vararg methods get compiled.
+	 * </p>
+	 * <p>
+	 * WARNING: For array-typed varargs, the {@link Type#resolveBinding() binding}
+	 * of the variable's {@link #getType() type} is not useful, since it represents
+	 * an unused type. It misses the last (innermost) dimension that carries the
+	 * {@link #varargsAnnotations()}.
 	 * </p>
 	 *
 	 * @return <code>true</code> if this is a variable arity parameter declaration,
@@ -603,10 +615,17 @@ public class SingleVariableDeclaration extends VariableDeclaration {
 
 	/**
 	 * Returns the ordered list of annotations on the varargs token (added in JLS8 API).
+	 * <p>
+	 * WARNING: For array-typed varargs, the {@link Type#resolveBinding() binding}
+	 * of the variable's {@link #getType() type} is not useful, since it represents
+	 * an unused type. It misses the last (innermost) dimension that carries the
+	 * returned {@code varargsAnnotations}.
+	 * </p>
 	 *
 	 * @return the list of annotations on the varargs token (element type: {@link Annotation})
 	 * @exception UnsupportedOperationException if this operation is used
 	 *            in a JLS2, JLS3 or JLS4 AST
+	 * @see #isVarargs()
 	 * @since 3.10
 	 */
 	public List varargsAnnotations() {

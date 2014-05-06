@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -660,7 +660,7 @@ public class NameLookup implements SuffixConstants {
 		IJavaProject javaProject = null;
 		Answer suggestedAnswer = null;
 		for (int i= 0; i < length; i++) {
-			type = findType(typeName, packages[i], partialMatch, acceptFlags);
+			type = findType(typeName, packages[i], partialMatch, acceptFlags, waitForIndexes, considerSecondaryTypes);
 			if (type != null) {
 				AccessRestriction accessRestriction = null;
 				if (checkRestrictions) {
@@ -761,10 +761,16 @@ public class NameLookup implements SuffixConstants {
 	 * @see #ACCEPT_ENUMS
 	 * @see #ACCEPT_ANNOTATIONS
 	 */
-	public IType findType(String name, IPackageFragment pkg, boolean partialMatch, int acceptFlags, boolean considerSecondaryTypes) {
-		IType type = findType(name, pkg, partialMatch, acceptFlags);
+	public IType findType(String name, IPackageFragment pkg, boolean partialMatch, int acceptFlags, boolean waitForIndices, boolean considerSecondaryTypes) {
+		if (pkg == null)
+			return null;
+
+		SingleTypeRequestor typeRequestor = new SingleTypeRequestor();
+		seekTypes(name, pkg, partialMatch, acceptFlags, typeRequestor, considerSecondaryTypes);
+		IType type = typeRequestor.getType();
+
 		if (type == null && considerSecondaryTypes) {
-			type = findSecondaryType(pkg.getElementName(), name, pkg.getJavaProject(), false, null);
+			type = findSecondaryType(pkg.getElementName(), name, pkg.getJavaProject(), waitForIndices, null);
 		}
 		return type;
 	}
@@ -795,7 +801,7 @@ public class NameLookup implements SuffixConstants {
 
 		// Return first found (ignore duplicates).
 		SingleTypeRequestor typeRequestor = new SingleTypeRequestor();
-		seekTypes(name, pkg, partialMatch, acceptFlags, typeRequestor);
+		seekTypes(name, pkg, partialMatch, acceptFlags, typeRequestor, false);
 		return typeRequestor.getType();
 	}
 
@@ -825,6 +831,9 @@ public class NameLookup implements SuffixConstants {
 	}
 	public Answer findType(String name, boolean partialMatch, int acceptFlags, boolean considerSecondaryTypes, boolean waitForIndexes, boolean checkRestrictions, IProgressMonitor monitor) {
 		int index= name.lastIndexOf('.');
+		if (index == 0) {
+			return null;  // bug 377710 - e.g. ".Foo" (no package, but not "default" package)
+		}
 		String className= null, packageName= null;
 		if (index == -1) {
 			packageName= IPackageFragment.DEFAULT_PACKAGE_NAME;
@@ -949,6 +958,10 @@ public class NameLookup implements SuffixConstants {
 		}
 	}
 
+	public void seekTypes(String name, IPackageFragment pkg, boolean partialMatch, int acceptFlags, IJavaElementRequestor requestor) {
+		seekTypes(name, pkg, partialMatch, acceptFlags, requestor, true);
+	}
+
 	/**
 	 * Notifies the given requestor of all types (classes and interfaces) in the
 	 * given package fragment with the given (unqualified) name.
@@ -969,7 +982,7 @@ public class NameLookup implements SuffixConstants {
 	 * @see #ACCEPT_ENUMS
 	 * @see #ACCEPT_ANNOTATIONS
 	 */
-	public void seekTypes(String name, IPackageFragment pkg, boolean partialMatch, int acceptFlags, IJavaElementRequestor requestor) {
+	public void seekTypes(String name, IPackageFragment pkg, boolean partialMatch, int acceptFlags, IJavaElementRequestor requestor, boolean considerSecondaryTypes) {
 /*		if (VERBOSE) {
 			Util.verbose(" SEEKING TYPES");  //$NON-NLS-1$
 			Util.verbose(" -> name: " + name);  //$NON-NLS-1$
@@ -995,7 +1008,7 @@ public class NameLookup implements SuffixConstants {
 					topLevelTypeName = firstDot == -1 ? matchName : matchName.substring(0, firstDot);
 			}
 			if (this.typesInWorkingCopies != null) {
-				if (seekTypesInWorkingCopies(matchName, pkg, firstDot, partialMatch, topLevelTypeName, acceptFlags, requestor))
+				if (seekTypesInWorkingCopies(matchName, pkg, firstDot, partialMatch, topLevelTypeName, acceptFlags, requestor, considerSecondaryTypes))
 					return;
 			}
 
@@ -1150,6 +1163,24 @@ public class NameLookup implements SuffixConstants {
 		}
 	}
 
+	private boolean isPrimaryType(String name, IType type, boolean partialMatch) {
+		/*
+		 * Please have a look at: NameLookup#NameLookup
+		 * The HashTable this.typesInWorkingCopies contains values which are HashTables themselves.
+		 * The values of these HashTables are either of IType or IType[].
+		 * These values are types belonging to a compilation unit. Please check:
+		 * CompilationUnit#getTypes().
+		 * Therefore the parents of these types would be compilation units.
+		 */
+		ICompilationUnit cu = (ICompilationUnit) type.getParent();
+		String cuName = cu.getElementName().substring(0, cu.getElementName().lastIndexOf('.'));
+		if (partialMatch) {
+			return cuName.regionMatches(0, name, 0, name.length());
+		} else {
+			return cuName.equals(name);
+		}
+	}
+
 	/**
 	 * Notifies the given requestor of all types (classes and interfaces) in the
 	 * given type with the given (possibly qualified) name. Checks
@@ -1215,7 +1246,8 @@ public class NameLookup implements SuffixConstants {
 			boolean partialMatch,
 			String topLevelTypeName,
 			int acceptFlags,
-			IJavaElementRequestor requestor) {
+			IJavaElementRequestor requestor,
+			boolean considerSecondaryTypes) {
 
 		if (!partialMatch) {
 			HashMap typeMap = (HashMap) (this.typesInWorkingCopies == null ? null : this.typesInWorkingCopies.get(pkg));
@@ -1223,6 +1255,8 @@ public class NameLookup implements SuffixConstants {
 				Object object = typeMap.get(topLevelTypeName);
 				if (object instanceof IType) {
 					IType type = getMemberType((IType) object, name, firstDot);
+					if (!considerSecondaryTypes && !isPrimaryType(name, (IType) object, false))
+						return false;
 					if (acceptType(type, acceptFlags, true/*a source type*/)) {
 						requestor.acceptType(type);
 						return true; // don't continue with compilation unit
@@ -1256,6 +1290,8 @@ public class NameLookup implements SuffixConstants {
 						return false;
 					Object object = iterator.next();
 					if (object instanceof IType) {
+						if (!considerSecondaryTypes && !isPrimaryType(name, (IType) object, true))
+							continue;
 						seekTypesInTopLevelType(name, firstDot, (IType) object, requestor, acceptFlags);
 					} else if (object instanceof IType[]) {
 						IType[] topLevelTypes = (IType[]) object;

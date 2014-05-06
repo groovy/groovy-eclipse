@@ -345,11 +345,29 @@ class ConstraintTypeFormula extends ConstraintFormula {
 			return false; // nothing here means we failed 
 		if (TypeBinding.equalsEquals(ca, cb)) // incl C#RAW vs C#RAW
 			return true;
+		if (!(cb instanceof ParameterizedTypeBinding)) {
+			// if C is parameterized with its own type variables, there're no more constraints to be created here, otherwise let's fail
+			return isInsignificantParameterized(ca);
+		}
 		TypeBinding[] bi = ((ParameterizedTypeBinding) cb).arguments;
 		if (cb.isRawType() || bi == null || bi.length == 0)
 			return (this.isSoft && InferenceContext18.SIMULATE_BUG_JDK_8026527) ? true : false; // FALSE would conform to the spec 
 		for (int i = 0; i < ai.length; i++)
 			constraints.add(ConstraintTypeFormula.create(bi[i], ai[i], TYPE_ARGUMENT_CONTAINED, this.isSoft));
+		return true;
+	}
+
+	private boolean isInsignificantParameterized(ParameterizedTypeBinding ca) {
+		TypeVariableBinding[] typeVariables = ca.original().typeVariables();
+		TypeBinding[] typeArguments = ca.arguments;
+		if (typeVariables == null || typeArguments == null)
+			return typeVariables == typeArguments;
+		if (typeVariables.length != typeArguments.length)
+			return false;
+		for (int i = 0; i < typeArguments.length; i++) {
+			if (TypeBinding.notEquals(typeVariables[i], typeArguments[i]))
+				return false;
+		}
 		return true;
 	}
 

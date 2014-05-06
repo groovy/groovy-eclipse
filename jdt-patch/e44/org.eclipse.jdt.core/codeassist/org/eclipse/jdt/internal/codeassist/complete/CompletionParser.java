@@ -3409,6 +3409,23 @@ protected void consumeNormalAnnotation(boolean isTypeAnnotation) {
 		this.restartRecovery = true;
 	} else {
 		popElement(K_BETWEEN_ANNOTATION_NAME_AND_RPAREN);
+		if (this.expressionPtr >= 0 && this.expressionStack[this.expressionPtr] instanceof CompletionOnMarkerAnnotationName) {
+			Annotation annotation = (Annotation)this.expressionStack[this.expressionPtr];
+			if(this.currentElement != null) {
+				annotationRecoveryCheckPoint(annotation.sourceStart, annotation.declarationSourceEnd);
+				if (this.currentElement instanceof RecoveredAnnotation) {
+					this.currentElement = ((RecoveredAnnotation)this.currentElement).addAnnotation(annotation, this.identifierPtr);
+				}
+			}
+
+			if(!this.statementRecoveryActivated &&
+					this.options.sourceLevel < ClassFileConstants.JDK1_5 &&
+					this.lastErrorEndPositionBeforeRecovery < this.scanner.currentPosition) {
+				problemReporter().invalidUsageOfAnnotation(annotation);
+			}
+			this.recordStringLiterals = true;
+			return;
+		}
 		super.consumeNormalAnnotation(isTypeAnnotation);
 	}
 }

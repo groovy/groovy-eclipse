@@ -12,6 +12,7 @@
  *								Bug 420894 - ClassCastException in DefaultBindingResolver.resolveType(Type)
  *								bug 392099 - [1.8][compiler][null] Apply null annotation on types for null analysis
  *								Bug 415043 - [1.8][null] Follow-up re null type annotations after bug 392099
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *        Andy Clement - Contributions for
  *                          Bug 383624 - [1.8][compiler] Revive code generation support for type annotations (from Olivier's work)
  *******************************************************************************/
@@ -119,7 +120,7 @@ public class ParameterizedSingleTypeReference extends ArrayTypeReference {
     /*
      * No need to check for reference to raw type per construction
      */
-	private TypeBinding internalResolveType(Scope scope, ReferenceBinding enclosingType, boolean checkBounds) {
+	private TypeBinding internalResolveType(Scope scope, ReferenceBinding enclosingType, boolean checkBounds, int location) {
 		// handle the error here
 		this.constant = Constant.NotAConstant;
 		if ((this.bits & ASTNode.DidResolve) != 0) { // is a shared type reference which was already resolved
@@ -145,18 +146,18 @@ public class ParameterizedSingleTypeReference extends ArrayTypeReference {
 		// handle three different outcomes:
 		if (type == null) {
 			this.resolvedType = createArrayType(scope, this.resolvedType);
-			resolveAnnotations(scope);
+			resolveAnnotations(scope, 0); // no defaultNullness for buggy type
 			checkNullConstraints(scope, this.typeArguments);
-			return null;							// no useful type, but still captured dimensions into this.resolvedType
+			return null;							// (1) no useful type, but still captured dimensions into this.resolvedType
 		} else {
 			type = createArrayType(scope, type);
 			if (!this.resolvedType.isValidBinding() && this.resolvedType.dimensions() == type.dimensions()) {
-				resolveAnnotations(scope);
+				resolveAnnotations(scope, 0); // no defaultNullness for buggy type
 				checkNullConstraints(scope, this.typeArguments);
-				return type;						// found some error, but could recover useful type (like closestMatch)
+				return type;						// (2) found some error, but could recover useful type (like closestMatch)
 			} else {
-				this.resolvedType = type; 	// no complaint, keep fully resolved type (incl. dimensions)
-				resolveAnnotations(scope);
+				this.resolvedType = type; 			// (3) no complaint, keep fully resolved type (incl. dimensions)
+				resolveAnnotations(scope, location);
 				checkNullConstraints(scope, this.typeArguments);
 				return this.resolvedType; // pick up any annotated type.
 			}
@@ -351,16 +352,16 @@ public class ParameterizedSingleTypeReference extends ArrayTypeReference {
 		return output;
 	}
 
-	public TypeBinding resolveType(BlockScope scope, boolean checkBounds) {
-	    return internalResolveType(scope, null, checkBounds);
+	public TypeBinding resolveType(BlockScope scope, boolean checkBounds, int location) {
+	    return internalResolveType(scope, null, checkBounds, location);
 	}
 
-	public TypeBinding resolveType(ClassScope scope) {
-	    return internalResolveType(scope, null, false /*no bounds check in classScope*/);
+	public TypeBinding resolveType(ClassScope scope, int location) {
+	    return internalResolveType(scope, null, false /*no bounds check in classScope*/, location);
 	}
 
 	public TypeBinding resolveTypeEnclosing(BlockScope scope, ReferenceBinding enclosingType) {
-	    return internalResolveType(scope, enclosingType, true/*check bounds*/);
+	    return internalResolveType(scope, enclosingType, true/*check bounds*/, 0);
 	}
 
 	public void traverse(ASTVisitor visitor, BlockScope scope) {

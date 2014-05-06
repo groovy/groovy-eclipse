@@ -36,7 +36,7 @@ public class CreationReference extends MethodReference {
 		new ChildPropertyDescriptor(CreationReference.class, "type", Type.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * The "typeArguments" structural property of this node type (element type: {@link Type}) 
+	 * The "typeArguments" structural property of this node type (element type: {@link Type}).
 	 */
 	public static final ChildListPropertyDescriptor TYPE_ARGUMENTS_PROPERTY =
 		internalTypeArgumentsFactory(CreationReference.class);

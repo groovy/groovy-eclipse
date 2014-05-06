@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,7 @@
  *     Stephan Herrmann - Contribution for
  *								bug 365531 - [compiler][null] investigate alternative strategy for internally encoding nullness defaults
  *								Bug 400874 - [1.8][compiler] Inference infrastructure should evolve to meet JLS8 18.x (Part G of JSR335 spec)
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *     Jesper Steen Moller - Contributions for
  *								Bug 412150 [1.8] [compiler] Enable reflected parameter names during annotation processing
  *******************************************************************************/
@@ -66,8 +67,44 @@ public abstract class Binding {
 
 	// Nullness defaults:
 	public static final int NO_NULL_DEFAULT = 0;
-	public static final int NULL_UNSPECIFIED_BY_DEFAULT = 1;
-	public static final int NONNULL_BY_DEFAULT = 2;
+	// SE5 style:
+	public static final int NONNULL_BY_DEFAULT = 1;
+	public static final int NULL_UNSPECIFIED_BY_DEFAULT = 2;
+	// JSR308 style:
+	/**
+	 * Bit in defaultNullness bit vectors, representing the enum constant DefaultLocation#PARAMETER
+	 */
+	public static final int DefaultLocationParameter = ASTNode.Bit4;
+	/**
+	 * Bit in defaultNullness bit vectors, representing the enum constant DefaultLocation#RETURN_TYPE
+	 */
+	public static final int DefaultLocationReturnType = ASTNode.Bit5;
+	/**
+	 * Bit in defaultNullness bit vectors, representing the enum constant DefaultLocation#FIELD
+	 */
+	public static final int DefaultLocationField = ASTNode.Bit6;
+	/**
+	 * Bit in defaultNullness bit vectors, representing the enum constant DefaultLocation#TYPE_ARGUMENT
+	 */
+	public static final int DefaultLocationTypeArgument = ASTNode.Bit7;
+	/**
+	 * Bit in defaultNullness bit vectors, representing the enum constant DefaultLocation#TYPE_PARAMETER
+	 */
+	public static final int DefaultLocationTypeParameter = ASTNode.Bit8;
+	/**
+	 * Bit in defaultNullness bit vectors, representing the enum constant DefaultLocation#TYPE_BOUND
+	 */
+	public static final int DefaultLocationTypeBound = ASTNode.Bit9;
+	/**
+	 * Bit in defaultNullness bit vectors, representing the enum constant DefaultLocation#ARRAY_CONTENTS
+	 * TODO: this constant is not yet used, due to difficulty to discern these annotations between SE5 / SE8
+	 */
+	public static final int DefaultLocationArrayContents = ASTNode.Bit10;
+
+	public static final int NullnessDefaultMASK = 
+			NULL_UNSPECIFIED_BY_DEFAULT | // included to terminate search up the parent chain
+			DefaultLocationParameter | DefaultLocationReturnType | DefaultLocationField |
+			DefaultLocationTypeArgument | DefaultLocationTypeParameter | DefaultLocationTypeBound | DefaultLocationArrayContents;
 
 	/*
 	* Answer the receiver's binding type from Binding.BindingID.

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1187,7 +1187,7 @@ public class Disassembler extends ClassFileBytesDisassembler {
 				disassemble(enclosingMethodAttribute, buffer, lineSeparator, 0);
 			}
 			if (bootstrapMethods != null) {
-				disassemble((IBootstrapMethodsAttribute) bootstrapMethods, buffer, lineSeparator, 0);
+				disassemble((IBootstrapMethodsAttribute) bootstrapMethods, buffer, lineSeparator, 0, classFileReader.getConstantPool());
 			}
 			if (checkMode(mode, SYSTEM)) {
 				if (runtimeVisibleAnnotationsAttribute != null) {
@@ -1572,6 +1572,80 @@ public class Disassembler extends ClassFileBytesDisassembler {
 		}
 	}
 
+	private String bootstrapMethodDescription(IBootstrapMethodsEntry entry, IConstantPool constantPool) {
+		// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html
+		// The BootstrapMethods attribute records bootstrap method specifiers referenced by invokedynamic instructions.
+		// The value of the bootstrap_method_ref item must be a valid index into the constant_pool table. The constant_pool entry at that index must be a CONSTANT_MethodHandle_info structure (�4.4.8).
+		// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4.8
+		// constantpoolentry.getKind() = IConstantPoolConstant.CONSTANT_MethodHandle
+
+		ConstantPoolEntry2 constantPoolEntry2 =  (ConstantPoolEntry2) constantPool.decodeEntry(entry.getBootstrapMethodReference());
+
+		// The reference_kind item of the CONSTANT_MethodHandle_info structure should have the value 6 (REF_invokeStatic) or 8 (REF_newInvokeSpecial)
+		// (�5.4.3.5) or else invocation of the bootstrap method handle during call site specifier resolution for an invokedynamic instruction will complete abruptly.
+		// If the value of the reference_kind item is 5 (REF_invokeVirtual), 6 (REF_invokeStatic), 7 (REF_invokeSpecial),
+		// or 9 (REF_invokeInterface), the name of the method represented by a CONSTANT_Methodref_info structure must not be <init> or <clinit>.
+
+		if (constantPoolEntry2.getReferenceKind() != 6)
+			return null;
+		ConstantPoolEntry constantPoolEntry = (ConstantPoolEntry) constantPool.decodeEntry(constantPoolEntry2.getReferenceIndex());
+		StringBuilder builder = new StringBuilder();
+		//String[] methodMsg = methodDescription(constantPoolEntry);
+		builder.append(Messages.bind("invokestatic {0}.{1}:{2}", methodDescription(constantPoolEntry))); //$NON-NLS-1$
+		return builder.toString();
+	}
+
+	private String[] bootstrapArgumentsDescription(IBootstrapMethodsEntry entry, IConstantPool constantPool) {
+		// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.21
+		// bootstrap_arguments
+		// 	    Each entry in the bootstrap_arguments array must be a valid index into the constant_pool table.
+		//      The constant_pool entry at that index must be a CONSTANT_String_info, CONSTANT_Class_info, CONSTANT_Integer_info
+		//      CONSTANT_Long_info, CONSTANT_Float_info, CONSTANT_Double_info, CONSTANT_MethodHandle_info, or
+		//      CONSTANT_MethodType_info structure (�4.4.3, �4.4.1, �4.4.4, �4.4.5), �4.4.8, �4.4.9).
+		if (entry.getBootstrapArguments().length == 0)
+			return null;
+		int[] bootstrapArguments = entry.getBootstrapArguments();
+		String[] arguments = new String[bootstrapArguments.length];
+		for (int i = 0, length = bootstrapArguments.length; i < length; i++) {
+			ConstantPoolEntry constantPoolEntry =  (ConstantPoolEntry) constantPool.decodeEntry(bootstrapArguments[i]);
+			switch(constantPoolEntry.getKind()) {
+				case IConstantPoolConstant.CONSTANT_Integer:
+					arguments[i] = ((Integer) constantPoolEntry.getIntegerValue()).toString();
+					break;
+				case IConstantPoolConstant.CONSTANT_MethodHandle:
+					// http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4.8
+					// If the value of the reference_kind item is 5 (REF_invokeVirtual), 6 (REF_invokeStatic),
+					// 7 (REF_invokeSpecial), or 8 (REF_newInvokeSpecial), then the constant_pool entry at that
+					// index must be a CONSTANT_Methodref_info structure (�4.4.2) representing a class's method or
+					// constructor (�2.9) for which a method handle is to be created.
+					ConstantPoolEntry2 constantPoolEntry2 = (ConstantPoolEntry2) constantPoolEntry;
+					StringBuilder builder = new StringBuilder(10);
+					switch(constantPoolEntry2.getReferenceKind()) {
+						case IConstantPoolConstant.METHOD_TYPE_REF_InvokeStatic:
+							builder.append("invokestatic "); //$NON-NLS-1$
+							//$FALL-THROUGH$
+						case IConstantPoolConstant.METHOD_TYPE_REF_InvokeVirtual:
+						case IConstantPoolConstant.METHOD_TYPE_REF_NewInvokeSpecial:
+							constantPoolEntry = (ConstantPoolEntry) constantPool.decodeEntry(constantPoolEntry2.getReferenceIndex());
+							builder.append(Messages.bind("{0}.{1}:{2}", methodDescription(constantPoolEntry))); //$NON-NLS-1$
+							arguments[i] =  builder.toString();
+							break;
+					}
+					break;
+				case IConstantPoolConstant.CONSTANT_MethodType:
+					arguments[i] = new String(((ConstantPoolEntry2) constantPoolEntry).getMethodDescriptor());
+					break;
+			}
+		}
+		return arguments;
+	}
+
+	private String[] methodDescription(IConstantPoolEntry constantPoolEntry) {
+		return new String[] { new String(constantPoolEntry.getClassName()),
+				new String(constantPoolEntry.getMethodName()),
+				new String(constantPoolEntry.getMethodDescriptor())};
+	}
+
 	private void disassemble(IConstantPool constantPool, StringBuffer buffer, String lineSeparator, int tabNumber) {
 		writeNewLine(buffer, lineSeparator, tabNumber);
 		int length = constantPool.getConstantPoolCount();
@@ -1582,6 +1656,7 @@ public class Disassembler extends ClassFileBytesDisassembler {
 				writeNewLine(buffer, lineSeparator, tabNumber + 1);
 			}
 			IConstantPoolEntry constantPoolEntry = constantPool.decodeEntry(i);
+			String[] methodDescription;
 			switch (constantPool.getEntryKind(i)) {
 				case IConstantPoolConstant.CONSTANT_Class :
 					buffer.append(
@@ -1625,15 +1700,14 @@ public class Disassembler extends ClassFileBytesDisassembler {
 								Integer.toString(constantPoolEntry.getIntegerValue())}));
 					break;
 				case IConstantPoolConstant.CONSTANT_InterfaceMethodref :
+					methodDescription = methodDescription(constantPoolEntry);
 					buffer.append(
 							Messages.bind(Messages.disassembler_constantpool_interfacemethodref,
 								new String[] {
 									Integer.toString(i),
 									Integer.toString(constantPoolEntry.getClassIndex()),
 									Integer.toString(constantPoolEntry.getNameAndTypeIndex()),
-									new String(constantPoolEntry.getClassName()),
-									new String(constantPoolEntry.getMethodName()),
-									new String(constantPoolEntry.getMethodDescriptor())}));
+									methodDescription[0], methodDescription[1], methodDescription[2]}));
 					break;
 				case IConstantPoolConstant.CONSTANT_Long :
 					buffer.append(
@@ -1643,15 +1717,14 @@ public class Disassembler extends ClassFileBytesDisassembler {
 								Long.toString(constantPoolEntry.getLongValue())}));
 					break;
 				case IConstantPoolConstant.CONSTANT_Methodref :
+					methodDescription = methodDescription(constantPoolEntry);
 					buffer.append(
 							Messages.bind(Messages.disassembler_constantpool_methodref,
 								new String[] {
 									Integer.toString(i),
 									Integer.toString(constantPoolEntry.getClassIndex()),
 									Integer.toString(constantPoolEntry.getNameAndTypeIndex()),
-									new String(constantPoolEntry.getClassName()),
-									new String(constantPoolEntry.getMethodName()),
-									new String(constantPoolEntry.getMethodDescriptor())}));
+									methodDescription[0], methodDescription[1], methodDescription[2]}));
 					break;
 				case IConstantPoolConstant.CONSTANT_NameAndType :
 					int nameIndex = constantPoolEntry.getNameAndTypeInfoNameIndex();
@@ -2019,7 +2092,7 @@ public class Disassembler extends ClassFileBytesDisassembler {
 		}
 	}
 
-	private void disassemble(IBootstrapMethodsAttribute bootstrapMethodsAttribute, StringBuffer buffer, String lineSeparator, int tabNumber) {
+	private void disassemble(IBootstrapMethodsAttribute bootstrapMethodsAttribute, StringBuffer buffer, String lineSeparator, int tabNumber, IConstantPool constantPool) {
 		writeNewLine(buffer, lineSeparator, tabNumber);
 		buffer.append(Messages.disassembler_bootstrapmethodattributesheader);
 		writeNewLine(buffer, lineSeparator, tabNumber + 1);
@@ -2031,32 +2104,33 @@ public class Disassembler extends ClassFileBytesDisassembler {
 				writeNewLine(buffer, lineSeparator, tabNumber + 1);
 			}
 			IBootstrapMethodsEntry entry = entries[i];
+			String[] argumentsName = bootstrapArgumentsDescription(entry, constantPool);
+
 			buffer.append(
 				Messages.bind(
 					Messages.disassembler_bootstrapmethodentry,
 					new String[] {
 						Integer.toString(i),
 						Integer.toString(entry.getBootstrapMethodReference()),
-						getArguments(entry.getBootstrapArguments())
+						bootstrapMethodDescription(entry, constantPool),
+						getArguments(entry.getBootstrapArguments(), argumentsName)
 					}));
 		}
 	}
 
-	private String getArguments(int[] arguments) {
+	private String getArguments(int[] arguments, String[] argumentsName) {
 		StringBuffer buffer = new StringBuffer();
-		buffer.append('{');
 		for (int i = 0, max = arguments.length; i < max; i++) {
-			if (i != 0) {
-				buffer.append(Messages.disassembler_comma);
-			}
 			buffer.append(
 				Messages.bind(
 					Messages.disassembler_bootstrapmethodentry_argument,
 					new String[] {
 						Integer.toString(arguments[i]),
+						argumentsName[i]
 					}));
+			if (i != arguments.length - 1)
+				buffer.append("\n\t\t"); //$NON-NLS-1$
 		}
-		buffer.append('}');
 		return String.valueOf(buffer);
 	}
 	private void disassemble(int index, IParameterAnnotation parameterAnnotation, StringBuffer buffer, String lineSeparator, int tabNumber, int mode) {

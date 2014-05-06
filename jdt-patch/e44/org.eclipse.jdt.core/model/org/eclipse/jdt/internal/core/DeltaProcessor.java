@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,6 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *     Terry Parker <tparker@google.com> - DeltaProcessor exhibits O(N^2) behavior, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=354332
  *     Terry Parker <tparker@google.com> - DeltaProcessor misses state changes in archive files, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=357425
+ *     Terry Parker <tparker@google.com> - [performance] Low hit rates in JavaModel caches - https://bugs.eclipse.org/421165
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
@@ -16,6 +17,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.*;
 
+import org.eclipse.core.resources.IBuildConfiguration;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -65,6 +67,9 @@ import org.eclipse.jdt.internal.core.util.Util;
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class DeltaProcessor {
 
+	/*
+	 * An object to hold information about a project's output folders (where .class files are generated).
+	 */
 	static class OutputsInfo {
 		int outputCount;
 		IPath[] paths;
@@ -102,14 +107,20 @@ public class DeltaProcessor {
 		}
 	}
 
+	/*
+	 * An object to hold information about IPackageFragmentRoots (which correspond to
+	 * individual classpath entry items, e.g., a java/javatests source root or library
+	 * archive jar.)
+	 */
 	public static class RootInfo {
-		char[][] inclusionPatterns;
-		char[][] exclusionPatterns;
-		public JavaProject project;
-		IPath rootPath;
-		int entryKind;
+		final char[][] inclusionPatterns;
+		final char[][] exclusionPatterns;
+		final public JavaProject project;
+		final IPath rootPath;
+		final int entryKind;
 		IPackageFragmentRoot root;
 		IPackageFragmentRoot cache;
+
 		RootInfo(JavaProject project, IPath rootPath, char[][] inclusionPatterns, char[][] exclusionPatterns, int entryKind) {
 			this.project = project;
 			this.rootPath = rootPath;
@@ -967,6 +978,9 @@ public class DeltaProcessor {
 					String status = (String)externalArchivesStatus.get(entryPath);
 					if (status == null){
 
+						// Clear the external file state for this path, since this method is responsible for updating it.
+						this.manager.clearExternalFileState(entryPath);
+
 						// compute shared status
 						Object targetLibrary = JavaModel.getTarget(entryPath, true);
 
@@ -1060,8 +1074,6 @@ public class DeltaProcessor {
 				javaProject.resetResolvedClasspath();
 			}
 		}
-		// ensure the external file cache is reset so that if a .jar file is deleted but no longer on the classpath, it won't appear as changed next time it is added
-		JavaModel.flushExternalFileCache();
 
 		if (hasDelta){
 			// flush jar type cache
@@ -1131,7 +1143,7 @@ public class DeltaProcessor {
 
 		if (elementType == IJavaElement.JAVA_PROJECT) {
 			// project add is handled by JavaProject.configure() because
-			// when a project is created, it does not yet have a java nature
+			// when a project is created, it does not yet have a Java nature
 			IProject project;
 			if (delta != null && JavaProject.hasJavaNature(project = (IProject)delta.getResource())) {
 				addToParentInfo(element);
@@ -2156,7 +2168,39 @@ public class DeltaProcessor {
 				}
 
 				if (isAffected) {
-					JavaModel.flushExternalFileCache();
+					Object source = event.getSource();
+					projects = null;
+					if (source instanceof IWorkspace) {
+						 projects = ((IWorkspace) source).getRoot().getProjects();
+					} else if (source instanceof IProject) {
+						projects = new IProject[] {(IProject) source};
+					} else {
+						Util.log(new Exception(),
+								"Expected to see a workspace or project on the PRE_BUILD resource change but was: " + source.toString()); //$NON-NLS-1$
+					}
+					if (projects != null) {
+						// If we are about to do a build and a Java project's first builder is not the Java builder,
+						// then it is possible that one of the earlier builders will build a jar file that is on that
+						// project's classpath. If we see that, then to be safe we must flush the caching of the
+						// JavaModelManager's external file state.
+						// A possible further optimization for this situation where earlier builders can affect the
+						// Java builder would be to add a new classpath element attribute that identifies whether
+						// or not a library jar is "stable" and needs to be flushed.
+						for (int i = 0; i < projects.length; i++) {
+							try {
+								IProject project = projects[i];
+								if (project.isOpen() && project.hasNature(JavaCore.NATURE_ID)) {
+									IBuildConfiguration[] configs = project.getBuildConfigs();
+									if (configs.length > 1 && !JavaCore.BUILDER_ID.equals(configs[0].getName())) {
+										this.manager.resetExternalFilesCache();
+										break;
+									}
+								}
+							} catch (CoreException exception) {
+				        		Util.log(exception, "Exception while checking builder configuration ordering"); //$NON-NLS-1$
+							}
+						 }
+					}
 					JavaBuilder.buildStarting();
 				}
 
@@ -2477,7 +2521,7 @@ public class DeltaProcessor {
 	}
 
 	/*
-	 * Update the current delta (i.e. add/remove/change the given element) and update the correponding index.
+	 * Update the current delta (i.e. add/remove/change the given element) and update the corresponding index.
 	 * Returns whether the children of the given delta must be processed.
 	 * @throws a JavaModelException if the delta doesn't correspond to a java element of the given type.
 	 */

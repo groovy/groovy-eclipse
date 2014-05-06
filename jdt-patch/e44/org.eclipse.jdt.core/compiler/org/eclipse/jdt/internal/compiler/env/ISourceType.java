@@ -87,4 +87,9 @@ char[][][] getTypeParameterBounds();
  * Answer the names of the receiver's type parameters.
  */
 char[][] getTypeParameterNames();
+
+/**
+ * Answer whether the receiver type is anonymous
+ */
+boolean isAnonymous();
 }

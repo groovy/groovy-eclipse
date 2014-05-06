@@ -41,7 +41,7 @@ public class ExpressionMethodReference extends MethodReference {
 		internalTypeArgumentsFactory(ExpressionMethodReference.class);
 
 	/**
-	 * The "name" structural property of this node type (child type: {@link SimpleName}. 
+	 * The "name" structural property of this node type (child type: {@link SimpleName}).
 	 */
 	public static final ChildPropertyDescriptor NAME_PROPERTY =
 		new ChildPropertyDescriptor(ExpressionMethodReference.class, "name", SimpleName.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$

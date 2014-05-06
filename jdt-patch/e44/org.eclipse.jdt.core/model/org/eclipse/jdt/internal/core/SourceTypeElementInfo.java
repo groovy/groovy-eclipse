@@ -170,7 +170,7 @@ public InitializerElementInfo[] getInitializers() {
  * @see ISourceType
  */
 public char[][] getInterfaceNames() {
-	if (this.handle.getElementName().length() == 0) { // if anonymous type
+	if (isAnonymous()) { // if anonymous type
 		return null;
 	}
 	return this.superInterfaceNames;
@@ -251,7 +251,7 @@ public char[] getName() {
  * @see ISourceType
  */
 public char[] getSuperclassName() {
-	if (this.handle.getElementName().length() == 0) { // if anonymous type
+	if (isAnonymous()) { // if anonymous type
 		char[][] interfaceNames = this.superInterfaceNames;
 		if (interfaceNames != null && interfaceNames.length > 0) {
 			return interfaceNames[0];
@@ -286,6 +286,15 @@ public char[][] getTypeParameterNames() {
  */
 public boolean isBinaryType() {
 	return false;
+}
+
+@Override
+public boolean isAnonymous() {
+	try {
+		return this.handle.isAnonymous();
+	} catch (JavaModelException e) {
+		return false;
+	}
 }
 /*
  * Returns whether the source type is an anonymous type of a member type.

@@ -47,6 +47,8 @@
  *								Bug 428366 - [1.8] [compiler] The method valueAt(ObservableList<Object>, int) is ambiguous for the type Bindings
  *								Bug 416190 - [1.8][null] detect incompatible overrides due to null type annotations
  *								Bug 392245 - [1.8][compiler][null] Define whether / how @NonNullByDefault applies to TYPE_USE locations
+ *								Bug 390889 - [1.8][compiler] Evaluate options to support 1.7- projects against 1.8 JRE.
+ *								Bug 430150 - [1.8][null] stricter checking against type variables
  *      Jesper S Moller <jesper@selskabet.org> -  Contributions for
  *								bug 382701 - [1.8][compiler] Implement semantic analysis of Lambda expressions & Reference expression
  *								bug 382721 - [1.8][compiler] Effectively final variables needs special treatment
@@ -388,6 +390,8 @@ public static int getIrritant(int problemID) {
 		case IProblem.CannotImplementIncompatibleNullness:
 		case IProblem.ConflictingNullAnnotations:
 		case IProblem.ConflictingInheritedNullAnnotations:
+		case IProblem.NullNotCompatibleToFreeTypeVariable:
+		case IProblem.NullityMismatchAgainstFreeTypeVariable:
 		case IProblem.NullityMismatchingTypeAnnotation:
 		case IProblem.NullityMismatchingTypeAnnotationSuperHint:
 		case IProblem.NullityMismatchTypeArgument:
@@ -1574,7 +1578,7 @@ public void conditionalArgumentsIncompatibleTypes(ConditionalExpression expressi
 	this.handle(
 		IProblem.IncompatibleTypesInConditionalOperator,
 		new String[] {new String(trueType.readableName()), new String(falseType.readableName())},
-		new String[] {new String(trueType.sourceName()), new String(falseType.sourceName())},
+		new String[] {new String(trueType.shortReadableName()), new String(falseType.shortReadableName())},
 		expression.sourceStart,
 		expression.sourceEnd);
 }
@@ -1808,11 +1812,15 @@ public void duplicateImport(ImportReference importRef) {
 		importRef.sourceEnd);
 }
 
-public void duplicateInheritedMethods(SourceTypeBinding type, MethodBinding inheritedMethod1, MethodBinding inheritedMethod2) {
+public void duplicateInheritedMethods(SourceTypeBinding type, MethodBinding inheritedMethod1, MethodBinding inheritedMethod2, boolean isJava8) {
 	if (TypeBinding.notEquals(inheritedMethod1.declaringClass, inheritedMethod2.declaringClass)) {
-		int problemID = (inheritedMethod1.isDefaultMethod() && inheritedMethod2.isDefaultMethod())
-				? IProblem.DuplicateInheritedDefaultMethods
-				: IProblem.DuplicateInheritedMethods;
+		int problemID = IProblem.DuplicateInheritedMethods;
+		if (inheritedMethod1.isDefaultMethod() && inheritedMethod2.isDefaultMethod()) {
+			if (isJava8)
+				problemID = IProblem.DuplicateInheritedDefaultMethods;
+			else
+				return; // don't report this error at 1.7-
+		}
 		this.handle(
 			problemID,
 			new String[] {
@@ -2228,8 +2236,8 @@ public void finalVariableBound(TypeVariableBinding typeVariable, TypeReference t
 	if (severity == ProblemSeverities.Ignore) return;
 	this.handle(
 		IProblem.FinalBoundForTypeVariable,
-		new String[] { new String(typeVariable.sourceName), new String(typeRef.resolvedType.readableName())},
-		new String[] { new String(typeVariable.sourceName), new String(typeRef.resolvedType.shortReadableName())},
+		new String[] { new String(typeVariable.sourceName()), new String(typeRef.resolvedType.readableName())},
+		new String[] { new String(typeVariable.sourceName()), new String(typeRef.resolvedType.shortReadableName())},
 		severity,
 		typeRef.sourceStart,
 		typeRef.sourceEnd);
@@ -2962,16 +2970,16 @@ public void defaultMethodsNotBelow18(MethodDeclaration md) {
 			IProblem.DefaultMethodNotBelow18,
 			NoArgument,
 			NoArgument,
-			md.bodyStart,
-			md.bodyEnd);
+			md.sourceStart,
+			md.sourceEnd);
 }
 public void staticInterfaceMethodsNotBelow18(MethodDeclaration md) {
 	this.handle(
 			IProblem.StaticInterfaceMethodNotBelow18,
 			NoArgument,
 			NoArgument,
-			md.bodyStart,
-			md.bodyEnd);
+			md.sourceStart,
+			md.sourceEnd);
 }
 public void referenceExpressionsNotBelow18(ReferenceExpression rexp) {
 	this.handle(
@@ -3584,7 +3592,7 @@ public void invalidConstructor(Statement statement, MethodBinding targetConstruc
 				        new String(shownConstructor.declaringClass.readableName()),
 				        typesAsString(invocationArguments, false),
 				        new String(inferredTypeArgument.readableName()),
-				        new String(typeParameter.sourceName),
+				        new String(typeParameter.sourceName()),
 				        parameterBoundAsString(typeParameter, false) },
 				new String[] {
 				        new String(shownConstructor.declaringClass.sourceName()),
@@ -3592,7 +3600,7 @@ public void invalidConstructor(Statement statement, MethodBinding targetConstruc
 				        new String(shownConstructor.declaringClass.shortReadableName()),
 				        typesAsString(invocationArguments, true),
 				        new String(inferredTypeArgument.shortReadableName()),
-				        new String(typeParameter.sourceName),
+				        new String(typeParameter.sourceName()),
 				        parameterBoundAsString(typeParameter, true) },
 				sourceStart,
 				sourceEnd);
@@ -4132,7 +4140,7 @@ public void invalidMethod(MessageSend messageSend, MethodBinding method) {
 				        new String(shownMethod.declaringClass.readableName()),
 				        typesAsString(invocationArguments, false),
 				        new String(inferredTypeArgument.readableName()),
-				        new String(typeParameter.sourceName),
+				        new String(typeParameter.sourceName()),
 				        parameterBoundAsString(typeParameter, false) },
 				new String[] {
 				        new String(shownMethod.selector),
@@ -4140,7 +4148,7 @@ public void invalidMethod(MessageSend messageSend, MethodBinding method) {
 				        new String(shownMethod.declaringClass.shortReadableName()),
 				        typesAsString(invocationArguments, true),
 				        new String(inferredTypeArgument.shortReadableName()),
-				        new String(typeParameter.sourceName),
+				        new String(typeParameter.sourceName()),
 				        parameterBoundAsString(typeParameter, true) },
 				(int) (messageSend.nameSourcePosition >>> 32),
 				(int) messageSend.nameSourcePosition);
@@ -4961,7 +4969,7 @@ public void javadocInvalidConstructor(Statement statement, MethodBinding targetC
 				        new String(shownConstructor.declaringClass.readableName()),
 				        typesAsString(invocationArguments, false),
 				        new String(inferredTypeArgument.readableName()),
-				        new String(typeParameter.sourceName),
+				        new String(typeParameter.sourceName()),
 				        parameterBoundAsString(typeParameter, false) },
 				new String[] {
 				        new String(shownConstructor.declaringClass.sourceName()),
@@ -4969,7 +4977,7 @@ public void javadocInvalidConstructor(Statement statement, MethodBinding targetC
 				        new String(shownConstructor.declaringClass.shortReadableName()),
 				        typesAsString(invocationArguments, true),
 				        new String(inferredTypeArgument.shortReadableName()),
-				        new String(typeParameter.sourceName),
+				        new String(typeParameter.sourceName()),
 				        parameterBoundAsString(typeParameter, true) },
 				severity,
 				sourceStart,
@@ -5193,7 +5201,7 @@ public void javadocInvalidMethod(MessageSend messageSend, MethodBinding method, 
 				        new String(shownMethod.declaringClass.readableName()),
 				        typesAsString(invocationArguments, false),
 				        new String(inferredTypeArgument.readableName()),
-				        new String(typeParameter.sourceName),
+				        new String(typeParameter.sourceName()),
 				        parameterBoundAsString(typeParameter, false) },
 				new String[] {
 				        new String(shownMethod.selector),
@@ -5201,7 +5209,7 @@ public void javadocInvalidMethod(MessageSend messageSend, MethodBinding method, 
 				        new String(shownMethod.declaringClass.shortReadableName()),
 				        typesAsString(invocationArguments, true),
 				        new String(inferredTypeArgument.shortReadableName()),
-				        new String(typeParameter.sourceName),
+				        new String(typeParameter.sourceName()),
 				        parameterBoundAsString(typeParameter, true) },
 				severity,
 				(int) (messageSend.nameSourcePosition >>> 32),
@@ -7825,6 +7833,10 @@ public void typeMismatchError(TypeBinding actualType, TypeBinding expectedType, 
 			expectedType = expectedType.erasure();
 	}
 	if (actualType != null && (actualType.tagBits & TagBits.HasMissingType) != 0) { // improve secondary error
+		if (location instanceof Annotation) {
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=376977
+			return; // Already reported, don't report a secondary error
+		}
 		this.handle(
 				IProblem.UndefinedType,
 				new String[] {new String(actualType.leafComponentType().readableName())},
@@ -7870,8 +7882,8 @@ public void typeMismatchError(TypeBinding typeArgument, TypeVariableBinding type
 	if (location == null) { // binary case
 		this.handle(
 			IProblem.TypeArgumentMismatch,
-			new String[] { new String(typeArgument.readableName()), new String(genericType.readableName()), new String(typeParameter.sourceName), parameterBoundAsString(typeParameter, false) },
-			new String[] { new String(typeArgument.shortReadableName()), new String(genericType.shortReadableName()), new String(typeParameter.sourceName), parameterBoundAsString(typeParameter, true) },
+			new String[] { new String(typeArgument.readableName()), new String(genericType.readableName()), new String(typeParameter.sourceName()), parameterBoundAsString(typeParameter, false) },
+			new String[] { new String(typeArgument.shortReadableName()), new String(genericType.shortReadableName()), new String(typeParameter.sourceName()), parameterBoundAsString(typeParameter, true) },
 			ProblemSeverities.AbortCompilation | ProblemSeverities.Error | ProblemSeverities.Fatal,
 			0,
 			0);
@@ -7879,8 +7891,8 @@ public void typeMismatchError(TypeBinding typeArgument, TypeVariableBinding type
     }
 	this.handle(
 		IProblem.TypeArgumentMismatch,
-		new String[] { new String(typeArgument.readableName()), new String(genericType.readableName()), new String(typeParameter.sourceName), parameterBoundAsString(typeParameter, false) },
-		new String[] { new String(typeArgument.shortReadableName()), new String(genericType.shortReadableName()), new String(typeParameter.sourceName), parameterBoundAsString(typeParameter, true) },
+		new String[] { new String(typeArgument.readableName()), new String(genericType.readableName()), new String(typeParameter.sourceName()), parameterBoundAsString(typeParameter, false) },
+		new String[] { new String(typeArgument.shortReadableName()), new String(genericType.shortReadableName()), new String(typeParameter.sourceName()), parameterBoundAsString(typeParameter, true) },
 		location.sourceStart,
 		location.sourceEnd);
 }
@@ -9179,20 +9191,27 @@ public void nullityMismatch(Expression expression, TypeBinding providedType, Typ
 		nullityMismatchingTypeAnnotation(expression, providedType, requiredType, NullAnnotationMatching.NULL_ANNOTATIONS_UNCHECKED);
 }
 public void nullityMismatchIsNull(Expression expression, TypeBinding requiredType) {
+	int problemId = IProblem.RequiredNonNullButProvidedNull;
+	if (requiredType.isTypeVariable() && !requiredType.hasNullTypeAnnotations())
+		problemId = IProblem.NullNotCompatibleToFreeTypeVariable;
 	if (requiredType instanceof CaptureBinding) {
 		CaptureBinding capture = (CaptureBinding) requiredType;
 		if (capture.wildcard != null)
 			requiredType = capture.wildcard;
 	}
-	int problemId = IProblem.RequiredNonNullButProvidedNull;
 	String[] arguments;
 	String[] argumentsShort;
 	if (this.options.sourceLevel < ClassFileConstants.JDK1_8) {
 		arguments      = new String[] { annotatedTypeName(requiredType, this.options.nonNullAnnotationName) };
 		argumentsShort = new String[] { shortAnnotatedTypeName(requiredType, this.options.nonNullAnnotationName) };
 	} else {
+		if (problemId == IProblem.NullNotCompatibleToFreeTypeVariable) {
+			arguments      = new String[] { new String(requiredType.sourceName()) }; // don't show any bounds
+			argumentsShort = new String[] { new String(requiredType.sourceName()) };
+		} else {
 		arguments      = new String[] { new String(requiredType.nullAnnotatedReadableName(this.options, false)) };
 		argumentsShort = new String[] { new String(requiredType.nullAnnotatedReadableName(this.options, true)) };
+	}
 	}
 	this.handle(problemId, arguments, argumentsShort, expression.sourceStart, expression.sourceEnd);
 }
@@ -9478,10 +9497,6 @@ public void nullDefaultAnnotationIsRedundant(ASTNode location, Annotation[] anno
 	this.handle(problemId, args, shortArgs, start, end);
 }
 
-public void nonNullDefaultDetailNotEvaluated(ASTNode location) {
-	this.handle(IProblem.NonNullDefaultDetailIsNotEvaluated, NoArgument, NoArgument, ProblemSeverities.Warning, location.sourceStart, location.sourceEnd);
-}
-
 public void contradictoryNullAnnotations(Annotation annotation) {
 	contradictoryNullAnnotations(annotation.sourceStart, annotation.sourceEnd);
 }
@@ -9728,23 +9743,47 @@ public void nullityMismatchingTypeAnnotation(Expression expression, TypeBinding 
 	String[] shortArguments;
 		
 	int problemId = 0;
+	String superHint = null;
+	String superHintShort = null;
 	if (status.superTypeHint != null) {
 		problemId = (status.isUnchecked()
 			? IProblem.NullityUncheckedTypeAnnotationDetailSuperHint
 			: IProblem.NullityMismatchingTypeAnnotationSuperHint);
-		arguments      = new String[] { null, null, status.superTypeHintName(this.options, false) };
-		shortArguments = new String[] { null, null, status.superTypeHintName(this.options, true) };
+		superHint = status.superTypeHintName(this.options, false);
+		superHintShort = status.superTypeHintName(this.options, true);
 	} else {
 		problemId = (status.isUnchecked()
 			? IProblem.NullityUncheckedTypeAnnotationDetail
+			: (requiredType.isTypeVariable() && !requiredType.hasNullTypeAnnotations())
+				? IProblem.NullityMismatchAgainstFreeTypeVariable
 			: IProblem.NullityMismatchingTypeAnnotation);
+		if (problemId == IProblem.NullityMismatchAgainstFreeTypeVariable) {
+			arguments      = new String[] { null, null, new String(requiredType.sourceName()) }; // don't show bounds here
+			shortArguments = new String[] { null, null, new String(requiredType.sourceName()) };
+		} else {
 		arguments      = new String[2];
 		shortArguments = new String[2];
 	}
-	arguments[0] = String.valueOf(requiredType.nullAnnotatedReadableName(this.options, false));
-	arguments[1] = String.valueOf(providedType.nullAnnotatedReadableName(this.options, false));
-	shortArguments[0] = String.valueOf(requiredType.nullAnnotatedReadableName(this.options, true));
-	shortArguments[1] = String.valueOf(providedType.nullAnnotatedReadableName(this.options, true));
+	}
+	String requiredName;
+	String requiredNameShort;
+	if (problemId == IProblem.NullityMismatchAgainstFreeTypeVariable) {
+		requiredName		= new String(requiredType.sourceName()); // don't show bounds here
+		requiredNameShort 	= new String(requiredType.sourceName()); // don't show bounds here
+	} else {
+		requiredName 		= new String(requiredType.nullAnnotatedReadableName(this.options, false));
+		requiredNameShort 	= new String(requiredType.nullAnnotatedReadableName(this.options, true));
+	}
+	String providedName		 = String.valueOf(providedType.nullAnnotatedReadableName(this.options, false));
+	String providedNameShort = String.valueOf(providedType.nullAnnotatedReadableName(this.options, true));
+	// assemble arguments:
+	if (superHint != null) {
+		arguments 		= new String[] { requiredName, providedName, superHint };
+		shortArguments 	= new String[] { requiredNameShort, providedNameShort, superHintShort };
+	} else {
+		arguments 		= new String[] { requiredName, providedName };
+		shortArguments 	= new String[] { requiredNameShort, providedNameShort };
+	}
 	this.handle(problemId, arguments, shortArguments, expression.sourceStart, expression.sourceEnd);
 }
 

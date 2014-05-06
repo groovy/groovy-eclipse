@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,6 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contribution for
  *								Bug 400874 - [1.8][compiler] Inference infrastructure should evolve to meet JLS8 18.x (Part G of JSR335 spec)
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -610,7 +611,7 @@ public class Javadoc extends ASTNode {
 				// Scan all @param tags
 				for (int i = 0; i < paramTypeParamLength; i++) {
 					JavadocSingleTypeReference param = this.paramTypeParameters[i];
-					TypeBinding paramBindind = param.internalResolveType(scope);
+					TypeBinding paramBindind = param.internalResolveType(scope, 0);
 					if (paramBindind != null && paramBindind.isValidBinding()) {
 						if (paramBindind.isTypeVariable()) {
 							// https://bugs.eclipse.org/bugs/show_bug.cgi?id=397888

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2014 GK Software AG.
+ * Copyright (c) 2013, 2014 GK Software AG, and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     Stephan Herrmann - initial API and implementation
+ *     IBM Corporation - Bug fixes
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -58,7 +59,7 @@ import org.eclipse.jdt.internal.compiler.util.Sorting;
  * 	 replace occurrences of an inference variable with a proper type.</li>
  * <li>{@link TypeBinding#collectInferenceVariables(Set)}:
  * 	 collect all inference variables mentioned in the receiver type into the given set.</li>
- * <li>{@link TypeVariableBinding#getTypeBounds(InferenceVariable, InferenceContext18)}:
+ * <li>{@link TypeVariableBinding#getTypeBounds(InferenceVariable, InferenceSubstitution)}:
  * 	Compute the initial type bounds for one inference variable as per JLS8 sect 18.1.3.</li>
  * </ul>
  * <h2>Phases of Inference</h2>
@@ -928,7 +929,7 @@ public class InferenceContext18 {
 				final int numVars = variableSet.size();
 				if (numVars > 0) {
 					final InferenceVariable[] variables = variableSet.toArray(new InferenceVariable[numVars]);
-					if (!tmpBoundSet.hasCaptureBound(variableSet)) {
+					variables: if (!tmpBoundSet.hasCaptureBound(variableSet)) {
 						// try to instantiate this set of variables in a fresh copy of the bound set:
 						BoundSet prevBoundSet = tmpBoundSet;
 						tmpBoundSet = tmpBoundSet.copy();
@@ -955,12 +956,18 @@ public class InferenceContext18 {
 											glb = upperBounds[0];
 										} else {
 											ReferenceBinding[] glbs = Scope.greaterLowerBound((ReferenceBinding[])upperBounds);
-											if (glbs == null)
+											if (glbs == null) {
 												throw new UnsupportedOperationException("no glb for "+Arrays.asList(upperBounds)); //$NON-NLS-1$
-											else if (glbs.length == 1)
+											} else if (glbs.length == 1) {
 												glb = glbs[0];
-											else
-												glb = new IntersectionCastTypeBinding(glbs, this.environment);
+											} else {
+												IntersectionCastTypeBinding intersection = new IntersectionCastTypeBinding(glbs, this.environment);
+												if (!ReferenceBinding.isConsistentIntersection(intersection.intersectingTypes)) {
+													tmpBoundSet = prevBoundSet; // clean up
+													break variables; // and start over
+												}
+												glb = intersection;
+											}
 										}
 									}
 									tmpBoundSet.addBound(new TypeBound(variable, glb, ReductionResult.SAME), this.environment);
@@ -1492,6 +1499,8 @@ public class InferenceContext18 {
 								ASTNode.resolvePolyExpressionArguments(invocation, innerBinding, this.scope);
 							}
 						}
+					} else if(method instanceof ParameterizedMethodBinding){
+						expression.checkAgainstFinalTargetType(targetType, this.scope);
 					}
 				} else {
 					expression.setExpectedType(targetType);

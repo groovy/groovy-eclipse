@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2010 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -74,11 +76,11 @@ public class JavadocQualifiedTypeReference extends QualifiedTypeReference {
 	protected void reportInvalidType(Scope scope) {
 		scope.problemReporter().javadocInvalidType(this, this.resolvedType, scope.getDeclarationModifiers());
 	}
-	public TypeBinding resolveType(BlockScope blockScope, boolean checkBounds) {
+	public TypeBinding resolveType(BlockScope blockScope, boolean checkBounds, int location) {
 		return internalResolveType(blockScope, checkBounds);
 	}
 
-	public TypeBinding resolveType(ClassScope classScope) {
+	public TypeBinding resolveType(ClassScope classScope, int location) {
 		return internalResolveType(classScope, false);
 	}
 

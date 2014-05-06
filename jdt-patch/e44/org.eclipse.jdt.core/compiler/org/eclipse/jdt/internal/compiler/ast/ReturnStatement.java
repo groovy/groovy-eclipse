@@ -29,6 +29,7 @@
  *								Bug 416307 - [1.8][compiler][null] subclass with type parameter substitution confuses null checking
  *								Bug 417758 - [1.8][null] Null safety compromise during array creation.
  *								Bug 427438 - [1.8][compiler] NPE at org.eclipse.jdt.internal.compiler.ast.ConditionalExpression.generateCode(ConditionalExpression.java:280)
+ *								Bug 430150 - [1.8][null] stricter checking against type variables
  *     Jesper S Moller - Contributions for
  *								bug 382701 - [1.8][compiler] Implement semantic analysis of Lambda expressions & Reference expression
  *******************************************************************************/
@@ -81,7 +82,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	if (this.expression != null) {
 		flowInfo = this.expression.analyseCode(currentScope, flowContext, flowInfo);
 		this.expression.checkNPEbyUnboxing(currentScope, flowContext, flowInfo);
-		if (flowInfo.reachMode() == FlowInfo.REACHABLE)
+		if (flowInfo.reachMode() == FlowInfo.REACHABLE && currentScope.compilerOptions().isAnnotationBasedNullAnalysisEnabled)
 			checkAgainstNullAnnotation(currentScope, flowContext, flowInfo);
 		if (currentScope.compilerOptions().analyseResourceLeaks) {
 			FakedTrackingVariable trackingVariable = FakedTrackingVariable.getCloseTrackingVariable(this.expression, flowInfo, flowContext);

@@ -28,6 +28,7 @@
  *								Bug 427483 - [Java 8] Variables in lambdas sometimes can't be resolved
  *								Bug 428352 - [1.8][compiler] Resolution errors don't always surface
  *								Bug 427163 - [1.8][null] bogus error "Contradictory null specification" on varags
+ *								Bug 432348 - [1.8] Internal compiler error (NPE) after upgrade to 1.8
  *     Jesper S Moller - Contributions for
  *								bug 382721 - [1.8][compiler] Effectively final variables needs special treatment
  *								bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
@@ -969,7 +970,7 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 			}
 		}
 		if (copySE8AnnotationsToType)
-			copySE8AnnotationsToType(scope, recipient, sourceAnnotations);
+			copySE8AnnotationsToType(scope, recipient, sourceAnnotations, true);
 		return annotations;
 	}
 	
@@ -995,7 +996,7 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	}
 
 	// When SE8 annotations feature in SE7 locations, they get attributed to the declared entity. Copy/move these to the type of the declared entity (field, local, argument etc.)
-	public static void copySE8AnnotationsToType(BlockScope scope, Binding recipient, Annotation[] annotations) {
+	public static void copySE8AnnotationsToType(BlockScope scope, Binding recipient, Annotation[] annotations, boolean isLegalLocation) {
 		
 		if (annotations == null || annotations.length == 0 || recipient == null)
 			return;
@@ -1019,12 +1020,15 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 		int se8count = 0;
 		long se8nullBits = 0;
 		Annotation se8NullAnnotation = null;
+		int firstSE8 = -1, lastSE8 = 0;
 		for (int i = 0, length = annotations.length; i < length; i++) {
 			AnnotationBinding annotation = annotations[i].getCompilerAnnotation();
 			if (annotation == null) continue;
 			final ReferenceBinding annotationType = annotation.getAnnotationType();
 			long metaTagBits = annotationType.getAnnotationTagBits();
 			if ((metaTagBits & TagBits.AnnotationForTypeUse) != 0) {
+				if (firstSE8 == -1) firstSE8 = i;
+				lastSE8 = i;
 				if (se8Annotations == null) {
 					se8Annotations = new AnnotationBinding[] { annotation };
 					se8count = 1;
@@ -1042,6 +1046,10 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 			}
 		}
 		if (se8Annotations != null) {
+			if (!isLegalLocation) {
+				scope.problemReporter().misplacedTypeAnnotations(annotations[firstSE8], annotations[lastSE8]);
+				return;
+			}
 			switch (recipient.kind()) {
 				case Binding.LOCAL:
 					LocalVariableBinding local = (LocalVariableBinding) recipient;

@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -101,8 +103,8 @@ public class ArrayQualifiedTypeReference extends QualifiedTypeReference {
 		}
 	}
 
-	protected TypeBinding internalResolveType(Scope scope) {
-		TypeBinding internalResolveType = super.internalResolveType(scope);
+	protected TypeBinding internalResolveType(Scope scope, int location) {
+		TypeBinding internalResolveType = super.internalResolveType(scope, location);
 		return internalResolveType;
 	}
 

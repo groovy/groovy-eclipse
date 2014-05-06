@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *								Bug 432977 - [1.8][null] Incorrect 'type is not visible' compiler error 
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -318,6 +320,9 @@ public class AnnotatableTypeSystem extends TypeSystem {
 					break;
 			}
 			if (Util.effectivelyEqual(derivedType.getTypeAnnotations(), annotations)) {
+				// point-fix for https://bugs.eclipse.org/432977
+				if (!type.isUnresolvedType() && derivedType.isUnresolvedType())
+					return ((UnresolvedReferenceBinding)derivedType).resolve(this.environment, false);
 				return derivedType;
 			}
 			if (!derivedType.hasTypeAnnotations())

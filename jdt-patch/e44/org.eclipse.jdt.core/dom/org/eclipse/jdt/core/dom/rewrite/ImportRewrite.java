@@ -143,12 +143,12 @@ public final class ImportRewrite {
 	private boolean useContextToFilterImplicitImports;
 
 	/**
-	 * Creates a {@link ImportRewrite} from a {@link ICompilationUnit}. If <code>restoreExistingImports</code>
+	 * Creates an {@link ImportRewrite} from an {@link ICompilationUnit}. If <code>restoreExistingImports</code>
 	 * is <code>true</code>, all existing imports are kept, and new imports will be inserted at best matching locations. If
 	 * <code>restoreExistingImports</code> is <code>false</code>, the existing imports will be removed and only the
 	 * newly added imports will be created.
 	 * <p>
-	 * Note that {@link #create(ICompilationUnit, boolean)} is more efficient than this method if an AST for
+	 * Note that {@link #create(CompilationUnit, boolean)} is more efficient than this method if an AST for
 	 * the compilation unit is already available.
 	 * </p>
 	 * @param cu the compilation unit to create the imports for
@@ -174,7 +174,7 @@ public final class ImportRewrite {
 	}
 
 	/**
-	 * Creates a {@link ImportRewrite} from a an AST ({@link CompilationUnit}). The AST has to be created from a
+	 * Creates an {@link ImportRewrite} from an AST ({@link CompilationUnit}). The AST has to be created from an
 	 * {@link ICompilationUnit}, that means {@link ASTParser#setSource(ICompilationUnit)} has been used when creating the
 	 * AST. If <code>restoreExistingImports</code> is <code>true</code>, all existing imports are kept, and new imports
 	 * will be inserted at best matching locations. If <code>restoreExistingImports</code> is <code>false</code>, the

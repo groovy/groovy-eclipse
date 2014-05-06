@@ -290,18 +290,25 @@ public class CaptureBinding extends TypeVariableBinding {
 	    StringBuffer nameBuffer = new StringBuffer(10);
 		appendNullAnnotation(nameBuffer, options);
 		nameBuffer.append(this.sourceName());
-		if (this.wildcard != null) {
-			nameBuffer.append("of "); //$NON-NLS-1$
-			nameBuffer.append(this.wildcard.nullAnnotatedReadableName(options, shortNames));
-		} else if (this.lowerBound != null) {
-			nameBuffer.append(" super "); //$NON-NLS-1$
-			nameBuffer.append(this.lowerBound.nullAnnotatedReadableName(options, shortNames));
-		} else if (this.firstBound != null) {
-			nameBuffer.append(" extends "); //$NON-NLS-1$
-			nameBuffer.append(this.firstBound.nullAnnotatedReadableName(options, shortNames));
-			TypeBinding[] otherUpperBounds = this.otherUpperBounds();
-			if (otherUpperBounds != NO_TYPES)
-				nameBuffer.append(" & ..."); //$NON-NLS-1$ // only hint at more bounds, we currently don't evaluate null annotations on otherUpperBounds
+		if (!this.inRecursiveFunction) { // CaptureBinding18 can be recursive indeed
+			this.inRecursiveFunction = true;
+			try {
+				if (this.wildcard != null) {
+					nameBuffer.append("of "); //$NON-NLS-1$
+					nameBuffer.append(this.wildcard.nullAnnotatedReadableName(options, shortNames));
+				} else if (this.lowerBound != null) {
+					nameBuffer.append(" super "); //$NON-NLS-1$
+					nameBuffer.append(this.lowerBound.nullAnnotatedReadableName(options, shortNames));
+				} else if (this.firstBound != null) {
+					nameBuffer.append(" extends "); //$NON-NLS-1$
+					nameBuffer.append(this.firstBound.nullAnnotatedReadableName(options, shortNames));
+					TypeBinding[] otherUpperBounds = this.otherUpperBounds();
+					if (otherUpperBounds != NO_TYPES)
+						nameBuffer.append(" & ..."); //$NON-NLS-1$ // only hint at more bounds, we currently don't evaluate null annotations on otherUpperBounds
+				}
+			} finally {
+				this.inRecursiveFunction = false;
+			}
 		}
 		int nameLength = nameBuffer.length();
 		char[] readableName = new char[nameLength];

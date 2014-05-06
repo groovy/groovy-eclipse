@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2013 IBM Corporation and others.
+ * Copyright (c) 2009, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -345,6 +345,9 @@ public class JavadocContents {
 			this.tempLastAnchorFoundIndex = this.unknownFormatLastAnchorFoundIndex;
 			
 			range = computeChildRange(anchor, this.indexOfFieldsBottom);
+			if (range == null) {
+				range = computeChildRange(getJavadoc8Anchor(anchor), this.indexOfAllMethodsBottom);
+			}
 			
 			this.unknownFormatLastAnchorFoundIndex = this.tempLastAnchorFoundIndex;
 			this.unknownFormatAnchorIndexesCount = this.tempAnchorIndexesCount;
@@ -361,6 +364,9 @@ public class JavadocContents {
 			this.tempLastAnchorFoundIndex = this.methodLastAnchorFoundIndex;
 			
 			range = computeChildRange(anchor, this.indexOfAllMethodsBottom);
+			if (range == null) {
+				range = computeChildRange(getJavadoc8Anchor(anchor), this.indexOfAllMethodsBottom);
+			}
 			
 			this.methodLastAnchorFoundIndex = this.tempLastAnchorFoundIndex;
 			this.methodAnchorIndexesCount = this.tempAnchorIndexesCount;
@@ -370,6 +376,35 @@ public class JavadocContents {
 		return range;
 	}
 	
+	private static char[] getJavadoc8Anchor(char[] anchor) {
+		// fix for bug 432284: [1.8] Javadoc-8-style anchors not found by IMethod#getAttachedJavadoc(..)
+		char[] anchor8 = new char[anchor.length];
+		int i8 = 0;
+		for (int i = 0; i < anchor.length; i++) {
+			char ch = anchor[i];
+			switch (ch) {
+				case '(':
+				case ')':
+				case ',':
+					anchor8[i8++] = '-';
+					break;
+				case '[':
+					anchor8[i8++] = ':';
+					anchor8[i8++] = 'A';
+					break;
+				case ' ': // handled by preceding ','
+				case ']': // handled by preceding '['
+					break;
+				default:
+					anchor8[i8++] = ch;
+			}
+		}
+		if (i8 != anchor.length) {
+			anchor8 = CharOperation.subarray(anchor8, 0, i8);
+		}
+		return anchor8;
+	}
+
 	private String computeMethodAnchorPrefixEnd(BinaryMethod method) throws JavaModelException {
 		String typeQualifiedName = null;
 		if (this.type.isMember()) {

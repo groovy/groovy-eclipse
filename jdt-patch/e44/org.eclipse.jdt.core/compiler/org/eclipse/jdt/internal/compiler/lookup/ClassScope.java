@@ -17,6 +17,7 @@
  *							Bug 395002 - Self bound generic class doesn't resolve bounds properly for wildcards for certain parametrisation.
  *							Bug 416176 - [1.8][compiler][null] null type annotations cause grief on type variables
  *							Bug 427199 - [1.8][resource] avoid resource leak warnings on Streams that have no resource
+ *							Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *        Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
  *                          Bug 415821 - [1.8][compiler] CLASS_EXTENDS target type annotation missing for anonymous classes
  *******************************************************************************/
@@ -1331,6 +1332,17 @@ public class ClassScope extends Scope {
 	*/
 	public TypeDeclaration referenceType() {
 		return this.referenceContext;
+	}
+
+	@Override
+	public boolean hasDefaultNullnessFor(int location) {
+		SourceTypeBinding binding = this.referenceContext.binding;
+		if (binding != null) {
+			int nullDefault = binding.getNullDefault();
+			if (nullDefault != 0)
+				return (nullDefault & location) != 0;
+		}
+		return this.parent.hasDefaultNullnessFor(location);
 	}
 
 	public String toString() {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,7 @@
  *     Stephan Herrmann - Contribution for Bug 346010 - [model] strange initialization dependency in OptionTests
  *     Terry Parker <tparker@google.com> - DeltaProcessor misses state changes in archive files, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=357425
  *     Thirumala Reddy Mutchukota <thirumala@google.com> - Contribution to bug: https://bugs.eclipse.org/bugs/show_bug.cgi?id=411423
+ *     Terry Parker <tparker@google.com> - [performance] Low hit rates in JavaModel caches - https://bugs.eclipse.org/421165
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 //GROOVY PATCHED
@@ -93,6 +94,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	private static final String NON_CHAINING_JARS_CACHE = "nonChainingJarsCache"; //$NON-NLS-1$
 	private static final String INVALID_ARCHIVES_CACHE = "invalidArchivesCache";  //$NON-NLS-1$
 	private static final String EXTERNAL_FILES_CACHE = "externalFilesCache";  //$NON-NLS-1$
+	private static final String ASSUMED_EXTERNAL_FILES_CACHE = "assumedExternalFilesCache";  //$NON-NLS-1$
 
 	/**
 	 * Define a zip cache object.
@@ -1441,19 +1443,26 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	private UserLibraryManager userLibraryManager;
 	
 	/*
-	 * List of IPath of jars that are known to not contain a chaining (through MANIFEST.MF) to another library
+	 * A set of IPaths for jars that are known to not contain a chaining (through MANIFEST.MF) to another library
 	 */
 	private Set nonChainingJars;
 	
 	/*
-	 * List of IPath of jars that are known to be invalid - such as not being a valid/known format
+	 * A set of IPaths for jars that are known to be invalid - such as not being a valid/known format
 	 */
 	private Set invalidArchives;
 
 	/*
-	 * List of IPath of files that are known to be external to the workspace
+	 * A set of IPaths for files that are known to be external to the workspace.
+	 * Need not be referenced by the classpath.
 	 */
 	private Set externalFiles;
+
+	/*
+	 * A set of IPaths for files that do not exist on the file system but are assumed to be
+	 * external archives (rather than external folders).
+	 */
+	private Set assumedExternalFiles;
 
 	/**
 	 * Update the classpath variable cache
@@ -1590,6 +1599,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			this.nonChainingJars = loadClasspathListCache(NON_CHAINING_JARS_CACHE);
 			this.invalidArchives = loadClasspathListCache(INVALID_ARCHIVES_CACHE);
 			this.externalFiles = loadClasspathListCache(EXTERNAL_FILES_CACHE);
+			this.assumedExternalFiles = loadClasspathListCache(ASSUMED_EXTERNAL_FILES_CACHE);
 			String includeContainerReferencedLib = System.getProperty(RESOLVE_REFERENCED_LIBRARIES_FOR_CONTAINERS);
 			this.resolveReferencedLibrariesForContainers = TRUE.equalsIgnoreCase(includeContainerReferencedLib);
 		}
@@ -1618,6 +1628,10 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		}
 	}
 
+	/**
+	 * Adds a path to the external files cache. It is the responsibility of callers to
+	 * determine the file's existence, as determined by  {@link File#isFile()}.
+	 */
 	public void addExternalFile(IPath path) {
 		// unlikely to be null
 		if (this.externalFiles == null) {
@@ -3123,8 +3137,50 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		}
 	}
 
+	/**
+	 * Returns the cached value for whether the file referred to by <code>path</code> exists
+	 * and is a file, as determined by the return value of {@link File#isFile()}.
+	 */
 	public boolean isExternalFile(IPath path) {
 		return this.externalFiles != null && this.externalFiles.contains(path);
+	}
+
+	/**
+	 * Removes the cached state of a single entry in the externalFiles cache.
+	 */
+	public void clearExternalFileState(IPath path) {
+		if (this.externalFiles != null) {
+			this.externalFiles.remove(path);
+		}
+	}
+
+	/**
+	 * Resets the entire externalFiles cache.
+	 */
+	public void resetExternalFilesCache() {
+		if (this.externalFiles != null) {
+			this.externalFiles.clear();
+		}
+	}
+
+	/**
+	 * Returns whether the provided {@link IPath} appears to be an external file,
+	 * which is true if the path does not represent an internal resource, does not
+	 * exist on the file system, and does have a file extension (this is the definition
+	 * provided by {@link ExternalFoldersManager#isExternalFolderPath}).
+	 */
+	public boolean isAssumedExternalFile(IPath path) {
+		if (this.assumedExternalFiles == null) {
+			return false;
+		}
+		return this.assumedExternalFiles.contains(path);
+	}
+
+	/**
+	 * Adds the provided {@link IPath} to the list of assumed external files.
+	 */
+	public void addAssumedExternalFile(IPath path) {
+		this.assumedExternalFiles.add(path);
 	}
 
 	public void setClasspathBeingResolved(IJavaProject project, boolean classpathIsResolved) {
@@ -3148,7 +3204,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			}
 		} catch (IOException e) {
 			if (cacheFile.exists())
-				Util.log(e, "Unable to read non-chaining jar cache file"); //$NON-NLS-1$
+				Util.log(e, "Unable to read JavaModelManager " + cacheName + " file"); //$NON-NLS-1$ //$NON-NLS-2$
 		} finally {
 			if (in != null) {
 				try {
@@ -3197,6 +3253,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			return this.invalidArchives;
 		else if (cacheName == EXTERNAL_FILES_CACHE)
 			return this.externalFiles;
+		else if (cacheName == ASSUMED_EXTERNAL_FILES_CACHE)
+			return this.assumedExternalFiles;
 		else
 			return null;
 	}
@@ -3941,6 +3999,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			this.invalidArchives.clear();
 		if (this.externalFiles != null)
 			this.externalFiles.clear();
+		if (this.assumedExternalFiles != null)
+			this.assumedExternalFiles.clear();
 	}
 
 	/*
@@ -4290,6 +4350,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				saveClasspathListCache(NON_CHAINING_JARS_CACHE);
 				saveClasspathListCache(INVALID_ARCHIVES_CACHE);
 				saveClasspathListCache(EXTERNAL_FILES_CACHE);
+				saveClasspathListCache(ASSUMED_EXTERNAL_FILES_CACHE);
 	
 				// will need delta since this save (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=38658)
 				context.needDelta();

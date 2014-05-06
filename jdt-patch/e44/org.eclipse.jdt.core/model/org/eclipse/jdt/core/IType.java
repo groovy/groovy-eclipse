@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,11 +17,15 @@ import org.eclipse.core.runtime.IProgressMonitor;
 
 /**
  * Represents either a source type in a compilation unit (either a top-level
- * type, a member type, a local type or an anonymous type)
+ * type, a member type, a local type, an anonymous type or a lambda expression)
  * or a binary type in a class file. Enumeration classes and annotation
  * types are subkinds of classes and interfaces, respectively.
  * <p>
- * Note that the element name of an anonymous source type is always empty.
+ * Note that the element name of an anonymous source type and lambda expressions
+ * is always empty. Types representing lambda expressions are pseudo-elements 
+ * and not included in the children of their parent. Lambda expressions are created 
+ * as the result of a <code>ICodeAssist.codeSelect(...)</code>. For more information 
+ * on such pseudo-elements, see <code>ILocalVariable</code>.
  * </p><p>
  * If a binary type cannot be parsed, its structure remains unknown.
  * Use <code>IJavaElement.isStructureKnown</code> to determine whether this
@@ -486,6 +490,9 @@ public interface IType extends IMember, IAnnotatable {
 	/**
 	 * Returns the simple name of this type, unqualified by package or enclosing type.
 	 * This is a handle-only method.
+	 * 
+	 * Note that the element name of an anonymous source type and lambda expressions
+	 * is always empty.
 	 *
 	 * @return the simple name of this type
 	 */
@@ -1205,4 +1212,12 @@ public interface IType extends IMember, IAnnotatable {
 	 * @since 3.0
 	 */
 	String[][] resolveType(String typeName, WorkingCopyOwner owner) throws JavaModelException;
+	
+	/**
+	 * Returns whether this type represents a lambda expression.
+	 *
+	 * @return true if this type represents a lambda expression, false otherwise
+	 * @since 3.10
+	 */
+	public boolean isLambda();
 }

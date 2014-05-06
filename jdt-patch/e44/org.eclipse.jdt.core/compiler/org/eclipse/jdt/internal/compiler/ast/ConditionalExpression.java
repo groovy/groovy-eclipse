@@ -464,6 +464,12 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 			if (this.valueIfFalse instanceof CastExpression) this.valueIfFalse.bits |= DisableUnnecessaryCastCheck; // will check later on
 			this.originalValueIfFalseType = this.valueIfFalse.resolveType(scope);
 
+			if (isPolyExpression()) {
+				if (this.expectedType == null) {
+					this.polyExpressionScope = scope; // preserve for eventual resolution/error reporting.
+				}
+			}
+
 			if (conditionType == null || this.originalValueIfTrueType == null || this.originalValueIfFalseType == null)
 				return null;
 		} else {

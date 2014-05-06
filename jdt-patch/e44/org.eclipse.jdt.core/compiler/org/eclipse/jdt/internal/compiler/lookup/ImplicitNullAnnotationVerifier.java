@@ -74,7 +74,9 @@ public class ImplicitNullAnnotationVerifier {
 			if (currentType.id == TypeIds.T_JavaLangObject) {
 				return;
 			}
-			boolean needToApplyNonNullDefault = currentMethod.hasNonNullDefault();
+			long sourceLevel = scope.compilerOptions().sourceLevel;
+			boolean needToApplyNonNullDefault = currentMethod.hasNonNullDefaultFor(Binding.DefaultLocationParameter|Binding.DefaultLocationReturnType,
+																					sourceLevel >= ClassFileConstants.JDK1_8);
 			// compatibility & inheritance do not consider constructors / static methods:
 			boolean isInstanceMethod = !currentMethod.isConstructor() && !currentMethod.isStatic();
 			complain &= isInstanceMethod;
@@ -110,7 +112,6 @@ public class ImplicitNullAnnotationVerifier {
 					checkNullSpecInheritance(currentMethod, srcMethod, needToApplyNonNullDefault, complain, currentSuper, scope, inheritedNonNullnessInfos);
 					needToApplyNonNullDefault = false;
 				}
-				long sourceLevel = scope.compilerOptions().sourceLevel;
 				
 				// transfer collected information into currentMethod:
 				InheritedNonNullnessInfo info = inheritedNonNullnessInfos[0];
@@ -166,7 +167,10 @@ public class ImplicitNullAnnotationVerifier {
 			return;
 
 		// superclass:
-		collectOverriddenMethods(original, selector, suggestedParameterLength, currentType.superclass(), ifcsSeen, result);
+		ReferenceBinding superclass = currentType.superclass();
+		if (superclass == null)
+			return; // pseudo root of inheritance, happens in eval contexts
+		collectOverriddenMethods(original, selector, suggestedParameterLength, superclass, ifcsSeen, result);
 
 		// superInterfaces:
 		ReferenceBinding[] superInterfaces = currentType.superInterfaces();

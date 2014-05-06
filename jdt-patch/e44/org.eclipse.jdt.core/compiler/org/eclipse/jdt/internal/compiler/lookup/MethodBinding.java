@@ -19,6 +19,7 @@
  *								Bug 400874 - [1.8][compiler] Inference infrastructure should evolve to meet JLS8 18.x (Part G of JSR335 spec)
  *								Bug 425152 - [1.8] [compiler] Lambda Expression not resolved but flow analyzed leading to NPE.
  *								Bug 423505 - [1.8] Implement "18.5.4 More Specific Method Inference"
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *     Jesper Steen Moller - Contributions for
  *								Bug 412150 [1.8] [compiler] Enable reflected parameter names during annotation processing
  *******************************************************************************/
@@ -35,6 +36,7 @@ import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.ConstantPool;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 @SuppressWarnings("rawtypes")
@@ -53,6 +55,7 @@ public class MethodBinding extends Binding {
 
 	/** Store nullness information from annotation (incl. applicable default). */
 	public Boolean[] parameterNonNullness;  // TRUE means @NonNull declared, FALSE means @Nullable declared, null means nothing declared
+	public int defaultNullness; // for null *type* annotations
 
 	/** Store parameter names from MethodParameters attribute (incl. applicable default). */
 	public char[][] parameterNames = Binding.NO_PARAMETER_NAMES;
@@ -506,28 +509,31 @@ protected void fillInDefaultNonNullness(AbstractMethodDeclaration sourceMethod) 
 	}
 }
 
+//pre: null annotation analysis is enabled
 protected void fillInDefaultNonNullness18(AbstractMethodDeclaration sourceMethod, LookupEnvironment env) {
-	boolean added = false;
-	int length = this.parameters.length;
-	for (int i = 0; i < length; i++) {
-		TypeBinding parameter = this.parameters[i];
-		if (parameter.isBaseType())
-			continue;
-		long existing = parameter.tagBits & TagBits.AnnotationNullMASK;
-		if (existing == 0L) {
-			added = true;
-			if (!parameter.isBaseType()) {
-				this.parameters[i] = env.createAnnotatedType(parameter, new AnnotationBinding[]{env.getNonNullAnnotation()});
-				if (sourceMethod != null)
-					sourceMethod.arguments[i].binding.type = this.parameters[i];
+	if (hasNonNullDefaultFor(DefaultLocationParameter, true)) {
+		boolean added = false;
+		int length = this.parameters.length;
+		for (int i = 0; i < length; i++) {
+			TypeBinding parameter = this.parameters[i];
+			if (parameter.isBaseType())
+				continue;
+			long existing = parameter.tagBits & TagBits.AnnotationNullMASK;
+			if (existing == 0L) {
+				added = true;
+				if (!parameter.isBaseType()) {
+					this.parameters[i] = env.createAnnotatedType(parameter, new AnnotationBinding[]{env.getNonNullAnnotation()});
+					if (sourceMethod != null)
+						sourceMethod.arguments[i].binding.type = this.parameters[i];
+				}
+			} else if (sourceMethod != null && (parameter.tagBits & TagBits.AnnotationNonNull) != 0) {
+				sourceMethod.scope.problemReporter().nullAnnotationIsRedundant(sourceMethod, i);
 			}
-		} else if (sourceMethod != null && (parameter.tagBits & TagBits.AnnotationNonNull) != 0) {
-			sourceMethod.scope.problemReporter().nullAnnotationIsRedundant(sourceMethod, i);
 		}
+		if (added)
+			this.tagBits |= TagBits.HasParameterAnnotations;
 	}
-	if (added)
-		this.tagBits |= TagBits.HasParameterAnnotations;
-	if (this.returnType != null) {
+	if (this.returnType != null && hasNonNullDefaultFor(DefaultLocationReturnType, true)) {
 		if (!this.returnType.isBaseType() && (this.returnType.tagBits & TagBits.AnnotationNullMASK) == 0) {
 			this.returnType = env.createAnnotatedType(this.returnType, new AnnotationBinding[]{env.getNonNullAnnotation()});
 		} else if (sourceMethod != null && (this.returnType.tagBits & TagBits.AnnotationNonNull) != 0) {
@@ -621,11 +627,16 @@ public long getAnnotationTagBits() {
 			AbstractMethodDeclaration methodDecl = typeDecl.declarationOf(originalMethod);
 			if (methodDecl != null)
 				ASTNode.resolveAnnotations(methodDecl.scope, methodDecl.annotations, originalMethod);
-			long nullDefaultBits = this.tagBits & (TagBits.AnnotationNonNullByDefault|TagBits.AnnotationNullUnspecifiedByDefault);
-			if (nullDefaultBits != 0 && this.declaringClass instanceof SourceTypeBinding) {
-				SourceTypeBinding declaringSourceType = (SourceTypeBinding) this.declaringClass;
-				if (declaringSourceType.checkRedundantNullnessDefaultOne(methodDecl, methodDecl.annotations, nullDefaultBits)) {
-					declaringSourceType.checkRedundantNullnessDefaultRecurse(methodDecl, methodDecl.annotations, nullDefaultBits);
+			CompilerOptions options = scope.compilerOptions();
+			if (options.isAnnotationBasedNullAnalysisEnabled) {
+				boolean isJdk18 = options.sourceLevel >= ClassFileConstants.JDK1_8;
+				long nullDefaultBits = isJdk18 ? this.defaultNullness
+						: this.tagBits & (TagBits.AnnotationNonNullByDefault|TagBits.AnnotationNullUnspecifiedByDefault);
+				if (nullDefaultBits != 0 && this.declaringClass instanceof SourceTypeBinding) {
+					SourceTypeBinding declaringSourceType = (SourceTypeBinding) this.declaringClass;
+					if (declaringSourceType.checkRedundantNullnessDefaultOne(methodDecl, methodDecl.annotations, nullDefaultBits, isJdk18)) {
+						declaringSourceType.checkRedundantNullnessDefaultRecurse(methodDecl, methodDecl.annotations, nullDefaultBits, isJdk18);
+					}
 				}
 			}
 		}
@@ -1244,12 +1255,18 @@ public String toString() {
 public TypeVariableBinding[] typeVariables() {
 	return this.typeVariables;
 }
-public boolean hasNonNullDefault() {
-	if ((this.tagBits & TagBits.AnnotationNonNullByDefault) != 0)
-		return true;
-	if ((this.tagBits & TagBits.AnnotationNullUnspecifiedByDefault) != 0)
-		return false;
-	return this.declaringClass.hasNonNullDefault();
+//pre: null annotation analysis is enabled
+public boolean hasNonNullDefaultFor(int location, boolean useTypeAnnotations) {
+	if (useTypeAnnotations) {
+		if (this.defaultNullness != 0)
+			return (this.defaultNullness & location) != 0;
+	} else {
+		if ((this.tagBits & TagBits.AnnotationNonNullByDefault) != 0)
+			return true;
+		if ((this.tagBits & TagBits.AnnotationNullUnspecifiedByDefault) != 0)
+			return false;
+	}
+	return this.declaringClass.hasNonNullDefaultFor(location, useTypeAnnotations);
 }
 
 public boolean redeclaresPublicObjectMethod(Scope scope) {

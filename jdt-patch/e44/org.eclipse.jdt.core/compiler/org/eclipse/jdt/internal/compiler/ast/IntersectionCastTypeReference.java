@@ -7,6 +7,8 @@
  * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *							Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *        Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
  *                          Bug 409236 - [1.8][compiler] Type annotations on intersection cast types dropped by code generator
  *******************************************************************************/
@@ -66,7 +68,7 @@ public class IntersectionCastTypeReference extends TypeReference {
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.internal.compiler.ast.TypeReference#getTypeBinding(org.eclipse.jdt.internal.compiler.lookup.Scope)
 	 */
-	public TypeBinding resolveType(BlockScope scope, boolean checkBounds) {
+	public TypeBinding resolveType(BlockScope scope, boolean checkBounds, int location) {
 
 		int length = this.typeReferences.length;
 		ReferenceBinding[] intersectingTypes = new ReferenceBinding[length];
@@ -76,7 +78,7 @@ public class IntersectionCastTypeReference extends TypeReference {
 		nextType:
 		for (int i = 0; i < length; i++) {
 			final TypeReference typeReference = this.typeReferences[i];
-			TypeBinding type = typeReference.resolveType(scope, checkBounds);
+			TypeBinding type = typeReference.resolveType(scope, checkBounds, location);
 			if (type == null || ((type.tagBits & TagBits.HasMissingType) != 0)) {
 				hasError = true;
 				continue;

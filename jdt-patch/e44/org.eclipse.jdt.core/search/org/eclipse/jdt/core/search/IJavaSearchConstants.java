@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -465,6 +465,17 @@ public interface IJavaSearchConstants {
 	 * @category limitTo
 	 */
 	int IMPLICIT_THIS_REFERENCE = 0x8000000;
+
+	/**
+	 * Return only method reference expressions, e.g. <code>A::foo</code>.
+	 * <p>
+	 * When this flag is set, only {@link MethodReferenceMatch} matches will be
+	 * returned.
+	 *</p>
+	 * @since 3.10
+	 * @category limitTo
+	 */
+	int METHOD_REFERENCE_EXPRESSION = 0x10000000;
 
 	/* Syntactic match modes */
 

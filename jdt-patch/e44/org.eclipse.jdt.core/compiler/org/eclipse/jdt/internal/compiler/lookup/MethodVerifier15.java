@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -24,6 +24,8 @@
  *								Bug 420080 - [1.8] Overridden Default method is reported as duplicated
  *								Bug 404690 - [1.8][compiler] revisit bridge generation after VM bug is fixed
  *								Bug 410325 - [1.7][compiler] Generified method override different between javac and eclipse compiler
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
+ *								Bug 390889 - [1.8][compiler] Evaluate options to support 1.7- projects against 1.8 JRE.
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -74,7 +76,9 @@ void checkConcreteInheritedMethod(MethodBinding concreteMethod, MethodBinding[] 
 	AbstractMethodDeclaration srcMethod = null;
 	if (analyseNullAnnotations && this.type.equals(concreteMethod.declaringClass)) // is currentMethod from the current type?
 		srcMethod = concreteMethod.sourceMethod();
-	boolean hasNonNullDefault = concreteMethod.hasNonNullDefault();
+	boolean useTypeAnnotations = this.environment.globalOptions.sourceLevel >= ClassFileConstants.JDK1_8;
+	boolean hasNonNullDefault = analyseNullAnnotations &&
+			concreteMethod.hasNonNullDefaultFor(Binding.DefaultLocationParameter|Binding.DefaultLocationReturnType, useTypeAnnotations);
 	for (int i = 0, l = abstractMethods.length; i < l; i++) {
 		MethodBinding abstractMethod = abstractMethods[i];
 		if (concreteMethod.isVarargs() != abstractMethod.isVarargs())
@@ -312,7 +316,8 @@ void checkInheritedMethods(MethodBinding[] methods, int length, boolean[] isOver
 							continue;
 					}
 
-					problemReporter().duplicateInheritedMethods(this.type, concreteMethod, methods[i]);
+					problemReporter().duplicateInheritedMethods(this.type, concreteMethod, methods[i],
+											this.environment.globalOptions.sourceLevel >= ClassFileConstants.JDK1_8);
 					continueInvestigation = false;
 				}
 				concreteMethod = methods[i];
@@ -387,7 +392,8 @@ void checkAgainstInheritedMethods(MethodBinding currentMethod, MethodBinding[] m
 		AbstractMethodDeclaration srcMethod = null;
 		if (this.type.equals(currentMethod.declaringClass)) // is currentMethod from the current type?
 			srcMethod = currentMethod.sourceMethod();
-		boolean hasNonNullDefault = currentMethod.hasNonNullDefault();
+		boolean useTypeAnnotations = options.sourceLevel >= ClassFileConstants.JDK1_8;
+		boolean hasNonNullDefault = currentMethod.hasNonNullDefaultFor(Binding.DefaultLocationParameter|Binding.DefaultLocationReturnType, useTypeAnnotations);
 		for (int i = length; --i >= 0;)
 			if (!currentMethod.isStatic() && !methods[i].isStatic())
 				checkNullSpecInheritance(currentMethod, srcMethod, hasNonNullDefault, true, methods[i], this.type.scope, null);

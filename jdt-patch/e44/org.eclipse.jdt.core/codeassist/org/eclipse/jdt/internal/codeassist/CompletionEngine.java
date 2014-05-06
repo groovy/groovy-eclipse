@@ -2628,8 +2628,13 @@ public final class CompletionEngine
 
 		// When completion is inside lambda body, the fake type cannot be attached to the lambda.
 		ReferenceContext referenceContext = scope.parent.referenceContext();
-		CompletionOnAnnotationOfType fakeType = (CompletionOnAnnotationOfType) (referenceContext instanceof CompletionOnAnnotationOfType ? referenceContext : null);
-		if (fakeType != null && fakeType.annotations[0] == annot) {
+		CompletionOnAnnotationOfType fakeType;
+		if (referenceContext instanceof CompletionOnAnnotationOfType) {
+			fakeType = (CompletionOnAnnotationOfType) referenceContext;
+		} else {
+			fakeType = new CompletionOnAnnotationOfType(CompletionParser.FAKE_TYPE_NAME, scope.referenceCompilationUnit().compilationResult, annot);
+		}
+		if (fakeType.annotations[0] == annot) {
 			// When the completion is inside a method body the annotation cannot be accuratly attached to the correct node by completion recovery.
 			// So 'targetedElement' is not computed in this case.
 			if (scope.parent.parent == null || !(scope.parent.parent instanceof MethodScope)) {
@@ -2645,8 +2650,7 @@ public final class CompletionEngine
 			setSourceAndTokenRange(type.sourceStart, type.sourceEnd);
 
 			if (scope.parent.parent != null &&
-					!(scope.parent.parent instanceof MethodScope) &&
-					fakeType != null && !fakeType.isParameter) {
+					!(scope.parent.parent instanceof MethodScope) && !fakeType.isParameter) {
 
 				if (this.completionToken.length <= Keywords.INTERFACE.length
 					&& CharOperation.prefixEquals(this.completionToken, Keywords.INTERFACE, false /* ignore case */

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 GK Software AG.
+ * Copyright (c) 2013, 2014 GK Software AG.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -44,9 +44,9 @@ public class TypeAnnotationWalker {
 		public IBinaryAnnotation[] getAnnotationsAtCursor() { return NO_ANNOTATIONS; }
 	};
 	
-	final private IBinaryTypeAnnotation[] typeAnnotations;	// the actual material we're managing here
-	final private long matches;							// bit mask of indices into typeAnnotations, 1 means active, 0 is filtered during the walk
-	final private int pathPtr;							// pointer into the typePath
+	final protected IBinaryTypeAnnotation[] typeAnnotations;	// the actual material we're managing here
+	final protected long matches;								// bit mask of indices into typeAnnotations, 1 means active, 0 is filtered during the walk
+	final protected int pathPtr;								// pointer into the typePath
 
 	// precondition: not-empty typeAnnotations
 	public TypeAnnotationWalker(IBinaryTypeAnnotation[] typeAnnotations) {
@@ -55,13 +55,13 @@ public class TypeAnnotationWalker {
 	TypeAnnotationWalker(IBinaryTypeAnnotation[] typeAnnotations, long matchBits) {
 		this(typeAnnotations, matchBits, 0);
 	}
-	private TypeAnnotationWalker(IBinaryTypeAnnotation[] typeAnnotations, long matchBits, int pathPtr) {
+	protected TypeAnnotationWalker(IBinaryTypeAnnotation[] typeAnnotations, long matchBits, int pathPtr) {
 		this.typeAnnotations = typeAnnotations;
 		this.matches = matchBits;
 		this.pathPtr = pathPtr;
 	}
 
-	private TypeAnnotationWalker restrict(long newMatches, int newPathPtr) {
+	protected TypeAnnotationWalker restrict(long newMatches, int newPathPtr) {
 		if (this.matches == newMatches && this.pathPtr == newPathPtr) return this;
 		if (newMatches == 0 || this.typeAnnotations == null || this.typeAnnotations.length == 0)
 			return EMPTY_ANNOTATION_WALKER;

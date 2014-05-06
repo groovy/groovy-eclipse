@@ -16,6 +16,7 @@
  *								Bug 405569 - Resource leak check false positive when using DbUtils.closeQuietly
  *								Bug 427199 - [1.8][resource] avoid resource leak warnings on Streams that have no resource
  *								Bug 425183 - [1.8][inference] make CaptureBinding18 safe
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *    Jesper S Moller - Contributions for
  *								Bug 405066 - [1.8][compiler][codegen] Implement code generation infrastructure for JSR335
  *								Bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
@@ -350,6 +351,16 @@ public interface TypeConstants {
 	char[] SYNTHETIC_ACCESS_METHOD_PREFIX =  "access$".toCharArray(); //$NON-NLS-1$
 	char[] SYNTHETIC_ENUM_CONSTANT_INITIALIZATION_METHOD_PREFIX =  " enum constant initialization$".toCharArray(); //$NON-NLS-1$
 	char[] SYNTHETIC_STATIC_FACTORY =  "<factory>".toCharArray(); //$NON-NLS-1$
+
+	// constants in enum org.eclipse.jdt.annotation.DefaultLocation:
+	char[] DEFAULT_LOCATION__PARAMETER = "PARAMETER".toCharArray(); //$NON-NLS-1$
+	char[] DEFAULT_LOCATION__RETURN_TYPE = "RETURN_TYPE".toCharArray(); //$NON-NLS-1$
+	char[] DEFAULT_LOCATION__FIELD = "FIELD".toCharArray(); //$NON-NLS-1$
+	char[] DEFAULT_LOCATION__TYPE_ARGUMENT = "TYPE_ARGUMENT".toCharArray(); //$NON-NLS-1$
+	char[] DEFAULT_LOCATION__TYPE_PARAMETER = "TYPE_PARAMETER".toCharArray(); //$NON-NLS-1$
+	char[] DEFAULT_LOCATION__TYPE_BOUND = "TYPE_BOUND".toCharArray(); //$NON-NLS-1$
+	char[] DEFAULT_LOCATION__ARRAY_CONTENTS = "ARRAY_CONTENTS".toCharArray(); //$NON-NLS-1$
+
 
 	// synthetic package-info name
 	public static final char[] PACKAGE_INFO_NAME = "package-info".toCharArray(); //$NON-NLS-1$

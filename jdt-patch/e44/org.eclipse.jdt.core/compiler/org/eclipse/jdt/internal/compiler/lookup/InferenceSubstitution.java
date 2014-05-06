@@ -30,7 +30,7 @@ public class InferenceSubstitution extends Scope.Substitutor implements Substitu
 	public TypeBinding substitute(Substitution substitution, TypeBinding originalType) {
 		for (int i = 0; i < this.variables.length; i++) {
 			InferenceVariable variable = this.variables[i];
-			if (TypeBinding.equalsEquals(variable.typeParameter, originalType)) {
+			if (TypeBinding.equalsEquals(getP(i), originalType)) {
 				variable.nullHints |= originalType.tagBits & TagBits.AnnotationNullMASK;
 				return variable;
 			}
@@ -39,15 +39,25 @@ public class InferenceSubstitution extends Scope.Substitutor implements Substitu
 		return super.substitute(substitution, originalType);
 	}
 
+	/**
+	 * Get the type corresponding to the ith inference variable.
+	 * Default behavior is to answer the inference variable's type parameter.
+	 * Sub-class may override to substitute other types.
+	 */
+	protected TypeBinding getP(int i) {
+		return this.variables[i].typeParameter;
+	}
+
 	public TypeBinding substitute(TypeVariableBinding typeVariable) {
 		ReferenceBinding superclass = typeVariable.superclass;
 		ReferenceBinding[] superInterfaces = typeVariable.superInterfaces;
 		boolean hasSubstituted = false;
 		variableLoop: for (int i = 0; i < this.variables.length; i++) {
 			InferenceVariable variable = this.variables[i];
-			if (TypeBinding.equalsEquals(variable.typeParameter, typeVariable))
+			TypeBinding pi = getP(i);
+			if (TypeBinding.equalsEquals(pi, typeVariable))
 				return variable;
-			if (TypeBinding.equalsEquals(variable.typeParameter, superclass)) {
+			if (TypeBinding.equalsEquals(pi, superclass)) {
 				superclass = variable;
 				hasSubstituted = true;
 				continue;
@@ -55,7 +65,7 @@ public class InferenceSubstitution extends Scope.Substitutor implements Substitu
 			if (superInterfaces != null) {
 				int ifcLen = superInterfaces.length; 
 				for (int j = 0; j < ifcLen; j++) {
-					if (TypeBinding.equalsEquals(variable.typeParameter, superInterfaces[j])) {
+					if (TypeBinding.equalsEquals(pi, superInterfaces[j])) {
 						if (superInterfaces == typeVariable.superInterfaces)
 							System.arraycopy(superInterfaces, 0, superInterfaces = new ReferenceBinding[ifcLen], 0, ifcLen);
 						superInterfaces[j] = variable;

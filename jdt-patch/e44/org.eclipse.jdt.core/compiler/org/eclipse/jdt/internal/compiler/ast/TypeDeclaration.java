@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1270,9 +1270,12 @@ checkOuterScope:while (outerScope != null) {
 					outerScope = outerScope.parent;
 				}
 			} else if (existingType instanceof LocalTypeBinding
-						&& (((LocalTypeBinding) existingType).scope.methodScope() == blockScope.methodScope() || blockScope.isLambdaSubscope())) {
+						&& ((LocalTypeBinding) existingType).scope.methodScope() == blockScope.methodScope()) {
 					// dup in same method
 					blockScope.problemReporter().duplicateNestedType(this);
+			} else if (existingType instanceof LocalTypeBinding && blockScope.isLambdaSubscope()
+					&& blockScope.enclosingLambdaScope().enclosingMethodScope() == ((LocalTypeBinding) existingType).scope.methodScope()) {
+				blockScope.problemReporter().duplicateNestedType(this);
 			} else if (blockScope.isDefinedInType(existingType)) {
 				//	collision with enclosing type
 				blockScope.problemReporter().typeCollidesWithEnclosingType(this);

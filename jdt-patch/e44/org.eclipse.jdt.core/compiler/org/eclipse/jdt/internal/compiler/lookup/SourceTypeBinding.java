@@ -30,6 +30,8 @@
  *								Bug 417295 - [1.8[[null] Massage type annotated null analysis to gel well with deep encoded type bindings.
  *								Bug 426048 - [1.8] NPE in TypeVariableBinding.internalBoundCheck when parentheses are not balanced
  *								Bug 392238 - [1.8][compiler][null] Detect semantically invalid null type annotations
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
+ *								Bug 432348 - [1.8] Internal compiler error (NPE) after upgrade to 1.8
  *      Jesper S Moller <jesper@selskabet.org> -  Contributions for
  *								Bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
  *      Till Brychcy - Contributions for
@@ -87,7 +89,7 @@ public class SourceTypeBinding extends ReferenceBinding {
 
 	private SimpleLookupTable storedAnnotations = null; // keys are this ReferenceBinding & its fields and methods, value is an AnnotationHolder
 
-	private int defaultNullness;
+	public int defaultNullness;
 	private int nullnessDefaultInitialized = 0; // 0: nothing; 1: type; 2: package
 	private int lambdaOrdinal = 0;
 	private ReferenceBinding containerAnnotationType = null;
@@ -1325,7 +1327,7 @@ void initializeForStaticImports() {
 	this.scope.buildMethods();
 }
 
-private int getNullDefault() {
+int getNullDefault() {
 	
 	if (!isPrototype()) {
 		return this.prototype.getNullDefault();
@@ -1736,9 +1738,10 @@ public FieldBinding resolveTypeFor(FieldBinding field) {
 			if (sourceLevel >= ClassFileConstants.JDK1_8) {
 				Annotation [] annotations = fieldDecl.annotations;
 				if (annotations != null && annotations.length != 0) {
-					ASTNode.copySE8AnnotationsToType(initializationScope, field, fieldDecl.annotations);
+					ASTNode.copySE8AnnotationsToType(initializationScope, field, annotations,
+							fieldDecl.getKind() != AbstractVariableDeclaration.ENUM_CONSTANT); // type annotation is illegal on enum constant
 				}
-				Annotation.isTypeUseCompatible(fieldDecl.type, this.scope, fieldDecl.annotations);
+				Annotation.isTypeUseCompatible(fieldDecl.type, this.scope, annotations);
 			}
 			// apply null default:
 			if (this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
@@ -1747,7 +1750,7 @@ public FieldBinding resolveTypeFor(FieldBinding field) {
 					// enum constants neither have a type declaration nor can they be null
 					field.tagBits |= TagBits.AnnotationNonNull;
 				} else {
-					if (hasNonNullDefault()) {
+					if (hasNonNullDefaultFor(DefaultLocationField, sourceLevel >= ClassFileConstants.JDK1_8)) {
 						field.fillInDefaultNonNullness(fieldDecl, initializationScope);
 					}
 					// validate null annotation:
@@ -1951,7 +1954,7 @@ public MethodBinding resolveTypesFor(MethodBinding method) {
 				if (sourceLevel >= ClassFileConstants.JDK1_8 && !method.isVoidMethod()) {
 					Annotation [] annotations = methodDecl.annotations;
 					if (annotations != null && annotations.length != 0) {
-						ASTNode.copySE8AnnotationsToType(methodDecl.scope, method, methodDecl.annotations);
+						ASTNode.copySE8AnnotationsToType(methodDecl.scope, method, methodDecl.annotations, true);
 					}
 					Annotation.isTypeUseCompatible(returnType, this.scope, methodDecl.annotations);
 				}
@@ -2059,6 +2062,21 @@ private void evaluateNullAnnotations(long annotationTagBits) {
 		}
 	}
 	this.nullnessDefaultInitialized = 1;
+	boolean isJdk18 = this.scope.compilerOptions().sourceLevel >= ClassFileConstants.JDK1_8;
+	if (isJdk18) {
+		if (this.defaultNullness != 0) {
+			if (isPackageInfo) {
+				pkg.defaultNullness = this.defaultNullness;
+			} else {
+				TypeDeclaration typeDecl = this.scope.referenceContext;
+				checkRedundantNullnessDefaultRecurse(typeDecl, typeDecl.annotations, this.defaultNullness, isJdk18);
+			}
+		} else if (isPackageInfo || (isInDefaultPkg && !(this instanceof NestedTypeBinding))) {
+			this.scope.problemReporter().missingNonNullByDefaultAnnotation(this.scope.referenceContext);
+			if (!isInDefaultPkg)
+				pkg.defaultNullness = NULL_UNSPECIFIED_BY_DEFAULT;
+		}
+	} else {
 	// transfer nullness info from tagBits to this.nullnessDefaultAnnotation
 	int newDefaultNullness = NO_NULL_DEFAULT;
 	if ((annotationTagBits & TagBits.AnnotationNullUnspecifiedByDefault) != 0)
@@ -2072,7 +2090,7 @@ private void evaluateNullAnnotations(long annotationTagBits) {
 			this.defaultNullness = newDefaultNullness;
 			TypeDeclaration typeDecl = this.scope.referenceContext;
 			long nullDefaultBits = annotationTagBits & (TagBits.AnnotationNullUnspecifiedByDefault|TagBits.AnnotationNonNullByDefault);
-			checkRedundantNullnessDefaultRecurse(typeDecl, typeDecl.annotations, nullDefaultBits);
+				checkRedundantNullnessDefaultRecurse(typeDecl, typeDecl.annotations, nullDefaultBits, false);
 		}
 	} else if (isPackageInfo || (isInDefaultPkg && !(this instanceof NestedTypeBinding))) {
 		this.scope.problemReporter().missingNonNullByDefaultAnnotation(this.scope.referenceContext);
@@ -2080,14 +2098,42 @@ private void evaluateNullAnnotations(long annotationTagBits) {
 			pkg.defaultNullness = NULL_UNSPECIFIED_BY_DEFAULT;
 	}
 }
+	maybeMarkTypeParametersNonNull();
+}
 
-protected void checkRedundantNullnessDefaultRecurse(ASTNode location, Annotation[] annotations, long annotationTagBits) {
+private void maybeMarkTypeParametersNonNull() {
+	// when creating type variables we didn't yet have the defaultNullness, fill it in now:
+	if (this.scope == null || !this.scope.hasDefaultNullnessFor(DefaultLocationTypeParameter))
+		return;
+	if (this.typeVariables != null && this.typeVariables.length > 0) {
+		AnnotationBinding[] annots = new AnnotationBinding[]{ this.environment.getNonNullAnnotation() };
+		for (int i = 0; i < this.typeVariables.length; i++) {
+			TypeVariableBinding tvb = this.typeVariables[i];
+			if ((tvb.tagBits & TagBits.AnnotationNullMASK) == 0)
+				this.typeVariables[i] = (TypeVariableBinding) this.environment.createAnnotatedType(tvb, annots);
+		}
+	}
+}
+
+/**
+ * Recursively check if the given annotations are redundant with equal annotations at an enclosing level.
+ * @param location fallback location to report the warning against (if we can't blame a specific annotation)
+ * @param annotations search these for the annotation that should be blamed in warning messages
+ * @param nullBits in 1.7- times these are the annotationTagBits, in 1.8+ the bitvector from {@link Binding#NullnessDefaultMASK}
+ * @param isJdk18 toggles the interpretation of 'nullBits'
+ * 
+ * @pre null annotation analysis is enabled
+ */
+protected void checkRedundantNullnessDefaultRecurse(ASTNode location, Annotation[] annotations, long nullBits, boolean isJdk18) {
 	
 	if (!isPrototype()) throw new IllegalStateException();
 	
 	if (this.fPackage.defaultNullness != NO_NULL_DEFAULT) {
-		if ((this.fPackage.defaultNullness == NONNULL_BY_DEFAULT
-				&& ((annotationTagBits & TagBits.AnnotationNonNullByDefault) != 0))) {
+		boolean isRedundant = isJdk18
+				? this.fPackage.defaultNullness == nullBits
+				: (this.fPackage.defaultNullness == NONNULL_BY_DEFAULT
+						&& ((nullBits & TagBits.AnnotationNonNullByDefault) != 0));
+		if (isRedundant) {
 			this.scope.problemReporter().nullDefaultAnnotationIsRedundant(location, annotations, this.fPackage);
 		}
 		return;
@@ -2095,13 +2141,16 @@ protected void checkRedundantNullnessDefaultRecurse(ASTNode location, Annotation
 }
 
 // return: should caller continue searching?
-protected boolean checkRedundantNullnessDefaultOne(ASTNode location, Annotation[] annotations, long annotationTagBits) {
+protected boolean checkRedundantNullnessDefaultOne(ASTNode location, Annotation[] annotations, long nullBits, boolean isJdk18) {
 	
 	if (!isPrototype()) throw new IllegalStateException();
 	
 	int thisDefault = getNullDefault();
-	if (thisDefault == NONNULL_BY_DEFAULT) {
-		if ((annotationTagBits & TagBits.AnnotationNonNullByDefault) != 0) {
+	if (thisDefault != NO_NULL_DEFAULT) {
+		boolean isRedundant = isJdk18
+				? thisDefault == nullBits
+				: (nullBits & TagBits.AnnotationNonNullByDefault) != 0;
+		if (isRedundant) {
 			this.scope.problemReporter().nullDefaultAnnotationIsRedundant(location, annotations, this);
 		}
 		return false; // different default means inner default is not redundant -> we're done
@@ -2109,10 +2158,18 @@ protected boolean checkRedundantNullnessDefaultOne(ASTNode location, Annotation[
 	return true;
 }
 
-boolean hasNonNullDefault() {
+boolean hasNonNullDefaultFor(int location, boolean useTypeAnnotations) {
 	
 	if (!isPrototype()) throw new IllegalStateException();
 	
+	// 1.8:
+	if (useTypeAnnotations) {
+		if (this.scope == null) {
+			return (this.defaultNullness & location) != 0;
+		}
+		return this.scope.hasDefaultNullnessFor(location);
+	}
+
 	// find the applicable default inside->out:
 
 	SourceTypeBinding currentType = null;
@@ -2133,6 +2190,9 @@ boolean hasNonNullDefault() {
 				currentType = ((ClassScope)currentScope).referenceContext.binding;
 				if (currentType != null) {
 					int foundDefaultNullness = currentType.getNullDefault();
+					if ((foundDefaultNullness & NullnessDefaultMASK) > NULL_UNSPECIFIED_BY_DEFAULT) {
+						return true;
+					}
 					if (foundDefaultNullness != NO_NULL_DEFAULT) {
 						return foundDefaultNullness == NONNULL_BY_DEFAULT;
 					}

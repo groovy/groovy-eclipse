@@ -205,8 +205,11 @@ class MethodBinding implements IMethodBinding {
 				final ReferenceBinding annotationType = internalAnnotation.getAnnotationType();
 				long metaTagBits = annotationType.getAnnotationTagBits();
 
-				if (isConstructor && (metaTagBits & TagBits.AnnotationForConstructor) == 0)
-					continue; // must be type use.
+				// Exclude all other targets including TYPE_USE, even though TYPE_USE is accepted.
+				if (isConstructor && (metaTagBits & TagBits.AnnotationForConstructor) == 0 &&
+						((metaTagBits & TagBits.AnnotationTargetMASK) != 0)) {
+					continue;
+				}
 				
 				final IAnnotationBinding annotationInstance = this.resolver.getAnnotationInstance(internalAnnotation);
 				if (annotationInstance == null) {

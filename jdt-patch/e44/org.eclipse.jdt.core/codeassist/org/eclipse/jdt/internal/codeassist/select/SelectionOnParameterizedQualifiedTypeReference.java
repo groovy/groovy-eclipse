@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *******************************************************************************/
 package org.eclipse.jdt.internal.codeassist.select;
 
@@ -29,8 +31,8 @@ public class SelectionOnParameterizedQualifiedTypeReference extends Parameterize
 		this.typeArguments[length] = assistTypeArguments;
 	}
 
-	public TypeBinding resolveType(BlockScope scope, boolean checkBounds) {
-		super.resolveType(scope, checkBounds);
+	public TypeBinding resolveType(BlockScope scope, boolean checkBounds, int location) {
+		super.resolveType(scope, checkBounds, location);
 		//// removed unnecessary code to solve bug 94653
 		//if(this.resolvedType != null && this.resolvedType.isRawType()) {
 		//	ParameterizedTypeBinding parameterizedTypeBinding = scope.createParameterizedType(((RawTypeBinding)this.resolvedType).type, new TypeBinding[0], this.resolvedType.enclosingType());
@@ -39,8 +41,8 @@ public class SelectionOnParameterizedQualifiedTypeReference extends Parameterize
 		throw new SelectionNodeFound(this.resolvedType);
 	}
 
-	public TypeBinding resolveType(ClassScope scope) {
-		super.resolveType(scope);
+	public TypeBinding resolveType(ClassScope scope, int location) {
+		super.resolveType(scope, location);
 		//// removed unnecessary code to solve bug 94653
 		//if(this.resolvedType != null && this.resolvedType.isRawType()) {
 		//	ParameterizedTypeBinding parameterizedTypeBinding = scope.createParameterizedType(((RawTypeBinding)this.resolvedType).type, new TypeBinding[0], this.resolvedType.enclosingType());

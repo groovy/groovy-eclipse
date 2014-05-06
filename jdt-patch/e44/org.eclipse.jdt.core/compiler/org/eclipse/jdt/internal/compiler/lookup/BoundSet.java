@@ -233,11 +233,17 @@ class BoundSet {
 		 * which only happens if null annotations are enabled in the first place.
 		 */
 		private void useNullHints(long nullHints, TypeBinding[] boundTypes, LookupEnvironment environment) {
-			AnnotationBinding[] annot = environment.nullAnnotationsFromTagBits(nullHints);
-			if (annot != null) {
-				// only get here if exactly one of @NonNull or @Nullable was hinted; now apply this hint:
+			if (nullHints == TagBits.AnnotationNullMASK) {
+				// on contradiction remove null type annotations
 				for (int i = 0; i < boundTypes.length; i++)
-					boundTypes[i] = environment.createAnnotatedType(boundTypes[i], annot);
+					boundTypes[i] = boundTypes[i].unannotated();
+			} else {
+				AnnotationBinding[] annot = environment.nullAnnotationsFromTagBits(nullHints);
+				if (annot != null) {
+					// only get here if exactly one of @NonNull or @Nullable was hinted; now apply this hint:
+					for (int i = 0; i < boundTypes.length; i++)
+						boundTypes[i] = environment.createAnnotatedType(boundTypes[i], annot);
+				}
 			}
 		}
 		TypeBinding combineAndUseNullHints(TypeBinding type, long nullHints, LookupEnvironment environment) {
@@ -259,6 +265,8 @@ class BoundSet {
 				while(it.hasNext())
 					nullHints |= it.next().nullHints;
 			}
+			if (nullHints == TagBits.AnnotationNullMASK) // on contradiction remove null type annotations
+				return type.unannotated();
 			AnnotationBinding[] annot = environment.nullAnnotationsFromTagBits(nullHints);
 			if (annot != null)
 				// only get here if exactly one of @NonNull or @Nullable was hinted; now apply this hint:
@@ -306,7 +314,7 @@ class BoundSet {
 		for (int i = 0; i < length; i++) {
 			TypeVariableBinding typeParameter = typeParameters[i];
 			InferenceVariable variable = variables[i];
-			TypeBound[] someBounds = typeParameter.getTypeBounds(variable, context);
+			TypeBound[] someBounds = typeParameter.getTypeBounds(variable, new InferenceSubstitution(context.environment, context.inferenceVariables));
 			boolean hasProperBound = false;
 			if (someBounds.length > 0)
 				hasProperBound = addBounds(someBounds, context.environment);
@@ -503,12 +511,21 @@ class BoundSet {
 				ParameterizedTypeBinding gAlpha = capt.getKey();
 				ParameterizedTypeBinding gA = capt.getValue();
 				ReferenceBinding g = (ReferenceBinding) gA.original();
-				TypeVariableBinding[] parameters = g.typeVariables();
+				final TypeVariableBinding[] parameters = g.typeVariables();
+				// construct theta = [P1:=alpha1,...]
+				final InferenceVariable[] alphas = new InferenceVariable[gAlpha.arguments.length];
+				System.arraycopy(gAlpha.arguments, 0, alphas, 0, alphas.length);
+				InferenceSubstitution theta = new InferenceSubstitution(context.environment, alphas) {
+					@Override
+					protected TypeBinding getP(int i) {
+						return parameters[i];
+					}
+				};
 				for (int i = 0; i < parameters.length; i++) {
 					// A set of bounds on α1, ..., αn, constructed from the declared bounds of P1, ..., Pn as described in 18.1.3, is immediately implied.
 					TypeVariableBinding pi = parameters[i];
 					InferenceVariable alpha = (InferenceVariable) gAlpha.arguments[i];
-					addBounds(pi.getTypeBounds(alpha, context), context.environment);
+					addBounds(pi.getTypeBounds(alpha, theta), context.environment);
 
 					TypeBinding ai = gA.arguments[i];
 					if (ai instanceof WildcardBinding) {
@@ -546,7 +563,7 @@ class BoundSet {
 											System.arraycopy(otherBounds, 0, allBounds, 1, n-1);
 											bi = new IntersectionCastTypeBinding(allBounds, context.environment);
 										}
-										addTypeBoundsFromWildcardBound(context, wildcardBinding.boundKind, t, r, bi);
+										addTypeBoundsFromWildcardBound(context, theta, wildcardBinding.boundKind, t, r, bi);
 //										if (otherBounds != null) {
 //											for (int j = 0; j < otherBounds.length; j++) {
 //												TypeBinding tj = otherBounds[j];
@@ -582,16 +599,16 @@ class BoundSet {
 		return true;
 	}
 
-	void addTypeBoundsFromWildcardBound(InferenceContext18 context, int boundKind, TypeBinding t,
+	void addTypeBoundsFromWildcardBound(InferenceContext18 context, InferenceSubstitution theta, int boundKind, TypeBinding t,
 			TypeBinding r, TypeBinding bi) throws InferenceFailureException {
 		ConstraintFormula formula = null;
 		if (boundKind == Wildcard.EXTENDS) {
 			if (bi.id == TypeIds.T_JavaLangObject)
 				formula = ConstraintTypeFormula.create(t, r, ReductionResult.SUBTYPE);
 			if (t.id == TypeIds.T_JavaLangObject)
-				formula = ConstraintTypeFormula.create(context.substitute(bi), r, ReductionResult.SUBTYPE);
+				formula = ConstraintTypeFormula.create(theta.substitute(theta, bi), r, ReductionResult.SUBTYPE);
 		} else {
-			formula = ConstraintTypeFormula.create(context.substitute(bi), r, ReductionResult.SUBTYPE);
+			formula = ConstraintTypeFormula.create(theta.substitute(theta, bi), r, ReductionResult.SUBTYPE);
 		}
 		if (formula != null)
 			reduceOneConstraint(context, formula);

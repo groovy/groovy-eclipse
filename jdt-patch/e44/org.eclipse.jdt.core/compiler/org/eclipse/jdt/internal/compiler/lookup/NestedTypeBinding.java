@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,7 +7,9 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
- *     Stephan Herrmann - Contribution for  bug 365662 - [compiler][null] warn on contradictory and redundant null annotations
+ *     Stephan Herrmann - Contributions for
+ *								Bug 365662 - [compiler][null] warn on contradictory and redundant null annotations
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *     Keigo Imai - Contribution for  bug 388903 - Cannot extend inner class as an anonymous class when it extends the outer class
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
@@ -123,16 +125,16 @@ public SyntheticArgumentBinding addSyntheticArgumentAndField(ReferenceBinding ta
 	return synthLocal;
 }
 
-protected void checkRedundantNullnessDefaultRecurse(ASTNode location, Annotation[] annotations, long annotationTagBits) {
+protected void checkRedundantNullnessDefaultRecurse(ASTNode location, Annotation[] annotations, long nullBits, boolean isJdk18) {
 	if (!isPrototype()) throw new IllegalStateException();
 	ReferenceBinding currentType = this.enclosingType;
 	do {
-		if (!((SourceTypeBinding)currentType).checkRedundantNullnessDefaultOne(location, annotations, annotationTagBits)) {
+		if (!((SourceTypeBinding)currentType).checkRedundantNullnessDefaultOne(location, annotations, nullBits, isJdk18)) {
 			return;
 		}
 		currentType = currentType.enclosingType();
 	} while (currentType instanceof SourceTypeBinding);
-	super.checkRedundantNullnessDefaultRecurse(location, annotations, annotationTagBits);
+	super.checkRedundantNullnessDefaultRecurse(location, annotations, nullBits, isJdk18);
 }
 
 /* Answer the receiver's enclosing type... null if the receiver is a top level type.

@@ -18,7 +18,7 @@ public class ResolvedLambdaExpression extends LambdaExpression {
 	LambdaExpression unresolved;
 
 	public ResolvedLambdaExpression(JavaElement parent, LambdaExpression unresolved, String uniqueKey) {
-		super(parent, unresolved.name, unresolved.interphase, unresolved.sourceStart, unresolved.sourceEnd, unresolved.arrowPosition, unresolved.lambdaMethod);
+		super(parent, unresolved.interphase, unresolved.sourceStart, unresolved.sourceEnd, unresolved.arrowPosition, unresolved.lambdaMethod);
 		this.uniqueKey = uniqueKey;
 		this.unresolved = unresolved;
 	}

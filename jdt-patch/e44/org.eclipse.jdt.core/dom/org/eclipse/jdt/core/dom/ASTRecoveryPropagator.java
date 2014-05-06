@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2013 IBM Corporation and others.
+ * Copyright (c) 2006, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -89,9 +89,6 @@ class ASTRecoveryPropagator extends DefaultASTVisitor {
 
 	private Vector stack = new Vector();
 
-	/**
-	 * @noreference This method is not intended to be referenced by clients.
-	 */
 	ASTRecoveryPropagator(CategorizedProblem[] problems, RecoveryScannerData data) {
 		// visit Javadoc.tags() as well
 		this.problems = problems;

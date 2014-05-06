@@ -479,7 +479,7 @@ protected boolean triggerRecoveryUponLambdaClosure(Statement statement, boolean 
 				if (recoveredBlock != null) {
 					RecoveredStatement recoveredStatement = recoveredBlock.statementCount > 0 ? recoveredBlock.statements[recoveredBlock.statementCount - 1] : null;
 					ASTNode parseTree = recoveredStatement != null ? recoveredStatement.updatedStatement(0, new HashSet()) : null;
-					if (parseTree == assistNodeParent || parseTree == enclosingNode) {
+					if (parseTree != null && (parseTree == assistNodeParent || parseTree == enclosingNode)) {
 						recoveredBlock.statements[--recoveredBlock.statementCount] = null;
 						this.currentElement = recoveredBlock;
 					}

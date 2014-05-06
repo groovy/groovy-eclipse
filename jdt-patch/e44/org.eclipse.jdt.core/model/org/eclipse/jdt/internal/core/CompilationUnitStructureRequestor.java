@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -728,7 +728,7 @@ protected void resolveDuplicates(SourceRefElement handle) {
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=342393
 	// For anonymous source types, the occurrence count should be in the context
 	// of the enclosing type.
-	if (handle instanceof SourceType && handle.getElementName().length() == 0) {
+	if (handle instanceof SourceType && ((SourceType) handle).isAnonymous()) {
 		Object key = handle.getParent().getAncestor(IJavaElement.TYPE);
 		occurenceCount = this.localOccurrenceCounts.get(key);
 		if (occurenceCount == -1)

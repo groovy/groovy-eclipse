@@ -446,7 +446,12 @@ protected void matchReportReference(ASTNode reference, IJavaElement element, IJa
 				reference = ((SingleMemberAnnotation)reference).memberValuePairs()[0];
 				this.match.setImplicit(true);
 			}
-			int offset = reference.sourceStart;
+			int offset;
+			if (reference instanceof ReferenceExpression) {
+				offset = ((ReferenceExpression) reference).nameSourceStart;
+			} else {
+				offset = reference.sourceStart;
+			}
 			int length =  reference.sourceEnd - offset + 1;
 			this.match.setOffset(offset);
 			this.match.setLength(length);

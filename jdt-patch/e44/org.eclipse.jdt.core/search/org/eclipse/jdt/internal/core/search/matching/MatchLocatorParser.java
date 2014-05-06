@@ -535,6 +535,8 @@ protected void consumeReferenceExpression(ReferenceExpression referenceExpressio
 	super.consumeReferenceExpression(referenceExpression);
 	if (this.patternFineGrain == 0) {
 		this.patternLocator.match(referenceExpression, this.nodeSet);
+	} else if ((this.patternFineGrain & IJavaSearchConstants.METHOD_REFERENCE_EXPRESSION) != 0) {
+		this.patternLocator.match(referenceExpression, this.nodeSet);
 	} else if (referenceExpression.lhs.isThis()) {
 		if ((this.patternFineGrain & IJavaSearchConstants.THIS_REFERENCE) != 0) {
 			this.patternLocator.match(referenceExpression, this.nodeSet);

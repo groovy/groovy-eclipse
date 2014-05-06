@@ -3523,73 +3523,74 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 			"\n"+
 			"}\n",
 
-		},isJRELevel(AbstractCompilerTest.F_1_8)?
-			"----------\n" + 
-			"1. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-			"	public class StructureBase implements Structure {\n" + 
-			"	             ^^^^^^^^^^^^^\n" + 
-			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object putIfAbsent(java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
-			"----------\n" + 
-			"2. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-			"	public class StructureBase implements Structure {\n" + 
-			"	             ^^^^^^^^^^^^^\n" + 
-			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'boolean remove(java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
-			"----------\n" + 
-			"3. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-			"	public class StructureBase implements Structure {\n" + 
-			"	             ^^^^^^^^^^^^^\n" + 
-			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object computeIfAbsent(java.lang.Object, java.util.function.Function)\' must be implemented.\n" + 
-			"----------\n" + 
-			"4. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-			"	public class StructureBase implements Structure {\n" + 
-			"	             ^^^^^^^^^^^^^\n" + 
-			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object computeIfPresent(java.lang.Object, java.util.function.BiFunction)\' must be implemented.\n" + 
-			"----------\n" + 
-			"5. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-			"	public class StructureBase implements Structure {\n" + 
-			"	             ^^^^^^^^^^^^^\n" + 
-			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void forEach(java.util.function.BiConsumer)\' must be implemented.\n" + 
-			"----------\n" + 
-			"6. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-			"	public class StructureBase implements Structure {\n" + 
-			"	             ^^^^^^^^^^^^^\n" + 
-			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object getOrDefault(java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
-			"----------\n" + 
-			"7. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-			"	public class StructureBase implements Structure {\n" + 
-			"	             ^^^^^^^^^^^^^\n" + 
-			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void setup(java.nio.ByteBuffer)\' must be implemented.\n" + 
-			"----------\n" + 
-			"8. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-			"	public class StructureBase implements Structure {\n" + 
-			"	             ^^^^^^^^^^^^^\n" + 
-			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'boolean replace(java.lang.Object, java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
-			"----------\n" + 
-			"9. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-			"	public class StructureBase implements Structure {\n" + 
-			"	             ^^^^^^^^^^^^^\n" + 
-			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object merge(java.lang.Object, java.lang.Object, java.util.function.BiFunction)\' must be implemented.\n" + 
-			"----------\n" + 
-			"10. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-			"	public class StructureBase implements Structure {\n" + 
-			"	             ^^^^^^^^^^^^^\n" + 
-			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void replaceAll(java.util.function.BiFunction)\' must be implemented.\n" + 
-			"----------\n" + 
-			"11. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-			"	public class StructureBase implements Structure {\n" + 
-			"	             ^^^^^^^^^^^^^\n" + 
-			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object replace(java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
-			"----------\n" + 
-			"12. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-			"	public class StructureBase implements Structure {\n" + 
-			"	             ^^^^^^^^^^^^^\n" + 
-			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void reset()\' must be implemented.\n" + 
-			"----------\n" + 
-			"13. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-			"	public class StructureBase implements Structure {\n" + 
-			"	             ^^^^^^^^^^^^^\n" + 
-			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object compute(java.lang.Object, java.util.function.BiFunction)\' must be implemented.\n" + 
-			"----------\n":
+		},
+//		false?//isJRELevel(3)?//AbstractCompilerTest.F_1_8)?
+//			"----------\n" + 
+//			"1. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object putIfAbsent(java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"2. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'boolean remove(java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"3. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object computeIfAbsent(java.lang.Object, java.util.function.Function)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"4. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object computeIfPresent(java.lang.Object, java.util.function.BiFunction)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"5. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void forEach(java.util.function.BiConsumer)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"6. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object getOrDefault(java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"7. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void setup(java.nio.ByteBuffer)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"8. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'boolean replace(java.lang.Object, java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"9. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object merge(java.lang.Object, java.lang.Object, java.util.function.BiFunction)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"10. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void replaceAll(java.util.function.BiFunction)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"11. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object replace(java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"12. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void reset()\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"13. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object compute(java.lang.Object, java.util.function.BiFunction)\' must be implemented.\n" + 
+//			"----------\n":
 			"----------\n" + 
 			"1. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
 			"	public class StructureBase implements Structure {\n" + 

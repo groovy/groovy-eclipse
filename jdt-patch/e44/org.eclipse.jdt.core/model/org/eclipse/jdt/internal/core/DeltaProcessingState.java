@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -179,30 +179,36 @@ public class DeltaProcessingState implements IResourceChangeListener {
 		return deltaProcessor;
 	}
 
-	public synchronized ClasspathChange addClasspathChange(IProject project, IClasspathEntry[] oldRawClasspath, IPath oldOutputLocation, IClasspathEntry[] oldResolvedClasspath) {
-		ClasspathChange change = (ClasspathChange) this.classpathChanges.get(project);
-		if (change == null) {
-			change = new ClasspathChange((JavaProject) JavaModelManager.getJavaModelManager().getJavaModel().getJavaProject(project), oldRawClasspath, oldOutputLocation, oldResolvedClasspath);
-			this.classpathChanges.put(project, change);
-		} else {
-			if (change.oldRawClasspath == null)
-				change.oldRawClasspath = oldRawClasspath;
-			if (change.oldOutputLocation == null)
-				change.oldOutputLocation = oldOutputLocation;
-			if (change.oldResolvedClasspath == null)
-				change.oldResolvedClasspath = oldResolvedClasspath;
+	public ClasspathChange addClasspathChange(IProject project, IClasspathEntry[] oldRawClasspath, IPath oldOutputLocation, IClasspathEntry[] oldResolvedClasspath) {
+		synchronized (this.classpathChanges) {
+			ClasspathChange change = (ClasspathChange) this.classpathChanges.get(project);
+			if (change == null) {
+				change = new ClasspathChange((JavaProject) JavaModelManager.getJavaModelManager().getJavaModel().getJavaProject(project), oldRawClasspath, oldOutputLocation, oldResolvedClasspath);
+				this.classpathChanges.put(project, change);
+			} else {
+				if (change.oldRawClasspath == null)
+					change.oldRawClasspath = oldRawClasspath;
+				if (change.oldOutputLocation == null)
+					change.oldOutputLocation = oldOutputLocation;
+				if (change.oldResolvedClasspath == null)
+					change.oldResolvedClasspath = oldResolvedClasspath;
+			}
+			return change;
 		}
-		return change;
 	}
 	
-	public synchronized ClasspathChange getClasspathChange(IProject project) {
-		return (ClasspathChange) this.classpathChanges.get(project);
+	public ClasspathChange getClasspathChange(IProject project) {
+		synchronized (this.classpathChanges) {
+			return (ClasspathChange) this.classpathChanges.get(project);
+		}
 	}
 	
-	public synchronized HashMap removeAllClasspathChanges() {
-		HashMap result = this.classpathChanges;
-		this.classpathChanges = new HashMap(result.size());
-		return result;
+	public HashMap removeAllClasspathChanges() {
+		synchronized (this.classpathChanges) {
+			HashMap result = this.classpathChanges;
+			this.classpathChanges = new HashMap(result.size());
+			return result;
+		}
 	}
 
 	public synchronized ClasspathValidation addClasspathValidation(JavaProject project) {

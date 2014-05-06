@@ -35,13 +35,13 @@ public class TypeMethodReference extends MethodReference {
 		new ChildPropertyDescriptor(TypeMethodReference.class, "type", Type.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * The "typeArguments" structural property of this node type (element type: {@link Type}) 
+	 * The "typeArguments" structural property of this node type (element type: {@link Type}).
 	 */
 	public static final ChildListPropertyDescriptor TYPE_ARGUMENTS_PROPERTY =
 		internalTypeArgumentsFactory(TypeMethodReference.class);
 
 	/**
-	 * The "name" structural property of this node type (child type: {@link SimpleName}. 
+	 * The "name" structural property of this node type (child type: {@link SimpleName}).
 	 */
 	public static final ChildPropertyDescriptor NAME_PROPERTY =
 		new ChildPropertyDescriptor(TypeMethodReference.class, "name", SimpleName.class, MANDATORY, NO_CYCLE_RISK); //$NON-NLS-1$

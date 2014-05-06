@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,7 @@
  *								bug 392099 - [1.8][compiler][null] Apply null annotation on types for null analysis
  *								Bug 415043 - [1.8][null] Follow-up re null type annotations after bug 392099
  *								Bug 416181 – [1.8][compiler][null] Invalid assignment is not rejected by the compiler
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *        Andy Clement - Contributions for
  *                          Bug 383624 - [1.8][compiler] Revive code generation support for type annotations (from Olivier's work)
  *******************************************************************************/
@@ -146,7 +147,7 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
     /*
      * No need to check for reference to raw type per construction
      */
-	private TypeBinding internalResolveType(Scope scope, boolean checkBounds) {
+	private TypeBinding internalResolveType(Scope scope, boolean checkBounds, int location) {
 		// handle the error here
 		this.constant = Constant.NotAConstant;
 		if ((this.bits & ASTNode.DidResolve) != 0) { // is a shared type reference which was already resolved
@@ -169,7 +170,7 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 		this.bits |= ASTNode.DidResolve;
 		TypeBinding type = internalResolveLeafType(scope, checkBounds);
 		createArrayType(scope);
-		resolveAnnotations(scope);
+		resolveAnnotations(scope, location);
 		if (this.typeArguments != null)
 			// relevant null annotations are on the inner most type:
 			checkNullConstraints(scope, this.typeArguments[this.typeArguments.length-1]); 
@@ -419,11 +420,11 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 		return output;
 	}
 
-	public TypeBinding resolveType(BlockScope scope, boolean checkBounds) {
-	    return internalResolveType(scope, checkBounds);
+	public TypeBinding resolveType(BlockScope scope, boolean checkBounds, int location) {
+	    return internalResolveType(scope, checkBounds, location);
 	}
-	public TypeBinding resolveType(ClassScope scope) {
-	    return internalResolveType(scope, false);
+	public TypeBinding resolveType(ClassScope scope, int location) {
+	    return internalResolveType(scope, false, location);
 	}
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,7 @@
  *        Stephan Herrmann - Contribution for
  *							Bug 415043 - [1.8][null] Follow-up re null type annotations after bug 392099
  *							Bug 417295 - [1.8[[null] Massage type annotated null analysis to gel well with deep encoded type bindings.
+ *							Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -62,15 +63,15 @@ public class Wildcard extends SingleTypeReference {
 		TypeBinding boundType = null;
 		if (this.bound != null) {
 			boundType = scope.kind == Scope.CLASS_SCOPE
-					? this.bound.resolveType((ClassScope)scope)
-					: this.bound.resolveType((BlockScope)scope, true /* check bounds*/);
+					? this.bound.resolveType((ClassScope)scope, Binding.DefaultLocationTypeBound)
+					: this.bound.resolveType((BlockScope)scope, true /* check bounds*/, Binding.DefaultLocationTypeBound);
 			this.bits |= (this.bound.bits & ASTNode.HasTypeAnnotations);
 			if (boundType == null) {
 				return null;
 			}
 		}
 		this.resolvedType = scope.environment().createWildcard(genericType, rank, boundType, null /*no extra bound*/, this.kind);
-		resolveAnnotations(scope);
+		resolveAnnotations(scope, 0); // no defaultNullness for wildcards
 		if (boundType != null && boundType.hasNullTypeAnnotations() && this.resolvedType.hasNullTypeAnnotations()) {
 			if (((boundType.tagBits | this.resolvedType.tagBits) & TagBits.AnnotationNullMASK) == TagBits.AnnotationNullMASK) { // are both set?
 				Annotation annotation = this.bound.findAnnotation(boundType.tagBits & TagBits.AnnotationNullMASK);
@@ -102,27 +103,27 @@ public class Wildcard extends SingleTypeReference {
 	}
 
 	// only invoked for improving resilience when unable to bind generic type from parameterized reference
-	public TypeBinding resolveType(BlockScope scope, boolean checkBounds) {
+	public TypeBinding resolveType(BlockScope scope, boolean checkBounds, int location) {
 		if (this.bound != null) {
-			this.bound.resolveType(scope, checkBounds);
+			this.bound.resolveType(scope, checkBounds, Binding.DefaultLocationTypeBound);
 			this.bits |= (this.bound.bits & ASTNode.HasTypeAnnotations);
 		}
 		return null;
 	}
 	// only invoked for improving resilience when unable to bind generic type from parameterized reference
-	public TypeBinding resolveType(ClassScope scope) {
+	public TypeBinding resolveType(ClassScope scope, int location) {
 		if (this.bound != null) {
-			this.bound.resolveType(scope);
+			this.bound.resolveType(scope, Binding.DefaultLocationTypeBound);
 			this.bits |= (this.bound.bits & ASTNode.HasTypeAnnotations);
 		}
 		return null;
 	}
 	public TypeBinding resolveTypeArgument(BlockScope blockScope, ReferenceBinding genericType, int rank) {
-	    return internalResolveType(blockScope, genericType, rank);
+	    return internalResolveType(blockScope, genericType, rank); // no defaultNullness for wildcards
 	}
 
 	public TypeBinding resolveTypeArgument(ClassScope classScope, ReferenceBinding genericType, int rank) {
-	    return internalResolveType(classScope, genericType, rank);
+	    return internalResolveType(classScope, genericType, rank); // no defaultNullness for wildcards
 	}
 
 	public void traverse(ASTVisitor visitor, BlockScope scope) {

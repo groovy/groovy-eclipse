@@ -36,7 +36,7 @@ public class SuperMethodReference extends MethodReference {
 		new ChildPropertyDescriptor(SuperMethodReference.class, "qualifier", Name.class, OPTIONAL, NO_CYCLE_RISK); //$NON-NLS-1$
 
 	/**
-	 * The "typeArguments" structural property of this node type (element type: {@link Type}) 
+	 * The "typeArguments" structural property of this node type (element type: {@link Type}).
 	 */
 	public static final ChildListPropertyDescriptor TYPE_ARGUMENTS_PROPERTY =
 		internalTypeArgumentsFactory(SuperMethodReference.class);

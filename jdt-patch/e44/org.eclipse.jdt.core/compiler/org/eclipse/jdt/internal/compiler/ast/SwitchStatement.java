@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -65,7 +65,8 @@ public class SwitchStatement extends Statement {
 		try {
 			flowInfo = this.expression.analyseCode(currentScope, flowContext, flowInfo);
 			if ((this.expression.implicitConversion & TypeIds.UNBOXING) != 0
-					|| (this.expression.resolvedType != null && this.expression.resolvedType.id == T_JavaLangString)) {
+					|| (this.expression.resolvedType != null
+							&& (this.expression.resolvedType.id == T_JavaLangString || this.expression.resolvedType.isEnum()))) {
 				this.expression.checkNPE(currentScope, flowContext, flowInfo);
 			}
 			SwitchFlowContext switchContext =

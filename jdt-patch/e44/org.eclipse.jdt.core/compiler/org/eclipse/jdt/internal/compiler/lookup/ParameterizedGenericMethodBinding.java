@@ -18,6 +18,7 @@
  *								Bug 427438 - [1.8][compiler] NPE at org.eclipse.jdt.internal.compiler.ast.ConditionalExpression.generateCode(ConditionalExpression.java:280)
  *								Bug 418743 - [1.8][null] contradictory annotations on invocation of generic method not reported
  *								Bug 416182 - [1.8][compiler][null] Contradictory null annotations not rejected
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -480,6 +481,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 	    									: Scope.substitute(rawType, originalMethod.returnType));
 	    this.wasInferred = false; // not resulting from method invocation inferrence
 	    this.parameterNonNullness = originalMethod.parameterNonNullness;
+	    this.defaultNullness = originalMethod.defaultNullness;
 	}
 
     /**
@@ -522,6 +524,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 		}
 	    this.wasInferred = true;// resulting from method invocation inferrence
 	    this.parameterNonNullness = originalMethod.parameterNonNullness;
+	    this.defaultNullness = originalMethod.defaultNullness;
 	    // special case: @NonNull for a parameter that is inferred to 'null' is encoded the old way
 	    // because we cannot (and don't want to) add type annotations to NullTypeBinding.
 	    int len = this.parameters.length;

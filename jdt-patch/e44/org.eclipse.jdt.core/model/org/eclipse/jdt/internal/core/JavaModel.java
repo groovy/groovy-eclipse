@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,12 +7,12 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Terry Parker <tparker@google.com> - [performance] Low hit rates in JavaModel caches - https://bugs.eclipse.org/421165
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
@@ -40,20 +40,6 @@ import org.eclipse.jdt.internal.core.util.Messages;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class JavaModel extends Openable implements IJavaModel {
-
-	/**
-	 * A set of java.io.Files used as a cache of external jars that
-	 * are known to be existing.
-	 * Note this cache is kept for the whole session.
-	 */
-	public static HashSet existingExternalFiles = new HashSet();
-
-	/**
-	 * A set of external files ({@link #existingExternalFiles}) which have
-	 * been confirmed as file (i.e. which returns true to {@link java.io.File#isFile()}.
-	 * Note this cache is kept for the whole session.
-	 */
-	public static HashSet existingExternalConfirmedFiles = new HashSet();
 
 /**
  * Constructs a new Java Model on the given workspace.
@@ -147,13 +133,6 @@ public boolean equals(Object o) {
  */
 public int getElementType() {
 	return JAVA_MODEL;
-}
-/**
- * Flushes the cache of external files known to be existing.
- */
-public static void flushExternalFileCache() {
-	existingExternalFiles = new HashSet();
-	existingExternalConfirmedFiles = new HashSet();
 }
 
 /*
@@ -309,9 +288,16 @@ protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean s
 }
 
 /**
- * Helper method - returns the targeted item (IResource if internal or java.io.File if external),
- * or null if unbound
- * Internal items must be referred to using container relative paths.
+ * Helper method - for the provided {@link IPath}, returns:
+ * <ul>
+ * <li>If the path corresponds to an internal file or folder, the {@link IResource} for that resource
+ * <li>If the path corresponds to an external folder linked through {@link ExternalFoldersManager},
+ * the {@link IFolder} for that folder
+ * <li>If the path corresponds to an external library archive, the {@link File} for that archive
+ * <li>Can return <code>null</code> if <code>checkResourceExistence</code> is <code>true</code>
+ * and the entity referred to by the path does not exist on the file system
+ * </ul>
+ * Internal items must be referred to using container-relative paths.
  */
 public static Object getTarget(IPath path, boolean checkResourceExistence) {
 	Object target = getWorkspaceTarget(path); // Implicitly checks resource existence
@@ -319,6 +305,11 @@ public static Object getTarget(IPath path, boolean checkResourceExistence) {
 		return target;
 	return getExternalTarget(path, checkResourceExistence);
 }
+
+/**
+ * Helper method - returns the {@link IResource} corresponding to the provided {@link IPath},
+ * or <code>null</code> if no such resource exists.
+ */
 public static IResource getWorkspaceTarget(IPath path) {
 	if (path == null || path.getDevice() != null)
 		return null;
@@ -327,6 +318,13 @@ public static IResource getWorkspaceTarget(IPath path) {
 		return null;
 	return workspace.getRoot().findMember(path);
 }
+
+/**
+ * Helper method - returns either the linked {@link IFolder} or the {@link File} corresponding
+ * to the provided {@link IPath}. If <code>checkResourceExistence</code> is <code>false</code>,
+ * then the IFolder or File object is always returned, otherwise <code>null</code> is returned
+ * if it does not exist on the file system.
+ */
 public static Object getExternalTarget(IPath path, boolean checkResourceExistence) {
 	if (path == null)
 		return null;
@@ -345,50 +343,48 @@ public static Object getExternalTarget(IPath path, boolean checkResourceExistenc
 	File externalFile = new File(path.toOSString());
 	if (!checkResourceExistence) {
 		return externalFile;
-	} else if (existingExternalFilesContains(externalFile)) {
+	} else if (isExternalFile(path)) {
 		return externalFile;
-	} else {
-		if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
-			System.out.println("(" + Thread.currentThread() + ") [JavaModel.getTarget(...)] Checking existence of " + path.toString()); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-		if (externalFile.isFile()) { // isFile() checks for existence (it returns false if a directory)
-			// cache external file
-			existingExternalFilesAdd(externalFile);
-			return externalFile;
-		}
 	}
 	return null;
 }
-private synchronized static void existingExternalFilesAdd(File externalFile) {
-	existingExternalFiles.add(externalFile);
-}
-private synchronized static boolean existingExternalFilesContains(File externalFile) {
-	return existingExternalFiles.contains(externalFile);
-}
 
 /**
- * Helper method - returns whether an object is afile (i.e. which returns true to {@link java.io.File#isFile()}.
+ * Helper method - returns whether an object is a file (i.e., it returns <code>true</code>
+ * to {@link File#isFile()}.
  */
 public static boolean isFile(Object target) {
-	return getFile(target) != null;
+	if (target instanceof File) {
+		IPath path = Path.fromOSString(((File) target).getPath());
+		return isExternalFile(path);
+	}
+	return false;
 }
 
 /**
- * Helper method - returns the file item (i.e. which returns true to {@link java.io.File#isFile()},
- * or null if unbound
+ * Returns whether the provided path is an external file, checking and updating the
+ * JavaModelManager's external file cache.
  */
-public static synchronized File getFile(Object target) {
-	if (existingExternalConfirmedFiles.contains(target))
-		return (File) target;
-	if (target instanceof File) {
-		File f = (File) target;
-		if (f.isFile()) {
-			existingExternalConfirmedFiles.add(f);
-			return f;
-		}
+static private boolean isExternalFile(IPath path) {
+	if (JavaModelManager.getJavaModelManager().isExternalFile(path)) {
+		return true;
 	}
+	if (JavaModelManager.ZIP_ACCESS_VERBOSE) {
+		System.out.println("(" + Thread.currentThread() + ") [JavaModel.isExternalFile(...)] Checking existence of " + path.toString()); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	boolean isFile = path.toFile().isFile();
+	if (isFile) {
+		JavaModelManager.getJavaModelManager().addExternalFile(path);
+	}
+	return isFile;
+}
 
-	return null;
+/**
+ * Helper method - returns the {@link File} item if <code>target</code> is a file (i.e., the target
+ * returns <code>true</code> to {@link File#isFile()}. Otherwise returns <code>null</code>.
+ */
+public static File getFile(Object target) {
+	return isFile(target) ? (File) target : null;
 }
 
 protected IStatus validateExistence(IResource underlyingResource) {

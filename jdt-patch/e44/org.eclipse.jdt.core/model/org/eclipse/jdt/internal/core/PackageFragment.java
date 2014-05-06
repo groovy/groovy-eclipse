@@ -513,7 +513,7 @@ public String getAttachedJavadoc(IProgressMonitor monitor) throws JavaModelExcep
 	pathBuffer.append(packPath).append('/').append(JavadocConstants.PACKAGE_FILE_NAME);
 
 	if (monitor != null && monitor.isCanceled()) throw new OperationCanceledException();
-	String contents = getURLContents(String.valueOf(pathBuffer));
+	String contents = getURLContents(baseLocation, String.valueOf(pathBuffer));
 	if (monitor != null && monitor.isCanceled()) throw new OperationCanceledException();
 	if (contents == null) return null;
 	

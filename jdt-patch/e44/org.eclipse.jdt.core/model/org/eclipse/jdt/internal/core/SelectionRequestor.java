@@ -863,7 +863,7 @@ protected IJavaElement findLocalElement(int pos, MethodScope scope) {
 		IJavaElement parent = findLocalElement(pos, scope.enclosingMethodScope());
 		LambdaExpression expression = (LambdaExpression) scope.originalReferenceContext();
 		if (expression != null && expression.resolvedType != null && expression.resolvedType.isValidBinding()) {
-			org.eclipse.jdt.internal.core.LambdaExpression lambdaElement = new org.eclipse.jdt.internal.core.LambdaExpression((JavaElement) parent, expression);
+			org.eclipse.jdt.internal.core.LambdaExpression lambdaElement = LambdaFactory.createLambdaExpression((JavaElement) parent, expression);
 			return lambdaElement.getMethod();
 		}
 		return parent;
@@ -941,7 +941,7 @@ protected IType resolveType(char[] packageName, char[] typeName, int acceptFlags
 			false);
 		// iterate type lookup in each package fragment
 		for (int i = 0, length = pkgs == null ? 0 : pkgs.length; i < length; i++) {
-			type= this.nameLookup.findType(new String(typeName), pkgs[i], false, acceptFlags, true/*consider secondary types*/);
+			type= this.nameLookup.findType(new String(typeName), pkgs[i], false, acceptFlags, false, true/*consider secondary types*/);
 			if (type != null) break;
 		}
 		if (type == null) {
@@ -1021,7 +1021,7 @@ protected IType resolveTypeByLocation(char[] packageName, char[] typeName, int a
 			false);
 		// iterate type lookup in each package fragment
 		for (int i = 0, length = pkgs == null ? 0 : pkgs.length; i < length; i++) {
-			type= this.nameLookup.findType(new String(typeName), pkgs[i], false, acceptFlags, true/*consider secondary types*/);
+			type= this.nameLookup.findType(new String(typeName), pkgs[i], false, acceptFlags, false, true/*consider secondary types*/);
 			if (type != null) break;
 		}
 		if (type == null) {

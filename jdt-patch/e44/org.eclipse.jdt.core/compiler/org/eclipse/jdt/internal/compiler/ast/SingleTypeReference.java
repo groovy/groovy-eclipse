@@ -9,6 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contribution for
  *								Bug 392238 - [1.8][compiler][null] Detect semantically invalid null type annotations
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -78,7 +79,7 @@ public class SingleTypeReference extends TypeReference {
 		this.resolvedType = scope.getMemberType(this.token, enclosingType);
 		boolean hasError = false;
 		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=391500
-		resolveAnnotations(scope);
+		resolveAnnotations(scope, 0); // defaultNullness not relevant, the only caller within the compiler: QAE
 		TypeBinding memberType = this.resolvedType; // load after possible update in resolveAnnotations()
 		if (!memberType.isValidBinding()) {
 			hasError = true;

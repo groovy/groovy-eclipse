@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,7 +9,8 @@
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for
  *								bug 365662 - [compiler][null] warn on contradictory and redundant null annotations
- *								bug 401030 - [1.8][null] Null analysis support for lambda methods. 
+ *								bug 401030 - [1.8][null] Null analysis support for lambda methods.
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -99,18 +100,23 @@ public ReferenceBinding anonymousOriginalSuperType() {
 	return this.superclass; // default answer
 }
 
-protected void checkRedundantNullnessDefaultRecurse(ASTNode location, Annotation[] annotations, long annotationTagBits) {
+protected void checkRedundantNullnessDefaultRecurse(ASTNode location, Annotation[] annotations, long nullBits, boolean isJdk18) {
 	
 	if (!isPrototype()) throw new IllegalStateException();
 	
-	long outerDefault = this.enclosingMethod != null ? this.enclosingMethod.tagBits & ((TagBits.AnnotationNonNullByDefault|TagBits.AnnotationNullUnspecifiedByDefault)) : 0;
+	long outerDefault = 0;
+	if (this.enclosingMethod != null) {
+		outerDefault = isJdk18 
+				? this.enclosingMethod.defaultNullness 
+				: this.enclosingMethod.tagBits & (TagBits.AnnotationNonNullByDefault|TagBits.AnnotationNullUnspecifiedByDefault);
+	}
 	if (outerDefault != 0) {
-		if (outerDefault == annotationTagBits) {
+		if (outerDefault == nullBits) {
 			this.scope.problemReporter().nullDefaultAnnotationIsRedundant(location, annotations, this.enclosingMethod);
 		}
 		return;
 	}
-	super.checkRedundantNullnessDefaultRecurse(location, annotations, annotationTagBits);
+	super.checkRedundantNullnessDefaultRecurse(location, annotations, nullBits, isJdk18);
 }
 
 public char[] computeUniqueKey(boolean isLeaf) {

@@ -378,8 +378,10 @@ public final boolean checkCastTypesCompatibility(Scope scope, TypeBinding castTy
 			if (match != null) {
 				return checkUnsafeCast(scope, castType, expressionType, match, false);
 			}
+			TypeBinding bound = ((WildcardBinding)expressionType).bound;
+			if (bound == null) bound = scope.getJavaLangObject();
 			// recursively on the type variable upper bound
-			return checkCastTypesCompatibility(scope, castType, ((WildcardBinding)expressionType).bound, expression);
+			return checkCastTypesCompatibility(scope, castType, bound, expression);
 		case Binding.INTERSECTION_CAST_TYPE:
 			ReferenceBinding [] intersectingTypes = expressionType.getIntersectingTypes();
 			for (int i = 0, length = intersectingTypes.length; i < length; i++) {

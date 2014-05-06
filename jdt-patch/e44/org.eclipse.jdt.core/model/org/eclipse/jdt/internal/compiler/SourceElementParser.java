@@ -751,7 +751,7 @@ public TypeReference getTypeReference(int dim) {
 			ref.sourceEnd = this.intStack[this.intPtr--];
 		} else {
 			this.intPtr--; // no need to use this position as it is an array
-			ref.sourceEnd = this.endPosition;
+			ref.sourceEnd = this.rBracketPosition;
 		}
 		if (this.reportReferenceInfo){
 				this.requestor.acceptTypeReference(ref.getParameterizedTypeName(), ref.sourceStart, ref.sourceEnd);

@@ -20,6 +20,7 @@
  *								Bug 392099 - [1.8][compiler][null] Apply null annotation on types for null analysis
  *								Bug 400874 - [1.8][compiler] Inference infrastructure should evolve to meet JLS8 18.x (Part G of JSR335 spec)
  *								Bug 427438 - [1.8][compiler] NPE at org.eclipse.jdt.internal.compiler.ast.ConditionalExpression.generateCode(ConditionalExpression.java:280)
+ *								Bug 430150 - [1.8][null] stricter checking against type variables
  *        Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
  *                          Bug 415541 - [1.8][compiler] Type annotations in the body of static initializer get dropped
  *******************************************************************************/
@@ -549,7 +550,8 @@ public TypeBinding resolveType(BlockScope scope) {
 	if (castType != null) {
 		if (expressionType != null) {
 
-			boolean nullAnnotationMismatch = NullAnnotationMatching.analyse(castType, expressionType, -1).isAnyMismatch();
+			boolean nullAnnotationMismatch = scope.compilerOptions().isAnnotationBasedNullAnalysisEnabled
+					&& NullAnnotationMatching.analyse(castType, expressionType, -1).isAnyMismatch();
 
 			boolean isLegal = checkCastTypesCompatibility(scope, castType, expressionType, this.expression);
 			if (isLegal) {

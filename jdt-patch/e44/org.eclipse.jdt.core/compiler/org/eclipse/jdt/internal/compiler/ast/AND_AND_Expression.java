@@ -11,6 +11,7 @@
  *								bug 319201 - [null] no warning when unboxing SingleNameReference causes NPE
  *								bug 403086 - [compiler][null] include the effect of 'assert' in syntactic null analysis for fields
  *								bug 403147 - [compiler][null] FUP of bug 400761: consolidate interaction between unboxing, NPE, and deferred checking
+ *								Bug 422796 - [compiler][null] boxed boolean reported as potentially null after null test in lazy disjunction
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -69,7 +70,7 @@ public class AND_AND_Expression extends BinaryExpression {
 		if ((flowContext.tagBits & FlowContext.INSIDE_NEGATION) != 0)
 			flowContext.expireNullCheckedFieldInfo();
 		this.left.checkNPEbyUnboxing(currentScope, flowContext, flowInfo);
-		this.right.checkNPEbyUnboxing(currentScope, flowContext, flowInfo);
+		this.right.checkNPEbyUnboxing(currentScope, flowContext, leftInfo.initsWhenTrue());
 		FlowInfo mergedInfo = FlowInfo.conditional(
 				rightInfo.safeInitsWhenTrue(),
 				leftInfo.initsWhenFalse().unconditionalInits().mergedWith(

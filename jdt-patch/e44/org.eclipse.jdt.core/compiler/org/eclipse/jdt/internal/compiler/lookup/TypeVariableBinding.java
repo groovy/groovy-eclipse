@@ -20,6 +20,8 @@
  *								Bug 426792 - [1.8][inference][impl] generify new type inference engine
  *								Bug 428019 - [1.8][compiler] Type inference failure with nested generic invocation.
  *								Bug 429384 - [1.8][null] implement conformance rules for null-annotated lower / upper type bounds
+ *								Bug 431269 - [1.8][compiler][null] StackOverflow in nullAnnotatedReadableName
+ *								Bug 431408 - Java 8 (1.8) generics bug
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -314,18 +316,25 @@ public class TypeVariableBinding extends ReferenceBinding {
 	public String annotatedDebugName() {
 		StringBuffer buffer = new StringBuffer(10);
 		buffer.append(super.annotatedDebugName());
-		if (this.superclass != null && TypeBinding.equalsEquals(this.firstBound, this.superclass)) {
-		    buffer.append(" extends ").append(this.superclass.annotatedDebugName()); //$NON-NLS-1$
-		}
-		if (this.superInterfaces != null && this.superInterfaces != Binding.NO_SUPERINTERFACES) {
-		   if (TypeBinding.notEquals(this.firstBound, this.superclass)) {
-		        buffer.append(" extends "); //$NON-NLS-1$
-	        }
-		    for (int i = 0, length = this.superInterfaces.length; i < length; i++) {
-		        if (i > 0 || TypeBinding.equalsEquals(this.firstBound, this.superclass)) {
-		            buffer.append(" & "); //$NON-NLS-1$
-		        }
-				buffer.append(this.superInterfaces[i].annotatedDebugName());
+		if (!this.inRecursiveFunction) {
+			this.inRecursiveFunction = true;
+			try {
+				if (this.superclass != null && TypeBinding.equalsEquals(this.firstBound, this.superclass)) {
+					buffer.append(" extends ").append(this.superclass.annotatedDebugName()); //$NON-NLS-1$
+				}
+				if (this.superInterfaces != null && this.superInterfaces != Binding.NO_SUPERINTERFACES) {
+					if (TypeBinding.notEquals(this.firstBound, this.superclass)) {
+						buffer.append(" extends "); //$NON-NLS-1$
+					}
+					for (int i = 0, length = this.superInterfaces.length; i < length; i++) {
+						if (i > 0 || TypeBinding.equalsEquals(this.firstBound, this.superclass)) {
+							buffer.append(" & "); //$NON-NLS-1$
+						}
+						buffer.append(this.superInterfaces[i].annotatedDebugName());
+					}
+				}
+			} finally {
+				this.inRecursiveFunction = false;
 			}
 		}
 		return buffer.toString();
@@ -376,15 +385,15 @@ public class TypeVariableBinding extends ReferenceBinding {
 	/**
 	 * Compute the initial type bounds for one inference variable as per JLS8 sect 18.1.3.
 	 */
-	TypeBound[] getTypeBounds(InferenceVariable variable, InferenceContext18 context) {
+	TypeBound[] getTypeBounds(InferenceVariable variable, InferenceSubstitution theta) {
 		int n = boundsCount();
         if (n == 0)
         	return NO_TYPE_BOUNDS;
         TypeBound[] bounds = new TypeBound[n];
-        bounds[0] = TypeBound.createBoundOrDependency(context, this.firstBound, variable);
+        bounds[0] = TypeBound.createBoundOrDependency(theta, this.firstBound, variable);
         int ifcOffset = TypeBinding.equalsEquals(this.firstBound, this.superclass) ? -1 : 0;
         for (int i = 1; i < n; i++)
-			bounds[i] = TypeBound.createBoundOrDependency(context, this.superInterfaces[i+ifcOffset], variable);
+			bounds[i] = TypeBound.createBoundOrDependency(theta, this.superInterfaces[i+ifcOffset], variable);
         return bounds;
 	}
 
@@ -724,18 +733,25 @@ public class TypeVariableBinding extends ReferenceBinding {
 	    StringBuffer nameBuffer = new StringBuffer(10);
 		appendNullAnnotation(nameBuffer, options);
 		nameBuffer.append(this.sourceName());
-		if (this.superclass != null && TypeBinding.equalsEquals(this.firstBound, this.superclass)) {
-			nameBuffer.append(" extends ").append(this.superclass.nullAnnotatedReadableName(options, shortNames)); //$NON-NLS-1$
-		}
-		if (this.superInterfaces != null && this.superInterfaces != Binding.NO_SUPERINTERFACES) {
-		   if (TypeBinding.notEquals(this.firstBound, this.superclass)) {
-			   nameBuffer.append(" extends "); //$NON-NLS-1$
-	        }
-		    for (int i = 0, length = this.superInterfaces.length; i < length; i++) {
-		        if (i > 0 || TypeBinding.equalsEquals(this.firstBound, this.superclass)) {
-		        	nameBuffer.append(" & "); //$NON-NLS-1$
-		        }
-		        nameBuffer.append(this.superInterfaces[i].nullAnnotatedReadableName(options, shortNames));
+		if (!this.inRecursiveFunction) {
+			this.inRecursiveFunction = true;
+			try {
+				if (this.superclass != null && TypeBinding.equalsEquals(this.firstBound, this.superclass)) {
+					nameBuffer.append(" extends ").append(this.superclass.nullAnnotatedReadableName(options, shortNames)); //$NON-NLS-1$
+				}
+				if (this.superInterfaces != null && this.superInterfaces != Binding.NO_SUPERINTERFACES) {
+					if (TypeBinding.notEquals(this.firstBound, this.superclass)) {
+						nameBuffer.append(" extends "); //$NON-NLS-1$
+					}
+					for (int i = 0, length = this.superInterfaces.length; i < length; i++) {
+						if (i > 0 || TypeBinding.equalsEquals(this.firstBound, this.superclass)) {
+							nameBuffer.append(" & "); //$NON-NLS-1$
+						}
+						nameBuffer.append(this.superInterfaces[i].nullAnnotatedReadableName(options, shortNames));
+					}
+				}
+			} finally {
+				this.inRecursiveFunction = false;
 			}
 		}
 		int nameLength = nameBuffer.length();

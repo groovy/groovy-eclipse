@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,6 +17,7 @@
  *								bug 379784 - [compiler] "Method can be static" is not getting reported
  *								bug 394768 - [compiler][resource] Incorrect resource leak warning when creating stream in conditional
  *								bug 404649 - [1.8][compiler] detect illegal reference to indirect or redundant super
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *     Jesper S Moller <jesper@selskabet.org> - Contributions for
  *								bug 378674 - "The method can be declared as static" is wrong
  *     Keigo Imai - Contribution for  bug 388903 - Cannot extend inner class as an anonymous class when it extends the outer class
@@ -61,6 +62,9 @@ public class BlockScope extends Scope {
 
 	public final static VariableBinding[] NoEnclosingInstanceInStaticContext = {};
 
+	// annotation support
+	public boolean insideTypeAnnotation = false;
+
 public BlockScope(BlockScope parent) {
 	this(parent, true);
 }
@@ -99,7 +103,7 @@ public final void addAnonymousType(TypeDeclaration anonymousType, ReferenceBindi
 	MethodScope methodScope = methodScope();
 	while (methodScope != null && methodScope.referenceContext instanceof LambdaExpression) {
 		LambdaExpression lambda = (LambdaExpression) methodScope.referenceContext;
-		if (!lambda.scope.isStatic) {
+		if (!lambda.scope.isStatic && !lambda.scope.isConstructorCall) {
 			lambda.shouldCaptureInstance = true;
 		}
 		methodScope = methodScope.enclosingMethodScope();
@@ -117,7 +121,7 @@ public final void addLocalType(TypeDeclaration localType) {
 	MethodScope methodScope = methodScope();
 	while (methodScope != null && methodScope.referenceContext instanceof LambdaExpression) {
 		LambdaExpression lambda = (LambdaExpression) methodScope.referenceContext;
-		if (!lambda.scope.isStatic) {
+		if (!lambda.scope.isStatic && !lambda.scope.isConstructorCall) {
 			lambda.shouldCaptureInstance = true;
 		}
 		methodScope = methodScope.enclosingMethodScope();
@@ -1227,5 +1231,9 @@ private boolean checkAppropriate(MethodBinding compileTimeDeclaration, MethodBin
 		return false; 
 	}
 	return true;
+}
+@Override
+public boolean hasDefaultNullnessFor(int location) {
+	return this.parent.hasDefaultNullnessFor(location);
 }
 }

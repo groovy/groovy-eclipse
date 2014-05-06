@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,7 @@ package org.eclipse.jdt.internal.core;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.core.runtime.preferences.PreferenceModifyListener;
-import org.eclipse.jdt.core.*;
+import org.eclipse.jdt.core.JavaCore;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
@@ -26,8 +26,20 @@ public class JavaCorePreferenceModifyListener extends PreferenceModifyListener {
 	 * @see org.eclipse.core.runtime.preferences.PreferenceModifyListener#preApply(org.eclipse.core.runtime.preferences.IEclipsePreferences)
 	 */
 	public IEclipsePreferences preApply(IEclipsePreferences node) {
-		Preferences instance = node.node(InstanceScope.SCOPE);
-		cleanJavaCore(instance.node(JavaCore.PLUGIN_ID));
+		// the node does not need to be the root of the hierarchy
+		Preferences root = node.node("/"); //$NON-NLS-1$
+		try {
+			// we must not create empty preference nodes, so first check if the node exists
+			if (root.nodeExists(InstanceScope.SCOPE)) {
+				Preferences instance = root.node(InstanceScope.SCOPE);
+				// we must not create empty preference nodes, so first check if the node exists
+				if (instance.nodeExists(JavaCore.PLUGIN_ID)) {
+					cleanJavaCore(instance.node(JavaCore.PLUGIN_ID));
+				}
+			}
+		} catch (BackingStoreException e) {
+			// do nothing
+		}
 		return super.preApply(node);
 	}
 

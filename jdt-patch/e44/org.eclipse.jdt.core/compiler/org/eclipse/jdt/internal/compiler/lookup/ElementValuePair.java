@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -18,6 +20,30 @@ public class ElementValuePair {
 	char[] name;
 	public Object value;
 	public MethodBinding binding;
+	
+	/**
+	 * We want to avoid eagerly resolving of all enums that are used in annotations.
+	 * This class encapsulates an unresolved enum constant as referenced in an ElementValuePair.
+	 * The enum constant will be resolved when asking getValue()
+	 */
+	public static class UnresolvedEnumConstant {
+		ReferenceBinding enumType;
+		LookupEnvironment environment;
+		char[] enumConstantName;
+		UnresolvedEnumConstant(ReferenceBinding enumType, LookupEnvironment environment, char[] enumConstantName) {
+			this.enumType = enumType;
+			this.environment = environment;
+			this.enumConstantName = enumConstantName;
+		}
+		FieldBinding getResolved() {
+			if (this.enumType.isUnresolvedType())
+				this.enumType = (ReferenceBinding) BinaryTypeBinding.resolveType(this.enumType, this.environment, false /* no raw conversion */);
+			return this.enumType.getField(this.enumConstantName, false);
+		}
+		public char[] getEnumConstantName() {
+			return this.enumConstantName;
+		}
+	}
 
 public static Object getValue(Expression expression) {
 	if (expression == null)
@@ -88,6 +114,16 @@ public MethodBinding getMethodBinding() {
  * @return the value of this member value pair or null if the value is missing or is not a compile-time constant
  */
 public Object getValue() {
+	if (this.value instanceof UnresolvedEnumConstant)
+		this.value = ((UnresolvedEnumConstant)this.value).getResolved();
+	else if (this.value instanceof Object[]) {
+		Object[] valueArray = (Object[]) this.value;
+		for(int i = 0; i < valueArray.length; i++) {
+			Object object = valueArray[i];
+			if (object instanceof UnresolvedEnumConstant)
+				valueArray[i] = ((UnresolvedEnumConstant) object).getResolved();
+		}
+	}
 	return this.value;
 }
 

@@ -32,6 +32,9 @@ public ConstructorLocator(ConstructorPattern pattern) {
 
 	this.pattern = pattern;
 }
+protected int fineGrain() {
+	return this.pattern.fineGrain;
+}
 public int match(ASTNode node, MatchingNodeSet nodeSet) { // interested in ExplicitConstructorCall
 	if (!this.pattern.findReferences) return IMPOSSIBLE_MATCH;
 	if (!(node instanceof ExplicitConstructorCall)) return IMPOSSIBLE_MATCH;

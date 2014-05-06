@@ -36,6 +36,7 @@ import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.core.*;
 import org.eclipse.jdt.internal.core.search.AbstractJavaSearchScope;
@@ -209,8 +210,10 @@ public class HandleFactory {
 				if (scope.isLambdaScope()) {
 					parentElement = createElement(scope.parent, elementPosition, unit, existingElements, knownScopes);
 					LambdaExpression expression = (LambdaExpression) scope.originalReferenceContext();
-					if (expression.resolvedType != null && expression.resolvedType.isValidBinding()) { // chain in lambda element only if resolved properly.
-						newElement = new org.eclipse.jdt.internal.core.LambdaExpression((JavaElement) parentElement, expression).getMethod();
+					if (expression.resolvedType != null && expression.resolvedType.isValidBinding() && 
+							!(expression.descriptor instanceof ProblemMethodBinding)) { // chain in lambda element only if resolved properly.
+						//newElement = new org.eclipse.jdt.internal.core.SourceLambdaExpression((JavaElement) parentElement, expression).getMethod();
+						newElement = LambdaFactory.createLambdaExpression((JavaElement) parentElement, expression).getMethod();
 						knownScopes.put(scope, newElement);
 						return newElement;
 					}
