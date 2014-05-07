@@ -28,6 +28,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 /**
  * @author Kris De Volder
+ * @author Andy Clement
  */
 public class JDTAstPositionTest extends BrowsingTestCase {
 
@@ -39,6 +40,7 @@ public class JDTAstPositionTest extends BrowsingTestCase {
         super(JDTAstPositionTest.class.getName());
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -49,20 +51,21 @@ public class JDTAstPositionTest extends BrowsingTestCase {
         } catch (NoSuchFieldException nsfe) {
             // pre-java8
         }
-        
-        //Need an active problem requestor to make reconcile turn on binding resolution.
+
+        // Need an active problem requestor to make reconcile turn on binding
+        // resolution.
         // This approximates better what is happening in reconciling for an actual editor in workspace.
         this.problemRequestor = new IProblemRequestor() {
             public boolean isActive() {
                 return true;
             }
-            
+
             public void endReporting() {
             }
-            
+
             public void beginReporting() {
             }
-            
+
             public void acceptProblem(IProblem problem) {
             	System.out.println("problem: "+problem);
             }
@@ -74,23 +77,98 @@ public class JDTAstPositionTest extends BrowsingTestCase {
         	}
         };
     }
-    
-    public void testStringArrayArgs() throws Exception {
-        final String contents = 
+
+    public void testAnnotationPositions_STS3822() throws Exception {
+        //@formatter:off
+        final String contents =
+                "class main_test extends BaseTest{\n"+
+                "  @Foo(s = '%1')\n"+
+                "  static Object[][] P() {\n"+
+                "    return null;\n"+
+                "   return [\n"+
+                "       [\n"+
+                "           \"a\",\n"+
+                "           \"b\",\n"+
+                "           \"c\"\n"+
+                "       ]\n"+
+                "   ]\n"+
+                "  }\n"+
+                "\n"+
+                "  @Bar(ddd = \"P\")\n"+
+                "  final void test_some_things(def a, def b, def c) {\n"+
+                "     method_1(a)\n"+
+                "     method_2(b)\n"+
+                "     method_3(c)\n"+
+                "  }\n"+
+                "\n"+
+                "  void setUp() {\n"+
+                "   XXX =\n"+
+                "   [\n"+
+                "     \"param_1\": \"1\",\n"+
+                "     \"param_2\": \"2\"\n"+
+                "   ]\n"+
+                "   setUpBase()\n"+
+                "  }\n"+
+                "}\n";
+        //@formatter:on
+        CompilationUnit ast = getAST(contents);
+        traverseAst(contents, ast);
+    }
+
+    // This variant doesn't have a well formed array spec on method P()
+    public void testAnnotationPositions_STS3822_2() throws Exception {
+        //@formatter:off
+        final String contents =
+                "class main_test extends BaseTest{\n"+
+                "  @Foo(s = '%1')\n"+
+                "  static Object[][ P() {\n"+
+                "    return null;\n"+
+                "   return [\n"+
+                "       [\n"+
+                "           \"a\",\n"+
+                "           \"b\",\n"+
+                "           \"c\"\n"+
+                "       ]\n"+
+                "   ]\n"+
+                "  }\n"+
+                "\n"+
+                "  @Bar(ddd = \"P\")\n"+
+                "  final void test_some_things(def a, def b, def c) {\n"+
+                "     method_1(a)\n"+
+                "     method_2(b)\n"+
+                "     method_3(c)\n"+
+                "  }\n"+
+                "\n"+
+                "  void setUp() {\n"+
+                "   XXX =\n"+
+                "   [\n"+
+                "     \"param_1\": \"1\",\n"+
+                "     \"param_2\": \"2\"\n"+
+                "   ]\n"+
+                "   setUpBase()\n"+
+                "  }\n"+
+                "}\n";
+        //@formatter:on
+        CompilationUnit ast = getAST(contents);
+        traverseAst(contents, ast);
+    }
+
+    public void testStringArrayArgs_STS3787() throws Exception {
+        final String contents =
                   "class MyMain {\n"
                 + "    static void main(String[] args) {\n"
                 + "    }\n"
                 + "}\n";
         CompilationUnit ast = getAST(contents);
         //I wished to check the String[] node has correct source location info
-        // but it does not appear in the final AST. Instead it seems to be 
+        // but it does not appear in the final AST. Instead it seems to be
         // represented as a String vararg parameter. There's no 'ArrayType' node in the AST at all.
-        
+
         traverseAst(contents, ast);
     }
 
-    public void testStringVarArg() throws Exception {
-        final String contents = 
+    public void testStringVarArg_STS3787() throws Exception {
+        final String contents =
                   "class MyMain {\n"
                 + "    static void munching(String... args) {\n"
                 + "    }\n"
@@ -109,7 +187,7 @@ public class JDTAstPositionTest extends BrowsingTestCase {
         	}
         });
     }
-    
+
 
     private String getText(ASTNode node, String text) {
         int start = node.getStartPosition();
@@ -120,12 +198,11 @@ public class JDTAstPositionTest extends BrowsingTestCase {
             return text.substring(start, start+len);
         }
     }
-    
+
     private CompilationUnit getAST(String contents) throws Exception {
         GroovyCompilationUnit unit = getCompilationUnitFor(contents);
         CompilationUnit ast = unit.reconcile(astLevel, true, workingCopyOwner, new NullProgressMonitor());
         return ast;
     }
-
 
 }

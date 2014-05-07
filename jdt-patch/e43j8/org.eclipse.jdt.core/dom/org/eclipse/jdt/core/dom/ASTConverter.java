@@ -4952,6 +4952,32 @@ class ASTConverter {
 				return -2;
 			}
 			else {
+				// Crude groovy variant of the below scanner usage to find right bracket
+				int count = 0, lParentCount = 0, balance = 0, pos = start, lines = 0;
+				int end = this.scanner.source.length;
+				char[] sourceCode = this.scanner.source;
+				while (pos<end) {
+					char ch = sourceCode[pos];
+					switch (ch) {
+						case '(': ++lParentCount; break;
+						case ')': --lParentCount; break;
+						case '[': ++balance; break;
+						case ']': --balance; 
+							if (lParentCount>0) break; 
+							if (balance>0) break; 
+							count++; 
+							if (count == bracketNumber) {
+								return pos;
+							}
+							break;
+						// Crude check to avoid scanning long distances down big files, give up after 5 lines
+						case '\n': ++lines;
+							if (lines>5) {
+								return -1;
+							}
+					}
+					pos++;
+				}
 				return -1;
 			}
 		}
