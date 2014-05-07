@@ -199,15 +199,17 @@ public class CompilerChooser {
      */
     public SpecifiedVersion getActiveSpecifiedVersion() {
     	if (activeIndex == -1) {
-			return allSpecifiedVersions.length > 0 ? allSpecifiedVersions[0] : SpecifiedVersion.UNSPECIFIED;
+    		return SpecifiedVersion.findVersion(getActiveVersion());
+//			return allSpecifiedVersions.length > 0 ? allSpecifiedVersions[0] : SpecifiedVersion.UNSPECIFIED;
     	} else {
 			return allSpecifiedVersions[activeIndex];
 		}
     }
+
         
     public Version getActiveVersion() {
         if (activeIndex == -1) {
-			Bundle bundle = Platform.getBundle(GROOVY_PLUGIN_ID);
+			Bundle bundle = getActiveBundle();
 			return bundle == null ? null : bundle.getVersion();
         } else {
 			return allVersions[activeIndex];
@@ -216,6 +218,11 @@ public class CompilerChooser {
     
     public Bundle getActiveBundle() {
         if (activeIndex == -1) {
+        	for (Bundle bundle : Platform.getBundles(GROOVY_PLUGIN_ID, null)) {
+        		if (bundle.getState() == Bundle.ACTIVE) {
+        			return bundle;
+        		}
+        	}
             return Platform.getBundle(GROOVY_PLUGIN_ID); 
         } else {
             Bundle[] bundles = Platform.getBundles(GROOVY_PLUGIN_ID, allVersions[activeIndex].toString());

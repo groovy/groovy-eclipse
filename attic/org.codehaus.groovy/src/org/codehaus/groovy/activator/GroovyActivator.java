@@ -61,7 +61,7 @@ public class GroovyActivator extends Plugin {
     }
 
     public static void initialize() throws IOException {
-        Bundle bundle = Platform.getBundle("org.codehaus.groovy");
+        Bundle bundle = GroovyActivator.getDefault().getBundle();
         GROOVY_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.GROOVY_JAR));
         GROOVY_ALL_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.GROOVY_ALL_JAR));
         ASM_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.ASM_JAR));
