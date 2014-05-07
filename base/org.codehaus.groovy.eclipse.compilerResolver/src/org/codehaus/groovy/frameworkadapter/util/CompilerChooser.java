@@ -134,14 +134,11 @@ public class CompilerChooser {
 //            // just use highest version
 //            activeIndex = 0;
 //            // no need to uninstall unused bundles since they aren't wired
-//            for (int i = 0; i < bundles.length; i++) {
-//                Bundle bundle = bundles[i];
-//                allVersions[i] = bundle.getVersion();
-//                allSpecifiedVersions[i] = SpecifiedVersion.findVersion(bundle.getVersion());
-//                if (bundle.getState() == Bundle.ACTIVE) {
-//                	activeIndex = i;
-//                }
-//            }            
+            for (int i = 0; i < bundles.length; i++) {
+                Bundle bundle = bundles[i];
+                allVersions[i] = bundle.getVersion();
+                allSpecifiedVersions[i] = SpecifiedVersion.findVersion(bundle.getVersion());
+            }            
         }
     }
     
