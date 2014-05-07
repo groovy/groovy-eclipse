@@ -80,10 +80,8 @@ public class CompilerChooser {
         }
 
         System.out.println("Starting Groovy-Eclipse compiler resolver.  Specified compiler level: " + specifiedVersion.toReadableVersionString());
-        
-        PackageAdmin pkgAdmin = context.getService(context.getServiceReference(org.osgi.service.packageadmin.PackageAdmin.class));
-        
-        Bundle[] bundles = pkgAdmin.getBundles(GROOVY_PLUGIN_ID, null);
+                
+        Bundle[] bundles = Platform.getBundles(GROOVY_PLUGIN_ID, null);
 
         if (bundles == null || bundles.length == 0) {
             System.out.println("No Groovy bundles found...this will cause some problems.");
@@ -114,6 +112,7 @@ public class CompilerChooser {
                         bundle.uninstall();
                     }
                 }
+                PackageAdmin pkgAdmin = context.getService(context.getServiceReference(org.osgi.service.packageadmin.PackageAdmin.class));
                 try {
 					Method method = pkgAdmin.getClass().getMethod("refreshPackages", Bundle[].class, boolean.class, FrameworkListener[].class);
 					if (method == null) {
@@ -131,9 +130,6 @@ public class CompilerChooser {
                 }
             }
         } else {
-            // just use highest version
-//            activeIndex = 0;
-            // no need to uninstall unused bundles since they aren't wired
             for (int i = 0; i < bundles.length; i++) {
                 Bundle bundle = bundles[i];
                 allVersions[i] = bundle.getVersion();
@@ -200,7 +196,6 @@ public class CompilerChooser {
     public SpecifiedVersion getActiveSpecifiedVersion() {
     	if (activeIndex == -1) {
     		return SpecifiedVersion.findVersion(getActiveVersion());
-//			return allSpecifiedVersions.length > 0 ? allSpecifiedVersions[0] : SpecifiedVersion.UNSPECIFIED;
     	} else {
 			return allSpecifiedVersions[activeIndex];
 		}
@@ -218,11 +213,13 @@ public class CompilerChooser {
     
     public Bundle getActiveBundle() {
         if (activeIndex == -1) {
+        	// Check if any of the org.codehaus.groovy bundles are active
         	for (Bundle bundle : Platform.getBundles(GROOVY_PLUGIN_ID, null)) {
         		if (bundle.getState() == Bundle.ACTIVE) {
         			return bundle;
         		}
         	}
+        	// If none active just return the latest version bundle
             return Platform.getBundle(GROOVY_PLUGIN_ID); 
         } else {
             Bundle[] bundles = Platform.getBundles(GROOVY_PLUGIN_ID, allVersions[activeIndex].toString());
@@ -238,14 +235,12 @@ public class CompilerChooser {
         return allSpecifiedVersions;
     }
     
-    public Version getAssociatedVersion(SpecifiedVersion specifiedVersion) {
-//        if (activeIndex >= 0) {
-            for (int i = 0; i < allSpecifiedVersions.length; i++) {
-                if (allSpecifiedVersions[i] == specifiedVersion) {
-                    return allVersions[i];
-                }
-            }
-//        }
-        return null;
-    }
+	public Version getAssociatedVersion(SpecifiedVersion specifiedVersion) {
+		for (int i = 0; i < allSpecifiedVersions.length; i++) {
+			if (allSpecifiedVersions[i] == specifiedVersion) {
+				return allVersions[i];
+			}
+		}
+		return null;
+	}
 }
