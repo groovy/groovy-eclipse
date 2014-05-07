@@ -16,7 +16,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 /**
  *
@@ -107,8 +107,8 @@ public class StringAsserts {
 	}
 
 	public static void assertEqualStringsIgnoreOrder(String[] actuals, String[] expecteds) {
-		ArrayList list1= new ArrayList(Arrays.asList(actuals));
-		ArrayList list2= new ArrayList(Arrays.asList(expecteds));
+		ArrayList<String> list1= new ArrayList<String>(Arrays.<String>asList(actuals));
+		ArrayList<String> list2= new ArrayList<String>(Arrays.<String>asList(expecteds));
 
 		for (int i= list1.size() - 1; i >= 0; i--) {
 			if (list2.remove(list1.get(i))) {
@@ -150,8 +150,8 @@ public class StringAsserts {
 	}
 
 	public static void assertExpectedExistInProposals(String[] actuals, String[] expecteds) {
-		ArrayList list1= new ArrayList(Arrays.asList(actuals));
-		ArrayList list2= new ArrayList(Arrays.asList(expecteds));
+		ArrayList<String> list1= new ArrayList<String>(Arrays.<String>asList(actuals));
+		ArrayList<String> list2= new ArrayList<String>(Arrays.<String>asList(expecteds));
 
 		for (int i= list1.size() - 1; i >= 0; i--) {
 			if (list2.remove(list1.get(i))) {
