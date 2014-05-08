@@ -717,8 +717,11 @@ public abstract class Annotation extends Expression {
 		}
 		this.resolvedType = typeBinding;
 		// ensure type refers to an annotation type
+ 		
 		if (!typeBinding.isAnnotationType() && typeBinding.isValidBinding()) {
-			scope.problemReporter().typeMismatchError(typeBinding, scope.getJavaLangAnnotationAnnotation(), this.type, null);
+			if (!isFakeGroovyAnnotation(typeBinding)) { // GROOVY suppress error (see https://jira.codehaus.org/browse/GRECLIPSE-1719)
+				scope.problemReporter().typeMismatchError(typeBinding, scope.getJavaLangAnnotationAnnotation(), this.type, null);
+			}
 			return null;
 		}
 
@@ -1079,4 +1082,51 @@ public abstract class Annotation extends Expression {
 	public void setPersistibleAnnotation(ContainerAnnotation container) {
 		this.persistibleAnnotation = container; // will be a legitimate container for the first of the repeating ones and null for the followers.
 	}
+	
+	// GROOVY start
+	public boolean isFakeGroovyAnnotation(TypeBinding tb) {
+		if (tb instanceof BinaryTypeBinding) {
+			BinaryTypeBinding type = (BinaryTypeBinding)tb;
+			if (isInterestingGroovyType(type)) {
+				try {
+					AnnotationBinding[] as = type.getAnnotations();
+					if (as!=null) {
+						for (AnnotationBinding a : as) {
+							ReferenceBinding at = a.getAnnotationType();
+							if (at!=null && at.compoundName!=null) {
+								String name = CharOperation.toString(at.compoundName);
+								if (name.equals("groovy.transform.AnnotationCollector")) {
+									return true;
+								}
+							}
+						}
+					}
+				} catch (Throwable e) {
+					//Safe: our code misbehaves? Then don't break JDT!
+					e.printStackTrace();
+				}
+			}
+		}
+		return false;
+	}
+
+	@SuppressWarnings("nls")
+	private static final char[] SPECIAL_GROOVY_FIELD_NAME = "$callSiteArray".toCharArray();
+
+	/**
+	 * Try to eliminate things we don't care about from being 'special groovy handled'.
+	 */
+	private static boolean isInterestingGroovyType(BinaryTypeBinding type) {
+		try {
+			FieldBinding f = type.getField(SPECIAL_GROOVY_FIELD_NAME, /*needResolve*/ false);
+			return f!=null;
+		} catch (Throwable e) {
+			//Better safe than sorry. 
+			//Don't break JDT if our code misbehaves in any way! 
+			e.printStackTrace();
+		}
+		return false;
+	}
+	// GROOVY end
+	
 }
