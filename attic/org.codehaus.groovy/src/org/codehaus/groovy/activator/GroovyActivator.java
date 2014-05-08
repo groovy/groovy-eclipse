@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2011 the original author or authors.
+ * Copyright 2003-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.net.URL;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.Status;
 import org.osgi.framework.Bundle;
@@ -61,7 +60,7 @@ public class GroovyActivator extends Plugin {
     }
 
     public static void initialize() throws IOException {
-        Bundle bundle = Platform.getBundle("org.codehaus.groovy");
+        Bundle bundle = GroovyActivator.getDefault().getBundle();
         GROOVY_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.GROOVY_JAR));
         GROOVY_ALL_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.GROOVY_ALL_JAR));
         ASM_JAR_URL = FileLocator.resolve(bundle.getEntry(GroovyActivator.ASM_JAR));
