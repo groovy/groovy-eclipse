@@ -638,7 +638,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 				for (Iterator<MethodNode> iterator = maybeMethods.iterator(); iterator.hasNext();) {
 					MethodNode maybeMethod = iterator.next();
 					Parameter[] parameters = maybeMethod.getParameters();
-					if (parameters == null && methodCallArgumentTypes.size() == 0) {
+					if ((parameters == null || parameters.length == 0) && methodCallArgumentTypes.size() == 0) {
 						return maybeMethod.getOriginal();
 					}
 					if (parameters != null && parameters.length == methodCallArgumentTypes.size()) {
@@ -666,6 +666,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 						if (!found) {
 							iterator.remove();
 						}
+					} else {
+						iterator.remove();
 					}
 				}
 			}
