@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2011 the original author or authors.
+ * Copyright 2003-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,7 +95,7 @@ public class GroovyActivator extends Plugin {
     }
 
     public static void initialize() throws IOException {
-        Bundle bundle = Platform.getBundle("org.codehaus.groovy");
+        Bundle bundle = GroovyActivator.getDefault().getBundle();
         URL entry = bundle.getEntry(GroovyActivator.GROOVY_ALL_JAR);
         if (entry==null) {
         	throw new RuntimeException("Couldn't find '"+GroovyActivator.GROOVY_ALL_JAR+"' in bundle "+bundle.getSymbolicName()+" "+bundle.getVersion());
