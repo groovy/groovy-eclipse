@@ -328,6 +328,53 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
             },"");
      }
     
+    public void testBadCodeCategory_STS3822() {
+    	this.runNegativeTest(new String[] {"bad.groovy",
+	    "@Category(C.class) \n"+
+		"@ScriptMixin(C.class)\n"+
+		"class Bad {\n"+
+		"@Override\n"+
+		"public String toString()\n"+
+		"{ return \"Bad [takeI()=\" + takeI() + \"]\"; }\n"+
+		"}\n"},
+			"----------\n" + 
+			"1. ERROR in bad.groovy (at line 1)\n" + 
+			"	@Category(C.class) \n" + 
+			"	  ^^^^^^^^\n" + 
+			"Groovy:@groovy.lang.Category must define \'value\' which is the class to apply this category to @ line 1, column 2.\n" + 
+			"----------\n" + 
+			"2. ERROR in bad.groovy (at line 1)\n" + 
+			"	@Category(C.class) \n" + 
+			"	          ^\n" + 
+			"Groovy:unable to find class \'C.class\' for annotation attribute constant\n" + 
+			"----------\n" + 
+			"3. ERROR in bad.groovy (at line 1)\n" + 
+			"	@Category(C.class) \n" + 
+			"	           ^^^^^^^\n" + 
+			"Groovy:Only classes and closures can be used for attribute \'value\' in @groovy.lang.Category\n" + 
+			"----------\n" + 
+			"4. ERROR in bad.groovy (at line 2)\n" + 
+			"	@ScriptMixin(C.class)\n" + 
+			"	 ^^^^^^^^^^^\n" + 
+			"Groovy:unable to resolve class ScriptMixin ,  unable to find class for annotation\n" + 
+			"----------\n" + 
+			"5. ERROR in bad.groovy (at line 2)\n" + 
+			"	@ScriptMixin(C.class)\n" + 
+			"	 ^^^^^^^^^^^\n" + 
+			"Groovy:class ScriptMixin is not an annotation in @ScriptMixin\n" + 
+			"----------\n" + 
+			"6. ERROR in bad.groovy (at line 2)\n" + 
+			"	@ScriptMixin(C.class)\n" + 
+			"	             ^\n" + 
+			"Groovy:unable to find class \'C.class\' for annotation attribute constant\n" + 
+			"----------\n" + 
+			"7. ERROR in bad.groovy (at line 4)\n" + 
+			"	@Override\n" + 
+			"	 ^^^^^^^^\n" + 
+			"Groovy:Method \'toString\' from class \'Bad\' does not override method from its superclass or interfaces but is annotated with @Override.\n" + 
+			"----------\n");
+    }
+    
    public void testGreclipse1521() {
     	if (GroovyUtils.GROOVY_LEVEL < 20) {
     		return;
@@ -1445,6 +1492,24 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
     	assertEquals("[[Ljava.lang.String;",getReturnTypeOfMethod("Z.groovy","zzz"));    	 
     } 
     
+    public void testAnonymousClasses_GE1531() {
+    	runNegativeTest(new String[]{
+    			"Foo.groovy",
+    			"class Foo {\n"+
+    			"  def foo () {\n"+
+    			"    new java.lang.Runnable () {}//<--quick fix here\n"+
+    			"  }\n"+
+    			"}"},
+    			"----------\n" + 
+				"1. ERROR in Foo.groovy (at line 3)\n" + 
+				"	new java.lang.Runnable () {}//<--quick fix here\n" + 
+				"	    ^^^^^^^^^^^^^^^^^^^\n" + 
+				"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'Foo$1\' must be declared abstract or the method \'void run()\' must be implemented.\n" + 
+				"----------\n");   	
+    	// return type is a qualified java built in type
+    	ModuleNode mn = getModuleNode("Foo$1.class");
+    	System.out.println(mn);
+    }
     public void testPrimitiveLikeTypeNames_GRE891_4() {
     	runConformTest(new String[]{
     			"pkg/Foo.java",
