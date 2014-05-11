@@ -34,10 +34,6 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.tests.util.Util;
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
-import org.eclipse.jdt.internal.core.JavaModelManager;
-
-
 
 /**
  * @author Andrew Eisenberg
@@ -50,28 +46,6 @@ public class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTests {
     }
 	public static Test suite() {
 		return buildTestSuite(GroovyCompilationUnitTests.class);
-	}
-	
-	@Override
-	protected void setUp() throws Exception {
-		super.setUp();
-        ICompilationUnit[] units = JavaModelManager.getJavaModelManager().getWorkingCopies(DefaultWorkingCopyOwner.PRIMARY, true);
-        if (units != null) {
-            for (int i = 0; i < units.length; i++) {
-                units[i].discardWorkingCopy();
-            }
-        }
-	}
-		
-	@Override
-	protected void tearDown() throws Exception {
-		super.tearDown();
-        ICompilationUnit[] units = JavaModelManager.getJavaModelManager().getWorkingCopies(DefaultWorkingCopyOwner.PRIMARY, true);
-        if (units != null) {
-            for (int i = 0; i < units.length; i++) {
-                units[i].discardWorkingCopy();
-            }
-        }
 	}
 	
 	public void testCreateJavaCompilationUnit() throws Exception {

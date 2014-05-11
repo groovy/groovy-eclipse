@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
+ * Copyright (c) 2009-2014 SpringSource and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -30,7 +30,6 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 import org.eclipse.jdt.internal.core.ResolvedBinaryField;
 import org.eclipse.jdt.internal.core.ResolvedBinaryMethod;
 import org.eclipse.jdt.internal.core.ResolvedBinaryType;
@@ -49,30 +48,6 @@ public abstract class BrowsingTestCase extends BuilderTests {
     public BrowsingTestCase(String name) {
         super(name);
     }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        ICompilationUnit[] wcs = new ICompilationUnit[0];
-        int i = 0;
-        do {
-            wcs = JavaCore.getWorkingCopies(DefaultWorkingCopyOwner.PRIMARY);
-            for (ICompilationUnit workingCopy : wcs) {
-                try {
-                    workingCopy.discardWorkingCopy();
-                    workingCopy.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            i++;
-            if (i > 20) {
-                fail("Could not delete working copies " + wcs);
-            }
-        } while (wcs.length > 0);
-    }
-
-
 
     protected IPath createGenericProject() throws Exception {
         IPath projectPath;
