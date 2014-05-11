@@ -19,6 +19,7 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IProblemRequestor;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.AST;
@@ -76,6 +77,28 @@ public class JDTAstPositionTest extends BrowsingTestCase {
         		return problemRequestor;
         	}
         };
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        ICompilationUnit[] wcs = new ICompilationUnit[0];
+        int i = 0;
+        do {
+            wcs = JavaCore.getWorkingCopies(this.workingCopyOwner);
+            for (ICompilationUnit workingCopy : wcs) {
+                try {
+                    workingCopy.discardWorkingCopy();
+                    workingCopy.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            i++;
+            if (i > 20) {
+                fail("Could not delete working copies " + wcs);
+            }
+        } while (wcs.length > 0);
+        super.tearDown();
     }
 
     public void testAnnotationPositions_STS3822() throws Exception {
