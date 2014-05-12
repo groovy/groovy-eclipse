@@ -1554,7 +1554,9 @@ new:*/
 				getPlainNodeReferencesFor(getInterfaces()), null);
         n.isPrimaryNode = false;
 		n.setRedirect(redirect());
-        n.componentType = redirect().getComponentType();
+		if (isArray()) {
+        	n.componentType = redirect().getComponentType();
+        }
         return n;
     }
 //end
