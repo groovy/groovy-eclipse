@@ -47,7 +47,6 @@ import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
 import org.osgi.framework.Version;
-import org.osgi.framework.VersionRange;
 
 /**
  * Basic tests for the builder - compiling and running some very simple java and
@@ -2016,7 +2015,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			return;
 		}
 		Version version = JavaCore.getPlugin().getBundle().getVersion();
-		if (!new VersionRange("3.9.50").includes(version)) {
+		if (version.compareTo(new Version("3.9.50"))<0) {
 			System.out.println("Skipping test. Need greclipse for e43j8 or above");
 			return;
 		}
