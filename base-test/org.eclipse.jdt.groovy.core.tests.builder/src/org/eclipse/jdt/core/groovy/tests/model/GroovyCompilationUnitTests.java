@@ -170,7 +170,7 @@ public class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTests {
         unit1.discardWorkingCopy();
         unit2.discardWorkingCopy();
         
-        assertTrue("ModuleNodeMapper should be empty when there are no working copies", ModuleNodeMapper.isEmpty());
+        assertTrue("ModuleNodeMapper should be empty when there are no working copies", getInitialModuleNodeMapperSize() >= ModuleNodeMapper.size());
     }
     
     public void testGetModuleNode_8() throws Exception {

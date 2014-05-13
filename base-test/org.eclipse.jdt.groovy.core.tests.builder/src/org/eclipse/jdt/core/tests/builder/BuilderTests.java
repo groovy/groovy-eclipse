@@ -38,6 +38,8 @@ public class BuilderTests extends TestCase {
 	protected static boolean DEBUG = false;
 	protected static TestingEnvironment env = null;
 	protected EfficiencyCompilerRequestor debugRequestor = null;
+	
+	private int moduleNodeMapperCacheSize = 0;
 
 	public BuilderTests(String name) {
 		super(name);
@@ -521,7 +523,13 @@ public class BuilderTests extends TestCase {
 		}
 		env.resetWorkspace();
 		env.setAutoBuilding(false);
+		this.moduleNodeMapperCacheSize = ModuleNodeMapper.size();
 	}
+	
+	final protected int getInitialModuleNodeMapperSize() {
+		return moduleNodeMapperCacheSize;
+	}
+	
 	/**
 	 * @see junit.framework.TestCase#tearDown()
 	 */
@@ -547,7 +555,7 @@ public class BuilderTests extends TestCase {
                 fail("Could not delete working copies " + wcs);
             }
         } while (wcs != null && wcs.length > 0);
-        assertTrue("ModuleNodeMapper should be empty when there are no working copies", ModuleNodeMapper.isEmpty());        
+        assertTrue("ModuleNodeMapper should be empty when there are no working copies", getInitialModuleNodeMapperSize() >= ModuleNodeMapper.size());        
 		JavaCore.setOptions(JavaCore.getDefaultOptions());
 		super.tearDown();
 	}
