@@ -669,6 +669,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			boolean isInterface = classNode.isInterface();
 			boolean isEnum = (classNode.getModifiers() & Opcodes.ACC_ENUM) != 0;
 			int mods = classNode.getModifiers();
+			if (isTrait(classNode)) {
+				mods |= Opcodes.ACC_INTERFACE;
+			}
 			if ((mods & Opcodes.ACC_ENUM) != 0) {
 				// remove final
 				mods = mods & ~Opcodes.ACC_FINAL;
@@ -825,6 +828,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			end = fileName.length;
 
 		return CharOperation.subarray(fileName, start, end);
+	}
+
+	private boolean isTrait(ClassNode classNode) {
+		List<AnnotationNode> annotations = classNode.getAnnotations();
+		if (annotations.size() > 0) {
+			String annotationTypeName = annotations.get(0).getClassNode().getName();
+			if (annotationTypeName.equals("groovy.transform.Trait")) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -1224,6 +1238,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			methodDeclaration.returnType = createTypeReferenceForClassNode(returnType);
 			return methodDeclaration;
 		} else {
+			boolean isTrait = isTrait(classNode);
 			MethodDeclaration methodDeclaration = new MethodDeclaration(compilationResult);
 			// TODO refactor - extract method
 			GenericsType[] generics = methodNode.getGenericsTypes();
@@ -1251,6 +1266,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			// Note: modifiers for the MethodBinding constructed for this declaration will be created marked with
 			// AccVarArgs if the bitset for the type reference in the final argument is marked IsVarArgs
 			int modifiers = methodNode.getModifiers();
+			if (isTrait) {
+				modifiers &= ~ClassFileConstants.AccAbstract;
+			}
+
 			modifiers &= ~(ClassFileConstants.AccSynthetic | ClassFileConstants.AccTransient);
 			methodDeclaration.annotations = transformAnnotations(methodNode.getAnnotations());
 			methodDeclaration.modifiers = modifiers;

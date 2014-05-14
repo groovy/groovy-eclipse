@@ -445,6 +445,9 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     	if (transformName.equals("groovy.transform.TypeChecked")) {
     		return true;
     	}
+    	if (localTransformsAllowed == null) {
+    		return true;
+    	}
     	for (String localTransformAllowed: localTransformsAllowed) {
 			if (localTransformAllowed.equals("*")) {
 				return true;

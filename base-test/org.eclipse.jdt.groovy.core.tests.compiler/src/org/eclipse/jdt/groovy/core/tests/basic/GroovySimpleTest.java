@@ -140,6 +140,30 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 //	    "public final java.lang.Object Foo.getContent(java.lang.Class[]) throws java.io.IOException");
 //    }
     
+    public void testTraits1() {
+    	if (GroovyUtils.GROOVY_LEVEL < 23) {
+    		return;
+    	}
+    	this.runConformTest(new String[] {
+    			"Test.groovy",
+    			"class Person implements Greetable {\n"+
+    			"    String name() { 'Bob' }\n"+
+    			"}\n"+
+    			"\n"+
+    			"public class Test {\n"+
+    			"  public static void main(String[] argv) {\n"+
+    			"    def p = new Person()\n"+
+    			"    print p.greeting()\n"+
+    			"  }\n"+
+    			"}\n",
+    			"Greetable.groovy",
+    			"trait Greetable {\n"+
+    			"    abstract String name()\n"+                              
+    			"    String greeting() { \"Hello, ${name()}!\" }\n"+
+    			"}\n",
+    	},"Hello, Bob!");
+    }
+    
     public void testParsingRecovery_GRE1085_1() {
     	if (GroovyUtils.GROOVY_LEVEL < 18) {
     		return;
