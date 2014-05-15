@@ -1541,7 +1541,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 /*old:
     public ClassNode getPlainNodeReference() {
         if (ClassHelper.isPrimitiveType(this)) return this;
-        ClassNode n = new ClassNode(getName(),getModifiers(),getSuperClass(),null,null);
+        ClassNode n = new ClassNode(name,modifiers,superClass,null,null);
         n.isPrimaryNode = false;
         n.setRedirect(redirect());
         n.componentType = redirect().getComponentType();
@@ -1550,7 +1550,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 new:*/
     public ClassNode getPlainNodeReference() {
         if (ClassHelper.isPrimitiveType(this)) return this;
-		ClassNode n = new ClassNode(getName(), getModifiers(), getSuperClass(),
+		ClassNode n = new ClassNode(name, modifiers, superClass,
 				getPlainNodeReferencesFor(getInterfaces()), null);
         n.isPrimaryNode = false;
 		n.setRedirect(redirect());

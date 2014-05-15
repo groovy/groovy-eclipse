@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2003-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,20 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import junit.framework.Test;
+
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IProblemRequestor;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.WorkingCopyOwner;
+import org.eclipse.jdt.core.compiler.IProblem;
+import org.eclipse.jdt.core.groovy.tests.compiler.ReconcilerUtils;
 
 /**
  * 
@@ -958,4 +971,110 @@ def h = [8: 1, bb:8]
         assertType(contents, start, end, "java.lang.String");
         assertDeclaringType(contents, start, end, "null");
     }
+    
+    private class ProblemRequestor implements IProblemRequestor {
+    	
+    	List<IProblem> problems = new ArrayList<IProblem>();
+
+		public ProblemRequestor() {
+			super();
+		}
+
+		public void acceptProblem(IProblem problem) {
+			problems.add(problem);
+		}
+
+		public void beginReporting() {
+		}
+
+		public void endReporting() {
+		}
+
+		public boolean isActive() {
+			return true;
+		}
+    	
+    }
+    
+	public void testJira1718() throws Exception {
+
+		// the type checking script
+		IPath robotPath = env.addPackage(
+				project.getFolder("src").getFullPath(), "p2");
+
+		env.addGroovyClass(robotPath, "Renderer", "package p2\n"
+				+ "interface Renderer<T> {\n" + "Class<T> getTargetType()\n"
+				+ "void render(T object, String context)\n" + "}\n");
+
+		env.addGroovyClass(
+				robotPath,
+				"AbstractRenderer",
+				"package p2\n"
+						+ "abstract class AbstractRenderer<T> implements Renderer<T> {\n"
+						+ "private Class<T> targetType\n"
+						+ "public Class<T> getTargetType() {\n"
+						+ "return null\n" + "}\n"
+						+ "public void render(T object, String context) {\n"
+						+ "}\n" + "}\n");
+
+		env.addGroovyClass(robotPath, "DefaultRenderer", "package p2\n"
+				+ "class DefaultRenderer<T> implements Renderer<T> {\n"
+				+ "Class<T> targetType\n"
+				+ "DefaultRenderer(Class<T> targetType) {\n"
+				+ "this.targetType = targetType\n" + "}\n"
+				+ "public Class<T> getTargetType() {\n" + "return null\n"
+				+ "}\n" + "public void render(T object, String context) {\n"
+				+ "}\n" + "}");
+
+		env.addGroovyClass(
+				robotPath,
+				"RendererRegistry",
+				"package p2\n"
+						+ "interface RendererRegistry {\n"
+						+ "public <T> Renderer<T> findRenderer(String contentType, T object)\n"
+						+ "}\n");
+
+		env.addGroovyClass(
+				robotPath,
+				"DefaultRendererRegistry",
+				"package p2\n"
+						+ "class DefaultRendererRegistry implements RendererRegistry {\n"
+						+ "def <T> Renderer<T> findRenderer(String contentType, T object) {\n"
+						+ "return null\n" + "}\n" + "}\n");
+
+		env.addGroovyClass(
+				robotPath,
+				"LinkingRenderer",
+				"package p2\n"
+						+ "import groovy.transform.CompileStatic\n"
+						+ "@CompileStatic\n"
+						+ "class LinkingRenderer<T> extends AbstractRenderer<T> {\n"
+						+ "public void render(T object, String context) {\n"
+						+ "DefaultRendererRegistry registry = new DefaultRendererRegistry()\n"
+						+ "Renderer htmlRenderer = registry.findRenderer(\"HTML\", object)\n"
+						+ "if (htmlRenderer == null) {\n"
+						+ "htmlRenderer = new DefaultRenderer(targetType)\n"
+						+ "}\n" + "htmlRenderer.render(object, context)\n"
+						+ "}\n" + "}\n");
+
+		final ProblemRequestor problemRequestor = new ProblemRequestor();
+
+		ICompilationUnit cu = ReconcilerUtils.findCompilationUnit(JavaCore.create(project),
+				"LinkingRenderer.groovy").getWorkingCopy(new WorkingCopyOwner() {
+			@Override
+			public IProblemRequestor getProblemRequestor(
+					ICompilationUnit workingCopy) {
+				return problemRequestor;
+			}
+
+		}, new NullProgressMonitor());
+		assertEquals(
+				"Should have found no problems in LinkingRenderer.groovy:\n"
+						+ Arrays.toString(problemRequestor.problems
+								.toArray(new IProblem[problemRequestor.problems
+										.size()])), 0,
+				problemRequestor.problems.size());
+		// Discard the working copy to free up caches
+		cu.discardWorkingCopy();
+	}
 }
