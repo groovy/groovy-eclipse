@@ -395,7 +395,7 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     // Multiple Inheritance
-    public void testTraits() {
+    public void testTraits13() {
         if (GroovyUtils.GROOVY_LEVEL < 23) {
             return;
         }
@@ -409,6 +409,59 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "}\n" +
                 "trait Identified implements WithId, WithName {}\n"
         }, "");
+    }
+
+    // Dynamic code
+    public void testTraits14() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait SpeakingDuck {\n" +
+                "    String speak() { quack() }\n" +
+                "}\n" +
+                "class Duck implements SpeakingDuck {\n" +
+                "    String methodMissing(String name, args) {\n" +
+                "        \"${name.capitalize()}!\"\n" +
+                "    }\n" +
+                "}\n" +
+                "def d = new Duck()\n" +
+                "print d.speak()\n"
+        }, "Quack!");
+    }
+
+    // Dynamic methods in trait
+    public void testTraits15() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait DynamicObject {\n" +
+                "    private Map props = [:]\n" +
+                "    def methodMissing(String name, args) {\n" +
+                "        name.toUpperCase()\n" +
+                "    }\n" +
+                "    def propertyMissing(String prop) {\n" +
+                "        props['prop']\n" +
+                "    }\n" +
+                "    void setProperty(String prop, Object value) {\n" +
+                "        props['prop'] = value\n" +
+                "    }\n" +
+                "}\n" +
+                "class Dynamic implements DynamicObject {\n" +
+                "    String existingProperty = 'ok'\n" +
+                "    String existingMethod() { 'ok' }\n" +
+                "}\n" +
+                "def d = new Dynamic()\n" +
+                "print d.existingProperty\n" +
+                "print d.foo\n" +
+                "d.foo = 'bar'\n" +
+                "print d.foo\n" +
+                "print d.existingMethod()\n" +
+                "print d.someMethod()\n"
+        }, "oknullbarokSOMEMETHOD");
     }
     // GRECLIPSE-1727 End of traits tests
 
