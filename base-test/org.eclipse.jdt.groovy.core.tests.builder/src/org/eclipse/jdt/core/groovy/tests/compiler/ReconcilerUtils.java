@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2003-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,6 +102,25 @@ public class ReconcilerUtils {
             }
         }
         return units;
+    }
+    
+    public static ICompilationUnit findCompilationUnit(IJavaProject project, String name) throws JavaModelException {
+        IPackageFragmentRoot[] roots = project.getAllPackageFragmentRoots();
+        for (IPackageFragmentRoot root : roots) {
+            if (!root.isReadOnly()) {
+                for (IJavaElement child : root.getChildren()) {
+                    if (child instanceof IPackageFragment) {
+                        ICompilationUnit[] theseUnits = ((IPackageFragment) child).getCompilationUnits();
+                        for (ICompilationUnit unit : theseUnits) {
+                        	if (unit.getResource().getName().equals(name)) {
+                        		return unit;
+                        	}
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
     
 
