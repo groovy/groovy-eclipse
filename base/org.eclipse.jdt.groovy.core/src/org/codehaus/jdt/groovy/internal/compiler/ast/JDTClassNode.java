@@ -316,7 +316,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 		AnnotationBinding[] annotations = jdtBinding.getAnnotations();
 		if (annotations != null && getAnnotations().isEmpty()) {
 			for (AnnotationBinding annotation : annotations) {
-				addAnnotation(new AnnotationNode(ClassHelper.make(annotation.getClass())));
+				addAnnotation(new AnnotationNode(resolver.convertToClassNode(annotation.getAnnotationType())));
 			}
 		}
 	}
