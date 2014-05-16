@@ -424,6 +424,8 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
             statement = createConstructorStatementArrayOrCloneable(fNode);
         } else if (isKnownImmutableClass(fieldType, knownImmutableClasses) || isKnownImmutable(pNode.getName(), knownImmutables)) {
             statement = createConstructorStatementDefault(fNode);
+        } else if (isImmutableByType(fieldType)) {
+            statement = createConstructorStatementDefault(fNode);
         } else if (fieldType.isDerivedFrom(DATE_TYPE)) {
             statement = createConstructorStatementDate(fNode);
         } else if (isOrImplements(fieldType, COLLECTION_TYPE) || fieldType.isDerivedFrom(COLLECTION_TYPE) || isOrImplements(fieldType, MAP_TYPE) || fieldType.isDerivedFrom(MAP_TYPE)) {
@@ -435,6 +437,17 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
             statement = createConstructorStatementGuarded(cNode, fNode);
         }
         return statement;
+    }
+
+    // GRECLIPSE-1723
+    private boolean isImmutableByType(ClassNode fieldType) {
+        List<AnnotationNode> annotations = fieldType.getAnnotations();
+        for (AnnotationNode node : annotations) {
+            if (Immutable.class.getName().equals(node.getClassNode().getName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Statement createConstructorStatementGuarded(ClassNode cNode, FieldNode fNode) {
