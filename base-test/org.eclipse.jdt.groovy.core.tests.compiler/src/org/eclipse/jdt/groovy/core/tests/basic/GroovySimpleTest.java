@@ -140,6 +140,7 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 //	    "public final java.lang.Object Foo.getContent(java.lang.Class[]) throws java.io.IOException");
 //    }
     
+    // GRECLIPSE-1727 Tests for traits
     public void testTraits1() {
     	if (GroovyUtils.GROOVY_LEVEL < 23) {
     		return;
@@ -162,8 +163,308 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
     			"    String greeting() { \"Hello, ${name()}!\" }\n"+
     			"}\n",
     	},"Hello, Bob!");
+        GroovyCompilationUnitDeclaration unit = getCUDeclFor("Greetable.groovy");
+        ClassNode classNode = unit.getCompilationUnit().getClassNode("Greetable");
+        assertTrue(classNode.isInterface());
     }
-    
+
+    // Abstract Methods
+    public void testTraits2() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait Greetable {\n" +
+                "    abstract String name()\n" +
+                "    String greeting() { \"Hello, ${name()}!\" }\n" +
+                "}\n" +
+                "class Person implements Greetable {\n" +
+                "    String name() { 'Bob' }\n" +
+                "}\n" +
+                "def p = new Person()\n" +
+                "print p.greeting()\n"
+        }, "Hello, Bob!");
+    }
+
+    // Private Methods - positive test
+    public void testTraits3() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait Greeter {\n" +
+                "    private String greetingMessage() {\n" +
+                "        'Hello from a private method!'\n" +
+                "    }\n" +
+                "    String greet() {\n" +
+                "        def m = greetingMessage()\n" +
+                "        println m\n" +
+                "        m\n" +
+                "    }\n" +
+                "}\n" +
+                "class GreetingMachine implements Greeter {}\n" +
+                "def g = new GreetingMachine()\n" +
+                "g.greet()\n"
+        }, "Hello from a private method!");
+    }
+
+    // Private Methods - negative test
+    public void testTraits4() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait Greeter {\n" +
+                "    private String greetingMessage() {\n" +
+                "        'Hello from a private method!'\n" +
+                "    }\n" +
+                "    String greet() {\n" +
+                "        def m = greetingMessage()\n" +
+                "        println m\n" +
+                "        m\n" +
+                "    }\n" +
+                "}\n" +
+                "class GreetingMachine implements Greeter {}\n" +
+                "def g = new GreetingMachine()\n" +
+                "try {\n" +
+                "    g.greetingMessage()\n" +
+                "} catch (MissingMethodException e) {\n" +
+                "    println \"greetingMessage is private in trait\"\n" +
+                "}\n"
+        }, "greetingMessage is private in trait");
+    }
+
+    // Meaning of this
+    public void testTraits5() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait Introspector {\n" +
+                "    def whoAmI() { this.getClass() }\n" +
+                "}\n" +
+                "class Foo implements Introspector {}\n" +
+                "def foo = new Foo()\n" +
+                "print foo.whoAmI()\n"
+        }, "class Foo");
+    }
+
+    // Interfaces
+    public void testTraits6() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "interface Named {\n" +
+                "    String name()\n" +
+                "}\n" +
+                "trait Greetable implements Named {\n" +
+                "    String greeting() { \"Hello, ${name()}!\" }\n" +
+                "}\n" +
+                "class Person implements Greetable {\n" +
+                "    String name() { 'Bob' }\n" +
+                "}\n" +
+                "def p = new Person()\n" +
+                "print p.greeting()"
+        }, "Hello, Bob!");
+        GroovyCompilationUnitDeclaration unit = getCUDeclFor("A.groovy");
+        ClassNode classNode = unit.getCompilationUnit().getClassNode("Person");
+        ClassNode type = unit.getCompilationUnit().getClassNode("Greetable");
+        assertTrue(classNode.implementsInterface(type));
+        type = unit.getCompilationUnit().getClassNode("Named");
+        assertTrue(classNode.implementsInterface(type));
+    }
+
+    // Properties
+    public void testTraits7() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait Named {\n" +
+                "    String name\n" +
+                "}\n" +
+                "class Person implements Named {}\n" +
+                "def p = new Person(name: 'Bob')\n" +
+                "print p.name == 'Bob'\n" +
+                "print p.getName()\n"
+        }, "BobBob");
+    }
+
+    // Private fields
+    public void testTraits8() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait Counter {\n" +
+                "    private int count = 0\n" +
+                "    int count() { count += 1; count }\n" +
+                "}\n" +
+                "class Foo implements Counter {}\n" +
+                "def f = new Foo()\n" +
+                "print f.count()\n"
+        }, "1");
+    }
+
+    // Public fields
+    public void testTraits9() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait Named {\n" +
+                "    public String name\n" +
+                "}\n" +
+                "class Person implements Named {}\n" +
+                "def p = new Person()\n" +
+                "p.Named__name = 'Bob'\n" +
+                "print p.Named__name\n"
+        }, "Bob");
+    }
+
+    // Composition of Behaviors
+    public void testTraits10() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+            "A.groovy",
+            "trait FlyingAbility {\n" +
+            "    String fly() { \"I'm flying!\" }\n" +
+            "}\n" +
+            "trait SpeakingAbility {\n" +
+            "    String speak() { \"I'm speaking!\" }\n" +
+            "}\n" +
+            "class Duck implements FlyingAbility, SpeakingAbility {}\n" +
+            "def d = new Duck()\n" +
+            "print d.fly()\n" +
+            "print d.speak()\n"
+        }, "I'm flying!I'm speaking!");
+    }
+
+    // Overriding default methods
+    public void testTraits11() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait FlyingAbility {\n" +
+                "    String fly() { \"I'm flying!\" }\n" +
+                "}\n" +
+                "trait SpeakingAbility {\n" +
+                "    String speak() { \"I'm speaking!\" }\n" +
+                "}\n" +
+                "class Duck implements FlyingAbility, SpeakingAbility {\n" +
+                "    String quack() { \"Quack!\" }\n" +
+                "    String speak() { quack() }\n" +
+                "}\n" +
+                "def d = new Duck()\n" +
+                "print d.fly()\n" +
+                "print d.quack()\n" +
+                "print d.speak()\n"
+        }, "I'm flying!Quack!Quack!");
+    }
+
+    // Simple Inheritance
+    public void testTraits12() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait Named {\n" +
+                "    String name\n" +
+                "}\n" +
+                "trait Polite extends Named {\n" +
+                "    String introduce() { \"Hello, I am $name\" }\n" +
+                "}\n" +
+                "class Person implements Polite {}\n" +
+                "def p = new Person(name: 'Alice')\n" +
+                "print p.introduce()"
+        }, "Hello, I am Alice");
+    }
+
+    // Multiple Inheritance
+    public void testTraits13() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait WithId {\n" +
+                "    Long id\n" +
+                "}\n" +
+                "trait WithName {\n" +
+                "    String name\n" +
+                "}\n" +
+                "trait Identified implements WithId, WithName {}\n"
+        }, "");
+    }
+
+    // Dynamic code
+    public void testTraits14() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait SpeakingDuck {\n" +
+                "    String speak() { quack() }\n" +
+                "}\n" +
+                "class Duck implements SpeakingDuck {\n" +
+                "    String methodMissing(String name, args) {\n" +
+                "        \"${name.capitalize()}!\"\n" +
+                "    }\n" +
+                "}\n" +
+                "def d = new Duck()\n" +
+                "print d.speak()\n"
+        }, "Quack!");
+    }
+
+    // Dynamic methods in trait
+    public void testTraits15() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait DynamicObject {\n" +
+                "    private Map props = [:]\n" +
+                "    def methodMissing(String name, args) {\n" +
+                "        name.toUpperCase()\n" +
+                "    }\n" +
+                "    def propertyMissing(String prop) {\n" +
+                "        props['prop']\n" +
+                "    }\n" +
+                "    void setProperty(String prop, Object value) {\n" +
+                "        props['prop'] = value\n" +
+                "    }\n" +
+                "}\n" +
+                "class Dynamic implements DynamicObject {\n" +
+                "    String existingProperty = 'ok'\n" +
+                "    String existingMethod() { 'ok' }\n" +
+                "}\n" +
+                "def d = new Dynamic()\n" +
+                "print d.existingProperty\n" +
+                "print d.foo\n" +
+                "d.foo = 'bar'\n" +
+                "print d.foo\n" +
+                "print d.existingMethod()\n" +
+                "print d.someMethod()\n"
+        }, "oknullbarokSOMEMETHOD");
+    }
+    // GRECLIPSE-1727 End of traits tests
+
     public void testParsingRecovery_GRE1085_1() {
     	if (GroovyUtils.GROOVY_LEVEL < 18) {
     		return;
