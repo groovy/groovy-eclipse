@@ -67,6 +67,13 @@ boolean areMethodsCompatible(MethodBinding one, MethodBinding two) {
 	return areMethodsCompatible(one, two, this.environment);
 }
 static boolean areMethodsCompatible(MethodBinding one, MethodBinding two, LookupEnvironment environment) {
+	// Fix for traits
+	if (one.isConstructor() && one.declaringClass.isInterface()) {
+		return true;
+	}
+	if (one.isConstructor() && one.declaringClass.isInterface()) {
+		return true;
+	}
 	// use the original methods to test compatibility, but do not check visibility, etc
 	one = one.original();
 	two = one.findOriginalInheritedMethod(two);

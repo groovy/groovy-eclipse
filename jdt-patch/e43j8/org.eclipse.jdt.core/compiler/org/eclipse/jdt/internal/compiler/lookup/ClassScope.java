@@ -981,6 +981,10 @@ public class ClassScope extends Scope {
 			sourceType.setSuperClass(getJavaLangObject());
 			return !detectHierarchyCycle(sourceType, sourceType.superclass, null);
 		}
+		if (isTrait()) {
+			sourceType.setSuperClass(getJavaLangObject());
+			return true;
+		}
 		TypeReference superclassRef = this.referenceContext.superclass;
 		ReferenceBinding superclass = findSupertype(superclassRef);
 		if (superclass != null) { // is null if a cycle was detected cycle or a problem
