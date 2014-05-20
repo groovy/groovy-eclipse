@@ -225,6 +225,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			}
 			setInterfaces(interfaces);
 			initializeMembers();
+			initializeAnnotations();
 		} finally {
 			beingInitialized = false;
 		}
@@ -306,6 +307,16 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			for (int i = 0; i < fieldBindings.length; i++) {
 				FieldNode fNode = fieldBindingToFieldNode(fieldBindings[i], groovyDecl);
 				addField(fNode);
+			}
+		}
+	}
+
+	// GRECLIPSE-1731
+	private void initializeAnnotations() {
+		AnnotationBinding[] annotations = jdtBinding.getAnnotations();
+		if (annotations != null && getAnnotations().isEmpty()) {
+			for (AnnotationBinding annotation : annotations) {
+				addAnnotation(new AnnotationNode(resolver.convertToClassNode(annotation.getAnnotationType())));
 			}
 		}
 	}

@@ -10115,6 +10115,60 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 			JDTResolver.recordInstances=false;
 		}
 	}
+
+	public void testJDTClassNode_1731() {
+		this.runConformTest(new String[] {
+				"c/Main.java",
+				"package c;\n" +
+				"import java.lang.reflect.Method;\n" +
+				"import a.SampleAnnotation;\n" +
+				"import b.Sample;\n" +
+				"public class Main {\n" +
+				"    public static void main(String[] args) throws Exception {" +
+				"        Method method = Sample.class.getMethod(\"doSomething\");\n" +
+				"        SampleAnnotation annotation = method.getAnnotation(SampleAnnotation.class);\n" +
+				"        System.out.print(annotation);\n" +
+				"    }\n" +
+				"}\n",
+
+				"a/SampleAnnotation.java",
+				"package a;\n" +
+				"import java.lang.annotation.ElementType;\n" +
+				"import java.lang.annotation.Retention;\n" +
+				"import java.lang.annotation.RetentionPolicy;\n" +
+				"import java.lang.annotation.Target;\n" +
+				"@Retention(RetentionPolicy.RUNTIME)\n" +
+				"@Target({ElementType.METHOD})\n" +
+				"public @interface SampleAnnotation {}\n",
+
+				"a/DelegateInOtherProject.java",
+				"package a;\n" +
+				"public class DelegateInOtherProject {\n" +
+				"    @SampleAnnotation\n" +
+				"    public void doSomething() {}\n" +
+				"}\n",
+
+				"b/Sample.groovy",
+				"package b\n" +
+				"import groovy.transform.CompileStatic\n" +
+				"import a.DelegateInOtherProject;\n" +
+				"@CompileStatic\n" +
+				"class Sample {\n" +
+				"    @Delegate(methodAnnotations = true)\n" +
+				"    DelegateInOtherProject delegate\n" +
+				"}\n",
+
+				"b/Delegated.groovy",
+				"package b\n" +
+				"import groovy.transform.CompileStatic\n" +
+				"import a.SampleAnnotation;\n" +
+				"@CompileStatic\n" +
+				"class Delegated {\n" +
+				"    @SampleAnnotation\n" +
+				"    def something() {}\n" +
+				"}\n",
+		}, "@a.SampleAnnotation()");		 
+	}
 	
 	public void testStaticImports2_GtoJ() {
 		this.runConformTest(new String[] {
