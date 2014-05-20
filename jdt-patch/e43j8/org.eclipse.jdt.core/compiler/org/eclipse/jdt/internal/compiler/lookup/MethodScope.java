@@ -20,7 +20,16 @@
 package org.eclipse.jdt.internal.compiler.lookup;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.internal.compiler.ast.*;
+import org.eclipse.jdt.internal.compiler.ast.ASTNode;
+import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.Annotation;
+import org.eclipse.jdt.internal.compiler.ast.Argument;
+import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
+import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
+import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.codegen.ConstantPool;
@@ -202,6 +211,9 @@ private void checkAndSetModifiersForMethod(MethodBinding methodBinding) {
 			if (isDefaultMethod) {
 				realModifiers |= ExtraCompilerModifiers.AccDefaultMethod;
 			}
+		}
+		if (isTrait()) {
+			expectedModifiers |= ClassFileConstants.AccPrivate;
 		}
 		if ((realModifiers & ~expectedModifiers) != 0) {
 			if ((declaringClass.modifiers & ClassFileConstants.AccAnnotation) != 0)
@@ -564,4 +576,19 @@ public TypeDeclaration referenceType() {
 void resolveTypeParameter(TypeParameter typeParameter) {
 	typeParameter.resolve(this);
 }
+
+	private boolean isTrait() {
+		if (this.parent instanceof ClassScope) {
+			TypeDeclaration parentContext = ((ClassScope) this.parent).referenceContext;
+			if (parentContext.annotations == null) {
+				return false;
+			}
+			for (Annotation annotation : parentContext.annotations) {
+				if ("@groovy.transform.Trait".equals(annotation.toString())) { //$NON-NLS-1$
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 }

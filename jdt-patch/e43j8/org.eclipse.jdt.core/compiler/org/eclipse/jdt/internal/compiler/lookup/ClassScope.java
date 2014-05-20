@@ -31,6 +31,7 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -720,6 +721,38 @@ public class ClassScope extends Scope {
 		if ((modifiers & ExtraCompilerModifiers.AccAlternateModifierProblem) != 0)
 			problemReporter().duplicateModifierForField(declaringClass, fieldDecl);
 
+		if (isTrait()) {
+			final int unexpectedModifiers = ~(ClassFileConstants.AccPublic | ClassFileConstants.AccPrivate | ClassFileConstants.AccFinal | ClassFileConstants.AccStatic | ClassFileConstants.AccTransient | ClassFileConstants.AccVolatile);
+			int realModifiers = modifiers & ExtraCompilerModifiers.AccJustFlag;
+			if ((realModifiers & unexpectedModifiers) != 0) {
+				problemReporter().illegalModifierForField(declaringClass, fieldDecl);
+				modifiers &= ~ExtraCompilerModifiers.AccJustFlag | ~unexpectedModifiers;
+			}
+
+			int accessorBits = realModifiers & (ClassFileConstants.AccPublic | ClassFileConstants.AccPrivate);
+			if ((accessorBits & (accessorBits - 1)) > 1) {
+				problemReporter().illegalVisibilityModifierCombinationForField(declaringClass, fieldDecl);
+
+				if ((accessorBits & ClassFileConstants.AccPublic) != 0) {
+					if ((accessorBits & ClassFileConstants.AccPrivate) != 0) {
+						modifiers &= ~ClassFileConstants.AccPrivate;
+					}
+				} else if ((accessorBits & ClassFileConstants.AccProtected) != 0 && (accessorBits & ClassFileConstants.AccPrivate) != 0) {
+					modifiers &= ~ClassFileConstants.AccPrivate;
+				}
+			}
+
+			if ((realModifiers & (ClassFileConstants.AccFinal | ClassFileConstants.AccVolatile)) == (ClassFileConstants.AccFinal | ClassFileConstants.AccVolatile)) {
+				problemReporter().illegalModifierCombinationFinalVolatileForField(declaringClass, fieldDecl);
+			}
+
+			if (fieldDecl.initialization == null && (modifiers & ClassFileConstants.AccFinal) != 0) {
+				modifiers |= ExtraCompilerModifiers.AccBlankFinal;
+			}
+			fieldBinding.modifiers = modifiers;
+			return;
+		}
+
 		if (declaringClass.isInterface()) {
 			final int IMPLICIT_MODIFIERS = ClassFileConstants.AccPublic | ClassFileConstants.AccStatic | ClassFileConstants.AccFinal;
 			// set the modifiers
@@ -1346,4 +1379,16 @@ public class ClassScope extends Scope {
 		return null;
 	}
 	// GROOVY end
+
+	private boolean isTrait() {
+		if (this.referenceContext.annotations == null) {
+			return false;
+		}
+		for (Annotation annotation : this.referenceContext.annotations) {
+			if ("@groovy.transform.Trait".equals(annotation.toString())) { //$NON-NLS-1$
+				return true;
+			}
+		}
+		return false;
+	}
 }

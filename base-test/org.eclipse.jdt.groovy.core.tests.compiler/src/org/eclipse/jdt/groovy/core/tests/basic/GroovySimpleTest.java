@@ -232,9 +232,8 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "try {\n" +
                 "    g.greetingMessage()\n" +
                 "} catch (MissingMethodException e) {\n" +
-                "    println \"greetingMessage is private in trait\"\n" +
                 "}\n"
-        }, "greetingMessage is private in trait");
+        }, "");
     }
 
     // Meaning of this
@@ -294,7 +293,7 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "def p = new Person(name: 'Bob')\n" +
                 "print p.name == 'Bob'\n" +
                 "print p.getName()\n"
-        }, "BobBob");
+        }, "trueBob");
     }
 
     // Private fields
