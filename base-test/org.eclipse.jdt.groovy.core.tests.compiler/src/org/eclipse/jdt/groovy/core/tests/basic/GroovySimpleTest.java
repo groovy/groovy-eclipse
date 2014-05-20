@@ -1375,6 +1375,10 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
     		return GroovyUtils.GROOVY_LEVEL>=20;
     }
     
+    private boolean isGE23() {
+		return GroovyUtils.GROOVY_LEVEL>=23;
+    }
+    
     private boolean isGE21() {
 		return GroovyUtils.GROOVY_LEVEL==21;
     }
@@ -9055,7 +9059,9 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 		"1. ERROR in Foo.groovy (at line 6)\n" + 
 		"	ls.add(\'abc\');\n" + 
 		"	^"+(isGE20()?"^^^^^^^^^^^^":"")+"\n" + 
-		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isGE20()?". Please check if the declared type is right and if the method exists.":"")+"\n" + 
+		(isGE23()?
+				"Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] ":
+		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isGE20()?". Please check if the declared type is right and if the method exists.":""))+"\n" + 
 		"----------\n");
 	}
 	
@@ -9116,7 +9122,9 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 		"1. ERROR in Foo.groovy (at line 6)\n" + 
 		"	ls.add(\'abc\');\n" + 
 		"	^"+(isGE20()?"^^^^^^^^^^^^":"")+"\n" + 
-		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isGE20()?". Please check if the declared type is right and if the method exists.":"")+"\n" + 
+		(isGE23()?
+		"Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] \n":
+		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isGE20()?". Please check if the declared type is right and if the method exists.":""))+(isGE23()?"":"\n") + 
 		"----------\n");
 	}
 	

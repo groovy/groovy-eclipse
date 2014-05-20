@@ -181,15 +181,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     // GRECLIPSE: from private to protected
     protected void outputASTInVariousFormsIfNeeded(SourceUnit sourceUnit, SourceBuffer sourceBuffer) {
         // straight xstream output of AST
+        String formatProp = System.getProperty("ANTLR.AST".toLowerCase()); // uppercase to hide from jarjar
+        
         // GRECLIPSE: removed for now...
         /*
-        if ("xml".equals(System.getProperty("antlr.ast"))) {
+        if ("xml".equals(formatProp)) {
             saveAsXML(sourceUnit.getName(), ast);
         }
         *///GRECLIPSE
 
          // 'pretty printer' output of AST
-        if ("groovy".equals(System.getProperty("antlr.ast"))) {
+        if ("groovy".equals(formatProp)) {
             try {
                 PrintStream out = new PrintStream(new FileOutputStream(sourceUnit.getName() + ".pretty.groovy"));
                 Visitor visitor = new SourcePrinter(out, tokenNames);
@@ -202,7 +204,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         
         // output AST in format suitable for opening in http://freemind.sourceforge.net
         // which is a really nice way of seeing the AST, folding nodes etc
-        if ("mindmap".equals(System.getProperty("antlr.ast"))) {
+        if ("mindmap".equals(formatProp)) {
             try {
                 PrintStream out = new PrintStream(new FileOutputStream(sourceUnit.getName() + ".mm"));
                 Visitor visitor = new MindMapPrinter(out,tokenNames);
@@ -214,7 +216,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
 
         // include original line/col info and source code on the mindmap output
-        if ("extendedMindmap".equals(System.getProperty("antlr.ast"))) {
+        if ("extendedMindmap".equals(formatProp)) {
             try {
                 PrintStream out = new PrintStream(new FileOutputStream(sourceUnit.getName() + ".mm"));
                 Visitor visitor = new MindMapPrinter(out,tokenNames,sourceBuffer);
@@ -226,7 +228,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
 
         // html output of AST
-        if ("html".equals(System.getProperty("antlr.ast"))) {
+        if ("html".equals(formatProp)) {
             try {
                 PrintStream out = new PrintStream(new FileOutputStream(sourceUnit.getName() + ".html"));
                 List<VisitorAdapter> v = new ArrayList<VisitorAdapter>();
