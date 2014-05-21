@@ -170,7 +170,9 @@ public class ModuleNode extends ASTNode implements Opcodes {
         if (type != null) {
             importNode.setSourcePosition(type);
             importNode.setColumnNumber(1);  // assume beginning of line
-            importNode.setStart(type.getStart()-type.getColumnNumber()+1);
+            if (type.getColumnNumber()!=-1) {
+            	importNode.setStart(type.getStart()-type.getColumnNumber()+1);
+            }
         }
         // end
         imports.put(alias, importNode);
