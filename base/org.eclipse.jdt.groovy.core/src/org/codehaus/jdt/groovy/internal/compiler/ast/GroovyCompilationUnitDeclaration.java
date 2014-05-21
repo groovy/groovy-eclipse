@@ -61,6 +61,7 @@ import org.codehaus.groovy.syntax.RuntimeParserException;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.tools.GroovyClass;
+import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -102,7 +103,6 @@ import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.LocalTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
-import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
@@ -669,7 +669,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			boolean isInterface = classNode.isInterface();
 			boolean isEnum = (classNode.getModifiers() & Opcodes.ACC_ENUM) != 0;
 			int mods = classNode.getModifiers();
-			if (isTrait(classNode)) {
+			if (Traits.isTrait(classNode)) {
 				mods |= Opcodes.ACC_INTERFACE;
 			}
 			if ((mods & Opcodes.ACC_ENUM) != 0) {
@@ -780,7 +780,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 					inner.enclosingMethod = enclosingMethodJDT;
 
 					// just a dummy scope to be filled in for real later. needed for structure requesting
-					enclosingMethodJDT.scope = new MethodScope(outerTypeDeclaration.scope, enclosingMethodJDT,
+					enclosingMethodJDT.scope = new GroovyMethodScope(outerTypeDeclaration.scope, enclosingMethodJDT,
 							enclosingMethodJDT.isStatic());
 					if (inner.enclosingMethod.statements == null || inner.enclosingMethod.statements.length == 0) {
 						inner.enclosingMethod.statements = new Statement[] { inner.allocation };
@@ -828,17 +828,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			end = fileName.length;
 
 		return CharOperation.subarray(fileName, start, end);
-	}
-
-	private boolean isTrait(ClassNode classNode) {
-		List<AnnotationNode> annotations = classNode.getAnnotations();
-		if (annotations.size() > 0) {
-			String annotationTypeName = annotations.get(0).getClassNode().getName();
-			if (annotationTypeName.equals("groovy.transform.Trait")) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	/**
@@ -1238,7 +1227,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			methodDeclaration.returnType = createTypeReferenceForClassNode(returnType);
 			return methodDeclaration;
 		} else {
-			boolean isTrait = isTrait(classNode);
+			boolean isTrait = Traits.isTrait(classNode);
 			MethodDeclaration methodDeclaration = new MethodDeclaration(compilationResult);
 			// TODO refactor - extract method
 			GenericsType[] generics = methodNode.getGenericsTypes();

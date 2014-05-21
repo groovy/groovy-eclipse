@@ -71,7 +71,7 @@ static boolean areMethodsCompatible(MethodBinding one, MethodBinding two, Lookup
 	if (one.isConstructor() && one.declaringClass.isInterface()) {
 		return true;
 	}
-	if (one.isConstructor() && one.declaringClass.isInterface()) {
+	if (two.isConstructor() && two.declaringClass.isInterface()) {
 		return true;
 	}
 	// use the original methods to test compatibility, but do not check visibility, etc

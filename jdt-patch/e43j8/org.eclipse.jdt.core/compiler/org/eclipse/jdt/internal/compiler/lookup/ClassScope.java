@@ -38,6 +38,7 @@ import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
+import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
@@ -193,8 +194,8 @@ public class ClassScope extends Scope {
 	private LocalTypeBinding buildLocalType(SourceTypeBinding enclosingType, PackageBinding packageBinding) {
 
 		this.referenceContext.scope = this;
-		this.referenceContext.staticInitializerScope = new MethodScope(this, this.referenceContext, true);
-		this.referenceContext.initializerScope = new MethodScope(this, this.referenceContext, false);
+		this.referenceContext.staticInitializerScope = createMethodScope(this, this.referenceContext, true);
+		this.referenceContext.initializerScope = createMethodScope(this, this.referenceContext, false);
 
 		// build the binding or the local type
 		LocalTypeBinding localType = new LocalTypeBinding(this, enclosingType, innermostSwitchCase());
@@ -348,7 +349,7 @@ public class ClassScope extends Scope {
 		if (sourceType.isAbstract()) {
 			for (int i = 0; i < size; i++) {
 				if (i != clinitIndex) {
-					MethodScope scope = new MethodScope(this, methods[i], false);
+					MethodScope scope = createMethodScope(this, methods[i], false);
 					MethodBinding methodBinding = scope.createMethod(methods[i]);
 					if (methodBinding != null) { // is null if binding could not be created
 						methodBindings[count++] = methodBinding;
@@ -360,7 +361,7 @@ public class ClassScope extends Scope {
 			boolean hasAbstractMethods = false;
 			for (int i = 0; i < size; i++) {
 				if (i != clinitIndex) {
-					MethodScope scope = new MethodScope(this, methods[i], false);
+					MethodScope scope = createMethodScope(this, methods[i], false);
 					MethodBinding methodBinding = scope.createMethod(methods[i]);
 					if (methodBinding != null) { // is null if binding could not be created
 						methodBindings[count++] = methodBinding;
@@ -402,8 +403,8 @@ public class ClassScope extends Scope {
 	SourceTypeBinding buildType(SourceTypeBinding enclosingType, PackageBinding packageBinding, AccessRestriction accessRestriction) {
 		// provide the typeDeclaration with needed scopes
 		this.referenceContext.scope = this;
-		this.referenceContext.staticInitializerScope = new MethodScope(this, this.referenceContext, true);
-		this.referenceContext.initializerScope = new MethodScope(this, this.referenceContext, false);
+		this.referenceContext.staticInitializerScope = createMethodScope(this, this.referenceContext, true);
+		this.referenceContext.initializerScope = createMethodScope(this, this.referenceContext, false);
 
 		if (enclosingType == null) {
 			char[][] className = CharOperation.arrayConcat(packageBinding.compoundName, this.referenceContext.name);
@@ -1346,4 +1347,17 @@ public class ClassScope extends Scope {
 		return null;
 	}
 	// GROOVY end
+
+	/**
+	 * Creates new Method Scope instance.
+	 * This method can be overridden in subclasses to provide more specific Methods Scopes.
+	 *
+	 * @param parentScope
+	 * @param context
+	 * @param isStatic
+	 * @return new Method scope instance
+	 */
+	protected MethodScope createMethodScope(Scope parentScope, ReferenceContext context, boolean isStatic) {
+		return new MethodScope(parentScope, context, isStatic);
+	}
 }
