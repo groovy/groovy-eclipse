@@ -124,7 +124,7 @@
           target: -init   
           create properties and filesets                   
          - - - - - - - - - - - - - - - - - -->
-	<target name="-init" depends="-fail-if-no-version-specified,-init17,-init18,-init20,-init21,-init22">
+	<target name="-init" depends="-fail-if-no-version-specified,-init17,-init18,-init20,-init21,-init22,-init23">
 		<property name="jar.prefix" value="groovy-eclipse-batch"/>
 
 		<property name="jar.name" value="${jar.prefix}-${version}.jar"/>
@@ -157,7 +157,7 @@
 		<fileset dir="${git.repo.loc}/base/org.eclipse.jdt.groovy.core/bin" id="jdt.groovy.core.class.files">
 			<include name="**/*.*" />
 		</fileset>
-		<fileset dir="${git.repo.loc}/jdt-patch/e43/org.eclipse.jdt.core/bin" id="jdt.core.class.files">
+		<fileset dir="${git.repo.loc}/jdt-patch/e43j8/org.eclipse.jdt.core/bin" id="jdt.core.class.files">
 			<include name="**/*.*" />
 		</fileset>
 		<!-- Ensure that this comes after the core groocy compiler files because the groovy-eclipse.jar must overwrite the groovy jar -->
@@ -217,6 +217,16 @@
     	 <property name="groovy.folder" value="org.codehaus.groovy22"/>
     </target>
 	
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: -init23
+         - - - - - - - - - - - - - - - - - -->
+    <target name="-init23" if="do-23-build">
+    	<echo message="Building groovy 2.3.x"/>
+       <property name="version" value="${version2.3}"/>
+    	 <property name="groovy.folder" value="org.codehaus.groovy23"/>
+    </target>
+	
+	
 	<target name="-check-build-version">
 		<property file="build.properties"/>
 		<condition property="no-version-specified">
@@ -227,6 +237,7 @@
 				<isset property="do-20-build"/>
 				<isset property="do-21-build"/>
 				<isset property="do-22-build"/>
+				<isset property="do-23-build"/>
 			</or>
 			</not>
 		</condition>
