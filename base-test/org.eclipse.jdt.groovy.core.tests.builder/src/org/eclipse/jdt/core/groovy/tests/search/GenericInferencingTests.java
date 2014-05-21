@@ -996,7 +996,7 @@ def h = [8: 1, bb:8]
     	
     }
     
-	public void testJira1718() throws Exception {
+	public void xtestJira1718() throws Exception {
 
 		// the type checking script
 		IPath robotPath = env.addPackage(
