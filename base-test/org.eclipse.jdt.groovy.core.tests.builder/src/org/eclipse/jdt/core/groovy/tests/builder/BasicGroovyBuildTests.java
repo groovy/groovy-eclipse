@@ -3148,7 +3148,8 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_LOW),
 					priority);
 		} catch (CoreException e) {
-			assertTrue(false);
+			e.printStackTrace();
+			fail("Unexpected failure: "+e.toString());
 		}
 		JavaCore.setOptions(options);
 	}
@@ -3209,7 +3210,8 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			assertEquals("Wrong priority",
 					new Integer(IMarker.PRIORITY_NORMAL), priority);
 		} catch (CoreException e) {
-			assertTrue(false);
+			e.printStackTrace();
+			fail("Unexpected failure: "+e.toString());
 		}
 		JavaCore.setOptions(options);
 	}
@@ -3270,7 +3272,8 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			assertEquals("Wrong priority",
 					new Integer(IMarker.PRIORITY_NORMAL), priority);
 		} catch (CoreException e) {
-			assertTrue(false);
+			e.printStackTrace();
+			fail("Unexpected failure: "+e.toString());
 		}
 		JavaCore.setOptions(options);
 	}
@@ -3323,7 +3326,8 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			assertEquals("Wrong priority",
 					new Integer(IMarker.PRIORITY_NORMAL), priority);
 		} catch (CoreException e) {
-			assertTrue(false);
+			e.printStackTrace();
+			fail("Unexpected failure: "+e.toString());
 		}
 		JavaCore.setOptions(options);
 	}
