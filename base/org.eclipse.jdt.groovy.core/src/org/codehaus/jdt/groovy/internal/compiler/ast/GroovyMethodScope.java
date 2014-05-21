@@ -33,7 +33,8 @@ public class GroovyMethodScope extends MethodScope {
 			final ReferenceBinding declaringClass = methodBinding.declaringClass;
 
 			int realModifiers = modifiers & ExtraCompilerModifiers.AccJustFlag;
-			int expectedModifiers = ClassFileConstants.AccPublic | ClassFileConstants.AccAbstract | ClassFileConstants.AccPrivate;
+			int expectedModifiers = ClassFileConstants.AccPublic | ClassFileConstants.AccAbstract | ClassFileConstants.AccPrivate
+					| ClassFileConstants.AccStatic;
 			boolean isDefaultMethod = (modifiers & ExtraCompilerModifiers.AccDefaultMethod) != 0;
 			boolean reportIllegalModifierCombination = false;
 			boolean isJDK18orGreater = false;
