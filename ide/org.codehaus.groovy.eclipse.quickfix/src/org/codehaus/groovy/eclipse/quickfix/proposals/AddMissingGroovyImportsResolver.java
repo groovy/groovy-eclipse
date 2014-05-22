@@ -192,7 +192,7 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
 			Matcher matcher = pattern.matcher(messages[0]
 					.substring(startIndex + ProblemType.MISSING_IMPORTS_TYPE.groovyProblemSnippets[0].length()));
 			if (matcher.find()) {
-				return matcher.group();
+				return getTopLevelType(matcher.group());
 			}
 		}
 
