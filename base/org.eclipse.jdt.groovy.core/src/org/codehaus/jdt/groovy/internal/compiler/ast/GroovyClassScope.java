@@ -13,6 +13,7 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.codehaus.groovy.ast.MethodNode;
@@ -75,7 +76,8 @@ public class GroovyClassScope extends ClassScope {
 	protected MethodBinding[] augmentMethodBindings(MethodBinding[] methodBindings) {
 		// Don't add these methods to annotations
 		SourceTypeBinding binding = this.referenceContext.binding;
-		if (binding != null && (binding.isAnnotationType() || binding.isInterface())) {
+		boolean isTrait = isTrait();
+		if (binding != null && !isTrait && (binding.isAnnotationType() || binding.isInterface())) {
 			return methodBindings;
 		}
 		boolean implementsGroovyLangObject = false;
@@ -179,10 +181,19 @@ public class GroovyClassScope extends ClassScope {
 				}
 			}
 		}
-
-		MethodBinding[] newMethodBindings = groovyMethods.toArray(new MethodBinding[methodBindings.length + groovyMethods.size()]);
-		System.arraycopy(methodBindings, 0, newMethodBindings, groovyMethods.size(), methodBindings.length);
-		return newMethodBindings;
+		List<MethodBinding> newMethodBindings = new ArrayList<MethodBinding>();
+		if (isTrait) {
+			// Romove constructors from traits
+			for (MethodBinding method : methodBindings) {
+				if (!method.isConstructor()) {
+					newMethodBindings.add(method);
+				}
+			}
+		} else {
+			newMethodBindings.addAll(Arrays.asList(methodBindings));
+		}
+		newMethodBindings.addAll(groovyMethods);
+		return newMethodBindings.toArray(new MethodBinding[newMethodBindings.size()]);
 	}
 
 	private void createMethod(String name, boolean isStatic, String signature, TypeBinding[] parameterTypes,
