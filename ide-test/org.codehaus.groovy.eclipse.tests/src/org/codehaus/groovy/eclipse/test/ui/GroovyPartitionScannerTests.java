@@ -75,6 +75,25 @@ public class GroovyPartitionScannerTests extends TestCase {
         tryString("$/fdafsdasda/ $fdsaafds\n/$", 0, GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS);
     }
     
+ // GRECLIPSE-1682
+    public void testDollarSlash4() throws Exception {
+        String string = "/$//$/"; // two '/$/' tokens expected
+        IDocument doc = new Document(string);
+        int start = 0;
+        scanner.setRange(doc, start, string.length() - start);
+        for (int i = 0; i < 2; i++) {
+            IToken token = scanner.nextToken();
+            int offset = scanner.getTokenOffset();
+            int length = scanner.getTokenLength();
+
+            assertEquals("Incorrect token.", "/$/",
+                    string.substring(offset, offset + length));
+            assertEquals("Incorrect content type for '" + string + "'",
+                    GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS,
+                    token.getData());
+        }
+    }
+    
     public void testNone() throws Exception {
         tryString("\"\n\"\"\"", 0, IJavaPartitions.JAVA_STRING);
     }
