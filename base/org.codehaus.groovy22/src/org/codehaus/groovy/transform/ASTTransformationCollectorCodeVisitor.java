@@ -410,8 +410,13 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         				values = loadedClasses.toArray(new Class<?>[loadedClasses.size()]);
         			}
         			return values;
-        		} else {
-        			
+        		} else if (expr instanceof ClassExpression) {
+        		    String classname = ((ClassExpression)expr).getType().getName();
+        			try {
+                        return new Class[]{ Class.forName(classname,false,transformLoader) };
+                    } catch (ClassNotFoundException e) {
+                        source.getErrorCollector().addError(new SimpleMessage("Ast transform processing, cannot find "+classname, source));
+                    }
         		}
 
         		throw new RuntimeException("nyi implemented in eclipse: need to support: "+expr+" (class="+expr.getClass()+")");
