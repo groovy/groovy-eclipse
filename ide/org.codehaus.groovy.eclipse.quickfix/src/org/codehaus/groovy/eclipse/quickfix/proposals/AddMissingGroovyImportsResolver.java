@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.codehaus.groovy.eclipse.codeassist.relevance.RelevanceRules;
 import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
@@ -184,37 +186,16 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
 			return null;
 		}
 
-		StringBuffer errorMessage = new StringBuffer(messages[0]);
-		int prefixIndex = errorMessage
-				.indexOf(ProblemType.MISSING_IMPORTS_TYPE.groovyProblemSnippets[0]);
-		if (prefixIndex >= 0) {
-            errorMessage
-                    .delete(prefixIndex,
-                            prefixIndex
-                                    + ProblemType.MISSING_IMPORTS_TYPE.groovyProblemSnippets[0]
-                                            .length());
-
-			// Strip starting whitespace
-			for (; errorMessage.length() > 0;) {
-				if (Character.isWhitespace(errorMessage.charAt(0))) {
-					errorMessage.deleteCharAt(0);
-				} else {
-					break;
-				}
+		int startIndex = messages[0].indexOf(ProblemType.MISSING_IMPORTS_TYPE.groovyProblemSnippets[0]);
+		if (startIndex >= 0) {
+			Pattern pattern = Pattern.compile("\\b\\w+\\b");
+			Matcher matcher = pattern.matcher(messages[0]
+					.substring(startIndex + ProblemType.MISSING_IMPORTS_TYPE.groovyProblemSnippets[0].length()));
+			if (matcher.find()) {
+				return matcher.group();
 			}
-
-			// Strip trailing whitespace
-			for (; errorMessage.length() > 0;) {
-				int lastIndex = errorMessage.length() - 1;
-				if (Character.isWhitespace(errorMessage.charAt(lastIndex))) {
-					errorMessage.deleteCharAt(lastIndex);
-				} else {
-					break;
-				}
-			}
-
-			return getTopLevelType(errorMessage.toString());
 		}
+
 		return null;
 	}
 
