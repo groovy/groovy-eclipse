@@ -194,8 +194,10 @@ public class ClassScope extends Scope {
 	private LocalTypeBinding buildLocalType(SourceTypeBinding enclosingType, PackageBinding packageBinding) {
 
 		this.referenceContext.scope = this;
+		// GROOVY start
 		this.referenceContext.staticInitializerScope = createMethodScope(this, this.referenceContext, true);
 		this.referenceContext.initializerScope = createMethodScope(this, this.referenceContext, false);
+		// GROOVY end
 
 		// build the binding or the local type
 		LocalTypeBinding localType = new LocalTypeBinding(this, enclosingType, innermostSwitchCase());
@@ -349,7 +351,9 @@ public class ClassScope extends Scope {
 		if (sourceType.isAbstract()) {
 			for (int i = 0; i < size; i++) {
 				if (i != clinitIndex) {
+					// GROOVY start
 					MethodScope scope = createMethodScope(this, methods[i], false);
+					// GROOVY end
 					MethodBinding methodBinding = scope.createMethod(methods[i]);
 					if (methodBinding != null) { // is null if binding could not be created
 						methodBindings[count++] = methodBinding;
@@ -361,7 +365,9 @@ public class ClassScope extends Scope {
 			boolean hasAbstractMethods = false;
 			for (int i = 0; i < size; i++) {
 				if (i != clinitIndex) {
+					// GROOVY start
 					MethodScope scope = createMethodScope(this, methods[i], false);
+					// GROOVY end
 					MethodBinding methodBinding = scope.createMethod(methods[i]);
 					if (methodBinding != null) { // is null if binding could not be created
 						methodBindings[count++] = methodBinding;
@@ -403,8 +409,10 @@ public class ClassScope extends Scope {
 	SourceTypeBinding buildType(SourceTypeBinding enclosingType, PackageBinding packageBinding, AccessRestriction accessRestriction) {
 		// provide the typeDeclaration with needed scopes
 		this.referenceContext.scope = this;
+		// GROOVY start
 		this.referenceContext.staticInitializerScope = createMethodScope(this, this.referenceContext, true);
 		this.referenceContext.initializerScope = createMethodScope(this, this.referenceContext, false);
+		// GROOVY end
 
 		if (enclosingType == null) {
 			char[][] className = CharOperation.arrayConcat(packageBinding.compoundName, this.referenceContext.name);
