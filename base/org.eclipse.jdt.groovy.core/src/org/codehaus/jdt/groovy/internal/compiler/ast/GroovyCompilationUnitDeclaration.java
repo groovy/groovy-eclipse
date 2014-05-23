@@ -922,7 +922,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		}
 
 		// Do we need a default constructor?
-		boolean needsDefaultCtor = constructorNodes.size() == 0 && !classNode.isInterface();
+		boolean needsDefaultCtor = constructorNodes.size() == 0 && !classNode.isInterface() && !Traits.isTrait(classNode);
 
 		if (needsDefaultCtor) {
 			ConstructorDeclaration constructor = new ConstructorDeclaration(compilationResult);

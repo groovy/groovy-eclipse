@@ -176,6 +176,8 @@ private void checkAndSetModifiersForConstructor(MethodBinding methodBinding) {
 /**
  * Spec : 8.4.3 & 9.4
  */
+// GROOVY
+// GRECLIPSE-1727: changed for protected. Special behavior is needed for Groovy traits
 protected void checkAndSetModifiersForMethod(MethodBinding methodBinding) {
 	int modifiers = methodBinding.modifiers;
 	final ReferenceBinding declaringClass = methodBinding.declaringClass;

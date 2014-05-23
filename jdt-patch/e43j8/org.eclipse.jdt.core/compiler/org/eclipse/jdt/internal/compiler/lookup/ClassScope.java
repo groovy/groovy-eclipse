@@ -715,6 +715,8 @@ public class ClassScope extends Scope {
 	*
 	* Note : A scope is accessible by : fieldBinding.declaringClass.scope
 	*/
+	// GROOVY
+	// GRECLIPSE-1727: changed for protected. Special behavior is needed for Groovy traits
 	protected void checkAndSetModifiersForField(FieldBinding fieldBinding, FieldDeclaration fieldDecl) {
 		int modifiers = fieldBinding.modifiers;
 		final ReferenceBinding declaringClass = fieldBinding.declaringClass;
@@ -932,6 +934,8 @@ public class ClassScope extends Scope {
 
 		Answer false if an error was reported against the sourceType.
 	*/
+	// GROOVY
+	// GRECLIPSE-1727: changed for protected. Special behavior is needed for Groovy traits
 	protected boolean connectSuperclass() {
 		SourceTypeBinding sourceType = this.referenceContext.binding;
 		if (sourceType.id == TypeIds.T_JavaLangObject) { // handle the case of redefining java.lang.Object up front
@@ -1348,6 +1352,8 @@ public class ClassScope extends Scope {
 	}
 	// GROOVY end
 
+	// GROOVY start
+	// GRECLIPSE-1727: changed for protected. Special behavior is needed for Groovy traits
 	/**
 	 * Creates new Method Scope instance.
 	 * This method can be overridden in subclasses to provide more specific Methods Scopes.
@@ -1360,4 +1366,5 @@ public class ClassScope extends Scope {
 	protected MethodScope createMethodScope(Scope parentScope, ReferenceContext context, boolean isStatic) {
 		return new MethodScope(parentScope, context, isStatic);
 	}
+	// GROOVY end
 }

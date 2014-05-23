@@ -13,7 +13,6 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.codehaus.groovy.ast.MethodNode;
@@ -181,19 +180,10 @@ public class GroovyClassScope extends ClassScope {
 				}
 			}
 		}
-		List<MethodBinding> newMethodBindings = new ArrayList<MethodBinding>();
-		if (isTrait) {
-			// Romove constructors from traits
-			for (MethodBinding method : methodBindings) {
-				if (!method.isConstructor()) {
-					newMethodBindings.add(method);
-				}
-			}
-		} else {
-			newMethodBindings.addAll(Arrays.asList(methodBindings));
-		}
-		newMethodBindings.addAll(groovyMethods);
-		return newMethodBindings.toArray(new MethodBinding[newMethodBindings.size()]);
+
+		MethodBinding[] newMethodBindings = groovyMethods.toArray(new MethodBinding[methodBindings.length + groovyMethods.size()]);
+		System.arraycopy(methodBindings, 0, newMethodBindings, groovyMethods.size(), methodBindings.length);
+		return newMethodBindings;
 	}
 
 	private void createMethod(String name, boolean isStatic, String signature, TypeBinding[] parameterTypes,
@@ -423,13 +413,12 @@ public class GroovyClassScope extends ClassScope {
 	}
 
 	protected void checkAndSetModifiersForField(FieldBinding fieldBinding, FieldDeclaration fieldDecl) {
-		int modifiers = fieldBinding.modifiers;
-		final ReferenceBinding declaringClass = fieldBinding.declaringClass;
-		if ((modifiers & ExtraCompilerModifiers.AccAlternateModifierProblem) != 0) {
-			problemReporter().duplicateModifierForField(declaringClass, fieldDecl);
-		}
-
 		if (isTrait()) {
+			int modifiers = fieldBinding.modifiers;
+			final ReferenceBinding declaringClass = fieldBinding.declaringClass;
+			if ((modifiers & ExtraCompilerModifiers.AccAlternateModifierProblem) != 0) {
+				problemReporter().duplicateModifierForField(declaringClass, fieldDecl);
+			}
 			final int unexpectedModifiers = ~(ClassFileConstants.AccPublic | ClassFileConstants.AccPrivate
 					| ClassFileConstants.AccFinal | ClassFileConstants.AccStatic | ClassFileConstants.AccTransient | ClassFileConstants.AccVolatile);
 			int realModifiers = modifiers & ExtraCompilerModifiers.AccJustFlag;
