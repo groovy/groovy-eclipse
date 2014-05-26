@@ -232,9 +232,8 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "try {\n" +
                 "    g.greetingMessage()\n" +
                 "} catch (MissingMethodException e) {\n" +
-                "    println \"greetingMessage is private in trait\"\n" +
                 "}\n"
-        }, "greetingMessage is private in trait");
+        }, "");
     }
 
     // Meaning of this
@@ -294,7 +293,7 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "def p = new Person(name: 'Bob')\n" +
                 "print p.name == 'Bob'\n" +
                 "print p.getName()\n"
-        }, "BobBob");
+        }, "trueBob");
     }
 
     // Private fields
@@ -462,6 +461,476 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "print d.existingMethod()\n" +
                 "print d.someMethod()\n"
         }, "oknullbarokSOMEMETHOD");
+    }
+
+    // Multiple inheritance conflicts - Default conflict resolution
+    public void testTraits16() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait A {\n" +
+                "    String exec() { 'A' }\n" +
+                "}\n" +
+                "trait B {\n" +
+                "    String exec() { 'B' }\n" +
+                "}\n" +
+                "class C implements A, B {}\n" +
+                "def c = new C()\n" +
+                "print c.exec()\n"
+        }, "B");
+    }
+
+    // Multiple inheritance conflicts - Default conflict resolution
+    public void testTraits17() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait A {\n" +
+                "    String exec() { 'A' }\n" +
+                "}\n" +
+                "trait B {\n" +
+                "    String exec() { 'B' }\n" +
+                "}\n" +
+                "class C implements B, A {}\n" +
+                "def c = new C()\n" +
+                "print c.exec()\n"
+        }, "A");
+    }
+
+    // Multiple inheritance conflicts - User conflict resolution
+    public void testTraits18() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait A {\n" +
+                "    String exec() { 'A' }\n" +
+                "}\n" +
+                "trait B {\n" +
+                "    String exec() { 'B' }\n" +
+                "}\n" +
+                "class C implements A, B {\n" +
+                "    String exec() { A.super.exec() }\n" +
+                "}\n" +
+                "def c = new C()\n" +
+                "print c.exec()\n"
+        }, "A");
+    }
+
+    // Implementing a trait at runtime
+    public void testTraits19() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait Extra {\n" +
+                "    String extra() { 'Extra' }\n" +
+                "}\n" +
+                "class Something {\n" +
+                "    String doSomething() { 'Something' }\n" +
+                "}\n" +
+                "def s = new Something() as Extra\n" +
+                "print s.extra()\n" +
+                "print s.doSomething()\n"
+        }, "ExtraSomething");
+    }
+
+    // Implementing multiple traits at once - negative
+    public void testTraits20() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        Map customOptions= getCompilerOptions();
+        this.runConformTest(
+                // test directory preparation
+                true, /* flush output directory */
+                new String[] { /* test files */
+                        "Sample.groovy",
+                        "trait A { String methodFromA() { 'A' } }\n" +
+                        "trait B { String methodFromB() { 'B' } }\n" +
+                        "class C {}\n" +
+                        "def c = new C()\n" +
+                        "print c.methodFromA()\n" +
+                        "print c.methodFromB()\n"
+                }, // compiler options
+                null /* no class libraries */,
+                customOptions /* custom options */,
+                "" /* expected compiler log */,
+                "" /* expected output string */,
+                "groovy.lang.MissingMethodException: No signature of method: C.methodFromA() is applicable for argument types: () values: []",
+                new JavacTestOptions());
+    }
+
+    // Implementing multiple traits at once - positive
+    public void testTraits21() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait A { String methodFromA() { 'A' } }\n" +
+                "trait B { String methodFromB() { 'B' } }\n" +
+                "class C {}\n" +
+                "def c = new C()\n" +
+                "def d = c.withTraits A, B\n" +
+                "print d.methodFromA()\n" +
+                "print d.methodFromB()\n"
+        }, "AB");
+    }
+
+    // Chaining behavior
+    public void testTraits22() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "interface MessageHandler {\n" +
+                "    void on(String message, Map payload)\n" +
+                "}\n" +
+                "trait DefaultHandler implements MessageHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        println \"Received $message with payload $payload\"\n" +
+                "    }\n" +
+                "}\n" +
+                "class SimpleHandler implements DefaultHandler {}\n" +
+                "def handler = new SimpleHandler()\n" +
+                "handler.on('test logging', [:])"
+        }, "Received test logging with payload [:]");
+    }
+
+    // Chaining behavior
+    public void testTraits23() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "interface MessageHandler {\n" +
+                "    void on(String message, Map payload)\n" +
+                "}\n" +
+                "trait DefaultHandler implements MessageHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        println \"Received $message with payload $payload\"\n" +
+                "    }\n" +
+                "}\n" +
+                "class SimpleHandlerWithLogging implements DefaultHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        println \"Seeing $message with payload $payload\"\n" +
+                "        DefaultHandler.super.on(message, payload)\n" +
+                "    }\n" +
+                "}\n" +
+                "def handler = new SimpleHandlerWithLogging()\n" +
+                "handler.on('test logging', [:])"
+        }, "Seeing test logging with payload [:]\nReceived test logging with payload [:]");
+    }
+
+    // Chaining behavior
+    public void testTraits24() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "interface MessageHandler {\n" +
+                "    void on(String message, Map payload)\n" +
+                "}\n" +
+                "trait DefaultHandler implements MessageHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        println \"Received $message with payload $payload\"\n" +
+                "    }\n" +
+                "}\n" +
+                "trait SayHandler implements MessageHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        if (message.startsWith(\"say\")) {\n" +
+                "            println \"I say ${message - 'say'}!\"\n" +
+                "        } else {\n" +
+                "            super.on(message, payload)\n" +
+                "        }\n" +
+                "    }\n" +
+                "}\n" +
+                "trait LoggingHandler implements MessageHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        println \"Seeing $message with payload $payload\"\n" +
+                "        super.on(message, payload)\n" +
+                "    }\n" +
+                "}\n" +
+                "class Handler implements DefaultHandler, SayHandler, LoggingHandler {}\n" +
+                "def handler = new Handler()\n" +
+                "handler.on('foo', [:])\n" +
+                "handler.on('sayHello', [:])\n"
+        }, "Seeing foo with payload [:]\nReceived foo with payload [:]\n"
+                + "Seeing sayHello with payload [:]\nI say Hello!");
+    }
+
+    // Chaining behavior
+    public void testTraits25() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "interface MessageHandler {\n" +
+                "    void on(String message, Map payload)\n" +
+                "}\n" +
+                "trait DefaultHandler implements MessageHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        println \"Received $message with payload $payload\"\n" +
+                "    }\n" +
+                "}\n" +
+                "trait SayHandler implements MessageHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        if (message.startsWith(\"say\")) {\n" +
+                "            println \"I say ${message - 'say'}!\"\n" +
+                "        } else {\n" +
+                "            super.on(message, payload)\n" +
+                "        }\n" +
+                "    }\n" +
+                "}\n" +
+                "trait LoggingHandler implements MessageHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        println \"Seeing $message with payload $payload\"\n" +
+                "        super.on(message, payload)\n" +
+                "    }\n" +
+                "}\n" +
+                "class AlternateHandler implements DefaultHandler, LoggingHandler, SayHandler {}\n" +
+                "def handler = new AlternateHandler()\n" +
+                "handler.on('foo', [:])\n" +
+                "handler.on('sayHello', [:])\n"
+        }, "Seeing foo with payload [:]\nReceived foo with payload [:]\n"
+                + "I say Hello!");
+    }
+
+    // Chaining behavior - Semantics of super inside a trait
+    public void testTraits26() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait Filtering {\n" +
+                "    StringBuilder append(String str) {\n" +
+                "        def subst = str.replace('o', '')\n" +
+                "        super.append(subst)\n" +
+                "    }\n" +
+                "    String toString() { super.toString() }\n" +
+                "}\n" +
+                "def sb = new StringBuilder().withTraits Filtering\n" +
+                "sb.append('Groovy')\n" +
+                "print sb.toString()\n"
+        }, "Grvy");
+    }
+
+    // SAM type coercion
+    public void testTraits27() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait Greeter {\n" +
+                "    String greet() { \"Hello $name\" }\n" +
+                "    abstract String getName()\n" +
+                "}\n" +
+                "Greeter greeter = { 'Alice' }\n" +
+                "print greeter.getName()\n"
+        }, "Alice");
+    }
+
+    // SAM type coercion
+    public void testTraits28() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait Greeter {\n" +
+                "    String greet() { \"Hello $name\" }\n" +
+                "    abstract String getName()\n" +
+                "}\n" +
+                "void greet(Greeter g) { println g.greet() }\n" +
+                "greet { 'Alice' }\n"
+        }, "Hello Alice");
+    }
+
+    // Differences with Java 8 default methods
+    public void testTraits29() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "class Person {\n" +
+                "    String name\n" +
+                "}\n" +
+                "trait Bob {\n" +
+                "    String getName() { 'Bob' }\n" +
+                "}\n" +
+                "def p = new Person(name: 'Alice')\n" +
+                "print p.name\n" +
+                "def p2 = p as Bob\n" +
+                "print p2.name\n"
+        }, "AliceBob");
+    }
+
+    // Differences with mixins
+    public void testTraits30() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "class A { String methodFromA() { 'A' } }\n" +
+                "class B { String methodFromB() { 'B' } }\n" +
+                "A.metaClass.mixin B\n" +
+                "def o = new A()\n" +
+                "print o.methodFromA()\n" +
+                "print o.methodFromB()\n" +
+                "print(o instanceof A)\n" +
+                "print(o instanceof B)\n"
+        }, "ABtruefalse");
+    }
+
+    // Static methods, properties and fields
+    public void testTraits31() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait TestHelper {\n" +
+                "    public static boolean called = false\n" +
+                "    static void init() {\n" +
+                "        called = true\n" +
+                "    }\n" +
+                "}\n" +
+                "class Foo implements TestHelper {}\n" +
+                "Foo.init()\n" +
+                "print Foo.TestHelper__called\n"
+        }, "true");
+    }
+
+    // Static methods, properties and fields
+    public void testTraits32() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait TestHelper {\n" +
+                "    public static boolean called = false\n" +
+                "    static void init() {\n" +
+                "        called = true\n" +
+                "    }\n" +
+                "}\n" +
+                "class Bar implements TestHelper {}\n" +
+                "class Baz implements TestHelper {}\n" +
+                "Bar.init()\n" +
+                "print Bar.TestHelper__called\n" +
+                "print Baz.TestHelper__called\n"
+        }, "truefalse");
+    }
+
+    // Inheritance of state gotchas
+    public void testTraits33() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait IntCouple {\n" +
+                "    int x = 1\n" +
+                "    int y = 2\n" +
+                "    int sum() { x+y }\n" +
+                "}\n" +
+                "class BaseElem implements IntCouple {\n" +
+                "    int f() { sum() }\n" +
+                "}\n" +
+                "def base = new BaseElem()\n" +
+                "print base.f()"
+        }, "3");
+    }
+
+    // Inheritance of state gotchas
+    public void testTraits34() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait IntCouple {\n" +
+                "    int x = 1\n" +
+                "    int y = 2\n" +
+                "    int sum() { x+y }\n" +
+                "}\n" +
+                "class Elem implements IntCouple {\n" +
+                "    int x = 3\n" +
+                "    int y = 4\n" +
+                "    int f() { sum() }\n" +
+                "}\n" +
+                "def elem = new Elem()\n" +
+                "print elem.f()"
+        }, "3");
+    }
+
+    // Inheritance of state gotchas
+    public void testTraits35() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait IntCouple {\n" +
+                "    int x = 1\n" +
+                "    int y = 2\n" +
+                "    int sum() { getX() + getY() }\n" +
+                "}\n" +
+                "class Elem implements IntCouple {\n" +
+                "    int x = 3\n" +
+                "    int y = 4\n" +
+                "    int f() { sum() }\n" +
+                "}\n" +
+                "def elem = new Elem()\n" +
+                "print elem.f()"
+        }, "7");
+    }
+
+    // Limitations - Prefix and postfix operations
+    public void testTraits36() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runNegativeTest(new String[] {
+                "Sample.groovy",
+                "trait Counting {\n" +
+                "    int x\n" +
+                "    void inc() {\n" +
+                "        x++\n" +
+                "    }\n" +
+                "    void dec() {\n" +
+                "        --x\n" +
+                "    }\n" +
+                "}\n" +
+                "class Counter implements Counting {}\n" +
+                "def c = new Counter()\n" +
+                "c.inc()\n"},
+                "----------\n" + 
+                "1. ERROR in Sample.groovy (at line 4)\n" + 
+                "	x++\n" + 
+                "	 ^\n" + 
+                "Groovy:Postfix expressions on trait fields/properties  are not supported in traits. @ line 4, column 10.\n" + 
+                "----------\n" + 
+                "2. ERROR in Sample.groovy (at line 7)\n" + 
+                "	--x\n" + 
+                "	^\n" + 
+                "Groovy:Prefix expressions on trait fields/properties are not supported in traits. @ line 7, column 9.\n" + 
+                "----------\n");
     }
     // GRECLIPSE-1727 End of traits tests
 
