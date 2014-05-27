@@ -20,7 +20,15 @@
 package org.eclipse.jdt.internal.compiler.lookup;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.internal.compiler.ast.*;
+import org.eclipse.jdt.internal.compiler.ast.ASTNode;
+import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.Argument;
+import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
+import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
+import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.TypeParameter;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.codegen.ConstantPool;
@@ -168,7 +176,9 @@ private void checkAndSetModifiersForConstructor(MethodBinding methodBinding) {
 /**
  * Spec : 8.4.3 & 9.4
  */
-private void checkAndSetModifiersForMethod(MethodBinding methodBinding) {
+// GROOVY
+// GRECLIPSE-1727: changed for protected. Special behavior is needed for Groovy traits
+protected void checkAndSetModifiersForMethod(MethodBinding methodBinding) {
 	int modifiers = methodBinding.modifiers;
 	final ReferenceBinding declaringClass = methodBinding.declaringClass;
 	if ((modifiers & ExtraCompilerModifiers.AccAlternateModifierProblem) != 0)
