@@ -502,7 +502,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 								ArrayInitializer arrayInitializer = new ArrayInitializer();
 								arrayInitializer.expressions = new org.eclipse.jdt.internal.compiler.ast.Expression[listOfExpressions
-										.size()];
+								                                                                                    .size()];
 								for (int c = 0; c < listOfExpressions.size(); c++) {
 									ConstantExpression cExpression = (ConstantExpression) listOfExpressions.get(c);
 									String v = (String) cExpression.getValue();
@@ -811,7 +811,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	private boolean isAnon(ClassNode classNode) {
 		// FIXADE does Groovy support non-anon local types???
 		return classNode.getEnclosingMethod() != null
-				// check to see if anon type inside of a script
+		// check to see if anon type inside of a script
 				|| (classNode.getOuterClass() != null && classNode.getOuterClass().isScript());
 	}
 
@@ -831,11 +831,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	}
 
 	private boolean isTrait(ClassNode classNode) {
-		List<AnnotationNode> annotations = classNode.getAnnotations();
-		if (annotations.size() > 0) {
-			String annotationTypeName = annotations.get(0).getClassNode().getName();
-			if (annotationTypeName.equals("groovy.transform.Trait")) {
-				return true;
+		if (classNode != null) {
+			List<AnnotationNode> annotations = classNode.getAnnotations();
+			if (annotations.size() > 0) {
+				for (AnnotationNode annotation : annotations) {
+					if (annotation.getClassNode().getName().equals("groovy.transform.Trait")) {
+						return true;
+					}
+				}
 			}
 		}
 		return false;
@@ -2051,13 +2054,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		// opening bracket
 		ctorDeclaration.bodyStart =
-				// try for opening bracket
-				ctorNode.getCode() != null ? ctorNode.getCode().getStart() :
-					// handle abstract constructor. not sure if this can ever happen, but you never know with Groovy
-					ctorNode.getNameEnd();
+		// try for opening bracket
+		ctorNode.getCode() != null ? ctorNode.getCode().getStart() :
+		// handle abstract constructor. not sure if this can ever happen, but you never know with Groovy
+				ctorNode.getNameEnd();
 
-				// closing bracket or ';' same as declarationSourceEnd
-				ctorDeclaration.bodyEnd = ctorNode.getEnd() - 1;
+		// closing bracket or ';' same as declarationSourceEnd
+		ctorDeclaration.bodyEnd = ctorNode.getEnd() - 1;
 	}
 
 	/**
@@ -2081,14 +2084,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		// opening bracket
 		methodDeclaration.bodyStart =
-				// try for opening bracket
-				methodNode.getCode() != null ? methodNode.getCode().getStart() :
-					// run() method for script has no opening bracket
-					// also need to handle abstract methods
-					Math.max(methodNode.getNameEnd(), methodNode.getStart());
+		// try for opening bracket
+		methodNode.getCode() != null ? methodNode.getCode().getStart() :
+		// run() method for script has no opening bracket
+		// also need to handle abstract methods
+				Math.max(methodNode.getNameEnd(), methodNode.getStart());
 
-				// closing bracket or ';' same as declarationSourceEnd
-				methodDeclaration.bodyEnd = methodNode.getEnd() - 1;
+		// closing bracket or ';' same as declarationSourceEnd
+		methodDeclaration.bodyEnd = methodNode.getEnd() - 1;
 	}
 
 	/**
