@@ -714,7 +714,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				}
 			}
 
-			configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum);
+			configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum, isTrait(classNode));
 			configureSuperInterfaces(typeDeclaration, classNode);
 			typeDeclaration.methods = createMethodAndConstructorDeclarations(typeDeclaration, classNode, isEnum, compilationResult);
 			typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
@@ -887,8 +887,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	private FieldDeclaration[] createFieldDeclarations(ClassNode classNode, boolean isEnum) {
 		List<FieldDeclaration> fieldDeclarations = new ArrayList<FieldDeclaration>();
 		List<FieldNode> fieldNodes = classNode.getFields();
+		boolean isTrait = isTrait(classNode);
 		if (fieldNodes != null) {
 			for (FieldNode fieldNode : fieldNodes) {
+				if (isTrait && !(fieldNode.isPublic() && fieldNode.isStatic() && fieldNode.isFinal())) {
+					continue;
+				}
 				if (isEnum && (fieldNode.getName().equals("MAX_VALUE") || fieldNode.getName().equals("MIN_VALUE"))) {
 					continue;
 				}
@@ -919,6 +923,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	private void createConstructorDeclarations(ClassNode classNode, boolean isEnum,
 			List<AbstractMethodDeclaration> accumulatedMethodDeclarations) {
+		if (isTrait(classNode)) {
+			return;
+		}
 		List<ConstructorNode> constructorNodes = classNode.getDeclaredConstructors();
 
 		char[] ctorName = null;
@@ -1074,9 +1081,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	private void createMethodDeclarations(GroovyTypeDeclaration typeDeclaration, ClassNode classNode, boolean isEnum,
 			List<AbstractMethodDeclaration> accumulatedDeclarations) {
+		boolean isTrait = isTrait(classNode);
 		List<MethodNode> methods = classNode.getMethods();
 
 		for (MethodNode methodNode : methods) {
+			if (isTrait && (methodNode.isPrivate() || methodNode.isStatic())) {
+				continue;
+			}
 			if (isEnum && methodNode.isSynthetic()) {
 				// skip synthetic methods in enums
 				continue;
@@ -1335,8 +1346,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		}
 	}
 
-	private void configureSuperClass(TypeDeclaration typeDeclaration, ClassNode superclass, boolean isEnum) {
-		if (isEnum && superclass.getName().equals("java.lang.Enum")) {
+	private void configureSuperClass(TypeDeclaration typeDeclaration, ClassNode superclass, boolean isEnum, boolean isTrait) {
+		if (isEnum && superclass.getName().equals("java.lang.Enum") || isTrait) {
 			// Don't wire it in, JDT will do it
 			typeDeclaration.superclass = null;
 		} else {
@@ -2448,5 +2459,4 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	public void tagAsScript() {
 		this.isScript = true;
 	}
-
 }

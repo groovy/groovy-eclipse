@@ -400,6 +400,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         "this",
         "throw",
         "throws",
+        "trait",
         "transient",
         "try",
         "volatile",
@@ -414,6 +415,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         "def",
         "assert",
         "in",
+        "trait",
     };
 
     private static String[] gjdkWords = {
