@@ -61,7 +61,6 @@ import org.codehaus.groovy.syntax.RuntimeParserException;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.tools.GroovyClass;
-import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -715,12 +714,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				}
 			}
 
-			if (Traits.isTrait(classNode)) {
-				// Let JDT set correct class
-				typeDeclaration.superclass = null;
-			} else {
-				configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum);
-			}
+			configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum, isTrait(classNode));
 			configureSuperInterfaces(typeDeclaration, classNode);
 			typeDeclaration.methods = createMethodAndConstructorDeclarations(typeDeclaration, classNode, isEnum, compilationResult);
 			typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
@@ -893,7 +887,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	private FieldDeclaration[] createFieldDeclarations(ClassNode classNode, boolean isEnum) {
 		List<FieldDeclaration> fieldDeclarations = new ArrayList<FieldDeclaration>();
 		List<FieldNode> fieldNodes = classNode.getFields();
-		boolean isTrait = Traits.isTrait(classNode);
+		boolean isTrait = isTrait(classNode);
 		if (fieldNodes != null) {
 			for (FieldNode fieldNode : fieldNodes) {
 				if (isTrait && !(fieldNode.isPublic() && fieldNode.isStatic() && fieldNode.isFinal())) {
@@ -929,7 +923,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	private void createConstructorDeclarations(ClassNode classNode, boolean isEnum,
 			List<AbstractMethodDeclaration> accumulatedMethodDeclarations) {
-		if (Traits.isTrait(classNode)) {
+		if (isTrait(classNode)) {
 			return;
 		}
 		List<ConstructorNode> constructorNodes = classNode.getDeclaredConstructors();
@@ -1087,7 +1081,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	private void createMethodDeclarations(GroovyTypeDeclaration typeDeclaration, ClassNode classNode, boolean isEnum,
 			List<AbstractMethodDeclaration> accumulatedDeclarations) {
-		boolean isTrait = Traits.isTrait(classNode);
+		boolean isTrait = isTrait(classNode);
 		List<MethodNode> methods = classNode.getMethods();
 
 		for (MethodNode methodNode : methods) {
@@ -1352,8 +1346,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		}
 	}
 
-	private void configureSuperClass(TypeDeclaration typeDeclaration, ClassNode superclass, boolean isEnum) {
-		if (isEnum && superclass.getName().equals("java.lang.Enum")) {
+	private void configureSuperClass(TypeDeclaration typeDeclaration, ClassNode superclass, boolean isEnum, boolean isTrait) {
+		if (isEnum && superclass.getName().equals("java.lang.Enum") || isTrait) {
 			// Don't wire it in, JDT will do it
 			typeDeclaration.superclass = null;
 		} else {
@@ -2465,5 +2459,4 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	public void tagAsScript() {
 		this.isScript = true;
 	}
-
 }
