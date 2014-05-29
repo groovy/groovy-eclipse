@@ -83,7 +83,77 @@ public class SemanticHighlightingTests extends EclipseTestCase {
         assertHighlighting(contents, 
                 new HighlightedTypedPosition(contents.indexOf("/fdsfasdfas/"), "/fdsfasdfas/".length(), REGEX));
     }
-    
+
+    public void testSlashyString1() throws Exception {
+        String contents = "/ends with dollar$/";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(contents.indexOf("/ends with dollar$/"), "/ends with dollar$/".length(), REGEX));
+    }
+
+    public void testSlashyString2() throws Exception {
+        String contents = "/$/";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(contents.indexOf("/$/"), "/$/".length(), REGEX));
+    }
+
+    public void testSlashyString3() throws Exception {
+        String contents = "def a = /a/\ndef b = /${a}/";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(contents.indexOf("/a/"), "/a/".length(), REGEX),
+                new HighlightedTypedPosition(contents.indexOf("/${a}/"), "/${a}/".length(), REGEX));
+    }
+
+    public void testSlashyString4() throws Exception {
+        String contents = "def a = /a/\ndef b = /$a/";
+        assertHighlighting(contents,
+                new HighlightedTypedPosition(contents.indexOf("/a/"), "/a/".length(), REGEX),
+                new HighlightedTypedPosition(contents.indexOf("/$a/"), "/$a/".length(), REGEX));
+    }
+
+    public void testSlashyString5() throws Exception {
+        String contents = "/\\/with slash/";
+        assertHighlighting(contents,
+                new HighlightedTypedPosition(contents.indexOf("/\\/with slash/"), "/\\/with slash/".length(), REGEX));
+    }
+
+    public void testSlashyString6() throws Exception {
+        String contents = "/with slash\\//";
+        assertHighlighting(contents,
+                new HighlightedTypedPosition(contents.indexOf("/with slash\\//"), "/with slash\\//".length(), REGEX));
+    }
+
+    public void testMultiLineSlashyString1() throws Exception {
+        String contents = "$/\nSlashy String\n/$";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(contents.indexOf("$/\nSlashy String\n/$"), "$/\nSlashy String\n/$".length(), REGEX));
+    }
+
+    public void testMultiLineSlashyString2() throws Exception {
+        String contents = "$/\nSlashy$ String\n/$";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(contents.indexOf("$/\nSlashy$ String\n/$"), "$/\nSlashy$ String\n/$".length(), REGEX));
+    }
+
+    public void testMultiLineSlashyString3() throws Exception {
+        String contents = "$/\nSlashy String$\n/$";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(contents.indexOf("$/\nSlashy String$\n/$"), "$/\nSlashy String$\n/$".length(), REGEX));
+    }
+
+    public void testMultiLineSlashyString4() throws Exception {
+        String contents = "def a = /a/\ndef b = $/\n${a}$\n/$";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(contents.indexOf("/a/"), "/a/".length(), REGEX),
+                new HighlightedTypedPosition(contents.indexOf("$/\n${a}$\n/$"), "$/\n${a}$\n/$".length(), REGEX));
+    }
+
+    public void testMultiLineSlashyString5() throws Exception {
+        String contents = "def a = /a/\ndef b = $/\n$a$\n/$";
+        assertHighlighting(contents, 
+                new HighlightedTypedPosition(contents.indexOf("/a/"), "/a/".length(), REGEX),
+                new HighlightedTypedPosition(contents.indexOf("$/\n$a$\n/$"), "$/\n$a$\n/$".length(), REGEX));
+    }
+
     public void testUnknown() throws Exception {
         String contents = "unknown";
         assertHighlighting(contents, 

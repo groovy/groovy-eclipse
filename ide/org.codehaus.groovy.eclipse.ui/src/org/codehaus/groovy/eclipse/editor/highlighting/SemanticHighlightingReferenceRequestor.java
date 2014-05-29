@@ -27,6 +27,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
@@ -95,10 +96,25 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             } else {
                 pos = new HighlightedTypedPosition(p, HighlightKind.METHOD);
             }
-        } else if (node instanceof ConstantExpression && node.getStart() < contents.length) {
+        } else if (node instanceof GStringExpression && node.getStart() < contents.length) {
             if (contents[node.getStart()] == '/') {
                 Position p = getPosition(node);
                 pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
+            } else if (contents[node.getStart()] == '$' && contents[node.getStart() + 1] == '/') {
+                Position p = getPosition(node);
+                pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
+            }
+        } else if (node instanceof ConstantExpression && node.getStart() < contents.length) {
+            if (contents[node.getStart()] == '/') {
+                Position p = getPosition(node);
+                if (!isAlreadyHighlighted(p)) {
+                    pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
+                }
+            } else if (contents[node.getStart()] == '$' && contents[node.getStart() + 1] == '/') {
+                Position p = getPosition(node);
+                if (!isAlreadyHighlighted(p)) {
+                    pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
+                }
             } else if (isNumber(((ConstantExpression) node).getType())) {
                 Position p = getPosition(node);
                 pos = new HighlightedTypedPosition(p, HighlightKind.NUMBER);
@@ -136,4 +152,18 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         return true;
     }
 
+    /**
+     * Checks if given position is already highlighted.
+     *
+     * @param position
+     * @return
+     */
+    private boolean isAlreadyHighlighted(Position position) {
+        for (HighlightedTypedPosition p : typedPosition) {
+            if (position.offset >= p.offset && (position.offset + position.length <= p.offset + p.length)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

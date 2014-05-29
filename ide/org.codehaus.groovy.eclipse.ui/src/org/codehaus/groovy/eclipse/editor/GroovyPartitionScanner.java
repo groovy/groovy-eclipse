@@ -161,14 +161,6 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
         // Add rules for multi-line comments
         rules.add(new MultiLineRule("/*", "*/", comment, (char) 0, true)); //$NON-NLS-1$ //$NON-NLS-2$
 
-        // GRECLIPSE-1682 add rule for single slashy string
-        rules.add(new SingleLineRule("/", "/", sString));
-
-        // GRECLIPSE-1203 make dollar slashies optionally highlighted
-        if (store.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_SLASHY_STRINGS)) {
-            rules.add(new MultiLineRule("$/", "/$", mString, '\0', false));
-        }
-
         return rules;
     }
 }
