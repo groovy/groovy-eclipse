@@ -3554,7 +3554,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				"}\n");
 
 		incrementalBuild(projectPath);
-		expectingCompiledClassesV("A", "A$Trait$Helper");
+		expectingCompiledClassesV("Named", "Named$Trait$Helper");
 		expectingNoProblems();
 	}
 

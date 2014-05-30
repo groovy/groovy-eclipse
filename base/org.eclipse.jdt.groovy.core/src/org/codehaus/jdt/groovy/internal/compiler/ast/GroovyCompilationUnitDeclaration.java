@@ -833,9 +833,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	private boolean isTrait(ClassNode classNode) {
 		List<AnnotationNode> annotations = classNode.getAnnotations();
 		if (annotations.size() > 0) {
-			String annotationTypeName = annotations.get(0).getClassNode().getName();
-			if (annotationTypeName.equals("groovy.transform.Trait")) {
-				return true;
+			for (AnnotationNode annotation : annotations) {
+				String annotationTypeName = annotation.getClassNode().getName();
+				if (annotationTypeName.equals("groovy.transform.Trait")) {
+					return true;
+				}
 			}
 		}
 		return false;
