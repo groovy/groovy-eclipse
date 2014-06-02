@@ -36,7 +36,7 @@ public abstract class AbstractGroovyRegressionTest extends AbstractRegressionTes
         String[] newcps = new String[cps.length+2];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.3.1.jar");
+        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.3.2.jar");
         	if (groovyJar==null) {
 	        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.2.2.jar");
 	        	if (groovyJar==null) {
