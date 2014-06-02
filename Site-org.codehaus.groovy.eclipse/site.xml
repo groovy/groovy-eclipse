@@ -18,12 +18,11 @@
    <!-- Not yet ported to tycho build:
    <feature url="features/org.codehaus.groovy17.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy17.feature" version="2.9.0.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
-   </feature>
+   </feature> -->
+   
    <feature url="features/org.codehaus.groovy18.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy18.feature" version="2.9.0.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
-    -->
-    
    <feature url="features/org.codehaus.groovy20.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy20.feature" version="2.9.0.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature>

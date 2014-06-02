@@ -36,7 +36,6 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
@@ -3534,6 +3533,99 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		assertEquals("Should have found 'x' property exactly one time", 1,
 				declCount);
 
+	}
+
+	// GRECLIPSE-1727
+	public void testTraitBasics() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "p", "Named",
+				"trait Named {\n" +
+				"    String name() { 'name' }" +
+				"}\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("Named", "Named$Trait$Helper");
+		expectingNoProblems();
+	}
+
+	public void testTraitIncremental() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "p", "Named",
+				"package p\n" +
+				"trait Named {\n" +
+				"    String name() { 'name' }\n" +
+				"}\n");
+
+		env.addGroovyClass(root, "q", "NamedClass",
+				"package q;\n" +
+				"import p.Named;\n" +
+				"public class NamedClass implements Named {}\n");
+
+		env.addGroovyClass(root, "", "Runner",
+				"import p.Named\n" +
+				"import q.NamedClass\n" +
+				"Named named = new NamedClass()\n" +
+				"print named.name()\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("p.Named", "p.Named$Trait$Helper", "q.NamedClass", "Runner");
+		expectingNoProblems();
+		executeClass(projectPath, "Runner", "name", "");
+
+		// modify the body of the trait
+		env.addGroovyClass(root, "p", "Named",
+				"package p\n" +
+				"trait Named {\n" +
+				"    String name\n" +
+				"    String name() { \"$name\" }\n" +
+				"}\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("p.Named", "p.Named$Trait$Helper", "p.Named$Trait$FieldHelper", "q.NamedClass", "Runner");
+		expectingNoProblems();
+		executeClass(projectPath, "Runner", "null", "");
+
+		env.addGroovyClass(root, "", "Runner",
+				"import p.Named\n" +
+				"import q.NamedClass\n" +
+				"Named named = new NamedClass(name: 'name')\n" +
+				"print named.name()\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("Runner");
+		expectingNoProblems();
+		executeClass(projectPath, "Runner", "name", "");
+
+		env.addGroovyClass(root, "q", "NamedClass",
+				"package q;\n" +
+				"import p.Named;\n" +
+				"public class NamedClass implements Named {\n" +
+				"    String name() { \"Hello, ${name}!\" }\n" +
+				"}\n");
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("q.NamedClass", "Runner");
+		expectingNoProblems();
+		executeClass(projectPath, "Runner", "Hello, name!", "");
 	}
 
 	//
