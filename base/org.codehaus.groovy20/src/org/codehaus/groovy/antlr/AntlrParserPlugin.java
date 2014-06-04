@@ -844,7 +844,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         classNode.addAnnotations(annotations);
         classNode.setGenericsTypes(genericsType);
         classNode.setSyntheticPublic(syntheticPublic);
-        classNode.setStaticClass((modifiers & Opcodes.ACC_STATIC) > 0);
+
+        // GRECLIPSE: start
+        classNode.setStaticClass((modifiers & Opcodes.ACC_STATIC) > 0); // GRECLIPSE-1700
+        //end
+        
         configureAST(classNode, classDef);
         // GRECLIPSE: start
         classNode.setNameStart(nameStart);
