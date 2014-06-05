@@ -2217,8 +2217,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             case LITERAL_null:
                 return literalExpression(node, null);
             case STRING_LITERAL:
+            // GRECLIPSE: start
+            // GRECLIPSE-1682 Treat slashy strings as string literal
             case REGEXP_LITERAL:
             case DOLLAR_REGEXP_LITERAL:
+            // end
                 return literalExpression(node, node.getText());
 
             case STRING_CONSTRUCTOR:
@@ -2939,6 +2942,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         } else if (!implicitThis || isType(DYNAMIC_MEMBER, selector) || isType(IDENT, selector) ||
                 isType(STRING_CONSTRUCTOR, selector) || isType(STRING_LITERAL, selector) ||
                 isType(REGEXP_LITERAL, selector) || isType(DOLLAR_REGEXP_LITERAL, selector)) {
+            // GRECLIPSE-1682 Slashy strings added to condition (REGEXP_LITERAL & DOLLAR_REGEXP_LITERAL)
             name = expression(selector,true);
         } else {
             implicitThis = false;
@@ -3312,8 +3316,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             switch (type) {
 
                 case STRING_LITERAL:
+                // GRECLIPSE: start
+                // GRECLIPSE-1682 Treat slashy strings as string literal
                 case REGEXP_LITERAL:
                 case DOLLAR_REGEXP_LITERAL:
+                // end
                     if (isPrevString) assertNodeType(IDENT, node);  // parser bug
                     isPrevString = true;
                     text = node.getText();
