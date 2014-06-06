@@ -27,7 +27,6 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
@@ -52,6 +51,9 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     SortedSet<HighlightedTypedPosition> typedPosition = new TreeSet<HighlightedTypedPosition>();
 
     final char[] contents;
+
+    private boolean insideSlashy;
+    private boolean insideDollarSlashy;
 
     public SemanticHighlightingReferenceRequestor(char[] contents) {
         this.contents = contents;
@@ -96,24 +98,30 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             } else {
                 pos = new HighlightedTypedPosition(p, HighlightKind.METHOD);
             }
-        } else if (node instanceof GStringExpression && node.getStart() < contents.length) {
-            if (contents[node.getStart()] == '/') {
-                Position p = getPosition(node);
-                pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
-            } else if (contents[node.getStart()] == '$' && contents[node.getStart() + 1] == '/') {
-                Position p = getPosition(node);
-                pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
-            }
         } else if (node instanceof ConstantExpression && node.getStart() < contents.length) {
-            if (contents[node.getStart()] == '/') {
+            if (insideSlashy) {
                 Position p = getPosition(node);
-                if (!isAlreadyHighlighted(p)) {
-                    pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
+                pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
+                if (contents[node.getEnd() - 1] == '/') {
+                    insideSlashy = false;
+                }
+            } else if (insideDollarSlashy) {
+                Position p = getPosition(node);
+                pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
+                if (contents[node.getEnd() - 2] == '/' && contents[node.getEnd() - 1] == '$') {
+                    insideDollarSlashy = false;
+                }
+            } else if (contents[node.getStart()] == '/') {
+                Position p = getPosition(node);
+                pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
+                if (contents[node.getEnd() - 1] != '/') {
+                    insideSlashy = true;
                 }
             } else if (contents[node.getStart()] == '$' && contents[node.getStart() + 1] == '/') {
                 Position p = getPosition(node);
-                if (!isAlreadyHighlighted(p)) {
-                    pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
+                pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
+                if (contents[node.getEnd() - 2] != '/' || contents[node.getEnd() - 1] != '$') {
+                    insideDollarSlashy = true;
                 }
             } else if (isNumber(((ConstantExpression) node).getType())) {
                 Position p = getPosition(node);

@@ -98,16 +98,20 @@ public class SemanticHighlightingTests extends EclipseTestCase {
 
     public void testSlashyString3() throws Exception {
         String contents = "def a = /a/\ndef b = /${a}/";
+        int indexOfExpression = contents.indexOf("/$");
         assertHighlighting(contents, 
                 new HighlightedTypedPosition(contents.indexOf("/a/"), "/a/".length(), REGEX),
-                new HighlightedTypedPosition(contents.indexOf("/${a}/"), "/${a}/".length(), REGEX));
+                new HighlightedTypedPosition(indexOfExpression, "/$".length(), REGEX),
+                new HighlightedTypedPosition(contents.indexOf("/", indexOfExpression + 1), "/".length(), REGEX));
     }
 
     public void testSlashyString4() throws Exception {
         String contents = "def a = /a/\ndef b = /$a/";
+        int indexOfExpression = contents.indexOf("/$");
         assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf("/a/"), "/a/".length(), REGEX),
-                new HighlightedTypedPosition(contents.indexOf("/$a/"), "/$a/".length(), REGEX));
+                new HighlightedTypedPosition(indexOfExpression, "/$".length(), REGEX),
+                new HighlightedTypedPosition(contents.indexOf("/", indexOfExpression + 1), "/".length(), REGEX));
     }
 
     public void testSlashyString5() throws Exception {
@@ -144,14 +148,16 @@ public class SemanticHighlightingTests extends EclipseTestCase {
         String contents = "def a = /a/\ndef b = $/\n${a}$\n/$";
         assertHighlighting(contents, 
                 new HighlightedTypedPosition(contents.indexOf("/a/"), "/a/".length(), REGEX),
-                new HighlightedTypedPosition(contents.indexOf("$/\n${a}$\n/$"), "$/\n${a}$\n/$".length(), REGEX));
+                new HighlightedTypedPosition(contents.indexOf("$/\n$"), "$/\n$".length(), REGEX),
+                new HighlightedTypedPosition(contents.indexOf("$\n/$"), "$\n/$".length(), REGEX));
     }
 
     public void testMultiLineSlashyString5() throws Exception {
         String contents = "def a = /a/\ndef b = $/\n$a$\n/$";
         assertHighlighting(contents, 
                 new HighlightedTypedPosition(contents.indexOf("/a/"), "/a/".length(), REGEX),
-                new HighlightedTypedPosition(contents.indexOf("$/\n$a$\n/$"), "$/\n$a$\n/$".length(), REGEX));
+                new HighlightedTypedPosition(contents.indexOf("$/\n$"), "$/\n$".length(), REGEX),
+                new HighlightedTypedPosition(contents.indexOf("$\n/$"), "$\n/$".length(), REGEX));
     }
 
     public void testUnknown() throws Exception {
