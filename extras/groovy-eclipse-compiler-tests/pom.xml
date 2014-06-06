@@ -9,8 +9,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<groovy.xx.version>2.3.1-01-SNAPSHOT</groovy.xx.version>
-		<groovy.all.version>2.3.1</groovy.all.version> <!-- groovy all jar version to use for tests -->
+		<groovy.xx.version>2.3.2-01-SNAPSHOT</groovy.xx.version>
+		<groovy.all.version>2.3.2</groovy.all.version> <!-- groovy all jar version to use for tests -->
 		<!-- only one of the below is actually used at any time and needs to be 
 			replaced to run tests with different compiler. So we it it changed to use 
 			just one property groovy.xx.version to represent all of them <groovy.22.version>2.2.0-01-SNAPSHOT</groovy.22.version> 
