@@ -122,7 +122,16 @@ public class GroovyProjectFacade {
                 toLookFor = node.getEnclosingMethod().getDeclaringClass();
                 IType enclosing = groovyClassToJavaType(node.getEnclosingMethod().getDeclaringClass());
                 if (enclosing != null) {
-                    return findAnonymousInnerClass(enclosing, (InnerClassNode) node);
+                    if (!enclosing.isBinary()) {
+                        // Throws exception enclosing is a binary type!
+                        return findAnonymousInnerClass(enclosing, (InnerClassNode) node);
+                    } else {
+                        // If the 'enclosing' is binary we may assume this one
+                        // is also binary and so we should
+                        // just be able to look for it with binary type name,
+                        // (including the $ etc.)
+                        return project.findType(node.getName(), new NullProgressMonitor());
+                    }
                 } else {
                     return null;
                 }
