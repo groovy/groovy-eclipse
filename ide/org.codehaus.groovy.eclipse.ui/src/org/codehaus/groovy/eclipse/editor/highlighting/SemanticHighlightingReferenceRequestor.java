@@ -159,19 +159,4 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
 
         return true;
     }
-
-    /**
-     * Checks if given position is already highlighted.
-     *
-     * @param position
-     * @return
-     */
-    private boolean isAlreadyHighlighted(Position position) {
-        for (HighlightedTypedPosition p : typedPosition) {
-            if (position.offset >= p.offset && (position.offset + position.length <= p.offset + p.length)) {
-                return true;
-            }
-        }
-        return false;
-    }
 }
