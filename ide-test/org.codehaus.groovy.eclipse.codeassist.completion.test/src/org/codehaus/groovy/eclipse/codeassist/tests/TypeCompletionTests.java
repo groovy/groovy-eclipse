@@ -233,4 +233,46 @@ public class TypeCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "Singleton", 1, true);
         proposalExists(proposals, "SingletonASTTransformation", 0, true);
     }
+
+    public void testField1() throws Exception {
+        String contents = "class TestF {\n	JFr\n}";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "JFr"));
+        proposalExists(proposals, "JFrame", 1, true);
+    }
+
+    public void testField2() throws Exception {
+        String contents = "class TestF {\n	private JFr\n}";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "JFr"));
+        proposalExists(proposals, "JFrame", 1, true);
+    }
+
+    public void testField3() throws Exception {
+        String contents = "class TestF {\n	public JFr\n}";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "JFr"));
+        proposalExists(proposals, "JFrame", 1, true);
+    }
+
+    public void testField4() throws Exception {
+        String contents = "class TestF {\n	protected JFr\n}";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "JFr"));
+        proposalExists(proposals, "JFrame", 1, true);
+    }
+
+    public void testField5() throws Exception {
+        String contents = "class TestF {\n	public static JFr\n}";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "JFr"));
+        proposalExists(proposals, "JFrame", 1, true);
+    }
+
+    public void testField6() throws Exception {
+        String contents = "class TestF {\n	public final JFr\n}";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "JFr"));
+        proposalExists(proposals, "JFrame", 1, true);
+    }
+
+    public void testField7() throws Exception {
+        String contents = "class TestF {\n	public static final JFr\n}";
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "JFr"));
+        proposalExists(proposals, "JFrame", 1, true);
+    }
 }

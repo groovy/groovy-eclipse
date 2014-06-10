@@ -17,12 +17,16 @@
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.eclipse.codeassist.CharArraySourceBuffer;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;
+import org.codehaus.groovy.eclipse.core.util.ExpressionFinder.NameAndLocation;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
@@ -36,6 +40,17 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  *
  */
 public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
+
+    // GRECLIPSE-1527 field modifiers collection
+    private static final Set<String> FIELD_MODIFIERS = new HashSet<String>();
+    static {
+        FIELD_MODIFIERS.add("private");
+        FIELD_MODIFIERS.add("protected");
+        FIELD_MODIFIERS.add("public");
+        FIELD_MODIFIERS.add("static");
+        FIELD_MODIFIERS.add("final");
+    }
+    // GRECLIPSE end
 
     public TypeCompletionProcessor(ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
@@ -121,8 +136,20 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor {
     }
 
     private boolean isBeforeTypeName(ContentAssistLocation location, GroovyCompilationUnit unit, int completionLocation) {
-        return location == ContentAssistLocation.CLASS_BODY
-                && new ExpressionFinder().findPreviousTypeNameToken(new CharArraySourceBuffer(unit.getContents()), completionLocation) != null;
+        // GRECLIPE-1527 Updated logic
+        if (location != ContentAssistLocation.CLASS_BODY) {
+            return false;
+        }
+        NameAndLocation nameAndLocation = new ExpressionFinder().findPreviousTypeNameToken(
+                new CharArraySourceBuffer(unit.getContents()), completionLocation);
+        if (nameAndLocation == null) {
+            return false;
+        }
+        if (!(getContext().completionNode instanceof FieldNode)) {
+            return false;
+        }
+        return !FIELD_MODIFIERS.contains(nameAndLocation.name.trim());
+        // GRECLIPSE end
     }
 
 }
