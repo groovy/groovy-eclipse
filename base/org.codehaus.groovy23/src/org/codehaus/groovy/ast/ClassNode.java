@@ -28,8 +28,12 @@ import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
+
 import groovyjarjarasm.asm.Opcodes;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.util.*;
 
@@ -93,8 +97,11 @@ import java.util.*;
  * @author Jochen Theodorou
  */
 public class ClassNode extends AnnotatedNode implements Opcodes {
-    private static class MapOfLists {
-        private Map<Object, List<MethodNode>> map = new HashMap<Object, List<MethodNode>>();
+	
+	// GRECLIPSE: made package visible
+    static class MapOfLists {
+    	// GRECLIPSE: made protected:
+        protected Map<Object, List<MethodNode>> map = new HashMap<Object, List<MethodNode>>();
         public List<MethodNode> get(Object key) {
             return map.get(key);
         }
@@ -128,7 +135,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     private MixinNode[] mixins;
     private List<ConstructorNode> constructors;
     private List<Statement> objectInitializers;
-    private MapOfLists methods;
+    // GRECLIPSE made protected so we can protect it from mutations in ImmutableClassNode subclass.
+    protected MapOfLists methods;
     private List<MethodNode> methodsList;
     private LinkedList<FieldNode> fields;
     private List<PropertyNode> properties;
