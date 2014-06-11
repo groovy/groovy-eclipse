@@ -167,6 +167,36 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
         ClassNode classNode = unit.getCompilationUnit().getClassNode("Greetable");
         assertTrue(classNode.isInterface());
     }
+    
+    // GRECLIPSE-1727 Tests for traits
+    public void testTraits1a() {
+    	if (GroovyUtils.GROOVY_LEVEL < 23) {
+    		return;
+    	}
+    	this.runConformTest(new String[] {
+    			"Test.groovy",
+    			"class Person implements Greetable {\n"+
+    			"    String name() { 'Bob' }\n"+
+    			"}\n"+
+    			"\n"+
+    			"public class Test {\n"+
+    			"  public static void main(String[] argv) {\n"+
+    			"    def p = new Person()\n"+
+    			"    print p.greeting()\n"+
+    			"  }\n"+
+    			"}\n",
+    			"Greetable.groovy",
+    			"import groovy.transform.Trait;\n"+
+    			"@Trait\n"+
+    			"class Greetable {\n"+
+    			"    abstract String name()\n"+                              
+    			"    String greeting() { \"Hello, ${name()}!\" }\n"+
+    			"}\n",
+    	},"Hello, Bob!");
+        GroovyCompilationUnitDeclaration unit = getCUDeclFor("Greetable.groovy");
+        ClassNode classNode = unit.getCompilationUnit().getClassNode("Greetable");
+        assertTrue(classNode.isInterface());
+    }
 
     // Abstract Methods
     public void testTraits2() {
@@ -3888,6 +3918,8 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 				"class GImpl extends Impl {}"
 		},"");
 	}
+	
+	
 
 	// If GroovyFoo is processed *before* FooBase then the MethodVerifier15 
 	// hasn't had a chance to run on FooBase and create the synthetic bridge method
@@ -4652,6 +4684,33 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 		},"");		
 	}
 	
+	public void testInnerStaticClass() {
+		this.runConformTest(new String[] {			
+			"p/Outer.groovy",
+			"package test\n"+
+			"public class Outer{\n"+
+			"  public static void main(String[] args) {\n"+
+			"    (new Inner()).print();\n"+
+			"  }\n"+
+			"  public static class Inner {\n"+
+			"    public void print() {\n"+
+			"      System.out.println(\"hello\");\n"+
+			"    }\n"+
+			"  }\n"+
+			"}\n",
+			"groovytest/Main.java",
+			"package groovytest;\n"+
+			"import test.Outer;\n"+
+			"public class Main {\n"+
+			"  public static void main(String[] args) {\n"+
+			"    Outer.main();\n"+
+			"    Outer.Inner inner = new Outer.Inner(); // brings to compiler error but no errors expected\n"+
+//			"    Outer outer = new Outer();\n"+
+//			"    Outer.Inner inner = outer.new Inner(); // brings to runtime error but compiler error expected\n"+
+			"  }\n"+
+			"}\n"
+		},"Success");		
+	}
 	
 	// when GROOVY-5861 is fixed we can uncomment these 2 tests:
 //	public void testGenericsAndGroovyJava_GRE278_3a() {

@@ -835,7 +835,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			List<AnnotationNode> annotations = classNode.getAnnotations();
 			if (annotations.size() > 0) {
 				for (AnnotationNode annotation : annotations) {
-					if (annotation.getClassNode().getName().equals("groovy.transform.Trait")) {
+					// TODO the latter of these is assuming groovy.transform.Trait, that is not great. We should be working it,
+					// possibly based on imports on the module node
+					// since we are not resolved at this stage
+					if (annotation.getClassNode().getName().equals("groovy.transform.Trait")
+							|| annotation.getClassNode().getName().equals("Trait")) {
 						return true;
 					}
 				}
