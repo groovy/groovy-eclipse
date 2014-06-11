@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import groovy.transform.Immutable;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -18,7 +20,9 @@ import java.util.Map;
 
 import junit.framework.Test;
 
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -10946,6 +10950,40 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 				"    def something() {}\n" +
 				"}\n",
 		}, "@a.SampleAnnotation()");		 
+	}
+
+	public void testImmutable_1723() {
+		this.runConformTest(new String[] {
+				"c/Main.java",
+				"package c;\n" +
+				"public class Main {\n" +
+				"    public static void main(String[] args) {" +
+				"    }\n" +
+				"}\n",
+
+				"a/SomeId.groovy",
+				"package a;\n" +
+				"import groovy.transform.Immutable\n" +
+				"@Immutable\n" +
+				"class SomeId {\n" +
+				"    UUID id\n" +
+				"}\n",
+
+				"b/SomeValueObject.groovy",
+				"package b;\n" +
+				"import groovy.transform.Immutable\n" +
+				"import a.SomeId\n" +
+				"@Immutable\n" +
+				"class SomeValueObject {\n" +
+				"    SomeId id\n" +
+				"}\n",
+		}, "");		 
+		GroovyCompilationUnitDeclaration unit = getCUDeclFor("SomeValueObject.groovy");
+		ClassNode classNode = unit.getCompilationUnit().getClassNode("b.SomeValueObject");
+		FieldNode field = classNode.getField("id");
+		ClassNode type = field.getType();
+		List annotations = type.getAnnotations(ClassHelper.make(Immutable.class));
+		assertEquals(1, annotations.size());
 	}
 	
 	public void testStaticImports2_GtoJ() {
