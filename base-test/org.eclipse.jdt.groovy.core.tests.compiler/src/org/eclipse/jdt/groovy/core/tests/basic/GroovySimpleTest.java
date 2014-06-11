@@ -4683,35 +4683,7 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
 		},"");		
 	}
-	
-	public void testInnerStaticClass() {
-		this.runConformTest(new String[] {			
-			"p/Outer.groovy",
-			"package test\n"+
-			"public class Outer{\n"+
-			"  public static void main(String[] args) {\n"+
-			"    (new Inner()).print();\n"+
-			"  }\n"+
-			"  public static class Inner {\n"+
-			"    public void print() {\n"+
-			"      System.out.println(\"hello\");\n"+
-			"    }\n"+
-			"  }\n"+
-			"}\n",
-			"groovytest/Main.java",
-			"package groovytest;\n"+
-			"import test.Outer;\n"+
-			"public class Main {\n"+
-			"  public static void main(String[] args) {\n"+
-			"    Outer.main();\n"+
-			"    Outer.Inner inner = new Outer.Inner(); // brings to compiler error but no errors expected\n"+
-//			"    Outer outer = new Outer();\n"+
-//			"    Outer.Inner inner = outer.new Inner(); // brings to runtime error but compiler error expected\n"+
-			"  }\n"+
-			"}\n"
-		},"Success");		
-	}
-	
+
 	// when GROOVY-5861 is fixed we can uncomment these 2 tests:
 //	public void testGenericsAndGroovyJava_GRE278_3a() {
 //		this.runConformTest(new String[] {			
