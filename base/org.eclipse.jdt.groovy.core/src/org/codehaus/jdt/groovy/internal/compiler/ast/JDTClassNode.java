@@ -66,7 +66,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
  * Groovy can use these to ask questions of JDT bindings. They are only built as required (as groovy references to java files are
  * resolved). They remain uninitialized until groovy starts digging into them - at that time the details are filled in (eg.
  * members).
- * 
+ *
  * @author Andy Clement
  */
 public class JDTClassNode extends ClassNode implements JDTNode {
@@ -168,7 +168,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			if (jdtBinding instanceof ParameterizedTypeBinding && !(jdtBinding instanceof RawTypeBinding)) {
 				// GenericsType[] gts = configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
 				GenericsType[] gts = new JDTClassNodeBuilder(this.resolver)
-						.configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
+				.configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
 				setGenericsTypes(gts);
 				// return base;
 			} else if (jdtBinding instanceof RawTypeBinding) {
@@ -241,6 +241,21 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 				}
 			}
 		}
+
+		// We do this here rather than at the start of the method because
+		// the preceding code sets 'groovyDecl', later used to 'initializeProperties'.
+
+		// From this point onward... the code is only about initializing fields, constructors and methods.
+		if (redirect != null) {
+			// The code in ClassNode seems set up to get field information *always* from the end of the 'redirect' chain.
+			// So, the redirect target should be responsible for its own members initialisation.
+
+			// If we initialize members here again, when redirect target is already
+			// initialised then we will be adding duplicated methods to the redirect target.
+
+			return;
+		}
+
 		MethodBinding[] bindings = null;
 		if (jdtBinding instanceof ParameterizedTypeBinding) {
 			ReferenceBinding genericType = ((ParameterizedTypeBinding) jdtBinding).genericType();
@@ -393,7 +408,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param type
 	 * @param cl erasure of type
 	 * @return
@@ -595,7 +610,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 	/**
 	 * Converts from a method get/set/is name to a property name Assumes that methodName is more than 4/3 characters long and starts
 	 * with a proper prefix
-	 * 
+	 *
 	 * @param methodNode
 	 * @return
 	 */
@@ -656,7 +671,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 	@Override
 	public void addProperty(PropertyNode node) {
 		new RuntimeException("JDTClassNode is immutable, should not be called to add property: " + node.getName())
-				.printStackTrace();
+		.printStackTrace();
 	}
 
 	@Override
