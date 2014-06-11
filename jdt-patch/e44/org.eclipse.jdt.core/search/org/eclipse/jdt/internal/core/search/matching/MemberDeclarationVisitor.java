@@ -17,6 +17,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemMethodBinding;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfIntValues;
 import org.eclipse.jdt.internal.core.search.matching.MatchLocator.WrappedCoreException;
 
@@ -208,7 +209,8 @@ public boolean visit(Argument argument, BlockScope scope) {
 public boolean visit(LambdaExpression lambdaExpression, BlockScope scope) {
 	Integer level = (Integer) this.nodeSet.matchingNodes.removeKey(lambdaExpression);
 	try {
-		if (lambdaExpression.resolvedType != null && lambdaExpression.resolvedType.isValidBinding())
+		if (lambdaExpression.resolvedType != null && lambdaExpression.resolvedType.isValidBinding() &&
+				!(lambdaExpression.descriptor instanceof ProblemMethodBinding))
 			this.locator.reportMatching(lambdaExpression, this.enclosingElement, level != null ? level.intValue() : -1, this.nodeSet, this.typeInHierarchy);
 		else 
 			return true;

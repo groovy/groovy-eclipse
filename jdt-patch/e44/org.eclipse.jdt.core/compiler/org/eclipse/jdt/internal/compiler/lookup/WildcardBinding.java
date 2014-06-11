@@ -17,6 +17,7 @@
  *								Bug 426676 - [1.8][compiler] Wrong generic method type inferred from lambda expression
  *								Bug 427411 - [1.8][generics] JDT reports type mismatch when using method that returns generic type
  *								Bug 428019 - [1.8][compiler] Type inference failure with nested generic invocation.
+ *								Bug 435962 - [RC2] StackOverFlowError when building
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -562,6 +563,18 @@ public class WildcardBinding extends ReferenceBinding {
 
 	// to prevent infinite recursion when inspecting recursive generics:
 	boolean inRecursiveFunction = false;
+
+	@Override
+	public boolean enterRecursiveFunction() {
+		if (this.inRecursiveFunction)
+			return false;
+		this.inRecursiveFunction = true;
+		return true;
+	}
+	@Override
+	public void exitRecursiveFunction() {
+		this.inRecursiveFunction = false;
+	}
 
 	public boolean isProperType(boolean admitCapture18) {
 		if (this.inRecursiveFunction)

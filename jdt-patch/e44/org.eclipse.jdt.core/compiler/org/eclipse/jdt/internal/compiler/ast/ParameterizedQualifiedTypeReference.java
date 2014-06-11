@@ -13,6 +13,7 @@
  *								Bug 415043 - [1.8][null] Follow-up re null type annotations after bug 392099
  *								Bug 416181 – [1.8][compiler][null] Invalid assignment is not rejected by the compiler
  *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
+ *								Bug 434600 - Incorrect null analysis error reporting on type parameters
  *        Andy Clement - Contributions for
  *                          Bug 383624 - [1.8][compiler] Revive code generation support for type annotations (from Olivier's work)
  *******************************************************************************/
@@ -81,6 +82,7 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 				parameterizedType.boundCheck(scope, this.typeArguments[index]);
 			}
 		}
+		checkNullConstraints(scope, this.typeArguments[index]);
 	}
 	public TypeReference augmentTypeWithAdditionalDimensions(int additionalDimensions, Annotation[][] additionalAnnotations, boolean isVarargs) {
 		int totalDimensions = this.dimensions() + additionalDimensions;
@@ -171,7 +173,7 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 		TypeBinding type = internalResolveLeafType(scope, checkBounds);
 		createArrayType(scope);
 		resolveAnnotations(scope, location);
-		if (this.typeArguments != null)
+		if (this.typeArguments != null && checkBounds)
 			// relevant null annotations are on the inner most type:
 			checkNullConstraints(scope, this.typeArguments[this.typeArguments.length-1]); 
 		return type == null ? type : this.resolvedType;

@@ -847,7 +847,11 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 		if (focusBinaryBinding == null && focus != null && focus.isBinary()) {
 			char[] fullyQualifiedName = focus.getFullyQualifiedName().toCharArray();
 			focusBinaryBinding = this.lookupEnvironment.getCachedType(CharOperation.splitOn('.', fullyQualifiedName));
-			if (focusBinaryBinding == null)
+			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=436155
+			// When local types are requested, it's likely a type is found from cache without
+			// the hierarchy being resolved completely, so consider that factor too
+			if (focusBinaryBinding == null ||
+					(focusBinaryBinding.tagBits & TagBits.HasUnresolvedSuperclass) != 0)
 				return;
 		}
 

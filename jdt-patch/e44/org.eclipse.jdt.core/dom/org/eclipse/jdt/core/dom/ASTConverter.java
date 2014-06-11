@@ -2792,7 +2792,7 @@ class ASTConverter {
 		}
 		if (statement instanceof org.eclipse.jdt.internal.compiler.ast.TypeDeclaration) {
 			ASTNode result = convert((org.eclipse.jdt.internal.compiler.ast.TypeDeclaration) statement);
-			if (result == null) {
+			if (result == null || !(result instanceof TypeDeclaration)) {
 				return createFakeEmptyStatement(statement);
 			}
 			// annotation and enum type declarations are not returned by the parser inside method bodies

@@ -371,7 +371,7 @@ public FieldBinding addSyntheticFieldForAssert(BlockScope blockScope) {
 		synthField = new SyntheticFieldBinding(
 			TypeConstants.SYNTHETIC_ASSERT_DISABLED,
 			TypeBinding.BOOLEAN,
-			ClassFileConstants.AccDefault | ClassFileConstants.AccStatic | ClassFileConstants.AccSynthetic | ClassFileConstants.AccFinal,
+			(isInterface() ? ClassFileConstants.AccPublic : ClassFileConstants.AccDefault) | ClassFileConstants.AccStatic | ClassFileConstants.AccSynthetic | ClassFileConstants.AccFinal,
 			this,
 			Constant.NotAConstant,
 			this.synthetics[SourceTypeBinding.FIELD_EMUL].size());
@@ -511,7 +511,7 @@ public SyntheticFieldBinding addSyntheticFieldForSwitchEnum(char[] fieldName, St
 		synthField = new SyntheticFieldBinding(
 			fieldName,
 			this.scope.createArrayType(TypeBinding.INT,1),
-			ClassFileConstants.AccPrivate | ClassFileConstants.AccStatic | ClassFileConstants.AccSynthetic,
+			(isInterface() ? (ClassFileConstants.AccPublic | ClassFileConstants.AccFinal) : ClassFileConstants.AccPrivate) | ClassFileConstants.AccStatic | ClassFileConstants.AccSynthetic,
 			this,
 			Constant.NotAConstant,
 			this.synthetics[SourceTypeBinding.FIELD_EMUL].size());

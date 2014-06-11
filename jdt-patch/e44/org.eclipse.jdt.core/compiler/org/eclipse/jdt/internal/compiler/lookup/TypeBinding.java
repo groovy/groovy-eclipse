@@ -23,6 +23,7 @@
  *								Bug 423505 - [1.8] Implement "18.5.4 More Specific Method Inference"
  *								Bug 427626 - [1.8] StackOverflow while typing new ArrayList<String>().toArray( and asking for code completion
  *								Bug 428019 - [1.8][compiler] Type inference failure with nested generic invocation.
+ *								Bug 435962 - [RC2] StackOverFlowError when building
  *      Jesper S Moller <jesper@selskabet.org> -  Contributions for
  *								bug 382701 - [1.8][compiler] Implement semantic analysis of Lambda expressions & Reference expression
  *******************************************************************************/
@@ -1575,5 +1576,18 @@ public ReferenceBinding[] superInterfaces() {
 
 public SyntheticArgumentBinding[] syntheticOuterLocalVariables() {
 	return null;		// is null if no enclosing instances are required
+}
+/**
+ * Call this before descending into type details to prevent infinite recursion.
+ * @return true if a recursion has already been started.
+ */
+public boolean enterRecursiveFunction() {
+	return true;
+}
+/**
+ * Exit the context of a potentially recursive function.
+ */
+public void exitRecursiveFunction() {
+	// empty, subclasses to override
 }
 }

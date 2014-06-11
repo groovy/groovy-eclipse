@@ -373,6 +373,10 @@ public class InferenceContext18 {
 	public BoundSet inferInvocationType(BoundSet b1, TypeBinding expectedType, InvocationSite invocationSite, MethodBinding method)
 			throws InferenceFailureException 
 	{
+		// not JLS: simply ensure that null hints from the return type have been seen even in standalone contexts:
+		if (expectedType == null && method.returnType != null)
+			substitute(method.returnType); // result is ignore, the only effect is on InferenceVariable.nullHints
+		//
 		BoundSet previous = this.currentBounds.copy();
 		this.currentBounds = b1;
 		try {

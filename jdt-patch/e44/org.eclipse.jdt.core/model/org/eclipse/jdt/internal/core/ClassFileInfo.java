@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -251,23 +251,37 @@ private void generateMethodInfos(IType type, IBinaryType typeInfo, HashMap newEl
 	}
 	for (int i = 0, methodCount = methods.length; i < methodCount; i++) {
 		IBinaryMethod methodInfo = methods[i];
+		final boolean isConstructor = methodInfo.isConstructor();
+		boolean isEnum = false;
+		try {
+			isEnum = type.isEnum();
+		} catch (JavaModelException e) {
+			// ignore
+		}
 		// TODO (jerome) filter out synthetic members
 		//                        indexer should not index them as well
 		// if ((methodInfo.getModifiers() & IConstants.AccSynthetic) != 0) continue; // skip synthetic
 		boolean useGenericSignature = true;
 		char[] signature = methodInfo.getGenericSignature();
+		String[] pNames = null;
 		if (signature == null) {
 			useGenericSignature = false;
 			signature = methodInfo.getMethodDescriptor();
+			if (isEnum && isConstructor) {
+				pNames = Signature.getParameterTypes(new String(signature));
+				int length = pNames.length - 2;
+				if (length >= 0) // https://bugs.eclipse.org/bugs/show_bug.cgi?id=436347
+					System.arraycopy(pNames, 2, pNames = new String[length], 0, length);
+			}
 		}
 		String selector = new String(methodInfo.getSelector());
-		final boolean isConstructor = methodInfo.isConstructor();
 		if (isConstructor) {
 			selector = type.getElementName();
 		}
-		String[] pNames = null;
 		try {
-			pNames = Signature.getParameterTypes(new String(signature));
+			if (!(isEnum && isConstructor && !useGenericSignature)) {
+				pNames = Signature.getParameterTypes(new String(signature));
+			}
 			if (isConstructor
 					&& useGenericSignature
 					&& type.isMember()
@@ -318,7 +332,7 @@ private void generateMethodInfos(IType type, IBinaryType typeInfo, HashMap newEl
 		int startIndex = 0;
 		try {
 			if (isConstructor) {
-				if (type.isEnum()) {
+				if (isEnum) {
 					startIndex = 2;
 				} else if (type.isMember()
 						&& !Flags.isStatic(type.getFlags())) {

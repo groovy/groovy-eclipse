@@ -228,6 +228,8 @@ public class AnnotatableTypeSystem extends TypeSystem {
 			case Binding.RAW_TYPE:
 			case Binding.TYPE_PARAMETER:
 			case Binding.WILDCARD_TYPE:
+			case Binding.INTERSECTION_TYPE:
+			case Binding.INTERSECTION_CAST_TYPE:
 				/* Taking the binding of QTR as an example, there could be different annotatable components, but we come in a with a single binding, e.g: 
 				   @T Z;                                      type => Z  annotations => [[@T]]
 				   @T Y.@T Z                                  type => Z  annotations => [[@T][@T]]

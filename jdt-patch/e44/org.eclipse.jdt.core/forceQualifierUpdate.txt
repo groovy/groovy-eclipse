@@ -5,3 +5,4 @@ Bug 407852 - ECJ source download is not correct
 Bug 408447 - compiler (log message) needs updating for copyright and bundle_qualifier
 Several bundles changed and need to be touched
 Bug 418646 - org.eclipse.jdt.core does not provide an artifact with classifier 'antadapter'
+Bug 436266 - Use RC3 (plus) version of JDT compiler to build RC4

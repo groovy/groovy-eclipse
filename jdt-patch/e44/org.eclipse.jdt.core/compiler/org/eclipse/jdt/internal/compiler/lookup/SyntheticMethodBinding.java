@@ -162,7 +162,7 @@ public class SyntheticMethodBinding extends MethodBinding {
 	}
 
 	public SyntheticMethodBinding(FieldBinding targetField, ReferenceBinding declaringClass, TypeBinding enumBinding, char[] selector) {
-		this.modifiers = ClassFileConstants.AccDefault | ClassFileConstants.AccStatic | ClassFileConstants.AccSynthetic;
+		this.modifiers = (declaringClass.isInterface() ? ClassFileConstants.AccPublic : ClassFileConstants.AccDefault) | ClassFileConstants.AccStatic | ClassFileConstants.AccSynthetic;
 		this.tagBits |= (TagBits.AnnotationResolved | TagBits.DeprecatedAnnotationResolved);
 		SourceTypeBinding declaringSourceType = (SourceTypeBinding) declaringClass;
 		SyntheticMethodBinding[] knownAccessMethods = declaringSourceType.syntheticMethods();

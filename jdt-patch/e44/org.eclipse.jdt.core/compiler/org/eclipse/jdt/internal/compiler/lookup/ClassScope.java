@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,11 +18,13 @@
  *							Bug 416176 - [1.8][compiler][null] null type annotations cause grief on type variables
  *							Bug 427199 - [1.8][resource] avoid resource leak warnings on Streams that have no resource
  *							Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
+ *							Bug 434570 - Generic type mismatch for parametrized class annotation attribute with inner class
  *        Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
  *                          Bug 415821 - [1.8][compiler] CLASS_EXTENDS target type annotation missing for anonymous classes
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 // GROOVY PATCHED
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -48,7 +50,7 @@ public class ClassScope extends Scope {
 
 	public TypeDeclaration referenceContext;
 	public TypeReference superTypeReference;
-	java.util.ArrayList deferredBoundChecks;
+	java.util.ArrayList<Object> deferredBoundChecks; // contains TypeReference or Runnable. TODO consider making this a List<Runnable>
 
 	public ClassScope(Scope parent, TypeDeclaration context) {
 		super(Scope.CLASS_SCOPE, parent);
@@ -903,8 +905,13 @@ public class ClassScope extends Scope {
 
 	// Perform deferred bound checks for parameterized type references (only done after hierarchy is connected)
 	public void  checkParameterizedTypeBounds() {
-		for (int i = 0, l = this.deferredBoundChecks == null ? 0 : this.deferredBoundChecks.size(); i < l; i++)
-			((TypeReference) this.deferredBoundChecks.get(i)).checkBounds(this);
+		for (int i = 0, l = this.deferredBoundChecks == null ? 0 : this.deferredBoundChecks.size(); i < l; i++) {
+			Object toCheck = this.deferredBoundChecks.get(i);
+			if (toCheck instanceof TypeReference)
+				((TypeReference) toCheck).checkBounds(this);
+			else if (toCheck instanceof Runnable)
+				((Runnable) toCheck).run();
+		}
 		this.deferredBoundChecks = null;
 
 		ReferenceBinding[] memberTypes = this.referenceContext.binding.memberTypes;
@@ -1137,6 +1144,18 @@ public class ClassScope extends Scope {
 			throw e;
 		} finally {
 			env.missingClassFileLocation = null;
+		}
+	}
+
+	@Override
+	public boolean deferCheck(Runnable check) {
+		if (compilationUnitScope().connectingHierarchy) {
+			if (this.deferredBoundChecks == null)
+				this.deferredBoundChecks = new ArrayList<Object>();
+			this.deferredBoundChecks.add(check);
+			return true;
+		} else {
+			return false;
 		}
 	}
 

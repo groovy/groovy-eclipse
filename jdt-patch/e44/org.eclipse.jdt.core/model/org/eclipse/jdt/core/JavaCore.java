@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -271,8 +271,9 @@ public final class JavaCore extends Plugin {
 	 */
 	public static final String COMPILER_CODEGEN_UNUSED_LOCAL = PLUGIN_ID + ".compiler.codegen.unusedLocal"; //$NON-NLS-1$
 	/**
-	 * Compiler option ID: Generating Method Parameters  Attribute.
-	 * <p>When generated, this attribute will enable parameter names to be accessed from reflection libraries, annotation processing,
+	 * Compiler option ID: Generating Method Parameters Attribute.
+	 * <p>When generated, this attribute will enable information about the formal parameters of a method
+	 * (such as their names) to be accessed from reflection libraries, annotation processing,
 	 * code weaving, and in the debugger, from platform target level 1.8 and later.</p>
 	 * <dl>
 	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.codegen.methodParameters"</code></dd>
