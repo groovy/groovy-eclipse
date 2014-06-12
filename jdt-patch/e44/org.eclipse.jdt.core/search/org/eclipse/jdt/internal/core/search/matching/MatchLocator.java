@@ -1144,7 +1144,8 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 					possibleMatches[i] = possibleMatch.getSimilarMatch();
 					i--;
 				}
-				// GROOVY: delay cleanup for groovy matches, clears out backpointer that may be used later in 'completeTypeBindings'
+				// GROOVY: delay cleanup for groovy matches.
+				// because it clears out 'scope' backpointer that may be used later in 'completeTypeBindings'
 				// was: if (!possibleMatch.nodeSet.mustResolve)
 				 if ((!possibleMatch.nodeSet.mustResolve) && !alreadyMatched.contains(possibleMatch))
 			    // GROOVY end
