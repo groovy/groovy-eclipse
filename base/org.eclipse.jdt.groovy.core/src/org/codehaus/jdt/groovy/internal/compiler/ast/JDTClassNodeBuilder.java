@@ -39,7 +39,7 @@ import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
  * code structure from Java5 as closely as we can, we will build ClassNodes that contain the unusual form of generics configuration
  * that the rest of groovy wants to see. (Note: Java5.setAdditionalClassInformation() is used for building ClassNode objects for JVM
  * reflective class objects).
- * 
+ *
  * @author Andy Clement
  */
 class JDTClassNodeBuilder {
@@ -77,7 +77,7 @@ class JDTClassNodeBuilder {
 		} else if (type instanceof SourceTypeBinding) {
 			return configureSourceType((SourceTypeBinding) type);
 		}
-		throw new IllegalStateException("nyi " + type.getClass());
+		throw new IllegalStateException("nyi " + (type == null ? "null" : type.getClass()));
 	}
 
 	JDTClassNodeBuilder(JDTResolver resolver) {
@@ -271,7 +271,11 @@ class JDTClassNodeBuilder {
 	private TypeBinding[] getBounds(TypeVariableBinding tv) {
 		List<TypeBinding> bounds = new ArrayList<TypeBinding>();
 		if (tv.firstBound == null) {
-			return new TypeBinding[] { tv.erasure() }; // Should be JLObject
+			TypeBinding erasure = tv.erasure();
+			if (erasure == null) {
+				erasure = resolver.getScope().getJavaLangObject();
+			}
+			return new TypeBinding[] { erasure }; // Should be JLObject
 			// return new TypeBinding[] { resolver.getScope().getJavaLangObject() };
 			// return null;
 		}
