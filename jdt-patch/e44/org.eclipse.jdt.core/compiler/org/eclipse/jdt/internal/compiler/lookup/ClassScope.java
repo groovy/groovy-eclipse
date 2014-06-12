@@ -1365,7 +1365,7 @@ public class ClassScope extends Scope {
 	}
 
 	public String toString() {
-		if (this.referenceContext != null)
+		if (this.referenceContext != null && this.referenceContext.binding!=null)
 			return "--- Class Scope ---\n\n"  //$NON-NLS-1$
 							+ this.referenceContext.binding.toString();
 		return "--- Class Scope ---\n\n Binding not initialized" ; //$NON-NLS-1$
