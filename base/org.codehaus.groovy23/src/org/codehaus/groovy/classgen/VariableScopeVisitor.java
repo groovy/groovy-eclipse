@@ -53,7 +53,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
     private class StateStackElement {
         VariableScope scope;
         ClassNode clazz;
-        boolean inConstructor; 
+        boolean inConstructor;
 
         StateStackElement() {
             scope = VariableScopeVisitor.this.currentScope;
@@ -253,7 +253,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
                     boolean staticMember = member.isInStaticContext();
                     // We don't allow a static context (e.g. a static method) to access
                     // a non-static variable (e.g. a non-static field).
-                    if (! (staticScope && ! staticMember))
+                    if (!(staticScope && !staticMember))
                         var = member;
                 }
                 break;
@@ -444,13 +444,13 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
         super.visitClosureExpression(expression);
         markClosureSharedVariables();
-        
+
         popState();
     }
 
     private void markClosureSharedVariables() {
         VariableScope scope = currentScope;
-        for (Iterator<Variable> it = scope.getReferencedLocalVariablesIterator(); it.hasNext();) {
+        for (Iterator<Variable> it = scope.getReferencedLocalVariablesIterator(); it.hasNext(); ) {
             it.next().setClosureSharedVariable(true);
         }
     }
@@ -481,7 +481,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             InnerClassNode in = (InnerClassNode) node;
             if (in.isAnonymous() && !in.isEnum()) return;
         }
-        
+
         pushState();
 
         prepareVisit(node);
@@ -570,9 +570,18 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
         for (FieldNode field : innerClass.getFields()) {
             final Expression expression = field.getInitialExpression();
+            pushState(field.isStatic());
             if (expression != null) {
+                if (expression instanceof VariableExpression) {
+                    VariableExpression vexp = (VariableExpression) expression;
+                    if (vexp.getAccessedVariable() instanceof Parameter) {
+                        // workaround for GROOVY-6834: accessing a parameter which is not yet seen in scope
+                        continue;
+                    }
+                }
                 expression.visit(this);
             }
+            popState();
         }
 
         for (Statement statement : innerClass.getObjectInitializerStatements()) {
@@ -581,7 +590,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         markClosureSharedVariables();
         popState();
     }
-    
+
     public void visitProperty(PropertyNode node) {
         pushState(node.isStatic());
         super.visitProperty(node);
@@ -598,8 +607,8 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         List<AnnotationNode> annotations = node.getAnnotations();
         if (annotations.isEmpty()) return;
         for (AnnotationNode an : annotations) {
-        	// skip built-in properties
-        	if (an.isBuiltIn()) continue;
+            // skip built-in properties
+            if (an.isBuiltIn()) continue;
             for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
                 Expression annMemberValue = member.getValue();
                 annMemberValue.visit(this);

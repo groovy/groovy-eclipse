@@ -16,22 +16,6 @@
 
 package org.codehaus.groovy.vmplugin.v5;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
-import java.util.List;
 
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -50,7 +34,27 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.syntax.RuntimeParserException;
 import org.codehaus.groovy.vmplugin.VMPlugin;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * java 5 based functions
  *
@@ -226,6 +230,7 @@ public class Java5 implements VMPlugin {
             ListExpression le = (ListExpression) exp;
             int bitmap = 0;
             for (Expression e : le.getExpressions()) {
+                if (!(e instanceof PropertyExpression)) return;
                 PropertyExpression element = (PropertyExpression) e;
                 String name = element.getPropertyAsString();
                 ElementType value = ElementType.valueOf(name);
@@ -249,6 +254,8 @@ public class Java5 implements VMPlugin {
  	            ListExpression le = (ListExpression) exp;
  	            int bitmap = 0;
  	            for (Expression expression: le.getExpressions()) {
+ 	                if (!(expression instanceof PropertyExpression)) return;
+
  	                PropertyExpression element = (PropertyExpression)expression;
  	                String name = element.getPropertyAsString();
  	                ElementType value = ElementType.valueOf(name);
@@ -378,10 +385,10 @@ public class Java5 implements VMPlugin {
 	        Class clazz = classNode.getTypeClass();
 	        Field[] fields = clazz.getDeclaredFields();
 	        for (Field f : fields) {
-	            ClassNode ret = makeClassNode(compileUnit, f.getGenericType(), f.getType());
-	            FieldNode fn = new FieldNode(f.getName(), f.getModifiers(), ret, classNode, null);
-	            setAnnotationMetaData(f.getAnnotations(), fn);
-	            classNode.addField(fn);
+		            ClassNode ret = makeClassNode(compileUnit, f.getGenericType(), f.getType());
+		            FieldNode fn = new FieldNode(f.getName(), f.getModifiers(), ret, classNode, null);
+		            setAnnotationMetaData(f.getAnnotations(), fn);
+		            classNode.addField(fn);
 	        }
 	        Method[] methods = clazz.getDeclaredMethods();
 	        for (Method m : methods) {

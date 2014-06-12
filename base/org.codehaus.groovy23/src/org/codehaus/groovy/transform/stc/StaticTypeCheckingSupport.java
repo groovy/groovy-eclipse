@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.codehaus.groovy.transform.stc;
 import static org.codehaus.groovy.ast.ClassHelper.BigDecimal_TYPE;
 import static org.codehaus.groovy.ast.ClassHelper.BigInteger_TYPE;
@@ -430,7 +431,7 @@ public abstract class StaticTypeCheckingSupport {
         //SAM check
         if (type.isDerivedFrom(CLOSURE_TYPE) && isSAMType(toBeAssignedTo)) {
             return true;
-    }
+        }
 
         return false;
     }
@@ -615,7 +616,7 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     public static boolean checkCompatibleAssignmentTypes(ClassNode left, ClassNode right, Expression rightExpression, boolean allowConstructorCoercion) {
-    	ClassNode leftRedirect = left.redirect();
+        ClassNode leftRedirect = left.redirect();
         ClassNode rightRedirect = right.redirect();
         if (leftRedirect==rightRedirect) return true;
 
@@ -1879,7 +1880,7 @@ public abstract class StaticTypeCheckingSupport {
     }
 
     private static Map<String, GenericsType> mergeGenerics(Map<String, GenericsType> current, GenericsType[] newGenerics) {
-        if (newGenerics == null || newGenerics.length == 0) return null;
+        if (newGenerics == null || newGenerics.length == 0) return current;
         if (current==null) current = new HashMap<String, GenericsType>();
         for (int i = 0; i < newGenerics.length; i++) {
             GenericsType gt = newGenerics[i];
