@@ -133,6 +133,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	private boolean hasAnonInners;
 
+	private TraitHelper traitHelper = new TraitHelper();
+
 	/**
 	 * Map to keep track of anonymous inner type outer methods. Only used is hasAnonInners is true
 	 */
@@ -669,7 +671,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			boolean isInterface = classNode.isInterface();
 			boolean isEnum = (classNode.getModifiers() & Opcodes.ACC_ENUM) != 0;
 			int mods = classNode.getModifiers();
-			if (isTrait(classNode)) {
+			if (traitHelper.isTrait(classNode)) {
 				mods |= Opcodes.ACC_INTERFACE;
 			}
 			if ((mods & Opcodes.ACC_ENUM) != 0) {
@@ -714,7 +716,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				}
 			}
 
-			configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum, isTrait(classNode));
+			configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum, traitHelper.isTrait(classNode));
 			configureSuperInterfaces(typeDeclaration, classNode);
 			typeDeclaration.methods = createMethodAndConstructorDeclarations(typeDeclaration, classNode, isEnum, compilationResult);
 			typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
@@ -830,20 +832,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		return CharOperation.subarray(fileName, start, end);
 	}
 
-	private boolean isTrait(ClassNode classNode) {
-		if (classNode != null) {
-			List<AnnotationNode> annotations = classNode.getAnnotations();
-			if (annotations.size() > 0) {
-				for (AnnotationNode annotation : annotations) {
-					if (annotation.getClassNode().getName().equals("groovy.transform.Trait")) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
-	}
-
 	/**
 	 * Build JDT representations of all the method/ctors on the groovy type
 	 *
@@ -890,7 +878,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	private FieldDeclaration[] createFieldDeclarations(ClassNode classNode, boolean isEnum) {
 		List<FieldDeclaration> fieldDeclarations = new ArrayList<FieldDeclaration>();
 		List<FieldNode> fieldNodes = classNode.getFields();
-		boolean isTrait = isTrait(classNode);
+		boolean isTrait = traitHelper.isTrait(classNode);
 		if (fieldNodes != null) {
 			for (FieldNode fieldNode : fieldNodes) {
 				if (isTrait && !(fieldNode.isPublic() && fieldNode.isStatic() && fieldNode.isFinal())) {
@@ -926,7 +914,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	private void createConstructorDeclarations(ClassNode classNode, boolean isEnum,
 			List<AbstractMethodDeclaration> accumulatedMethodDeclarations) {
-		if (isTrait(classNode)) {
+		if (traitHelper.isTrait(classNode)) {
 			return;
 		}
 		List<ConstructorNode> constructorNodes = classNode.getDeclaredConstructors();
@@ -1084,7 +1072,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	private void createMethodDeclarations(GroovyTypeDeclaration typeDeclaration, ClassNode classNode, boolean isEnum,
 			List<AbstractMethodDeclaration> accumulatedDeclarations) {
-		boolean isTrait = isTrait(classNode);
+		boolean isTrait = traitHelper.isTrait(classNode);
 		List<MethodNode> methods = classNode.getMethods();
 
 		for (MethodNode methodNode : methods) {
@@ -1252,7 +1240,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			methodDeclaration.returnType = createTypeReferenceForClassNode(returnType);
 			return methodDeclaration;
 		} else {
-			boolean isTrait = isTrait(classNode);
+			boolean isTrait = traitHelper.isTrait(classNode);
 			MethodDeclaration methodDeclaration = new MethodDeclaration(compilationResult);
 			// TODO refactor - extract method
 			GenericsType[] generics = methodNode.getGenericsTypes();
@@ -2461,5 +2449,55 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	public void tagAsScript() {
 		this.isScript = true;
+	}
+
+	/**
+	 * The class helps to check if some class node is trait.
+	 */
+	private class TraitHelper {
+
+		private boolean toBeInitialized = true;
+		private boolean lookForTraitAlias = false;
+
+		private void initialize() {
+			if (imports != null) {
+				for (ImportReference i : imports) {
+					String importedType = i.toString();
+					if ("groovy.transform.Trait".equals(importedType)) {
+						lookForTraitAlias = true;
+						break;
+					}
+					if (importedType.endsWith(".Trait")) {
+						lookForTraitAlias = false;
+						break;
+					}
+					if ("groovy.transform.*".equals(importedType)) {
+						lookForTraitAlias = true;
+					}
+				}
+				toBeInitialized = true;
+			}
+		}
+
+		private boolean isTrait(ClassNode classNode) {
+			if (classNode == null) {
+				return false;
+			}
+			if (toBeInitialized) {
+				initialize();
+			}
+			List<AnnotationNode> annotations = classNode.getAnnotations();
+			if (annotations.size() > 0) {
+				for (AnnotationNode annotation : annotations) {
+					if ("groovy.transform.Trait".equals(annotation.getClassNode().getName())) {
+						return true;
+					}
+					if (lookForTraitAlias && "Trait".equals(annotation.getClassNode().getName())) {
+						return true;
+					}
+				}
+			}
+			return false;
+		}
 	}
 }

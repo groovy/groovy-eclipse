@@ -932,6 +932,190 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "Groovy:Prefix expressions on trait fields/properties are not supported in traits. @ line 7, column 9.\n" + 
                 "----------\n");
     }
+
+    // Test @Trait annotation
+    public void testTraits37() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "@groovy.transform.Trait\n" +
+                "class MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MyClass implements MyTrait {\n" +
+                "}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()"
+        }, "a");
+    }
+
+    // Test @Trait annotation
+    public void testTraits38() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "import groovy.transform.Trait\n" +
+                "@Trait\n" +
+                "class MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MyClass implements MyTrait {\n" +
+                "}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()"
+        }, "a");
+    }
+
+    // Test @Trait annotation
+    public void testTraits39() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "import groovy.transform.*\n" +
+                "@Trait\n" +
+                "class MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MyClass implements MyTrait {\n" +
+                "}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()"
+        }, "a");
+    }
+
+    // Negative test for @Trait annotation
+    public void testTraits40() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runNegativeTest(new String[] {
+                "Sample.groovy",
+                "@interface Trait{}\n" +
+                "@Trait\n" +
+                "class MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MyClass implements MyTrait {\n" +
+                "}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()"},
+                "----------\n" + 
+                "1. ERROR in Sample.groovy (at line 6)\n" + 
+                "	class MyClass implements MyTrait {\n" + 
+                "	      ^^^^^^^\n" + 
+                "Groovy:You are not allowed to implement the class 'MyTrait', use extends instead.\n" + 
+                "----------\n" + 
+                "2. ERROR in Sample.groovy (at line 6)\n" + 
+                "	class MyClass implements MyTrait {\n" + 
+                "	                         ^^^^^^^^\n" + 
+                "The type MyTrait cannot be a superinterface of MyClass; a superinterface must be an interface\n" + 
+                "----------\n");
+    }
+
+    // Negative test for @Trait annotation
+    public void testTraits41() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runNegativeTest(new String[] {
+        		"Trait.groovy", 
+                "package a\n" +
+                "@interface Trait {}\n",
+                "Sample.groovy",
+                "package b\n" +
+                "import a.Trait\n" +
+                "@Trait\n" +
+                "class MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MyClass implements MyTrait {\n" +
+                "}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()"},
+                "----------\n" + 
+                "1. ERROR in Sample.groovy (at line 7)\n" + 
+                "	class MyClass implements MyTrait {\n" + 
+                "	      ^^^^^^^\n" + 
+                "Groovy:You are not allowed to implement the class 'b.MyTrait', use extends instead.\n" + 
+                "----------\n" + 
+                "2. ERROR in Sample.groovy (at line 7)\n" + 
+                "	class MyClass implements MyTrait {\n" + 
+                "	                         ^^^^^^^^\n" + 
+                "The type MyTrait cannot be a superinterface of MyClass; a superinterface must be an interface\n" + 
+                "----------\n");
+    }
+
+    // Negative test for @Trait annotation
+    public void testTraits42() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runNegativeTest(new String[] {
+        		"Trait.groovy", 
+                "package a\n" +
+                "@interface Trait {}\n",
+                "Sample.groovy",
+                "package b\n" +
+                "@a.Trait\n" +
+                "class MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MyClass implements MyTrait {\n" +
+                "}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()"},
+                "----------\n" + 
+                "1. ERROR in Sample.groovy (at line 6)\n" + 
+                "	class MyClass implements MyTrait {\n" + 
+                "	      ^^^^^^^\n" + 
+                "Groovy:You are not allowed to implement the class 'b.MyTrait', use extends instead.\n" + 
+                "----------\n" + 
+                "2. ERROR in Sample.groovy (at line 6)\n" + 
+                "	class MyClass implements MyTrait {\n" + 
+                "	                         ^^^^^^^^\n" + 
+                "The type MyTrait cannot be a superinterface of MyClass; a superinterface must be an interface\n" + 
+                "----------\n");
+    }
+
+    // Negative test for @Trait annotation
+    public void testTraits43() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runNegativeTest(new String[] {
+        		"Trait.groovy", 
+                "package a\n" +
+                "@interface Trait {}\n",
+                "Sample.groovy",
+                "package b\n" +
+                "import a.Trait\n" +
+                "import groovy.transform.*\n" +
+                "@Trait\n" +
+                "class MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MyClass implements MyTrait {\n" +
+                "}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()"},
+                "----------\n" + 
+                "1. ERROR in Sample.groovy (at line 8)\n" + 
+                "	class MyClass implements MyTrait {\n" + 
+                "	      ^^^^^^^\n" + 
+                "Groovy:You are not allowed to implement the class 'b.MyTrait', use extends instead.\n" + 
+                "----------\n" + 
+                "2. ERROR in Sample.groovy (at line 8)\n" + 
+                "	class MyClass implements MyTrait {\n" + 
+                "	                         ^^^^^^^^\n" + 
+                "The type MyTrait cannot be a superinterface of MyClass; a superinterface must be an interface\n" + 
+                "----------\n");
+    }
     // GRECLIPSE-1727 End of traits tests
 
     public void testParsingRecovery_GRE1085_1() {
