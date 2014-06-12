@@ -1144,8 +1144,11 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 					possibleMatches[i] = possibleMatch.getSimilarMatch();
 					i--;
 				}
-				if (!possibleMatch.nodeSet.mustResolve)
-					possibleMatch.cleanUp();
+				// GROOVY: delay cleanup for groovy matches, clears out backpointer that may be used later in 'completeTypeBindings'
+				// was: if (!possibleMatch.nodeSet.mustResolve)
+				 if ((!possibleMatch.nodeSet.mustResolve) && !alreadyMatched.contains(possibleMatch))
+			    // GROOVY end
+					 possibleMatch.cleanUp();
 			}
 		}
 		if (mustResolve)
