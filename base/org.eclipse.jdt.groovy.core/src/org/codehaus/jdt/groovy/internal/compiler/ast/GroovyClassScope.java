@@ -191,8 +191,9 @@ public class GroovyClassScope extends ClassScope {
 					if (method.isPrivate() || method.isStatic()) {
 						continue;
 					}
-					// TODO Add actually not abstract trait methods only
-					methodsMap.put(getMethodAsString(method), method);
+					if (isNotActuallyAbstract(method)) {
+						methodsMap.put(getMethodAsString(method), method);
+					}
 				}
 			}
 		}
@@ -239,6 +240,18 @@ public class GroovyClassScope extends ClassScope {
 			}
 		}
 		return key.toString();
+	}
+
+	private boolean isNotActuallyAbstract(MethodBinding methodBinding) {
+		if (methodBinding.declaringClass instanceof SourceTypeBinding) {
+			AbstractMethodDeclaration methodDeclaration = ((SourceTypeBinding) methodBinding.declaringClass).scope.referenceContext
+					.declarationOf(methodBinding);
+			if (methodDeclaration != null) {
+				return (methodDeclaration.modifiers & ClassFileConstants.AccAbstract) == 0;
+			}
+		}
+		// TODO Handle BinaryTypeBinding
+		return true;
 	}
 
 	private void createMethod(String name, boolean isStatic, String signature, TypeBinding[] parameterTypes,

@@ -1240,7 +1240,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			methodDeclaration.returnType = createTypeReferenceForClassNode(returnType);
 			return methodDeclaration;
 		} else {
-			boolean isTrait = traitHelper.isTrait(classNode);
 			MethodDeclaration methodDeclaration = new MethodDeclaration(compilationResult);
 			// TODO refactor - extract method
 			GenericsType[] generics = methodNode.getGenericsTypes();
@@ -1268,9 +1267,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			// Note: modifiers for the MethodBinding constructed for this declaration will be created marked with
 			// AccVarArgs if the bitset for the type reference in the final argument is marked IsVarArgs
 			int modifiers = methodNode.getModifiers();
-			if (isTrait) {
-				modifiers &= ~ClassFileConstants.AccAbstract;
-			}
 
 			modifiers &= ~(ClassFileConstants.AccSynthetic | ClassFileConstants.AccTransient);
 			methodDeclaration.annotations = transformAnnotations(methodNode.getAnnotations());

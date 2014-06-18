@@ -1253,8 +1253,13 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "class MyClass extends MySuperClass implements MyTrait {}\n" +
                 "def myClass = new MyClass()\n" +
                 "print myClass.m()\n"},
-                // TODO Add correct error message
-                "");
+
+                "----------\n" +
+                "1. ERROR in Sample.groovy (at line 7)\n" +
+                "	class MyClass extends MySuperClass implements MyTrait {}\n" +
+                "	      ^^^^^^^\n" +
+                "The inherited method MySuperClass.m() cannot hide the public abstract method in MyTrait\n" +
+                "----------\n");
     }
 
     // Test protected method of superclass and traits method overriding by class - positive test
