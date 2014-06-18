@@ -1275,7 +1275,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (!commencingResolution()) {
         	return;
         }
-        try {
         // end
         resolveGenericsHeader(node.getGenericsTypes());
 
@@ -1334,13 +1333,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
 
         // GRECLIPSE: start
-        } finally {
-        	finishedResolution();
+        finishedResolution();
         // end
-            currentClass = oldNode;
-        // GRECLIPSE: start
-        }
-        // end
+        currentClass = oldNode;
     }
     
     private void checkCyclicInheritence(ClassNode originalNode, ClassNode parentToCompare, ClassNode[] interfacesToCompare) {

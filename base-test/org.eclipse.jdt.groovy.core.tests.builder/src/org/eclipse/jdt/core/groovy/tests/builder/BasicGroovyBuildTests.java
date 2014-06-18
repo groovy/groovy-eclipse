@@ -3456,7 +3456,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 	}
 
 	// currently failing
-	public void _testNoDoubleResolve() throws Exception {
+	public void testNoDoubleResolve() throws Exception {
 		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
