@@ -23,24 +23,30 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 /**
  * The multiplexing parser can delegate file parsing to multiple parsers. In this scenario it subtypes 'Parser' (which is the Java
  * parser) but is also aware of a groovy parser. Depending on what kind of file is to be parsed, it will invoke the relevant parser.
- * 
+ *
  * @author Andy Clement
  */
 @SuppressWarnings("restriction")
 public class MultiplexingParser extends Parser {
 
-	GroovyParser groovyParser;
+	private Object requestor;
+	private CompilerOptions compilerOptions;
+	private GroovyParser groovyParser;
 
 	public MultiplexingParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter,
 			boolean optimizeStringLiterals) {
-		super(problemReporter, optimizeStringLiterals);
 		// The superclass that is extended is in charge of parsing .java files
-		groovyParser = new GroovyParser(requestor, compilerOptions, problemReporter, true, false);
+		super(problemReporter, optimizeStringLiterals);
+		this.requestor = requestor;
+		this.compilerOptions = compilerOptions;
 	}
 
 	@Override
 	public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
 		if (ContentTypeUtils.isGroovyLikeFileName(sourceUnit.getFileName())) {
+			if (groovyParser == null) {
+				groovyParser = new GroovyParser(this.requestor, this.compilerOptions, this.problemReporter, true, false);
+			}
 			return groovyParser.dietParse(sourceUnit, compilationResult);
 		} else {
 			return super.dietParse(sourceUnit, compilationResult);
@@ -49,6 +55,7 @@ public class MultiplexingParser extends Parser {
 
 	@Override
 	public void reset() {
-		groovyParser.reset();
+		groovyParser = null;
 	}
+
 }
