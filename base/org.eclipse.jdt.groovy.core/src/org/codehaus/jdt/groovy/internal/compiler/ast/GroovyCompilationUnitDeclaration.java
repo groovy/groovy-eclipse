@@ -11,6 +11,7 @@
  *******************************************************************************/
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import groovy.transform.Immutable;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.io.PrintWriter;
@@ -19,10 +20,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -40,6 +43,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.TaskEntry;
+import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
@@ -2250,7 +2254,47 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	@Override
 	public void analyseCode() {
+		fixImmutableFields();
 		processToPhase(Phases.CANONICALIZATION);
+	}
+
+	private void fixImmutableFields() {
+		final String knownImmutableClasses = "knownImmutableClasses";
+		List<ClassNode> classes = groovyCompilationUnit.getAST().getClasses();
+		for (ClassNode c : classes) {
+			AnnotationNode immutableAnnotation = getImmutableAnnotation(c);
+			if (immutableAnnotation != null) {
+				Set<ClassNode> immutables = new HashSet<ClassNode>();
+				for (FieldNode field : c.getFields()) {
+					if (getImmutableAnnotation(field.getType()) != null) {
+						immutables.add(field.getType());
+					}
+				}
+				if (!immutables.isEmpty()) {
+					ListExpression listExpression = (ListExpression) immutableAnnotation.getMember(knownImmutableClasses);
+					if (listExpression == null) {
+						listExpression = new ListExpression();
+					}
+					List<Expression> expressions = listExpression.getExpressions();
+					for (Expression e : expressions) {
+						immutables.remove(e.getType());
+					}
+					for (ClassNode n : immutables) {
+						expressions.add(new ClassExpression(n));
+					}
+					immutableAnnotation.setMember(knownImmutableClasses, listExpression);
+				}
+			}
+		}
+	}
+
+	private AnnotationNode getImmutableAnnotation(ClassNode classNode) {
+		for (AnnotationNode node : classNode.getAnnotations()) {
+			if (Immutable.class.getName().equals(node.getClassNode().getName())) {
+				return node;
+			}
+		}
+		return null;
 	}
 
 	@Override
