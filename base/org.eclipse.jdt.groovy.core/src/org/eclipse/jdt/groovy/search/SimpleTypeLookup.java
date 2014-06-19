@@ -654,6 +654,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 									break;
 								}
 							} else {
+								// TODO Case with literal null argument should be correctly resolved
 								if (!methodCallArgumentTypes.get(i).isDerivedFrom(parameters[i].getType())) {
 									found = false;
 									break;
@@ -671,7 +672,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 					}
 				}
 			}
-			return maybeMethods.get(0);
+			return maybeMethods.size() > 0 ? maybeMethods.get(0) : null;
 		}
 
 		if (methodCallArgumentTypes == null) {
