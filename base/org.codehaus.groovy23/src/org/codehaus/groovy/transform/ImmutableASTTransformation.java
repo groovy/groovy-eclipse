@@ -424,8 +424,6 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
             statement = createConstructorStatementArrayOrCloneable(fNode);
         } else if (isKnownImmutableClass(fieldType, knownImmutableClasses) || isKnownImmutable(pNode.getName(), knownImmutables)) {
             statement = createConstructorStatementDefault(fNode);
-        } else if (isImmutableByType(fieldType)) {
-            statement = createConstructorStatementDefault(fNode);
         } else if (fieldType.isDerivedFrom(DATE_TYPE)) {
             statement = createConstructorStatementDate(fNode);
         } else if (isOrImplements(fieldType, COLLECTION_TYPE) || fieldType.isDerivedFrom(COLLECTION_TYPE) || isOrImplements(fieldType, MAP_TYPE) || fieldType.isDerivedFrom(MAP_TYPE)) {
@@ -437,17 +435,6 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
             statement = createConstructorStatementGuarded(cNode, fNode);
         }
         return statement;
-    }
-
-    // GRECLIPSE-1723
-    private boolean isImmutableByType(ClassNode fieldType) {
-        List<AnnotationNode> annotations = fieldType.getAnnotations();
-        for (AnnotationNode node : annotations) {
-            if (Immutable.class.getName().equals(node.getClassNode().getName())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private Statement createConstructorStatementGuarded(ClassNode cNode, FieldNode fNode) {
@@ -489,23 +476,12 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
 
     private boolean isKnownImmutableClass(ClassNode fieldType, List<String> knownImmutableClasses) {
         if (inImmutableList(fieldType.getName()) || knownImmutableClasses.contains(fieldType.getName()))
-    		return true;
+            return true;
         if (!fieldType.isResolved())
-        	return false;
-        // GRECLIPSE: need the check in here for whether it is immutable..
-        // GRECLIPSE: start - one check missing from here maybe, compared to 180
-        /*{
-         return fieldType.isEnum() ||
+            return false;
+        return fieldType.isEnum() ||
                 ClassHelper.isPrimitiveType(fieldType) ||
                 fieldType.getAnnotations(MY_TYPE).size() != 0;
-       }*/
-        // TODO not taking account of the getAnnotations() above, ought to factor that into the
-        // test below but have to be careful about using reflection directly.
-        // new
-        String s= fieldType.getName();
-        return fieldType.isPrimitive() || fieldType.isEnum() || 
-        		inImmutableList(fieldType.getName());
-        // GRECLIPSE end
     }
 
     private boolean isKnownImmutable(String fieldName, List<String> knownImmutables) {
