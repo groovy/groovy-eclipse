@@ -352,7 +352,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			type = typeFromDeclaration(declaration, declaringType);
 			realDeclaringType = declaringTypeFromDeclaration(declaration, declaringType);
 		} else if (isPrimaryExpression &&
-				// make everything from the scopes available
+		// make everything from the scopes available
 				(varInfo = scope.lookupName(name)) != null) {
 
 			// now try to find the declaration again
@@ -632,7 +632,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		}
 
 		List<MethodNode> maybeMethods = declaringType.getMethods(name);
+
 		if (maybeMethods != null && maybeMethods.size() > 0) {
+			// Remember first entry in case exact match not found
+			MethodNode defaultChoice = maybeMethods.get(0);
 			// prefer retrieving the method with the same number of args as specified in the parameter.
 			// if none exists, or parameter is -1, then arbitrarily choose the first.
 			if (methodCallArgumentTypes != null && methodCallArgumentTypes.size() >= 0) {
@@ -673,7 +676,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 					}
 				}
 			}
-			return maybeMethods.size() > 0 ? maybeMethods.get(0) : null;
+			return defaultChoice;
 		}
 
 		if (methodCallArgumentTypes == null) {

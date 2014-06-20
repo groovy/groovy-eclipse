@@ -303,7 +303,7 @@ public class VariableScope {
 	/**
 	 * number of parameters of current method call or -1 if not a method call
 	 */
-	private int methodCallNumberOfArguments = -1;
+	// private int methodCallNumberOfArguments = -1; // commented this out due to introducing methodCallArgumentTypes field
 	private boolean isPrimaryNode;
 	private List<ClassNode> methodCallArgumentTypes;
 
@@ -556,7 +556,7 @@ public class VariableScope {
 		return maybeVoid != null
 				&& (maybeVoid.getName().equals(VOID_CLASS_NODE.getName())
 						|| maybeVoid.getName().equals(VOID_WRAPPER_CLASS_NODE.getName()) || maybeVoid.getName().equals(
-						OBJECT_CLASS_NODE.getName()));
+								OBJECT_CLASS_NODE.getName()));
 	}
 
 	/**
@@ -857,19 +857,20 @@ public class VariableScope {
 	 * call.
 	 */
 	int getMethodCallNumberOfArguments() {
-		return methodCallNumberOfArguments;
+		return methodCallArgumentTypes != null ? methodCallArgumentTypes.size() : 0;
 	}
 
-	void setMethodCallNumberOfArguments(int methodCallNumberOfArguments) {
-		this.methodCallNumberOfArguments = methodCallNumberOfArguments;
-	}
+	/*
+	 * void setMethodCallNumberOfArguments(int methodCallNumberOfArguments) { this.methodCallNumberOfArguments =
+	 * methodCallNumberOfArguments; }
+	 */
 
 	void setMethodCallArgumentTypes(List<ClassNode> methodCallArgumentTypes) {
 		this.methodCallArgumentTypes = methodCallArgumentTypes;
 	}
 
 	public boolean isMethodCall() {
-		return methodCallNumberOfArguments >= 0;
+		return methodCallArgumentTypes != null;
 	}
 
 	public Iterator<Map.Entry<String, VariableInfo>> variablesIterator() {

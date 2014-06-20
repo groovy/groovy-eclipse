@@ -2020,8 +2020,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		result.enclosingAssignment = enclosingAssignment;
 		VisitStatus status = requestor.acceptASTNode(node, result, enclosingElement);
 		VariableScope scope = scopes.peek();
-		// forget the number of arguments
-		scope.setMethodCallNumberOfArguments(-1);
+		// forget the argument types
+		scope.setMethodCallArgumentTypes(null);
 
 		// when there is a category method, we don't want to store it
 		// as the declaring type since this will mess things up inside closures
