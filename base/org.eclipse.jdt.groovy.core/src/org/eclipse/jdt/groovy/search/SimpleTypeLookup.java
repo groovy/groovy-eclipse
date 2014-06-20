@@ -352,7 +352,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			type = typeFromDeclaration(declaration, declaringType);
 			realDeclaringType = declaringTypeFromDeclaration(declaration, declaringType);
 		} else if (isPrimaryExpression &&
-		// make everything from the scopes available
+				// make everything from the scopes available
 				(varInfo = scope.lookupName(name)) != null) {
 
 			// now try to find the declaration again
@@ -548,7 +548,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 	 *
 	 * @param name
 	 * @param declaringType
-	 * @param methodCallArgumentTypes types of arguments to the associated method call (or -1 if not a method call)
+	 * @param methodCallArgumentTypes types of arguments to the associated method call (or null if not a method call)
 	 * @return
 	 */
 	private ASTNode findDeclaration(String name, ClassNode declaringType, List<ClassNode> methodCallArgumentTypes) {
@@ -563,16 +563,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		}
 
 		AnnotatedNode maybe = null;
-		if (methodCallArgumentTypes == null) {
-			// this expression is not part of a method call expression and so, look for methods last
-			maybe = findMethodDeclaration(name, declaringType, methodCallArgumentTypes, true);
-			if (maybe != null) {
-				return maybe;
-			}
-			return null;
-		}
 
-		if (methodCallArgumentTypes.size() >= 0) {
+		if (methodCallArgumentTypes != null) {
 			// this expression is part of a method call expression and so, look for methods first
 			maybe = findMethodDeclaration(name, declaringType, methodCallArgumentTypes, true);
 			if (maybe != null) {
@@ -597,6 +589,15 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		FieldNode constantFromSuper = findConstantInClass(name, allClasses);
 		if (constantFromSuper != null) {
 			return constantFromSuper;
+		}
+
+		if (methodCallArgumentTypes == null) {
+			// this expression is not part of a method call expression and so, look for methods last
+			maybe = findMethodDeclaration(name, declaringType, methodCallArgumentTypes, true);
+			if (maybe != null) {
+				return maybe;
+			}
+			return null;
 		}
 
 		return null;
