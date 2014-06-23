@@ -13,6 +13,7 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,6 +30,7 @@ import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
+import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
@@ -37,6 +39,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LazilyResolvedMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MissingTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
@@ -250,7 +253,39 @@ public class GroovyClassScope extends ClassScope {
 				return (methodDeclaration.modifiers & ClassFileConstants.AccAbstract) == 0;
 			}
 		}
-		// TODO Handle BinaryTypeBinding
+		if (methodBinding.declaringClass instanceof BinaryTypeBinding) {
+			StringBuilder nameBuilder = new StringBuilder();
+			nameBuilder.append(methodBinding.declaringClass.sourceName);
+			nameBuilder.append("$Trait$Helper");
+			ReferenceBinding helperBinding = compilationUnitScope().findType(nameBuilder.toString().toCharArray(),
+					methodBinding.declaringClass.fPackage, methodBinding.declaringClass.fPackage);
+			if (helperBinding != null) {
+				if (helperBinding instanceof ProblemReferenceBinding) {
+					helperBinding = ((ProblemReferenceBinding) helperBinding).closestReferenceMatch();
+				}
+				for (MethodBinding m : helperBinding.methods()) {
+					if (!Arrays.equals(methodBinding.selector, m.selector)) {
+						continue;
+					}
+					TypeBinding[] actualParameters = m.parameters;
+					TypeBinding[] expectedParameters = methodBinding.parameters;
+					if (actualParameters.length != expectedParameters.length + 1) {
+						continue;
+					}
+					if (!actualParameters[0].equals(methodBinding.declaringClass)) {
+						continue;
+					}
+					boolean same = true;
+					for (int i = 0; i < expectedParameters.length; i++) {
+						if (!actualParameters[i + 1].equals(expectedParameters[i])) {
+							same = false;
+							break;
+						}
+					}
+					return same && !m.isAbstract();
+				}
+			}
+		}
 		return true;
 	}
 

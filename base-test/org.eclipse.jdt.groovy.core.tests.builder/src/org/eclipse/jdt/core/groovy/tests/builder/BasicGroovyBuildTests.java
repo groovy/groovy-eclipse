@@ -3628,6 +3628,90 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		executeClass(projectPath, "Runner", "Hello, name!", "");
 	}
 
+	public void testTraitBinary() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "p", "Named",
+				"package p\n" +
+				"trait Named {\n" +
+				"    String name() { 'name' }\n" +
+				"}\n");
+
+		env.addGroovyClass(root, "q", "DefaultNamed",
+				"package q;\n" +
+				"public class DefaultNamed {\n" +
+				"    protected String name() { 'name' }\n" +
+				"}\n");
+
+		env.addGroovyClass(root, "r", "NamedClass",
+				"package r;\n" +
+				"import p.Named\n" +
+				"import q.DefaultNamed\n" +
+				"public class NamedClass extends DefaultNamed implements Named {}\n");
+
+		env.addGroovyClass(root, "", "Runner",
+				"import r.NamedClass\n" +
+				"NamedClass named = new NamedClass()\n" +
+				"print named.name()\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("p.Named", "p.Named$Trait$Helper", "q.DefaultNamed", "r.NamedClass", "Runner");
+		expectingNoProblems();
+		executeClass(projectPath, "Runner", "name", "");
+
+		env.addGroovyClass(root, "r", "NamedClass",
+				"package r;\n" +
+				"import p.Named\n" +
+				"import q.DefaultNamed\n" +
+				"public class NamedClass extends DefaultNamed implements Named {\n" +
+				"    String name() { 'new name' }\n" +
+				"}\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("r.NamedClass", "Runner");
+		expectingNoProblems();
+		executeClass(projectPath, "Runner", "new name", "");
+
+		env.addGroovyClass(root, "r", "NamedClass",
+				"package r;\n" +
+				"import p.Named\n" +
+				"import q.DefaultNamed\n" +
+				"public class NamedClass extends DefaultNamed implements Named {}\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("r.NamedClass", "Runner");
+		expectingNoProblems();
+		executeClass(projectPath, "Runner", "name", "");
+
+		env.addGroovyClass(root, "p", "Named",
+				"package p\n" +
+				"trait Named {\n" +
+				"    abstract String name()\n" +
+				"}\n");
+
+		env.addGroovyClass(root, "r", "NamedClass",
+				"package r;\n" +
+				"import p.Named\n" +
+				"import q.DefaultNamed\n" +
+				"public class NamedClass extends DefaultNamed implements Named {\n" +
+				"    String name() { 'new name' }\n" +
+				"}\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("p.Named", "p.Named$Trait$Helper", "r.NamedClass", "Runner");
+		expectingNoProblems();
+		executeClass(projectPath, "Runner", "new name", "");
+	}
+
 	//
 	// /*
 	// * Ensures that a task tag is not user editable
