@@ -1962,6 +1962,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					types.add(expression.getType());
 				}
 				return types;
+			} else {
+				// TODO Might be useful also to look into TupleExpressions like in ArgumentListExpressions
+				return new ArrayList<ClassNode>();
 			}
 		}
 		return null;
