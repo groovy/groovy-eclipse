@@ -476,23 +476,12 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
 
     private boolean isKnownImmutableClass(ClassNode fieldType, List<String> knownImmutableClasses) {
         if (inImmutableList(fieldType.getName()) || knownImmutableClasses.contains(fieldType.getName()))
-    		return true;
+            return true;
         if (!fieldType.isResolved())
-        	return false;
-        // GRECLIPSE: need the check in here for whether it is immutable..
-        // GRECLIPSE: start - one check missing from here maybe, compared to 180
-        /*{
-         return fieldType.isEnum() ||
+            return false;
+        return fieldType.isEnum() ||
                 ClassHelper.isPrimitiveType(fieldType) ||
                 fieldType.getAnnotations(MY_TYPE).size() != 0;
-       }*/
-        // TODO not taking account of the getAnnotations() above, ought to factor that into the
-        // test below but have to be careful about using reflection directly.
-        // new
-        String s= fieldType.getName();
-        return fieldType.isPrimitive() || fieldType.isEnum() || 
-        		inImmutableList(fieldType.getName());
-        // GRECLIPSE end
     }
 
     private boolean isKnownImmutable(String fieldName, List<String> knownImmutables) {
