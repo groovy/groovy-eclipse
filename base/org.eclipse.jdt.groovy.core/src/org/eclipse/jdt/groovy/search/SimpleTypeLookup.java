@@ -635,7 +635,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
 		if (maybeMethods != null && maybeMethods.size() > 0) {
 			// Remember first entry in case exact match not found
-			MethodNode defaultChoice = maybeMethods.get(0);
+			MethodNode closestMatch = maybeMethods.get(0);
 			// prefer retrieving the method with the same number of args as specified in the parameter.
 			// if none exists, or parameter is -1, then arbitrarily choose the first.
 			if (methodCallArgumentTypes != null && methodCallArgumentTypes.size() >= 0) {
@@ -648,6 +648,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 					if (parameters != null && parameters.length == methodCallArgumentTypes.size()) {
 						boolean found = true;
 						boolean exactMatchFound = true;
+						closestMatch = maybeMethod.getOriginal();
 						for (int i = 0; i < parameters.length; i++) {
 							if (!methodCallArgumentTypes.get(i).equals(parameters[i].getType())) {
 								exactMatchFound = false;
@@ -658,7 +659,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 									break;
 								}
 							} else {
-								// TODO Case with literal null argument should be correctly resolved
+								// TODO 'null' literal argument should be correctly resolved
 								if (!methodCallArgumentTypes.get(i).isDerivedFrom(parameters[i].getType())) {
 									found = false;
 									break;
@@ -666,7 +667,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 							}
 						}
 						if (exactMatchFound) {
-							return maybeMethod.getOriginal();
+							return closestMatch;
 						}
 						if (!found) {
 							iterator.remove();
@@ -676,7 +677,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 					}
 				}
 			}
-			return defaultChoice;
+			return closestMatch;
 		}
 
 		if (methodCallArgumentTypes == null) {
