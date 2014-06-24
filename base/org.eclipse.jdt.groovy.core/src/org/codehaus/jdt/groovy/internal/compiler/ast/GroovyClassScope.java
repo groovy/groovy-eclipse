@@ -190,11 +190,12 @@ public class GroovyClassScope extends ClassScope {
 		Map<String, MethodBinding> methodsMap = new HashMap<String, MethodBinding>();
 		for (ReferenceBinding i : superInterfaces) {
 			if (traitHelper.isTrait(i)) {
+				ReferenceBinding helperBinding = getHelperBinding(i);
 				for (MethodBinding method : i.availableMethods()) {
 					if (method.isPrivate() || method.isStatic()) {
 						continue;
 					}
-					if (isNotActuallyAbstract(method)) {
+					if (isNotActuallyAbstract(method, helperBinding)) {
 						methodsMap.put(getMethodAsString(method), method);
 					}
 				}
@@ -245,7 +246,24 @@ public class GroovyClassScope extends ClassScope {
 		return key.toString();
 	}
 
-	private boolean isNotActuallyAbstract(MethodBinding methodBinding) {
+	private ReferenceBinding getHelperBinding(ReferenceBinding interfaceBinding) {
+		if (interfaceBinding instanceof BinaryTypeBinding) {
+			StringBuilder nameBuilder = new StringBuilder();
+			nameBuilder.append(interfaceBinding.sourceName);
+			nameBuilder.append("$Trait$Helper");
+			ReferenceBinding helperBinding = compilationUnitScope().findType(nameBuilder.toString().toCharArray(),
+					interfaceBinding.fPackage, interfaceBinding.fPackage);
+			if (helperBinding != null) {
+				if (helperBinding instanceof ProblemReferenceBinding) {
+					helperBinding = ((ProblemReferenceBinding) helperBinding).closestReferenceMatch();
+				}
+			}
+			return helperBinding;
+		}
+		return null;
+	}
+
+	private boolean isNotActuallyAbstract(MethodBinding methodBinding, ReferenceBinding helperBinding) {
 		if (methodBinding.declaringClass instanceof SourceTypeBinding) {
 			AbstractMethodDeclaration methodDeclaration = ((SourceTypeBinding) methodBinding.declaringClass).scope.referenceContext
 					.declarationOf(methodBinding);
@@ -254,15 +272,7 @@ public class GroovyClassScope extends ClassScope {
 			}
 		}
 		if (methodBinding.declaringClass instanceof BinaryTypeBinding) {
-			StringBuilder nameBuilder = new StringBuilder();
-			nameBuilder.append(methodBinding.declaringClass.sourceName);
-			nameBuilder.append("$Trait$Helper");
-			ReferenceBinding helperBinding = compilationUnitScope().findType(nameBuilder.toString().toCharArray(),
-					methodBinding.declaringClass.fPackage, methodBinding.declaringClass.fPackage);
 			if (helperBinding != null) {
-				if (helperBinding instanceof ProblemReferenceBinding) {
-					helperBinding = ((ProblemReferenceBinding) helperBinding).closestReferenceMatch();
-				}
 				for (MethodBinding m : helperBinding.methods()) {
 					if (!Arrays.equals(methodBinding.selector, m.selector)) {
 						continue;
