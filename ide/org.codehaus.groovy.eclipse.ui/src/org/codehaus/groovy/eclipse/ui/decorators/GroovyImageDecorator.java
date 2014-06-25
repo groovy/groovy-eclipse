@@ -87,7 +87,8 @@ public class GroovyImageDecorator implements ILabelDecorator {
                 isApplicable = true;
             }
         } else if (element instanceof IFile && ContentTypeUtils.isGroovyLikeFileName(((IResource) element).getName())) {
-            image = getJavaElementImageDescriptor(image, (IResource) element);
+            // IFile already has correct icon, so there is no need to replace it.
+            // image = getJavaElementImageDescriptor(image, (IResource) element);
             isApplicable = true;
         } else if (element instanceof String) {
             // a request where an IResource cannot be found (probably from opening an svn or cvs file)
