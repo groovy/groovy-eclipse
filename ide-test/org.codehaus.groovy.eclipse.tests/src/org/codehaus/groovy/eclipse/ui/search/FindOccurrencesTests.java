@@ -430,6 +430,40 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         doTest(contents, start, len, start1, len, start2, len);
     }
     
+  //GRECLIPSE-1573
+    public void testOverloaded4() throws Exception {
+        String contents = 
+                "class LotsOfMethods { \n" + 
+                        "    def meth() { }\n" + 
+                        "    def meth(int a) { }\n" + 
+                        "    def meth(String a) { }\n" + 
+                        "}\n" + 
+                        "new LotsOfMethods().meth(1)\n" + 
+                        "new LotsOfMethods().meth()\n" +
+                        "new LotsOfMethods().meth(\"\")\n";
+        int start = contents.lastIndexOf("meth");
+        int len = "meth".length();
+        int start1 = contents.indexOf("meth", contents.indexOf("meth", contents.indexOf("meth")+1)+1);
+        int start2 = start;
+        doTest(contents, start2, len, start1, len, start2, len);
+    }
+    
+    public void testOverloaded5() throws Exception {
+        String contents = 
+                "class LotsOfMethods { \n" + 
+                        "    def meth() { }\n" + 
+                        "    def meth(int a) { }\n" + 
+                        "    def meth(String a) { }\n" + 
+                        "}\n" + 
+                        "new LotsOfMethods().meth(1)\n" + 
+                        "new LotsOfMethods().meth()\n" +
+                        "new LotsOfMethods().meth(null)\n";
+        int start = contents.lastIndexOf("meth");
+        int len = "meth".length();
+        int start1 = contents.indexOf("meth", contents.indexOf("meth", contents.indexOf("meth")+1)+1);
+        int start2 = start;
+        doTest(contents, start2, len, start1, len, start2, len);
+    }
     
     public void testDefaultParameters1() throws Exception {
         String contents = "class Default {\n" +
