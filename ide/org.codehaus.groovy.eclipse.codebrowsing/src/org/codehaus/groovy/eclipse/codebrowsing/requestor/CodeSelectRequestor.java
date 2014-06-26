@@ -511,13 +511,13 @@ public class CodeSelectRequestor implements ITypeRequestor {
         String getMethod = AccessorSupport.GETTER.createAccessorName(text);
         String isMethod = AccessorSupport.ISSER.createAccessorName(text);
         
-        IMethod closestMatch = type.getMethods().length > 0 ? type.getMethods()[0] : null;
+        IMethod closestMatch = null;
         methodsIteration : for (IMethod method : type.getMethods()) {
             if (method.getElementName().equals(text)) {
                 // prefer methods with the same parameter types
+            	closestMatch = method;
                 String[] maybeMethodParameters = method.getParameterTypes();
                 if (maybeMethodParameters.length == parameters.length) {
-                    closestMatch = method;
                     for (int i = 0; i < maybeMethodParameters.length; i++) {
                         String maybeMethodParameterSignature = removeGenerics(maybeMethodParameters[i]);
                         String originalMethodSignature = Signature.createTypeSignature(parameters[i].getType().getNameWithoutPackage(), type.isBinary());
