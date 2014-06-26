@@ -249,18 +249,17 @@ public class CodeSelectRequestor implements ITypeRequestor {
             if (maybeRequested == null) {
                 // try something else because source location not set right
                 String name = null;
-                int preferredParamNumber = -1;
+                Parameter[] parameters = null;
                 if (declaration instanceof MethodNode) {
                     name = ((MethodNode) declaration).getName();
-                    Parameter[] parameters = ((MethodNode) declaration).getParameters();
-                    preferredParamNumber = parameters == null ? 0 : parameters.length;
+                    parameters = ((MethodNode) declaration).getParameters();
                 } else if (declaration instanceof PropertyNode) {
                     name = ((PropertyNode) declaration).getName();
                 } else if (declaration instanceof FieldNode) {
                     name = ((FieldNode) declaration).getName();
                 }
                 if (name != null) {
-                    maybeRequested = findElement(type, name, preferredParamNumber);
+                    maybeRequested = findElement(type, name, parameters);
                 }
                 if (maybeRequested == null) {
                     // still couldn't find anything
@@ -494,11 +493,11 @@ public class CodeSelectRequestor implements ITypeRequestor {
      * May return null
      * @param type
      * @param text
-     * @param preferredParamNumber
+     * @param parameters
      * @return
      * @throws JavaModelException 
      */
-    private IJavaElement findElement(IType type, String text, int preferredParamNumber) throws JavaModelException {
+    private IJavaElement findElement(IType type, String text, Parameter[] parameters) throws JavaModelException {
         if (text.equals(type.getElementName())) {
             return type;
         }
@@ -512,21 +511,26 @@ public class CodeSelectRequestor implements ITypeRequestor {
         String getMethod = AccessorSupport.GETTER.createAccessorName(text);
         String isMethod = AccessorSupport.ISSER.createAccessorName(text);
         
-        IMethod lastFound = null;
-        for (IMethod method : type.getMethods()) {
+        IMethod closestMatch = type.getMethods().length > 0 ? type.getMethods()[0] : null;
+        methodsIteration : for (IMethod method : type.getMethods()) {
             if (method.getElementName().equals(text)) {
-                // prefer methods with the appropriate number of parameters
-                // GRECLIPSE-1233 this is not quite right since we really should be
-                // trying to find the original methods when default parameters are used
-                if (method.getParameterTypes().length == preferredParamNumber) {
+                // prefer methods with the same parameter types
+                String[] maybeMethodParameters = method.getParameterTypes();
+                if (maybeMethodParameters.length == parameters.length) {
+                    closestMatch = method;
+                    for (int i = 0; i < maybeMethodParameters.length; i++) {
+                        String maybeMethodParameterSignature = removeGenerics(maybeMethodParameters[i]);
+                        String originalMethodSignature = Signature.createTypeSignature(parameters[i].getType().getNameWithoutPackage(), type.isBinary());
+                        if (!originalMethodSignature.equals(maybeMethodParameterSignature)) {
+                            continue methodsIteration;
+                        }
+                    }
                     return method;
-                } else {
-                    lastFound = method;
                 }
             }
         }
-        if (lastFound != null) {
-            return lastFound;
+        if (closestMatch != null) {
+            return closestMatch;
         }
         
         IField field = type.getField(text);
@@ -548,6 +552,16 @@ public class CodeSelectRequestor implements ITypeRequestor {
             }
         }
         return null;
+    }
+    
+    private String removeGenerics(String maybeMethodParameterName) {
+        int genericStart = maybeMethodParameterName.indexOf("<");
+        if (genericStart > 0) {
+            maybeMethodParameterName = maybeMethodParameterName.substring(0, genericStart)
+                    + maybeMethodParameterName.substring(maybeMethodParameterName.indexOf(">") + 1,
+                            maybeMethodParameterName.length());
+        }
+        return maybeMethodParameterName;
     }
     
     private String extractPrefix(String text) {
