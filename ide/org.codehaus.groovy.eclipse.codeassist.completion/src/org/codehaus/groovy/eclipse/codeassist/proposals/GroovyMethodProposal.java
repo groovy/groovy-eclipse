@@ -345,20 +345,19 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
             closestMatch = null;
             // prefer retrieving the method with the same arg types as
             // specified in the parameter.
-            for (IMethod maybeMethod : methods) {
+            methodsIteration: for (IMethod maybeMethod : methods) {
                 if (maybeMethod.getElementName().equals(method.getName())) {
                     String[] maybeMethodParameters = maybeMethod.getParameterTypes();
-                    if ((maybeMethodParameters == null || maybeMethodParameters.length == 0) && parameterTypeSignatures.length == 0) {
-                        return maybeMethod;
-                    }
-                    if (maybeMethodParameters != null && maybeMethodParameters.length == parameterTypeSignatures.length) {
+                    assert maybeMethodParameters != null;
+                    if (maybeMethodParameters.length == parameterTypeSignatures.length) {
                         closestMatch = maybeMethod;
                         for (int i = 0; i < maybeMethodParameters.length; i++) {
                             String maybeMethodParameterName = removeGenerics(maybeMethodParameters[i]);
-                            if (parameterTypeSignatures[i].equals(maybeMethodParameterName)) {
-                                return closestMatch;
+                            if (!parameterTypeSignatures[i].equals(maybeMethodParameterName)) {
+                                continue methodsIteration;
                             }
                         }
+                        return closestMatch;
                     }
                 }
             }
