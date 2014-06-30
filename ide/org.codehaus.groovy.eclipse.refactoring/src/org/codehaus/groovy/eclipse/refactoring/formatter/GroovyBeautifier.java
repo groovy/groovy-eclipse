@@ -99,6 +99,7 @@ public class GroovyBeautifier {
             int nodeStart = node.getStart();
             int nodeEnd = node.getEnd();
             int nodeLen = nodeEnd - nodeStart;
+            nodeLen = correctNodeLen(nodeLen, tokens.tokens, formatter.getNewLine());
             boolean isLong = nodeLen > preferences.getLongListLength();
             List<Expression> exps = node.getExpressions();
 
@@ -151,6 +152,26 @@ public class GroovyBeautifier {
                 }
             }
         }
+    }
+
+    /**
+     * Corrects node length in case new line token consists of more than one
+     * character.
+     *
+     * @param nodeLen original node length
+     * @param tokens a list of node tokens
+     * @param newLine
+     * @return corrected node length
+     */
+    private int correctNodeLen(int nodeLen, List<Token> tokens, String newLine) {
+        if (newLine.length() > 1) {
+            for (Token token : tokens) {
+                if (token.getType() == GroovyTokenTypeBridge.NLS) {
+                    nodeLen -= newLine.length() - 1;
+                }
+            }
+        }
+        return nodeLen;
     }
 
     /**
