@@ -1074,7 +1074,52 @@ public class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Search");
     }
 
-    
+    // Closure type inference with @CompileStatic  
+    public void testClosureTypeInference1() throws Exception {
+        String contents =
+                "import groovy.beans.Bindable\n" +
+                "import groovy.transform.CompileStatic\n" +
+                "class A {\n" +
+                "    @Bindable\n" +
+                "    String foo\n" +
+                "    @CompileStatic" +
+                "    static void main(String[] args) {\n" +
+                "        A a = new A()\n" +
+                "        a.foo = 'old'\n" +
+                "        a.addPropertyChangeListener('foo') {\n" +
+                "            println 'foo changed: ' + it.oldValue + ' -> ' + it.newValue\n" +
+                "        }\n" +
+                "        a.foo = 'new'\n" +
+                "    }\n" +
+                "}";
+        
+        int start = contents.lastIndexOf("it");
+        int end = start + "it".length();
+        assertType(contents, start, end, "java.beans.PropertyChangeEvent");
+    }
+
+    // Closure type inference without @CompileStatic
+    public void testClosureTypeInference2() throws Exception {
+        String contents =
+                "import groovy.beans.Bindable\n" +
+                "class A {\n" +
+                "    @Bindable\n" +
+                "    String foo\n" +
+                "    static void main(String[] args) {\n" +
+                "        A a = new A()\n" +
+                "        a.foo = 'old'\n" +
+                "        a.addPropertyChangeListener('foo') {\n" +
+                "            println 'foo changed: ' + it.oldValue + ' -> ' + it.newValue\n" +
+                "        }\n" +
+                "        a.foo = 'new'\n" +
+                "    }\n" +
+                "}";
+        
+        int start = contents.lastIndexOf("it");
+        int end = start + "it".length();
+        assertType(contents, start, end, "java.beans.PropertyChangeEvent");
+    }
+
     // Unknown references should have the declaring type of the enclosing closure
     public void testInScriptDeclaringType() throws Exception {
         String contents = 
