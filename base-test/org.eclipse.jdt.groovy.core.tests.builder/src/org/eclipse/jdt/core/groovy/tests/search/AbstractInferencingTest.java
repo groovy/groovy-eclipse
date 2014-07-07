@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
@@ -390,7 +391,11 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
                     !(visitorNode instanceof MethodNode /* ignore the run() method*/) &&
                     !(visitorNode instanceof Statement /* ignore all statements */) &&
                     !(visitorNode instanceof ClassNode && ((ClassNode) visitorNode).isScript() /* ignore the script */ )) {
-                this.result = visitorResult;
+                if (ClassHelper.isPrimitiveType(visitorResult.type)) {
+                    this.result = new TypeLookupResult(ClassHelper.getWrapper(visitorResult.type), visitorResult.declaringType, visitorResult.declaration, visitorResult.confidence, visitorResult.scope, visitorResult.extraDoc);
+                } else {
+                	this.result = visitorResult;
+                }
                 this.node = visitorNode;
             }
             
