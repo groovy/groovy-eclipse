@@ -221,6 +221,61 @@ public class MethodCompletionTests extends CompletionTestCase {
         proposalExists(proposals, "setValue", 1);
     }
 
+    // GRECLIPSE-1752
+    public void testStatic1() throws Exception {
+        String contents =
+                "class A {\n" +
+                "    public static void util() {}\n" +
+                "    void foo() {\n" +
+                "        A.\n" +
+                "    }\n" +
+                "}";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "A."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "util", 1);
+    }
+
+    public void testStatic2() throws Exception {
+        String contents =
+                "@groovy.transform.CompileStatic\n" +
+                "class A {\n" +
+                "    public static void util() {}\n" +
+                "    void foo() {\n" +
+                "        A.\n" +
+                "    }\n" +
+                "}";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "A."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "util", 1);
+    }
+
+    public void testClass1() throws Exception {
+        String contents =
+                "class A {\n" +
+                "    public static void util() {}\n" +
+                "    void foo() {\n" +
+                "        A.class.\n" +
+                "    }\n" +
+                "}";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "A.class."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "util", 1);
+    }
+
+    public void testClass2() throws Exception {
+        String contents =
+                "@groovy.transform.CompileStatic\n" +
+                "class A {\n" +
+                "    public static void util() {}\n" +
+                "    void foo() {\n" +
+                "        A.class.\n" +
+                "    }\n" +
+                "}";
+        ICompilationUnit unit = create(contents);
+        ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "A.class."), GroovyCompletionProposalComputer.class);
+        proposalExists(proposals, "util", 1);
+    }
+
     private List<MethodNode> delegateTestParameterNames(GroovyCompilationUnit unit) throws Exception {
         // for some reason, need to wait for indices to be built before this can work
         SynchronizationUtils.waitForIndexingToComplete();
