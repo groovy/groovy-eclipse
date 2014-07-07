@@ -1634,7 +1634,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		String associatedMethod = findUnaryOperatorName(operation);
 		ClassNode completeExprType;
 		if (associatedMethod == null && primaryType.equals(VariableScope.NUMBER_CLASS_NODE)
-				|| primaryType.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
+				|| ClassHelper.getWrapper(primaryType).isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
 			completeExprType = primaryType;
 		} else {
 			// there is an overloadable method associated with this operation
