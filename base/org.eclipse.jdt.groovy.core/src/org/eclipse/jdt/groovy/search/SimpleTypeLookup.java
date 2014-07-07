@@ -244,6 +244,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 				return new TypeLookupResult(VariableScope.STRING_CLASS_NODE, null, null, confidence, scope);
 			} else if (ClassHelper.isNumberType(nodeType) || nodeType == ClassHelper.BigDecimal_TYPE
 					|| nodeType == ClassHelper.BigInteger_TYPE) {
+				if (ClassHelper.isPrimitiveType(nodeType)) {
+					return new TypeLookupResult(ClassHelper.getWrapper(nodeType), null, null, confidence, scope);
+				}
 				return new TypeLookupResult(nodeType, null, null, confidence, scope);
 			} else if (nodeType.equals(VariableScope.STRING_CLASS_NODE)) {
 				// likely a proper quoted string constant

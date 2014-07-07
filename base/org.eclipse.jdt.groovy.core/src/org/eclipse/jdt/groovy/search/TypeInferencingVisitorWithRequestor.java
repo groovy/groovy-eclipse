@@ -1060,6 +1060,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			return false;
 		}
 
+		lhs = ClassHelper.getWrapper(lhs);
+
 		switch (text.charAt(0)) {
 			case '+':
 			case '-':
@@ -1632,7 +1634,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		String associatedMethod = findUnaryOperatorName(operation);
 		ClassNode completeExprType;
 		if (associatedMethod == null && primaryType.equals(VariableScope.NUMBER_CLASS_NODE)
-				|| primaryType.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
+				|| ClassHelper.getWrapper(primaryType).isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
 			completeExprType = primaryType;
 		} else {
 			// there is an overloadable method associated with this operation
@@ -2364,7 +2366,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			if (maybeProperty instanceof PropertyExpression) {
 				PropertyExpression prop = (PropertyExpression) maybeProperty;
 				return prop.getObjectExpression() instanceof ClassExpression ||
-						// check to see if in a static scope
+				// check to see if in a static scope
 						(prop.isImplicitThis() && scopes.peek().isStatic());
 			} else if (maybeProperty instanceof MethodCallExpression) {
 				MethodCallExpression prop = (MethodCallExpression) maybeProperty;
