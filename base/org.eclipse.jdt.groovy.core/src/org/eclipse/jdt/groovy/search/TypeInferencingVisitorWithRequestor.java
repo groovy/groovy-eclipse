@@ -13,8 +13,10 @@ package org.eclipse.jdt.groovy.search;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -282,6 +284,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 * Keeps track of the type of the type of the property field corresponding to each frame of the property expression.
 	 */
 	private Stack<ClassNode> dependentTypeStack;
+
+	/**
+	 * Keeps track of closures types.
+	 */
+	private Deque<Map<ClosureExpression, ClassNode>> closureTypes = new LinkedList<Map<ClosureExpression, ClassNode>>();
 
 	private final JDTResolver resolver;
 
@@ -927,7 +934,25 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitArgumentlistExpression(ArgumentListExpression node) {
+		CallAndType callAndType = scopes.peek().getEnclosingMethodCallExpression();
+		boolean closureFound = false;
+		if (callAndType != null && callAndType.declaration instanceof MethodNode) {
+			Map<ClosureExpression, ClassNode> map = new HashMap<ClosureExpression, ClassNode>();
+			MethodNode methodNode = (MethodNode) callAndType.declaration;
+			for (int i = 0; i < node.getExpressions().size(); i++) {
+				if (node.getExpression(i) instanceof ClosureExpression) {
+					map.put((ClosureExpression) node.getExpression(i), methodNode.getParameters()[i].getType());
+					closureFound = true;
+				}
+			}
+			if (closureFound) {
+				closureTypes.push(map);
+			}
+		}
 		visitTupleExpression(node);
+		if (closureFound) {
+			closureTypes.pop();
+		}
 	}
 
 	@Override
@@ -1218,6 +1243,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				if (implicitParamType[0] != VariableScope.OBJECT_CLASS_NODE && !scope.containsInThisScope("it")) {
 					scope.addVariable("it", implicitParamType[0], VariableScope.OBJECT_CLASS_NODE);
 				}
+			if (scope.lookupNameInCurrentScope("it") == null) {
+				inferItType(node, scope);
+			}
 
 			// Delegate is the declaring type of the enclosing call if one exists, or it is 'this'
 			CallAndType cat = scope.getEnclosingMethodCallExpression();
@@ -1322,6 +1350,25 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 		Arrays.fill(allInferred, VariableScope.OBJECT_CLASS_NODE);
 		return allInferred;
+	}
+
+	private void inferItType(ClosureExpression node, VariableScope scope) {
+		ClassNode closureType = closureTypes.peek().get(node);
+		// Try to find single abstract method with single parameter
+		MethodNode method = null;
+		for (MethodNode methodNode : closureType.getMethods()) {
+			if (methodNode.isAbstract() && methodNode.getParameters().length == 1) {
+				if (method != null) {
+					return;
+				} else {
+					method = methodNode;
+				}
+			}
+		}
+		if (method != null) {
+			ClassNode inferredType = method.getParameters()[0].getType();
+			scope.addVariable("it", inferredType, VariableScope.OBJECT_CLASS_NODE);
+		}
 	}
 
 	@Override
