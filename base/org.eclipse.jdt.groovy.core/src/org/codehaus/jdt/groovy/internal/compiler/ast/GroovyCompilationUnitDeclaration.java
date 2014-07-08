@@ -185,6 +185,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			try {
 				Thread.currentThread().setContextClassLoader(groovyCompilationUnit.getTransformLoader());
 				groovyCompilationUnit.compile(phase);
+				if (phase == Phases.FINALIZATION) {
+					for (Object o : groovyCompilationUnit.getAST().getClasses()) {
+						ClassNode classNode = (ClassNode) o;
+						new GroovyTypeInferenceHelperVisitor(groovySourceUnit, classNode).visitClass(classNode);
+					}
+				}
 			} finally {
 				Thread.currentThread().setContextClassLoader(cl);
 			}
