@@ -49,6 +49,7 @@
  *								Bug 392245 - [1.8][compiler][null] Define whether / how @NonNullByDefault applies to TYPE_USE locations
  *								Bug 390889 - [1.8][compiler] Evaluate options to support 1.7- projects against 1.8 JRE.
  *								Bug 430150 - [1.8][null] stricter checking against type variables
+ *								Bug 434600 - Incorrect null analysis error reporting on type parameters
  *      Jesper S Moller <jesper@selskabet.org> -  Contributions for
  *								bug 382701 - [1.8][compiler] Implement semantic analysis of Lambda expressions & Reference expression
  *								bug 382721 - [1.8][compiler] Effectively final variables needs special treatment
@@ -9192,7 +9193,8 @@ public void nullityMismatch(Expression expression, TypeBinding providedType, Typ
 }
 public void nullityMismatchIsNull(Expression expression, TypeBinding requiredType) {
 	int problemId = IProblem.RequiredNonNullButProvidedNull;
-	if (requiredType.isTypeVariable() && !requiredType.hasNullTypeAnnotations())
+	boolean below18 = this.options.sourceLevel < ClassFileConstants.JDK1_8;
+	if (!below18 && requiredType.isTypeVariable() && !requiredType.hasNullTypeAnnotations())
 		problemId = IProblem.NullNotCompatibleToFreeTypeVariable;
 	if (requiredType instanceof CaptureBinding) {
 		CaptureBinding capture = (CaptureBinding) requiredType;
@@ -9201,7 +9203,7 @@ public void nullityMismatchIsNull(Expression expression, TypeBinding requiredTyp
 	}
 	String[] arguments;
 	String[] argumentsShort;
-	if (this.options.sourceLevel < ClassFileConstants.JDK1_8) {
+	if (below18) {
 		arguments      = new String[] { annotatedTypeName(requiredType, this.options.nonNullAnnotationName) };
 		argumentsShort = new String[] { shortAnnotatedTypeName(requiredType, this.options.nonNullAnnotationName) };
 	} else {
@@ -9788,16 +9790,12 @@ public void nullityMismatchingTypeAnnotation(Expression expression, TypeBinding 
 }
 
 public void nullityMismatchTypeArgument(TypeBinding typeVariable, TypeBinding typeArgument, ASTNode location) {
-	long tagBits = typeVariable.tagBits & TagBits.AnnotationNullMASK;
-	char[][] annotationName = tagBits == TagBits.AnnotationNonNull ? this.options.nonNullAnnotationName : this.options.nullableAnnotationName;
 	String[] arguments = {
-		String.valueOf(typeVariable.readableName()),
-		String.valueOf(CharOperation.concatWith(annotationName, '.')),
+		String.valueOf(typeVariable.nullAnnotatedReadableName(this.options, false)),
 		String.valueOf(typeArgument.nullAnnotatedReadableName(this.options, false))
 	};
 	String[] shortArguments = {
-		String.valueOf(typeVariable.shortReadableName()),
-		String.valueOf(annotationName[annotationName.length-1]),
+		String.valueOf(typeVariable.nullAnnotatedReadableName(this.options, true)),
 		String.valueOf(typeArgument.nullAnnotatedReadableName(this.options, true))
 	};
 	this.handle(

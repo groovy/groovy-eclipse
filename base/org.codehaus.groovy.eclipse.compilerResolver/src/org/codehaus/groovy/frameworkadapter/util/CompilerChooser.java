@@ -82,6 +82,10 @@ public class CompilerChooser {
         System.out.println("Starting Groovy-Eclipse compiler resolver.  Specified compiler level: " + specifiedVersion.toReadableVersionString());
                 
         Bundle[] bundles = Platform.getBundles(GROOVY_PLUGIN_ID, null);
+        
+        //Print debug infos about the bundles, to debug screwy behavior
+        //dump(bundles);
+
 
         if (bundles == null || bundles.length == 0) {
             System.out.println("No Groovy bundles found...this will cause some problems.");
@@ -105,7 +109,9 @@ public class CompilerChooser {
             }
             
             // if activeIndex == 0, then there's nothing to do since specified bundle is already first
-            if (found && activeIndex > 0) {
+            // WRONG on e4.4 it looks like osgi remember which bundle was activated last time and will
+            // use that one again, rather than automatically use latest available version.
+            if (found /*&& activeIndex > 0*/) {
                 for (int i = 0; i < bundles.length; i++) {
                     if (i != activeIndex) {
                         Bundle bundle = bundles[i];
@@ -136,7 +142,36 @@ public class CompilerChooser {
                 allSpecifiedVersions[i] = SpecifiedVersion.findVersion(bundle.getVersion());
             }            
         }
+        //Print debug infos about the bundles, to debug screwy behavior
+        //dump(bundles);
     }
+
+//	private void dump(Bundle[] bundles) {
+//		for (int i = 0; i < bundles.length; i++) {
+//			Bundle b = bundles[i];
+//			System.out.println(b.getBundleId() + " "+b.getVersion()+" = "+stateString(b.getState()));
+//		}
+//	}
+    
+//	private static String stateString(int state) {
+//		switch (state) {
+//		case Bundle.ACTIVE:
+//			return "ACTIVE";
+//		case Bundle.UNINSTALLED:
+//			return "UNINSTALLED";
+//		case Bundle.INSTALLED:
+//			return "INSTALLED";
+//		case Bundle.RESOLVED:
+//			return "RESOLVED";
+//		case Bundle.STARTING:
+//			return "STARTING";
+//		case Bundle.STOPPING:
+//			return "STOPPING";
+//		default:
+//			return "UNKOWN("+state+")";
+//		}
+//	}
+    
     
     /**
      * Finds the compiler version that is specified in the system properties

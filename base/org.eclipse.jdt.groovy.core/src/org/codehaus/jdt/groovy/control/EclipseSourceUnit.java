@@ -22,7 +22,7 @@ import org.eclipse.core.resources.IFile;
 /**
  * Eclipse specific subclass of SourceUnit, attaches extra information to a SourceUnit that is specific to compilation in an Eclipse
  * context.
- * 
+ *
  * @author Kris De Volder
  * @since 2.5.2
  */
@@ -49,6 +49,11 @@ public class EclipseSourceUnit extends SourceUnit {
 	public void convert() throws CompilationFailedException {
 		super.convert();
 		super.cst = null;
+	}
+
+	@Override
+	public String toString() {
+		return "EclipseSourceUnit(" + name + ")";
 	}
 
 }

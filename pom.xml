@@ -14,11 +14,15 @@
 		in a properties file. The properties file must be specified via env variable 
 		'dist_properties'. The existence of this env variable enables the deployment 
 		profile automatically and will allow the 'deploy' to execute. -->
-		
-	<!-- Example commands to build and deploy a milestone or a release
-	     mvn clean deploy -Pe43j8 -Pmilestone
-	     mvn clean deploy -Pe43j8 -Prelease
-	   -->	
+
+	<!-- Example commands to build and deploy a milestone or a release 
+	    mvn clean deploy -Pe43j8 -Pmilestone 
+	    mvn clean deploy -Pe43j8 -Prelease 
+	    
+	    Before building a release also check the definition of the release profile
+	    in this pom. It may need some minor edits such as the deploy location
+	    and version number.
+	    -->
 
 	<properties>
 		<tycho-version>0.19.0</tycho-version>
@@ -40,24 +44,23 @@
 		<dist.name>Groovy Eclipse</dist.name>
 		<dist.key>GRECLIPSE</dist.key>
 		<dist.type>snapshot</dist.type>
-		<dist.qualifier></dist.qualifier> <!-- appended to the end of p2 qualifier, used to add stuff like 'M1', 'RELEASE' etc. -->
+		<dist.qualifier></dist.qualifier> <!-- appended to the end of p2 qualifier, used to add stuff like 'M1', 'RELEASE' 
+			etc. -->
 		<dist.path>${dist.type}/${dist.key}/${dist.target}</dist.path>
-		
-		<!-- signing properties:
-		   Note these properties here are only 'documentation'. The real values are
-		   furnished by the 'bamboo-signing' profile. When not running on bamboo,
-		   singing is disabled by default
-		  -->
+
+		<!-- signing properties: Note these properties here are only 'documentation'. 
+			The real values are furnished by the 'bamboo-signing' profile. When not running 
+			on bamboo, singing is disabled by default -->
 		<signing.skip>true</signing.skip>
 		<signing.alias>vmware</signing.alias>
 		<signing.keystore></signing.keystore>
 		<signing.store.password></signing.store.password>
 		<signing.key.password></signing.key.password>
-		
+
 	</properties>
 
 	<modules>
-	
+
 		<!-- SDK and test bits -->
 
 		<module>ide-test</module> <!-- parent pom for all the ide-test modules -->
@@ -108,10 +111,10 @@
 		<module>ide/org.codehaus.groovy.eclipse.ui</module>
 
 		<!-- m2e integration -->
-		
+
 		<module>extras/Feature-org.codehaus.groovy.m2eclipse</module>
 		<module>extras/org.codehaus.groovy.m2eclipse</module>
-		
+
 		<!-- update site -->
 		<module>Site-org.codehaus.groovy.eclipse</module>
 
@@ -120,26 +123,22 @@
 	</modules>
 
 	<profiles>
-	    <profile>
-	       <id>e44</id>
+		<profile>
+			<id>e44</id>
 			<repositories>
 				<repository>
 					<id>e44M</id>
 					<layout>p2</layout>
 					<url>http://download.eclipse.org/eclipse/updates/4.4milestones</url>
 				</repository>
-<!-- 			<repository>
-					<id>kepler</id>
-					<layout>p2</layout>
-					<url>http://download.eclipse.org/releases/luna</url>
-				</repository>
-				 -->
-				<!-- luna simul release update site doesn't exist yet. Add individual sites. When 4.4 is 
-					released. Replace with luna site -->
+				<!-- <repository> <id>kepler</id> <layout>p2</layout> <url>http://download.eclipse.org/releases/luna</url> 
+					</repository> -->
+				<!-- luna simul release update site doesn't exist yet. Add individual 
+					sites. When 4.4 is released. Replace with luna site -->
 				<repository>
-				   <id>m2e</id>
-				   <layout>p2</layout>
-				   <url>http://download.eclipse.org/technology/m2e/milestones/1.5</url>
+					<id>m2e</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/technology/m2e/milestones/1.5</url>
 				</repository>
 			</repositories>
 			<modules>
@@ -150,8 +149,8 @@
 				<dist.target>e4.4</dist.target>
 				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e44${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
-	    </profile>
-	
+		</profile>
+
 		<profile>
 			<id>e43j8</id>
 			<repositories>
@@ -180,7 +179,7 @@
 				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e43j8${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
-		
+
 		<profile>
 			<id>e43</id>
 			<repositories>
@@ -287,11 +286,9 @@
 				</plugins>
 			</build>
 		</profile>
-		
-		<!-- 
-		  profile to sign jars. Enabled automatically on bamboo when detecting 
-		  'bamboo_signing_key_password' env variable is defined 
-		  -->
+
+		<!-- profile to sign jars. Enabled automatically on bamboo when detecting 
+			'bamboo_signing_key_password' env variable is defined -->
 		<profile>
 			<activation>
 				<property>
@@ -308,7 +305,8 @@
 			</properties>
 		</profile>
 
-		<!-- snaphshot builds are the default. Enable one of the profiles below to do a milestone or release build -->		
+		<!-- snaphshot builds are the default. Enable one of the profiles below 
+			to do a milestone or release build -->
 		<profile>
 			<id>milestone</id>
 			<properties>
@@ -319,7 +317,10 @@
 			<id>release</id>
 			<properties>
 				<dist.type>release</dist.type>
+				<dist.version>2.9.0</dist.version>
 				<dist.qualifier>-RELEASE</dist.qualifier>
+				<!-- use the below for 'practice' builds, comment out to do the 'real' build -->
+				<dist.path>${dist.type}/${dist.key}/${dist.version}/${dist.target}</dist.path>
 			</properties>
 		</profile>
 	</profiles>
@@ -328,7 +329,7 @@
 		<repository>
 			<id>orbit</id>
 			<layout>p2</layout>
-			<url>http://download.eclipse.org/tools/orbit/downloads/drops/R20120526062928/repository/</url>
+			<url>http://download.eclipse.org/tools/orbit/downloads/drops/R20140525021250/repository/</url>
 		</repository>
 
 		<!-- required for Maven and Ant AWS dependency -->
@@ -458,8 +459,9 @@
 						</goals>
 						<configuration>
 							<excludes>
-								<plugin id="org.codehaus.groovy.eclipse"/>
-								<!-- Stuff below is related to j8 patch. Can't find source for these patched bits. -->
+								<plugin id="org.codehaus.groovy.eclipse" />
+								<!-- Stuff below is related to j8 patch. Can't find source for these 
+									patched bits. -->
 								<plugin id="org.eclipse.jdt.apt.core" />
 								<plugin id="org.eclipse.jdt.apt.ui" />
 								<plugin id="org.eclipse.jdt.apt.pluggable.core" />
@@ -492,8 +494,8 @@
 					</execution>
 				</executions>
 			</plugin>
-    
-    	
+
+
 		</plugins>
 	</build>
 </project>

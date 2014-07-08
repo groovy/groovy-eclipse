@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
@@ -51,7 +52,7 @@ public class FindFieldPointcut extends FilteringPointcut<FieldNode> {
             }
             return fields;
         } else if (toMatch instanceof ClassNode) {
-            return ((ClassNode) toMatch).getFields();
+        	return ClassHelper.getWrapper((ClassNode) toMatch).getFields();
         } else if (toMatch instanceof FieldNode) {
             return Collections.singleton((FieldNode) toMatch);
         }

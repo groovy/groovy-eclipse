@@ -157,7 +157,7 @@
 		<fileset dir="${git.repo.loc}/base/org.eclipse.jdt.groovy.core/bin" id="jdt.groovy.core.class.files">
 			<include name="**/*.*" />
 		</fileset>
-		<fileset dir="${git.repo.loc}/jdt-patch/e43j8/org.eclipse.jdt.core/bin" id="jdt.core.class.files">
+		<fileset dir="${git.repo.loc}/jdt-patch/e44/org.eclipse.jdt.core/bin" id="jdt.core.class.files">
 			<include name="**/*.*" />
 		</fileset>
 		<!-- Ensure that this comes after the core groocy compiler files because the groovy-eclipse.jar must overwrite the groovy jar -->

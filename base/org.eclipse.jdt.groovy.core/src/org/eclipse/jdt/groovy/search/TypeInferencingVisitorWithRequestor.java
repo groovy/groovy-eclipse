@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.groovy.search;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -1059,6 +1060,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			return false;
 		}
 
+		lhs = ClassHelper.getWrapper(lhs);
+
 		switch (text.charAt(0)) {
 			case '+':
 			case '-':
@@ -1631,7 +1634,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		String associatedMethod = findUnaryOperatorName(operation);
 		ClassNode completeExprType;
 		if (associatedMethod == null && primaryType.equals(VariableScope.NUMBER_CLASS_NODE)
-				|| primaryType.isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
+				|| ClassHelper.getWrapper(primaryType).isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
 			completeExprType = primaryType;
 		} else {
 			// there is an overloadable method associated with this operation
@@ -1868,7 +1871,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				primaryType = null;
 			}
 			isStatic = hasStaticObjectExpression(node);
-			scope.setMethodCallNumberOfArguments(getMethodCallArgs());
+			scope.setMethodCallArgumentTypes(getMethodCallArgs());
 		} else {
 			primaryType = null;
 			isStatic = false;
@@ -1927,7 +1930,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 *
 	 * @return
 	 */
-	private int getMethodCallArgs() {
+	private int getMethodCallArgsCount() {
 		ASTNode peek = completeExpressionStack.peek();
 		if (peek instanceof MethodCallExpression) {
 			MethodCallExpression call = (MethodCallExpression) peek;
@@ -1941,6 +1944,32 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			}
 		}
 		return -1;
+	}
+
+	/**
+	 * Finds argument types of the current method call. Returns null if not a method call.
+	 *
+	 * @return
+	 */
+	private List<ClassNode> getMethodCallArgs() {
+		ASTNode peek = completeExpressionStack.peek();
+		if (peek instanceof MethodCallExpression) {
+			MethodCallExpression call = (MethodCallExpression) peek;
+			Expression arguments = call.getArguments();
+			if (arguments instanceof ArgumentListExpression) {
+				ArgumentListExpression list = (ArgumentListExpression) arguments;
+				List<Expression> expressions = list.getExpressions();
+				List<ClassNode> types = new ArrayList<ClassNode>();
+				for (Expression expression : expressions) {
+					types.add(expression.getType());
+				}
+				return types;
+			} else {
+				// TODO Might be useful also to look into TupleExpressions like in ArgumentListExpressions
+				return new ArrayList<ClassNode>();
+			}
+		}
+		return null;
 	}
 
 	private boolean handleParameterList(Parameter[] params) {
@@ -1996,8 +2025,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		result.enclosingAssignment = enclosingAssignment;
 		VisitStatus status = requestor.acceptASTNode(node, result, enclosingElement);
 		VariableScope scope = scopes.peek();
-		// forget the number of arguments
-		scope.setMethodCallNumberOfArguments(-1);
+		// forget the argument types
+		scope.setMethodCallArgumentTypes(null);
 
 		// when there is a category method, we don't want to store it
 		// as the declaring type since this will mess things up inside closures
@@ -2337,7 +2366,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			if (maybeProperty instanceof PropertyExpression) {
 				PropertyExpression prop = (PropertyExpression) maybeProperty;
 				return prop.getObjectExpression() instanceof ClassExpression ||
-						// check to see if in a static scope
+				// check to see if in a static scope
 						(prop.isImplicitThis() && scopes.peek().isStatic());
 			} else if (maybeProperty instanceof MethodCallExpression) {
 				MethodCallExpression prop = (MethodCallExpression) maybeProperty;

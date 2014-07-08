@@ -22,6 +22,7 @@
  *								Bug 429384 - [1.8][null] implement conformance rules for null-annotated lower / upper type bounds
  *								Bug 431269 - [1.8][compiler][null] StackOverflow in nullAnnotatedReadableName
  *								Bug 431408 - Java 8 (1.8) generics bug
+ *								Bug 435962 - [RC2] StackOverFlowError when building
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -483,6 +484,18 @@ public class TypeVariableBinding extends ReferenceBinding {
 
 	// to prevent infinite recursion when inspecting recursive generics:
 	boolean inRecursiveFunction = false;
+	
+	@Override
+	public boolean enterRecursiveFunction() {
+		if (this.inRecursiveFunction)
+			return false;
+		this.inRecursiveFunction = true;
+		return true;
+	}
+	@Override
+	public void exitRecursiveFunction() {
+		this.inRecursiveFunction = false;
+	}
 	
 	public boolean isProperType(boolean admitCapture18) {
 		// handle recursive calls:

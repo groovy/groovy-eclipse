@@ -94,7 +94,7 @@
 										<echo> metadata release.type=${dist.type}</echo>
 										<echo> metadata bundle.version=${dist.full.version}</echo>
 										<echo> metadata package.file.name=${dist.file.name}</echo>
-
+										
  										<s3 accessKey="${accessKey}" secretKey="${secretKey}">
 
 											<delete bucketName="${dist.bucket}">
@@ -125,6 +125,7 @@
 											</upload>
 
 										</s3>
+										
 									</target>
 								</configuration>
 								<goals>

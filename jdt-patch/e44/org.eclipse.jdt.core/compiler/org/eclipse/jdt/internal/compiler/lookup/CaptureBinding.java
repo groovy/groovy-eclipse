@@ -10,6 +10,7 @@
  *     Stephan Herrmann - Contribution for
  *								Bug 400874 - [1.8][compiler] Inference infrastructure should evolve to meet JLS8 18.x (Part G of JSR335 spec)
  *								Bug 429384 - [1.8][null] implement conformance rules for null-annotated lower / upper type bounds
+ *								Bug 434044 - Java 8 generics thinks single method is ambiguous
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -189,8 +190,14 @@ public class CaptureBinding extends TypeVariableBinding {
 					} else {
 						int length = substitutedVariableInterfaces.length;
 						System.arraycopy(substitutedVariableInterfaces, 0, substitutedVariableInterfaces = new ReferenceBinding[length+1], 1, length);
-						substitutedVariableInterfaces[0] =  (ReferenceBinding) capturedWildcardBound;
-						this.setSuperInterfaces(Scope.greaterLowerBound(substitutedVariableInterfaces));
+						// to properly support glb, perform capture *after* glb, so restart from the original bound:
+						substitutedVariableInterfaces[0] =  (ReferenceBinding) originalWildcardBound;
+						ReferenceBinding[] glb = Scope.greaterLowerBound(substitutedVariableInterfaces);
+						if (glb != null) {
+							for (int i = 0; i < glb.length; i++)
+								glb[i] = (ReferenceBinding) glb[i].capture(scope, this.position);
+						}
+						this.setSuperInterfaces(glb);
 					}
 				} else {
 					// the wildcard bound should be a subtype of variable superclass

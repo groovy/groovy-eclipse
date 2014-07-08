@@ -52,6 +52,9 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
 
     final char[] contents;
 
+    private boolean insideSlashy;
+    private boolean insideDollarSlashy;
+
     public SemanticHighlightingReferenceRequestor(char[] contents) {
         this.contents = contents;
     }
@@ -96,9 +99,30 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                 pos = new HighlightedTypedPosition(p, HighlightKind.METHOD);
             }
         } else if (node instanceof ConstantExpression && node.getStart() < contents.length) {
-            if (contents[node.getStart()] == '/') {
+            if (insideSlashy) {
                 Position p = getPosition(node);
                 pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
+                if (contents[node.getEnd() - 1] == '/') {
+                    insideSlashy = false;
+                }
+            } else if (insideDollarSlashy) {
+                Position p = getPosition(node);
+                pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
+                if (contents[node.getEnd() - 2] == '/' && contents[node.getEnd() - 1] == '$') {
+                    insideDollarSlashy = false;
+                }
+            } else if (contents[node.getStart()] == '/') {
+                Position p = getPosition(node);
+                pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
+                if (contents[node.getEnd() - 1] != '/') {
+                    insideSlashy = true;
+                }
+            } else if (contents[node.getStart()] == '$' && contents[node.getStart() + 1] == '/') {
+                Position p = getPosition(node);
+                pos = new HighlightedTypedPosition(p, HighlightKind.REGEX);
+                if (contents[node.getEnd() - 2] != '/' || contents[node.getEnd() - 1] != '$') {
+                    insideDollarSlashy = true;
+                }
             } else if (isNumber(((ConstantExpression) node).getType())) {
                 Position p = getPosition(node);
                 pos = new HighlightedTypedPosition(p, HighlightKind.NUMBER);
@@ -135,5 +159,4 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
 
         return true;
     }
-
 }

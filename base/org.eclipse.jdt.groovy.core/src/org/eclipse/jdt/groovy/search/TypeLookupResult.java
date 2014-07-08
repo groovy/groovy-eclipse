@@ -17,7 +17,6 @@
 package org.eclipse.jdt.groovy.search;
 
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 
@@ -118,7 +117,8 @@ public class TypeLookupResult {
 	public TypeLookupResult(ClassNode type, ClassNode declaringType, ASTNode declaration, TypeConfidence confidence,
 			VariableScope scope, String extraDoc) {
 		this.confidence = confidence;
-		this.type = ClassHelper.isPrimitiveType(type) ? ClassHelper.getWrapper(type) : type;
+		// this.type = ClassHelper.isPrimitiveType(type) ? ClassHelper.getWrapper(type) : type;
+		this.type = type;
 		this.declaringType = declaringType;
 		this.declaration = declaration;
 		this.scope = scope;

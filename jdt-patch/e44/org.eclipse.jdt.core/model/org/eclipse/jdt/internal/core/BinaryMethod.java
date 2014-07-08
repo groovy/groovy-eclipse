@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Terry Parker <tparker@google.com> - Bug 418092
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
@@ -28,6 +29,7 @@ import org.eclipse.jdt.internal.compiler.env.IBinaryMethod;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
+import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerProjectInfo;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -275,6 +277,9 @@ public String[] getParameterNames() throws JavaModelException {
 		if (declaringType.isMember()
 				&& !Flags.isStatic(declaringType.getFlags())) {
 			paramCount--; // remove synthetic argument from constructor param count
+		} else if (declaringType.isEnum()) {
+			if (paramCount >= 2) // https://bugs.eclipse.org/bugs/show_bug.cgi?id=436347
+				paramCount -= 2;
 		}
 	}
 
@@ -353,7 +358,13 @@ public String[] getParameterNames() throws JavaModelException {
 			}
 		}
 		if (methodDoc != null) {
-			final int indexOfOpenParen = methodDoc.indexOf('(');
+			int indexOfOpenParen = methodDoc.indexOf('(');
+			// Annotations may have parameters, so make sure we are parsing the actual method parameters.
+			if (info.getAnnotations() != null) {
+				while (indexOfOpenParen != -1 && !isOpenParenForMethod(methodDoc, getElementName(), indexOfOpenParen)) {
+					indexOfOpenParen = methodDoc.indexOf('(', indexOfOpenParen + 1);
+				}
+			}
 			if (indexOfOpenParen != -1) {
 				final int indexOfClosingParen = methodDoc.indexOf(')', indexOfOpenParen);
 				if (indexOfClosingParen != -1) {
@@ -390,6 +401,33 @@ public String[] getParameterNames() throws JavaModelException {
 	}
 	// If still no parameter names, produce fake ones, but don't cache them (https://bugs.eclipse.org/bugs/show_bug.cgi?id=329671)
 	return getRawParameterNames(paramCount);
+}
+private boolean isOpenParenForMethod(String javaDoc, String methodName, int index) {
+	/*
+	 * Annotations can have parameters associated with them, so we need to validate that this parameter list is
+	 * actually for the method. Determine this by scanning backwards from where the paren was seen, skipping over
+	 * HTML tags to find the identifier that precedes the paren, and then matching that identifier against the
+	 * method's name.
+	 */
+	boolean scanningTag = false;
+	int endIndex = 0;
+	while (--index > methodName.length()) {
+		char previousChar = javaDoc.charAt(index);
+		if (endIndex > 0) {
+			if (!ScannerHelper.isJavaIdentifierPart(previousChar)
+					|| !ScannerHelper.isJavaIdentifierStart(previousChar))
+				return methodName.equals(javaDoc.substring(index + 1, endIndex));
+		} else if (!scanningTag) {
+			if (previousChar == '>')
+				scanningTag = true;
+			else if (ScannerHelper.isJavaIdentifierPart(previousChar)
+					|| ScannerHelper.isJavaIdentifierStart(previousChar))
+				endIndex = index + 1;
+		} else if (previousChar == '<')
+			// We are only matching angle brackets here, without any other validation of the tags.
+			scanningTag = false;
+	}
+	return false;
 }
 private char[][] splitParameters(char[] parametersSource, int paramCount) {
 	// we have generic types as one of the parameter types

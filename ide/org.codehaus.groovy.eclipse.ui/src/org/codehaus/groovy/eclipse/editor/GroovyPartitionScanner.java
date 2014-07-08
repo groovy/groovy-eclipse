@@ -152,11 +152,6 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
         rules.add(new SingleLineRule("\"", "\"", sString, '\\'));
         rules.add(new SingleLineRule("'", "'", sString, '\\'));
 
-        // GRECLIPSE-1203 make dollar slashies optionally highlighted
-        if (store.getBoolean(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_SLASHY_STRINGS)) {
-            rules.add(new MultiLineRule("$/", "/$", mString, '\0', false));
-        }
-
         // Add special case word rule.
         rules.add(new WordPredicateRule(comment));
 

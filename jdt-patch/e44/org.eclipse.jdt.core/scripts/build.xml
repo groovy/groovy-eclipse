@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Copyright (c) 2007, 2012 IBM Corporation and others.
+    Copyright (c) 2007, 2014 IBM Corporation and others.
     All rights reserved. This program and the accompanying materials
     are made available under the terms of the Eclipse Public License v1.0
     which accompanies this distribution, and is available at
@@ -21,21 +21,9 @@
 		<mkdir dir="${output}" />
 
 		<javac srcdir="${basedir}" destdir="${output}"
-				debuglevel="lines,source"
-				source="1.3"
-				target="1.2"
-			excludes="org/eclipse/jdt/internal/compiler/tool/*,**/apt/**">
-			<compilerarg line="-Xlint:none"/>
-		</javac>
-
-		<javac destdir="${output}"
-				debuglevel="lines,source"
-				source="1.6"
-				target="1.6"
-				includes="org/eclipse/jdt/internal/compiler/tool/*">
-			<src path="${basedir}"/>
-			<include name="org/eclipse/jdt/internal/compiler/tool/*"/>
-			<include name="**/apt/**"/>
+					debuglevel="lines,source"
+					source="1.6"
+					target="1.6">
 			<compilerarg line="-Xlint:none"/>
 		</javac>
 
@@ -45,6 +33,7 @@
 			<fileset dir="${output}" />
 			<fileset dir="${basedir}">
 				<include name="about.html"/>
+				<include name="ecj.1"/>
 				<include name="**/*.rsc"/>
 				<include name="**/readableNames.props"/>
 				<include name="META-INF/**"/>

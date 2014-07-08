@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,7 @@
  *     Stephan Herrmann - Contributions for
  *								bug 186342 - [compiler][null] Using annotations for null checking
  *								bug 365519 - editorial cleanup after bug 186342 and bug 365387
+ *								Bug 434570 - Generic type mismatch for parametrized class annotation attribute with inner class
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -58,7 +59,7 @@ public class MemberValuePair extends ASTNode {
 		return output;
 	}
 
-	public void resolveTypeExpecting(BlockScope scope, TypeBinding requiredType) {
+	public void resolveTypeExpecting(final BlockScope scope, final TypeBinding requiredType) {
 
 		if (this.value == null) {
 			this.compilerElementPair = new ElementValuePair(this.name, this.value, this.binding);
@@ -76,7 +77,7 @@ public class MemberValuePair extends ASTNode {
 		}
 
 		this.value.setExpectedType(requiredType); // needed in case of generic method invocation - looks suspect, generic method invocation here ???
-		TypeBinding valueType;
+		final TypeBinding valueType;
 		if (this.value instanceof ArrayInitializer) {
 			ArrayInitializer initializer = (ArrayInitializer) this.value;
 			valueType = initializer.resolveTypeExpecting(scope, this.binding.returnType);
@@ -101,25 +102,38 @@ public class MemberValuePair extends ASTNode {
 		if (valueType == null)
 			return;
 
-		TypeBinding leafType = requiredType.leafComponentType();
-		if (!(this.value.isConstantValueOfTypeAssignableToType(valueType, requiredType)
-				|| valueType.isCompatibleWith(requiredType))) {
-
-			if (!(requiredType.isArrayType()
-					&& requiredType.dimensions() == 1
-					&& (this.value.isConstantValueOfTypeAssignableToType(valueType, leafType)
-							|| valueType.isCompatibleWith(leafType)))) {
-
-				if (leafType.isAnnotationType() && !valueType.isAnnotationType()) {
-					scope.problemReporter().annotationValueMustBeAnnotation(this.binding.declaringClass, this.name, this.value, leafType);
+		final TypeBinding leafType = requiredType.leafComponentType();
+		// the next check may need deferring:
+		final boolean[] shouldExit = new boolean[1];
+		Runnable check = new Runnable() {
+			@Override
+			public void run() {
+				if (!(MemberValuePair.this.value.isConstantValueOfTypeAssignableToType(valueType, requiredType)
+						|| valueType.isCompatibleWith(requiredType))) {
+					if (!(requiredType.isArrayType()
+							&& requiredType.dimensions() == 1
+							&& (MemberValuePair.this.value.isConstantValueOfTypeAssignableToType(valueType, leafType)
+									|| valueType.isCompatibleWith(leafType)))) {
+						
+						if (leafType.isAnnotationType() && !valueType.isAnnotationType()) {
+							scope.problemReporter().annotationValueMustBeAnnotation(MemberValuePair.this.binding.declaringClass,
+									MemberValuePair.this.name, MemberValuePair.this.value, leafType);
+						} else {
+							scope.problemReporter().typeMismatchError(valueType, requiredType, MemberValuePair.this.value, null);
+						}
+						shouldExit[0] = true; // TODO may allow to proceed to find more errors at once
+					}
 				} else {
-					scope.problemReporter().typeMismatchError(valueType, requiredType, this.value, null);
+					scope.compilationUnitScope().recordTypeConversion(requiredType.leafComponentType(), valueType.leafComponentType());
+					MemberValuePair.this.value.computeConversion(scope, requiredType, valueType);
 				}
-				return; // may allow to proceed to find more errors at once
 			}
-		} else {
-			scope.compilationUnitScope().recordTypeConversion(requiredType.leafComponentType(), valueType.leafComponentType());
-			this.value.computeConversion(scope, requiredType, valueType);
+		};
+		// ... now or later?
+		if (!scope.deferCheck(check)) {
+			check.run();
+			if (shouldExit[0])
+				return;
 		}
 
 		// annotation methods can only return base types, String, Class, enum type, annotation types and arrays of these

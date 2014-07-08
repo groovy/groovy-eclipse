@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import groovy.transform.Immutable;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -18,7 +20,9 @@ import java.util.Map;
 
 import junit.framework.Test;
 
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -159,6 +163,36 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
     			"}\n",
     			"Greetable.groovy",
     			"trait Greetable {\n"+
+    			"    abstract String name()\n"+                              
+    			"    String greeting() { \"Hello, ${name()}!\" }\n"+
+    			"}\n",
+    	},"Hello, Bob!");
+        GroovyCompilationUnitDeclaration unit = getCUDeclFor("Greetable.groovy");
+        ClassNode classNode = unit.getCompilationUnit().getClassNode("Greetable");
+        assertTrue(classNode.isInterface());
+    }
+    
+    // GRECLIPSE-1727 Tests for traits
+    public void testTraits1a() {
+    	if (GroovyUtils.GROOVY_LEVEL < 23) {
+    		return;
+    	}
+    	this.runConformTest(new String[] {
+    			"Test.groovy",
+    			"class Person implements Greetable {\n"+
+    			"    String name() { 'Bob' }\n"+
+    			"}\n"+
+    			"\n"+
+    			"public class Test {\n"+
+    			"  public static void main(String[] argv) {\n"+
+    			"    def p = new Person()\n"+
+    			"    print p.greeting()\n"+
+    			"  }\n"+
+    			"}\n",
+    			"Greetable.groovy",
+    			"import groovy.transform.Trait;\n"+
+    			"@Trait\n"+
+    			"class Greetable {\n"+
     			"    abstract String name()\n"+                              
     			"    String greeting() { \"Hello, ${name()}!\" }\n"+
     			"}\n",
@@ -931,6 +965,356 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "	^\n" + 
                 "Groovy:Prefix expressions on trait fields/properties are not supported in traits. @ line 7, column 9.\n" + 
                 "----------\n");
+    }
+
+    // Test @Trait annotation
+    public void testTraits37() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "@groovy.transform.Trait\n" +
+                "class MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MyClass implements MyTrait {\n" +
+                "}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()"
+        }, "a");
+    }
+
+    // Test @Trait annotation
+    public void testTraits38() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "import groovy.transform.Trait\n" +
+                "@Trait\n" +
+                "class MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MyClass implements MyTrait {\n" +
+                "}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()"
+        }, "a");
+    }
+
+    // Test @Trait annotation
+    public void testTraits39() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "import groovy.transform.*\n" +
+                "@Trait\n" +
+                "class MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MyClass implements MyTrait {\n" +
+                "}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()"
+        }, "a");
+    }
+
+    // Negative test for @Trait annotation
+    public void testTraits40() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runNegativeTest(new String[] {
+                "Sample.groovy",
+                "@interface Trait{}\n" +
+                "@Trait\n" +
+                "class MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MyClass implements MyTrait {\n" +
+                "}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()"},
+                "----------\n" + 
+                "1. ERROR in Sample.groovy (at line 6)\n" + 
+                "	class MyClass implements MyTrait {\n" + 
+                "	      ^^^^^^^\n" + 
+                "Groovy:You are not allowed to implement the class 'MyTrait', use extends instead.\n" + 
+                "----------\n" + 
+                "2. ERROR in Sample.groovy (at line 6)\n" + 
+                "	class MyClass implements MyTrait {\n" + 
+                "	                         ^^^^^^^^\n" + 
+                "The type MyTrait cannot be a superinterface of MyClass; a superinterface must be an interface\n" + 
+                "----------\n");
+    }
+
+    // Negative test for @Trait annotation
+    public void testTraits41() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runNegativeTest(new String[] {
+                "Trait.groovy",
+                "package a\n" +
+                "@interface Trait {}\n",
+                "Sample.groovy",
+                "package b\n" +
+                "import a.Trait\n" +
+                "@Trait\n" +
+                "class MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MyClass implements MyTrait {\n" +
+                "}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()"},
+                "----------\n" + 
+                "1. ERROR in Sample.groovy (at line 7)\n" + 
+                "	class MyClass implements MyTrait {\n" + 
+                "	      ^^^^^^^\n" + 
+                "Groovy:You are not allowed to implement the class 'b.MyTrait', use extends instead.\n" + 
+                "----------\n" + 
+                "2. ERROR in Sample.groovy (at line 7)\n" + 
+                "	class MyClass implements MyTrait {\n" + 
+                "	                         ^^^^^^^^\n" + 
+                "The type MyTrait cannot be a superinterface of MyClass; a superinterface must be an interface\n" + 
+                "----------\n");
+    }
+
+    // Negative test for @Trait annotation
+    public void testTraits42() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runNegativeTest(new String[] {
+                "Trait.groovy",
+                "package a\n" +
+                "@interface Trait {}\n",
+                "Sample.groovy",
+                "package b\n" +
+                "@a.Trait\n" +
+                "class MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MyClass implements MyTrait {\n" +
+                "}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()"},
+                "----------\n" + 
+                "1. ERROR in Sample.groovy (at line 6)\n" + 
+                "	class MyClass implements MyTrait {\n" + 
+                "	      ^^^^^^^\n" + 
+                "Groovy:You are not allowed to implement the class 'b.MyTrait', use extends instead.\n" + 
+                "----------\n" + 
+                "2. ERROR in Sample.groovy (at line 6)\n" + 
+                "	class MyClass implements MyTrait {\n" + 
+                "	                         ^^^^^^^^\n" + 
+                "The type MyTrait cannot be a superinterface of MyClass; a superinterface must be an interface\n" + 
+                "----------\n");
+    }
+
+    // Negative test for @Trait annotation
+    public void testTraits43() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runNegativeTest(new String[] {
+                "Trait.groovy",
+                "package a\n" +
+                "@interface Trait {}\n",
+                "Sample.groovy",
+                "package b\n" +
+                "import a.Trait\n" +
+                "import groovy.transform.*\n" +
+                "@Trait\n" +
+                "class MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MyClass implements MyTrait {\n" +
+                "}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()"},
+                "----------\n" + 
+                "1. ERROR in Sample.groovy (at line 8)\n" + 
+                "	class MyClass implements MyTrait {\n" + 
+                "	      ^^^^^^^\n" + 
+                "Groovy:You are not allowed to implement the class 'b.MyTrait', use extends instead.\n" + 
+                "----------\n" + 
+                "2. ERROR in Sample.groovy (at line 8)\n" + 
+                "	class MyClass implements MyTrait {\n" + 
+                "	                         ^^^^^^^^\n" + 
+                "The type MyTrait cannot be a superinterface of MyClass; a superinterface must be an interface\n" + 
+                "----------\n");
+    }
+
+    // Test protected method of superclass overriding by trait method - default package
+    public void testTraits44() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MySuperClass {\n" +
+                "    protected def m() { 'b' }\n" +
+                "}\n" +
+                "class MyClass extends MySuperClass implements MyTrait {}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()\n"
+        }, "a");
+    }
+
+    // Test protected method of superclass overriding by trait method - the same package
+    public void testTraits45() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "def myClass = new a.MyClass()\n" +
+                "print myClass.m()\n",
+
+                "Stuff.groovy",
+                "package a\n" +
+                "trait MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MySuperClass {\n" +
+                "    protected def m() { 'b' }\n" +
+                "}\n" +
+                "class MyClass extends MySuperClass implements MyTrait {}\n"
+        }, "a");
+    }
+
+    // Test protected method of superclass overriding by trait method - different packages
+    public void testTraits46() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "def myClass = new c.MyClass()\n" +
+                "print myClass.m()\n",
+
+                "MyTrait.groovy",
+                "package a\n" +
+                "trait MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n",
+
+                "MySuperClass.groovy",
+                "package b\n" +
+                "class MySuperClass {\n" +
+                "    protected def m() { 'b' }\n" +
+                "}\n",
+
+                "MyClass.groovy",
+                "package c\n" +
+                "class MyClass extends b.MySuperClass implements a.MyTrait {}\n",
+        }, "a");
+    }
+
+    // Test protected method of superclass overriding by trait method - different packages
+    public void testTraits47() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "def myClass = new c.MyClass()\n" +
+                "print myClass.m()\n",
+
+                "MyTrait.groovy",
+                "package a\n" +
+                "trait MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n",
+
+                "MySuperClass.groovy",
+                "package b\n" +
+                "class MySuperClass {\n" +
+                "    protected def m() { 'b' }\n" +
+                "}\n",
+
+                "MyClass.groovy",
+                "package c\n" +
+                "import a.MyTrait\n" +
+                "import b.MySuperClass\n" +
+                "class MyClass extends MySuperClass implements MyTrait {}\n",
+        }, "a");
+    }
+
+    // Test protected method of superclass and traits method overriding by class
+    public void testTraits48() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait MyTrait {\n" +
+                "    def m() { 'a' }\n" +
+                "}\n" +
+                "class MySuperClass {\n" +
+                "    protected def m() { 'b' }\n" +
+                "}\n" +
+                "class MyClass extends MySuperClass implements MyTrait {\n" +
+                "    def m() { 'c' }\n" +
+                "}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()\n"
+        }, "c");
+    }
+
+    // Test protected method of superclass and traits method overriding by class - negative test
+    public void testTraits49() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runNegativeTest(new String[] {
+                "Sample.groovy",
+                "trait MyTrait {\n" +
+                "    abstract def m()\n" +
+                "}\n" +
+                "class MySuperClass {\n" +
+                "    protected def m() { 'b' }\n" +
+                "}\n" +
+                "class MyClass extends MySuperClass implements MyTrait {}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()\n"},
+
+                "----------\n" +
+                "1. ERROR in Sample.groovy (at line 7)\n" +
+                "	class MyClass extends MySuperClass implements MyTrait {}\n" +
+                "	      ^^^^^^^\n" +
+                "The inherited method MySuperClass.m() cannot hide the public abstract method in MyTrait\n" +
+                "----------\n");
+    }
+
+    // Test protected method of superclass and traits method overriding by class - positive test
+    public void testTraits50() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait MyTrait {\n" +
+                "    abstract def m()\n" +
+                "}\n" +
+                "class MySuperClass {\n" +
+                "    protected def m() { 'b' }\n" +
+                "}\n" +
+                "class MyClass extends MySuperClass implements MyTrait {\n" +
+                "    def m() { 'c' }\n" +
+                "}\n" +
+                "def myClass = new MyClass()\n" +
+                "print myClass.m()\n"
+        }, "c");
     }
     // GRECLIPSE-1727 End of traits tests
 
@@ -3888,6 +4272,8 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 				"class GImpl extends Impl {}"
 		},"");
 	}
+	
+	
 
 	// If GroovyFoo is processed *before* FooBase then the MethodVerifier15 
 	// hasn't had a chance to run on FooBase and create the synthetic bridge method
@@ -4651,8 +5037,7 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
 		},"");		
 	}
-	
-	
+
 	// when GROOVY-5861 is fixed we can uncomment these 2 tests:
 //	public void testGenericsAndGroovyJava_GRE278_3a() {
 //		this.runConformTest(new String[] {			
@@ -10947,7 +11332,41 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 				"}\n",
 		}, "@a.SampleAnnotation()");		 
 	}
-	
+
+	public void testImmutable_1723() {
+		this.runConformTest(new String[] {
+				"c/Main.java",
+				"package c;\n" +
+				"public class Main {\n" +
+				"    public static void main(String[] args) {" +
+				"    }\n" +
+				"}\n",
+
+				"a/SomeId.groovy",
+				"package a;\n" +
+				"import groovy.transform.Immutable\n" +
+				"@Immutable\n" +
+				"class SomeId {\n" +
+				"    UUID id\n" +
+				"}\n",
+
+				"b/SomeValueObject.groovy",
+				"package b;\n" +
+				"import groovy.transform.Immutable\n" +
+				"import a.SomeId\n" +
+				"@Immutable\n" +
+				"class SomeValueObject {\n" +
+				"    SomeId id\n" +
+				"}\n",
+		}, "");		 
+		GroovyCompilationUnitDeclaration unit = getCUDeclFor("SomeValueObject.groovy");
+		ClassNode classNode = unit.getCompilationUnit().getClassNode("b.SomeValueObject");
+		FieldNode field = classNode.getField("id");
+		ClassNode type = field.getType();
+		List annotations = type.getAnnotations(ClassHelper.make(Immutable.class));
+		assertEquals(1, annotations.size());
+	}
+
 	public void testStaticImports2_GtoJ() {
 		this.runConformTest(new String[] {
 			"p/Run.java",

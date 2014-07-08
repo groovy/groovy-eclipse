@@ -16,6 +16,8 @@
  *								Bug 417295 - [1.8[[null] Massage type annotated null analysis to gel well with deep encoded type bindings.
  *								Bug 427163 - [1.8][null] bogus error "Contradictory null specification" on varags
  *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
+ *								Bug 434570 - Generic type mismatch for parametrized class annotation attribute with inner class
+ *								Bug 434600 - Incorrect null analysis error reporting on type parameters
  *        Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
  *                          Bug 383624 - [1.8][compiler] Revive code generation support for type annotations (from Olivier's work)
  *                          Bug 409236 - [1.8][compiler] Type annotations on intersection cast types dropped by code generator
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
+import org.eclipse.jdt.internal.compiler.ast.NullAnnotationMatching.CheckMode;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.AnnotationContext;
 import org.eclipse.jdt.internal.compiler.codegen.AnnotationTargetTypeConstants;
@@ -632,7 +635,8 @@ protected void resolveAnnotations(Scope scope, int location) {
 			}
 		}
 	}
-	if (this.resolvedType != null
+	if (scope.compilerOptions().isAnnotationBasedNullAnalysisEnabled
+			&& this.resolvedType != null
 			&& (this.resolvedType.tagBits & TagBits.AnnotationNullMASK) == 0
 			&& !this.resolvedType.isTypeVariable()
 			&& !this.resolvedType.isWildcard()
@@ -665,10 +669,10 @@ protected void checkNullConstraints(Scope scope, TypeReference[] typeArguments) 
 /** Check whether this type reference conforms to all null constraints defined for any of the given type variables. */
 protected void checkNullConstraints(Scope scope, TypeBinding[] variables, int rank) {
 	if (variables != null && variables.length > rank) {
-		if (variables[rank].hasNullTypeAnnotations()) {
-			if (NullAnnotationMatching.validNullTagBits(this.resolvedType.tagBits) != NullAnnotationMatching.validNullTagBits(variables[rank].tagBits)) {
-				scope.problemReporter().nullityMismatchTypeArgument(variables[rank], this.resolvedType, this);
-			}
+		TypeBinding variable = variables[rank];
+		if (variable.hasNullTypeAnnotations()) {
+			if (NullAnnotationMatching.analyse(variable, this.resolvedType, null, -1, CheckMode.BOUND_CHECK).isAnyMismatch())
+				scope.problemReporter().nullityMismatchTypeArgument(variable, this.resolvedType, this);
     	}
 	}
 }

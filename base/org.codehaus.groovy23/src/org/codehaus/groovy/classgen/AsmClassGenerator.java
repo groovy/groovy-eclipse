@@ -18,12 +18,13 @@ package org.codehaus.groovy.classgen;
 
 import groovy.lang.GroovyRuntimeException;
 import groovyjarjarasm.asm.ClassVisitor;
+import groovyjarjarasm.asm.AnnotationVisitor;
 import groovyjarjarasm.asm.FieldVisitor;
 import groovyjarjarasm.asm.Label;
 import groovyjarjarasm.asm.MethodVisitor;
 import groovyjarjarasm.asm.Opcodes;
 import groovyjarjarasm.asm.Type;
-import groovyjarjarasm.asm.AnnotationVisitor;
+import groovyjarjarasm.asm.*;
 
 
 import org.codehaus.groovy.GroovyBugError;
@@ -173,13 +174,6 @@ public class AsmClassGenerator extends ClassGenerator {
                 visitAnnotations(classNode, cv);
             }
 
-            // GROOVY-6750: Make sure the inner class table is called first
-            for (Iterator<InnerClassNode> iter = classNode.getInnerClasses(); iter.hasNext();) {
-                InnerClassNode innerClass = iter.next();
-                makeInnerClassEntry(innerClass);
-            }
-            makeInnerClassEntry(classNode);
-
             if (classNode.isInterface()) {
                 ClassNode owner = classNode;
                 if (owner instanceof InnerClassNode) {
@@ -200,6 +194,13 @@ public class AsmClassGenerator extends ClassGenerator {
                 controller.getCallSiteWriter().generateCallSiteArray();
                 createSyntheticStaticFields();
             }
+
+            // GROOVY-6750 and GROOVY-6808
+            for (Iterator<InnerClassNode> iter = classNode.getInnerClasses(); iter.hasNext();) {
+                InnerClassNode innerClass = iter.next();
+                makeInnerClassEntry(innerClass);
+            }
+            makeInnerClassEntry(classNode);
 
             cv.visitEnd();
         } catch (GroovyRuntimeException e) {
@@ -868,6 +869,17 @@ public class AsmClassGenerator extends ClassGenerator {
             // A.B and this.this$0.this$0 return A.
             ClassNode type = objectExpression.getType();
             ClassNode iterType = classNode;
+            if (controller.getCompileStack().isInSpecialConstructorCall() && classNode instanceof InnerClassNode) {
+                boolean staticInnerClass = classNode.isStaticClass();
+                // Outer.this in a special constructor call
+                if (classNode.getOuterClass().equals(type)) {
+                    ConstructorNode ctor = controller.getConstructorNode();
+                    Expression receiver = !staticInnerClass ? new VariableExpression(ctor.getParameters()[0]) : new ClassExpression(type);
+                    receiver.setSourcePosition(expression);
+                    receiver.visit(this);
+                    return;
+                }
+            }
             mv.visitVarInsn(ALOAD, 0);
             while (!iterType.equals(type)) {
                 String ownerName = BytecodeHelper.getClassInternalName(iterType);
@@ -1158,10 +1170,6 @@ public class AsmClassGenerator extends ClassGenerator {
         ClassNode icl =  controller.getInterfaceClassLoadingClass();
 
         if (referencedClasses.isEmpty()) {
-        	//GRECLIPSE-1167
-        	// this patch obsolete now. Code just below //end does the same!
-        	// controller.getClassNode().forgetInnerClass(controller.getInterfaceClassLoadingClass());
-        	//end
             Iterator<InnerClassNode> it = controller.getClassNode().getInnerClasses();
             while(it.hasNext()) {
                 InnerClassNode inner = it.next();

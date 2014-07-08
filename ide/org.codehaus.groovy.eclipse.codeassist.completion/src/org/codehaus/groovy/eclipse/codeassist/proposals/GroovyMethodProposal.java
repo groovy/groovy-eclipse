@@ -306,26 +306,8 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
                         parameterTypeSignatures[i] = ProposalUtils.createUnresolvedTypeSignatureStr(params[i].getType());
                     }
                 }
-                IMethod jdtMethod = null;
-
-                // try to find the precise method
-                IMethod maybeMethod = declaringType.getMethod(method.getName(),
-                        parameterTypeSignatures);
-                if (maybeMethod != null && maybeMethod.exists()) {
-                    jdtMethod = maybeMethod;
-                } else {
-                    // try something else and be a little more lenient
-                    // look for any methods with the same name and number of
-                    // arguments
-                    IMethod[] methods = declaringType.getMethods();
-                    for (IMethod maybeMethod2 : methods) {
-                        if (maybeMethod2.getElementName().equals(
-                                method.getName())
-                                && maybeMethod2.getNumberOfParameters() == numParams) {
-                            jdtMethod = maybeMethod2;
-                        }
-                    }
-                }
+             // try to find the precise method
+                IMethod jdtMethod = findPreciseMethod(declaringType, parameterTypeSignatures);
 
                 // method was found somehow...use it.
                 if (jdtMethod != null) {
@@ -341,6 +323,60 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
             GroovyCore.logException("Exception while looking for parameter types of " + method.getName(), e);
         }
         return null;
+    }
+
+    /**
+     * Finds a method with the same name and parameter types
+     *
+     * @param declaringType
+     * @param parameterTypeSignatures
+     * @return
+     * @throws JavaModelException
+     */
+    private IMethod findPreciseMethod(IType declaringType, String[] parameterTypeSignatures) throws JavaModelException {
+        IMethod closestMatch = declaringType.getMethod(method.getName(), parameterTypeSignatures);
+        if (closestMatch != null && closestMatch.exists()) {
+            return closestMatch;
+        } else {
+            // try something else and be a little more lenient
+            // look for any methods with the same name and argument types
+            // (ignoring generic types)
+            IMethod[] methods = declaringType.getMethods();
+            closestMatch = null;
+            // prefer retrieving the method with the same arg types as
+            // specified in the parameter.
+            methodsIteration: for (IMethod maybeMethod : methods) {
+                if (maybeMethod.getElementName().equals(method.getName())) {
+                    String[] maybeMethodParameters = maybeMethod.getParameterTypes();
+                    assert maybeMethodParameters != null;
+                    if (maybeMethodParameters.length == parameterTypeSignatures.length) {
+                        closestMatch = maybeMethod;
+                        for (int i = 0; i < maybeMethodParameters.length; i++) {
+                            String maybeMethodParameterName = removeGenerics(maybeMethodParameters[i]);
+                            if (!parameterTypeSignatures[i].equals(maybeMethodParameterName)) {
+                                continue methodsIteration;
+                            }
+                        }
+                        return closestMatch;
+                    }
+                }
+            }
+        }
+        return closestMatch;
+    }
+
+    /**
+     * @param maybeMethodParameterName
+     * @return parameter signature without generics signature
+     */
+    private String removeGenerics(String maybeMethodParameterName) {
+        int genericStart = maybeMethodParameterName.indexOf("<");
+        if (genericStart > 0) {
+            maybeMethodParameterName = maybeMethodParameterName.substring(0, genericStart)
+                    + maybeMethodParameterName.substring(maybeMethodParameterName.indexOf(">") + 1,
+                            maybeMethodParameterName.length());
+        }
+        return maybeMethodParameterName;
     }
 
     private char[][] getSpecialParameterNames(Parameter[] params) {

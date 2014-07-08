@@ -17,7 +17,6 @@ package org.codehaus.groovy.classgen.asm;
 
 import groovy.lang.GroovyRuntimeException;
 
-
 import java.lang.reflect.Constructor;
 import java.util.Map;
 
@@ -52,7 +51,7 @@ public class WriterController {
             indyWriter = null;
             indyCallSiteWriter = null;
             indyBinHelper = null;
-        }        
+        }
     }
     private AsmClassGenerator acg;
     private MethodVisitor methodVisitor;
@@ -78,7 +77,7 @@ public class WriterController {
     private StatementWriter statementWriter;
     private boolean fastPath = false;
     private TypeChooser typeChooser;
-    private int bytecodeVersion = Opcodes.V1_5; 
+    private int bytecodeVersion = Opcodes.V1_5;
     private int lineNumber = -1;
 
     public void init(AsmClassGenerator asmClassGenerator, GeneratorContext gcon, ClassVisitor cv, ClassNode cn) {
@@ -99,7 +98,7 @@ public class WriterController {
         this.classNode = cn;
         this.outermostClass = null;
         this.internalClassName = BytecodeHelper.getClassInternalName(classNode);
-        
+
         bytecodeVersion = chooseBytecodeVersion(invokedynamic, config.getTargetBytecode());
 
         if (invokedynamic) {
@@ -112,19 +111,20 @@ public class WriterController {
             }
         } else {
             this.callSiteWriter = new CallSiteWriter(this);
-        	this.invocationWriter = new InvocationWriter(this);
+            this.invocationWriter = new InvocationWriter(this);
             this.binaryExpHelper = new BinaryExpressionHelper(this);
         }
-
+        
         this.unaryExpressionHelper = new UnaryExpressionHelper(this);
         if (optimizeForInt) {
-            this.fastPathBinaryExpHelper = new BinaryExpressionMultiTypeDispatcher(this);            
+            this.fastPathBinaryExpHelper = new BinaryExpressionMultiTypeDispatcher(this);
             // todo: replace with a real fast path unary expression helper when available
             this.fastPathUnaryExpressionHelper = new UnaryExpressionHelper(this);
         } else {
             this.fastPathBinaryExpHelper = this.binaryExpHelper;
             this.fastPathUnaryExpressionHelper = new UnaryExpressionHelper(this);
         }
+
         this.operandStack = new OperandStack(this);
         this.assertionWriter = new AssertionWriter(this);
         this.closureWriter = new ClosureWriter(this);
@@ -148,8 +148,10 @@ public class WriterController {
     }
 
     private static int chooseBytecodeVersion(final boolean invokedynamic, final String targetBytecode) {
-        // todo: support JDK 1.8 when ASM5 is out
         if (invokedynamic) {
+            if (CompilerConfiguration.JDK8.equals(targetBytecode)) {
+                return Opcodes.V1_8;
+            }
             return Opcodes.V1_7;
         } else {
             if (CompilerConfiguration.JDK4.equals(targetBytecode)) {
@@ -163,6 +165,9 @@ public class WriterController {
             }
             if (CompilerConfiguration.JDK7.equals(targetBytecode)) {
                 return Opcodes.V1_7;
+            }
+            if (CompilerConfiguration.JDK8.equals(targetBytecode)) {
+                return Opcodes.V1_8;
             }
         }
         throw new GroovyBugError("Bytecode version ["+targetBytecode+"] is not supported by the compiler");
