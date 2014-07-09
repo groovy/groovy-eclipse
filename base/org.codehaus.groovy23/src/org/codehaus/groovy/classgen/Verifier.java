@@ -1379,13 +1379,19 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         return newMethod;
     }
 
-    private boolean isAssignable(ClassNode node, ClassNode testNode) {
+   private boolean isAssignable(ClassNode node, ClassNode testNode) {
+        if (node.isArray() && testNode.isArray()) {
+            return isArrayAssignable(node.getComponentType(), testNode.getComponentType());
+        }
         if (testNode.isInterface()) {
             if (node.equals(testNode) || node.implementsInterface(testNode)) return true;
-        } else {
-            if (node.isDerivedFrom(testNode)) return true;
         }
-        return false;
+        return node.isDerivedFrom(testNode);
+    }
+
+    private boolean isArrayAssignable(ClassNode node, ClassNode testNode) {
+        if (node.isArray() && testNode.isArray()) { return isArrayAssignable(node.getComponentType(), testNode.getComponentType()); }
+        return node.equals(testNode);
     }
 
     private Parameter[] cleanParameters(Parameter[] parameters) {
