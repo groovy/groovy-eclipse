@@ -355,7 +355,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			type = typeFromDeclaration(declaration, declaringType);
 			realDeclaringType = declaringTypeFromDeclaration(declaration, declaringType);
 		} else if (isPrimaryExpression &&
-		// make everything from the scopes available
+				// make everything from the scopes available
 				(varInfo = scope.lookupName(name)) != null) {
 
 			// now try to find the declaration again
@@ -625,13 +625,39 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		if (checkSuperInterfaces && declaringType.isInterface()) {
 			LinkedHashSet<ClassNode> allInterfaces = new LinkedHashSet<ClassNode>();
 			VariableScope.findAllInterfaces(declaringType, allInterfaces, true);
-			for (ClassNode interf : allInterfaces) {
-				AnnotatedNode candidate = findMethodDeclaration(name, interf, methodCallArgumentTypes, false);
-				if (candidate != null) {
-					return candidate;
+			AnnotatedNode candidate = null;
+			interfacesSearch: for (ClassNode interf : allInterfaces) {
+				candidate = findMethodDeclaration(name, interf, methodCallArgumentTypes, false);
+
+				// Figuring out if we should try to find more precise match or stop here
+
+				if (candidate != null && methodCallArgumentTypes != null) {
+					Parameter[] candidateParameters = ((MethodNode) candidate).getParameters();
+					if (methodCallArgumentTypes.size() == 0 && candidateParameters.length == 0) {
+						return candidate;
+					} else if (methodCallArgumentTypes.size() == candidateParameters.length) {
+						boolean exactMatchFound = true;
+						for (int i = 0; i < candidateParameters.length; i++) {
+							if (!methodCallArgumentTypes.get(i).equals(candidateParameters[i].getType())) {
+								exactMatchFound = false;
+							}
+							if (candidateParameters[i].getType().isInterface()) {
+								if (!methodCallArgumentTypes.get(i).declaresInterface(candidateParameters[i].getType())) {
+									continue interfacesSearch;
+								}
+							} else {
+								if (!methodCallArgumentTypes.get(i).isDerivedFrom(candidateParameters[i].getType())) {
+									continue interfacesSearch;
+								}
+							}
+						}
+						if (exactMatchFound) {
+							return candidate;
+						}
+					}
 				}
 			}
-			return null;
+			return candidate;
 		}
 
 		List<MethodNode> maybeMethods = declaringType.getMethods(name);
