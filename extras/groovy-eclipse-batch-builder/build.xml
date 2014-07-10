@@ -12,7 +12,7 @@
 
 <!--
 	To use this scrupt:
-	  1) Make sure that you have an eclipse 4.2 installation available.
+	  1) Make sure that you have an eclipse 4.4 installation available.
 	  2) Clone Groovy-Eclipse from git and start up a workspace with all of these projects
 	  3) Update build.properties to point to the appropriate locations
 	  4) Comment/uncomment do-17-build, do-18-build, or  do-20-build (exactly one of these must be uncommented at once)
@@ -94,7 +94,7 @@
 		</copy>
 
 		<!-- now unzip the jdt compiler adapter jar.  It is a jar within a jar -->
-		<unzip dest="${extract.loc}" src="${git.repo.loc}/jdt-patch/e43/org.eclipse.jdt.core/jdtCompilerAdapter.jar" />
+		<unzip dest="${extract.loc}" src="${git.repo.loc}/jdt-patch/e44/org.eclipse.jdt.core/jdtCompilerAdapter.jar" />
 
 	</target>
 	
