@@ -356,6 +356,13 @@ public class StatementAndExpressionCompletionProcessor extends
                 completionType = context.containingDeclaration instanceof ClassNode ? (ClassNode) context.containingDeclaration
                         : context.unit.getModuleNode().getScriptClassDummy();
             }
+            if (context.completionNode instanceof ClassExpression) {
+                if ("java.lang.Class".equals(completionType.getName())) {
+                    // Add proposals for static members
+                    ClassNode type = ((ClassExpression) context.completionNode).getType();
+                    proposalCreatorLoop(context, requestor, type, isStatic, groovyProposals, creators, false);
+                }
+            }
             proposalCreatorLoop(context, requestor, completionType, isStatic, groovyProposals, creators, false);
             if (ContentAssistLocation.STATEMENT == context.location) {
                 ClassNode closureThis = requestor.currentScope.getThis();
