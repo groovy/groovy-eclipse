@@ -627,32 +627,37 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			VariableScope.findAllInterfaces(declaringType, allInterfaces, true);
 			AnnotatedNode candidate = null;
 			interfacesSearch: for (ClassNode interf : allInterfaces) {
-				candidate = findMethodDeclaration(name, interf, methodCallArgumentTypes, false);
+				AnnotatedNode methodDeclaration = findMethodDeclaration(name, interf, methodCallArgumentTypes, false);
+
+				if (candidate == null) {
+					candidate = methodDeclaration;
+				}
 
 				// Figuring out if we should try to find more precise match or stop here
 
 				if (candidate != null && methodCallArgumentTypes != null) {
-					Parameter[] candidateParameters = ((MethodNode) candidate).getParameters();
-					if (methodCallArgumentTypes.size() == 0 && candidateParameters.length == 0) {
+					Parameter[] methodParameters = ((MethodNode) methodDeclaration).getParameters();
+					if (methodCallArgumentTypes.size() == 0 && methodParameters.length == 0) {
 						return candidate;
-					} else if (methodCallArgumentTypes.size() == candidateParameters.length) {
+					} else if (methodCallArgumentTypes.size() == methodParameters.length) {
+						candidate = methodDeclaration;
 						boolean exactMatchFound = true;
-						for (int i = 0; i < candidateParameters.length; i++) {
-							if (!methodCallArgumentTypes.get(i).equals(candidateParameters[i].getType())) {
+						for (int i = 0; i < methodParameters.length; i++) {
+							if (!methodCallArgumentTypes.get(i).equals(methodParameters[i].getType())) {
 								exactMatchFound = false;
 							}
-							if (candidateParameters[i].getType().isInterface()) {
-								if (!methodCallArgumentTypes.get(i).declaresInterface(candidateParameters[i].getType())) {
+							if (methodParameters[i].getType().isInterface()) {
+								if (!methodCallArgumentTypes.get(i).declaresInterface(methodParameters[i].getType())) {
 									continue interfacesSearch;
 								}
 							} else {
-								if (!methodCallArgumentTypes.get(i).isDerivedFrom(candidateParameters[i].getType())) {
+								if (!methodCallArgumentTypes.get(i).isDerivedFrom(methodParameters[i].getType())) {
 									continue interfacesSearch;
 								}
 							}
 						}
 						if (exactMatchFound) {
-							return candidate;
+							return methodDeclaration;
 						}
 					}
 				}
