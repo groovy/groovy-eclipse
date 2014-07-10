@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.groovy.search;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -81,8 +82,10 @@ import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
+import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.syntax.Types;
+import org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
@@ -1643,8 +1646,31 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		if (node.isSpreadSafe()) {
 			exprType = createParameterizedList(exprType);
 		}
+		// Check if it is generic method
+		if (t.declaration instanceof MethodNode) {
+			MethodNode methodNode = (MethodNode) t.declaration;
+			boolean generic = methodNode.getReturnType().isGenericsPlaceHolder();
+			GenericsType[] genericsTypes = methodNode.getGenericsTypes();
+			if (generic && genericsTypes != null && genericsTypes.length > 0) {
+				exprType = inferGenericMethodType(methodNode, node.getArguments());
+			}
+		}
 		handleCompleteExpression(node, exprType, t.declaringType);
 		scopes.peek().forgetCurrentNode();
+	}
+
+	private ClassNode inferGenericMethodType(final MethodNode methodNode, Expression arguments) {
+		// Actually helper is not used as visitor. It is just reuses method inference implemented in the visitor.
+		class Helper extends StaticTypeCheckingVisitor {
+			public Helper() {
+				super(new SourceUnit(new File("."), new CompilerConfiguration(), null, null), methodNode.getDeclaringClass());
+			}
+
+			public ClassNode inferMethodType(ClassNode receiver, MethodNode method, Expression arguments) {
+				return inferReturnTypeGenerics(receiver, method, arguments);
+			}
+		}
+		return new Helper().inferMethodType(methodNode.getDeclaringClass(), methodNode, arguments);
 	}
 
 	@Override
