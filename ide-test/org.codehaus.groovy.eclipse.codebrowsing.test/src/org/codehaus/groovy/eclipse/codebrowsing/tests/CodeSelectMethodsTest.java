@@ -11,6 +11,8 @@
 
 package org.codehaus.groovy.eclipse.codebrowsing.tests;
 
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceMethod;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaElement;
@@ -179,6 +181,41 @@ public class CodeSelectMethodsTest extends BrowsingTestCase {
         IJavaElement[] elt = unit.codeSelect(contents2.lastIndexOf("redirect"), "redirect".length());
         assertEquals("Should have found a selection", 1, elt.length);
         assertEquals("Should have found method 'redirect'", "redirect", elt[0].getElementName());
+    }
+
+    // GRECLIPSE-1755
+    public void testCodeSelectMethodInSuperInterface() throws Exception {
+        IPath projectPath = createGenericProject();
+        IPath root = projectPath.append("src");
+
+        String contents = "interface SuperInterface {\n" + "def foo(String string);\n" + "}\n";
+        env.addGroovyClass(root, "", "Hello", contents);
+
+        String contents2 = "interface SubInterface extends SuperInterface {\n" + "def foo(String string, int integer);\n" + "}";
+        env.addGroovyClass(root, "", "Hello2", contents2);
+
+        String contents3 = "class Foo implements SubInterface{\n" + "def foo(String string) {}\n"
+                + "def foo(String string, int integer) {}\n" + "}";
+        env.addGroovyClass(root, "", "Hello3", contents3);
+
+        String contents4 = "class Bar {\n" + "def main() {\n" + "def bar = new Foo();\n"
+                + "((SubInterface) bar).foo(\"string\");\n"
+                + "}}";
+        env.addGroovyClass(root, "", "Hello4", contents4);
+
+        incrementalBuild();
+        env.waitForAutoBuild();
+        expectingNoProblems();
+
+        GroovyCompilationUnit unit = getGroovyCompilationUnit(root, "Hello4.groovy");
+        unit.becomeWorkingCopy(null);
+        assertTrue("Hello4 groovy unit should exist", unit.exists());
+        IJavaElement[] elt = unit.codeSelect(contents4.lastIndexOf("foo"), "foo".length());
+        assertEquals("Should have found a selection", 1, elt.length);
+        assertEquals("Should have found method 'foo'", "foo", elt[0].getElementName());
+        assertEquals("Declaring type is expected to be 'SuperInterface", "SuperInterface",
+                ((MethodNode) ((GroovyResolvedSourceMethod) elt[0]).getInferredElement()).getDeclaringClass()
+                        .getNameWithoutPackage());
     }
 
     public void testCodeSelectMethodInScriptFromScript() throws Exception {

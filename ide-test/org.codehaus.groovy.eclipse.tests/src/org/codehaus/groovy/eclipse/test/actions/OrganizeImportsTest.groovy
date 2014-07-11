@@ -202,7 +202,7 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 		
         def expectedImports = ["p2.GroovyBar"]
 		contents = """
-			import p1.Foo
+			import p1.Foo${LINE_SEPARATOR}
 			class Boo extends Foo<GroovyBar> {
             }
 			"""

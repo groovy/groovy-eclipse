@@ -42,7 +42,7 @@ public class GroovyJDTTests {
         // ensure that the compiler chooser starts up
     	GroovyTestSuiteSupport.initializeCompilerChooser();
         
-        TestSuite suite = new TestSuite("Groovy JDT Tests");
+        TestSuite suite = new TestSuite(GroovyJDTTests.class.getName());
         
         suite.addTestSuite(SanityTest.class);
 

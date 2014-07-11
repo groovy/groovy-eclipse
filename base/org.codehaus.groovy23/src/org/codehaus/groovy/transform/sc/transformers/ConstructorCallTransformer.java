@@ -27,7 +27,8 @@ import groovyjarjarasm.asm.MethodVisitor;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.util.List;
-import static org.codehaus.groovy.transform.stc.StaticTypesMarker.*;
+
+import static org.codehaus.groovy.transform.stc.StaticTypesMarker.DIRECT_METHOD_CALL_TARGET;
 
 public class ConstructorCallTransformer {
     private final StaticCompilationTransformer staticCompilationTransformer;
