@@ -20,7 +20,7 @@ import org.codehaus.groovy.control.messages.SimpleMessage;
 /**
  * A subtype of the Groovy ErrorCollector that can be made more JDT friendly (not throwing exceptions when errors occur and doing
  * nicer mapping from errors to JDT problems). Still much to be done with this.
- * 
+ *
  * @author Andy Clement
  */
 public class GroovyErrorCollectorForJDT extends ErrorCollector {
@@ -31,7 +31,7 @@ public class GroovyErrorCollectorForJDT extends ErrorCollector {
 
 	@Override
 	public void addErrorAndContinue(Message message) {
-		System.err.println(message);
+		// System.err.println(message);
 		// FIXASC SimpleMessage can be an error, it just isn't a syntax error - should be recorded with appropriate priority.
 		// Look at creators of SimpleMessage - are they all errors?
 		if (message instanceof SimpleMessage) {
