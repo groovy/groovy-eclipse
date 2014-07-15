@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2003-2014 the original author or authors.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -17,11 +17,9 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
-import org.eclipse.jdt.internal.core.JavaModelManager;
 
 /**
  * 
@@ -32,21 +30,6 @@ public class AbstractGroovyTypeRootTests extends BuilderTests {
 
     public AbstractGroovyTypeRootTests(String name) {
         super(name);
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        // discard all working copies in case a previous test has
-        // failed
-        ICompilationUnit[] workingCopies = JavaModelManager.getJavaModelManager().getWorkingCopies(null, true);
-        if (workingCopies != null) {
-    	    for (ICompilationUnit workingCopy : workingCopies) {
-                while (workingCopy.isWorkingCopy()) {
-                    workingCopy.discardWorkingCopy();
-                }
-            }
-        }
-        super.tearDown();
     }
 
     protected IFile getFile(String path) {
@@ -77,6 +60,7 @@ public class AbstractGroovyTypeRootTests extends BuilderTests {
                 "}\n"
                 );
         }
+        fullBuild(projectPath);
         
         IFile groovyFile = getFile("Project/src/p1/Hello.groovy");
     	return groovyFile;

@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2011 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
+ * Copyright (c) 2009, 2014 SpringSource and others.
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     Andrew Eisenberg - initial API and implementation
  *******************************************************************************/
@@ -33,9 +33,9 @@ import org.eclipse.jdt.internal.core.util.Util;
 /**
  * @author Andrew Eisenberg
  * @created Jun 11, 2009
- * 
+ *
  *          This class stores module nodes for groovy compilation units This class is not meant to be accessed externally.
- * 
+ *
  *          One module node is stored per working copy of a unit
  */
 public class ModuleNodeMapper {
@@ -128,7 +128,7 @@ public class ModuleNodeMapper {
 
 	/**
 	 * Cache the module node if this is a working copy
-	 * 
+	 *
 	 * @param perWorkingCopyInfo
 	 * @param compilationUnitDeclaration
 	 */
@@ -168,6 +168,10 @@ public class ModuleNodeMapper {
 
 	public static boolean isEmpty() {
 		return INSTANCE.infoToModuleMap.isEmpty();
+	}
+
+	public static int size() {
+		return INSTANCE.infoToModuleMap.size();
 	}
 
 	// GRECLIPSE-804 check to see that the stored nodes are correct

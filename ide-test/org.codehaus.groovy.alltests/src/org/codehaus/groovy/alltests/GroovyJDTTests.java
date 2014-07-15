@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
+ * Copyright (c) 2009-2014 SpringSource and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,7 +14,6 @@ package org.codehaus.groovy.alltests;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.codehaus.groovy.frameworkadapter.util.ResolverActivator;
 import org.eclipse.jdt.core.groovy.tests.builder.BasicGroovyBuildTests;
 import org.eclipse.jdt.core.groovy.tests.builder.FullProjectTests;
 import org.eclipse.jdt.core.groovy.tests.compiler.ScriptFolderTests;
@@ -30,6 +29,7 @@ import org.eclipse.jdt.core.groovy.tests.model.GroovyPartialModelTests;
 import org.eclipse.jdt.core.groovy.tests.model.MoveRenameCopyTests;
 import org.eclipse.jdt.core.groovy.tests.search.AllSearchTests;
 import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTest;
+import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTests_Compliance_1_8;
 
 /**
  * @author Andrew Eisenberg
@@ -40,7 +40,7 @@ import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTest;
 public class GroovyJDTTests {
     public static Test suite() throws Exception {
         // ensure that the compiler chooser starts up
-        ResolverActivator.getDefault().initializeChooser();
+    	GroovyTestSuiteSupport.initializeCompilerChooser();
         
         TestSuite suite = new TestSuite("Groovy JDT Tests");
         
@@ -66,6 +66,7 @@ public class GroovyJDTTests {
 
         // Compiler tests
         suite.addTest(GroovySimpleTest.suite());
+        suite.addTest(GroovySimpleTests_Compliance_1_8.suite());
         suite.addTest(ScriptFolderTests.suite());
 
         // Search tests

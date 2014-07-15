@@ -47,9 +47,9 @@ import org.codehaus.groovy.eclipse.ui.search.FindOccurrencesTests;
 public class AllUITests {
 	public static Test suite() throws Exception {
 		final TestSuite suite = new TestSuite(AllUITests.class.getName());
+		suite.addTestSuite(ErrorLogTest.class); //This must be first or it will pick up garbage left in log by other tests.
         suite.addTestSuite(GroovyAutoIndenterTests.class);
         suite.addTestSuite(GroovyAutoIndenterTests2.class);
-		suite.addTestSuite(ErrorLogTest.class);
 		suite.addTestSuite(GroovyLauncherShortcutTests.class);
 		suite.addTestSuite(GroovyNatureActionTestCase.class);
 		suite.addTestSuite(GroovyFileAdapterFactoryTestCase.class);

@@ -36,6 +36,7 @@ public class AllBrowsingTests {
         suite.addTestSuite(CodeSelectFieldsPropertiesTest.class);
         suite.addTestSuite(CodeSelectLocalTest.class);
         suite.addTestSuite(CodeSelectStaticImportsTest.class);
+        suite.addTestSuite(JDTAstPositionTest.class);
         return suite;
     }
 }

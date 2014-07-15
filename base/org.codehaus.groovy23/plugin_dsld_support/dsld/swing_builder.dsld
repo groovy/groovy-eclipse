@@ -1,0 +1,137 @@
+/*
+ * Copyright 2011 SpringSource
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package dsld
+
+import groovy.swing.SwingBuilder
+import groovy.swing.impl.*
+import javax.swing.*
+import javax.swing.border.CompoundBorder;
+import groovy.model.DefaultTableColumn
+
+import org.codehaus.groovy.binding.*
+import java.awt.*
+
+
+/**
+ * This is the DSLD for SwingBuilder
+ * 
+ * @author Andrew Eisenberg
+ * @since 2.5.1
+ */
+currentType(SwingBuilder).accept {
+        provider = "SwingBuilder DSL"
+        
+        method name: "action", type: Action, useNamedArgs: true, params: [name: String, shortDescription: String, smallIcon: String, accelerator:String, closure: Closure], doc: """
+        Actions are the lifeblood of a full fledged swing application. Other sources can expound on their usefullness.
+        <br/> see <a href="http://groovy.codehaus.org/SwingBuilder.action">http://groovy.codehaus.org/SwingBuilder.action</a>
+        """
+        method name: "frame", type: JFrame, useNamedArgs: true, params: [contentPane:Container, defaultCloseOperation:int, title:String, glassPane:Component, layeredPane:JLayeredPane, contentPane:Container],
+        doc: """
+        Generates a JFrame.
+        <br/> see <a href="http://groovy.codehaus.org/SwingBuilder.frame">http://groovy.codehaus.org/SwingBuilder.frame</a>
+        """
+        
+        def add = { name, type ->
+            def docText = "See <a href=\"http://groovy.codehaus.org/SwingBuilder.${name}\">SwingBuilder.${name}</a>"
+            method name:name, type:type, doc:docText
+        }
+        
+        // and so on...
+        add("actions", List)
+        add("bean", Void)
+        add("bind", FullBinding)
+        add("borderLayout", BorderLayout)
+        add("boundedRangeModel", DefaultBoundedRangeModel)
+        add("box", Box)
+        add("boxLayout", BoxLayout)
+        add("button", JButton)
+        add("buttonGroup", ButtonGroup)
+        add("cardLayout", CardLayout)
+        add("checkBox", JCheckBox)
+        add("checkBoxMenuItem", JCheckBoxMenuItem)
+        add("closureColumn", DefaultTableColumn)
+        add("compoundBorder", CompoundBorder)
+        add("colorChooser", JColorChooser)
+        add("comboBox", JComboBox)
+        add("container", Container)
+        add("desktopPane", JDesktopPane)
+        add("dialog", JDialog)
+        add("editorPane", JEditorPane)
+        add("emptyBorder", border.EmptyBorder)
+        add("etchedBorder", border.EtchedBorder)
+        add("fileChooser", JFileChooser)
+        add("flowLayout", FlowLayout)
+        add("formattedTextField", JFormattedTextField)
+        add("gbc", GridBagConstraints)
+        add("gridBagConstraints", GridBagConstraints)
+        add("glue", Component)
+        add("gridBagConstraints", GridBagConstraints)
+        add("gridBagLayout", GridBagLayout)
+        add("gridLayout", GridLayout)
+        add("hbox", Box)
+        add("hglue", Component)
+        add("hstrut", Component)
+        add("internalFrame", JInternalFrame)
+        add("label", JLabel)
+        add("layeredPane", JLayeredPane)
+        add("list", JList)
+        add("loweredBevelBorder", border.BevelBorder)
+        add("loweredEtchedBorder", border.EtchedBorder)
+        add("map", Map)
+        add("matteBorder", border.MatteBorder)
+        add("menu", JMenu)
+        add("menuBar", JMenuBar)
+        add("menuItem", JMenuItem)
+        add("optionPane", JOptionPane)
+        add("overlayLayout", OverlayLayout)
+        add("panel", JPanel)
+        add("passwordField", JPasswordField)
+        add("popupMenum", JPopupMenu)
+        add("progressBar", JProgressBar)
+        add("propertyColumn", table.TableColumn)
+        add("radioButton", JRadioButton)
+        add("radioButtonMenuItem", JRadioButtonMenuItem)
+        add("rigidArea", Component)
+        add("scrollBar", JScrollBar)
+        add("scrollPane", JScrollPane)
+        add("separator", JSeparator)
+        add("slider", JSlider)
+        add("spinner", JSpinner)
+        add("spinnerDateModel", SpinnerDateModel)
+        add("spinnerListModel", SpinnerListModel)
+        add("spinnerNumberModel", SpinnerNumberModel)
+        add("splitPane", JSplitPane)
+        add("springLayout", SpringLayout)
+        add("tabbedPane", JTabbedPane)
+        add("table", JTable)
+        add("tableColumn", table.TableColumn)
+        add("tableLayout", TableLayoutRow)
+        add("tableModel", table.TableModel)
+        add("td", TableLayoutCell)
+        add("textArea", JTextArea)
+        add("textField", JTextField)
+        add("textPane", JTextPane)
+        add("toggleButton", JToggleButton)
+        add("toolbar", JToolBar)
+        add("tr", TableLayoutRow)
+        add("tree", JTree)
+        add("vbox", Box)
+        add("vglue", Component)
+        add("viewport", JViewport)
+        add("vstrut", Component)
+        add("widget", Component)
+        add("window", JWindow)
+}

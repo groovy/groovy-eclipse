@@ -1,0 +1,13 @@
+25-Sep-13: groovy-2.2.0-beta-2
+30-Oct-13: groovy-2.2.0-rc-2
+26-Nov-13: groovy-2.2.0
+20-Feb-14: groovy-2.2.1
+24-Feb-14: groovy-2.2.2 
+    Used GROOVY_2_2_X head rather than tagged version. 
+    Hash = 9d9ae56a35b9b24384cae12cb10dacad809bdee9. 
+    Manually edited gradle.properties to a release version.
+    When 2.2.2 is officially released / tagged check for last minute changes.
+    Then delete this comment :-)
+09-Apr-14: TAG GROOVY_2_3_0_BETA_1
+28-Apr-14: TAG GROOVY_2_3_0_RC_2 (hash 644c90419ba7bb5274940b94a5639df916a155d0)
+21-May-14: GROOVY_2_3_1

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
+import org.codehaus.jdt.groovy.model.ModuleNodeMapper;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -28,7 +29,7 @@ import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 import org.eclipse.jdt.core.tests.util.TestVerifier;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.Compiler;
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
+import org.eclipse.jdt.internal.core.JavaModelManager;
 
 /**
  * Base class for Java image builder tests
@@ -37,6 +38,8 @@ public class BuilderTests extends TestCase {
 	protected static boolean DEBUG = false;
 	protected static TestingEnvironment env = null;
 	protected EfficiencyCompilerRequestor debugRequestor = null;
+	
+	private int moduleNodeMapperCacheSize = 0;
 
 	public BuilderTests(String name) {
 		super(name);
@@ -57,7 +60,7 @@ public class BuilderTests extends TestCase {
 		String expectingOutput,
 		String expectedError) {
 		TestVerifier verifier = new TestVerifier(false);
-		Vector classpath = new Vector(5);
+		Vector<String> classpath = new Vector<String>(5);
 
 		IPath workspacePath = env.getWorkspaceRootPath();
 
@@ -84,7 +87,7 @@ public class BuilderTests extends TestCase {
 			}
 		}
 
-		verifier.execute(className, (String[]) classpath.toArray(new String[0]));
+		verifier.execute(className, classpath.toArray(new String[0]));
 
 		if (DEBUG) {
 			System.out.println("ERRORS\n"); //$NON-NLS-1$
@@ -100,7 +103,11 @@ public class BuilderTests extends TestCase {
 		actualError = new String(CharOperation.replace(error, System.getProperty("line.separator").toCharArray(), new char[] { '\n' })); //$NON-NLS-1$
 
 		if (expectedError==null && actualError.length()!=0) {
-			fail("unexpected error : " + actualError);
+			if (actualError.trim().endsWith("WARNING: Module [groovy-all] - Unable to load extension class [org.codehaus.groovy.runtime.NioGroovyMethods]")) {
+				// Allow this it indicates (usually) running the tests with groovy 2.3 on a pre 1.7 vm
+			} else {
+				fail("unexpected error : " + actualError);
+			}
 		}
 		if (expectedError!=null && actualError.indexOf(expectedError) == -1) {
 			System.out.println("ERRORS\n"); //$NON-NLS-1$
@@ -299,7 +306,7 @@ public class BuilderTests extends TestCase {
 			printProblems();
 
 		Problem[] rootProblems = env.getProblems();
-		Hashtable actual = new Hashtable(rootProblems.length * 2 + 1);
+		Hashtable<IPath, IPath> actual = new Hashtable<IPath, IPath>(rootProblems.length * 2 + 1);
 		for (int i = 0; i < rootProblems.length; i++) {
 			IPath culprit = rootProblems[i].getResourcePath();
 			actual.put(culprit, culprit);
@@ -310,8 +317,8 @@ public class BuilderTests extends TestCase {
 				assertTrue("missing expected problem with " + expected[i].toString(), false); //$NON-NLS-1$
 
 		if (actual.size() > expected.length) {
-			for (Enumeration e = actual.elements(); e.hasMoreElements();) {
-				IPath path = (IPath) e.nextElement();
+			for (Enumeration<IPath> e = actual.elements(); e.hasMoreElements();) {
+				IPath path = e.nextElement();
 				boolean found = false;
 				for (int i = 0; i < expected.length; ++i) {
 					if (path.equals(expected[i])) {
@@ -380,14 +387,14 @@ public class BuilderTests extends TestCase {
 	/**
 	 * Verifies that the given element has the expected problems.
 	 */
-	protected void expectingProblemsFor(IPath root, List expected) {
+	protected void expectingProblemsFor(IPath root, List<IPath> expected) {
 		expectingProblemsFor(new IPath[] { root }, expected);
 	}
 
 	/**
 	 * Verifies that the given elements have the expected problems.
 	 */
-	protected void expectingProblemsFor(IPath[] roots, List expected) {
+	protected void expectingProblemsFor(IPath[] roots, List<IPath> expected) {
 		Problem[] allProblems = allSortedProblems(roots);
 		assumeEquals("Invalid problem(s)!!!", arrayToString(expected.toArray()), arrayToString(allProblems));
 	}
@@ -515,30 +522,40 @@ public class BuilderTests extends TestCase {
 			env.openEmptyWorkspace();
 		}
 		env.resetWorkspace();
-
+		env.setAutoBuilding(false);
+		this.moduleNodeMapperCacheSize = ModuleNodeMapper.size();
 	}
+	
+	final protected int getInitialModuleNodeMapperSize() {
+		return moduleNodeMapperCacheSize;
+	}
+	
 	/**
 	 * @see junit.framework.TestCase#tearDown()
 	 */
 	protected void tearDown() throws Exception {
 		env.resetWorkspace();
-        ICompilationUnit[] wcs = new ICompilationUnit[0];
+        // Discard primary working copies and copies with owner left from failed tests
+        ICompilationUnit[] wcs = null;
         int i = 0;
         do {
-            wcs = JavaCore.getWorkingCopies(DefaultWorkingCopyOwner.PRIMARY);
-            for (ICompilationUnit workingCopy : wcs) {
-                try {
-                    workingCopy.discardWorkingCopy();
-                    workingCopy.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            wcs = JavaModelManager.getJavaModelManager().getWorkingCopies(null, true);
+            if (wcs != null) {
+	            for (ICompilationUnit workingCopy : wcs) {
+	                try {
+	                    workingCopy.discardWorkingCopy();
+	                    workingCopy.close();
+	                } catch (Exception e) {
+	                    e.printStackTrace();
+	                }
+	            }
             }
             i++;
-            if (i > 20) {
+            if (i > 20 && wcs != null) {
                 fail("Could not delete working copies " + wcs);
             }
-        } while (wcs.length > 0);
+        } while (wcs != null && wcs.length > 0);
+        assertTrue("ModuleNodeMapper should be empty when there are no working copies", getInitialModuleNodeMapperSize() >= ModuleNodeMapper.size());        
 		JavaCore.setOptions(JavaCore.getDefaultOptions());
 		super.tearDown();
 	}

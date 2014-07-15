@@ -11,8 +11,6 @@
 package org.eclipse.jdt.core.groovy.tests.builder;
 
 import java.io.File;
-import java.net.URL;
-import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -30,7 +28,6 @@ import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
-import org.codehaus.groovy.vmplugin.v5.Java5;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -38,21 +35,17 @@ import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
-import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
+import org.osgi.framework.Version;
 
 /**
  * Basic tests for the builder - compiling and running some very simple java and
@@ -67,7 +60,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 	public static Test suite() {
 		return buildTestSuite(BasicGroovyBuildTests.class);
 	} 
-
+	
 	/**
 	 * Testing that the classpath computation works for multi dependent
 	 * projects. This classpath will be used for the ast transform loader.
@@ -159,7 +152,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		incrementalBuild(projectDPath);
 		expectingCompiledClassesV("p1.Hello");
 		expectingNoProblems();
-		executeClass(projectDPath, "p1.Hello", "Hello world", "");
+//		executeClass(projectDPath, "p1.Hello", "Hello world", "");
 
 		String classpathForProjectD = CompilerUtils.calculateClasspath(env
 				.getJavaProject(projectDPath));
@@ -2015,6 +2008,61 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		executeClass(projectPath, "X", "abc", "");
 	}
 
+	public void testAnnotationCollectorMultiProject() throws Exception {
+		if (GroovyUtils.GROOVY_LEVEL < 21) {
+			System.out.println("Skipping test. Need groovy 2.2 or above");
+			return;
+		}
+		Version version = JavaCore.getPlugin().getBundle().getVersion();
+		if (version.compareTo(new Version("3.9.50"))<0) {
+			System.out.println("Skipping test. Need greclipse for e43j8 or above");
+			return;
+		}
+		
+		// Construct 'annotation' project that defines annotation using 'AnnotationsCollector'
+		IPath annotationProject = env.addProject("annotation"); //$NON-NLS-1$
+		env.addExternalJars(annotationProject, Util.getJavaClassLibs());
+		env.addGroovyJars(annotationProject);
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(annotationProject, ""); //$NON-NLS-1$
+
+		IPath annotationRoot = env.addPackageFragmentRoot(annotationProject, "src"); //$NON-NLS-1$
+		env.setOutputFolder(annotationProject, "bin"); //$NON-NLS-1$
+
+		
+		env.addGroovyClass(annotationRoot, "com.demo", "MyAnnotation",
+				"package com.demo\r\n" + 
+				"\r\n" + 
+				"@groovy.transform.AnnotationCollector\r\n" + 
+				"@Deprecated\r\n" + 
+				"@interface MyAnnotation {}\r\n"
+		);
+		
+		// Construct 'app' project that uses the annotation
+		IPath appProject = env.addProject("app"); //$NON-NLS-1$
+		env.addExternalJars(appProject, Util.getJavaClassLibs());
+		env.addGroovyJars(appProject);
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(appProject, ""); //$NON-NLS-1$
+		
+		env.addRequiredProject(appProject, annotationProject);
+
+		IPath appRoot = env.addPackageFragmentRoot(appProject, "src"); //$NON-NLS-1$
+		env.setOutputFolder(appProject, "bin"); //$NON-NLS-1$
+		
+		env.addGroovyClass(appRoot, "com.demo", "Widget",
+				"package com.demo\r\n" + 
+				"\r\n" + 
+				"@MyAnnotation\r\n" + 
+				"class Widget {}\r\n"
+		);
+		
+		fullBuild();
+		expectedCompiledClassCount(2);
+		expectingNoProblems();
+	}
+	
+	
 	public void testAnnotationCollectorIncremental() throws Exception {
 
 		if (GroovyUtils.GROOVY_LEVEL < 21) {
@@ -2603,7 +2651,8 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 				+ "    def x= new Runnable() {public void run() {}};\n"+
 				  "}\n"+
 				 "}\n");
-		executeClass(projectPath, "testpkg.TestCaseChannelPersistentStore", "running", "");
+		incrementalBuild();
+		executeClass(projectPath, "testpkg.TestCaseChannelPersistentStore", "", "");
 
 //		// whitespace change to groovy file
 //		env.addGroovyClass(root, "testpkg", "TestCaseChannelPersistentStore", "package testpkg\n"
@@ -3098,7 +3147,8 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			assertEquals("Wrong priority", new Integer(IMarker.PRIORITY_LOW),
 					priority);
 		} catch (CoreException e) {
-			assertTrue(false);
+			e.printStackTrace();
+			fail("Unexpected failure: "+e.toString());
 		}
 		JavaCore.setOptions(options);
 	}
@@ -3159,7 +3209,8 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			assertEquals("Wrong priority",
 					new Integer(IMarker.PRIORITY_NORMAL), priority);
 		} catch (CoreException e) {
-			assertTrue(false);
+			e.printStackTrace();
+			fail("Unexpected failure: "+e.toString());
 		}
 		JavaCore.setOptions(options);
 	}
@@ -3220,7 +3271,8 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			assertEquals("Wrong priority",
 					new Integer(IMarker.PRIORITY_NORMAL), priority);
 		} catch (CoreException e) {
-			assertTrue(false);
+			e.printStackTrace();
+			fail("Unexpected failure: "+e.toString());
 		}
 		JavaCore.setOptions(options);
 	}
@@ -3273,7 +3325,8 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 			assertEquals("Wrong priority",
 					new Integer(IMarker.PRIORITY_NORMAL), priority);
 		} catch (CoreException e) {
-			assertTrue(false);
+			e.printStackTrace();
+			fail("Unexpected failure: "+e.toString());
 		}
 		JavaCore.setOptions(options);
 	}
@@ -3480,6 +3533,99 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		assertEquals("Should have found 'x' property exactly one time", 1,
 				declCount);
 
+	}
+
+	// GRECLIPSE-1727
+	public void testTraitBasics() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "p", "Named",
+				"trait Named {\n" +
+				"    String name() { 'name' }" +
+				"}\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("Named", "Named$Trait$Helper");
+		expectingNoProblems();
+	}
+
+	public void testTraitIncremental() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "p", "Named",
+				"package p\n" +
+				"trait Named {\n" +
+				"    String name() { 'name' }\n" +
+				"}\n");
+
+		env.addGroovyClass(root, "q", "NamedClass",
+				"package q;\n" +
+				"import p.Named;\n" +
+				"public class NamedClass implements Named {}\n");
+
+		env.addGroovyClass(root, "", "Runner",
+				"import p.Named\n" +
+				"import q.NamedClass\n" +
+				"Named named = new NamedClass()\n" +
+				"print named.name()\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("p.Named", "p.Named$Trait$Helper", "q.NamedClass", "Runner");
+		expectingNoProblems();
+		executeClass(projectPath, "Runner", "name", "");
+
+		// modify the body of the trait
+		env.addGroovyClass(root, "p", "Named",
+				"package p\n" +
+				"trait Named {\n" +
+				"    String name\n" +
+				"    String name() { \"$name\" }\n" +
+				"}\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("p.Named", "p.Named$Trait$Helper", "p.Named$Trait$FieldHelper", "q.NamedClass", "Runner");
+		expectingNoProblems();
+		executeClass(projectPath, "Runner", "null", "");
+
+		env.addGroovyClass(root, "", "Runner",
+				"import p.Named\n" +
+				"import q.NamedClass\n" +
+				"Named named = new NamedClass(name: 'name')\n" +
+				"print named.name()\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("Runner");
+		expectingNoProblems();
+		executeClass(projectPath, "Runner", "name", "");
+
+		env.addGroovyClass(root, "q", "NamedClass",
+				"package q;\n" +
+				"import p.Named;\n" +
+				"public class NamedClass implements Named {\n" +
+				"    String name() { \"Hello, ${name}!\" }\n" +
+				"}\n");
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("q.NamedClass", "Runner");
+		expectingNoProblems();
+		executeClass(projectPath, "Runner", "Hello, name!", "");
 	}
 
 	//

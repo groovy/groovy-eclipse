@@ -338,7 +338,27 @@ public class GroovyProjectGroovyQuickFixTest extends
 		assertNull("Expected no resolver for nonexistant type: "
 				+ nonExistantType, resolver);
 	}
-	
+
+	/**
+	 * Tests if Groovy add import quick fix resolvers are obtained for an annotation.
+	 * 
+	 * @throws Exception
+	 */
+	public void testAddImportAnnotation() throws Exception {
+		String typeToImport = "Target";
+
+		String expectedQuickFixDisplay = "Import 'Target' (java.lang.annotation)";
+		String fullQualifiedTypeToImport = "java.lang.annotation.Target";
+		String typeToAddImport = "Test";
+
+		String typeToAddImportContent = "@Target() public @interface Test {}";
+
+		testSelectImportGroovyTypeFromNewPackage(typeToImport,
+				fullQualifiedTypeToImport, expectedQuickFixDisplay,
+				typeToAddImport, typeToAddImportContent);
+
+	}
+
 	public void testAddGroovyRuntime() throws Exception {
         GroovyRuntime.removeGroovyClasspathContainer(testProject.getJavaProject());
         testProject.getProject().build(IncrementalProjectBuilder.FULL_BUILD, null);

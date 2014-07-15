@@ -11,6 +11,7 @@
 
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -30,12 +31,14 @@ import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchPattern;
@@ -282,6 +285,31 @@ public abstract class CompletionTestCase extends BuilderTests {
         }
     }
 
+    /**
+     * The build machine sometimes seems to be running on a JDK with different local variable tables for
+     * system classes.  This variant of checkReplacementString() can take a couple of options rather
+     * than just one when asserting what is expected to be found.
+     */
+    protected void checkReplacementString(ICompletionProposal[] proposals, String[] expectedReplacementOptions, int expectedCount) {
+        int foundCount = 0;
+        for (ICompletionProposal proposal : proposals) {
+            AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal;
+            String replacement = javaProposal.getReplacementString();
+            if (replacement.equals(expectedReplacementOptions[0]) || replacement.equals(expectedReplacementOptions[1])) {
+                foundCount ++;
+            }
+        }
+        
+        if (foundCount != expectedCount) {
+            StringBuffer sb = new StringBuffer();
+            for (ICompletionProposal proposal : proposals) {
+                AbstractJavaCompletionProposal javaProposal = (AbstractJavaCompletionProposal) proposal;
+                sb.append("\n" + javaProposal.getReplacementString());
+            }
+            fail("Expected to find proposal '" + expectedReplacementOptions[0] + "' or '"+expectedReplacementOptions[1]+"' " + expectedCount + " times, but found them " + foundCount + " times.\nAll Proposals:" + sb);
+        }
+    }
+
     
     protected void validateProposal(CompletionProposal proposal, String name) {
         assertEquals(proposal.getName(), name);
@@ -311,13 +339,16 @@ public abstract class CompletionTestCase extends BuilderTests {
         
         IPath pathToGroovyClass = env.addGroovyClass(pack, "TransformerTest2", contents);
         fullBuild();
-        // don't do this here since many completeion tests intentionally have errors
-//        expectingNoProblems();
+        // don't do this here since many completion tests intentionally have errors
+        // expectingNoProblems();
         
         ICompilationUnit unit = getCompilationUnit(pathToGroovyClass);
+        // SimpleProgressMonitor spm = new SimpleProgressMonitor("become working copy for "+unit.getElementName());
         unit.becomeWorkingCopy(null);
+        try { Thread.sleep(1000); } catch (Exception e) {}
+//        spm.waitForCompletion();
         
-        // intermitent failures on build server.  proposals not found, so perform this part in a loop
+        // intermittent failures on build server.  proposals not found, so perform this part in a loop
         return createProposalsAtOffset(unit, completionOffset);
         
     }
@@ -327,26 +358,42 @@ public abstract class CompletionTestCase extends BuilderTests {
         int count = 0;
         int maxCount = 15;
         ICompletionProposal[] proposals;
+        System.err.println("Attempting createProposalsAtOffset(unit="+unit.getElementName()+",completionOffset="+completionOffset);
         do {
-            // intermitent failures on the build server
+            // intermittent failures on the build server
             if (count > 0) {
+            	System.err.println("In createProposalsAtOffset() count="+count);
                 performDummySearch(unit.getJavaProject());
-                unit.reconcile(AST.JLS3, true, null, null);
+                
+                int astLevel = AST.JLS3;
+                try {
+                	AST.class.getDeclaredField("JLS8");
+                	astLevel = 8;
+                } catch (NoSuchFieldException nsfe) {
+                	// pre-java8
+                }
+                System.err.println("ast level = "+astLevel);
+                SimpleProgressMonitor spm = new SimpleProgressMonitor("unit reconcile");
+                unit.reconcile(astLevel, true, null, spm);
+                spm.waitForCompletion();
                 env.fullBuild();
                 SynchronizationUtils.joinBackgroudActivities();
                 SynchronizationUtils.waitForIndexingToComplete();
             }
             
-            System.out.println("Content assist for " + unit.getElementName());
+            System.err.println("Content assist for " + unit.getElementName());
             proposals = performContentAssist(unit, completionOffset, GroovyCompletionProposalComputer.class);
             if (proposals == null) {
-                System.out.println("Found null proposals");
+                System.err.println("Found null proposals");
             } else {
-                System.out.println("Found : " + Arrays.toString(proposals));
+                System.err.println("Found : " + Arrays.toString(proposals));
             }
             count++;
         } while ((proposals == null || proposals.length == 0) && count < maxCount);
 
+        if (count>=maxCount) {
+        	System.err.println("Reached maxcount("+maxCount+") attempts and still got no proposals - hopefully that is what the test expects");
+        }
         return proposals;
     }
     
@@ -557,6 +604,7 @@ public abstract class CompletionTestCase extends BuilderTests {
     
     public void performDummySearch(IJavaElement element) throws Exception{
         JavaModelManager.getIndexManager().indexAll(element.getJavaProject().getProject());
+        SimpleProgressMonitor spm = new SimpleProgressMonitor("dummy search");
         new SearchEngine().searchAllTypeNames(
             null,
             SearchPattern.R_EXACT_MATCH,
@@ -566,8 +614,10 @@ public abstract class CompletionTestCase extends BuilderTests {
             SearchEngine.createJavaSearchScope(new IJavaElement[]{element}),
             new Requestor(),
             IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
-            null);
+            spm);
+        spm.waitForCompletion();
     }
+
     private static class Requestor extends TypeNameRequestor {
     }
 

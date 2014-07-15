@@ -66,18 +66,9 @@
 					<argLine>-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M</argLine>
 	
 					<includes>
-						<include>**/alltests/GroovyJDTTests.java</include>
-						<include>**/alltests/AllGroovyTests.java</include>
+						<include>**/alltests/AllGroovyAndJDTTests.java</include>
 					</includes>
 	
-					<!-- Note: these deactivated bits are meant to ensure all of the 'default' 
-						groovy eclipse stuff is in the test target platform and additionally A specific 
-						compiler support feature is installed as well. I haven't gotten this to work 
-						yet.... but for some reason its not needed now as the 22 compiler seems to 
-						be already on the target platform by default. I am guessing this is because 
-						tycho looks for any compiler bundle to satisfy deps and finds more than one.. 
-						So it picks the most recent one available. This may pose problems if we want 
-						to run tests with older compilers. -->
 					<dependencies>
 						<dependency>
 							<type>eclipse-feature</type>
@@ -86,7 +77,12 @@
 						</dependency>
 						<dependency>
 							<type>eclipse-feature</type>
-							<artifactId>org.codehaus.groovy22.feature</artifactId>
+							<artifactId>org.codehaus.groovy23.feature</artifactId>
+							<version>0.0.0</version>
+						</dependency>
+						<dependency>
+							<type>eclipse-feature</type>
+							<artifactId>org.eclipse.rcp</artifactId>
 							<version>0.0.0</version>
 						</dependency>
 					</dependencies>

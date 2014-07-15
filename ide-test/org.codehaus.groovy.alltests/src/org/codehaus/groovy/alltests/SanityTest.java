@@ -37,6 +37,13 @@ public class SanityTest extends TestCase {
         super.setUp();
     }
 
+    private Version getEclipsePlatformVersion() {
+        Bundle eclipseplatform = Platform.getBundle("org.eclipse.platform");
+        System.out.println("org.eclipse.platform?"+eclipseplatform);
+//        assertNotNull("Can't find eclipse platform", eclipseplatform);
+        return eclipseplatform==null?null:eclipseplatform.getVersion();    	
+    }
+    
     private Version getEclipseVersion() {
         Bundle jdtcore = Platform.getBundle("org.eclipse.jdt.core");
         assertNotNull("Can't find jdt core", jdtcore);
@@ -52,11 +59,13 @@ public class SanityTest extends TestCase {
     
     public void testCompilerVersion() throws Exception {
         Version jdtVersion = getEclipseVersion();
+        Version eclipseplatformVersion = getEclipsePlatformVersion();
         Version groovyVersion = getGroovyCompilerVersion();
         
         //use sys *err* because build run on bamboo eats the sys out
         System.err.println("---------------------------------------");
         System.err.println("SanityTest.testCompilerVersion()");
+        System.err.println("Eclipse Platform " + eclipseplatformVersion);
         System.err.println("Using JDT version " + jdtVersion);
         System.err.println("Using Groovy version " + groovyVersion);
         System.err.println("Classloader location" + GroovyActivator.class.getClassLoader().getResource("."));
@@ -73,7 +82,12 @@ public class SanityTest extends TestCase {
         }
         if (jdtVersion.getMinor() == 8) {
             assertEquals(2, groovyVersion.getMajor());
-            assertEquals(1, groovyVersion.getMinor());
+//            if (eclipseplatformVersion.toString().startsWith("4.2")) {
+//            	assertEquals(3, groovyVersion.getMinor());
+//            }
+//            else {
+            	assertEquals(1, groovyVersion.getMinor());
+//            }
         }
         else if (jdtVersion.getMinor() == 9) {
             assertEquals(2, groovyVersion.getMajor());

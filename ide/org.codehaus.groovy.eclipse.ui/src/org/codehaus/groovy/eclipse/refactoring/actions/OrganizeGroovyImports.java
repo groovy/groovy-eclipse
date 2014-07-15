@@ -191,6 +191,14 @@ public class OrganizeGroovyImports {
             current = node;
             if (!node.isSynthetic()) {
                 handleType(node.getSuperClass(), false);
+                // GRECLIPSE-1693
+                GenericsType[] genericsTypes = node.getUnresolvedSuperClass().getGenericsTypes();
+                if (genericsTypes != null) {
+                    for (GenericsType type : genericsTypes) {
+                        handleType(type.getType(), false);
+                    }
+                }
+                // End GRECLIPSE-1693
                 for (ClassNode impls : node.getInterfaces()) {
                     handleType(impls, false);
                 }

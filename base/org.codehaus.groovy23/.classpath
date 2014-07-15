@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5"/>
+	<classpathentry exported="true" kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" output="bin-trace" path="src-trace"/>
+	<classpathentry kind="src" path="script"/>
+	<classpathentry exported="true" kind="lib" path="lib/ivy-2.3.0.jar" sourcepath="lib/ivy-2.3.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/bsf-2.4.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/groovy-all-2.3.1.jar"/>  
+	<classpathentry exported="true" kind="con" path="GROOVY_DSL_SUPPORT"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

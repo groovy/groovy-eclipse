@@ -387,5 +387,4 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
             }
         }
     }
-
 }

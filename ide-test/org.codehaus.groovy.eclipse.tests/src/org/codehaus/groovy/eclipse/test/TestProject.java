@@ -59,6 +59,7 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.groovy.tests.builder.SimpleProgressMonitor;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -408,8 +409,10 @@ public class TestProject {
     }
 
     
-    protected void fullBuild() throws CoreException {
-        this.getProject().build(org.eclipse.core.resources.IncrementalProjectBuilder.FULL_BUILD, null);
+    public void fullBuild() throws CoreException {
+    	SimpleProgressMonitor spm = new SimpleProgressMonitor("full build of "+this.getProject().getName());
+        this.getProject().build(org.eclipse.core.resources.IncrementalProjectBuilder.FULL_BUILD, spm);
+        spm.waitForCompletion();
     }
     
     public String getProblems() throws CoreException {

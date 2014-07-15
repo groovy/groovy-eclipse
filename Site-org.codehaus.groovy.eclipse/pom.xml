@@ -95,36 +95,36 @@
 										<echo> metadata bundle.version=${dist.full.version}</echo>
 										<echo> metadata package.file.name=${dist.file.name}</echo>
 
-<!-- 										<s3 accessKey="${accessKey}" secretKey="${secretKey}"> -->
+ 										<s3 accessKey="${accessKey}" secretKey="${secretKey}">
 
-<!-- 											<delete bucketName="${dist.bucket}"> -->
-<!-- 												<fileset dir="${dist.path}"> -->
-<!-- 													<include name="site.xml" /> -->
-<!-- 													<include name="content.jar" /> -->
-<!-- 													<include name="artifacts.jar" /> -->
-<!-- 													<include name="plugins/**" /> -->
-<!-- 													<include name="features/**" /> -->
-<!-- 												</fileset> -->
-<!-- 											</delete> -->
+											<delete bucketName="${dist.bucket}">
+												<fileset dir="${dist.path}">
+													<include name="site.xml" />
+													<include name="content.jar" />
+													<include name="artifacts.jar" />
+													<include name="plugins/**" />
+													<include name="features/**" />
+												</fileset>
+											</delete>
 
-<!-- 											<upload bucketName="${dist.bucket}" toDir="${dist.path}" -->
-<!-- 												publicRead="true"> -->
-<!-- 												<fileset dir="${site.target.dir}/site"> -->
-<!-- 													<include name="**/*" /> -->
-<!-- 													<include name="**" /> -->
-<!-- 													<exclude name="*.zip" /> -->
-<!-- 												</fileset> -->
-<!-- 											</upload> -->
+											<upload bucketName="${dist.bucket}" toDir="${dist.path}"
+												publicRead="true">
+												<fileset dir="${site.target.dir}/site">
+													<include name="**/*" />
+													<include name="**" />
+													<exclude name="*.zip" />
+												</fileset>
+											</upload>
 
-<!-- 											<upload bucketName="${dist.bucket}" file="${dist.full.path}" -->
-<!-- 												toFile="${dist.path}/${dist.file.name}" publicRead="true"> -->
-<!-- 												<metadata name="project.name" value="${dist.name}" /> -->
-<!-- 												<metadata name="release.type" value="${dist.type}" /> -->
-<!-- 												<metadata name="bundle.version" value="${dist.full.version}" /> -->
-<!-- 												<metadata name="package.file.name" value="${dist.file.name}" /> -->
-<!-- 											</upload> -->
+											<upload bucketName="${dist.bucket}" file="${dist.full.path}"
+												toFile="${dist.path}/${dist.file.name}" publicRead="true">
+												<metadata name="project.name" value="${dist.name}" />
+												<metadata name="release.type" value="${dist.type}" />
+												<metadata name="bundle.version" value="${dist.full.version}" />
+												<metadata name="package.file.name" value="${dist.file.name}" />
+											</upload>
 
-<!-- 										</s3> -->
+										</s3>
 									</target>
 								</configuration>
 								<goals>

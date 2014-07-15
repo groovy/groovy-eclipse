@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009-2011 SpringSource and others.
+ * Copyright (c) 2009-2014 SpringSource and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,8 +12,6 @@ package org.eclipse.jdt.groovy.core.tests.basic;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,17 +28,15 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.EventListener;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
-import org.codehaus.jdt.groovy.internal.compiler.ast.IGroovyDebugRequestor;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.ToolFactory;
-import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
+import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
@@ -58,7 +54,7 @@ import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
-public class GroovySimpleTest extends AbstractRegressionTest {
+public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
 	public GroovySimpleTest(String name) {
 		super(name);
@@ -74,8 +70,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	
 	protected void setUp() throws Exception {
 		super.setUp();
-		GroovyCompilationUnitDeclaration.defaultCheckGenerics=true;
-		GroovyParser.debugRequestor = new DebugRequestor();
 		complianceLevel = ClassFileConstants.JDK1_5;
 	}
 
@@ -83,46 +77,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		return GroovySimpleTest.class;
 	}
 	
-	protected void tearDown() throws Exception {
-		super.tearDown();
-		GroovyCompilationUnitDeclaration.defaultCheckGenerics=false;
-		GroovyParser.debugRequestor = null; 
-	}
-
-	/** 
-     * Include the groovy runtime jars on the classpath that is used.
-     * Other classpath issues can be seen in TestVerifier/VerifyTests and only when
-     * the right prefixes are registered in there will it use the classloader with this
-     * classpath rather than the one it conjures up just to load the built code.
-     */
-    protected String[] getDefaultClassPaths() {
-        String[] cps = super.getDefaultClassPaths();
-        String[] newcps = new String[cps.length+2];
-        System.arraycopy(cps,0,newcps,0,cps.length);
-        try {
-        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.2.2.jar");
-        	if (groovyJar==null) {
-	        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.1.8.jar");
-	        	if (groovyJar==null) {
-		            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.0.7.jar");
-		            if (groovyJar==null) {
-						groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-1.8.6.jar");
-		            }
-	        	}
-        	}
-            newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
-	        // FIXASC think more about why this is here... the tests that need it specify the option but that is just for
-	        // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when
-	        // building the annotated source - and so I suspect that the groovyclassloaderpath does need merging onto the project
-	        // classpath for just this reason, hmm.
-	        newcps[newcps.length-2] = FileLocator.resolve(Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry("astTransformations/transforms.jar")).getFile();
-	        // newcps[newcps.length-4] = new File("astTransformations/spock-core-0.1.jar").getAbsolutePath();
-        } catch (IOException e) {
-            fail("IOException thrown " + e.getMessage());
-        }
-        return newcps;
-    }
-    
     // demonstrates the incorrect use of closure syntax on groovy 1.6 that compiles OK.
     // On 1.7 it is recognized as incorrect (it is too similar to the inner class syntax)
     public void testClosureSyntax() {
@@ -186,6 +140,800 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 //	    "public final java.lang.Object Foo.getContent(java.lang.Class[]) throws java.io.IOException");
 //    }
     
+    // GRECLIPSE-1727 Tests for traits
+    public void testTraits1() {
+    	if (GroovyUtils.GROOVY_LEVEL < 23) {
+    		return;
+    	}
+    	this.runConformTest(new String[] {
+    			"Test.groovy",
+    			"class Person implements Greetable {\n"+
+    			"    String name() { 'Bob' }\n"+
+    			"}\n"+
+    			"\n"+
+    			"public class Test {\n"+
+    			"  public static void main(String[] argv) {\n"+
+    			"    def p = new Person()\n"+
+    			"    print p.greeting()\n"+
+    			"  }\n"+
+    			"}\n",
+    			"Greetable.groovy",
+    			"trait Greetable {\n"+
+    			"    abstract String name()\n"+                              
+    			"    String greeting() { \"Hello, ${name()}!\" }\n"+
+    			"}\n",
+    	},"Hello, Bob!");
+        GroovyCompilationUnitDeclaration unit = getCUDeclFor("Greetable.groovy");
+        ClassNode classNode = unit.getCompilationUnit().getClassNode("Greetable");
+        assertTrue(classNode.isInterface());
+    }
+
+    // Abstract Methods
+    public void testTraits2() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait Greetable {\n" +
+                "    abstract String name()\n" +
+                "    String greeting() { \"Hello, ${name()}!\" }\n" +
+                "}\n" +
+                "class Person implements Greetable {\n" +
+                "    String name() { 'Bob' }\n" +
+                "}\n" +
+                "def p = new Person()\n" +
+                "print p.greeting()\n"
+        }, "Hello, Bob!");
+    }
+
+    // Private Methods - positive test
+    public void testTraits3() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait Greeter {\n" +
+                "    private String greetingMessage() {\n" +
+                "        'Hello from a private method!'\n" +
+                "    }\n" +
+                "    String greet() {\n" +
+                "        def m = greetingMessage()\n" +
+                "        println m\n" +
+                "        m\n" +
+                "    }\n" +
+                "}\n" +
+                "class GreetingMachine implements Greeter {}\n" +
+                "def g = new GreetingMachine()\n" +
+                "g.greet()\n"
+        }, "Hello from a private method!");
+    }
+
+    // Private Methods - negative test
+    public void testTraits4() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait Greeter {\n" +
+                "    private String greetingMessage() {\n" +
+                "        'Hello from a private method!'\n" +
+                "    }\n" +
+                "    String greet() {\n" +
+                "        def m = greetingMessage()\n" +
+                "        println m\n" +
+                "        m\n" +
+                "    }\n" +
+                "}\n" +
+                "class GreetingMachine implements Greeter {}\n" +
+                "def g = new GreetingMachine()\n" +
+                "try {\n" +
+                "    g.greetingMessage()\n" +
+                "} catch (MissingMethodException e) {\n" +
+                "}\n"
+        }, "");
+    }
+
+    // Meaning of this
+    public void testTraits5() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait Introspector {\n" +
+                "    def whoAmI() { this.getClass() }\n" +
+                "}\n" +
+                "class Foo implements Introspector {}\n" +
+                "def foo = new Foo()\n" +
+                "print foo.whoAmI()\n"
+        }, "class Foo");
+    }
+
+    // Interfaces
+    public void testTraits6() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "interface Named {\n" +
+                "    String name()\n" +
+                "}\n" +
+                "trait Greetable implements Named {\n" +
+                "    String greeting() { \"Hello, ${name()}!\" }\n" +
+                "}\n" +
+                "class Person implements Greetable {\n" +
+                "    String name() { 'Bob' }\n" +
+                "}\n" +
+                "def p = new Person()\n" +
+                "print p.greeting()"
+        }, "Hello, Bob!");
+        GroovyCompilationUnitDeclaration unit = getCUDeclFor("A.groovy");
+        ClassNode classNode = unit.getCompilationUnit().getClassNode("Person");
+        ClassNode type = unit.getCompilationUnit().getClassNode("Greetable");
+        assertTrue(classNode.implementsInterface(type));
+        type = unit.getCompilationUnit().getClassNode("Named");
+        assertTrue(classNode.implementsInterface(type));
+    }
+
+    // Properties
+    public void testTraits7() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait Named {\n" +
+                "    String name\n" +
+                "}\n" +
+                "class Person implements Named {}\n" +
+                "def p = new Person(name: 'Bob')\n" +
+                "print p.name == 'Bob'\n" +
+                "print p.getName()\n"
+        }, "trueBob");
+    }
+
+    // Private fields
+    public void testTraits8() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait Counter {\n" +
+                "    private int count = 0\n" +
+                "    int count() { count += 1; count }\n" +
+                "}\n" +
+                "class Foo implements Counter {}\n" +
+                "def f = new Foo()\n" +
+                "print f.count()\n"
+        }, "1");
+    }
+
+    // Public fields
+    public void testTraits9() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait Named {\n" +
+                "    public String name\n" +
+                "}\n" +
+                "class Person implements Named {}\n" +
+                "def p = new Person()\n" +
+                "p.Named__name = 'Bob'\n" +
+                "print p.Named__name\n"
+        }, "Bob");
+    }
+
+    // Composition of Behaviors
+    public void testTraits10() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+            "A.groovy",
+            "trait FlyingAbility {\n" +
+            "    String fly() { \"I'm flying!\" }\n" +
+            "}\n" +
+            "trait SpeakingAbility {\n" +
+            "    String speak() { \"I'm speaking!\" }\n" +
+            "}\n" +
+            "class Duck implements FlyingAbility, SpeakingAbility {}\n" +
+            "def d = new Duck()\n" +
+            "print d.fly()\n" +
+            "print d.speak()\n"
+        }, "I'm flying!I'm speaking!");
+    }
+
+    // Overriding default methods
+    public void testTraits11() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait FlyingAbility {\n" +
+                "    String fly() { \"I'm flying!\" }\n" +
+                "}\n" +
+                "trait SpeakingAbility {\n" +
+                "    String speak() { \"I'm speaking!\" }\n" +
+                "}\n" +
+                "class Duck implements FlyingAbility, SpeakingAbility {\n" +
+                "    String quack() { \"Quack!\" }\n" +
+                "    String speak() { quack() }\n" +
+                "}\n" +
+                "def d = new Duck()\n" +
+                "print d.fly()\n" +
+                "print d.quack()\n" +
+                "print d.speak()\n"
+        }, "I'm flying!Quack!Quack!");
+    }
+
+    // Simple Inheritance
+    public void testTraits12() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait Named {\n" +
+                "    String name\n" +
+                "}\n" +
+                "trait Polite extends Named {\n" +
+                "    String introduce() { \"Hello, I am $name\" }\n" +
+                "}\n" +
+                "class Person implements Polite {}\n" +
+                "def p = new Person(name: 'Alice')\n" +
+                "print p.introduce()"
+        }, "Hello, I am Alice");
+    }
+
+    // Multiple Inheritance
+    public void testTraits13() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait WithId {\n" +
+                "    Long id\n" +
+                "}\n" +
+                "trait WithName {\n" +
+                "    String name\n" +
+                "}\n" +
+                "trait Identified implements WithId, WithName {}\n"
+        }, "");
+    }
+
+    // Dynamic code
+    public void testTraits14() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait SpeakingDuck {\n" +
+                "    String speak() { quack() }\n" +
+                "}\n" +
+                "class Duck implements SpeakingDuck {\n" +
+                "    String methodMissing(String name, args) {\n" +
+                "        \"${name.capitalize()}!\"\n" +
+                "    }\n" +
+                "}\n" +
+                "def d = new Duck()\n" +
+                "print d.speak()\n"
+        }, "Quack!");
+    }
+
+    // Dynamic methods in trait
+    public void testTraits15() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "A.groovy",
+                "trait DynamicObject {\n" +
+                "    private Map props = [:]\n" +
+                "    def methodMissing(String name, args) {\n" +
+                "        name.toUpperCase()\n" +
+                "    }\n" +
+                "    def propertyMissing(String prop) {\n" +
+                "        props['prop']\n" +
+                "    }\n" +
+                "    void setProperty(String prop, Object value) {\n" +
+                "        props['prop'] = value\n" +
+                "    }\n" +
+                "}\n" +
+                "class Dynamic implements DynamicObject {\n" +
+                "    String existingProperty = 'ok'\n" +
+                "    String existingMethod() { 'ok' }\n" +
+                "}\n" +
+                "def d = new Dynamic()\n" +
+                "print d.existingProperty\n" +
+                "print d.foo\n" +
+                "d.foo = 'bar'\n" +
+                "print d.foo\n" +
+                "print d.existingMethod()\n" +
+                "print d.someMethod()\n"
+        }, "oknullbarokSOMEMETHOD");
+    }
+
+    // Multiple inheritance conflicts - Default conflict resolution
+    public void testTraits16() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait A {\n" +
+                "    String exec() { 'A' }\n" +
+                "}\n" +
+                "trait B {\n" +
+                "    String exec() { 'B' }\n" +
+                "}\n" +
+                "class C implements A, B {}\n" +
+                "def c = new C()\n" +
+                "print c.exec()\n"
+        }, "B");
+    }
+
+    // Multiple inheritance conflicts - Default conflict resolution
+    public void testTraits17() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait A {\n" +
+                "    String exec() { 'A' }\n" +
+                "}\n" +
+                "trait B {\n" +
+                "    String exec() { 'B' }\n" +
+                "}\n" +
+                "class C implements B, A {}\n" +
+                "def c = new C()\n" +
+                "print c.exec()\n"
+        }, "A");
+    }
+
+    // Multiple inheritance conflicts - User conflict resolution
+    public void testTraits18() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait A {\n" +
+                "    String exec() { 'A' }\n" +
+                "}\n" +
+                "trait B {\n" +
+                "    String exec() { 'B' }\n" +
+                "}\n" +
+                "class C implements A, B {\n" +
+                "    String exec() { A.super.exec() }\n" +
+                "}\n" +
+                "def c = new C()\n" +
+                "print c.exec()\n"
+        }, "A");
+    }
+
+    // Implementing a trait at runtime
+    public void testTraits19() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait Extra {\n" +
+                "    String extra() { 'Extra' }\n" +
+                "}\n" +
+                "class Something {\n" +
+                "    String doSomething() { 'Something' }\n" +
+                "}\n" +
+                "def s = new Something() as Extra\n" +
+                "print s.extra()\n" +
+                "print s.doSomething()\n"
+        }, "ExtraSomething");
+    }
+
+    // Implementing multiple traits at once - negative
+    public void testTraits20() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        Map customOptions= getCompilerOptions();
+        this.runConformTest(
+                // test directory preparation
+                true, /* flush output directory */
+                new String[] { /* test files */
+                        "Sample.groovy",
+                        "trait A { String methodFromA() { 'A' } }\n" +
+                        "trait B { String methodFromB() { 'B' } }\n" +
+                        "class C {}\n" +
+                        "def c = new C()\n" +
+                        "print c.methodFromA()\n" +
+                        "print c.methodFromB()\n"
+                }, // compiler options
+                null /* no class libraries */,
+                customOptions /* custom options */,
+                "" /* expected compiler log */,
+                "" /* expected output string */,
+                "groovy.lang.MissingMethodException: No signature of method: C.methodFromA() is applicable for argument types: () values: []",
+                new JavacTestOptions());
+    }
+
+    // Implementing multiple traits at once - positive
+    public void testTraits21() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait A { String methodFromA() { 'A' } }\n" +
+                "trait B { String methodFromB() { 'B' } }\n" +
+                "class C {}\n" +
+                "def c = new C()\n" +
+                "def d = c.withTraits A, B\n" +
+                "print d.methodFromA()\n" +
+                "print d.methodFromB()\n"
+        }, "AB");
+    }
+
+    // Chaining behavior
+    public void testTraits22() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "interface MessageHandler {\n" +
+                "    void on(String message, Map payload)\n" +
+                "}\n" +
+                "trait DefaultHandler implements MessageHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        println \"Received $message with payload $payload\"\n" +
+                "    }\n" +
+                "}\n" +
+                "class SimpleHandler implements DefaultHandler {}\n" +
+                "def handler = new SimpleHandler()\n" +
+                "handler.on('test logging', [:])"
+        }, "Received test logging with payload [:]");
+    }
+
+    // Chaining behavior
+    public void testTraits23() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "interface MessageHandler {\n" +
+                "    void on(String message, Map payload)\n" +
+                "}\n" +
+                "trait DefaultHandler implements MessageHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        println \"Received $message with payload $payload\"\n" +
+                "    }\n" +
+                "}\n" +
+                "class SimpleHandlerWithLogging implements DefaultHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        println \"Seeing $message with payload $payload\"\n" +
+                "        DefaultHandler.super.on(message, payload)\n" +
+                "    }\n" +
+                "}\n" +
+                "def handler = new SimpleHandlerWithLogging()\n" +
+                "handler.on('test logging', [:])"
+        }, "Seeing test logging with payload [:]\nReceived test logging with payload [:]");
+    }
+
+    // Chaining behavior
+    public void testTraits24() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "interface MessageHandler {\n" +
+                "    void on(String message, Map payload)\n" +
+                "}\n" +
+                "trait DefaultHandler implements MessageHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        println \"Received $message with payload $payload\"\n" +
+                "    }\n" +
+                "}\n" +
+                "trait SayHandler implements MessageHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        if (message.startsWith(\"say\")) {\n" +
+                "            println \"I say ${message - 'say'}!\"\n" +
+                "        } else {\n" +
+                "            super.on(message, payload)\n" +
+                "        }\n" +
+                "    }\n" +
+                "}\n" +
+                "trait LoggingHandler implements MessageHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        println \"Seeing $message with payload $payload\"\n" +
+                "        super.on(message, payload)\n" +
+                "    }\n" +
+                "}\n" +
+                "class Handler implements DefaultHandler, SayHandler, LoggingHandler {}\n" +
+                "def handler = new Handler()\n" +
+                "handler.on('foo', [:])\n" +
+                "handler.on('sayHello', [:])\n"
+        }, "Seeing foo with payload [:]\nReceived foo with payload [:]\n"
+                + "Seeing sayHello with payload [:]\nI say Hello!");
+    }
+
+    // Chaining behavior
+    public void testTraits25() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "interface MessageHandler {\n" +
+                "    void on(String message, Map payload)\n" +
+                "}\n" +
+                "trait DefaultHandler implements MessageHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        println \"Received $message with payload $payload\"\n" +
+                "    }\n" +
+                "}\n" +
+                "trait SayHandler implements MessageHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        if (message.startsWith(\"say\")) {\n" +
+                "            println \"I say ${message - 'say'}!\"\n" +
+                "        } else {\n" +
+                "            super.on(message, payload)\n" +
+                "        }\n" +
+                "    }\n" +
+                "}\n" +
+                "trait LoggingHandler implements MessageHandler {\n" +
+                "    void on(String message, Map payload) {\n" +
+                "        println \"Seeing $message with payload $payload\"\n" +
+                "        super.on(message, payload)\n" +
+                "    }\n" +
+                "}\n" +
+                "class AlternateHandler implements DefaultHandler, LoggingHandler, SayHandler {}\n" +
+                "def handler = new AlternateHandler()\n" +
+                "handler.on('foo', [:])\n" +
+                "handler.on('sayHello', [:])\n"
+        }, "Seeing foo with payload [:]\nReceived foo with payload [:]\n"
+                + "I say Hello!");
+    }
+
+    // Chaining behavior - Semantics of super inside a trait
+    public void testTraits26() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait Filtering {\n" +
+                "    StringBuilder append(String str) {\n" +
+                "        def subst = str.replace('o', '')\n" +
+                "        super.append(subst)\n" +
+                "    }\n" +
+                "    String toString() { super.toString() }\n" +
+                "}\n" +
+                "def sb = new StringBuilder().withTraits Filtering\n" +
+                "sb.append('Groovy')\n" +
+                "print sb.toString()\n"
+        }, "Grvy");
+    }
+
+    // SAM type coercion
+    public void testTraits27() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait Greeter {\n" +
+                "    String greet() { \"Hello $name\" }\n" +
+                "    abstract String getName()\n" +
+                "}\n" +
+                "Greeter greeter = { 'Alice' }\n" +
+                "print greeter.getName()\n"
+        }, "Alice");
+    }
+
+    // SAM type coercion
+    public void testTraits28() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait Greeter {\n" +
+                "    String greet() { \"Hello $name\" }\n" +
+                "    abstract String getName()\n" +
+                "}\n" +
+                "void greet(Greeter g) { println g.greet() }\n" +
+                "greet { 'Alice' }\n"
+        }, "Hello Alice");
+    }
+
+    // Differences with Java 8 default methods
+    public void testTraits29() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "class Person {\n" +
+                "    String name\n" +
+                "}\n" +
+                "trait Bob {\n" +
+                "    String getName() { 'Bob' }\n" +
+                "}\n" +
+                "def p = new Person(name: 'Alice')\n" +
+                "print p.name\n" +
+                "def p2 = p as Bob\n" +
+                "print p2.name\n"
+        }, "AliceBob");
+    }
+
+    // Differences with mixins
+    public void testTraits30() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "class A { String methodFromA() { 'A' } }\n" +
+                "class B { String methodFromB() { 'B' } }\n" +
+                "A.metaClass.mixin B\n" +
+                "def o = new A()\n" +
+                "print o.methodFromA()\n" +
+                "print o.methodFromB()\n" +
+                "print(o instanceof A)\n" +
+                "print(o instanceof B)\n"
+        }, "ABtruefalse");
+    }
+
+    // Static methods, properties and fields
+    public void testTraits31() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait TestHelper {\n" +
+                "    public static boolean called = false\n" +
+                "    static void init() {\n" +
+                "        called = true\n" +
+                "    }\n" +
+                "}\n" +
+                "class Foo implements TestHelper {}\n" +
+                "Foo.init()\n" +
+                "print Foo.TestHelper__called\n"
+        }, "true");
+    }
+
+    // Static methods, properties and fields
+    public void testTraits32() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait TestHelper {\n" +
+                "    public static boolean called = false\n" +
+                "    static void init() {\n" +
+                "        called = true\n" +
+                "    }\n" +
+                "}\n" +
+                "class Bar implements TestHelper {}\n" +
+                "class Baz implements TestHelper {}\n" +
+                "Bar.init()\n" +
+                "print Bar.TestHelper__called\n" +
+                "print Baz.TestHelper__called\n"
+        }, "truefalse");
+    }
+
+    // Inheritance of state gotchas
+    public void testTraits33() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait IntCouple {\n" +
+                "    int x = 1\n" +
+                "    int y = 2\n" +
+                "    int sum() { x+y }\n" +
+                "}\n" +
+                "class BaseElem implements IntCouple {\n" +
+                "    int f() { sum() }\n" +
+                "}\n" +
+                "def base = new BaseElem()\n" +
+                "print base.f()"
+        }, "3");
+    }
+
+    // Inheritance of state gotchas
+    public void testTraits34() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait IntCouple {\n" +
+                "    int x = 1\n" +
+                "    int y = 2\n" +
+                "    int sum() { x+y }\n" +
+                "}\n" +
+                "class Elem implements IntCouple {\n" +
+                "    int x = 3\n" +
+                "    int y = 4\n" +
+                "    int f() { sum() }\n" +
+                "}\n" +
+                "def elem = new Elem()\n" +
+                "print elem.f()"
+        }, "3");
+    }
+
+    // Inheritance of state gotchas
+    public void testTraits35() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runConformTest(new String[] {
+                "Sample.groovy",
+                "trait IntCouple {\n" +
+                "    int x = 1\n" +
+                "    int y = 2\n" +
+                "    int sum() { getX() + getY() }\n" +
+                "}\n" +
+                "class Elem implements IntCouple {\n" +
+                "    int x = 3\n" +
+                "    int y = 4\n" +
+                "    int f() { sum() }\n" +
+                "}\n" +
+                "def elem = new Elem()\n" +
+                "print elem.f()"
+        }, "7");
+    }
+
+    // Limitations - Prefix and postfix operations
+    public void testTraits36() {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
+        this.runNegativeTest(new String[] {
+                "Sample.groovy",
+                "trait Counting {\n" +
+                "    int x\n" +
+                "    void inc() {\n" +
+                "        x++\n" +
+                "    }\n" +
+                "    void dec() {\n" +
+                "        --x\n" +
+                "    }\n" +
+                "}\n" +
+                "class Counter implements Counting {}\n" +
+                "def c = new Counter()\n" +
+                "c.inc()\n"},
+                "----------\n" + 
+                "1. ERROR in Sample.groovy (at line 4)\n" + 
+                "	x++\n" + 
+                "	 ^\n" + 
+                "Groovy:Postfix expressions on trait fields/properties  are not supported in traits. @ line 4, column 10.\n" + 
+                "----------\n" + 
+                "2. ERROR in Sample.groovy (at line 7)\n" + 
+                "	--x\n" + 
+                "	^\n" + 
+                "Groovy:Prefix expressions on trait fields/properties are not supported in traits. @ line 7, column 9.\n" + 
+                "----------\n");
+    }
+    // GRECLIPSE-1727 End of traits tests
+
     public void testParsingRecovery_GRE1085_1() {
     	if (GroovyUtils.GROOVY_LEVEL < 18) {
     		return;
@@ -373,6 +1121,54 @@ public class GroovySimpleTest extends AbstractRegressionTest {
  			"enum Color { R,G,B;}\n"
             },"");
      }
+    
+    // not a great test, needs work
+//    public void testBadCodeCategory_STS3822() {
+//    	this.runNegativeTest(new String[] {"bad.groovy",
+//	    "@Category(C.class) \n"+
+//		"@ScriptMixin(C.class)\n"+
+//		"class Bad {\n"+
+//		"@Override\n"+
+//		"public String toString()\n"+
+//		"{ return \"Bad [takeI()=\" + takeI() + \"]\"; }\n"+
+//		"}\n"},
+//			"----------\n" + 
+//			"1. ERROR in bad.groovy (at line 1)\n" + 
+//			"	@Category(C.class) \n" + 
+//			"	  ^^^^^^^^\n" + 
+//			"Groovy:@groovy.lang.Category must define \'value\' which is the class to apply this category to @ line 1, column 2.\n" + 
+//			"----------\n" + 
+//			"2. ERROR in bad.groovy (at line 1)\n" + 
+//			"	@Category(C.class) \n" + 
+//			"	          ^\n" + 
+//			"Groovy:unable to find class \'C.class\' for annotation attribute constant\n" + 
+//			"----------\n" + 
+//			"3. ERROR in bad.groovy (at line 1)\n" + 
+//			"	@Category(C.class) \n" + 
+//			"	           ^^^^^^^\n" + 
+//			"Groovy:Only classes and closures can be used for attribute \'value\' in @groovy.lang.Category\n" + 
+//			"----------\n" + 
+//			"4. ERROR in bad.groovy (at line 2)\n" + 
+//			"	@ScriptMixin(C.class)\n" + 
+//			"	 ^^^^^^^^^^^\n" + 
+//			"Groovy:unable to resolve class ScriptMixin ,  unable to find class for annotation\n" + 
+//			"----------\n" + 
+//			"5. ERROR in bad.groovy (at line 2)\n" + 
+//			"	@ScriptMixin(C.class)\n" + 
+//			"	 ^^^^^^^^^^^\n" + 
+//			"Groovy:class ScriptMixin is not an annotation in @ScriptMixin\n" + 
+//			"----------\n" + 
+//			"6. ERROR in bad.groovy (at line 2)\n" + 
+//			"	@ScriptMixin(C.class)\n" + 
+//			"	             ^\n" + 
+//			"Groovy:unable to find class \'C.class\' for annotation attribute constant\n" + 
+//			"----------\n" + 
+//			"7. ERROR in bad.groovy (at line 4)\n" + 
+//			"	@Override\n" + 
+//			"	 ^^^^^^^^\n" + 
+//			"Groovy:Method \'toString\' from class \'Bad\' does not override method from its superclass or interfaces but is annotated with @Override.\n" + 
+//			"----------\n");
+//    }
     
    public void testGreclipse1521() {
     	if (GroovyUtils.GROOVY_LEVEL < 20) {
@@ -1349,6 +2145,10 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     		return GroovyUtils.GROOVY_LEVEL>=20;
     }
     
+    private boolean isGE23() {
+		return GroovyUtils.GROOVY_LEVEL>=23;
+    }
+    
     private boolean isGE21() {
 		return GroovyUtils.GROOVY_LEVEL==21;
     }
@@ -1491,6 +2291,24 @@ public class GroovySimpleTest extends AbstractRegressionTest {
     	assertEquals("[[Ljava.lang.String;",getReturnTypeOfMethod("Z.groovy","zzz"));    	 
     } 
     
+    public void testAnonymousClasses_GE1531() {
+    	runNegativeTest(new String[]{
+    			"Foo.groovy",
+    			"class Foo {\n"+
+    			"  def foo () {\n"+
+    			"    new java.lang.Runnable () {}//<--quick fix here\n"+
+    			"  }\n"+
+    			"}"},
+    			"----------\n" + 
+				"1. ERROR in Foo.groovy (at line 3)\n" + 
+				"	new java.lang.Runnable () {}//<--quick fix here\n" + 
+				"	    ^^^^^^^^^^^^^^^^^^^\n" + 
+				"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'Foo$1\' must be declared abstract or the method \'void run()\' must be implemented.\n" + 
+				"----------\n");   	
+    	// return type is a qualified java built in type
+    	ModuleNode mn = getModuleNode("Foo$1.class");
+    	System.out.println(mn);
+    }
     public void testPrimitiveLikeTypeNames_GRE891_4() {
     	runConformTest(new String[]{
     			"pkg/Foo.java",
@@ -3451,10 +4269,10 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"		return str.put(arg0, arg1);\n"+
 			"	}\n"+
 			"	\n"+
-			"	public Object put(Object key, Object value) {\n"+
-			"		return str.put(key, value)\n"+
-			"	}\n"+
-			"\n"+
+//			"	public Object put(Object key, Object value) {\n"+
+//			"		return str.put(key, value)\n"+
+//			"	}\n"+
+//			"\n"+
 			"	public void putAll(Map<? extends String, ? extends Field<?>> arg0) {\n"+
 			"		str.putAll(arg0);\n"+
 			"	}\n"+
@@ -3569,20 +4387,91 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"\n"+
 			"}\n",
 
-		},"----------\n" + 
-		"1. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-		"	public class StructureBase implements Structure {\n" + 
-		"	             ^^^^^^^^^^^^^\n" + 
-		"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void setup(java.nio.ByteBuffer)\' must be implemented.\n" + 
-		"----------\n" + 
-		"2. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
-		"	public class StructureBase implements Structure {\n" + 
-		"	             ^^^^^^^^^^^^^\n" + 
-		"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void reset()\' must be implemented.\n" + 
-		"----------\n");		
+		},
+//		false?//isJRELevel(3)?//AbstractCompilerTest.F_1_8)?
+//			"----------\n" + 
+//			"1. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object putIfAbsent(java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"2. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'boolean remove(java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"3. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object computeIfAbsent(java.lang.Object, java.util.function.Function)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"4. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object computeIfPresent(java.lang.Object, java.util.function.BiFunction)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"5. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void forEach(java.util.function.BiConsumer)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"6. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object getOrDefault(java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"7. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void setup(java.nio.ByteBuffer)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"8. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'boolean replace(java.lang.Object, java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"9. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object merge(java.lang.Object, java.lang.Object, java.util.function.BiFunction)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"10. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void replaceAll(java.util.function.BiFunction)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"11. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object replace(java.lang.Object, java.lang.Object)\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"12. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void reset()\' must be implemented.\n" + 
+//			"----------\n" + 
+//			"13. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+//			"	public class StructureBase implements Structure {\n" + 
+//			"	             ^^^^^^^^^^^^^\n" + 
+//			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'java.lang.Object compute(java.lang.Object, java.util.function.BiFunction)\' must be implemented.\n" + 
+//			"----------\n":
+			"----------\n" + 
+			"1. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void setup(java.nio.ByteBuffer)\' must be implemented.\n" + 
+			"----------\n" + 
+			"2. ERROR in p\\StructureBase.groovy (at line 6)\n" + 
+			"	public class StructureBase implements Structure {\n" + 
+			"	             ^^^^^^^^^^^^^\n" + 
+			"Groovy:Can\'t have an abstract method in a non-abstract class. The class \'test.StructureBase\' must be declared abstract or the method \'void reset()\' must be implemented.\n" + 
+			"----------\n");		
 	}
 
 	public void testGenericsAndGroovyJava_GRE278_2() {
+		if (isJRELevel(AbstractCompilerTest.F_1_8)) {
+			return;
+		}
 		this.runConformTest(new String[] {
 			"Main.java",
 			"public class Main {\n"+
@@ -3653,10 +4542,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			"\n"+
 			"	public Field<?> put(String arg0, Field<?> arg1) {\n"+
 			"		return str.put(arg0, arg1);\n"+
-			"	}\n"+
-			"	\n"+
-			"	public Object put(Object key, Object value) {\n"+
-			"		return str.put(key, value)\n"+
 			"	}\n"+
 			"\n"+
 			"	public void putAll(Map<? extends String, ? extends Field<?>> arg0) {\n"+
@@ -5259,7 +6144,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"success");
 	}
 	
-
 	public void testNotMakingInterfacesImplementGroovyObject() {
 		this.runConformTest(new String[] {
 			"p/X.java",
@@ -6543,6 +7427,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	// see comments in worklog on 8-Jun-09
 	// note this also tests that qualified references are converted correctly (generics info intact)
 	public void testExtendingGenerics_GroovyExtendsJava4() {
+		if (isJRELevel(AbstractCompilerTest.F_1_8)) {
+			return;
+		}
 		this.runConformTest(new String[] {
 				"p/B.groovy",
 				"package p;\n" + 
@@ -6559,6 +7446,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 	
 	public void testExtendingGenerics_GroovyExtendsJava5() {
+		if (isJRELevel(AbstractCompilerTest.F_1_8)) {
+			return;
+		}
 		this.runConformTest(new String[] {
 				"p/B.groovy",
 				"package p;\n" + 
@@ -6572,6 +7462,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	}
 
 	public void testExtendingGenerics_GroovyExtendsJava5a() {
+		if (isJRELevel(AbstractCompilerTest.F_1_8)) {
+			return;
+		}
 		this.runConformTest(new String[] {
 				"p/B.groovy",
 				"package p;\n" + 
@@ -8936,7 +9829,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"1. ERROR in Foo.groovy (at line 6)\n" + 
 		"	ls.add(\'abc\');\n" + 
 		"	^"+(isGE20()?"^^^^^^^^^^^^":"")+"\n" + 
-		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isGE20()?". Please check if the declared type is right and if the method exists.":"")+"\n" + 
+		(isGE23()?
+				"Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] ":
+		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isGE20()?". Please check if the declared type is right and if the method exists.":""))+"\n" + 
 		"----------\n");
 	}
 	
@@ -8997,7 +9892,9 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 		"1. ERROR in Foo.groovy (at line 6)\n" + 
 		"	ls.add(\'abc\');\n" + 
 		"	^"+(isGE20()?"^^^^^^^^^^^^":"")+"\n" + 
-		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isGE20()?". Please check if the declared type is right and if the method exists.":"")+"\n" + 
+		(isGE23()?
+		"Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] \n":
+		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isGE20()?". Please check if the declared type is right and if the method exists.":""))+(isGE23()?"":"\n") + 
 		"----------\n");
 	}
 	
@@ -9996,6 +10893,60 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 			JDTResolver.recordInstances=false;
 		}
 	}
+
+	public void testJDTClassNode_1731() {
+		this.runConformTest(new String[] {
+				"c/Main.java",
+				"package c;\n" +
+				"import java.lang.reflect.Method;\n" +
+				"import a.SampleAnnotation;\n" +
+				"import b.Sample;\n" +
+				"public class Main {\n" +
+				"    public static void main(String[] args) throws Exception {" +
+				"        Method method = Sample.class.getMethod(\"doSomething\");\n" +
+				"        SampleAnnotation annotation = method.getAnnotation(SampleAnnotation.class);\n" +
+				"        System.out.print(annotation);\n" +
+				"    }\n" +
+				"}\n",
+
+				"a/SampleAnnotation.java",
+				"package a;\n" +
+				"import java.lang.annotation.ElementType;\n" +
+				"import java.lang.annotation.Retention;\n" +
+				"import java.lang.annotation.RetentionPolicy;\n" +
+				"import java.lang.annotation.Target;\n" +
+				"@Retention(RetentionPolicy.RUNTIME)\n" +
+				"@Target({ElementType.METHOD})\n" +
+				"public @interface SampleAnnotation {}\n",
+
+				"a/DelegateInOtherProject.java",
+				"package a;\n" +
+				"public class DelegateInOtherProject {\n" +
+				"    @SampleAnnotation\n" +
+				"    public void doSomething() {}\n" +
+				"}\n",
+
+				"b/Sample.groovy",
+				"package b\n" +
+				"import groovy.transform.CompileStatic\n" +
+				"import a.DelegateInOtherProject;\n" +
+				"@CompileStatic\n" +
+				"class Sample {\n" +
+				"    @Delegate(methodAnnotations = true)\n" +
+				"    DelegateInOtherProject delegate\n" +
+				"}\n",
+
+				"b/Delegated.groovy",
+				"package b\n" +
+				"import groovy.transform.CompileStatic\n" +
+				"import a.SampleAnnotation;\n" +
+				"@CompileStatic\n" +
+				"class Delegated {\n" +
+				"    @SampleAnnotation\n" +
+				"    def something() {}\n" +
+				"}\n",
+		}, "@a.SampleAnnotation()");		 
+	}
 	
 	public void testStaticImports2_GtoJ() {
 		this.runConformTest(new String[] {
@@ -10465,9 +11416,25 @@ public class GroovySimpleTest extends AbstractRegressionTest {
    			"----------\n");
     }
 
+    public void testAbstractMethodWithinEnum_STS3803() {
+    	this.runConformTest(new String[] {
+	        "Bad.groovy",
+	        "enum Bad {\n" + 
+	        "	A() {\n" + 
+	        "		@Override\n" + 
+	        "		int foo() {\n" +
+	        "			1\n" +
+	        "		}\n" + 
+	        "	}\n" + 
+	        "	abstract int foo()\n" + 
+			"}"});
+    }
     
     // See https://jira.codehaus.org/browse/GRECLIPSE-1639
     public void testTransforms_Gaelyk() throws IOException {
+		if (isJRELevel(AbstractCompilerTest.F_1_8) || isJRELevel(AbstractCompilerTest.F_1_7)) {
+			return;
+		}
         float classVersion = Float.parseFloat(System.getProperty("java.class.version"));
         if (classVersion < 51.0f) {
             System.out.println("TEST DISABLED: Gaelyk requires a java.class.version of 51.0 or greater. This JRE is java.class.version " + classVersion + 
@@ -10570,25 +11537,6 @@ public class GroovySimpleTest extends AbstractRegressionTest {
 	private GroovyCompilationUnitDeclaration getCUDeclFor(String filename) {
 		return (GroovyCompilationUnitDeclaration)((DebugRequestor)GroovyParser.debugRequestor).declarations.get(filename);
 	}
-
-	static class DebugRequestor implements IGroovyDebugRequestor {
-
-		Map declarations;
-		Map types;
-		
-		public DebugRequestor() {
-			declarations = new HashMap();
-		}
-
-		public void acceptCompilationUnitDeclaration(GroovyCompilationUnitDeclaration gcuDeclaration) {
-			System.out.println(gcuDeclaration);
-			String filename = new String(gcuDeclaration.getFileName());
-			filename=filename.substring(filename.lastIndexOf(File.separator)+1); // Filename now being just X.groovy or Foo.java
-			declarations.put(filename,gcuDeclaration);
-		}
-		
-	}
-	
 
 	private String stringify(TypeReference type) {
 		StringBuffer sb = new StringBuffer();

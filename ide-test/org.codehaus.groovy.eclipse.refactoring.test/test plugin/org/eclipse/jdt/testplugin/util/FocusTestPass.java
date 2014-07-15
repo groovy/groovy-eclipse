@@ -44,8 +44,8 @@ public class FocusTestPass implements IDialogTestPass {
 	/**
 	 * @see IDialogTestPass#checkListTexts()
 	 */
-	public ArrayList checkListTexts() {
-		ArrayList list = new ArrayList(CHECKLIST_SIZE);
+	public ArrayList<String> checkListTexts() {
+		ArrayList<String> list = new ArrayList<String>(CHECKLIST_SIZE);
 		list.add("&1) the initial focus is appropriate.");
 		return list;
 	}

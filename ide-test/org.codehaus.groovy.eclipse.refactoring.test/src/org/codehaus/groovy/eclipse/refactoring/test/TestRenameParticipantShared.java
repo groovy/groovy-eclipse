@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -109,7 +109,7 @@ public class TestRenameParticipantShared extends RenameParticipant implements IS
 			Assert.assertTrue(fgInstance == null);
 		} else {
 			Assert.assertEquals(expected, fgInstance.fElements.size());
-			Assert.assertEquals(expected, fgInstance.fArguments.size());
+			Assert.assertEquals(expected, fgInstance.fArguments.size()); 
 		}
 	}
 
@@ -134,7 +134,7 @@ public class TestRenameParticipantShared extends RenameParticipant implements IS
 			Assert.assertEquals(expected, fgInstance.fSimilarToHandle.size());
 	}
 
-	public static void testSimilarElements(List similarList, List similarNewNameList, List similarNewHandleList) {
+	public static void testSimilarElements(List<String> similarList, List<String> similarNewNameList, List<String> similarNewHandleList) {
 		for (int i=0; i< similarList.size(); i++) {
 			String handle= (String) similarList.get(i);
 			String newHandle= (String)similarNewHandleList.get(i);

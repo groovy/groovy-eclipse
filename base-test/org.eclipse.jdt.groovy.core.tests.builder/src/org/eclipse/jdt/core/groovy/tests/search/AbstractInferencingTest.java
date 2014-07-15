@@ -91,7 +91,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
             fail(sb.toString());
         }
         
-        if (extraDocSnippet != null && ! requestor.result.extraDoc.contains(extraDocSnippet)) {
+        if (extraDocSnippet != null && (requestor.result.extraDoc==null || !requestor.result.extraDoc.contains(extraDocSnippet))) {
             StringBuilder sb = new StringBuilder();
             sb.append("Incorrect Doc found.\n");
             sb.append("Expected doc should contain: " + extraDocSnippet + "\n");

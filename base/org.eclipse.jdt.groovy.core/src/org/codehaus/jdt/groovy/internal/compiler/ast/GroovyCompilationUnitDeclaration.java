@@ -114,7 +114,7 @@ import org.eclipse.jdt.internal.core.util.Util;
 /**
  * A subtype of JDT CompilationUnitDeclaration that represents a groovy source file. It overrides methods as appropriate, delegating
  * to the groovy infrastructure.
- * 
+ *
  * @author Andy Clement
  */
 @SuppressWarnings("restriction")
@@ -171,7 +171,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * processToPhase(), all the groovy files in the project proceed to that phase. This isn't ideal but doesn't necessarily cause a
 	 * problem. But it does mean progress reporting for the compilation is incorrect as it jumps rather than smoothly going from 1
 	 * to 100%.
-	 * 
+	 *
 	 * @param phase the phase to process up to
 	 * @return true if clean processing, false otherwise
 	 */
@@ -305,6 +305,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 							ClassFileConstants.AccDefault);
 				}
 				ref.sourceEnd = Math.max(typeEndOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
+				if (ref.sourceEnd == -1) {
+					ref.sourceEnd = -2;
+				}
 				int start = importNode.getStart();
 				ref.declarationSourceStart = start;
 				int end = importNode.getEnd();
@@ -419,7 +422,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	/**
 	 * Convert groovy annotations into JDT annotations
-	 * 
+	 *
 	 * @return an array of annotations or null if there are none
 	 */
 	private Annotation[] transformAnnotations(List<AnnotationNode> groovyAnnotations) {
@@ -664,7 +667,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			}
 
 			boolean isInterface = classNode.isInterface();
+			boolean isEnum = (classNode.getModifiers() & Opcodes.ACC_ENUM) != 0;
 			int mods = classNode.getModifiers();
+			if (isTrait(classNode)) {
+				mods |= Opcodes.ACC_INTERFACE;
+			}
 			if ((mods & Opcodes.ACC_ENUM) != 0) {
 				// remove final
 				mods = mods & ~Opcodes.ACC_FINAL;
@@ -679,7 +686,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 					mods = mods & ~(Opcodes.ACC_STATIC);
 				}
 			}
-			typeDeclaration.modifiers = mods & ~(isInterface ? Opcodes.ACC_ABSTRACT : 0);
+
+			typeDeclaration.modifiers = mods & ~((isInterface || isEnum) ? Opcodes.ACC_ABSTRACT : 0);
 
 			fixupSourceLocationsForTypeDeclaration(typeDeclaration, classNode);
 
@@ -706,10 +714,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				}
 			}
 
-			boolean isEnum = (classNode.getModifiers() & Opcodes.ACC_ENUM) != 0;
-			configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum);
+			configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum, isTrait(classNode));
 			configureSuperInterfaces(typeDeclaration, classNode);
-			typeDeclaration.methods = createMethodAndConstructorDeclarations(classNode, isEnum, compilationResult);
+			typeDeclaration.methods = createMethodAndConstructorDeclarations(typeDeclaration, classNode, isEnum, compilationResult);
 			typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
 			typeDeclaration.properties = classNode.getProperties();
 			if (classNode instanceof InnerClassNode) {
@@ -804,7 +811,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	private boolean isAnon(ClassNode classNode) {
 		// FIXADE does Groovy support non-anon local types???
 		return classNode.getEnclosingMethod() != null
-		// check to see if anon type inside of a script
+				// check to see if anon type inside of a script
 				|| (classNode.getOuterClass() != null && classNode.getOuterClass().isScript());
 	}
 
@@ -823,14 +830,29 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		return CharOperation.subarray(fileName, start, end);
 	}
 
+	private boolean isTrait(ClassNode classNode) {
+		List<AnnotationNode> annotations = classNode.getAnnotations();
+		if (annotations.size() > 0) {
+			for (AnnotationNode annotation : annotations) {
+				String annotationTypeName = annotation.getClassNode().getName();
+				if (annotationTypeName.equals("groovy.transform.Trait")) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * Build JDT representations of all the method/ctors on the groovy type
+	 *
+	 * @param typeDeclaration
 	 */
-	private AbstractMethodDeclaration[] createMethodAndConstructorDeclarations(ClassNode classNode, boolean isEnum,
-			CompilationResult compilationResult) {
+	private AbstractMethodDeclaration[] createMethodAndConstructorDeclarations(GroovyTypeDeclaration typeDeclaration,
+			ClassNode classNode, boolean isEnum, CompilationResult compilationResult) {
 		List<AbstractMethodDeclaration> accumulatedDeclarations = new ArrayList<AbstractMethodDeclaration>();
 		createConstructorDeclarations(classNode, isEnum, accumulatedDeclarations);
-		createMethodDeclarations(classNode, isEnum, accumulatedDeclarations);
+		createMethodDeclarations(typeDeclaration, classNode, isEnum, accumulatedDeclarations);
 		return accumulatedDeclarations.toArray(new AbstractMethodDeclaration[accumulatedDeclarations.size()]);
 	}
 
@@ -861,14 +883,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * building declarations, if you want the SourceTypeBinding to correctly build an enum field binding (in
 	 * SourceTypeBinding.resolveTypeFor(FieldBinding)) then you need to: (1) avoid setting modifiers, the enum fields are not
 	 * expected to have any modifiers (2) leave the type as null, that is how these things are identified by JDT.
-	 * 
+	 *
 	 * @param isEnum
 	 */
 	private FieldDeclaration[] createFieldDeclarations(ClassNode classNode, boolean isEnum) {
 		List<FieldDeclaration> fieldDeclarations = new ArrayList<FieldDeclaration>();
 		List<FieldNode> fieldNodes = classNode.getFields();
+		boolean isTrait = isTrait(classNode);
 		if (fieldNodes != null) {
 			for (FieldNode fieldNode : fieldNodes) {
+				if (isTrait && !(fieldNode.isPublic() && fieldNode.isStatic() && fieldNode.isFinal())) {
+					continue;
+				}
 				if (isEnum && (fieldNode.getName().equals("MAX_VALUE") || fieldNode.getName().equals("MIN_VALUE"))) {
 					continue;
 				}
@@ -899,6 +925,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	private void createConstructorDeclarations(ClassNode classNode, boolean isEnum,
 			List<AbstractMethodDeclaration> accumulatedMethodDeclarations) {
+		if (isTrait(classNode)) {
+			return;
+		}
 		List<ConstructorNode> constructorNodes = classNode.getDeclaredConstructors();
 
 		char[] ctorName = null;
@@ -1049,12 +1078,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	/**
 	 * Build JDT representations of all the methods on the groovy type
+	 *
+	 * @param typeDeclaration the type declaration the method is being created for
 	 */
-	private void createMethodDeclarations(ClassNode classNode, boolean isEnum,
+	private void createMethodDeclarations(GroovyTypeDeclaration typeDeclaration, ClassNode classNode, boolean isEnum,
 			List<AbstractMethodDeclaration> accumulatedDeclarations) {
+		boolean isTrait = isTrait(classNode);
 		List<MethodNode> methods = classNode.getMethods();
 
 		for (MethodNode methodNode : methods) {
+			if (isTrait && (methodNode.isPrivate() || methodNode.isStatic())) {
+				continue;
+			}
 			if (isEnum && methodNode.isSynthetic()) {
 				// skip synthetic methods in enums
 				continue;
@@ -1068,6 +1103,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				// }
 			}
 			MethodDeclaration methodDeclaration = createMethodDeclaration(classNode, methodNode, isEnum, compilationResult);
+			if (methodNode.isAbstract()) {
+				typeDeclaration.bits |= ASTNode.HasAbstractMethods;
+			}
 			// methodDeclaration.javadoc = new Javadoc(0, 20);
 			if (methodNode.hasDefaultValue()) {
 				createMethodVariants(classNode, methodNode, isEnum, methodDeclaration, accumulatedDeclarations, compilationResult);
@@ -1213,6 +1251,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			methodDeclaration.returnType = createTypeReferenceForClassNode(returnType);
 			return methodDeclaration;
 		} else {
+			boolean isTrait = isTrait(classNode);
 			MethodDeclaration methodDeclaration = new MethodDeclaration(compilationResult);
 			// TODO refactor - extract method
 			GenericsType[] generics = methodNode.getGenericsTypes();
@@ -1240,6 +1279,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			// Note: modifiers for the MethodBinding constructed for this declaration will be created marked with
 			// AccVarArgs if the bitset for the type reference in the final argument is marked IsVarArgs
 			int modifiers = methodNode.getModifiers();
+			if (isTrait) {
+				modifiers &= ~ClassFileConstants.AccAbstract;
+			}
+
 			modifiers &= ~(ClassFileConstants.AccSynthetic | ClassFileConstants.AccTransient);
 			methodDeclaration.annotations = transformAnnotations(methodNode.getAnnotations());
 			methodDeclaration.modifiers = modifiers;
@@ -1305,8 +1348,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		}
 	}
 
-	private void configureSuperClass(TypeDeclaration typeDeclaration, ClassNode superclass, boolean isEnum) {
-		if (isEnum && superclass.getName().equals("java.lang.Enum")) {
+	private void configureSuperClass(TypeDeclaration typeDeclaration, ClassNode superclass, boolean isEnum, boolean isTrait) {
+		if (isEnum && superclass.getName().equals("java.lang.Enum") || isTrait) {
 			// Don't wire it in, JDT will do it
 			typeDeclaration.superclass = null;
 		} else {
@@ -1474,7 +1517,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 	// because 'length' is computed as 'end-start+1' and start==-1 indicates it does not exist, then
 	// to have a length of 0 the end must be -2.
-	private static long NON_EXISTENT_POSITION = toPos(-1, -2);
+	private static long NON_EXISTENT_POSITION = ((-1L << 32) | -2L);
 
 	/**
 	 * Pack start and end positions into a long - no adjustments are made to the values passed in, the caller must make any required
@@ -1482,6 +1525,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 */
 	private static long toPos(long start, long end) {
 		if (start == 0 && end <= 0) {
+			return NON_EXISTENT_POSITION;
+		} else if (start < 0 || end < 0) {
 			return NON_EXISTENT_POSITION;
 		}
 		return ((start << 32) | end);
@@ -2008,13 +2053,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		// opening bracket
 		ctorDeclaration.bodyStart =
-		// try for opening bracket
-		ctorNode.getCode() != null ? ctorNode.getCode().getStart() :
-		// handle abstract constructor. not sure if this can ever happen, but you never know with Groovy
-				ctorNode.getNameEnd();
+				// try for opening bracket
+				ctorNode.getCode() != null ? ctorNode.getCode().getStart() :
+					// handle abstract constructor. not sure if this can ever happen, but you never know with Groovy
+					ctorNode.getNameEnd();
 
-		// closing bracket or ';' same as declarationSourceEnd
-		ctorDeclaration.bodyEnd = ctorNode.getEnd() - 1;
+				// closing bracket or ';' same as declarationSourceEnd
+				ctorDeclaration.bodyEnd = ctorNode.getEnd() - 1;
 	}
 
 	/**
@@ -2038,14 +2083,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 		// opening bracket
 		methodDeclaration.bodyStart =
-		// try for opening bracket
-		methodNode.getCode() != null ? methodNode.getCode().getStart() :
-		// run() method for script has no opening bracket
-		// also need to handle abstract methods
-				Math.max(methodNode.getNameEnd(), methodNode.getStart());
+				// try for opening bracket
+				methodNode.getCode() != null ? methodNode.getCode().getStart() :
+					// run() method for script has no opening bracket
+					// also need to handle abstract methods
+					Math.max(methodNode.getNameEnd(), methodNode.getStart());
 
-		// closing bracket or ';' same as declarationSourceEnd
-		methodDeclaration.bodyEnd = methodNode.getEnd() - 1;
+				// closing bracket or ';' same as declarationSourceEnd
+				methodDeclaration.bodyEnd = methodNode.getEnd() - 1;
 	}
 
 	/**
@@ -2386,7 +2431,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * Check the supplied TypeReference. If there are problems with the construction of a TypeReference then these may not surface
 	 * until it is used later, perhaps when reconciling. The easiest way to check there will not be problems later is to check it at
 	 * construction time.
-	 * 
+	 *
 	 * @param toVerify the type reference to check
 	 * @param does the type reference really exist in the source or is it conjured up based on the source
 	 * @return the verified type reference
@@ -2416,5 +2461,4 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	public void tagAsScript() {
 		this.isScript = true;
 	}
-
 }

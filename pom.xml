@@ -14,6 +14,11 @@
 		in a properties file. The properties file must be specified via env variable 
 		'dist_properties'. The existence of this env variable enables the deployment 
 		profile automatically and will allow the 'deploy' to execute. -->
+		
+	<!-- Example commands to build and deploy a milestone or a release
+	     mvn clean deploy -Pe43j8 -Pmilestone
+	     mvn clean deploy -Pe43j8 -Prelease
+	   -->	
 
 	<properties>
 		<tycho-version>0.19.0</tycho-version>
@@ -35,6 +40,7 @@
 		<dist.name>Groovy Eclipse</dist.name>
 		<dist.key>GRECLIPSE</dist.key>
 		<dist.type>snapshot</dist.type>
+		<dist.qualifier></dist.qualifier> <!-- appended to the end of p2 qualifier, used to add stuff like 'M1', 'RELEASE' etc. -->
 		<dist.path>${dist.type}/${dist.key}/${dist.target}</dist.path>
 		
 		<!-- signing properties:
@@ -76,15 +82,19 @@
 		<module>ide/org.codehaus.groovy.eclipse</module>
 
 		<module>ide/Feature-org.codehaus.groovy.eclipse.feature</module>
+		<module>ide/Feature-org.codehaus.groovy18.feature</module>
 		<module>ide/Feature-org.codehaus.groovy20.feature</module>
 		<module>ide/Feature-org.codehaus.groovy21.feature</module>
 		<module>ide/Feature-org.codehaus.groovy22.feature</module>
+		<module>ide/Feature-org.codehaus.groovy23.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.headless.feature</module>
 
 		<module>base/org.eclipse.jdt.groovy.core</module>
+		<module>base/org.codehaus.groovy18</module>
 		<module>base/org.codehaus.groovy20</module>
 		<module>base/org.codehaus.groovy21</module>
 		<module>base/org.codehaus.groovy22</module>
+		<module>base/org.codehaus.groovy23</module>
 		<module>base/org.codehaus.groovy.eclipse.compilerResolver</module>
 
 		<module>ide/org.codehaus.groovy.eclipse.ant</module>
@@ -110,6 +120,38 @@
 	</modules>
 
 	<profiles>
+	    <profile>
+	       <id>e44</id>
+			<repositories>
+				<repository>
+					<id>e44M</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/eclipse/updates/4.4milestones</url>
+				</repository>
+<!-- 			<repository>
+					<id>kepler</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/releases/luna</url>
+				</repository>
+				 -->
+				<!-- luna simul release update site doesn't exist yet. Add individual sites. When 4.4 is 
+					released. Replace with luna site -->
+				<repository>
+				   <id>m2e</id>
+				   <layout>p2</layout>
+				   <url>http://download.eclipse.org/technology/m2e/milestones/1.5</url>
+				</repository>
+			</repositories>
+			<modules>
+				<module>jdt-patch/e44/Feature-org.codehaus.groovy.jdt.patch</module>
+				<module>jdt-patch/e44/org.eclipse.jdt.core</module>
+			</modules>
+			<properties>
+				<dist.target>e4.4</dist.target>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e44${dist.qualifier}'</greclipse.build.qualifier>
+			</properties>
+	    </profile>
+	
 		<profile>
 			<id>e43j8</id>
 			<repositories>
@@ -135,7 +177,7 @@
 			</modules>
 			<properties>
 				<dist.target>e4.3-j8</dist.target>
-				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e43j8'</greclipse.build.qualifier>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e43j8${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 		
@@ -159,7 +201,7 @@
 			</modules>
 			<properties>
 				<dist.target>e4.3</dist.target>
-				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e43'</greclipse.build.qualifier>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e43${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
 
@@ -183,10 +225,33 @@
 			</modules>
 			<properties>
 				<dist.target>e4.2</dist.target>
-				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e42'</greclipse.build.qualifier>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e42${dist.qualifier}'</greclipse.build.qualifier>
 			</properties>
 		</profile>
-		
+
+		<profile>
+			<id>e37</id>
+			<repositories>
+				<repository>
+					<id>e37</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/eclipse/updates/3.7</url>
+				</repository>
+				<repository>
+					<id>juno</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/releases/indigo</url>
+				</repository>
+			</repositories>
+			<modules>
+				<module>jdt-patch/e37/Feature-org.codehaus.groovy.jdt.patch</module>
+				<module>jdt-patch/e37/org.eclipse.jdt.core</module>
+			</modules>
+			<properties>
+				<dist.target>e3.7</dist.target>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e37${dist.qualifier}'</greclipse.build.qualifier>
+			</properties>
+		</profile>
 
 		<profile>
 			<id>s3-deploy</id>
@@ -240,6 +305,21 @@
 				<signing.store.password>${env.bamboo_signing_store_password}</signing.store.password>
 				<signing.key.password>${env.bamboo_signing_key_password}</signing.key.password>
 				<signing.keystore>~/.keytool/springsource.jks</signing.keystore>
+			</properties>
+		</profile>
+
+		<!-- snaphshot builds are the default. Enable one of the profiles below to do a milestone or release build -->		
+		<profile>
+			<id>milestone</id>
+			<properties>
+				<dist.type>milestone</dist.type>
+			</properties>
+		</profile>
+		<profile>
+			<id>release</id>
+			<properties>
+				<dist.type>release</dist.type>
+				<dist.qualifier>-RELEASE</dist.qualifier>
 			</properties>
 		</profile>
 	</profiles>
@@ -378,8 +458,21 @@
 						</goals>
 						<configuration>
 							<excludes>
-						  		<plugin id="org.codehaus.groovy.eclipse"/>
-						  		<!--  <feature id="feature.nosource"/> -->
+								<plugin id="org.codehaus.groovy.eclipse"/>
+								<!-- Stuff below is related to j8 patch. Can't find source for these patched bits. -->
+								<plugin id="org.eclipse.jdt.apt.core" />
+								<plugin id="org.eclipse.jdt.apt.ui" />
+								<plugin id="org.eclipse.jdt.apt.pluggable.core" />
+								<plugin id="org.eclipse.jdt.compiler.apt" />
+								<plugin id="org.eclipse.jdt.compiler.tool" />
+								<plugin id="org.eclipse.jdt.annotation" />
+								<plugin id="org.eclipse.jdt.debug.ui" />
+								<plugin id="org.eclipse.jdt.debug" />
+								<plugin id="org.eclipse.jdt.launching" />
+								<plugin id="org.eclipse.jdt.ui" />
+								<plugin id="org.eclipse.jdt.junit" />
+								<plugin id="org.eclipse.jdt.junit.core" />
+								<feature id="org.eclipse.jdt.a2.java8patch" />
 							</excludes>
 						</configuration>
 					</execution>
