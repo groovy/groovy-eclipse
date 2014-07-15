@@ -44,7 +44,6 @@ import org.codehaus.groovy.eclipse.codeassist.creators.CategoryProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.FieldProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.IProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.MethodProposalCreator;
-import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
@@ -393,14 +392,9 @@ public class StatementAndExpressionCompletionProcessor extends
                     groovyProposals.addAll(new FieldProposalCreator().findAllProposals(containingClass,
                             VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), true,
                             ContentAssistLocation.STATEMENT == context.location));
-                    List<IGroovyProposal> methodProposals = new MethodProposalCreator().findAllProposals(containingClass,
+                    groovyProposals.addAll(new MethodProposalCreator().findAllProposals(containingClass,
                             VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), true,
-                            ContentAssistLocation.STATEMENT == context.location);
-                    for (IGroovyProposal proposal : methodProposals) {
-                        ((GroovyMethodProposal) proposal).setNoParens(true);
-                        ((GroovyMethodProposal) proposal).setUseNamedArguments(false);
-                        groovyProposals.add(proposal);
-                    }
+                            ContentAssistLocation.STATEMENT == context.location));
                 }
             }
             completionType = context.containingDeclaration instanceof ClassNode ? (ClassNode) context.containingDeclaration
