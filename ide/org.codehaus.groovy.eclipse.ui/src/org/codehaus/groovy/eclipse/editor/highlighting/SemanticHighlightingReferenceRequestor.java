@@ -27,6 +27,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
@@ -126,6 +127,13 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             } else if (isNumber(((ConstantExpression) node).getType())) {
                 Position p = getPosition(node);
                 pos = new HighlightedTypedPosition(p, HighlightKind.NUMBER);
+            }
+        } else if (node instanceof MapEntryExpression) {
+            Expression key = ((MapEntryExpression) node).getKeyExpression();
+            char c = contents[key.getStart()];
+            if (key instanceof ConstantExpression && c != '\'' && c != '"' && c != '/') {
+                Position p = getPosition(key);
+                pos = new HighlightedTypedPosition(p, HighlightKind.MAP_KEY);
             }
         }
 
