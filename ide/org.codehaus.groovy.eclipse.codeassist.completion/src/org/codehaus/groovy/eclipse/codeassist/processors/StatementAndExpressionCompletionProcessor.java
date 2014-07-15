@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
@@ -40,7 +41,10 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext;
 import org.codehaus.groovy.eclipse.codeassist.creators.AbstractProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.CategoryProposalCreator;
+import org.codehaus.groovy.eclipse.codeassist.creators.FieldProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.IProposalCreator;
+import org.codehaus.groovy.eclipse.codeassist.creators.MethodProposalCreator;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
@@ -382,6 +386,22 @@ public class StatementAndExpressionCompletionProcessor extends
                 groovyProposals.addAll(new CategoryProposalCreator().findAllProposals(containingClass,
                         VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), false,
                         ContentAssistLocation.STATEMENT == context.location));
+            } else if (node instanceof ImportNode) {
+                ImportNode importNode = (ImportNode) node;
+                if (importNode.isStatic()) {
+                    containingClass = importNode.getType();
+                    groovyProposals.addAll(new FieldProposalCreator().findAllProposals(containingClass,
+                            VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), true,
+                            ContentAssistLocation.STATEMENT == context.location));
+                    List<IGroovyProposal> methodProposals = new MethodProposalCreator().findAllProposals(containingClass,
+                            VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), true,
+                            ContentAssistLocation.STATEMENT == context.location);
+                    for (IGroovyProposal proposal : methodProposals) {
+                        ((GroovyMethodProposal) proposal).setNoParens(true);
+                        ((GroovyMethodProposal) proposal).setUseNamedArguments(false);
+                        groovyProposals.add(proposal);
+                    }
+                }
             }
             completionType = context.containingDeclaration instanceof ClassNode ? (ClassNode) context.containingDeclaration
                     : context.unit.getModuleNode().getScriptClassDummy();
