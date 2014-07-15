@@ -3,7 +3,8 @@
 
 	<groupId>org.codehaus.groovy</groupId>
 	<artifactId>groovy-eclipse-compiler</artifactId>
-	<version>2.9.0-01-SNAPSHOT</version>
+	<!-- 	<version>2.9.0-01-SNAPSHOT</version> -->
+	<version>2.9.0-01</version>
 
 	<packaging>maven-plugin</packaging>
 	<name>Groovy-Eclipse compiler</name>
@@ -30,9 +31,9 @@
 
 	<developers>
 		<developer>
-			<id>werdna</id>
-			<name>Andrew Eisenberg</name>
-			<email>andrew@eisenberg.as</email>
+			<id>kdvolder</id>
+			<name>Kris De Volder</name>
+			<email>kdevolder@gopivotal.com</email>
 		</developer>
 	</developers>
 
@@ -101,6 +102,19 @@
 			</extension>
 		</extensions>
 		<plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-release-plugin</artifactId>

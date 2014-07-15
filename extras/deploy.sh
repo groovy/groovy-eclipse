@@ -1,12 +1,13 @@
 #!/bin/bash
 
+WD=`pwd`
+
 echo Building groovy-eclipse-batch and deploying or staging to codehaus
-cd groovy-eclipse-batch-builder
-#ant extract-create-install
+cd ${WD}/groovy-eclipse-batch-builder
 ant extract-create-publish
 
 echo Deploying/staging groovy-eclipse-compiler to codehaus
-cd ../groovy-eclipse-compiler
+cd ${WD}/groovy-eclipse-compiler
 mvn clean deploy
 
 #clear maven local to make sure we use the deployed artifacts
@@ -14,5 +15,5 @@ mvn clean deploy
 rm -fr ~/.m2/repository/org/codehaus/groovy/groovy-eclipse-*
 
 echo Running integration tests...
-cd ../groovy-eclipse-compiler-tests
+cd ${WD}/groovy-eclipse-compiler-tests
 mvn clean install
