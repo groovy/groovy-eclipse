@@ -137,27 +137,32 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
 
         // look at all local variables in scope
         Map<String, IJavaElement> nameElementMap = new LinkedHashMap<String, IJavaElement>();
-        Iterator<Entry<String, VariableInfo>> variablesIter = currentScope.variablesIterator();
-        while (variablesIter.hasNext()) {
-            // GRECLIPSE-1268 currently, no good way to get to the actual
-            // declaration.
-            // of the variable. This can cause ordering problems for the guessed
-            // parameters.
-            Entry<String, VariableInfo> entry = variablesIter.next();
-            // don't put elements in a second time since we are moving from
-            // inner scope to outer scope
-            String varName = entry.getKey();
-            // ignore synthetic getters and setters that are put in the scope.
-            // looking at prefix is a good approximation
+        if (currentScope != null) {
+            Iterator<Entry<String, VariableInfo>> variablesIter = currentScope.variablesIterator();
+            while (variablesIter.hasNext()) {
+                // GRECLIPSE-1268 currently, no good way to get to the actual
+                // declaration.
+                // of the variable. This can cause ordering problems for the
+                // guessed
+                // parameters.
+                Entry<String, VariableInfo> entry = variablesIter.next();
+                // don't put elements in a second time since we are moving from
+                // inner scope to outer scope
+                String varName = entry.getKey();
+                // ignore synthetic getters and setters that are put in the
+                // scope.
+                // looking at prefix is a good approximation
 
-            if (!varName.startsWith("get") && !varName.startsWith("set") && !varName.equals("super") && !varName.startsWith("<")
-                    && !nameElementMap.containsKey(varName)) {
-                ClassNode type = entry.getValue().type;
-                if (isAssignableTo(type, targetType, isInterface)) {
-                    // note that parent, start location, and typeSignature are
-                    // not important here
-                    nameElementMap.put(varName,
-                            ReflectionUtils.createLocalVariable(getEnclosingElement(), varName, 0, typeSignature));
+                if (!varName.startsWith("get") && !varName.startsWith("set") && !varName.equals("super")
+                        && !varName.startsWith("<") && !nameElementMap.containsKey(varName)) {
+                    ClassNode type = entry.getValue().type;
+                    if (isAssignableTo(type, targetType, isInterface)) {
+                        // note that parent, start location, and typeSignature
+                        // are
+                        // not important here
+                        nameElementMap.put(varName,
+                                ReflectionUtils.createLocalVariable(getEnclosingElement(), varName, 0, typeSignature));
+                    }
                 }
             }
         }
