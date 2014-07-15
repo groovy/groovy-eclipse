@@ -71,9 +71,15 @@ public class GroovyCompletionProposalComputer implements
         locationFactoryMap.put(ContentAssistLocation.EXTENDS, factories);
         locationFactoryMap.put(ContentAssistLocation.IMPLEMENTS, factories);
         locationFactoryMap.put(ContentAssistLocation.ANNOTATION, factories);
-        locationFactoryMap.put(ContentAssistLocation.IMPORT, factories);
         locationFactoryMap.put(ContentAssistLocation.CONSTRUCTOR, factories);
         locationFactoryMap.put(ContentAssistLocation.PARAMETER, factories);
+
+        factories = new ArrayList<IGroovyCompletionProcessorFactory>(3);
+        factories.add(new TypeCompletionProcessorFactory());
+        factories.add(new PackageCompletionProcessorFactory());
+        factories.add(new ConstructorCompletionProcessorFactory());
+        factories.add(new ExpressionCompletionProcessorFactory());
+        locationFactoryMap.put(ContentAssistLocation.IMPORT, factories);
 
         factories = new ArrayList<IGroovyCompletionProcessorFactory>(3);
         factories.add(new PackageCompletionProcessorFactory());
