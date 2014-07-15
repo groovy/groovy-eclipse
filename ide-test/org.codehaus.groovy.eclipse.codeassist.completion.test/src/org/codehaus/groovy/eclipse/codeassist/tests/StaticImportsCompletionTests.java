@@ -66,7 +66,7 @@ public class StaticImportsCompletionTests extends CompletionTestCase {
         String contents = "import static java.lang.Boolean.FA";
         ICompilationUnit unit = create(contents);
         fullBuild();
-//        expectingNoProblems();
+        expectingNoProblems();
         
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "FA"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "FALSE", 1);
@@ -75,7 +75,7 @@ public class StaticImportsCompletionTests extends CompletionTestCase {
         String contents = "import static java.lang.Boolean.co";
         ICompilationUnit unit = create(contents);
         fullBuild();
-//        expectingNoProblems();
+        expectingNoProblems();
         
         ICompletionProposal[] proposals = performContentAssist(unit, getLastIndexOf(contents, "co"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "compare", 1);
