@@ -31,6 +31,7 @@ import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.tools.GroovyClass;
 import org.codehaus.groovy.transform.ASTTransformationVisitor;
 import org.codehaus.groovy.transform.AnnotationCollectorTransform;
+
 import groovyjarjarasm.asm.ClassVisitor;
 import groovyjarjarasm.asm.ClassWriter;
 
@@ -120,7 +121,18 @@ public class CompilationUnit extends ProcessingUnit {
         this(configuration, security, loader, null,true,null);
     }
     
-    // GRECLIPSE extraparam
+    // GRECLIPSE start
+    /**
+     * Note: globalASTransformExclude param is ignored it is only implemented for Groovy 23 and up. 
+     * This is just a stub to maintain binary compatibility on the calling side.
+     */
+    public CompilationUnit(CompilerConfiguration configuration, CodeSource security, 
+            GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean allowTransforms, String localTransformsToRunOnReconcile, String globalASTransformExclude) {
+    	this(configuration, security, loader, transformLoader, allowTransforms, localTransformsToRunOnReconcile);
+    }
+    // GRECLIPSE end
+   
+	// GRECLIPSE extra param
     /**
      * Initializes the CompilationUnit with a CodeSource for controlling
      * security stuff, a class loader for loading classes, and a class

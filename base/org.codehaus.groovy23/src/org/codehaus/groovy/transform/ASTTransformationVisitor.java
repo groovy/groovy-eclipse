@@ -17,6 +17,7 @@
 package org.codehaus.groovy.transform;
 
 import groovy.transform.CompilationUnitAware;
+
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.*;
@@ -27,6 +28,7 @@ import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.syntax.SyntaxException;
 
 import groovy.lang.GroovyClassLoader;
+
 import org.codehaus.groovy.GroovyException;
 
 import java.io.BufferedReader;
@@ -250,23 +252,13 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             while (globalServices.hasMoreElements()) {
                 URL service = globalServices.nextElement();
                 String className;
-                
+                                
                 // GRECLIPSE: start: don't consume our own META-INF entries - bit of a hack...
-//                try {
-//                	// this unfortunately also prevents the execution of transforms from project dependencies!
-//					String file = service.getFile().toString();
-//					System.out.println("TRANSFORM: Processing META-INF file "+file);					
-//					if (file.indexOf("jar!")==-1) {
-//						// it is a 'local' services file
-//						// eg. /META-INF/services/org.codehaus.groovy.transform.ASTTransformation
-//						// whereas a jar related one would be:
-//						// eg. file:/N:/workspaces/groovy35/org.codehaus.groovy/lib/groovy-all-1.7-rc-1.jar!/META-INF/services/org.codehaus.groovy.transform.ASTTransformation
-//						continue;
-//					}
-//                } catch (Throwable t) {
-//                	t.printStackTrace();
-//                }
-                // end
+                if (skipManifest(compilationUnit, service)) {
+                	continue;
+                }
+                // GRECLIPSE: end
+                
                 // GRECLIPSE start
                 // was
                 // BufferedReader svcIn = new BufferedReader(new InputStreamReader(service.openStream()));
@@ -377,7 +369,32 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         }
     }
     
-    // GRECLIPSE: start
+
+ // GRECLIPSE: start
+    /** 
+     * Determines whether a given services manifest file belongs to the current project. If so
+     * it must be skipped because we can not apply a GlobalASTTransform to the project that
+     * defines it.
+     */
+    private static boolean skipManifest(CompilationUnit compilationUnit, URL service) {
+    	if (service==null) {
+    		//This shouldn't happen, but anyhow...
+    		return true;
+    	}
+    	String exclude = compilationUnit.excludeGlobalASTScan;
+		if (exclude==null) {
+    		return false;
+    	}
+    	String proto = service.getProtocol();
+    	if ("file".equals(proto)) {
+//        	System.out.println("skip? "+service);
+//            System.out.println("Exclude = "+exclude);
+            boolean isExclude = service.getPath().startsWith(exclude);
+            return isExclude;
+    	}
+ 		return false;
+ 	}
+    
     private static List<String> globalTransformsAllowedInReconcile = null;
     
     private static void ensurelobalTransformsAllowedInReconcileInitialized() {

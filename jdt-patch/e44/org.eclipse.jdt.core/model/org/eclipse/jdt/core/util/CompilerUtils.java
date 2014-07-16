@@ -156,7 +156,17 @@ public class CompilerUtils {
 				t.printStackTrace();				
 			}
 		}
-		optionMap.put(CompilerOptions.OPTIONG_GroovyProjectName,javaProject.getProject().getName());
+		IProject project = javaProject.getProject();
+		try {
+			IPath defaultOutputPath = javaProject.getOutputLocation();
+			String defaultOutputLocation = pathToString(defaultOutputPath, project);
+			optionMap.put(CompilerOptions.OPTIONG_GroovyExcludeGlobalASTScan, defaultOutputLocation);
+		} catch (Throwable t) {
+			System.err.println("Problem configuring serviceScanExclude"); //$NON-NLS-1$
+			t.printStackTrace();				
+		}
+		optionMap.put(CompilerOptions.OPTIONG_GroovyProjectName, project.getName());
+		
 	}
 
 		

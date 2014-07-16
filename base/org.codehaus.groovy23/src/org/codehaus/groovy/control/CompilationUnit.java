@@ -17,8 +17,8 @@ package org.codehaus.groovy.control;
 
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyRuntimeException;
-
 import groovy.transform.CompilationUnitAware;
+
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.classgen.*;
@@ -33,6 +33,7 @@ import org.codehaus.groovy.tools.GroovyClass;
 import org.codehaus.groovy.transform.ASTTransformationVisitor;
 import org.codehaus.groovy.transform.AnnotationCollectorTransform;
 import org.codehaus.groovy.transform.trait.TraitComposer;
+
 import groovyjarjarasm.asm.ClassVisitor;
 import groovyjarjarasm.asm.ClassWriter;
 
@@ -89,14 +90,12 @@ public class CompilationUnit extends ProcessingUnit {
     LinkedList[] phaseOperations;
     LinkedList[] newPhaseOperations;
 
-
     /**
      * Initializes the CompilationUnit with defaults.
      */
     public CompilationUnit() {
         this(null, null, null);
     }
-
 
     /**
      * Initializes the CompilationUnit with defaults except for class loader.
@@ -118,11 +117,11 @@ public class CompilationUnit extends ProcessingUnit {
      * security stuff and a class loader for loading classes.
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, GroovyClassLoader loader) {
-		// GRECLIPSE extra param
-        this(configuration, security, loader, null,true,null);
+		// GRECLIPSE extra params
+        this(configuration, security, loader, null,true,null, null);
     }
     
-    // GRECLIPSE extraparam
+    // GRECLIPSE extraparams
     /**
      * Initializes the CompilationUnit with a CodeSource for controlling
      * security stuff, a class loader for loading classes, and a class
@@ -137,11 +136,13 @@ public class CompilationUnit extends ProcessingUnit {
      * @param configuration - compilation configuration
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, 
-                           GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean allowTransforms, String localTransformsToRunOnReconcile) {
+                           GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean allowTransforms, 
+                           String localTransformsToRunOnReconcile, String excludeGlobalASTScan) {
         super(configuration, loader, null);
 
 		//GRECLISE start
         this.allowTransforms = allowTransforms;
+        this.excludeGlobalASTScan = excludeGlobalASTScan;
 		//GRECLISE end
         this.astTransformationsContext = new ASTTransformationsContext(this, transformLoader);
         this.names = new ArrayList<String>();
@@ -1310,9 +1311,15 @@ public class CompilationUnit extends ProcessingUnit {
 		return "CompilationUnit: null";
 	}
 
+	/**
+	 * Path to a directory that should be ignored when searching for manifest files
+	 * that define global AST transforms. See bug https://jira.codehaus.org/browse/GRECLIPSE-1762
+	 */
+	public String excludeGlobalASTScan;
 	public boolean allowTransforms = true;
 	public boolean isReconcile = false;
 	public List<String> localTransformsToRunOnReconcile = null;
+	
 	
 	/**
 	 * Slightly modifies the behaviour of the phases based on what the caller really needs.  Some invocations of the compilation
@@ -1334,5 +1341,5 @@ public class CompilationUnit extends ProcessingUnit {
 		this.isReconcile = isReconcile;
 	}
 	// end
-    
+	
 }

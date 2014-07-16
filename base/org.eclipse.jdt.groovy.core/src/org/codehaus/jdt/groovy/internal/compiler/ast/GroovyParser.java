@@ -64,7 +64,7 @@ import org.eclipse.jdt.internal.core.builder.BuildNotifier;
 /**
  * The mapping layer between the groovy parser and the JDT. This class communicates with the groovy parser and translates results
  * back for JDT to consume.
- * 
+ *
  * @author Andy Clement
  */
 @SuppressWarnings("restriction")
@@ -423,7 +423,7 @@ public class GroovyParser {
 		IFile eclipseFile = null;
 		// GRECLIPSE-1269 ensure get plugin is not null to ensure the workspace is open (ie- not in batch mode)
 		if (ResourcesPlugin.getPlugin() != null && path.segmentCount() >= 2) { // Needs 2 segments: a project and file name or
-																				// eclipse throws assertion failed here.
+			// eclipse throws assertion failed here.
 			eclipseFile = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(filepath));
 			final IPath location = eclipseFile.getLocation();
 			if (location != null) {
@@ -483,7 +483,7 @@ public class GroovyParser {
 	/**
 	 * ProgressListener is called back when parsing of a file or generation of a classfile completes. By calling back to the build
 	 * notifier we ignore those long pauses where it look likes it has hung!
-	 * 
+	 *
 	 * Note: this does not move the progress bar, it merely updates the text
 	 */
 	static class ProgressListenerImpl implements ProgressListener {
@@ -569,7 +569,7 @@ public class GroovyParser {
 		}
 
 		CompilationUnit it = new CompilationUnit(compilerConfiguration, null, loader, transformLoader, allowTransforms,
-				compilerOptions.groovyTransformsToRunOnReconcile);
+				compilerOptions.groovyTransformsToRunOnReconcile, compilerOptions.groovyExcludeGlobalASTScan);
 		// Grails: start
 		// This code makes Grails 1.4.M1 AST transforms work.
 		if (allowTransforms && transformLoader != null && compilerOptions != null && ((compilerOptions.groovyFlags & 0x01) != 0)) {
