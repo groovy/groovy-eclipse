@@ -2,51 +2,51 @@
 
 <site>
 
-   <feature url="features/org.codehaus.groovy.eclipse.feature.source_2.9.0.qualifier.jar" id="org.codehaus.groovy.eclipse.feature.source" version="2.9.0.qualifier">
+   <feature url="features/org.codehaus.groovy.eclipse.feature.source_2.9.1.qualifier.jar" id="org.codehaus.groovy.eclipse.feature.source" version="2.9.1.qualifier">
       <category name="org.codehaus.groovy.eclipse.sdk"/>
    </feature>
-   <feature url="features/org.codehaus.groovy.jdt.patch.source_2.9.0.qualifier.jar" id="org.codehaus.groovy.jdt.patch.source" version="2.9.0.qualifier">
+   <feature url="features/org.codehaus.groovy.jdt.patch.source_2.9.1.qualifier.jar" id="org.codehaus.groovy.jdt.patch.source" version="2.9.1.qualifier">
       <category name="org.codehaus.groovy.eclipse.sdk"/>
    </feature>
 
-   <feature url="features/org.codehaus.groovy.eclipse.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy.eclipse.feature" version="2.9.0.qualifier">
+   <feature url="features/org.codehaus.groovy.eclipse.feature_2.9.1.qualifier.jar" id="org.codehaus.groovy.eclipse.feature" version="2.9.1.qualifier">
       <category name="org.codehaus.groovy.eclipse"/>
    </feature>
    
-   <feature url="features/org.codehaus.groovy.jdt.patch_2.9.0.qualifier.jar" id="org.codehaus.groovy.jdt.patch" version="2.9.0.qualifier" patch="true"/>
+   <feature url="features/org.codehaus.groovy.jdt.patch_2.9.1.qualifier.jar" id="org.codehaus.groovy.jdt.patch" version="2.9.1.qualifier" patch="true"/>
    
    <!-- Not yet ported to tycho build:
-   <feature url="features/org.codehaus.groovy17.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy17.feature" version="2.9.0.qualifier">
+   <feature url="features/org.codehaus.groovy17.feature_2.9.1.qualifier.jar" id="org.codehaus.groovy17.feature" version="2.9.1.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature> -->
    
-   <feature url="features/org.codehaus.groovy18.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy18.feature" version="2.9.0.qualifier">
+   <feature url="features/org.codehaus.groovy18.feature_2.9.1.qualifier.jar" id="org.codehaus.groovy18.feature" version="2.9.1.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
-   <feature url="features/org.codehaus.groovy20.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy20.feature" version="2.9.0.qualifier">
+   <feature url="features/org.codehaus.groovy20.feature_2.9.1.qualifier.jar" id="org.codehaus.groovy20.feature" version="2.9.1.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
-   <feature url="features/org.codehaus.groovy21.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy21.feature" version="2.9.0.qualifier">
+   <feature url="features/org.codehaus.groovy21.feature_2.9.1.qualifier.jar" id="org.codehaus.groovy21.feature" version="2.9.1.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
-   <feature url="features/org.codehaus.groovy22.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy22.feature" version="2.9.0.qualifier">
+   <feature url="features/org.codehaus.groovy22.feature_2.9.1.qualifier.jar" id="org.codehaus.groovy22.feature" version="2.9.1.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
-   <feature url="features/org.codehaus.groovy23.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy23.feature" version="2.9.0.qualifier">
+   <feature url="features/org.codehaus.groovy23.feature_2.9.1.qualifier.jar" id="org.codehaus.groovy23.feature" version="2.9.1.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
    
-   <feature url="features/org.codehaus.groovy.m2eclipse.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse.feature" version="2.9.0.qualifier">
+   <feature url="features/org.codehaus.groovy.m2eclipse.feature_2.9.1.qualifier.jar" id="org.codehaus.groovy.m2eclipse.feature" version="2.9.1.qualifier">
       <category name="org.codehaus.groovy.m2eclipse"/>
    </feature>
    <!--
-   <feature url="features/org.codehaus.groovy.m2eclipse.source_2.9.0.qualifier.jar" id="org.codehaus.groovy.m2eclipse.source" version="2.9.0.qualifier">
+   <feature url="features/org.codehaus.groovy.m2eclipse.source_2.9.1.qualifier.jar" id="org.codehaus.groovy.m2eclipse.source" version="2.9.1.qualifier">
       <category name="org.codehaus.groovy.m2eclipse"/>
    </feature>
-   <feature url="features/org.codehaus.groovy.alltests.feature.source_2.9.0.qualifier.jar" id="org.codehaus.groovy.alltests.feature.source" version="2.9.0.qualifier">
+   <feature url="features/org.codehaus.groovy.alltests.feature.source_2.9.1.qualifier.jar" id="org.codehaus.groovy.alltests.feature.source" version="2.9.1.qualifier">
       <category name="org.codehaus.groovy.sdk"/>
    </feature> -->
-   <feature url="features/org.codehaus.groovy.alltests.feature_2.9.0.qualifier.jar" id="org.codehaus.groovy.alltests.feature" version="2.9.0.qualifier">
+   <feature url="features/org.codehaus.groovy.alltests.feature_2.9.1.qualifier.jar" id="org.codehaus.groovy.alltests.feature" version="2.9.1.qualifier">
       <!-- <category name="org.codehaus.groovy.sdk"/> -->
    </feature>
    
