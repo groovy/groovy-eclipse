@@ -149,6 +149,7 @@ public class CompilerOptions {
 	public static final String OPTIONG_GroovyExtraImports = "org.eclipse.jdt.core.compiler.groovy.groovyExtraImports"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyTransformsToRunOnReconcile = "org.eclipse.jdt.core.compiler.groovy.groovyTransformsToRunOnReconcile"; //$NON-NLS-1$
 	public static final String OPTIONG_GroovyCustomizerClassesList = "org.eclipse.jdt.core.compiler.groovy.groovyCustomizerClassesList"; //$NON-NLS-1$
+	public static final String OPTIONG_GroovyExcludeGlobalASTScan = "org.eclipse.jdt.core.compiler.groovy.groovyServiceScanExclude";  //$NON-NLS-1$
 	// GROOVY end
 	
 	/**
@@ -385,6 +386,7 @@ public class CompilerOptions {
 	public String groovyExtraImports = null;
 	public String groovyProjectName = null;
 	public String groovyTransformsToRunOnReconcile = null;
+	public String groovyExcludeGlobalASTScan = null;
 	// GROOVY end
 
 
@@ -1596,6 +1598,9 @@ public class CompilerOptions {
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyProjectName)) != null) {
 			this.groovyProjectName = (String)optionValue;
+		}
+		if ((optionValue = optionsMap.get(OPTIONG_GroovyExcludeGlobalASTScan)) != null) {
+			this.groovyExcludeGlobalASTScan = (String)optionValue;
 		}
 		// GROOVY end
 	}
