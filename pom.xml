@@ -127,9 +127,9 @@
 			<id>e44</id>
 			<repositories>
 				<repository>
-					<id>e44M</id>
+					<id>e44</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.4milestones</url>
+					<url>http://download.eclipse.org/eclipse/updates/4.4</url>
 				</repository>
 				<!-- <repository> <id>kepler</id> <layout>p2</layout> <url>http://download.eclipse.org/releases/luna</url> 
 					</repository> -->
