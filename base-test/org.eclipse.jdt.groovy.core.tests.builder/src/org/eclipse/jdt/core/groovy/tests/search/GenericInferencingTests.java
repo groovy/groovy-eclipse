@@ -971,7 +971,86 @@ def h = [8: 1, bb:8]
         assertType(contents, start, end, "java.lang.String");
         assertDeclaringType(contents, start, end, "null");
     }
-    
+
+    // GRECLIPSE-1696
+    // Generic method type inference with @CompileStatic
+    public void testMethod1() throws Exception {
+        String contents = 
+                "import groovy.transform.CompileStatic\n" +
+                "class A {\n" +
+                "    public <T> T myMethod(Class<T> claz) {\n" +
+                "        return null\n" +
+                "    }\n" +
+                "    @CompileStatic\n" +
+                "    static void main(String[] args) {\n" +
+                "        A a = new A()\n" +
+                "        def val = a.myMethod(String)\n" +
+                "        val.trim()\n" +
+                "    }\n" +
+                "}";
+        
+        int start = contents.lastIndexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
+    // Generic method type inference without @CompileStatic
+    public void testMethod2() throws Exception {
+        String contents = 
+                "class A {\n" +
+                "    public <T> T myMethod(Class<T> claz) {\n" +
+                "        return null\n" +
+                "    }\n" +
+                "    static void main(String[] args) {\n" +
+                "        A a = new A()\n" +
+                "        def val = a.myMethod(String)\n" +
+                "        val.trim()\n" +
+                "    }\n" +
+                "}";
+        
+        int start = contents.lastIndexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
+    // Generic method without object type inference with @CompileStatic
+    public void testMethod3() throws Exception {
+        String contents = 
+                "import groovy.transform.CompileStatic\n" +
+                "class A {\n" +
+                "    public <T> T myMethod(Class<T> claz) {\n" +
+                "        return null\n" +
+                "    }\n" +
+                "    @CompileStatic\n" +
+                "    def m() {\n" +
+                "        def val = myMethod(String)\n" +
+                "        val.trim()\n" +
+                "    }\n" +
+                "}";
+        
+        int start = contents.lastIndexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
+    // Generic method type without object inference without @CompileStatic
+    public void testMethod4() throws Exception {
+        String contents = 
+                "class A {\n" +
+                "    public <T> T myMethod(Class<T> claz) {\n" +
+                "        return null\n" +
+                "    }\n" +
+                "    def m() {\n" +
+                "        def val = myMethod(String)\n" +
+                "        val.trim()\n" +
+                "    }\n" +
+                "}";
+        
+        int start = contents.lastIndexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
     private class ProblemRequestor implements IProblemRequestor {
     	
     	List<IProblem> problems = new ArrayList<IProblem>();
