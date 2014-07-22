@@ -67,8 +67,12 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
             String methodName = method.getName();
             if ((!isStatic || method.isStatic() || method.getDeclaringClass() == VariableScope.OBJECT_CLASS_NODE) &&
                     checkName(methodName)) {
-                boolean isInterestingType = isInterestingType(method
-                                .getReturnType());
+                boolean isInterestingType = false;
+                if (isStatic && method.isStatic()) {
+                    isInterestingType = true;
+                } else {
+                    isInterestingType = isInterestingType(method.getReturnType());
+                }
                 if (ProposalUtils.looselyMatches(prefix, methodName)) {
                     GroovyMethodProposal methodProposal = new GroovyMethodProposal(method, "Groovy", options);
                     float relevanceMultiplier = isInterestingType ? 101f : 1f;
@@ -98,11 +102,11 @@ public class MethodProposalCreator extends AbstractProposalCreator implements IP
         }
 
         // now do methods from static imports
-        ClassNode enclosingTypeDeclaration = currentScope
-                .getEnclosingTypeDeclaration();
-        if (enclosingTypeDeclaration != null && firstTime && isPrimary && type.getModule() != null) {
-            groovyProposals.addAll(getStaticImportProposals(prefix,
-                    type.getModule()));
+        if (currentScope != null) {
+            ClassNode enclosingTypeDeclaration = currentScope.getEnclosingTypeDeclaration();
+            if (enclosingTypeDeclaration != null && firstTime && isPrimary && type.getModule() != null) {
+                groovyProposals.addAll(getStaticImportProposals(prefix, type.getModule()));
+            }
         }
 
         return groovyProposals;

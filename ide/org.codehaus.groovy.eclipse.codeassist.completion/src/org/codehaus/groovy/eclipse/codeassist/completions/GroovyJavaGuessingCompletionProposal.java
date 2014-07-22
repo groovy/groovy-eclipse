@@ -21,6 +21,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.core.ImportContainer;
 import org.eclipse.jdt.internal.corext.template.java.SignatureUtil;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorHighlightingSynchronizer;
@@ -354,77 +355,78 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
                 buffer.append(SPACE);
         }
 
-        // now add the parameters
-        int replacementOffset = getReplacementOffset();
-        fChoices = guessParameters(namedParameterNames, regularParameterNames);
+        // we don't want parameters for static import declarations
+        if (!(fCoreContext.getEnclosingElement().getParent() instanceof ImportContainer)) {
+            // now add the parameters
+            int replacementOffset = getReplacementOffset();
+            fChoices = guessParameters(namedParameterNames, regularParameterNames);
 
-        for (int i = 0; i < allCount; i++) {
-            if (i == indexOfLastClosure) {
-                // handle the last closure separately
-                continue;
+            for (int i = 0; i < allCount; i++) {
+                if (i == indexOfLastClosure) {
+                    // handle the last closure separately
+                    continue;
+                }
+
+                char[] nextName;
+                if (i < argCount) {
+                    nextName = regularParameterNames[i];
+                } else {
+                    nextName = namedParameterNames[i - argCount];
+                }
+                if (i >= argCount || proposalOptions.useNamedArguments) {
+                    buffer.append(nextName).append(":");
+                }
+
+                // handle the value
+                ICompletionProposal proposal = fChoices[i][0];
+                String argument = proposal.getDisplayString();
+
+                Position position = fPositions[i];
+                position.setOffset(replacementOffset + buffer.length());
+                position.setLength(argument.length());
+
+                // handle the "unknown" case where we only insert a proposal.
+                if (proposal instanceof JavaCompletionProposal) {
+                    ((JavaCompletionProposal) proposal).setReplacementOffset(replacementOffset + buffer.length());
+                }
+                buffer.append(argument);
+
+                // check what to add after argument
+                if (i == allCount - 1 || (i == allCount - 2 && i == indexOfLastClosure - 1)) {
+                    if (prefs.beforeClosingParen || proposalOptions.noParens) {
+                        buffer.append(SPACE);
+                    }
+                    if (!proposalOptions.noParens) {
+                        buffer.append(RPAREN);
+                    }
+                } else if (i < allCount - 1) {
+                    if (prefs.beforeComma)
+                        buffer.append(SPACE);
+                    buffer.append(COMMA);
+                    if (prefs.afterComma)
+                        buffer.append(SPACE);
+                }
             }
 
-            char[] nextName;
-            if (i < argCount) {
-                nextName = regularParameterNames[i];
-            } else {
-                nextName = namedParameterNames[i - argCount];
-            }
-            if (i >= argCount || proposalOptions.useNamedArguments) {
-                buffer.append(nextName).append(":");
-            }
-
-
-            // handle the value
-            ICompletionProposal proposal = fChoices[i][0];
-            String argument = proposal.getDisplayString();
-
-            Position position = fPositions[i];
-            position.setOffset(replacementOffset + buffer.length());
-            position.setLength(argument.length());
-
-            // handle the "unknown" case where we only insert a proposal.
-            if (proposal instanceof JavaCompletionProposal) {
-                ((JavaCompletionProposal) proposal).setReplacementOffset(replacementOffset + buffer.length());
-            }
-            buffer.append(argument);
-
-            // check what to add after argument
-            if (i == allCount - 1 || (i == allCount - 2 && i == indexOfLastClosure - 1)) {
-                if (prefs.beforeClosingParen || proposalOptions.noParens) {
+            // closures at the end are added in an idiomatic groovy way
+            if (indexOfLastClosure >= 0) {
+                if (allCount > 1) {
+                    if (!proposalOptions.noParensAroundClosures) {
+                        buffer.append(COMMA);
+                    }
                     buffer.append(SPACE);
                 }
-                if (!proposalOptions.noParens) {
+                Position position = fPositions[indexOfLastClosure];
+                position.setOffset(replacementOffset + buffer.length());
+                position.setLength(LAST_CLOSURE_TEXT.length());
+                buffer.append(LAST_CLOSURE_TEXT);
+
+                if (!proposalOptions.noParensAroundClosures) {
+                    buffer.append(" }");
                     buffer.append(RPAREN);
                 }
-            } else if (i < allCount - 1) {
-                if (prefs.beforeComma)
-                    buffer.append(SPACE);
-                buffer.append(COMMA);
-                if (prefs.afterComma)
-                    buffer.append(SPACE);
             }
         }
-
-        // closures at the end are added in an idiomatic groovy way
-        if (indexOfLastClosure >= 0) {
-            if (allCount > 1) {
-                if (!proposalOptions.noParensAroundClosures) {
-                    buffer.append(COMMA);
-                }
-                buffer.append(SPACE);
-            }
-            Position position = fPositions[indexOfLastClosure];
-            position.setOffset(replacementOffset + buffer.length());
-            position.setLength(LAST_CLOSURE_TEXT.length());
-            buffer.append(LAST_CLOSURE_TEXT);
-
-            if (!proposalOptions.noParensAroundClosures) {
-                buffer.append(" }");
-                buffer.append(RPAREN);
-            }
-        }
-
         return buffer.toString();
     }
 
