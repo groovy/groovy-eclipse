@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -77,6 +77,9 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     private HighlightingStyle staticMethodRefHighlighting;
 
     private HighlightingStyle numberRefHighlighting;
+
+    private HighlightingStyle mapKeyHighlighting;
+
     private SemanticHighlightingPresenter presenter;
 
     /**
@@ -106,6 +109,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         staticFieldRefHighlighting = new HighlightingStyle(new TextAttribute(fieldColor, null, SWT.ITALIC), true);
         methodRefHighlighting = new HighlightingStyle(new TextAttribute(methodColor), true);
         staticMethodRefHighlighting = new HighlightingStyle(new TextAttribute(methodColor, null, SWT.ITALIC), true);
+        mapKeyHighlighting = new HighlightingStyle(new TextAttribute(regexColor), true);
     }
 
 
@@ -203,6 +207,8 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
                 return new HighlightedPosition(pos.offset, pos.length, methodRefHighlighting, this);
             case STATIC_METHOD:
                 return new HighlightedPosition(pos.offset, pos.length, staticMethodRefHighlighting, this);
+            case MAP_KEY:
+                return new HighlightedPosition(pos.offset, pos.length, mapKeyHighlighting, this);
         }
         // won't get here
         return null;

@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.test.ui;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.DEPRECATED;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.FIELD;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.REGEX;
+import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.MAP_KEY;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.METHOD;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.STATIC_METHOD;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.STATIC_FIELD;
@@ -278,7 +279,20 @@ public class SemanticHighlightingTests extends EclipseTestCase {
                 new HighlightedTypedPosition(second, "f".length(), STATIC_METHOD),
                 new HighlightedTypedPosition(third, "f".length(), STATIC_METHOD));
     }
-    
+
+    // GRECLIPSE-878
+    public void testMapKey1() throws Exception {
+        String contents = "def map = [key: 'value']";
+        assertHighlighting(contents,
+                new HighlightedTypedPosition(contents.indexOf("key"), "key".length(), MAP_KEY));
+    }
+
+    public void testMapKey2() throws Exception {
+        String contents = "def key = 'key1'\ndef map = [(key): '1', key2: '2', 'key3': '3', \"key4\": '4']";
+        assertHighlighting(contents,
+                new HighlightedTypedPosition(contents.indexOf("key2"), "key2".length(), MAP_KEY));
+    }
+
     private void assertHighlighting(String contents, HighlightedTypedPosition... expectedPositions) throws Exception {
         GroovyCompilationUnit unit = openFile(contents);
         checkStyles(unit, expectedPositions);

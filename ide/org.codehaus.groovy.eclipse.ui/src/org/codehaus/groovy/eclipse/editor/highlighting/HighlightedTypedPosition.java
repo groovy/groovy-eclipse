@@ -24,7 +24,7 @@ import org.eclipse.jface.text.Position;
  */
 public class HighlightedTypedPosition extends Position implements Comparable<HighlightedTypedPosition> {
     public static enum HighlightKind {
-        DEPRECATED, FIELD, METHOD, STATIC_FIELD, STATIC_METHOD, REGEX, NUMBER, UNKNOWN
+        DEPRECATED, FIELD, METHOD, STATIC_FIELD, STATIC_METHOD, REGEX, NUMBER, UNKNOWN, MAP_KEY
     }
 
     public final HighlightKind kind;
