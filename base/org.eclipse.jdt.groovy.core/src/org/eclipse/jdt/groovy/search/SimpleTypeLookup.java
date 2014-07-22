@@ -355,7 +355,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 			type = typeFromDeclaration(declaration, declaringType);
 			realDeclaringType = declaringTypeFromDeclaration(declaration, declaringType);
 		} else if (isPrimaryExpression &&
-				// make everything from the scopes available
+		// make everything from the scopes available
 				(varInfo = scope.lookupName(name)) != null) {
 
 			// now try to find the declaration again
@@ -635,10 +635,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
 				// Figuring out if we should try to find more precise match or stop here
 
-				if (candidate != null && methodCallArgumentTypes != null) {
+				if (methodDeclaration != null && candidate != null && methodCallArgumentTypes != null) {
 					Parameter[] methodParameters = ((MethodNode) methodDeclaration).getParameters();
 					if (methodCallArgumentTypes.size() == 0 && methodParameters.length == 0) {
-						return candidate;
+						return methodDeclaration;
 					} else if (methodCallArgumentTypes.size() == methodParameters.length) {
 						candidate = methodDeclaration;
 						boolean exactMatchFound = true;

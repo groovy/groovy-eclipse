@@ -573,6 +573,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		} catch (JavaModelException e) {
 			Util.log(e, "Exception visiting method " + method.getElementName() + " in class " //$NON-NLS-1$ //$NON-NLS-2$
 					+ method.getParent().getElementName());
+		} catch (Exception e) {
+			Util.log(e);
 		} finally {
 			enclosingElement = oldEnclosing;
 			enclosingDeclarationNode = oldEnclosingNode;
@@ -1364,20 +1366,22 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			return;
 		}
 		ClassNode closureType = closureTypes.peek().get(node);
-		// Try to find single abstract method with single parameter
-		MethodNode method = null;
-		for (MethodNode methodNode : closureType.getMethods()) {
-			if (methodNode.isAbstract() && methodNode.getParameters().length == 1) {
-				if (method != null) {
-					return;
-				} else {
-					method = methodNode;
+		if (closureType != null) {
+			// Try to find single abstract method with single parameter
+			MethodNode method = null;
+			for (MethodNode methodNode : closureType.getMethods()) {
+				if (methodNode.isAbstract() && methodNode.getParameters().length == 1) {
+					if (method != null) {
+						return;
+					} else {
+						method = methodNode;
+					}
 				}
 			}
-		}
-		if (method != null) {
-			ClassNode inferredType = method.getParameters()[0].getType();
-			scope.addVariable("it", inferredType, VariableScope.OBJECT_CLASS_NODE);
+			if (method != null) {
+				ClassNode inferredType = method.getParameters()[0].getType();
+				scope.addVariable("it", inferredType, VariableScope.OBJECT_CLASS_NODE);
+			}
 		}
 	}
 
