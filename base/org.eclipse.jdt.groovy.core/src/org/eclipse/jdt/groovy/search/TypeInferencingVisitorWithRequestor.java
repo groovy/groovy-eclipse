@@ -977,6 +977,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitBinaryExpression(BinaryExpression node) {
+		if (node.getOperation().getType() == Types.KEYWORD_INSTANCEOF && node.getLeftExpression() instanceof VariableExpression) {
+			VariableExpression variable = (VariableExpression) node.getLeftExpression();
+			scopes.peek().addVariable(variable.getName(), node.getRightExpression().getType(), variable.getDeclaringClass());
+		}
 		if (isDependentExpression(node)) {
 			primaryTypeStack.pop();
 		}
