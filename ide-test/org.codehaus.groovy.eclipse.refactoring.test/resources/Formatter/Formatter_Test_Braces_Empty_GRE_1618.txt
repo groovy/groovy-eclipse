@@ -1,0 +1,21 @@
+###prop
+setPreferences=true
+indentendOnly=false
+###src
+class FormatTest {
+
+def test () {}
+
+def test1 () {
+
+}
+} 
+###exp
+class FormatTest {
+
+	def test () {}
+
+	def test1 () {
+	}
+}
+###end

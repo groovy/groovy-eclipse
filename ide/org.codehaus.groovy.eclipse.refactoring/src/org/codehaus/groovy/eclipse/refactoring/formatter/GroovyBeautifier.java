@@ -343,16 +343,20 @@ public class GroovyBeautifier {
 		assert rCurlyCorrector != null;
 
 		Token token;
-		boolean skipNextNLS = false;
-		for (int i = 0; i < formatter.getTokens().size(); i++) {
+        KlenkDocumentScanner tokens = formatter.getTokens();
 
-			token = formatter.getTokens().get(i);
-			if(ignoreToken.contains(token))
-				continue;
+        assert tokens != null;
 
-            int ttype = formatter.getTokens().get(i).getType();
-            if (ttype == GroovyTokenTypeBridge.LCURLY) {
-                KlenkDocumentScanner tokens = formatter.getTokens();
+        boolean skipNextNLS = false;
+        for (int i = 0; i < tokens.size(); i++) {
+            token = tokens.get(i);
+
+            if (ignoreToken.contains(token)) {
+                continue;
+            }
+
+            int tokenType = token.getType();
+            if (tokenType == GroovyTokenTypeBridge.LCURLY) {
                 if (skipNextNLS) {
                     skipNextNLS = false;
                     break;
@@ -377,7 +381,7 @@ public class GroovyBeautifier {
                         Token nextToken = tokens.getNextToken(token);
                         if (nextToken != null) {
                             int type = nextToken.getType();
-                            if (type != GroovyTokenTypeBridge.NLS) {
+                            if (type != GroovyTokenTypeBridge.NLS && type != GroovyTokenTypeBridge.RCURLY) {
                                 int start = tokens.getEnd(token);
                                 int end = tokens.getOffset(nextToken);
                                 addEdit(new ReplaceEdit(start, end - start, formatter.getNewLine()), edits);
@@ -386,19 +390,25 @@ public class GroovyBeautifier {
                     }
                 }
 
-            } else if (ttype == GroovyTokenTypeBridge.RCURLY) {
+            } else if (tokenType == GroovyTokenTypeBridge.RCURLY) {
                 if (skipNextNLS) {
                     skipNextNLS = false;
                 } else {
-                    addEdit(rCurlyCorrector.correctLineWrap(i, token), edits);
+                    Token previousToken = tokens.getLastTokenBefore(token);
+
+                    // for cases like method() {} we want the braces to stay
+                    // where they are
+                    if (previousToken.getType() != GroovyTokenTypeBridge.LCURLY) {
+                        addEdit(rCurlyCorrector.correctLineWrap(i, token), edits);
+                    }
                 }
-            } else if (ttype == GroovyTokenTypeBridge.NLS) {
+            } else if (tokenType == GroovyTokenTypeBridge.NLS) {
                 // nothing
-            } else if (ttype == GroovyTokenTypeBridge.SL_COMMENT) {
+            } else if (tokenType == GroovyTokenTypeBridge.SL_COMMENT) {
                 skipNextNLS = true;
-			}
-		}
-	}
+            }
+        }
+    }
 
     private void removeUnnecessarySemicolons(MultiTextEdit edits) throws BadLocationException {
         if (preferences.isRemoveUnnecessarySemicolons()) {
