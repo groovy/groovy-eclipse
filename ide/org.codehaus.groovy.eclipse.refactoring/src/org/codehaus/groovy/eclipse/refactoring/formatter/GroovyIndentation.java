@@ -146,11 +146,11 @@ public class GroovyIndentation {
                             .getProgressDocument().get(offsetToken, (offsetNextToken - offsetToken)), indentation)));
                 }
             }
-		} catch (BadLocationException e) {
+        } catch (BadLocationException e) {
             GroovyCore.logException("Exception thrown while determining indentation", e);
-		}
-		return indentationEdits;
-	}
+        }
+        return indentationEdits;
+    }
 
     // GRECLIPSE-1478 and GRECLIPSE-1508 add proper indentation for methods with
     // multiline parameters
@@ -267,36 +267,36 @@ public class GroovyIndentation {
     }
 
     private void indentendSwitchStatement(Token token) {
-		if (token != null) {
-			ASTNode node = formatter.findCorrespondingNode(token);
-			if (node instanceof SwitchStatement) {
-				SwitchStatement switchstmt = (SwitchStatement) node;
-				for(CaseStatement cs : (List<CaseStatement>)switchstmt.getCaseStatements()) {
-					indentendBlockStatement(cs.getCode(), cs.getLineNumber());
-				}
-				// Hack because the default statement has wrong line infos
-				Statement defaultstmt = switchstmt.getDefaultStatement();
-				int posDef = formatter.getPosOfToken(defaultstmt.getLineNumber(), defaultstmt.getColumnNumber());
-				if(posDef != -1) {
-					Token def = formatter.getPreviousToken(posDef);
-					indentendBlockStatement(switchstmt.getDefaultStatement(),def.getLine());
-				}
-			}
-		}
-	}
+        if (token != null) {
+            ASTNode node = formatter.findCorrespondingNode(token);
+            if (node instanceof SwitchStatement) {
+                SwitchStatement switchstmt = (SwitchStatement) node;
+                for (CaseStatement cs : (List<CaseStatement>) switchstmt.getCaseStatements()) {
+                    indentendBlockStatement(cs.getCode(), cs.getLineNumber());
+                }
+                // Hack because the default statement has wrong line infos
+                Statement defaultstmt = switchstmt.getDefaultStatement();
+                int posDef = formatter.getPosOfToken(defaultstmt.getLineNumber(), defaultstmt.getColumnNumber());
+                if (posDef != -1) {
+                    Token def = formatter.getPreviousToken(posDef);
+                    indentendBlockStatement(switchstmt.getDefaultStatement(), def.getLine());
+                }
+            }
+        }
+    }
 
-	private void indentendBlockStatement(Statement stmt, int currentLine) {
-		if (stmt instanceof BlockStatement) {
-			BlockStatement defaultBlock = (BlockStatement) stmt;
-			for(Statement sm : (List<Statement>)defaultBlock.getStatements()) {
-				if(sm.getLineNumber() > currentLine) {
-					for(int i = sm.getLineNumber(); i <= sm.getLastLineNumber(); i++){
-						tempIndentation[i - 1] += 1;
-					}
-				}
-			}
-		}
-	}
+    private void indentendBlockStatement(Statement stmt, int currentLine) {
+        if (stmt instanceof BlockStatement) {
+            BlockStatement defaultBlock = (BlockStatement) stmt;
+            for (Statement sm : (List<Statement>) defaultBlock.getStatements()) {
+                if (sm.getLineNumber() > currentLine) {
+                    for (int i = sm.getLineNumber(); i <= sm.getLastLineNumber(); i++) {
+                        tempIndentation[i - 1] += 1;
+                    }
+                }
+            }
+        }
+    }
 
     private void addEdit(TextEdit edit) {
         if (edit instanceof DeleteEdit && edit.getLength() == 0) {
@@ -329,29 +329,34 @@ public class GroovyIndentation {
                 debug("Ignored conflicting edit: " + edit);
                 GroovyCore.logException("WARNING: Formatting ignored a conflicting text edit", e);
             }
-		}
-	}
+        }
+    }
 
-	private void setAdditionalIndentation(Token t, int i,
-			boolean firstLineInlcuded) {
-        if (t != null) {
-            if (t.getType() != GroovyTokenTypeBridge.LCURLY) {
-                ASTNode node = formatter.findCorrespondingNode(t);
+    private void setAdditionalIndentation(Token token, int indent, boolean firstLineInlcuded) throws BadLocationException {
+        if (token != null) {
+
+            // Skipping (but indenting) single-line comments
+            while (token.getType() == GroovyTokenTypeBridge.SL_COMMENT) {
+                tempIndentation[token.getLine() - 1] += indent;
+                token = formatter.getNextToken(formatter.getPosOfToken(token));
+            }
+            if (token.getType() != GroovyTokenTypeBridge.LCURLY) {
+                ASTNode node = formatter.findCorrespondingNode(token);
                 if (node != null) {
-                    int r = node.getLineNumber();
+                    int lineNumber = node.getLineNumber();
                     if (!firstLineInlcuded) {
-                        r++;
+                        lineNumber++;
                     }
-                    for (; r <= node.getLastLineNumber(); r++) {
-                        if (isLastClosureArg(r - 1, node))
+                    for (; lineNumber <= node.getLastLineNumber(); lineNumber++) {
+                        if (isLastClosureArg(lineNumber - 1, node))
                             break;
-                        tempIndentation[r - 1] += i;
-                        lineInd.setMultilineIndentation(r, true);
+                        tempIndentation[lineNumber - 1] += indent;
+                        lineInd.setMultilineIndentation(lineNumber, true);
                     }
                 }
             }
         }
-	}
+    }
 
     /**
      * Tests whether a given line (0-base index) is the start of a
@@ -377,22 +382,23 @@ public class GroovyIndentation {
         }
     }
 
-    private void setAdditionalIndentation(Token t) {
-		setAdditionalIndentation(t, 1, true);
-	}
+    private void setAdditionalIndentation(Token t) throws BadLocationException {
+        setAdditionalIndentation(t, 1, true);
+    }
 
-	public LineIndentations getLineIndentations() {
-		return lineInd;
-	}
-	/**
-	 * Format a multi line Comment
-	 *
-	 * @param string
-	 *            the Coment to format
-	 * @param ind
-	 *            the current indentation level
-	 * @return the formatted indeationed comment
-	 * @throws BadLocationException
+    public LineIndentations getLineIndentations() {
+        return lineInd;
+    }
+
+    /**
+     * Format a multi line Comment
+     *
+     * @param string
+     *            the Coment to format
+     * @param ind
+     *            the current indentation level
+     * @return the formatted indeationed comment
+     * @throws BadLocationException
 	 */
 	private String formatMultilineComment(String str, int ind)
 			throws BadLocationException {
@@ -400,6 +406,6 @@ public class GroovyIndentation {
 		Matcher m = Pattern.compile("(\n|\r|\r\n)\\s*", Pattern.MULTILINE)
 				.matcher(string);
 		string = m.replaceAll(formatter.getNewLine() + formatter.getLeadingGap(ind) + " ");
-		return string;
-	}
+        return string;
+    }
 }
