@@ -1593,7 +1593,90 @@ public class InferencingTests extends AbstractInferencingTest {
     	int end = start + "compareTo".length();
     	assertDeclaringType(contents, start, end, "Search$2");
     }
-    
+
+	// GRECLIPSE-1638
+	public void testInstanceOf1() throws Exception {
+		String contents =
+				"def m(Object obj) {\n" +
+				"    def val = obj\n" +
+				"    if (val instanceof String) {\n" +
+				"        println val.trim()\n" +
+				"    }\n" +
+				"}\n";
+		int start = contents.indexOf("val");
+		int end = start + "val".length();
+		assertType(contents, start, end, "java.lang.Object");
+
+		start = contents.lastIndexOf("val");
+		end = start + "val".length();
+		assertType(contents, start, end, "java.lang.String");
+	}
+
+	public void testInstanceOf2() throws Exception {
+		String contents =
+				"@groovy.transform.TypeChecked\n" +
+				"def m(Object obj) {\n" +
+				"    def val = obj\n" +
+				"    if (val instanceof String) {\n" +
+				"        println val.trim()\n" +
+				"    }\n" +
+				"}\n";
+		int start = contents.indexOf("val");
+		int end = start + "val".length();
+		assertType(contents, start, end, "java.lang.Object");
+
+		start = contents.lastIndexOf("val");
+		end = start + "val".length();
+		assertType(contents, start, end, "java.lang.String");
+	}
+
+	public void testInstanceOf3() throws Exception {
+		String contents =
+				"@groovy.transform.CompileStatic\n" +
+				"def m(Object obj) {\n" +
+				"    def val = obj\n" +
+				"    if (val instanceof String) {\n" +
+				"        println val.trim()\n" +
+				"    }\n" +
+				"}\n";
+		int start = contents.indexOf("val");
+		int end = start + "val".length();
+		assertType(contents, start, end, "java.lang.Object");
+
+		start = contents.lastIndexOf("val");
+		end = start + "val".length();
+		assertType(contents, start, end, "java.lang.String");
+	}
+
+	public void testInstanceOf4() throws Exception {
+		String contents =
+				"def m(Object obj) {\n" +
+				"    def val = obj\n" +
+				"    if (val instanceof String) {\n" +
+				"        println val.trim()\n" +
+				"    }\n" +
+				"    def var = obj\n" +
+				"    if (var instanceof Integer) {\n" +
+				"        println var.intValue()\n" +
+				"    }\n" +
+				"}\n";
+		int start = contents.indexOf("val");
+		int end = start + "val".length();
+		assertType(contents, start, end, "java.lang.Object");
+
+		start = contents.lastIndexOf("val");
+		end = start + "val".length();
+		assertType(contents, start, end, "java.lang.String");
+
+		start = contents.indexOf("var");
+		end = start + "var".length();
+		assertType(contents, start, end, "java.lang.Object");
+
+		start = contents.lastIndexOf("var");
+		end = start + "var".length();
+		assertType(contents, start, end, "java.lang.Integer");
+	}
+
     protected void assertNoUnknowns(String contents) {
         GroovyCompilationUnit unit = createUnit("Search", contents);
         
