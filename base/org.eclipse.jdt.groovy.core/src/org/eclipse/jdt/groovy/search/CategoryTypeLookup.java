@@ -36,7 +36,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 /**
  * @author Andrew Eisenberg
  * @created Oct 25, 2009
- * 
+ *
  *          Looks up the type of an expression in the currently applicable categories. Note that DefaultGroovyMethods are always
  *          considered to be an applicable category. This lookup is not being used yet
  */
@@ -88,7 +88,11 @@ public class CategoryTypeLookup implements ITypeLookup {
 						&& isAssignableFrom(VariableScope.maybeConvertFromPrimitive(currentType), params[0].getType())) {
 					ClassNode declaringClass = methodNode.getDeclaringClass();
 					ClassNode returnType = SimpleTypeLookup.typeFromDeclaration(methodNode, currentType);
-					return new TypeLookupResult(returnType, declaringClass, methodNode, getConfidence(declaringClass), scope);
+					TypeConfidence confidence = getConfidence(declaringClass);
+					if (confidence == TypeConfidence.LOOSELY_INFERRED) {
+						confidence = checkParameters(params, scope.getMethodCallArgumentTypes());
+					}
+					return new TypeLookupResult(returnType, declaringClass, methodNode, confidence, scope);
 				}
 			}
 		}
@@ -97,13 +101,35 @@ public class CategoryTypeLookup implements ITypeLookup {
 
 	/**
 	 * DGM and DGSM classes are loosely inferred so that other lookups can provide better solutions
-	 * 
+	 *
 	 * @param declaringClass
 	 * @return
 	 */
 	private TypeConfidence getConfidence(ClassNode declaringClass) {
 		return VariableScope.ALL_DEFAULT_CATEGORIES.contains(declaringClass) ? TypeConfidence.LOOSELY_INFERRED
 				: TypeConfidence.INFERRED;
+	}
+
+	/**
+	 * Checks for exact match. If so then confidence is EXACT. In that case no need to find better solution.
+	 *
+	 * @param params declared method parameters
+	 * @param arguments actual method arguments
+	 * @return updated confidence
+	 */
+	private TypeConfidence checkParameters(Parameter[] params, List<ClassNode> arguments) {
+		if (arguments == null || arguments.size() == 0) {
+			return TypeConfidence.LOOSELY_INFERRED;
+		}
+		if (params.length != arguments.size() + 1) {
+			return TypeConfidence.LOOSELY_INFERRED;
+		}
+		for (int i = 0; i < arguments.size(); i++) {
+			if (!arguments.get(i).equals(params[i + 1].getDeclaringClass())) {
+				return TypeConfidence.LOOSELY_INFERRED;
+			}
+		}
+		return TypeConfidence.EXACT;
 	}
 
 	/**
@@ -126,7 +152,7 @@ public class CategoryTypeLookup implements ITypeLookup {
 
 	/**
 	 * can from be assigned to to?
-	 * 
+	 *
 	 * @param from
 	 * @param to
 	 * @return
