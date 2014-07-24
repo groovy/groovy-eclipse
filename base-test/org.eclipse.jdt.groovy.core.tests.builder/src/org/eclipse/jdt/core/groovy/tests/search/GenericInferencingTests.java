@@ -1136,6 +1136,24 @@ def h = [8: 1, bb:8]
         assertType(contents, start, end, "B");
     }
 
+    // Additional test according comment to PR #75
+    // Actually type should not be inferred for fields with type def
+    public void testStaticMethod6() throws Exception {
+        String contents =
+                "class A {}\n" +
+                "class B extends A {}\n" +
+                "class C {\n" +
+                "    static <T extends A> T loadSomething(T t) {\n" +
+                "        return t\n" +
+                "    }\n" +
+                "    def col = loadSomething(new B())\n" +
+                "    def m() { col }" +
+                "}\n";
+        int start = contents.lastIndexOf("col");
+        int end = start + "col".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
     private class ProblemRequestor implements IProblemRequestor {
     	
     	List<IProblem> problems = new ArrayList<IProblem>();

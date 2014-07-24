@@ -1829,10 +1829,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitStaticMethodCallExpression(StaticMethodCallExpression node) {
-		needToFixStaticMethodType = true;
-		visitMethodCallExpression(new MethodCallExpression(new ClassExpression(node.getOwnerType()), node.getMethod(),
-				node.getArguments()));
-		needToFixStaticMethodType = false;
+		if (isPrimaryExpression(node)) {
+			needToFixStaticMethodType = true;
+			visitMethodCallExpression(new MethodCallExpression(new ClassExpression(node.getOwnerType()), node.getMethod(),
+					node.getArguments()));
+			needToFixStaticMethodType = false;
+		}
 		boolean shouldContinue = handleSimpleExpression(node);
 		if (inferredStaticMethodType != null) {
 			primaryTypeStack.pop();
