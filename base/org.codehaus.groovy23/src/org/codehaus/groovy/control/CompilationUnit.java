@@ -875,7 +875,8 @@ public class CompilationUnit extends ProcessingUnit {
             //
             // GRECLIPSE: if there are errors, don't generate code. 
             // code gen can fail unexpectedly if there was an earlier error.
-            if (!source.getErrorCollector().hasErrors()) {
+            // source can be null for class nodes created by StaticTypeCheckingSupport
+            if (source == null || !source.getErrorCollector().hasErrors()) {
             // end
 	            generator.visitClass(classNode);
 	
