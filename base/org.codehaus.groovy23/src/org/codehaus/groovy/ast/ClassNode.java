@@ -28,7 +28,6 @@ import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
-
 import groovyjarjarasm.asm.Opcodes;
 
 import java.io.ByteArrayOutputStream;
@@ -114,7 +113,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             if (map.containsKey(key)) {
                 get(key).add(value);
             } else {
-                ArrayList<MethodNode> list = new ArrayList<MethodNode>(2);
+                List<MethodNode> list = new ArrayList<MethodNode>(2);
                 list.add(value);
                 map.put(key, list);
             }
@@ -442,7 +441,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      */
     public ClassNode[] getInterfaces() {
         if (!redirect().lazyInitDone) redirect().lazyClassInit();
-        if (hasInconsistentHierarchy()) {
+        if (hasInconsistentHierarchy()) { // GRECLIPSE?
         	return EMPTY_ARRAY;
         }
         if (redirect!=null) return redirect().getInterfaces();

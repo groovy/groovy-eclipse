@@ -31,10 +31,10 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.*;
+import static org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys.BINARY_EXP_TARGET;
 
 public class BinaryExpressionTransformer {
-    private final static MethodNode COMPARE_TO_METHOD = ClassHelper.COMPARABLE_TYPE.getMethods("compareTo").get(0);
+    private static final MethodNode COMPARE_TO_METHOD = ClassHelper.COMPARABLE_TYPE.getMethods("compareTo").get(0);
 
     private static final ConstantExpression CONSTANT_ZERO = new ConstantExpression(0, true);
     private static final ConstantExpression CONSTANT_MINUS_ONE = new ConstantExpression(-1, true);

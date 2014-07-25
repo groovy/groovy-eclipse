@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-
 package org.codehaus.groovy.antlr;
+
+import java.io.IOException;
+import java.io.Reader;
 
 import groovyjarjarantlr.CharScanner;
 import groovyjarjarantlr.Token;
 import groovyjarjarantlr.TokenStreamException;
-
-import java.io.IOException;
-import java.io.Reader;
 
 /**
  * Translates GLS-defined unicode escapes into characters. Throws an exception
@@ -42,7 +41,7 @@ public class UnicodeEscapingReader extends Reader {
     private int numUnicodeEscapesFoundOnCurrentLine = 0;
 
     private static class DummyLexer extends CharScanner {
-        final private Token t = new Token();
+        private final Token t = new Token();
         public Token nextToken() throws TokenStreamException {
             return t;
         }

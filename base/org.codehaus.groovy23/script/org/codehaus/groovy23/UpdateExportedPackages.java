@@ -36,7 +36,7 @@ import java.util.jar.Manifest;
  */
 public class UpdateExportedPackages {
 	
-	public static final String GROOVY_ALL_PATH = "lib/groovy-all-2.3.4.jar";
+	public static final String GROOVY_ALL_PATH = "lib/groovy-all-2.3.5.jar";
 	public static final String MANIFEST = "META-INF/MANIFEST.MF";
 	
 	public static void main(String[] args) throws Exception {
