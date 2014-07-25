@@ -297,6 +297,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	private final AssignmentStorer assignmentStorer = new AssignmentStorer();
 
+	private ClassNode inferredStaticMethodType;
+	private boolean needToFixStaticMethodType;
+
 	/**
 	 * Use factory to instantiate
 	 */
@@ -1661,6 +1664,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			GenericsType[] genericsTypes = methodNode.getGenericsTypes();
 			if (generic && genericsTypes != null && genericsTypes.length > 0) {
 				exprType = inferGenericMethodType(methodNode, node.getArguments());
+				if (needToFixStaticMethodType) {
+					inferredStaticMethodType = exprType;
+				}
 			}
 		}
 		handleCompleteExpression(node, exprType, t.declaringType);
@@ -1823,7 +1829,18 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	@Override
 	public void visitStaticMethodCallExpression(StaticMethodCallExpression node) {
+		if (isPrimaryExpression(node)) {
+			needToFixStaticMethodType = true;
+			visitMethodCallExpression(new MethodCallExpression(new ClassExpression(node.getOwnerType()), node.getMethod(),
+					node.getArguments()));
+			needToFixStaticMethodType = false;
+		}
 		boolean shouldContinue = handleSimpleExpression(node);
+		if (inferredStaticMethodType != null) {
+			primaryTypeStack.pop();
+			primaryTypeStack.push(inferredStaticMethodType);
+			inferredStaticMethodType = null;
+		}
 		if (shouldContinue && node.getEnd() > 0) {
 			visitClassReference(node.getOwnerType());
 			super.visitStaticMethodCallExpression(node);

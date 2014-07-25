@@ -1051,6 +1051,109 @@ def h = [8: 1, bb:8]
         assertType(contents, start, end, "java.lang.String");
     }
 
+    // GRECLIPSE-1129
+    // Static generic method type inference with @CompileStatic
+    public void testStaticMethod1() throws Exception {
+        String contents =
+                "class A {\n" +
+                "    static <T> T myMethod(Class<T> claz) {\n" +
+                "        return null\n" +
+                "    }\n" +
+                "    @groovy.transform.CompileStatic\n" +
+                "    static void main(String[] args) {\n" +
+                "        def val = A.myMethod(String)\n" +
+                "        val.trim()\n" +
+                "    }\n" +
+                "}";
+        int start = contents.lastIndexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
+    // Static generic method type inference without @CompileStatic
+    public void testStaticMethod2() throws Exception {
+        String contents = 
+                "class A {\n" +
+                "    static <T> T myMethod(Class<T> claz) {\n" +
+                "        return null\n" +
+                "    }\n" +
+                "    static void main(String[] args) {\n" +
+                "        def val = A.myMethod(String)\n" +
+                "        val.trim()\n" +
+                "    }\n" +
+                "}";
+        int start = contents.lastIndexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
+    // Static generic method without class type inference with @CompileStatic
+    public void testStaticMethod3() throws Exception {
+        String contents =
+                "class A {\n" +
+                "    static <T> T myMethod(Class<T> claz) {\n" +
+                "        return null\n" +
+                "    }\n" +
+                "    @groovy.transform.CompileStatic\n" +
+                "    def m() {\n" +
+                "        def val = myMethod(String)\n" +
+                "        val.trim()\n" +
+                "    }\n" +
+                "}";
+        int start = contents.lastIndexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
+    // Static generic method without class type inference without @CompileStatic
+    public void testStaticMethod4() throws Exception {
+        String contents =
+                "class A {\n" +
+                "    static <T> T myMethod(Class<T> claz) {\n" +
+                "        return null\n" +
+                "    }\n" +
+                "    def m() {\n" +
+                "        def val = myMethod(String)\n" +
+                "        val.trim()\n" +
+                "    }\n" +
+                "}";
+        int start = contents.lastIndexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
+    // Test according GRECLIPSE-1129 description
+    public void testStaticMethod5() throws Exception {
+        String contents =
+                "class A { }\n" +
+                "class B extends A {}\n" +
+                "static <T extends A> T loadSomething(T t) {\n" +
+                "    return t\n" +
+                "}\n" +
+                "def val = loadSomething(new B())\n";
+        int start = contents.lastIndexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "B");
+    }
+
+    // Additional test according comment to PR #75
+    // Actually type should not be inferred for fields with type def
+    public void testStaticMethod6() throws Exception {
+        String contents =
+                "class A {}\n" +
+                "class B extends A {}\n" +
+                "class C {\n" +
+                "    static <T extends A> T loadSomething(T t) {\n" +
+                "        return t\n" +
+                "    }\n" +
+                "    def col = loadSomething(new B())\n" +
+                "    def m() { col }" +
+                "}\n";
+        int start = contents.lastIndexOf("col");
+        int end = start + "col".length();
+        assertType(contents, start, end, "java.lang.Object");
+    }
+
     private class ProblemRequestor implements IProblemRequestor {
     	
     	List<IProblem> problems = new ArrayList<IProblem>();
