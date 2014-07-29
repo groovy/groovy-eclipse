@@ -16,6 +16,7 @@ import java.util.List;
 import junit.framework.Test;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -38,6 +39,7 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.groovy.tests.builder.GroovierBuilderTests;
+import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 
@@ -294,6 +296,19 @@ public class SourceLocationsTests extends GroovierBuilderTests {
         assertUnitWithSingleType(source, unit);
     }
 
+    // STS-3878
+    public void testErrorPositionForUnsupportedOperation() throws Exception {
+        String source =
+                "def a = 'a'\n" +
+                "def b = 'b'\n" +
+                "println a === b\n";
+        IPath root = createGenericProject();
+        IPath path = env.addGroovyClass(root, "p", "Hello", source);
+        fullBuild();
+        expectingOnlySpecificProblemFor(root, new Problem(
+                "p/Hello", "Groovy:Operator (\"===\" at 3:11:  \"===\" ) not supported @ line 3, column 11.", path, 34, 35, 60, IMarker.SEVERITY_ERROR));
+        // It marks just first character of operator as groovyc marks only first character
+    }
 
 	// next test a variety of slocs for var decl fragments
 

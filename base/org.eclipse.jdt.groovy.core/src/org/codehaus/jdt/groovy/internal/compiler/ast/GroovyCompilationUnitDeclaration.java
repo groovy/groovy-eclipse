@@ -11,6 +11,7 @@
  *******************************************************************************/
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import groovy.lang.GroovyRuntimeException;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.io.PrintWriter;
@@ -23,7 +24,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -195,6 +195,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				return true;
 			}
 		} catch (MultipleCompilationErrorsException problems) {
+			fixGroovyRuntimeException(problems);
 			AbortCompilation abort = getAbortCompilation(problems);
 			if (abort != null) {
 				System.out.println("Abort compilation");
@@ -244,6 +245,27 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			}
 		}
 		return false;
+	}
+
+	private void fixGroovyRuntimeException(MultipleCompilationErrorsException problems) {
+		List<?> errors = problems.getErrorCollector().getErrors();
+		List<ExceptionMessage> toBeFixed = new ArrayList<ExceptionMessage>();
+		for (Object o : errors) {
+			if (o instanceof ExceptionMessage) {
+				ExceptionMessage em = (ExceptionMessage) o;
+				if (em.getCause() instanceof GroovyRuntimeException) {
+					GroovyRuntimeException gre = (GroovyRuntimeException) em.getCause();
+					if (gre.getCause() instanceof SyntaxException) {
+						toBeFixed.add(em);
+					}
+				}
+			}
+		}
+		for (ExceptionMessage e : toBeFixed) {
+			errors.remove(e);
+			SyntaxException se = (SyntaxException) e.getCause().getCause();
+			problems.getErrorCollector().addError(se, groovySourceUnit);
+		}
 	}
 
 	private org.eclipse.jdt.internal.compiler.problem.AbortCompilation getAbortCompilation(
