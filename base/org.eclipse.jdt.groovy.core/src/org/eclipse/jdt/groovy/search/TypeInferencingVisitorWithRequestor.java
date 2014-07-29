@@ -2034,6 +2034,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				}
 			}
 		}
+		if (result.confidence == TypeConfidence.UNKNOWN && VariableScope.MAP_CLASS_NODE.equals(result.declaringType)) {
+			result = new TypeLookupResult(VariableScope.OBJECT_CLASS_NODE, result.declaringType, result.declaration,
+					TypeConfidence.POTENTIAL, result.scope);
+		}
 		return result;
 	}
 
