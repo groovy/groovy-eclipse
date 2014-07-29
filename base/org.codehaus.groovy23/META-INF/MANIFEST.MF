@@ -2,11 +2,11 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Groovy Runtime Plug-in
 Bundle-SymbolicName: org.codehaus.groovy
-Bundle-Version: 2.3.5.qualifier
+Bundle-Version: 2.3.6.qualifier
 Bundle-ClassPath: groovy-eclipse.jar,
  lib/ivy-2.3.0.jar,
  lib/bsf-2.4.0.jar,
- lib/groovy-all-2.3.5.jar,
+ lib/groovy-all-2.3.6.jar,
  eclipse-trace.jar
 Groovy-Runtime-Jars: groovy.jar
 Export-Package: groovy.beans,
@@ -91,6 +91,7 @@ Export-Package: groovy.beans,
  org.codehaus.groovy.classgen,
  org.codehaus.groovy.classgen.asm,
  org.codehaus.groovy.classgen.asm.sc,
+ org.codehaus.groovy.cli,
  org.codehaus.groovy.control,
  org.codehaus.groovy.control.customizers,
  org.codehaus.groovy.control.customizers.builder,
