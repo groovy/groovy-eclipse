@@ -1238,6 +1238,40 @@ public class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    // Another test 'with' operator. @CompileStatic annotation.
+    public void testWithAndClosure4() throws Exception {
+        createUnit("p", "D",
+                "package p\n" +
+                "class D {\n" +
+                "    String foo\n" +
+                "    D bar = new D()\n" +
+                "}");
+        String contents =
+                "package p\n" +
+                "@groovy.transform.CompileStatic\n" +
+                "class E {\n" +
+                "    D d = new D()\n" +
+                "    void doSomething() {\n" +
+                "        d.with {\n" +
+                "            foo = 'foo'\n" +
+                "            bar.foo = 'bar'\n" +
+                "        }\n" +
+                "    }\n" +
+                "}";
+
+        int start = contents.indexOf("foo");
+        int end = start + "foo".length();
+        assertType(contents, start, end, "java.lang.String");
+
+        start = contents.indexOf("bar", end);
+        end = start + "bar".length();
+        assertType(contents, start, end, "p.D");
+
+        start = contents.indexOf("foo", end);
+        end = start + "foo".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
     // Unknown references should have the declaring type of the enclosing closure
     public void testInScriptDeclaringType() throws Exception {
         String contents = 
