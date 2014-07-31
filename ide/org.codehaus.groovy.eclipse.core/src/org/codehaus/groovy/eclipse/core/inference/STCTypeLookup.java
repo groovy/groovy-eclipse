@@ -20,6 +20,7 @@ package org.codehaus.groovy.eclipse.core.inference;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -56,18 +57,23 @@ public class STCTypeLookup implements ITypeLookup {
         }
         Object inferredType = node.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
         if (inferredType instanceof ClassNode) {
+            TypeConfidence confidence = TypeConfidence.INFERRED;
             ASTNode decl = node;
             if (node instanceof VariableExpression) {
                 Variable accessedVariable = ((VariableExpression) node).getAccessedVariable();
                 if (accessedVariable instanceof ASTNode) {
                     decl = (ASTNode) accessedVariable;
+                } else if (accessedVariable instanceof DynamicVariable) {
+                    // Give a chance for other lookups to find more adequate
+                    // declaration for dynamic variables
+                    confidence = TypeConfidence.LOOSELY_INFERRED;
                 }
             } else if (node instanceof FieldExpression) {
                 decl = ((FieldExpression) node).getField();
             } else if (node instanceof ClassExpression) {
                 decl = node.getType();
             }
-            return new TypeLookupResult((ClassNode) inferredType, objectExpressionType, decl, TypeConfidence.INFERRED, scope);
+            return new TypeLookupResult((ClassNode) inferredType, objectExpressionType, decl, confidence, scope);
         }
         return null;
     }
