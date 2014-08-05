@@ -326,6 +326,8 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         // if we get here, then it is probably because the block statement
         // has been swapped with a new one that has not had
         // its locations set properly
+        code.setStart(node.getStart());
+        code.setEnd(node.getEnd());
         createContext(code, code, expressionScriptOrStatement(node));
     }
 
