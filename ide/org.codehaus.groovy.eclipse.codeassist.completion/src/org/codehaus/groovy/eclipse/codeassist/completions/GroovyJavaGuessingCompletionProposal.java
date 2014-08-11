@@ -356,7 +356,8 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         }
 
         // we don't want parameters for static import declarations
-        if (!(fCoreContext.getEnclosingElement().getParent() instanceof ImportContainer)) {
+        if (fCoreContext.getEnclosingElement() != null
+                && !(fCoreContext.getEnclosingElement().getParent() instanceof ImportContainer)) {
             // now add the parameters
             int replacementOffset = getReplacementOffset();
             fChoices = guessParameters(namedParameterNames, regularParameterNames);
