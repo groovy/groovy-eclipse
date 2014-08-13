@@ -84,7 +84,7 @@ public class CompilerChooser {
         Bundle[] bundles = Platform.getBundles(GROOVY_PLUGIN_ID, null);
         
         //Print debug infos about the bundles, to debug screwy behavior
-        //dump(bundles);
+        dump(bundles);
 
 
         if (bundles == null || bundles.length == 0) {
@@ -113,9 +113,12 @@ public class CompilerChooser {
             // use that one again, rather than automatically use latest available version.
             if (found /*&& activeIndex > 0*/) {
                 for (int i = 0; i < bundles.length; i++) {
+                    Bundle bundle = bundles[i];
                     if (i != activeIndex) {
-                        Bundle bundle = bundles[i];
+                    	System.out.println("Avoided bundle version = "+bundle.getVersion());
                         bundle.uninstall();
+                    } else {
+                    	System.out.println("Blessed bundle version = "+bundle.getVersion());
                     }
                 }
                 PackageAdmin pkgAdmin = context.getService(context.getServiceReference(org.osgi.service.packageadmin.PackageAdmin.class));
@@ -146,31 +149,31 @@ public class CompilerChooser {
         //dump(bundles);
     }
 
-//	private void dump(Bundle[] bundles) {
-//		for (int i = 0; i < bundles.length; i++) {
-//			Bundle b = bundles[i];
-//			System.out.println(b.getBundleId() + " "+b.getVersion()+" = "+stateString(b.getState()));
-//		}
-//	}
+	private void dump(Bundle[] bundles) {
+		for (int i = 0; i < bundles.length; i++) {
+			Bundle b = bundles[i];
+			System.out.println(b.getBundleId() + " "+b.getVersion()+" = "+stateString(b.getState()));
+		}
+	}
     
-//	private static String stateString(int state) {
-//		switch (state) {
-//		case Bundle.ACTIVE:
-//			return "ACTIVE";
-//		case Bundle.UNINSTALLED:
-//			return "UNINSTALLED";
-//		case Bundle.INSTALLED:
-//			return "INSTALLED";
-//		case Bundle.RESOLVED:
-//			return "RESOLVED";
-//		case Bundle.STARTING:
-//			return "STARTING";
-//		case Bundle.STOPPING:
-//			return "STOPPING";
-//		default:
-//			return "UNKOWN("+state+")";
-//		}
-//	}
+	private static String stateString(int state) {
+		switch (state) {
+		case Bundle.ACTIVE:
+			return "ACTIVE";
+		case Bundle.UNINSTALLED:
+			return "UNINSTALLED";
+		case Bundle.INSTALLED:
+			return "INSTALLED";
+		case Bundle.RESOLVED:
+			return "RESOLVED";
+		case Bundle.STARTING:
+			return "STARTING";
+		case Bundle.STOPPING:
+			return "STOPPING";
+		default:
+			return "UNKOWN("+state+")";
+		}
+	}
     
     
     /**

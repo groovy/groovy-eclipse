@@ -67,7 +67,9 @@
 
 		<module>ide-test/org.codehaus.groovy.alltests</module>
 		<module>ide-test/org.codehaus.groovy20.tests</module>
-		<module>ide-test/org.codehaus.groovy.eclipse.codeassist.completion.test</module>
+<!-- TODO:  <module>ide-test/org.codehaus.groovy21.tests</module> -->
+<!-- TODO:  <module>ide-test/org.codehaus.groovy22.tests</module> -->
+	    <module>ide-test/org.codehaus.groovy.eclipse.codeassist.completion.test</module>
 		<module>ide-test/org.codehaus.groovy.eclipse.codebrowsing.test</module>
 		<module>ide-test/org.codehaus.groovy.eclipse.core.test</module>
 		<module>ide-test/org.codehaus.groovy.eclipse.dsl.tests</module>
@@ -99,7 +101,7 @@
 		<module>base/org.codehaus.groovy20</module>
 		<module>base/org.codehaus.groovy21</module>
 		<module>base/org.codehaus.groovy22</module>
-		<module>base/org.codehaus.groovy23</module>
+ 		<module>base/org.codehaus.groovy23</module>
 		<module>base/org.codehaus.groovy.eclipse.compilerResolver</module>
 
 		<module>ide/org.codehaus.groovy.eclipse.ant</module>

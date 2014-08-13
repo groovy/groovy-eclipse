@@ -21,3 +21,4 @@ Require-Bundle: org.codehaus.groovy.eclipse.core.test;bundle-version="2.9.1",
  org.codehaus.groovy.eclipse.core;bundle-version="2.9.1",
  org.codehaus.groovy;bundle-version="1.8.6"
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Export-Package: org.codehaus.groovy.alltests
