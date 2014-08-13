@@ -1596,7 +1596,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 					handleSimpleExpression(key);
 				}
 				// and visit the value as normal
-				handleSimpleExpression(entry.getValueExpression());
+				entry.getValueExpression().visit(this);
+
+				// handleSimpleExpression(entry.getValueExpression());
 			}
 		}
 		completeExpressionStack.pop();
