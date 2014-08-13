@@ -29,7 +29,7 @@
    </license>
 
    <includes
-         id="org.codehaus.groovy.headless.feature"
+         id="org.codehaus.groovy.compilerless.feature"
          version="0.0.0"/>
 
 <!-- not included anymore 
@@ -41,113 +41,20 @@
          id="org.codehaus.groovy20.feature"
          version="0.0.0"
          optional="true"/>
- -->
-
-   <!-- used by Grails 2.3.8 -->         
    <includes
          id="org.codehaus.groovy21.feature"
          version="0.0.0"
          optional="true"/>
-
-   <!--- optional not included yet
    <includes
          id="org.codehaus.groovy22.feature"
          version="0.0.0"
          optional="true"/>
     -->
     
-   <!-- used by Grails 2.4.x -->         
+   <!-- used by Grails 2.4.x -->
    <includes
          id="org.codehaus.groovy23.feature"
          version="0.0.0"
          optional="true"/>
-
-   <requires>
-      <import plugin="org.eclipse.jface"/>
-      <import plugin="org.eclipse.text"/>
-      <import plugin="org.eclipse.jface.text"/>
-      <import plugin="org.eclipse.core.runtime"/>
-      <import plugin="org.eclipse.ui.editors"/>
-      <import plugin="org.eclipse.jdt.ui"/>
-      <import plugin="org.eclipse.ui"/>
-      <import plugin="org.eclipse.debug.core"/>
-      <import plugin="org.eclipse.debug.ui"/>
-      <import plugin="org.eclipse.jdt.debug"/>
-      <import plugin="org.eclipse.jdt.launching"/>
-      <import plugin="org.eclipse.jdt.debug.ui"/>
-      <import plugin="org.eclipse.ui.views"/>
-      <import plugin="org.eclipse.core.filebuffers"/>
-      <import plugin="org.eclipse.ui.console"/>
-      <import plugin="org.eclipse.jdt.junit"/>
-      <import plugin="org.apache.ant"/>
-      <import plugin="org.junit"/>
-      <import plugin="org.eclipse.ui.workbench"/>
-      <import plugin="org.eclipse.ui.navigator"/>
-      <import plugin="org.eclipse.ui.ide" version="3.2.0" match="compatible"/>
-      <import plugin="org.eclipse.ui.workbench.texteditor" version="3.2.0" match="compatible"/>
-      <import plugin="org.eclipse.core.expressions" version="3.2.0" match="compatible"/>
-      <import plugin="org.eclipse.core.resources" version="3.2.0" match="compatible"/>
-      <import plugin="org.eclipse.core.runtime.compatibility" version="3.1.0" match="compatible"/>
-      <import plugin="org.eclipse.compare" version="3.2.0" match="compatible"/>
-      <import plugin="org.eclipse.core.variables" version="3.1.0" match="compatible"/>
-      <import plugin="org.eclipse.jdt.junit4.runtime"/>
-      <import plugin="org.eclipse.jdt.junit.runtime" version="3.2.0" match="compatible"/>
-   </requires>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse.codebrowsing"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse.ui"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse.codeassist.completion"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse.astviews"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse.refactoring"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse.quickfix"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.codehaus.groovy.eclipse.dsl"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
 
 </feature>

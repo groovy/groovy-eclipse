@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: org.codehaus.groovy20.tests
+Bundle-SymbolicName: org.codehaus.groovy20.tests
+Bundle-Version: 2.9.1.qualifier
+Require-Bundle: org.codehaus.groovy.alltests;bundle-version="2.9.1"
+Bundle-RequiredExecutionEnvironment: J2SE-1.5

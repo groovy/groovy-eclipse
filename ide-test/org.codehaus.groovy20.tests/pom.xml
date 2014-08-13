@@ -1,0 +1,56 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+  	<relativePath>../pom.xml</relativePath>
+    <groupId>org.codehaus.groovy.eclipse</groupId>
+    <artifactId>org.codehaus.groovy.eclipse.ide-test.parent</artifactId>
+    <version>2.9.1-SNAPSHOT</version>
+  </parent>
+  <groupId>org.codehaus.groovy.eclipse</groupId>
+  <artifactId>org.codehaus.groovy20.tests</artifactId>
+  <version>2.9.1-SNAPSHOT</version>
+  <packaging>eclipse-test-plugin</packaging>
+  
+  <!--  For running a subset of the tests on a target platform 
+        provisioned with an older version of Groovy Eclipse -->
+  
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-surefire-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<configuration>
+					<skip>${maven.test.skip}</skip>
+					<useUIThread>true</useUIThread>
+					<useUIHarness>true</useUIHarness>
+					<forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
+					<showEclipseLog>true</showEclipseLog>
+					<argLine>-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M</argLine>
+	
+					<testSuite>org.codehaus.groovy.alltests</testSuite>
+					<testClass>org.codehaus.groovy.alltests.SmokeTests</testClass>
+	
+					<dependencies>
+						<dependency>
+							<type>eclipse-feature</type>
+							<artifactId>org.codehaus.groovy.eclipse.feature</artifactId>
+							<version>0.0.0</version>
+						</dependency>
+						<dependency>
+							<type>eclipse-feature</type>
+							<artifactId>org.codehaus.groovy20.feature</artifactId>
+							<version>0.0.0</version>
+						</dependency>
+						<dependency>
+							<type>eclipse-feature</type>
+							<artifactId>org.eclipse.rcp</artifactId>
+							<version>0.0.0</version>
+						</dependency>
+					</dependencies>
+	
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

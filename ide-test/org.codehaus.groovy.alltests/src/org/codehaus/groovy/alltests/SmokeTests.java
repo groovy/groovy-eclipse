@@ -12,23 +12,24 @@
 
 package org.codehaus.groovy.alltests;
 
+import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTest;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 /**
+ * A subset of the tests that we want to run with older groovy compilers.
+ * 
  * @author Kris De Volder
- *
- * Groovy plugin tests
  */
-public class AllGroovyAndJDTTests {
+public class SmokeTests {
     public static Test suite() throws Exception {
         // ensure that the compiler chooser starts up
     	GroovyTestSuiteSupport.initializeCompilerChooser();
     	
-        TestSuite suite = new TestSuite(AllGroovyAndJDTTests.class.getName()); //$NON-NLS-1$
-        
-        suite.addTest(AllGroovyTests.suite()); //This must be first because of test that check startup log contents!
-        suite.addTest(GroovyJDTTests.suite());
+        TestSuite suite = new TestSuite(SmokeTests.class.getName()); //$NON-NLS-1$
+        suite.addTest(GroovySimpleTest.suite());
+        //Can add more tests here.
         
         return suite;
     }

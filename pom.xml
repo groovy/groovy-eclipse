@@ -66,6 +66,7 @@
 		<module>ide-test</module> <!-- parent pom for all the ide-test modules -->
 
 		<module>ide-test/org.codehaus.groovy.alltests</module>
+		<module>ide-test/org.codehaus.groovy20.tests</module>
 		<module>ide-test/org.codehaus.groovy.eclipse.codeassist.completion.test</module>
 		<module>ide-test/org.codehaus.groovy.eclipse.codebrowsing.test</module>
 		<module>ide-test/org.codehaus.groovy.eclipse.core.test</module>
@@ -84,6 +85,7 @@
 
 		<module>ide/org.codehaus.groovy.eclipse</module>
 
+		<module>ide/Feature-org.codehaus.groovy.compilerless.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.eclipse.feature</module>
 		<module>ide/Feature-org.codehaus.groovy18.feature</module>
 		<module>ide/Feature-org.codehaus.groovy20.feature</module>

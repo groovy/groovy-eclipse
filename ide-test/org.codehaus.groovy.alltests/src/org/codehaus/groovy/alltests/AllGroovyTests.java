@@ -42,7 +42,7 @@ public class AllGroovyTests {
         System.err.println("active Groovy version (specified) = "+ResolverActivator.getDefault().getChooser().getActiveSpecifiedVersion());
         System.err.println("------------------------------------------");
 
-        TestSuite suite = new TestSuite("All Groovy Tests"); //$NON-NLS-1$
+        TestSuite suite = new TestSuite(AllGroovyTests.class.getName()); //$NON-NLS-1$
         suite.addTestSuite(SanityTest.class);
         suite.addTest(AllUITests.suite()); //This must be first because of 'ErrorLogTest' inside of it.
         suite.addTest(AllCoreTests.suite());
