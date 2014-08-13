@@ -58,7 +58,7 @@
 				<artifactId>tycho-surefire-plugin</artifactId>
 				<version>${tycho-version}</version>
 				<configuration>
-					<skip>${maven.test.skip}</skip>
+ 					<skip>${maven.test.skip}</skip>
 					<useUIThread>true</useUIThread>
 					<useUIHarness>true</useUIHarness>
 					<forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
