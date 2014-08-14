@@ -2038,7 +2038,7 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
     			"1. ERROR in Foo.groovy (at line 1)\n" + 
     			"	class Foo {}\n" + 
     			"	 ^"+(isGE20()?"^^^^^^^^^^":"")+"\n" + 
-    			"Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy "+(isGE21()?"are containing both a class of the name":"each contain a class with the name")+" Foo.\n" + 
+    			"Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy "+(isGE20()?"are containing both a class of the name":"each contain a class with the name")+" Foo.\n" + 
     			"----------\n" + 
     			"2. ERROR in Foo.groovy (at line 1)\n" + 
     			"	class Foo {}\n" + 
@@ -11280,6 +11280,9 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 	}
 
 	public void testJDTClassNode_1731() {
+        if (GroovyUtils.GROOVY_LEVEL < 21) {
+            return;
+        }
 		this.runConformTest(new String[] {
 				"c/Main.java",
 				"package c;\n" +
@@ -11517,7 +11520,7 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 
     
     public void testParsingBlankImport_538() throws Exception {
-    	if (GroovyUtils.GROOVY_LEVEL<18) {
+    	if (GroovyUtils.GROOVY_LEVEL<21) {
     		return;
     	}
         this.runNegativeTest(new String[]{
@@ -11699,7 +11702,7 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
     
     public void testParsingBlankImportFollowedByClassDeclaration_538() throws Exception {
-    	if (GroovyUtils.GROOVY_LEVEL<18) {
+    	if (GroovyUtils.GROOVY_LEVEL<21) {
 			return;
 		}
 
@@ -11836,6 +11839,9 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
     }
 
     public void testAbstractMethodWithinEnum_STS3803() {
+        if (GroovyUtils.GROOVY_LEVEL < 21) {
+            return;
+        }
     	this.runConformTest(new String[] {
 	        "Bad.groovy",
 	        "enum Bad {\n" + 
