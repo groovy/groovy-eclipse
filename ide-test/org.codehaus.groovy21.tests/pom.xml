@@ -1,17 +1,16 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<relativePath>../pom.xml</relativePath>
-		<groupId>org.codehaus.groovy.eclipse</groupId>
-		<artifactId>org.codehaus.groovy.eclipse.ide-test.parent</artifactId>
-		<version>2.9.1-SNAPSHOT</version>
-	</parent>
-	<groupId>org.codehaus.groovy.eclipse</groupId>
-	<artifactId>org.codehaus.groovy20.tests</artifactId>
-	<version>2.9.1-SNAPSHOT</version>
-	<packaging>eclipse-test-plugin</packaging>
-
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+  	<relativePath>../pom.xml</relativePath>
+    <groupId>org.codehaus.groovy.eclipse</groupId>
+    <artifactId>org.codehaus.groovy.eclipse.ide-test.parent</artifactId>
+    <version>2.9.1-SNAPSHOT</version>
+  </parent>
+  <groupId>org.codehaus.groovy.eclipse</groupId>
+  <artifactId>org.codehaus.groovy21.tests</artifactId>
+  <version>2.9.1-SNAPSHOT</version>
+  <packaging>eclipse-test-plugin</packaging>
+  
 	<!-- For running a subset of the tests on a target platform provisioned 
 		with an older version of Groovy Eclipse (2.0 in this case) -->
 
@@ -44,11 +43,11 @@
 							<version>0.0.0</version>
 						</dependency>
 						<dependency>
-							<!-- This guarantees the 20 compiler is installed. But it does not
+							<!-- This guarantees the 21 compiler is installed. But it does not
 							     stop tycho from finding something more recent and installing that as well.
 							     -->
 							<type>eclipse-feature</type>
-							<artifactId>org.codehaus.groovy20.feature</artifactId>
+							<artifactId>org.codehaus.groovy21.feature</artifactId>
 							<version>0.0.0</version>
 						</dependency>
 						<dependency>
@@ -67,14 +66,14 @@
 				<configuration>
 					<filters>
 						<filter>
-							<!-- Limit compiler version to 2.0
-							     Note that this does not guarantee a 2.0 compiler is installed!
+							<!-- Limit compiler version to 2.1
+							     Note that this does not guarantee a 2.1 compiler is installed!
 							     It only ensures no other version is installed.
 							  -->
 							<type>eclipse-plugin</type>
 							<id>org.codehaus.groovy</id>
 							<restrictTo>
-								<versionRange>[2.0,2.1)</versionRange>
+								<versionRange>[2.1,2.2)</versionRange>
 							</restrictTo>
 						</filter>
 					</filters>
