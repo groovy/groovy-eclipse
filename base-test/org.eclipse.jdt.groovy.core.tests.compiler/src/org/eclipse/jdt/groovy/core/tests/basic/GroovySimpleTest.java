@@ -1863,7 +1863,7 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
     			"----------\n" + 
     			"1. ERROR in A.groovy (at line 2)\n" + 
     			"	class Foo {}\n" + 
-    			"	^"+(isGE20()?"^^^^^^^^^^^":"")+"\n" + 
+    			"	^"+(isGE20_OrLater()?"^^^^^^^^^^^":"")+"\n" + 
     			"Groovy:Invalid duplicate class definition of class Foo : The source A.groovy contains at least two definitions of the class Foo.\n" + 
     			"----------\n" + 
     			"2. ERROR in A.groovy (at line 2)\n" + 
@@ -2037,8 +2037,9 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
     			"----------\n" + 
     			"1. ERROR in Foo.groovy (at line 1)\n" + 
     			"	class Foo {}\n" + 
-    			"	 ^"+(isGE20()?"^^^^^^^^^^":"")+"\n" + 
-    			"Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy "+(isGE20()?"are containing both a class of the name":"each contain a class with the name")+" Foo.\n" + 
+    			"	 ^"+(isGE20_OrLater()?"^^^^^^^^^^":"")+"\n" + 
+    			"Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy "+
+    			(isGE20()||isGE21()?"are containing both a class of the name":"each contain a class with the name")+" Foo.\n" + 
     			"----------\n" + 
     			"2. ERROR in Foo.groovy (at line 1)\n" + 
     			"	class Foo {}\n" + 
@@ -2519,14 +2520,18 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 	    	},"----------\n" + 
 			"1. ERROR in AnnotationDoubleTest.groovy (at line 3)\n" + 
 			"	class FooWithAnnotation { @AnnotationDouble(value=\"test\", width=1.0) double value; }\n" + 
-			"	                                                                ^"+(isGE20()?"^^":"")+"\n" + 
+			"	                                                                ^"+(isGE20_OrLater()?"^^":"")+"\n" + 
 			"Groovy:Attribute \'width\' should have type \'java.lang.Double\'; but found type \'java.math.BigDecimal\' in @AnnotationDouble\n" + 
 			"----------\n");
     }
     
     // is greater than or equal to 20
     private boolean isGE20() {
-    		return GroovyUtils.GROOVY_LEVEL>=20;
+    		return GroovyUtils.GROOVY_LEVEL==20;
+    }
+    
+    private boolean isGE20_OrLater() {
+		return GroovyUtils.GROOVY_LEVEL>=20;
     }
     
     private boolean isGE23() {
@@ -2558,7 +2563,7 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
     	},"----------\n" + 
 		"1. ERROR in AnnotationDoubleTest.groovy (at line 3)\n" + 
 		"	class FooWithAnnotation { @AnnotationDouble(value=\"test\", width=1.0) double value; }\n" + 
-		"	                                                                ^"+(isGE20()?"^^":"")+"\n" + 
+		"	                                                                ^"+(isGE20_OrLater()?"^^":"")+"\n" + 
 		"Groovy:Attribute \'width\' should have type \'java.lang.Double\'; but found type \'java.math.BigDecimal\' in @AnnotationDouble\n" + 
 		"----------\n");
     }
@@ -9431,7 +9436,7 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 		"----------\n" + 
 		"1. ERROR in p\\Code.groovy (at line 5)\n" + 
 		"	public void m(String s, Integer i =3) {}\n" + 
-		"	^"+(isGE20()?"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^":"")+"\n" + 
+		"	^"+(isGE20_OrLater()?"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^":"")+"\n" + 
 		"Groovy:The method with default parameters \"void m(java.lang.String, java.lang.Integer)\" defines a method \"void m(java.lang.String)\" that is already defined.\n"+ 
 		"----------\n"
 		);
@@ -10185,13 +10190,13 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 		"----------\n" + 
 		"1. ERROR in Foo.groovy (at line 4)\n" + 
 		"	if (rareCondition) {\n" + 
-		"	    ^"+(isGE20()?"^^^^^^^^^^^^":"")+"\n" + 
+		"	    ^"+(isGE20_OrLater()?"^^^^^^^^^^^^":"")+"\n" + 
 		"Groovy:[Static type checking] - The variable [rareCondition] is undeclared.\n" + 
 		"----------\n" + 
 		"2. ERROR in Foo.groovy (at line 5)\n" + 
 		"	println \"Did you spot the error in this ${message.toUppercase()}?\"\n" + 
-		"	                                         ^"+(isGE20()?"^^^^^^^^^^^^^^^^^^^^^^":"")+"\n" + 
-		"Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase()"+(isGE20()?". Please check if the declared type is right and if the method exists.":"")+"\n" + 
+		"	                                         ^"+(isGE20_OrLater()?"^^^^^^^^^^^^^^^^^^^^^^":"")+"\n" + 
+		"Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase()"+(isGE20_OrLater()?". Please check if the declared type is right and if the method exists.":"")+"\n" + 
 		"----------\n");
 	}
 	
@@ -10213,10 +10218,10 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 		"----------\n" + 
 		"1. ERROR in Foo.groovy (at line 6)\n" + 
 		"	ls.add(\'abc\');\n" + 
-		"	^"+(isGE20()?"^^^^^^^^^^^^":"")+"\n" + 
+		"	^"+(isGE20_OrLater()?"^^^^^^^^^^^^":"")+"\n" + 
 		(isGE23()?
 				"Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] ":
-		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isGE20()?". Please check if the declared type is right and if the method exists.":""))+"\n" + 
+		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isGE20_OrLater()?". Please check if the declared type is right and if the method exists.":""))+"\n" + 
 		"----------\n");
 	}
 	
@@ -10276,10 +10281,10 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 		"----------\n" + 
 		"1. ERROR in Foo.groovy (at line 6)\n" + 
 		"	ls.add(\'abc\');\n" + 
-		"	^"+(isGE20()?"^^^^^^^^^^^^":"")+"\n" + 
+		"	^"+(isGE20_OrLater()?"^^^^^^^^^^^^":"")+"\n" + 
 		(isGE23()?
 		"Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] \n":
-		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isGE20()?". Please check if the declared type is right and if the method exists.":""))+(isGE23()?"":"\n") + 
+		"Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isGE20_OrLater()?". Please check if the declared type is right and if the method exists.":""))+(isGE23()?"":"\n") + 
 		"----------\n");
 	}
 	
