@@ -16,6 +16,7 @@ public class SmokeTests {
     	
         TestSuite suite = new TestSuite(SmokeTests.class.getName()); //$NON-NLS-1$
         suite.addTest(GroovySimpleTest.suite());
+        suite.addTest(org.codehaus.groovy.eclipse.codeassist.tests.AllCompletionTests.suite());
         //Can add more tests here.
         
         return suite;
