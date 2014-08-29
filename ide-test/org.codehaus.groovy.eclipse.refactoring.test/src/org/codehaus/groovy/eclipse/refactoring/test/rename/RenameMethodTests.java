@@ -12,6 +12,7 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.refactoring.IJavaRefactorings;
 import org.eclipse.jdt.core.refactoring.descriptors.RenameJavaElementDescriptor;
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory;
 import org.eclipse.ltk.core.refactoring.RefactoringCore;
 
@@ -120,6 +121,9 @@ public class RenameMethodTests extends RefactoringTest {
     }
     // GRECLIPSE-1538
 	public void test11() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL < 21) {
+            return;
+        }
         helper2_0("A", "getFoo", "foo", new String[] { }, true, false);
 	}
     public void testInitializer1() throws Exception {

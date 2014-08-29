@@ -1077,6 +1077,9 @@ public class InferencingTests extends AbstractInferencingTest {
     // GRECLIPSE-1748
     // Closure type inference with @CompileStatic  
     public void testClosureTypeInference1() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL < 21) {
+            return;
+        }
         String contents =
                 "import groovy.beans.Bindable\n" +
                 "import groovy.transform.CompileStatic\n" +
@@ -1101,6 +1104,9 @@ public class InferencingTests extends AbstractInferencingTest {
 
     // Closure type inference without @CompileStatic
     public void testClosureTypeInference2() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL < 21) {
+            return;
+        }
         String contents =
                 "import groovy.beans.Bindable\n" +
                 "class A {\n" +
