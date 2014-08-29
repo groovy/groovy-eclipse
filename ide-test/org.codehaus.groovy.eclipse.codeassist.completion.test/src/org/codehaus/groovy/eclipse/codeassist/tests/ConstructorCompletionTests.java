@@ -13,6 +13,7 @@ package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 
@@ -67,6 +68,9 @@ public class ConstructorCompletionTests extends CompletionTestCase {
     }
     
     public void testContructorCompletionWithinEnumDeclaration1() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL < 21) {
+            return;
+        }
     	String contents = "package f\nclass YYY { YYY() { } }\nenum F {\n"
     			+ "	Aaa() {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}";
     	String expected = "package f\nclass YYY { YYY() { } }\nenum F {\n"

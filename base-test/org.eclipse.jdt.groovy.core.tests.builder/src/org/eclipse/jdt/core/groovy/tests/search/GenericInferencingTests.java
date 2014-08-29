@@ -29,6 +29,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.groovy.tests.compiler.ReconcilerUtils;
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 
 /**
  * 
@@ -505,6 +506,9 @@ public class GenericInferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
     public void testDGMClosure3() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL < 21) {
+            return;
+        }
         String contents = "(1..4).find { it }";
         String toFind = "it";
         int start = contents.lastIndexOf(toFind);
@@ -1124,6 +1128,9 @@ def h = [8: 1, bb:8]
 
     // Test according GRECLIPSE-1129 description
     public void testStaticMethod5() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL < 23) {
+            return;
+        }
         String contents =
                 "class A { }\n" +
                 "class B extends A {}\n" +

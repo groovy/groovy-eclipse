@@ -3537,6 +3537,9 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
 	// GRECLIPSE-1727
 	public void testTraitBasics() throws Exception {
+		if (GroovyUtils.GROOVY_LEVEL < 23) {
+			return;
+		}
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
@@ -3559,6 +3562,9 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 	}
 
 	public void testTraitIncremental() throws Exception {
+		if (GroovyUtils.GROOVY_LEVEL < 23) {
+			return;
+		}
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
@@ -3629,6 +3635,9 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 	}
 
 	public void testTraitBinary() throws Exception {
+		if (GroovyUtils.GROOVY_LEVEL < 23) {
+			return;
+		}
 		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		env.addGroovyJars(projectPath);
