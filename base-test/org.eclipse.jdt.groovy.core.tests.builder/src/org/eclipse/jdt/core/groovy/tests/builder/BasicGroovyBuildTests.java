@@ -3721,6 +3721,58 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		executeClass(projectPath, "Runner", "new name", "");
 	}
 
+	public void testTraitGRE1776() throws Exception {
+		if (GroovyUtils.GROOVY_LEVEL < 23) {
+			return;
+		}
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "p", "MyTrait",
+				"package p\n" +
+				"trait MyTrait {\n" +
+				"}\n");
+
+		env.addGroovyClass(root, "q", "MyClass",
+				"package q\n" +
+				"import p.MyTrait\n" +
+				"public class MyClass implements MyTrait {}\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("p.MyTrait", "p.MyTrait$Trait$Helper", "q.MyClass");
+		expectingNoProblems();
+
+		// modify the body of the trait
+		env.addGroovyClass(root, "p", "MyTrait",
+				"package p\n" +
+				"trait MyTrait {\n" +
+				"    def m() { 'm' }\n" +
+				"}\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("p.MyTrait", "p.MyTrait$Trait$Helper", "q.MyClass");
+		expectingNoProblems();
+
+		// modify again the body of the trait
+		env.addGroovyClass(root, "p", "MyTrait",
+				"package p\n" +
+				"trait MyTrait {\n" +
+				"    def k() { 'm' }\n" +
+				"}\n");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("p.MyTrait", "p.MyTrait$Trait$Helper", "q.MyClass");
+		expectingNoProblems();
+	}
+
 	//
 	// /*
 	// * Ensures that a task tag is not user editable

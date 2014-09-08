@@ -178,6 +178,19 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	 * @return true if clean processing, false otherwise
 	 */
 	public boolean processToPhase(int phase) {
+		// GRECLIPSE-1776 start
+		// Try to discard cached class loaders for traits
+		if (phase == Phases.CANONICALIZATION) {
+			for (ModuleNode module : groovyCompilationUnit.getAST().getModules()) {
+				for (ClassNode classNode : module.getClasses()) {
+					if (traitHelper.isTrait(classNode)) {
+						GroovyParser.tidyCache();
+						break;
+					}
+				}
+			}
+		}
+		// GRECLIPSE end
 		boolean alreadyHasProblems = compilationResult.hasProblems();
 		// Our replacement error collector doesn't cause an exception, instead they are checked for post 'compile'
 		try {
