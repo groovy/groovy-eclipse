@@ -1834,6 +1834,23 @@ public class InferencingTests extends AbstractInferencingTest {
 		assertType(contents, start, end, "java.lang.Integer");
 	}
 
+	public void testThisInInnerClass1() {
+		String contents =
+				"class A {\n" +
+				"    String source = null\n" +
+				"    def user = new Object() {\n" +
+				"        def field = A.this.source\n" +
+				"    }\n" +
+				"}\n";
+		int start = contents.lastIndexOf("source");
+		int end = start + "source".length();
+		assertType(contents, start, end, "java.lang.String");
+
+		start = contents.indexOf("this");
+		end = start + "this".length();
+		assertType(contents, start, end, "A");
+	}
+
     protected void assertNoUnknowns(String contents) {
         GroovyCompilationUnit unit = createUnit("Search", contents);
         
