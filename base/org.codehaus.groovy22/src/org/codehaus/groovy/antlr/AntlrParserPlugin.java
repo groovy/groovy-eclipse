@@ -2851,6 +2851,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 if (property instanceof VariableExpression) {
                     VariableExpression ve = (VariableExpression) property;
                     property = new ConstantExpression(ve.getName());
+                    // GRECLIPSE start
+                    // Add missing position information
+                    property.setSourcePosition(ve);
+                    // GRECLIPSE end
                 }
                 
                 PropertyExpression propertyExpression = new PropertyExpression(leftExpression, property, node.getType() != DOT);
