@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -65,6 +66,7 @@ import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
+import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
@@ -1785,6 +1787,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 						} else {
 							compilationResult.record(classNameChars, classFile);
 						}
+					}
+				}
+			}
+		} else {
+			if (types != null) {
+				for (TypeDeclaration type : types) {
+					if (type.binding != null) {
+						ClassFile.createProblemType(type, compilationResult);
 					}
 				}
 			}

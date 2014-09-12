@@ -3773,6 +3773,102 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		expectingNoProblems();
 	}
 
+	public void testGRE1773() throws Exception {
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		IPath class1 = env.addGroovyClass(root, "test", "Class1",
+				"package test\n" +
+				"abstract class Class1 {\n" +
+				"    abstract void m1()\n" +
+				"    void m2() {}\n" +
+				"    static Class1 create(String type) {\n" +
+				"        switch (type) {\n" +
+				"            case 'Class2':\n" +
+				"                return new Class2()\n" +
+				"                break\n" +
+				"            case 'Class3':\n" +
+				"                return new Class3()\n" +
+				"            default:\n" +
+				"                assert false : \"Unexpected type ${type}\"\n" +
+				"        }\n" +
+				"    }\n" +
+				"}");
+
+		IPath class2 = env.addGroovyClass(root, "test", "Class2",
+				"package test\n" +
+				"class Class2 extends Class1 {\n" +
+				"    @Override\n" +
+				"    public void m1() {}\n" +
+				"}");
+
+		IPath class3 = env.addGroovyClass(root, "test", "Class3",
+				"package test\n" +
+				"class Class3 extends Class1 {\n" +
+				"    @Override\n" +
+				"    public void m1() {}\n" +
+				"}");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("test.Class1", "test.Class2", "test.Class3");
+		expectingNoProblems();
+
+		// modify the body of the abstract class to break build
+		class1 = env.addGroovyClass(root, "test", "Class1",
+				"package test\n" +
+				"abstract class Class1 {\n" +
+				"    abstract void ()\n" +
+				"    void m2() {}\n" +
+				"    static Class1 create(String type) {\n" +
+				"        switch (type) {\n" +
+				"            case 'Class2':\n" +
+				"                return new Class2()\n" +
+				"                break\n" +
+				"            case 'Class3':\n" +
+				"                return new Class3()\n" +
+				"            default:\n" +
+				"                assert false : \"Unexpected type ${type}\"\n" +
+				"        }\n" +
+				"    }\n" +
+				"}");
+
+		incrementalBuild(projectPath);
+		expectingProblemsFor(class1, "Problem : Groovy:unexpected token: abstract @ line 3, column 5. [ resource : </Project/src/test/Class1.groovy> range : <41,42> category : <60> severity : <2>]");
+		expectingProblemsFor(class2, "Problem : Groovy:Method \'m1\' from class \'test.Class2\' does not override method from its superclass or interfaces but is annotated with @Override. [ resource : </Project/src/test/Class2.groovy> range : <48,56> category : <60> severity : <2>]");
+		expectingProblemsFor(class3, "Problem : Groovy:Method \'m1\' from class \'test.Class3\' does not override method from its superclass or interfaces but is annotated with @Override. [ resource : </Project/src/test/Class3.groovy> range : <48,56> category : <60> severity : <2>]");
+
+		// modify the body of the abstract class to fix build
+		env.addGroovyClass(root, "test", "Class1",
+				"package test\n" +
+				"abstract class Class1 {\n" +
+				"    abstract void m1()\n" +
+				"    void m2() {}\n" +
+				"    static Class1 create(String type) {\n" +
+				"        switch (type) {\n" +
+				"            case 'Class2':\n" +
+				"                return new Class2()\n" +
+				"                break\n" +
+				"            case 'Class3':\n" +
+				"                return new Class3()\n" +
+				"            default:\n" +
+				"                assert false : \"Unexpected type ${type}\"\n" +
+				"        }\n" +
+				"    }\n" +
+				"}");
+
+		incrementalBuild(projectPath);
+		expectingCompiledClassesV("test.Class1", "test.Class2", "test.Class3");
+		expectingNoProblems();
+	}
+
 	//
 	// /*
 	// * Ensures that a task tag is not user editable
