@@ -136,6 +136,13 @@ public boolean build(SimpleLookupTable deltas) {
 			compile(allSourceFiles);
 			removeSecondaryTypes();
 			addAffectedSourceFiles();
+			// GRECLIPSE-1773
+			// If there are new errors try to compile previous files 
+			if (this.notifier.newErrorCount > 0 && this.sourceFiles.isEmpty() && !this.previousSourceFiles.isEmpty()) {
+				this.sourceFiles.addAll(this.previousSourceFiles);
+				this.previousSourceFiles.clear();
+			}
+			// GRECLIPSE end
 		}
 		if (this.hasStructuralChanges && this.javaBuilder.javaProject.hasCycleMarker())
 			this.javaBuilder.mustPropagateStructuralChanges();
