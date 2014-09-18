@@ -354,6 +354,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 		if (declaration != null) {
 			type = typeFromDeclaration(declaration, declaringType);
 			realDeclaringType = declaringTypeFromDeclaration(declaration, declaringType);
+		} else if ("this".equals(name)) {
+			// Fix for 'this' as property of ClassName
+			declaration = declaringType;
+			type = declaringType;
+			realDeclaringType = declaringType;
 		} else if (isPrimaryExpression &&
 		// make everything from the scopes available
 				(varInfo = scope.lookupName(name)) != null) {

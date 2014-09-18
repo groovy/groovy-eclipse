@@ -993,7 +993,15 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (objectExpression instanceof ClassExpression && pe.getPropertyAsString() != null) {
             // possibly an inner class
             ClassExpression ce = (ClassExpression) objectExpression;
-            ClassNode type = ClassHelper.make(ce.getType().getName() + "$" + pe.getPropertyAsString());
+            // GRECLIPSE start
+            // Fix for 'this' as property inside inner classes
+            String propertyAsString = pe.getPropertyAsString();
+            if ("this".equals(propertyAsString)) {
+                pe.getProperty().setType(ce.getType());
+                return pe;
+            }
+            ClassNode type = ClassHelper.make(ce.getType().getName() + "$" + propertyAsString);
+            // GRECLIPSE end
             if (resolve(type, false, false, false)) {
                 Expression ret = new ClassExpression(type);
                 ret.setSourcePosition(ce);
