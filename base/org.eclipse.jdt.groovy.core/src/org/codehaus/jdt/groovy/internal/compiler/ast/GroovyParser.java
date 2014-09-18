@@ -158,6 +158,13 @@ public class GroovyParser {
 		}
 	}
 
+	/**
+	 * Clears cached class loaders for all caches. It helps to fix problems with cached trait helper classes.
+	 */
+	static void tidyCache() {
+		projectToLoaderCache.clear();
+	}
+
 	// public GroovyParser(CompilerOptions options, ProblemReporter problemReporter) {
 	// this(null, options, problemReporter);
 	// }
