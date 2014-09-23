@@ -216,7 +216,7 @@ public class CompilerUtils {
 	// public for testing
 	public static String calculateClasspath(IJavaProject javaProject) {
 		try {
-			Set accumulatedPathEntries = new LinkedHashSet();
+			Set<String> accumulatedPathEntries = new LinkedHashSet<String>();
 			IProject project = javaProject.getProject();
 			String projectName = project.getName();
 			IPath defaultOutputPath = javaProject.getOutputLocation();
@@ -269,10 +269,21 @@ public class CompilerUtils {
 					}
 				}
 				accumulatedPathEntries.add(defaultOutputLocation);
+				// GRECLIPSE start
+				// Add output locations which are not default
+				for (IClasspathEntry entry : javaProject.getRawClasspath()) {
+					if (entry.getOutputLocation() != null) {
+						String location = pathToString(entry.getOutputLocation(), project);
+						if (!defaultOutputLocation.equals(location)) {
+							accumulatedPathEntries.add(location);
+						}
+					}
+				}
+				// GRECLIPSE end
 				StringBuilder sb = new StringBuilder();
-				Iterator iter = accumulatedPathEntries.iterator();
+				Iterator<String> iter = accumulatedPathEntries.iterator();
 				while (iter.hasNext()) {
-					sb.append((String)iter.next());
+					sb.append(iter.next());
 					sb.append(File.pathSeparator);
 				}
 				String classpath = sb.toString();
