@@ -269,17 +269,23 @@ public class CompilerUtils {
 					}
 				}
 				accumulatedPathEntries.add(defaultOutputLocation);
-				// GRECLIPSE start
-				// Add output locations which are not default
-				for (IClasspathEntry entry : javaProject.getRawClasspath()) {
-					if (entry.getOutputLocation() != null) {
-						String location = pathToString(entry.getOutputLocation(), project);
-						if (!defaultOutputLocation.equals(location)) {
-							accumulatedPathEntries.add(location);
+//				// GRECLIPSE start
+//				// Add output locations which are not default
+				try {
+					if (isGroovyNaturedProject(project)) {
+						for (IClasspathEntry entry : javaProject.getRawClasspath()) {
+							if (entry.getOutputLocation() != null) {
+								String location = pathToString(entry.getOutputLocation(), project);
+								if (!defaultOutputLocation.equals(location)) {
+									accumulatedPathEntries.add(location);
+								}
+							}
 						}
 					}
+				} catch (CoreException e) {
+					System.err.println("Unexpected error on checking Groovy Nature"); //$NON-NLS-1$
 				}
-				// GRECLIPSE end
+//				// GRECLIPSE end
 				StringBuilder sb = new StringBuilder();
 				Iterator<String> iter = accumulatedPathEntries.iterator();
 				while (iter.hasNext()) {
