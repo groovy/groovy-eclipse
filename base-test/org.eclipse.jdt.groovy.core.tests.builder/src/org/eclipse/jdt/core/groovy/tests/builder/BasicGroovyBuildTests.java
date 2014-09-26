@@ -1830,7 +1830,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
 		incrementalBuild(projectPath);
 		// lots of errors on the missing static imports
-		expectingCompiledClassesV("Foo");
+		expectingCompiledClassesV("Foo", "Test1");
 
 	}
 
@@ -1907,7 +1907,7 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 
 		incrementalBuild(projectPath);
 		// lots of errors on the missing static imports
-		expectingCompiledClassesV("");
+		expectingCompiledClassesV("Test1");
 
 	}
 
