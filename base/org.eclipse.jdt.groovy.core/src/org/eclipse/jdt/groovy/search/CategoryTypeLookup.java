@@ -125,7 +125,7 @@ public class CategoryTypeLookup implements ITypeLookup {
 			return TypeConfidence.LOOSELY_INFERRED;
 		}
 		for (int i = 0; i < arguments.size(); i++) {
-			if (!arguments.get(i).equals(params[i + 1].getDeclaringClass())) {
+			if (!arguments.get(i).equals(params[i + 1].getOriginType())) {
 				return TypeConfidence.LOOSELY_INFERRED;
 			}
 		}
