@@ -15,11 +15,11 @@ MyBean soSomething() {
 	}
 ###exp
 MyBean soSomething() {
-	return new MyBean('foo',
-			'bar', 'baz')
+    return new MyBean('foo',
+            'bar', 'baz')
 }
 MyBean soSomething() {
-	return method('foo',
-			'bar', 'baz')
+    return method('foo',
+            'bar', 'baz')
 }
 ###end
