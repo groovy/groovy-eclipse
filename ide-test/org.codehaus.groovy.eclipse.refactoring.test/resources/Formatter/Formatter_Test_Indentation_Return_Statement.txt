@@ -1,0 +1,25 @@
+###prop
+setPreferences=true
+bracesEnd=next
+indentation=space
+tabsize=4
+indentEmptyLines=true
+###src
+MyBean soSomething() {
+		return new MyBean('foo',
+		'bar', 'baz')
+	}
+	MyBean soSomething() {
+		return method('foo',
+		'bar', 'baz')
+	}
+###exp
+MyBean soSomething() {
+	return new MyBean('foo',
+			'bar', 'baz')
+}
+MyBean soSomething() {
+	return method('foo',
+			'bar', 'baz')
+}
+###end

@@ -32,6 +32,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
@@ -217,6 +218,8 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
     private boolean isMultilineNodeType(ASTNode node) {
         if (node != null && node.getLineNumber() < node.getLastLineNumber()) {
             if (node instanceof ExpressionStatement) {
+                return true;
+            } else if (node instanceof ReturnStatement) {
                 return true;
             } else if (node instanceof Statement) {
                 return false;
