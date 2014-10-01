@@ -18,6 +18,7 @@
  *								Bug 427411 - [1.8][generics] JDT reports type mismatch when using method that returns generic type
  *								Bug 428019 - [1.8][compiler] Type inference failure with nested generic invocation.
  *								Bug 435962 - [RC2] StackOverFlowError when building
+ *								Bug 438458 - [1.8][null] clean up handling of null type annotations wrt type variables
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -883,8 +884,24 @@ public class WildcardBinding extends ReferenceBinding {
 		return this.typeVariable;
 	}
 
-	public TypeBinding unannotated() {
-		return this.hasTypeAnnotations() ? this.environment.getUnannotatedType(this) : this;
+	public TypeBinding unannotated(boolean removeOnlyNullAnnotations) {
+		if (!hasTypeAnnotations())
+			return this;
+		if (removeOnlyNullAnnotations && !hasNullTypeAnnotations())
+			return this;
+		ReferenceBinding unannotatedGenericType = (ReferenceBinding) this.genericType.unannotated(removeOnlyNullAnnotations);
+		if (removeOnlyNullAnnotations) {
+			// cf. structure of uncapture():
+			TypeBinding unannotatedBound = this.bound != null ? this.bound.unannotated(removeOnlyNullAnnotations) : null;
+			int length = 0;
+			TypeBinding [] unannotatedOtherBounds = this.otherBounds == null ? null : new TypeBinding[length = this.otherBounds.length];
+			for (int i = 0; i < length; i++) {
+				unannotatedOtherBounds[i] = this.otherBounds[i] == null ? null : this.otherBounds[i].unannotated(removeOnlyNullAnnotations);
+			}
+			AnnotationBinding[] newAnnotations = this.environment.filterNullTypeAnnotations(getTypeAnnotations());
+			return this.environment.createWildcard(unannotatedGenericType, this.rank, unannotatedBound, unannotatedOtherBounds, this.boundKind, newAnnotations);			
+		}
+		return unannotatedGenericType;
 	}
 	@Override
 	public TypeBinding uncapture(Scope scope) {
@@ -908,14 +925,21 @@ public class WildcardBinding extends ReferenceBinding {
 	}
 	@Override
 	public boolean mentionsAny(TypeBinding[] parameters, int idx) {
-		if (super.mentionsAny(parameters, idx))
-			return true;
-		if (this.bound != null && 	this.bound.mentionsAny(parameters, -1))
-			return true;
-		if (this.otherBounds != null) {
-			for (int i = 0, length = this.otherBounds.length; i < length; i++)
-				if (this.otherBounds[i].mentionsAny(parameters, -1))
-					return true;
+		if (this.inRecursiveFunction)
+			return false;
+		this.inRecursiveFunction = true;
+		try {
+			if (super.mentionsAny(parameters, idx))
+				return true;
+			if (this.bound != null && 	this.bound.mentionsAny(parameters, -1))
+				return true;
+			if (this.otherBounds != null) {
+				for (int i = 0, length = this.otherBounds.length; i < length; i++)
+					if (this.otherBounds[i].mentionsAny(parameters, -1))
+						return true;
+			}
+		} finally {
+			this.inRecursiveFunction = false;
 		}
 		return false;
 	}

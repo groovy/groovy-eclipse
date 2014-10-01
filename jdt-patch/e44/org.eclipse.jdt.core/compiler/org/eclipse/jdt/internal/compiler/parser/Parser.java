@@ -4952,8 +4952,8 @@ protected void consumeMethodDeclaration(boolean isNotAbstract, boolean isDefault
 			problemReporter().defaultModifierIllegallySpecified(md.sourceStart, md.sourceEnd);
 		} else {
 			problemReporter().illegalModifierForMethod(md);
+		}
 	}
-}
 }
 protected void consumeMethodHeader() {
 	// MethodHeader ::= MethodHeaderName MethodHeaderParameters MethodHeaderExtendedDims ThrowsClauseopt
@@ -7991,6 +7991,11 @@ protected void consumeLambdaExpression() {
 	}
 	this.referenceContext.compilationResult().hasFunctionalTypes = true;
 	markEnclosingMemberWithLocalOrFunctionalType(LocalTypeKind.LAMBDA);
+	if (lexp.compilationResult.getCompilationUnit() == null) {
+		// unit built out of model. Stash a textual representation of lambda to enable LE.copy().
+		int length = lexp.sourceEnd - lexp.sourceStart + 1;
+		System.arraycopy(this.scanner.getSource(), lexp.sourceStart, lexp.text = new char [length], 0, length); 
+	}
 }
 
 protected Argument typeElidedArgument() {

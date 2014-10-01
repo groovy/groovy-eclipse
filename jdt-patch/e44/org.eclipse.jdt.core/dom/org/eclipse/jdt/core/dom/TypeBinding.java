@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Stephan Herrmann - Contribution for
+ *								Bug 438458 - [1.8][null] clean up handling of null type annotations wrt type variables
  *******************************************************************************/
 
 package org.eclipse.jdt.core.dom;
@@ -465,7 +467,7 @@ class TypeBinding implements ITypeBinding {
 	public ITypeBinding getTypeDeclaration() {
 		if (this.binding instanceof ParameterizedTypeBinding)
 			return this.resolver.getTypeBinding(((ParameterizedTypeBinding)this.binding).genericType());
-		return this.resolver.getTypeBinding(this.binding.unannotated());
+		return this.resolver.getTypeBinding(this.binding.unannotated(false));
 	}
 	
 	/* (non-Javadoc)
@@ -1125,7 +1127,7 @@ class TypeBinding implements ITypeBinding {
 			return false;
 		}
 		org.eclipse.jdt.internal.compiler.lookup.TypeBinding otherBinding = ((TypeBinding) other).binding;
-		if (org.eclipse.jdt.internal.compiler.lookup.TypeBinding.equalsEquals(otherBinding.unannotated(), this.binding.unannotated())) {
+		if (org.eclipse.jdt.internal.compiler.lookup.TypeBinding.equalsEquals(otherBinding.unannotated(false), this.binding.unannotated(false))) {
 			return true;
 		}
 		// check return type

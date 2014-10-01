@@ -20,6 +20,8 @@
  *                          Bug 415399 - [1.8][compiler] Type annotations on constructor results dropped by the code generator
  *                          Bug 415470 - [1.8][compiler] Type annotations on class declaration go vanishing
  *                          Bug 405104 - [1.8][compiler][codegen] Implement support for serializeable lambdas
+ *     Stephan Herrmann - Contribution for
+ *							Bug 438458 - [1.8][null] clean up handling of null type annotations wrt type variables
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler;
 
@@ -5152,11 +5154,11 @@ public class ClassFile implements TypeConstants, TypeIds {
 			this.innerClassesBindings = new HashSet(INNER_CLASSES_SIZE);
 		}
 		ReferenceBinding innerClass = (ReferenceBinding) binding;
-		this.innerClassesBindings.add(innerClass.erasure().unannotated());  // should not emit yet another inner class for Outer.@Inner Inner.
+		this.innerClassesBindings.add(innerClass.erasure().unannotated(false));  // should not emit yet another inner class for Outer.@Inner Inner.
 		ReferenceBinding enclosingType = innerClass.enclosingType();
 		while (enclosingType != null
 				&& enclosingType.isNestedType()) {
-			this.innerClassesBindings.add(enclosingType.erasure().unannotated());
+			this.innerClassesBindings.add(enclosingType.erasure().unannotated(false));
 			enclosingType = enclosingType.enclosingType();
 		}
 	}

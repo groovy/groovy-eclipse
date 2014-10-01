@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,7 @@
  *     Stephan Herrmann - Contribution for
  *								bug 395002 - Self bound generic class doesn't resolve bounds properly for wildcards for certain parametrisation.
  *								Bug 417295 - [1.8[[null] Massage type annotated null analysis to gel well with deep encoded type bindings.
+ *								Bug 438458 - [1.8][null] clean up handling of null type annotations wrt type variables
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -172,7 +173,7 @@ public class BaseTypeBinding extends TypeBinding {
 		super.setTypeAnnotations(annotations, false); // never set nullTagBits on base types
 	}
 
-	public TypeBinding unannotated() {
+	public TypeBinding unannotated(boolean removeOnlyNullAnnotations) {
 		if (!this.hasTypeAnnotations())
 			return this;
 		switch (this.id) {

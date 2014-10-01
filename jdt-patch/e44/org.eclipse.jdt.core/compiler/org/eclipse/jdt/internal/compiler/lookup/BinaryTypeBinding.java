@@ -26,6 +26,7 @@
  *								Bug 392245 - [1.8][compiler][null] Define whether / how @NonNullByDefault applies to TYPE_USE locations
  *								Bug 429958 - [1.8][null] evaluate new DefaultLocation attribute of @NonNullByDefault
  *								Bug 390889 - [1.8][compiler] Evaluate options to support 1.7- projects against 1.8 JRE.
+ *								Bug 438458 - [1.8][null] clean up handling of null type annotations wrt type variables
  *    Jesper Steen Moller - Contributions for
  *								Bug 412150 [1.8] [compiler] Enable reflected parameter names during annotation processing
  *								Bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
@@ -523,7 +524,7 @@ private TypeAnnotationWalker getTypeAnnotationWalker(IBinaryTypeAnnotation[] ann
 				return new NonNullDefaultAwareTypeAnnotationWalker(nullness, this.environment);
 		}
 		return TypeAnnotationWalker.EMPTY_ANNOTATION_WALKER;
-}
+	}
 	if (this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
 		int nullness = getNullDefault();
 		if (nullness > Binding.NULL_UNSPECIFIED_BY_DEFAULT)
@@ -588,10 +589,10 @@ private MethodBinding createMethod(IBinaryMethod method, long sourceLevel, char[
 		methodModifiers &= ~ClassFileConstants.AccVarargs; // vararg methods are not recognized until 1.5
 	if (isInterface() && (methodModifiers & ClassFileConstants.AccAbstract) == 0) {
 		// see https://bugs.eclipse.org/388954 superseded by https://bugs.eclipse.org/390889
-			if ((methodModifiers & ClassFileConstants.AccStatic) == 0) {
+		if ((methodModifiers & ClassFileConstants.AccStatic) == 0) {
 			// i.e. even at 1.7- we record AccDefaultMethod when reading a 1.8+ interface to avoid errors caused by default methods added to a library
-				methodModifiers |= ExtraCompilerModifiers.AccDefaultMethod;
-			}
+			methodModifiers |= ExtraCompilerModifiers.AccDefaultMethod;
+		}
 	}
 	ReferenceBinding[] exceptions = Binding.NO_EXCEPTIONS;
 	TypeBinding[] parameters = Binding.NO_PARAMETERS;
@@ -1499,6 +1500,12 @@ SimpleLookupTable storedAnnotations(boolean forceInitialize) {
 //pre: null annotation analysis is enabled
 private void scanFieldForNullAnnotation(IBinaryField field, FieldBinding fieldBinding, boolean isEnum) {
 	if (!isPrototype()) throw new IllegalStateException();
+
+	if (isEnum && (field.getModifiers() & ClassFileConstants.AccEnum) != 0) {
+		fieldBinding.tagBits |= TagBits.AnnotationNonNull;
+		return; // we know it's nonnull, no need to look for null *annotations* on enum constants.
+	}
+
 	if (this.environment.globalOptions.sourceLevel >= ClassFileConstants.JDK1_8) {
 		TypeBinding fieldType = fieldBinding.type;
 		if (fieldType != null
@@ -1541,11 +1548,6 @@ private void scanFieldForNullAnnotation(IBinaryField field, FieldBinding fieldBi
 	}
 	if (!explicitNullness && (this.tagBits & TagBits.AnnotationNonNullByDefault) != 0) {
 		fieldBinding.tagBits |= TagBits.AnnotationNonNull;
-	}
-	if (isEnum) {
-		if ((field.getModifiers() & ClassFileConstants.AccEnum) != 0) {
-			fieldBinding.tagBits |= TagBits.AnnotationNonNull;
-		}
 	}
 }
 
@@ -1644,15 +1646,15 @@ private void scanTypeForNullDefaultAnnotation(IBinaryType binaryType, PackageBin
 			if (CharOperation.equals(typeName, nonNullByDefaultAnnotationName)) {
 				IBinaryElementValuePair[] elementValuePairs = annotations[i].getElementValuePairs();
 				if (!useTypeAnnotations) {
-				if (elementValuePairs != null && elementValuePairs.length == 1) {
-					Object value = elementValuePairs[0].getValue();
-					if (value instanceof BooleanConstant
-						&& !((BooleanConstant)value).booleanValue())
-					{
-						// parameter is 'false': this means we cancel defaults from outer scopes:
-						annotationBit = TagBits.AnnotationNullUnspecifiedByDefault;
-						nullness = NULL_UNSPECIFIED_BY_DEFAULT;
-						break;
+					if (elementValuePairs != null && elementValuePairs.length == 1) {
+						Object value = elementValuePairs[0].getValue();
+						if (value instanceof BooleanConstant
+							&& !((BooleanConstant)value).booleanValue())
+						{
+							// parameter is 'false': this means we cancel defaults from outer scopes:
+							annotationBit = TagBits.AnnotationNullUnspecifiedByDefault;
+							nullness = NULL_UNSPECIFIED_BY_DEFAULT;
+							break;
 						}
 					}
 				} else {
@@ -1662,7 +1664,7 @@ private void scanTypeForNullDefaultAnnotation(IBinaryType binaryType, PackageBin
 						annotationBit = TagBits.AnnotationNullUnspecifiedByDefault;
 					} else if (nullness != 0) {
 						annotationBit = TagBits.AnnotationNonNullByDefault;
-					}
+					}	
 					this.defaultNullness = nullness;
 					break;
 				}
@@ -1691,14 +1693,14 @@ private void scanTypeForNullDefaultAnnotation(IBinaryType binaryType, PackageBin
 				return;
 			}
 		} else {
-		if ((enclosingTypeBinding.tagBits & TagBits.AnnotationNonNullByDefault) != 0) {
-			binaryBinding.tagBits |= TagBits.AnnotationNonNullByDefault;
-			return;
-		} else if ((enclosingTypeBinding.tagBits & TagBits.AnnotationNullUnspecifiedByDefault) != 0) {
-			binaryBinding.tagBits |= TagBits.AnnotationNullUnspecifiedByDefault;
-			return;
+			if ((enclosingTypeBinding.tagBits & TagBits.AnnotationNonNullByDefault) != 0) {
+				binaryBinding.tagBits |= TagBits.AnnotationNonNullByDefault;
+				return;
+			} else if ((enclosingTypeBinding.tagBits & TagBits.AnnotationNullUnspecifiedByDefault) != 0) {
+				binaryBinding.tagBits |= TagBits.AnnotationNullUnspecifiedByDefault;
+				return;
+			}
 		}
-	}
 	}
 	// no annotation found on the type or its enclosing types
 	// check the package-info for default annotation if not already done before
@@ -1713,15 +1715,15 @@ private void scanTypeForNullDefaultAnnotation(IBinaryType binaryType, PackageBin
 	if (useTypeAnnotations) {
 		binaryBinding.defaultNullness = packageBinding.defaultNullness;
 	} else {
-	switch (packageBinding.defaultNullness) {
-		case Binding.NONNULL_BY_DEFAULT : 
-			binaryBinding.tagBits |= TagBits.AnnotationNonNullByDefault;
-			break;
-		case Binding.NULL_UNSPECIFIED_BY_DEFAULT :
-			binaryBinding.tagBits |= TagBits.AnnotationNullUnspecifiedByDefault;
-			break;
+		switch (packageBinding.defaultNullness) {
+			case Binding.NONNULL_BY_DEFAULT : 
+				binaryBinding.tagBits |= TagBits.AnnotationNonNullByDefault;
+				break;
+			case Binding.NULL_UNSPECIFIED_BY_DEFAULT :
+				binaryBinding.tagBits |= TagBits.AnnotationNullUnspecifiedByDefault;
+				break;
+		}
 	}
-}
 }
 
 /** given an application of @NonNullByDefault convert the annotation argument (if any) into a bitvector a la {@link Binding#NullnessDefaultMASK} */
@@ -1949,7 +1951,14 @@ public String toString() {
 	return buffer.toString();
 }
 
-public TypeBinding unannotated() {
+public TypeBinding unannotated(boolean removeOnlyNullAnnotations) {
+	if (removeOnlyNullAnnotations) {
+		if (!hasNullTypeAnnotations())
+			return this;
+		AnnotationBinding[] newAnnotations = this.environment.filterNullTypeAnnotations(this.typeAnnotations);
+		if (newAnnotations.length > 0)
+			return this.environment.createAnnotatedType(this.prototype, newAnnotations);
+	}
 	return this.prototype;
 }
 

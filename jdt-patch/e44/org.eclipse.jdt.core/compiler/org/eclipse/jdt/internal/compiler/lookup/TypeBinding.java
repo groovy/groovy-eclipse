@@ -24,6 +24,7 @@
  *								Bug 427626 - [1.8] StackOverflow while typing new ArrayList<String>().toArray( and asking for code completion
  *								Bug 428019 - [1.8][compiler] Type inference failure with nested generic invocation.
  *								Bug 435962 - [RC2] StackOverFlowError when building
+ *								Bug 438458 - [1.8][null] clean up handling of null type annotations wrt type variables
  *      Jesper S Moller <jesper@selskabet.org> -  Contributions for
  *								bug 382701 - [1.8][compiler] Implement semantic analysis of Lambda expressions & Reference expression
  *******************************************************************************/
@@ -1393,16 +1394,17 @@ public TypeBinding original() {
 		case Binding.PARAMETERIZED_TYPE :
 		case Binding.RAW_TYPE :
 		case Binding.ARRAY_TYPE :
-			return erasure().unannotated();
+			return erasure().unannotated(false);
 		default :
-			return this.unannotated();
+			return this.unannotated(false);
 	}
 }
 
 /** 
  * Return this type minus its type annotations
+ * @param removeOnlyNullAnnotations if true only null type annotations are removed, otherwise all type annotations.
  */
-public TypeBinding unannotated() {
+public TypeBinding unannotated(boolean removeOnlyNullAnnotations) {
 	return this;
 }
 

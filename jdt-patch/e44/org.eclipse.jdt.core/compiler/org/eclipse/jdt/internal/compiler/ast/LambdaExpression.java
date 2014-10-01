@@ -31,6 +31,7 @@
  *							Bug 428980 - [1.8][null] simple expression as lambda body doesn't leverage null annotation on argument
  *							Bug 429430 - [1.8] Lambdas and method reference infer wrong exception type with generics (RuntimeException instead of IOException)
  *							Bug 432110 - [1.8][compiler] nested lambda type incorrectly inferred vs javac
+ *							Bug 438458 - [1.8][null] clean up handling of null type annotations wrt type variables
  *     Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
  *                          Bug 405104 - [1.8][compiler][codegen] Implement support for serializeable lambdas
  *******************************************************************************/
@@ -52,6 +53,7 @@ import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
+import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.flow.ExceptionHandlingFlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
@@ -114,6 +116,7 @@ public class LambdaExpression extends FunctionalExpression implements ReferenceC
 	private ReferenceBinding classType;
 	public int ordinal;
 	private Set thrownExceptions;
+	public char[] text;  // source representation of the lambda.
 	private static final SyntheticArgumentBinding [] NO_SYNTHETIC_ARGUMENTS = new SyntheticArgumentBinding[0];
 	private static final Block NO_BODY = new Block(0, true);
 
@@ -333,9 +336,6 @@ public class LambdaExpression extends FunctionalExpression implements ReferenceC
 					}
 				}
 
-				TypeBinding leafType = parameterType.leafComponentType();
-				if (leafType instanceof ReferenceBinding && (((ReferenceBinding) leafType).modifiers & ExtraCompilerModifiers.AccGenericSignature) != 0)
-					this.binding.modifiers |= ExtraCompilerModifiers.AccGenericSignature;
 				newParameters[i] = argument.bind(this.scope, parameterType, false);				
 				if (argument.annotations != null) {
 					this.binding.tagBits |= TagBits.HasParameterAnnotations;
@@ -371,7 +371,6 @@ public class LambdaExpression extends FunctionalExpression implements ReferenceC
 			if ((exception.tagBits & TagBits.HasMissingType) != 0) {
 				this.binding.tagBits |= TagBits.HasMissingType;
 			}
-			this.binding.modifiers |= (exception.modifiers & ExtraCompilerModifiers.AccGenericSignature);
 		}
 		
 		TypeBinding returnType = this.binding.returnType;
@@ -379,9 +378,6 @@ public class LambdaExpression extends FunctionalExpression implements ReferenceC
 			if ((returnType.tagBits & TagBits.HasMissingType) != 0) {
 				this.binding.tagBits |= TagBits.HasMissingType;
 			}
-			TypeBinding leafType = returnType.leafComponentType();
-			if (leafType instanceof ReferenceBinding && (((ReferenceBinding) leafType).modifiers & ExtraCompilerModifiers.AccGenericSignature) != 0)
-				this.binding.modifiers |= ExtraCompilerModifiers.AccGenericSignature;
 		} // TODO (stephan): else? (can that happen?)
 
 		if (haveDescriptor && !buggyArguments && blockScope.compilerOptions().isAnnotationBasedNullAnalysisEnabled) {
@@ -514,7 +510,7 @@ public class LambdaExpression extends FunctionalExpression implements ReferenceC
 			int length = this.binding.parameters.length;
 			for (int i=0; i<length; i++) {
 				if (!this.scope.validateNullAnnotation(this.binding.returnType.tagBits, this.arguments[i].type, this.arguments[i].annotations))
-					this.binding.returnType = this.binding.returnType.unannotated();
+					this.binding.returnType = this.binding.returnType.unannotated(true);
 			}
 		}
 	}
@@ -624,10 +620,10 @@ public class LambdaExpression extends FunctionalExpression implements ReferenceC
 		if (makeShort) {
 			output.append("{}"); //$NON-NLS-1$
 		} else {
-		if (this.body != null)
-			this.body.print(this.body instanceof Block ? tab : 0, output);
-		else 
-			output.append("<@incubator>"); //$NON-NLS-1$
+			if (this.body != null)
+				this.body.print(this.body instanceof Block ? tab : 0, output);
+			else
+				output.append("<@incubator>"); //$NON-NLS-1$
 		}
 		return output.append(suffix);
 	}
@@ -943,8 +939,9 @@ public class LambdaExpression extends FunctionalExpression implements ReferenceC
 
 	LambdaExpression copy() {
 		final Parser parser = new Parser(this.enclosingScope.problemReporter(), false);
-		final char[] source = this.compilationResult.getCompilationUnit().getContents();
-		LambdaExpression copy =  (LambdaExpression) parser.parseLambdaExpression(source, this.sourceStart, this.sourceEnd - this.sourceStart + 1, 
+		final ICompilationUnit compilationUnit = this.compilationResult.getCompilationUnit();
+		char[] source = compilationUnit != null ? compilationUnit.getContents() : this.text;
+		LambdaExpression copy =  (LambdaExpression) parser.parseLambdaExpression(source, compilationUnit != null ? this.sourceStart : 0, this.sourceEnd - this.sourceStart + 1, 
 										this.enclosingScope.referenceCompilationUnit(), false /* record line separators */);
 
 		if (copy != null) { // ==> syntax errors == null

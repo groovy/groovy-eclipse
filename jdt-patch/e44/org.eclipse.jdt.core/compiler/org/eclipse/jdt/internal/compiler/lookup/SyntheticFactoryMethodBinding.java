@@ -36,6 +36,11 @@ public class SyntheticFactoryMethodBinding extends MethodBinding {
 		for (MethodBinding parameterizedMethod : parameterizedType.methods()) {
 			if (parameterizedMethod.original() == this.staticFactoryFor)
 				return (ParameterizedMethodBinding) parameterizedMethod;
+			if (parameterizedMethod instanceof ProblemMethodBinding) {
+				MethodBinding closestMatch = ((ProblemMethodBinding)parameterizedMethod).closestMatch;
+				if (closestMatch instanceof ParameterizedMethodBinding && closestMatch.original() == this.staticFactoryFor)
+					return (ParameterizedMethodBinding) closestMatch;
+			}
 		}
 		throw new IllegalArgumentException("Type doesn't have its own method?"); //$NON-NLS-1$
 	}

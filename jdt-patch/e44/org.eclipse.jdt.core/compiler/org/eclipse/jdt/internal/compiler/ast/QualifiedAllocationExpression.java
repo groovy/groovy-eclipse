@@ -253,7 +253,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 
 		// perform some extra emulation work in case there is some and we are inside a local type only
 		if (allocatedTypeErasure.isNestedType()
-			&& currentScope.enclosingSourceType().isLocalType()) {
+			&& (currentScope.enclosingSourceType().isLocalType() || currentScope.isLambdaScope())) {
 
 			if (allocatedTypeErasure.isLocalType()) {
 				((LocalTypeBinding) allocatedTypeErasure).addInnerEmulationDependent(currentScope, this.enclosingInstance != null);

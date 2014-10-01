@@ -24,6 +24,7 @@
  *								Bug 417295 - [1.8[[null] Massage type annotated null analysis to gel well with deep encoded type bindings.
  *								Bug 416190 - [1.8][null] detect incompatible overrides due to null type annotations
  *								Bug 424624 - [1.8][null] if a static-object with annotation @NonNull is used, a warning is shown
+ *								Bug 438458 - [1.8][null] clean up handling of null type annotations wrt type variables
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 // GROOVY PATCHED
@@ -1612,5 +1613,28 @@ public TypeBinding getUnannotatedType(TypeBinding typeBinding) {
 // Given a type, return all its variously annotated versions.
 public TypeBinding[] getAnnotatedTypes(TypeBinding type) {
 	return this.typeSystem.getAnnotatedTypes(type);
+}
+
+public AnnotationBinding[] filterNullTypeAnnotations(AnnotationBinding[] typeAnnotations) {
+	if (typeAnnotations.length == 0)
+		return typeAnnotations;
+	AnnotationBinding[] filtered = new AnnotationBinding[typeAnnotations.length];
+	int count = 0;
+	for (int i = 0; i < typeAnnotations.length; i++) {
+		AnnotationBinding typeAnnotation = typeAnnotations[i];
+		if (typeAnnotation == null) {
+			count++; // sentinel in annotation sequence for array dimensions
+		} else {
+			int id = typeAnnotation.type.id;
+			if (id != TypeIds.T_ConfiguredAnnotationNonNull && id != TypeIds.T_ConfiguredAnnotationNullable)
+				filtered[count++] = typeAnnotation;
+		}
+	}
+	if (count == 0)
+		return Binding.NO_ANNOTATIONS;
+	if (count == typeAnnotations.length)
+		return typeAnnotations;
+	System.arraycopy(filtered, 0, filtered = new AnnotationBinding[count], 0, count);
+	return filtered;
 }
 }

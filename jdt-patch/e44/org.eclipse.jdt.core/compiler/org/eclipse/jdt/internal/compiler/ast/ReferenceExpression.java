@@ -26,6 +26,7 @@
  *							Bug 428264 - [1.8] method reference of generic class causes problems (wrong inference result or NPE)
  *							Bug 392238 - [1.8][compiler][null] Detect semantically invalid null type annotations
  *							Bug 426537 - [1.8][inference] Eclipse compiler thinks I<? super J> is compatible with I<J<?>> - raw type J involved
+ *							Bug 435689 - [1.8][inference] Type inference not occurring with lambda expression and method reference
  *        Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contribution for
  *                          Bug 383624 - [1.8][compiler] Revive code generation support for type annotations (from Olivier's work)
  *******************************************************************************/
@@ -385,9 +386,10 @@ public class ReferenceExpression extends FunctionalExpression implements Invocat
 				return this.resolvedType = null;
     	}
 
+    	if (lhsType != null && !lhsType.isRawType()) // RawType::m and RawType::new are not exact method references
+    		this.exactMethodBinding = isMethodReference() ? scope.getExactMethod(lhsType, this.selector, this) : scope.getExactConstructor(lhsType, this);
+
     	if (this.expectedType == null && this.expressionContext == INVOCATION_CONTEXT) {
-    		if (lhsType != null && !lhsType.isRawType()) // RawType::m and RawType::new are not exact method references
-    			this.exactMethodBinding = isMethodReference() ? scope.getExactMethod(lhsType, this.selector, this) : scope.getExactConstructor(lhsType, this);
     		return new PolyTypeBinding(this);
 		}
 		super.resolveType(scope);

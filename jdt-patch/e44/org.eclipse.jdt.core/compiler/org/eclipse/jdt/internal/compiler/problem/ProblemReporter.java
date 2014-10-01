@@ -50,6 +50,7 @@
  *								Bug 390889 - [1.8][compiler] Evaluate options to support 1.7- projects against 1.8 JRE.
  *								Bug 430150 - [1.8][null] stricter checking against type variables
  *								Bug 434600 - Incorrect null analysis error reporting on type parameters
+ *								Bug 439298 - [null] "Missing code implementation in the compiler" when using @NonNullByDefault in package-info.java
  *      Jesper S Moller <jesper@selskabet.org> -  Contributions for
  *								bug 382701 - [1.8][compiler] Implement semantic analysis of Lambda expressions & Reference expression
  *								bug 382721 - [1.8][compiler] Effectively final variables needs special treatment
@@ -3717,6 +3718,10 @@ public void invalidConstructor(Statement statement, MethodBinding targetConstruc
 				        (problemConstructor.returnType != null ? String.valueOf(problemConstructor.returnType.shortReadableName()) : "<unknown>")}, //$NON-NLS-1$
 				statement.sourceStart,
 				statement.sourceEnd);
+			return;
+		case ProblemReasons.ContradictoryNullAnnotations:
+			problemConstructor = (ProblemMethodBinding) targetConstructor;
+			contradictoryNullAnnotationsInferred(problemConstructor.closestMatch, statement);
 			return;
 		case ProblemReasons.NoError : // 0
 		default :
@@ -9211,9 +9216,9 @@ public void nullityMismatchIsNull(Expression expression, TypeBinding requiredTyp
 			arguments      = new String[] { new String(requiredType.sourceName()) }; // don't show any bounds
 			argumentsShort = new String[] { new String(requiredType.sourceName()) };
 		} else {
-		arguments      = new String[] { new String(requiredType.nullAnnotatedReadableName(this.options, false)) };
-		argumentsShort = new String[] { new String(requiredType.nullAnnotatedReadableName(this.options, true)) };
-	}
+			arguments      = new String[] { new String(requiredType.nullAnnotatedReadableName(this.options, false)) };
+			argumentsShort = new String[] { new String(requiredType.nullAnnotatedReadableName(this.options, true))  };			
+		}
 	}
 	this.handle(problemId, arguments, argumentsShort, expression.sourceStart, expression.sourceEnd);
 }
@@ -9758,14 +9763,14 @@ public void nullityMismatchingTypeAnnotation(Expression expression, TypeBinding 
 			? IProblem.NullityUncheckedTypeAnnotationDetail
 			: (requiredType.isTypeVariable() && !requiredType.hasNullTypeAnnotations())
 				? IProblem.NullityMismatchAgainstFreeTypeVariable
-			: IProblem.NullityMismatchingTypeAnnotation);
+				: IProblem.NullityMismatchingTypeAnnotation);
 		if (problemId == IProblem.NullityMismatchAgainstFreeTypeVariable) {
 			arguments      = new String[] { null, null, new String(requiredType.sourceName()) }; // don't show bounds here
 			shortArguments = new String[] { null, null, new String(requiredType.sourceName()) };
 		} else {
-		arguments      = new String[2];
-		shortArguments = new String[2];
-	}
+			arguments      = new String[2];
+			shortArguments = new String[2];
+		}
 	}
 	String requiredName;
 	String requiredNameShort;

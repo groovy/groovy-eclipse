@@ -435,7 +435,8 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 				if (sam.returnType != TypeBinding.VOID) {
 					// ii)
 					final TypeBinding r = sam.returnType;
-					Statement body = lambda.body();
+					LambdaExpression resolved = lambda.getResolvedCopyForInferenceTargeting(this.right);
+					Statement body = resolved != null ? resolved.body() : lambda.body();
 					if (body instanceof Expression) {
 						variables.addAll(new ConstraintExpressionFormula((Expression) body, r, COMPATIBLE).inputVariables(context));
 					} else {

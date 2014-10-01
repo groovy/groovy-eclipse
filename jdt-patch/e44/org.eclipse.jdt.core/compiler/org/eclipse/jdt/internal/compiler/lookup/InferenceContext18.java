@@ -291,7 +291,8 @@ public class InferenceContext18 {
 			}
 		}
 		if (checkVararg && varArgsType instanceof ArrayBinding) {
-			TypeBinding thetaF = substitute(((ArrayBinding) varArgsType).elementsType());
+			varArgsType = ((ArrayBinding)varArgsType).elementsType();
+			TypeBinding thetaF = substitute(varArgsType);
 			for (int i = len; i < this.invocationArguments.length; i++) {
 				if (this.invocationArguments[i].isPertinentToApplicability(varArgsType, method)) {
 					this.initialConstraints[numConstraints++] = new ConstraintExpressionFormula(this.invocationArguments[i], thetaF, ReductionResult.COMPATIBLE, ARGUMENT_CONSTRAINTS_ARE_SOFT);

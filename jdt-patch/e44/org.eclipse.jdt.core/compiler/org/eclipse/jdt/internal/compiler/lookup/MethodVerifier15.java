@@ -950,11 +950,15 @@ boolean isInterfaceMethodImplemented(MethodBinding inheritedMethod, MethodBindin
 		return false; // must hold onto ParameterizedMethod to see if a bridge method is necessary
 
 	inheritedMethod = computeSubstituteMethod(inheritedMethod, existingMethod);
-	return inheritedMethod != null
-		&& (TypeBinding.equalsEquals(inheritedMethod.returnType, existingMethod.returnType)	// need to keep around to produce bridge methods? ...
-			|| (TypeBinding.notEquals(this.type, existingMethod.declaringClass) 			// ... not if inheriting the bridge situation from a superclass
-					&& !existingMethod.declaringClass.isInterface()))
-		&& doesMethodOverride(existingMethod, inheritedMethod);
+	if (inheritedMethod == null
+			|| TypeBinding.notEquals(inheritedMethod.returnType, existingMethod.returnType)) // need to keep around to produce bridge methods? ...
+		return false;
+
+	if (!doesMethodOverride(existingMethod, inheritedMethod))
+		return false;
+
+	return TypeBinding.notEquals(this.type, existingMethod.declaringClass) // ... not if inheriting the bridge situation from a superclass
+			&& !existingMethod.declaringClass.isInterface();
 }
 public boolean isMethodSubsignature(MethodBinding method, MethodBinding inheritedMethod) {
 	if (!org.eclipse.jdt.core.compiler.CharOperation.equals(method.selector, inheritedMethod.selector))
