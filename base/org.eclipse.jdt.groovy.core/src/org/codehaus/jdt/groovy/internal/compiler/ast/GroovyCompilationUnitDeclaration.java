@@ -1791,6 +1791,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				}
 			}
 		} else {
+			// GRECLIPSE-1773
+			// We should create problem types if some types are not compiled successfully as it is done for Java types.
+			// Otherwise incremental builder is not able to recompile dependencies of broken types.
 			if (types != null) {
 				for (TypeDeclaration type : types) {
 					if (type.binding != null) {
