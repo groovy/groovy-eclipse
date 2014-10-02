@@ -63,7 +63,7 @@
 					<useUIHarness>true</useUIHarness>
 					<forkedProcessTimeoutInSeconds>14400</forkedProcessTimeoutInSeconds>
 					<showEclipseLog>true</showEclipseLog>
-					<argLine>-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M -Dosgi.configuration.area.default=null -Dosgi.user.area.default=null -Dosgi.user.area=@user.home -Dosgi.instance.area.default=null</argLine>
+					<argLine>-Xmx1024M -XX:PermSize=64M -XX:MaxPermSize=256M</argLine>
 	
 					<includes>
 						<include>**/alltests/AllGroovyAndJDTTests.java</include>
