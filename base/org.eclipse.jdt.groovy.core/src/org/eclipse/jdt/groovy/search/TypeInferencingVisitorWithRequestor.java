@@ -38,6 +38,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
@@ -1585,12 +1586,19 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				if (key instanceof ConstantExpression) {
 					String fieldName = key.getText();
 					FieldNode field = newType.getField(fieldName);
-					if (field != null) {
+					if (field == null) {
+						PropertyNode property = newType.getProperty(fieldName);
+						if (property == null) {
+							handleSimpleExpression(key);
+						} else {
+							TypeLookupResult result = new TypeLookupResult(property.getType(), property.getDeclaringClass(),
+									property, TypeConfidence.EXACT, scopes.peek());
+							handleRequestor(key, newType, result);
+						}
+					} else {
 						TypeLookupResult result = new TypeLookupResult(field.getType(), field.getDeclaringClass(), field,
 								TypeConfidence.EXACT, scopes.peek());
 						handleRequestor(key, newType, result);
-					} else {
-						handleSimpleExpression(key);
 					}
 				} else {
 					handleSimpleExpression(key);

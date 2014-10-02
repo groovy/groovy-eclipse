@@ -210,4 +210,7 @@ public class RenameFieldTests extends RefactoringTest {
     public void test13() throws Exception {
     	helper2_0("A", "f", "g", true, false, false, false, false, true);
     }
+    public void test14() throws Exception {
+    	helper2_0("MyBean", "foo", "baz", true, false, false, false, false, true);
+    }
 }
