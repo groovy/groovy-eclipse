@@ -1,0 +1,11 @@
+instructions.configure = \
+	addJvmArg(jvmArg:-Dosgi.configuration.area.default=null); \
+	addJvmArg(jvmArg:-Dosgi.user.area.default=null); \
+	addJvmArg(jvmArg:-Dosgi.user.area=@user.home); \
+	addJvmArg(jvmArg:-Dosgi.instance.area.default=null);
+	
+instructions.unconfigure = \
+	removeJvmArg(jvmArg:-Dosgi.configuration.area.default=null); \
+	removeJvmArg(jvmArg:-Dosgi.user.area.default=null); \
+	removeJvmArg(jvmArg:-Dosgi.user.area=@user.home); \
+	removeJvmArg(jvmArg:-Dosgi.instance.area.default=null);
