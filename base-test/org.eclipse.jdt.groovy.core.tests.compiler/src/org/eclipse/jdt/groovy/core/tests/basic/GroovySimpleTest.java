@@ -2800,7 +2800,7 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
     			"}\n"},"");
     }
     
-    public void xtestGrabScriptAndImports_GRE680() {
+    public void testGrabScriptAndImports_GRE680() {
 	    this.runConformTest(new String[]{"Script.groovy",
 			    "import org.mortbay.jetty.Server\n"+
 			    "import org.mortbay.jetty.servlet.*\n"+  
@@ -9828,7 +9828,7 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 		"123");
 	}
 	
-	public void xtestGrab() {
+	public void testGrab() {
 		this.runConformTest(new String[]{
 				"Printer.groovy",
 				"import groovy.lang.Grab;\n"+
@@ -9878,7 +9878,7 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
     	}
 	}
 	
-	public void xtestGrabError() {
+	public void testGrabError() {
 		this.runConformTest(new String[]{
 				"Printer.groovy",
 				"import groovy.lang.Grab;\n"+
