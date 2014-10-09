@@ -118,6 +118,9 @@ public class GroovyQuickFixResolverRegistry {
 				
 				// Add unimplemented abstract methods
 				new AddUnimplementedResolver(problem),
+
+				// Add class cast
+				new AddClassCastResolver(problem),
 		};
 	}
 
