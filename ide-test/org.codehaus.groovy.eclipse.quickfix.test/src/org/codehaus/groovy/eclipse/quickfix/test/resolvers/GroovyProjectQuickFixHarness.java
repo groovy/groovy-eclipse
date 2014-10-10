@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.codehaus.groovy.eclipse.quickfix.processors.GroovyQuickFixProcessor;
+import org.codehaus.groovy.eclipse.quickfix.proposals.AddClassCastResolver;
+import org.codehaus.groovy.eclipse.quickfix.proposals.AddClassCastResolver.AddClassCastProposal;
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddMissingGroovyImportsResolver;
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddMissingGroovyImportsResolver.AddMissingImportProposal;
 import org.codehaus.groovy.eclipse.quickfix.proposals.GroovyQuickFixResolverRegistry;
@@ -244,6 +246,16 @@ public class GroovyProjectQuickFixHarness extends GroovyProjectTestCase {
 		return null;
 	}
 
+	protected AddClassCastProposal getAddClassCastProposal(
+			String quickFixDisplay, IQuickFixResolver resolver) {
+		IJavaCompletionProposal proposal = getCompletionProposal(quickFixDisplay,
+				resolver);
+		if (proposal instanceof AddClassCastProposal) {
+			return (AddClassCastProposal) proposal;
+		}
+		return null;
+	}
+
 	/**
 	 * Generates a problem context only containing basic marker information and
 	 * compilation unit. It however, does not contain AST information like the
@@ -326,6 +338,44 @@ public class GroovyProjectQuickFixHarness extends GroovyProjectTestCase {
 									.equals(unresolvedSimpleName)) {
 								return importResolver;
 							}
+						}
+					}
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Gets the first enountered add class cast resolver, or null if none
+	 * are found for the given unresolved type. If multiple resolvers are found,
+	 * it returns the first one.
+	 * 
+	 * @param simpleName
+	 * @param unit
+	 * @return
+	 * @throws Exception
+	 */
+	protected AddClassCastResolver getAddClassCastResolver(ICompilationUnit unit)
+			throws Exception {
+		IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit);
+		List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(
+				markers, ProblemType.STATIC_TYPE_CHECKING_CANNOT_ASSIGN, unit);
+
+		if (resolvers == null) {
+			return null;
+		}
+
+		for (IQuickFixResolver resolver : resolvers) {
+			if (resolver instanceof AddClassCastResolver) {
+				AddClassCastResolver classCastResolver = (AddClassCastResolver) resolver;
+				List<IJavaCompletionProposal> proposals = classCastResolver
+						.getQuickFixProposals();
+				if (proposals != null) {
+					for (IJavaCompletionProposal proposal : proposals) {
+						if (proposal instanceof AddClassCastProposal) {
+							return classCastResolver;
 						}
 					}
 				}

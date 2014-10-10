@@ -9,10 +9,20 @@ import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.ui.text.correction.AssistContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.ITextSelection;
+import org.eclipse.jface.text.TextSelection;
 import org.eclipse.text.edits.InsertEdit;
+import org.eclipse.ui.texteditor.ITextEditor;
 
+/**
+ * Generates quick fix proposals for assignment problems during static type checking.
+ * These proposals add class casting to expression to make it assignable to variable.
+ * 
+ * @author Denis Murashev
+ */
 public class AddClassCastResolver extends AbstractQuickFixResolver {
 
 	private static final Set<String> DEFAULT_IMPORTS = new HashSet<String>();
@@ -43,7 +53,7 @@ public class AddClassCastResolver extends AbstractQuickFixResolver {
 		return new ProblemType[] { ProblemType.STATIC_TYPE_CHECKING_CANNOT_ASSIGN };
 	}
 
-	private static class AddClassCastProposal extends AbstractGroovyQuickFixProposal {
+	public static class AddClassCastProposal extends AbstractGroovyQuickFixProposal {
 
 		private GroovyCompilationUnit unit;
 		private String typeName;
@@ -55,7 +65,8 @@ public class AddClassCastResolver extends AbstractQuickFixResolver {
 		}
 
 		public void apply(IDocument document) {
-			int offset = getQuickFixProblemContext().getOffset();
+			QuickFixProblemContext problemContext = getQuickFixProblemContext();
+			int offset = problemContext.getOffset();
 			InsertEdit insertEdit = new InsertEdit(offset, "(" + typeName + ") ");
 			try {
 				unit.applyTextEdit(insertEdit, null);
