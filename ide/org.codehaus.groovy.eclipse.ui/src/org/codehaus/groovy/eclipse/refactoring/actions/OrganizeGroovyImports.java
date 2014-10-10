@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import greclipse.org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import greclipse.org.eclipse.jdt.ui.CodeStyleConfiguration;
+import groovy.transform.AnnotationCollector;
 import groovy.transform.Field;
 
 import java.util.ArrayList;
