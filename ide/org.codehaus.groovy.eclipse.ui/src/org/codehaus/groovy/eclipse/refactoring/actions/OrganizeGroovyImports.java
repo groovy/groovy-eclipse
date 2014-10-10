@@ -309,6 +309,16 @@ public class OrganizeGroovyImports {
                 doNotRemoveImport(partialName);
             }
 
+            // GRECLIPSE 1794
+            // see org.codehaus.groovy.transform.ASTTransformationCollectorCodeVisitor.addCollectedAnnotations(...)
+            if (isAnnotation) {
+                Object key = AnnotationCollector.class + node.getName();
+                Object nodeMetaData = node.getNodeMetaData(key);
+                if (nodeMetaData != null) {
+                    doNotRemoveImport((String) nodeMetaData);
+                }
+            }
+
             if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
                 for (GenericsType gen : node.getGenericsTypes()) {
                     if (gen.getLowerBound() != null) {
