@@ -97,7 +97,7 @@ public class AddClassCastResolver extends AbstractQuickFixResolver {
 			}
 			try {
 				for (IImportDeclaration i : unit.getImports()) {
-					if (i.getElementName().equals(typeName) || i.getElementName().equals(starPackageName)) {
+					if (i.getElementName().equals(name) || i.getElementName().equals(starPackageName)) {
 						return name.substring(lastDotPosition + 1);
 					}
 				}
