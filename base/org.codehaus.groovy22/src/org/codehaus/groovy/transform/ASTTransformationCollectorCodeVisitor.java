@@ -167,7 +167,19 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
                 } else {
                     act = new AnnotationCollectorTransform();
                 }
-                if (act!=null) collected.addAll(act.visit(annotation, aliasNode, origin, source));
+                // GRECLIPSE: start: Information about original annotation added to meta 
+                // data to prevent import organizer from deleting original import
+                if (act!=null) { 
+                    List<AnnotationNode> visitResult = act.visit(annotation, aliasNode, origin, source);
+                    for (AnnotationNode annotationNode : visitResult) {
+	                    Object key = AnnotationCollector.class + annotationNode.getClassNode().getName();
+	                    if (annotationNode.getClassNode().getNodeMetaData(key) == null) {
+	                    	annotationNode.getClassNode().setNodeMetaData(key, aliasNode.getClassNode().getName());
+	                    }
+                    }
+					collected.addAll(visitResult);
+                }
+                // GRECLIPSE: end
                 ret = true;
             }
         }
