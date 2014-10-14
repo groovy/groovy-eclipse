@@ -605,6 +605,17 @@ public class OrganizeImportsTest extends AbstractOrganizeImportsTest {
 				doAddImportTest(contents)
 	}
 	
+	void testCompileDynamicImport2() {
+		String contents =
+				"""
+				@CompileDynamic
+				public void x() {
+				}
+				"""
+				def expectedImports = [ 'groovy.transform.CompileDynamic']
+				doAddImportTest(contents, expectedImports)
+	}
+	
 //    // GRECLIPSE-1219
 //    void testAnnotationsOnImports2() {
 //        String contents =

@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
+import groovy.transform.AnnotationCollector;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -35,11 +37,12 @@ import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector;
 /**
  * Use a SearchEngine to look for the Java types
  * This will not find inner types, however
- * 
+ *
  * @author Andrew Eisenberg
  * @author Nieraj Singh
  */
 public class TypeSearch {
+    private static final String ANNOTATION_COLLECTOR = AnnotationCollector.class.getSimpleName();
 
     public TypeSearch() {
         //
@@ -88,6 +91,11 @@ public class TypeSearch {
      * @return
      */
     protected boolean isOfKind(TypeNameMatch match, boolean isAnnotation) {
-        return isAnnotation ? Flags.isAnnotation(match.getModifiers()) : true;
+        boolean isRegularAnnotation = isAnnotation ? Flags.isAnnotation(match.getModifiers()) : true;
+
+        //Annotations that are annotated with {@link AnnotationCollector} are not treated as annotations, so additional check is required
+        boolean isCollectedByAnnotationCollector = match.getType().getAnnotation(ANNOTATION_COLLECTOR) != null;
+
+        return isRegularAnnotation || isCollectedByAnnotationCollector;
     }
 }
