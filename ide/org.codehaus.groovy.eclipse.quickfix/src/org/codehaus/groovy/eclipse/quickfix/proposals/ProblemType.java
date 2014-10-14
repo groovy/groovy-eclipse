@@ -31,7 +31,10 @@ public enum ProblemType {
     
     MISSING_IMPORTS_TYPE("Groovy:unable to resolve class"), 
     UNIMPLEMENTED_METHODS_TYPE("Groovy:Can't have an abstract method in a non-abstract class."), 
-    MISSING_CLASSPATH_CONTAINER_TYPE(IProblem.IsClassPathCorrect, "groovy.lang.GroovyObject", "groovy.lang.MetaClass");
+    MISSING_CLASSPATH_CONTAINER_TYPE(IProblem.IsClassPathCorrect, "groovy.lang.GroovyObject", "groovy.lang.MetaClass"),
+
+    STATIC_TYPE_CHECKING_CANNOT_ASSIGN("Groovy:[Static type checking] - Cannot assign value of type",
+    		"Groovy:[Static type checking] - Cannot return value of type");
 
     /**
      * The {@link IMarker} type of the problem.

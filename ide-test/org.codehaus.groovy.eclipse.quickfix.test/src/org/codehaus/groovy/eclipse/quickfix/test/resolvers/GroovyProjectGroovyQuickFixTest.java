@@ -21,14 +21,19 @@ import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
+import org.codehaus.groovy.eclipse.quickfix.proposals.AddClassCastResolver;
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddGroovyRuntimeResolver;
 import org.codehaus.groovy.eclipse.quickfix.proposals.AddMissingGroovyImportsResolver;
 import org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver;
 import org.codehaus.groovy.eclipse.quickfix.proposals.ProblemType;
+import org.codehaus.groovy.eclipse.quickfix.proposals.AddClassCastResolver.AddClassCastProposal;
+import org.codehaus.groovy.eclipse.quickfix.proposals.AddMissingGroovyImportsResolver.AddMissingImportProposal;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 
 /**
  * Tests Groovy quick fixes in a Groovy file contained in a Groovy Project
@@ -403,5 +408,38 @@ public class GroovyProjectGroovyQuickFixTest extends
 					resolvers == null || resolvers.isEmpty());
 		}
 
+	}
+
+	public void testGRECLIPSE1777() throws Exception {
+		String expectedQuickFixDisplay = "Add cast to Integer";
+
+		ICompilationUnit unit = createGroovyTypeInTestPackage("D.groovy",
+				"import groovy.transform.CompileStatic\n" +
+				"@CompileStatic\n" +
+				"class D {\n" +
+				"    Number foo() {\n" +
+				"        new Integer(1)\n" +
+				"    }\n" +
+				"    Integer bar() {\n" +
+				"        Integer result = foo()\n" +
+				"        result\n" +
+				"    }\n" +
+				"}");
+
+
+		AddClassCastResolver resolver = getAddClassCastResolver(unit);
+
+		assertNotNull("Expected a resolver for " + unit, resolver);
+
+		AddClassCastProposal proposal = getAddClassCastProposal(
+				expectedQuickFixDisplay, resolver);
+
+		assertNotNull(
+				"Expected a quick fix proposal for " + unit,
+				proposal);
+
+		assertEquals("Actual quick fix display expression should be: "
+				+ expectedQuickFixDisplay, expectedQuickFixDisplay,
+				proposal.getDisplayString());
 	}
 }
