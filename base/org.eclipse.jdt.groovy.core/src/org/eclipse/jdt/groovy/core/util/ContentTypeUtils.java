@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     Andrew Eisenberg - initial API and implementation
  *******************************************************************************/
@@ -26,7 +26,7 @@ import org.eclipse.jdt.internal.core.util.Util;
 /**
  * @author Andrew Eisenberg
  * @created Jun 23, 2009
- * 
+ *
  *          Utility methods for dealing with Groovy content types
  */
 @SuppressWarnings("restriction")
@@ -58,10 +58,12 @@ public class ContentTypeUtils {
 
 	public static String GROOVY_SOURCE_CONTENT_TYPE = "org.eclipse.jdt.groovy.core.groovySource"; //$NON-NLS-1$
 
+	private static boolean noGroovyContentTypesErrorLogged = false; // To avoid spamming error into the log repeatedly.
+
 	/**
 	 * Uses the Eclipse content type extension point to determine if a file is a groovy file. Taken from
 	 * org.eclipse.jdt.internal.core.util.Util.isJavaLikeExtension
-	 * 
+	 *
 	 * @param file name (absolute path or simple name is fine)
 	 * @return true iff the file name is Groovy-like.
 	 */
@@ -74,7 +76,7 @@ public class ContentTypeUtils {
 	/**
 	 * Uses the Eclipse content type extension point to determine if a file is a groovy file. Taken from
 	 * org.eclipse.jdt.internal.core.util.Util.isJavaLikeExtension
-	 * 
+	 *
 	 * @param file name (absolute path or simple name is fine)
 	 * @return true iff the file name is Groovy-like.
 	 */
@@ -151,17 +153,31 @@ public class ContentTypeUtils {
 				}
 			}
 			int length = fileExtensions.size();
-			char[][] extensions = new char[length][];
-			extensions[0] = "groovy".toCharArray(); // ensure that "groovy" is first //$NON-NLS-1$
-			int index = 1;
-			Iterator<String> iterator = fileExtensions.iterator();
-			while (iterator.hasNext()) {
-				String fileExtension = iterator.next();
-				if ("groovy".equals(fileExtension)) //$NON-NLS-1$
-					continue;
-				extensions[index++] = fileExtension.toCharArray();
+			if (length == 0) {
+				// Shouldn't happen, but it seems it does.
+				// See: STS-3936
+				// Probably means user's workspace is already severely broken...
+				// Still it is not nice to throw exceptions. So handle the case and log an error instead.
+				if (!noGroovyContentTypesErrorLogged) {
+					noGroovyContentTypesErrorLogged = true;
+					Util.log(new IllegalStateException(
+							"No Groovy Content Types found. This shouldn't happen. Is the workspace metadata corrupted?"));
+				}
+				// Don't cache it. Maybe its only looking funky because we are looking 'too early'.
+				return new char[][] { "groovy".toCharArray() };
+			} else {
+				char[][] extensions = new char[length][];
+				extensions[0] = "groovy".toCharArray(); // ensure that "groovy" is first //$NON-NLS-1$
+				int index = 1;
+				Iterator<String> iterator = fileExtensions.iterator();
+				while (iterator.hasNext()) {
+					String fileExtension = iterator.next();
+					if ("groovy".equals(fileExtension)) //$NON-NLS-1$
+						continue;
+					extensions[index++] = fileExtension.toCharArray();
+				}
+				GROOVY_LIKE_EXTENSIONS = extensions;
 			}
-			GROOVY_LIKE_EXTENSIONS = extensions;
 		}
 		return GROOVY_LIKE_EXTENSIONS;
 	}
