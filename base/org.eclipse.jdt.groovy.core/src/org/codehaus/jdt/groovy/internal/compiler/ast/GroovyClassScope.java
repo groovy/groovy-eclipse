@@ -39,12 +39,14 @@ import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LazilyResolvedMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MissingTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
+import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 
 @SuppressWarnings("restriction")
 public class GroovyClassScope extends ClassScope {
@@ -516,6 +518,48 @@ public class GroovyClassScope extends ClassScope {
 				GroovyClassScope anonScope = new GroovyClassScope(this, anonType);
 				anonType.scope = anonScope;
 				anonType.resolve(anonType.enclosingMethod.scope);
+			}
+		}
+		// STS-3930 start
+		for (MethodBinding method : this.referenceContext.binding.methods()) {
+			fixupTypeParameters(method);
+		}
+		// STS-3930 end
+	}
+
+	/**
+	 * This is fix for generic methods with default parameter values. For those methods type variables and parameter arguments
+	 * should be the same as it is for all other methods.
+	 *
+	 * @param method method to be fixed
+	 */
+	private void fixupTypeParameters(MethodBinding method) {
+		if (method.typeVariables == null || method.typeVariables.length == 0) {
+			return;
+		}
+		if (method.parameters == null || method.parameters.length == 0) {
+			return;
+		}
+		Map<String, TypeBinding> bindings = new HashMap<String, TypeBinding>();
+		for (TypeVariableBinding v : method.typeVariables) {
+			bindings.put(new String(v.sourceName), v);
+		}
+		for (TypeBinding parameter : method.parameters) {
+			if (!(parameter instanceof ParameterizedTypeBinding)) {
+				continue;
+			}
+			TypeBinding[] arguments = ((ParameterizedTypeBinding) parameter).arguments;
+			if (arguments == null) {
+				continue;
+			}
+			for (int i = 0; i < arguments.length; i++) {
+				if (arguments[i] instanceof TypeVariableBinding) {
+					String name = new String(arguments[i].sourceName());
+					TypeBinding argument = bindings.get(name);
+					if (arguments[i].id != argument.id) {
+						arguments[i] = argument;
+					}
+				}
 			}
 		}
 	}
