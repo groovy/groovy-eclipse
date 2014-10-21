@@ -29,7 +29,7 @@ public enum ProblemType {
     MISSING_SEMI_COLON_TYPE(IProblem.ParsingErrorInsertToComplete, (String[]) null),
     MISSING_SEMI_COLON_TYPE_VARIANT(IProblem.ParsingErrorInsertTokenAfter, (String[]) null),
     
-    MISSING_IMPORTS_TYPE("Groovy:unable to resolve class"), 
+    MISSING_IMPORTS_TYPE("Groovy:unable to resolve class", "Groovy:[Static type checking] - The variable"),
     UNIMPLEMENTED_METHODS_TYPE("Groovy:Can't have an abstract method in a non-abstract class."), 
     MISSING_CLASSPATH_CONTAINER_TYPE(IProblem.IsClassPathCorrect, "groovy.lang.GroovyObject", "groovy.lang.MetaClass"),
 
