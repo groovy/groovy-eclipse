@@ -25,7 +25,9 @@ import org.eclipse.jface.text.templates.persistence.TemplateStore;
 public class TemplateProposalComputer implements
         IJavaCompletionProposalComputer {
 
-    public void sessionStarted() {
+	private static final int EMPTY_PREFIX_TEMPLATE_RELEVANCE = 20;
+
+	public void sessionStarted() {
 
     }
 
@@ -54,8 +56,12 @@ public class TemplateProposalComputer implements
             templateContext.setVariable("selection", document.get(region.getOffset(), region.getLength()));
             for (Template template : codeTemplates.getTemplates()) {
                 if (isApplicable(template, prefix)) {
-                    templates.add(new TemplateProposal(template,
-                            templateContext, region, null));
+                	TemplateProposal templateProposal = new TemplateProposal(template,
+                            templateContext, region, null);
+                	if (prefix.length() == 0) {
+                		templateProposal.setRelevance(EMPTY_PREFIX_TEMPLATE_RELEVANCE);
+                	}
+                    templates.add(templateProposal);
                 }
             }
             return templates;
