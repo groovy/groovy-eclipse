@@ -410,6 +410,30 @@ public class GroovyProjectGroovyQuickFixTest extends
 
 	}
 
+	public void testAddImportGRECLIPSE1612() throws Exception {
+		testProject.createJavaType(testProject.createPackage("other"), "FooJava.java",
+				"package other;\n" +
+				"public class FooJava {\n" +
+				"    public static String getProperty() {\n" +
+				"        return \"sad\";\n" +
+				"    }\n" +
+				"}");
+
+		String typeToAddImport = "FooGroovy";
+		String typeToAddImportContent = "@groovy.transform.TypeChecked\nclass FooGroovy {\n def main() { FooJava.getProperty() } }";
+		ICompilationUnit unit = createGroovyTypeInTestPackage(typeToAddImport + ".groovy",
+				typeToAddImportContent);
+
+		IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit);
+
+		List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(
+					markers, ProblemType.MISSING_IMPORTS_TYPE, unit);
+        assertEquals("Should have found exactly one resolver", 1, resolvers.size());
+        assertEquals("Wrong type of resolver", AddMissingGroovyImportsResolver.class, resolvers.get(0).getClass());
+        IJavaCompletionProposal proposal = resolvers.get(0).getQuickFixProposals().get(0);
+        assertEquals("Import 'FooJava' (other)", proposal.getDisplayString());
+	}
+
 	public void testGRECLIPSE1777() throws Exception {
 		String expectedQuickFixDisplay = "Add cast to Integer";
 
