@@ -39,6 +39,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
@@ -300,6 +301,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
 	private ClassNode inferredStaticMethodType;
 	private boolean needToFixStaticMethodType;
+
+	/**
+	 * Keeps track of local map variables contexts.
+	 */
+	private Map<Variable, Map<String, ClassNode>> localMapProperties = new HashMap<Variable, Map<String, ClassNode>>();
+	private Variable currentMapVariable;
 
 	/**
 	 * Use factory to instantiate
@@ -1766,7 +1773,21 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			objType = primaryTypeStack.peek();
 		}
 
+		if (VariableScope.MAP_CLASS_NODE.equals(objType) && node.getObjectExpression() instanceof VariableExpression
+				&& node.getProperty() instanceof ConstantExpression) {
+			currentMapVariable = ((VariableExpression) node.getObjectExpression()).getAccessedVariable();
+			Map<String, ClassNode> map = localMapProperties.get(currentMapVariable);
+			if (map == null) {
+				map = new HashMap<String, ClassNode>();
+				localMapProperties.put(currentMapVariable, map);
+			}
+			if (enclosingAssignment != null) {
+				map.put(((ConstantExpression) node.getProperty()).getConstantName(), enclosingAssignment.getRightExpression()
+						.getType());
+			}
+		}
 		node.getProperty().visit(this);
+		currentMapVariable = null;
 
 		// this is the type of this property expression
 		ClassNode exprType = dependentTypeStack.pop();
@@ -2035,8 +2056,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			}
 		}
 		if (result.confidence == TypeConfidence.UNKNOWN && VariableScope.MAP_CLASS_NODE.equals(result.declaringType)) {
-			result = new TypeLookupResult(VariableScope.OBJECT_CLASS_NODE, result.declaringType, result.declaration,
-					TypeConfidence.POTENTIAL, result.scope);
+			ClassNode inferredType = VariableScope.OBJECT_CLASS_NODE;
+			if (currentMapVariable != null && node instanceof ConstantExpression) {
+				inferredType = localMapProperties.get(currentMapVariable).get(((ConstantExpression) node).getConstantName());
+			}
+			result = new TypeLookupResult(inferredType, result.declaringType, result.declaration, TypeConfidence.INFERRED,
+					result.scope);
 		}
 		return result;
 	}
