@@ -1834,6 +1834,30 @@ public class InferencingTests extends AbstractInferencingTest {
 		assertType(contents, start, end, "java.lang.Integer");
 	}
 
+    // GRECLIPSE-554
+    public void testMapEntries1() throws Exception {
+        String contents =
+                "def map = [:]\n" +
+                "map.foo = 1\n" +
+                "print map.foo\n" +
+                "map.foo = 'text'\n" +
+                "print map.foo\n";
+
+        int start = contents.lastIndexOf("map");
+        int end = start + "map".length();
+        assertType(contents, start, end, "java.util.Map<java.lang.Object,java.lang.Object>");
+
+        start = contents.indexOf("foo");
+        start = contents.indexOf("foo", start + 1);
+        end = start + "foo".length();
+        assertType(contents, start, end, "java.lang.Integer");
+
+        start = contents.indexOf("foo", start + 1);
+        start = contents.indexOf("foo", start + 1);
+        end = start + "foo".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
 	public void testThisInInnerClass1() {
 		String contents =
 				"class A {\n" +
