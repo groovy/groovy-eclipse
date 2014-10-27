@@ -458,6 +458,10 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     	if (transformName.equals("groovy.transform.TypeChecked")) {
     		return true;
     	}
+    	if ("grails.transaction.Transactional".equals(transformName)) {
+    		//STS-3928
+    		return false;
+    	}
     	if (localTransformsAllowed == null) {
     		return true;
     	}
