@@ -86,6 +86,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
@@ -307,6 +308,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	 */
 	private Map<Variable, Map<String, ClassNode>> localMapProperties = new HashMap<Variable, Map<String, ClassNode>>();
 	private Variable currentMapVariable;
+
+	private boolean checkGetter;
+	private boolean checkSetter;
 
 	/**
 	 * Use factory to instantiate
@@ -1033,7 +1037,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 			assignmentStorer.storeAssignment(node, scopes.peek(), primaryExprType);
 		}
 
+		if (isAssignment) {
+			checkSetter = true;
+		}
 		toVisitDependent.visit(this);
+		checkSetter = false;
 
 		completeExpressionStack.pop();
 		// type of the entire expression
@@ -1785,9 +1793,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 				map.put(((ConstantExpression) node.getProperty()).getConstantName(), enclosingAssignment.getRightExpression()
 						.getType());
 			}
+		} else if (node.getProperty() instanceof ConstantExpression) {
+			checkGetter = true;
 		}
 		node.getProperty().visit(this);
 		currentMapVariable = null;
+		checkGetter = false;
 
 		// this is the type of this property expression
 		ClassNode exprType = dependentTypeStack.pop();
@@ -2013,6 +2024,27 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		scope.setPrimaryNode(primaryType == null);
 
 		TypeLookupResult result = lookupExpressionType(node, primaryType, isStatic, scope);
+
+		// Try to fix special getters and setters
+		if (checkSetter && result != null && node instanceof ConstantExpression
+				&& (result.declaration instanceof FieldNode || result.declaration instanceof MethodNode)) {
+			String name = ((ConstantExpression) node).getValue().toString();
+			List<MethodNode> methods = result.declaringType.getMethods("set" + MetaClassHelper.capitalize(name));
+			for (MethodNode m : methods) {
+				if (m.getParameters().length == 1) {
+					result = new TypeLookupResult(m.getParameters()[0].getType(), result.declaringType, m, result.confidence,
+							result.scope);
+					break;
+				}
+			}
+		} else if (checkGetter && result != null && node instanceof ConstantExpression && result.declaration instanceof FieldNode) {
+			String name = ((ConstantExpression) node).getValue().toString();
+			MethodNode method = result.declaringType.getMethod("get" + MetaClassHelper.capitalize(name), new Parameter[0]);
+			if (method != null) {
+				result = new TypeLookupResult(method.getReturnType(), result.declaringType, method, result.confidence, result.scope);
+			}
+		}
+
 		return handleRequestor(node, primaryType, result);
 	}
 

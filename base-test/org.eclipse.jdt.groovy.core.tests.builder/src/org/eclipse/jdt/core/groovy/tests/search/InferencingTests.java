@@ -1875,6 +1875,30 @@ public class InferencingTests extends AbstractInferencingTest {
 		assertType(contents, start, end, "A");
 	}
 
+	public void testGRECLIPSE1798() {
+		createJavaUnit("Wrapper",
+				"public class Wrapper<T> {\n" +
+				"    private final T wrapped;\n" +
+				"    public Wrapper(T wrapped) { this.wrapped = wrapped; }\n" +
+				"    public T getWrapped() { return wrapped; }\n" +
+				"}\n");
+		createJavaUnit("MyBean",
+				"public class MyBean {\n" +
+				"    private Wrapper<String> foo = new Wrapper<>(\"foo\");\n" +
+				"    public String getFoo() { return foo.getWrapped(); }\n" +
+				"}\n");
+		String contents =
+				"class GroovyTest {\n" +
+				"    static void main(String[] args) {\n" +
+				"        def b = new MyBean()\n" +
+				"        println b.foo.toUpperCase()\n" +
+				"    }\n" +
+				"}\n";
+		int start = contents.lastIndexOf("foo");
+		int end = start + "foo".length();
+		assertType(contents, start, end, "java.lang.String");
+	}
+
     protected void assertNoUnknowns(String contents) {
         GroovyCompilationUnit unit = createUnit("Search", contents);
         
