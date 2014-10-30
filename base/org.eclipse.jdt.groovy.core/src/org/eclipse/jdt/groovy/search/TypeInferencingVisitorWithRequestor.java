@@ -309,8 +309,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 	private Map<Variable, Map<String, ClassNode>> localMapProperties = new HashMap<Variable, Map<String, ClassNode>>();
 	private Variable currentMapVariable;
 
-	private boolean checkGetter;
-	private boolean checkSetter;
+	private Set<ConstantExpression> currentGetters = new HashSet<ConstantExpression>();
+	private ConstantExpression currentSetter;
 
 	/**
 	 * Use factory to instantiate
@@ -1038,10 +1038,26 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		}
 
 		if (isAssignment) {
-			checkSetter = true;
+			if (toVisitDependent instanceof ConstantExpression) {
+				currentSetter = (ConstantExpression) toVisitDependent;
+			} else {
+				Expression expression = toVisitDependent;
+				while (expression instanceof PropertyExpression) {
+					Expression objectExpression = ((PropertyExpression) expression).getObjectExpression();
+					if (objectExpression instanceof VariableExpression
+							&& "this".equals(((VariableExpression) objectExpression).getName())) {
+						break;
+					}
+					expression = ((PropertyExpression) expression).getProperty();
+					if (expression instanceof ConstantExpression) {
+						currentSetter = (ConstantExpression) expression;
+						break;
+					}
+				}
+			}
 		}
 		toVisitDependent.visit(this);
-		checkSetter = false;
+		currentSetter = null;
 
 		completeExpressionStack.pop();
 		// type of the entire expression
@@ -1794,11 +1810,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 						.getType());
 			}
 		} else if (node.getProperty() instanceof ConstantExpression) {
-			checkGetter = true;
+			Expression objectExpression = node.getObjectExpression();
+			if (!(objectExpression instanceof VariableExpression)
+					|| !"this".equals(((VariableExpression) objectExpression).getName())) {
+				currentGetters.add((ConstantExpression) node.getProperty());
+			}
 		}
 		node.getProperty().visit(this);
 		currentMapVariable = null;
-		checkGetter = false;
+		currentGetters.remove(node.getProperty());
 
 		// this is the type of this property expression
 		ClassNode exprType = dependentTypeStack.pop();
@@ -2026,21 +2046,21 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 		TypeLookupResult result = lookupExpressionType(node, primaryType, isStatic, scope);
 
 		// Try to fix special getters and setters
-		if (checkSetter && result != null && node instanceof ConstantExpression
+		if (currentSetter == node && result != null
 				&& (result.declaration instanceof FieldNode || result.declaration instanceof MethodNode)) {
-			String name = ((ConstantExpression) node).getValue().toString();
+			String name = currentSetter.getValue().toString();
 			List<MethodNode> methods = result.declaringType.getMethods("set" + MetaClassHelper.capitalize(name));
 			for (MethodNode m : methods) {
-				if (m.getParameters().length == 1) {
+				if (m.getParameters().length == 1 && !m.isStatic()) {
 					result = new TypeLookupResult(m.getParameters()[0].getType(), result.declaringType, m, result.confidence,
 							result.scope);
 					break;
 				}
 			}
-		} else if (checkGetter && result != null && node instanceof ConstantExpression && result.declaration instanceof FieldNode) {
+		} else if (currentGetters.contains(node) && result != null && result.declaration instanceof FieldNode) {
 			String name = ((ConstantExpression) node).getValue().toString();
 			MethodNode method = result.declaringType.getMethod("get" + MetaClassHelper.capitalize(name), new Parameter[0]);
-			if (method != null) {
+			if (method != null && !method.isStatic()) {
 				result = new TypeLookupResult(method.getReturnType(), result.declaringType, method, result.confidence, result.scope);
 			}
 		}
