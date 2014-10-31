@@ -121,7 +121,7 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
     @Override
     protected TypeConfidence checkConfidence(Expression node, TypeConfidence originalConfidence, ASTNode declaration, String extraDoc) {
         TypeConfidence confidence = originalConfidence == null ? confidence() : originalConfidence;
-        if (node instanceof ConstantExpression && declaration instanceof MethodNode && extraDoc != null && extraDoc.contains(GORM_SIGNATURE)) {
+        if (declaration instanceof MethodNode && extraDoc != null && extraDoc.contains(GORM_SIGNATURE)) {
             // Give a chance for TypeLookups called later
             confidence = TypeConfidence.LOOSELY_INFERRED;
         }
