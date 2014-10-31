@@ -135,10 +135,19 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 		}
 
 		if (tAndD != null) {
+			TypeConfidence confidence = checkConfidence(node, tAndD.confidence, tAndD.declaration, tAndD.extraDoc);
 			return new TypeLookupResult(tAndD.type, tAndD.declaringType == null ? declaringType : tAndD.declaringType,
-					tAndD.declaration, tAndD.confidence == null ? confidence() : tAndD.confidence, scope, tAndD.extraDoc);
+					tAndD.declaration, confidence, scope, tAndD.extraDoc);
 		}
 		return null;
+	}
+
+	/**
+	 * Gives an option for descendants to set confidence by their own
+	 */
+	protected TypeConfidence checkConfidence(Expression node, TypeConfidence originalConfidence, ASTNode declaration,
+			String extraDoc) {
+		return originalConfidence == null ? confidence() : originalConfidence;
 	}
 
 	/**
@@ -177,7 +186,7 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 
 	/**
 	 * Clients should return a {@link TypeAndDeclaration} corresponding to an additional
-	 * 
+	 *
 	 * @param declaringType
 	 * @param name
 	 * @param scope
