@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2013 the original author or authors.
+ * Copyright 2003-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,15 +43,21 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.io.StringReaderSource;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.tools.GrapeUtil;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.ASTTransformationVisitor;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static org.codehaus.groovy.transform.AbstractASTTransformation.getMemberStringValue;
 
 /**
  * Transformation for declarative dependency management.
@@ -222,19 +228,12 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                 grabResolverAnnotationLoop:
                 for (AnnotationNode node : grabResolverAnnotations) {
                     Map<String, Object> grabResolverMap = new HashMap<String, Object>();
-                    Expression value = node.getMember("value");
-                    ConstantExpression ce = null;
-                    if (value != null && value instanceof ConstantExpression) {
-                        ce = (ConstantExpression) value;
-                    }
-                    String sval = null;
-                    if (ce != null && ce.getValue() instanceof String) {
-                        sval = (String) ce.getValue();
-                    }
+                    String sval = getMemberStringValue(node, "value");
                     if (sval != null && sval.length() > 0) {
                         for (String s : GRABRESOLVER_REQUIRED) {
-                            Expression member = node.getMember(s);
-                            if (member != null) {
+                            String mval = getMemberStringValue(node, s);
+                            if (mval != null && mval.isEmpty()) mval = null;
+                            if (mval != null) {
                                 addError("The attribute \"" + s + "\" conflicts with attribute 'value' in @" + node.getClassNode().getNameWithoutPackage() + " annotations", node);
                                 continue grabResolverAnnotationLoop;
                             }
@@ -243,17 +242,47 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                         grabResolverMap.put("root", sval);
                     } else {
                         for (String s : GRABRESOLVER_REQUIRED) {
+                            String mval = getMemberStringValue(node, s);
+                            if (mval != null && mval.isEmpty()) mval = null;
                             Expression member = node.getMember(s);
-                            if (member == null) {
+                            if (member == null || mval == null) {
                                 addError("The missing attribute \"" + s + "\" is required in @" + node.getClassNode().getNameWithoutPackage() + " annotations", node);
                                 continue grabResolverAnnotationLoop;
-                            } else if (member != null && !(member instanceof ConstantExpression)) {
-                                addError("Attribute \"" + s + "\" has value " + member.getText() + " but should be an inline constant in @" + node.getClassNode().getNameWithoutPackage() + " annotations", node);
+                            } else if (mval == null) {
+                                addError("Attribute \"" + s + "\" has value " + member.getText() + " but should be an inline constant String in @" + node.getClassNode().getNameWithoutPackage() + " annotations", node);
                                 continue grabResolverAnnotationLoop;
                             }
-                            grabResolverMap.put(s, ((ConstantExpression) member).getValue());
+                            grabResolverMap.put(s, mval);
                         }
                     }
+
+                    // If no scheme is specified for the repository root,
+                    // then turn it into a URI relative to that of the source file.
+                    String root = (String) grabResolverMap.get("root");
+                    if (root != null && !root.contains(":")) {
+                        URI sourceURI = null;
+                        // Since we use the data: scheme for StringReaderSources (which are fairly common)
+                        // and those are not hierarchical we can't use them for making an absolute URI.
+                        if (!(getSourceUnit().getSource() instanceof StringReaderSource)) {
+                            // Otherwise let's trust the source to know where it is from.
+                            // And actually InputStreamReaderSource doesn't know what to do and so returns null.
+                            sourceURI = getSourceUnit().getSource().getURI();
+                        }
+                        // If source doesn't know how to get a reference to itself,
+                        // then let's use the current working directory, since the repo can be relative to that.
+                        if (sourceURI == null) {
+                            sourceURI = new File(".").toURI();
+                        }
+                        try {
+                            URI rootURI = sourceURI.resolve(new URI(root));
+                            grabResolverMap.put("root", rootURI.toString());
+                        } catch (URISyntaxException e) {
+                            // We'll be silent here.
+                            // If the URI scheme is unknown or not hierarchical, then we just can't help them and shouldn't cause any trouble either.
+                            // addError("Attribute \"root\" has value '" + root + "' which can't be turned into a valid URI relative to it's source '" + getSourceUnit().getName() + "' @" + node.getClassNode().getNameWithoutPackage() + " annotations", node);
+                        }
+                    }
+
                     Grape.addResolver(grabResolverMap);
                     addGrabResolverAsStaticInitIfNeeded(grapeClassNode, node, grabResolverInitializers, grabResolverMap);
                 }
@@ -296,6 +325,8 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                     checkForConvenienceForm(node, false);
                     for (String s : GRAB_ALL) {
                         Expression member = node.getMember(s);
+                        String mval = getMemberStringValue(node, s);
+                        if (mval != null && mval.isEmpty()) member = null;
                         if (member == null && !GRAB_OPTIONAL.contains(s)) {
                             addError("The missing attribute \"" + s + "\" is required in @" + node.getClassNode().getNameWithoutPackage() + " annotations", node);
                             continue grabAnnotationLoop;
@@ -308,8 +339,7 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                         }
                     }
                     grabMaps.add(grabMap);
-                    if ((node.getMember("initClass") == null)
-                            || (node.getMember("initClass") == ConstantExpression.TRUE)) {
+                    if ((node.getMember("initClass") == null) || (node.getMember("initClass") == ConstantExpression.TRUE)) {
                         grabMapsInit.add(grabMap);
                     }
                 }
@@ -393,6 +423,7 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
 
         List<Expression> argList = new ArrayList<Expression>();
         argList.add(basicArgs);
+        if (grabMapsInit.size() == 0) return;
         for (Map<String, Object> grabMap : grabMapsInit) {
             // add Grape.grab(excludeArgs, [group:group, module:module, version:version, classifier:classifier])
             // or Grape.grab([group:group, module:module, version:version, classifier:classifier])

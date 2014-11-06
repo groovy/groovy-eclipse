@@ -462,7 +462,7 @@ public class BytecodeHelper implements Opcodes {
 
     private static void writeGenericsBoundType(StringBuilder ret, ClassNode printType, boolean writeInterfaceMarker) {
         if (writeInterfaceMarker && printType.isInterface()) ret.append(":");
-        if (printType.equals(ClassHelper.OBJECT_TYPE) && printType.getGenericsTypes() != null) {
+        if (printType.isGenericsPlaceHolder() && printType.getGenericsTypes()!=null) {
             ret.append("T");
             ret.append(printType.getGenericsTypes()[0].getName());
             ret.append(";");
@@ -610,6 +610,7 @@ public class BytecodeHelper implements Opcodes {
     /**
      * box top level operand
      */
+    @Deprecated
     public static boolean box(MethodVisitor mv, ClassNode type) {
         if (type.isPrimaryClassNode()) return false;
         // GRECLIPSE: start
@@ -622,6 +623,7 @@ public class BytecodeHelper implements Opcodes {
     /**
      * Generates the bytecode to autobox the current value on the stack
      */
+    @Deprecated
     public static boolean box(MethodVisitor mv, Class type) {
         if (ReflectionCache.getCachedClass(type).isPrimitive && type != void.class) {
             String returnString = "(" + BytecodeHelper.getTypeDescription(type) + ")Ljava/lang/Object;";
