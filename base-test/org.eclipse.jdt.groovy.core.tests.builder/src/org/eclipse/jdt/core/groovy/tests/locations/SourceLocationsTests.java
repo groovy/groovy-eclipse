@@ -306,8 +306,7 @@ public class SourceLocationsTests extends GroovierBuilderTests {
         IPath path = env.addGroovyClass(root, "p", "Hello", source);
         fullBuild();
         expectingOnlySpecificProblemFor(root, new Problem(
-                "p/Hello", "Groovy:Operator (\"===\" at 3:11:  \"===\" ) not supported @ line 3, column 11.", path, 34, 35, 60, IMarker.SEVERITY_ERROR));
-        // It marks just first character of operator as groovyc marks only first character
+                "p/Hello", "Groovy:Operator (\"===\" at 3:11:  \"===\" ) not supported @ line 3, column 11.", path, 34, 37, 60, IMarker.SEVERITY_ERROR));
     }
 
 	// next test a variety of slocs for var decl fragments
