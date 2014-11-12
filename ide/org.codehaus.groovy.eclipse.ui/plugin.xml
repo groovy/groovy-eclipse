@@ -737,18 +737,7 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M3+G F"/>
       <!-- Now disable all of the M3+G commands for Swiss German since that conflicts with '@' -->      
-      <key
-            contextId="org.eclipse.ui.contexts.window"
-            locale="de_CH"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M3+G J"/>
       <!-- Reenable commands using M1+M3+G for Swiss German -->      
-      <key
-            commandId="org.codehaus.groovy.eclipse.ui.convertToJava"
-            contextId="org.eclipse.ui.contexts.window"
-            locale="de_CH"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M1+M3+G J"/>
             
       <!-- Use our Find occurrences command instead -->
       <key
@@ -756,6 +745,11 @@
             contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+M2+U"/>
+      <sequenceModifier
+            find="M3+G"
+            platforms="cocoa,carbon"
+            replace="M3+M4+G">
+      </sequenceModifier>
    </extension>
    <extension point="org.eclipse.debug.ui.consoleLineTrackers">
 		<consoleLineTracker
