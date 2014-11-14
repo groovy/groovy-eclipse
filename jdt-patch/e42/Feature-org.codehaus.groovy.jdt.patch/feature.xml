@@ -5,9 +5,12 @@
     are made available under the terms of the Eclipse Public License v1.0
     which accompanies this distribution, and is available at
     http://www.eclipse.org/legal/epl-v10.html
+   
+    Contributors:
+        Andrew Eisenberg - modified for Groovy Eclipse 2.0
  -->
 <feature
-      id="org.codehaus.groovy17.feature"
+      id="org.codehaus.groovy.jdt.patch"
       label="%featureName"
       version="2.9.1.qualifier"
       provider-name="%providerName"
@@ -21,21 +24,20 @@
       %copyright
    </copyright>
 
-   <license url="license.html">
+   <license url="%licenseURL">
       %license
    </license>
 
    <requires>
-      <import plugin="org.apache.ant"/>
-      <import plugin="org.junit"/>
-      <import plugin="org.eclipse.core.runtime"/>
+      <import feature="org.eclipse.jdt" version="3.8.0.v20111130-1318-8-8lFpEFNOfwRc2R3LVOg_u9B15B" patch="true"/>
    </requires>
 
    <plugin
-         id="org.codehaus.groovy"
+         id="org.eclipse.jdt.core"
          download-size="0"
          install-size="0"
-         version="1.7.10.qualifier"/>
+         version="0.0.0"
+         unpack="false"/>
 
    <plugin
          id="org.codehaus.groovy.eclipse"

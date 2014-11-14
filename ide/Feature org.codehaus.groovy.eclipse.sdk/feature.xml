@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) 2009 Codehaus.org, SpringSource, and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+   
+    Contributors:
+        Andrew Eisenberg - modified for Groovy Eclipse 2.0
+ -->
+<feature
+      id="org.codehaus.groovy.eclipse.sdk"
+      label="%featureName"
+      version="2.9.1.qualifier"
+      provider-name="%providerName">
+
+   <description url="%descriptionURL">
+      %description
+   </description>
+
+   <copyright>
+      %copyright
+   </copyright>
+
+   <license url="license.html">
+      %license
+   </license>
+
+   <includes
+         id="org.codehaus.groovy.eclipse.feature"
+         version="0.0.0"/>
+
+   <includes
+         id="org.codehaus.groovy.eclipse.feature.source"
+         version="0.0.0"/>
+
+   <includes
+         id="org.codehaus.groovy.jdt.patch"
+         version="0.0.0"/>
+
+   <includes
+         id="org.codehaus.groovy.jdt.patch.source"
+         version="0.0.0"/>
+
+   <includes
+         id="org.codehaus.groovy.m2eclipse.source"
+         version="0.0.0"/>
+
+   <includes
+         id="org.codehaus.groovy21.feature"
+         version="0.0.0"/>
+
+   <includes
+         id="org.codehaus.groovy20.feature"
+         version="0.0.0"/>
+
+   <includes
+         id="org.codehaus.groovy18.feature"
+         version="0.0.0"/>
+
+   <includes
+         id="org.codehaus.groovy.alltests.feature"
+         version="0.0.0"/>
+
+   <includes
+         id="org.codehaus.groovy.alltests.feature.source"
+         version="0.0.0"/>
+
+</feature>

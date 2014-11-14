@@ -1,0 +1,20 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Groovy Code Browsing
+Bundle-SymbolicName: org.codehaus.groovy.eclipse.codebrowsing; singleton:=true
+Bundle-Version: 2.9.1.qualifier
+Bundle-Activator: org.codehaus.groovy.eclipse.codebrowsing.GroovyBrowsingPlugin
+Require-Bundle: org.eclipse.core.runtime.compatibility,
+ org.codehaus.groovy.eclipse.core;bundle-version="2.9.1";visibility:=reexport,
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.groovy.core;bundle-version="2.9.1",
+ org.codehaus.groovy;bundle-version="1.8.6",
+ org.eclipse.core.resources;bundle-version="3.6.0"
+Bundle-ActivationPolicy: lazy
+Export-Package: org.codehaus.groovy.eclipse.codebrowsing,
+ org.codehaus.groovy.eclipse.codebrowsing.elements,
+ org.codehaus.groovy.eclipse.codebrowsing.fragments,
+ org.codehaus.groovy.eclipse.codebrowsing.requestor,
+ org.codehaus.groovy.eclipse.codebrowsing.selection
+Bundle-Vendor: The Codehaus
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
