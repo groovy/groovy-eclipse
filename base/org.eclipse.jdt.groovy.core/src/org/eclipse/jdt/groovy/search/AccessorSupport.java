@@ -23,7 +23,7 @@ import org.codehaus.groovy.ast.MethodNode;
 
 /**
  * Determined what kind of accessor a method name may be and then does further processing on a method node if the name matches
- * 
+ *
  * @author andrew
  * @created Jan 23, 2012
  */
@@ -52,10 +52,10 @@ public enum AccessorSupport {
 						&& (node.getParameters() == null || node.getParameters().length == args)
 						&& (returnType.equals(VariableScope.OBJECT_CLASS_NODE)
 								|| returnType.equals(VariableScope.BOOLEAN_CLASS_NODE) || returnType
-									.equals(ClassHelper.boolean_TYPE));
+								.equals(ClassHelper.boolean_TYPE));
 			case SETTER:
 				return node.getParameters() != null && node.getParameters().length == args + 1
-						&& (returnType.equals(VariableScope.VOID_CLASS_NODE) || returnType.equals(VariableScope.OBJECT_CLASS_NODE));
+				&& (returnType.equals(VariableScope.VOID_CLASS_NODE) || returnType.equals(VariableScope.OBJECT_CLASS_NODE));
 			case NONE:
 			default:
 				return false;
@@ -77,7 +77,7 @@ public enum AccessorSupport {
 
 	/**
 	 * If maybeProperty is a property variant of a method in declaringType, then return that method
-	 * 
+	 *
 	 */
 	public static MethodNode findAccessorMethodForPropertyName(String name, ClassNode declaringType, boolean isCategory) {
 		if (name.length() <= 0) {
@@ -88,25 +88,28 @@ public enum AccessorSupport {
 		String getterName = "get" + suffix;
 		List<MethodNode> methods = declaringType.getMethods(getterName);
 		if (!methods.isEmpty()) {
-			MethodNode maybeMethod = methods.get(0);
-			if (findAccessorKind(maybeMethod, isCategory) == GETTER) {
-				return maybeMethod;
+			for (MethodNode maybeMethod : methods) {
+				if (findAccessorKind(maybeMethod, isCategory) == GETTER) {
+					return maybeMethod;
+				}
 			}
 		}
 		String setterName = "set" + suffix;
 		methods = declaringType.getMethods(setterName);
 		if (!methods.isEmpty()) {
-			MethodNode maybeMethod = methods.get(0);
-			if (findAccessorKind(maybeMethod, isCategory) == SETTER) {
-				return maybeMethod;
+			for (MethodNode maybeMethod : methods) {
+				if (findAccessorKind(maybeMethod, isCategory) == SETTER) {
+					return maybeMethod;
+				}
 			}
 		}
 		String isserName = "is" + suffix;
 		methods = declaringType.getMethods(isserName);
 		if (!methods.isEmpty()) {
-			MethodNode maybeMethod = methods.get(0);
-			if (findAccessorKind(maybeMethod, isCategory) == ISSER) {
-				return maybeMethod;
+			for (MethodNode maybeMethod : methods) {
+				if (findAccessorKind(maybeMethod, isCategory) == ISSER) {
+					return maybeMethod;
+				}
 			}
 		}
 
