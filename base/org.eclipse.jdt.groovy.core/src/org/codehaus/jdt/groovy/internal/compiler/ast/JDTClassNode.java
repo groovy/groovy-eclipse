@@ -168,7 +168,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			if (jdtBinding instanceof ParameterizedTypeBinding && !(jdtBinding instanceof RawTypeBinding)) {
 				// GenericsType[] gts = configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
 				GenericsType[] gts = new JDTClassNodeBuilder(this.resolver)
-				.configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
+						.configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
 				setGenericsTypes(gts);
 				// return base;
 			} else if (jdtBinding instanceof RawTypeBinding) {
@@ -225,7 +225,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			}
 			setInterfaces(interfaces);
 			initializeMembers();
-			initializeAnnotations();
 		} finally {
 			beingInitialized = false;
 		}
@@ -322,16 +321,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 			for (int i = 0; i < fieldBindings.length; i++) {
 				FieldNode fNode = fieldBindingToFieldNode(fieldBindings[i], groovyDecl);
 				addField(fNode);
-			}
-		}
-	}
-
-	// GRECLIPSE-1731
-	private void initializeAnnotations() {
-		AnnotationBinding[] annotations = jdtBinding.getAnnotations();
-		if (annotations != null && getAnnotations().isEmpty()) {
-			for (AnnotationBinding annotation : annotations) {
-				addAnnotation(new AnnotationNode(resolver.convertToClassNode(annotation.getAnnotationType())));
 			}
 		}
 	}
@@ -533,10 +522,14 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 	 */
 	@Override
 	public List<AnnotationNode> getAnnotations() {
-		if ((bits & ANNOTATIONS_INITIALIZED) == 0) {
-			ensureAnnotationsInitialized();
-		}
+		ensureAnnotationsInitialized();
 		return super.getAnnotations();
+	}
+
+	@Override
+	public List<AnnotationNode> getAnnotations(ClassNode type) {
+		ensureAnnotationsInitialized();
+		return super.getAnnotations(type);
 	}
 
 	private synchronized void ensureAnnotationsInitialized() {
@@ -671,7 +664,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 	@Override
 	public void addProperty(PropertyNode node) {
 		new RuntimeException("JDTClassNode is immutable, should not be called to add property: " + node.getName())
-		.printStackTrace();
+				.printStackTrace();
 	}
 
 	@Override
