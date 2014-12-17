@@ -315,20 +315,27 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         blockStack.pop();
 
         Statement code = node.getCode();
-        visitClassCodeContainer(code);
 
+        /*
+         * Traits have code assigned to null by the TraitASTTransformation. The
+         * transformation creates a helper inner class node that has the
+         * necessary data. Hence skip the rest if code is null
+         */
+        if (code != null) {
+            visitClassCodeContainer(code);
 
-        if (completionOffset < code.getStart() && !isRunMethod(node)) {
-            // probably inside an empty parameters list
-            createContext(null, node, PARAMETER);
+            if (completionOffset < code.getStart() && !isRunMethod(node)) {
+                // probably inside an empty parameters list
+                createContext(null, node, PARAMETER);
+            }
+
+            // if we get here, then it is probably because the block statement
+            // has been swapped with a new one that has not had
+            // its locations set properly
+            code.setStart(node.getStart());
+            code.setEnd(node.getEnd());
+            createContext(code, code, expressionScriptOrStatement(node));
         }
-
-        // if we get here, then it is probably because the block statement
-        // has been swapped with a new one that has not had
-        // its locations set properly
-        code.setStart(node.getStart());
-        code.setEnd(node.getEnd());
-        createContext(code, code, expressionScriptOrStatement(node));
     }
 
     /**
