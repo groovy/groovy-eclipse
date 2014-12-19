@@ -1530,25 +1530,27 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
     
 // GRECLIPE start
-/*old:
+//old:
     public ClassNode getPlainNodeReference() {
         if (ClassHelper.isPrimitiveType(this)) return this;
-        ClassNode n = new ClassNode(name,modifiers,superClass,null,null);
+        ClassNode n = new ClassNode(name, modifiers, superClass,null,null);
         n.isPrimaryNode = false;
         n.setRedirect(redirect());
-        n.componentType = redirect().getComponentType();
+        if (isArray()) {
+            n.componentType = redirect().getComponentType();
+        } 
         return n;
     }
-new:*/
-    public ClassNode getPlainNodeReference() {
-        if (ClassHelper.isPrimitiveType(this)) return this;
-		ClassNode n = new ClassNode(name, modifiers, superClass,
-				getPlainNodeReferencesFor(getInterfaces()), null);
-        n.isPrimaryNode = false;
-		n.setRedirect(redirect());
-        n.componentType = redirect().getComponentType();
-        return n;
-    }
+// new:
+//    public ClassNode getPlainNodeReference() {
+//        if (ClassHelper.isPrimitiveType(this)) return this;
+//		ClassNode n = new ClassNode(name, modifiers, superClass,
+//				getPlainNodeReferencesFor(getInterfaces()), null);
+//        n.isPrimaryNode = false;
+//		n.setRedirect(redirect());
+//        n.componentType = redirect().getComponentType();
+//        return n;
+//    }
 //end
 
 	public ClassNode[] getPlainNodeReferencesFor(ClassNode[] classNodes) {

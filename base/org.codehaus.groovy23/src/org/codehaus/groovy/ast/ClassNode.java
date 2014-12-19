@@ -1556,14 +1556,22 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 new:*/
     public ClassNode getPlainNodeReference() {
+//        if (ClassHelper.isPrimitiveType(this)) return this;
+//		ClassNode n = new ClassNode(name, modifiers, superClass,
+//				getPlainNodeReferencesFor(getInterfaces()), null);
+//        n.isPrimaryNode = false;
+//		n.setRedirect(redirect());
+//		if (isArray()) {
+//        	n.componentType = redirect().getComponentType();
+//        }
+//        return n;
         if (ClassHelper.isPrimitiveType(this)) return this;
-		ClassNode n = new ClassNode(name, modifiers, superClass,
-				getPlainNodeReferencesFor(getInterfaces()), null);
+        ClassNode n = new ClassNode(name, modifiers, superClass,null,null);
         n.isPrimaryNode = false;
-		n.setRedirect(redirect());
-		if (isArray()) {
-        	n.componentType = redirect().getComponentType();
-        }
+        n.setRedirect(redirect());
+        if (isArray()) {
+            n.componentType = redirect().getComponentType();
+        } 
         return n;
     }
 //end
