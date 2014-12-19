@@ -463,7 +463,7 @@ public class Java5 implements VMPlugin {
             front.setRedirect(back);
             return front;
         }
-        return back;//.getPlainNodeReference(); // GRECLIPSE did we remove the getPlain at some point???
+        return back.getPlainNodeReference();
     }
 
     private Parameter[] makeParameters(CompileUnit cu, Type[] types, Class[] cls, Annotation[][] parameterAnnotations) {

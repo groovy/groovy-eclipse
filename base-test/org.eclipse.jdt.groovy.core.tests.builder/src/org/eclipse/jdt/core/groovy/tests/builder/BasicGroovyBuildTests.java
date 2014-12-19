@@ -1030,6 +1030,37 @@ public class BasicGroovyBuildTests extends GroovierBuilderTests {
 		expectingCompiledClassesV("Foo");
 	}
 	
+	public void testCompileStatic_MapEachClosure() throws Exception {
+		if (GroovyUtils.GROOVY_LEVEL < 20) {
+			return;
+		}
+		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+		env.addGroovyJars(projectPath);
+		fullBuild(projectPath);
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+
+		env.addGroovyClass(root, "", "Demo",
+				"@groovy.transform.CompileStatic\n"+
+				"class Demo {\n"+
+			    "	void doit() {\n" +
+			    "		def c = {\n" +
+	            "			Map<String, String> data = [:]\n" +
+	            "			Map<String, Set<String>> otherData = [:];\n" +	 
+	            "			data.each { String k, String v ->\n" +
+	            "		    	def foo = otherData.get(k)\n" +
+	            "			}\n" +
+	        	"		}\n" +
+				"	}\n" +
+				"}\n");
+
+		incrementalBuild(projectPath);
+		expectingNoProblems();
+	}
 
 	public void test1167() throws Exception {
 		IPath projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
