@@ -66,6 +66,7 @@ import org.eclipse.jdt.internal.ui.text.java.LazyGenericTypeProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaTypeCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
@@ -802,8 +803,15 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
             // CompletionEngine.java
             proposal.setReplaceRange(this.offset + this.replaceLength, this.offset + this.replaceLength);
             proposal.setTokenRange(this.offset, this.actualCompletionPosition);
-            proposal.setCompletion(new char[] { '(', ')' });
-
+            try {
+                if (this.javaContext.getDocument().getChar(this.actualCompletionPosition) == '(') {
+                    proposal.setCompletion(new char[] {});
+                } else {
+                    proposal.setCompletion(new char[] { '(', ')' });
+                }
+            } catch (BadLocationException e) {
+                proposal.setCompletion(new char[] { '(', ')' });
+            }
             // provides the import statement
             GroovyCompletionProposal typeProposal = createTypeProposal(packageName, typeModifiers, accessibility, typeName,
                     fullyQualifiedName, isQualified, typeCompletion, augmentedModifiers, declarationSignature);

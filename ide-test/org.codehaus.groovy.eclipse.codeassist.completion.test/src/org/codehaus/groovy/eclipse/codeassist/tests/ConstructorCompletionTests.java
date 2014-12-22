@@ -67,6 +67,12 @@ public class ConstructorCompletionTests extends CompletionTestCase {
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
     }
     
+    public void testConstructorCompletion4() throws Exception {
+        String contents = "package f\n\nclass YYY { YYY() { } }\nnew YY()\nkkk";
+        String expected = "package f\n\nclass YYY { YYY() { } }\nnew YYY()\nkkk";
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, "new YY"), "YYY");
+    }
+    
     public void testContructorCompletionWithinEnumDeclaration1() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL < 21) {
             return;
