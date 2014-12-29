@@ -80,6 +80,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
         super(sel, doc);
         this.indentOnly = indentOnly;
         this.pref = pref;
+        this.formatterOffHandler = new FomatterOffHandler(this);
 
         if (selection.getLength() != 0) {
             try {
@@ -119,6 +120,14 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
             // caused by unparseable file
             throw new Exception("Could not format.  Problem parsing Compilation unit.  Fix all syntax errors and try again.");
         }
+    }
+
+    private FomatterOffHandler formatterOffHandler;
+
+    public MultiTextEdit getInitalizedTextEdit() {
+        MultiTextEdit edits = new MultiTextEdit();
+        formatterOffHandler.protectIgnoredLines(edits);
+        return edits;
     }
 
     @Override

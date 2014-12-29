@@ -33,7 +33,6 @@ import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.PreferenceConstants;
-import org.codehaus.groovy.eclipse.refactoring.core.utils.FormatterOffUtils;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.ASTScanner;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.ClosuresInCodePredicate;
 import org.codehaus.groovy.eclipse.refactoring.formatter.lineWrap.CorrectLineWrap;
@@ -66,8 +65,7 @@ public class GroovyBeautifier {
 	}
 
 	public TextEdit getBeautifiEdits() throws MalformedTreeException, BadLocationException {
-		MultiTextEdit edits = new MultiTextEdit();
-        protectIgnoredLines(edits);
+        MultiTextEdit edits = formatter.getInitalizedTextEdit();
         combineClosures(edits);
         formatLists(edits);
         correctBraces(edits);
@@ -75,29 +73,6 @@ public class GroovyBeautifier {
         formatter.getTokens().dispose();
         return edits;
 	}
-
-    private void protectIgnoredLines(MultiTextEdit edits) {
-        GroovyDocumentScanner tokens = formatter.getTokens();
-        try {
-            for (Token token = tokens.getLastTokenBefore(1); token != null; token = tokens.getNextToken(token)) {
-                int start = 0, end = 0;
-                if (FormatterOffUtils.matchFormatterOff(token.getText())) {
-                    start = formatter.getOffsetOfToken(token);
-                    for (token = tokens.getNextToken(token); token != null; token = tokens.getNextToken(token)) {
-                        if (FormatterOffUtils.matchFormatterOn(token.getText())) {
-                            end = formatter.getOffsetOfToken(token) + formatter.getTokenLength(token);
-                            break;
-                        }
-                    }
-                    if (start < end) {
-                        ignoreFormatting(start, end, edits);
-                    }
-                }
-            }
-        } catch (BadLocationException e) {
-            Util.log(e);
-        }
-    }
 
     private void formatLists(MultiTextEdit edits) {
         ASTScanner scanner = new ASTScanner(formatter.getProgressRootNode(), new ListInCodePredicate(),
@@ -480,8 +455,4 @@ public class GroovyBeautifier {
 		}
 	}
 
-    private void ignoreFormatting(final int start, final int end, MultiTextEdit edits) throws BadLocationException {
-        String text = formatter.getTokens().getDocument().get(start, end - start);
-        addEdit(new ReplaceEdit(start, end - start, text), edits);
-    }
 }

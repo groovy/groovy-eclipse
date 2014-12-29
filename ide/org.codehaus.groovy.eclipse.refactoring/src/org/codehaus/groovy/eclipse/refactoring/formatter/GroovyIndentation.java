@@ -40,7 +40,6 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.DeleteEdit;
 import org.eclipse.text.edits.InsertEdit;
 import org.eclipse.text.edits.MalformedTreeException;
-import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 
@@ -82,7 +81,7 @@ public class GroovyIndentation {
 	}
 
 	public TextEdit getIndentationEdits() {
-		indentationEdits = new MultiTextEdit();
+        indentationEdits = formatter.getInitalizedTextEdit();
 
         // GRECLIPSE-1478
         handleMultilineMethodParameters();
