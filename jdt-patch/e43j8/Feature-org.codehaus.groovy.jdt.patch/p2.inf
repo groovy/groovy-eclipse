@@ -1,4 +1,4 @@
 update.id = org.codehaus.groovy.jdt.patch.feature.group
 update.matchExp = providedCapabilities.exists(pc | pc.namespace \=\= 'org.eclipse.equinox.p2.iu' && (pc.name \=\= 'org.eclipse.jdt.java8patch.feature.group' || pc.name \=\= 'org.codehaus.groovy.jdt.patch.feature.group' && pc.version < '$version$'))
 update.severity = 0
-update.range = [0.0.0,2.9.1.xx-201403162337-e43j8)
+update.range = [0.0.0,2.9.2.xx-201403162337-e43j8)
