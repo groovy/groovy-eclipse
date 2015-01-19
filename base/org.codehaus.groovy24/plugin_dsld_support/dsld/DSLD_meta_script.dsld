@@ -1,0 +1,214 @@
+/*
+ * Copyright 2011 SpringSource
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package dsld
+
+import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.expr.MapEntryExpression
+
+/**
+ * This is the meta DSL descriptor for *.dsld files.
+ * 
+ * @author Andrew Eisenberg
+ * @since 2.5.1
+ */
+
+// first thing to do is to check that versions are correct
+// for this script to be evaluated any further, all conditions must be met
+// also supports grailsTooling and sts, which are synonyms and correspond to the STS version eg- 2.6.0
+// we can add more version checking on request
+supportsVersion(groovy:"1.7.10",groovyEclipse:"2.5.1")
+
+interface IPointcut {
+    /**
+     * Accepts a contribution group to this Pointcut. What this means
+     * is that whenever this pointcut evaluates to a match, then the
+     * contribution group is evaluated with the bindings that have 
+     * been generated from the pointcut match
+     *   
+     * @param group the contribution group to accept
+     * 
+     * @deprecated Use <code>contribution(<pointcut_expression>)</code> instead
+     */
+    @Deprecated
+    def accept(Closure group);
+}
+
+
+// You can store shared pointcuts in a variable
+// This particular pointcut matches all join points that are inside of a
+// groovy project and inside a file with a *.dsld extension and are scripts
+def dsldFile = nature("org.eclipse.jdt.groovy.core.groovyNature") & fileExtension("dsld") & isScript()
+
+// You can also create a closure around pointcuts and assign them to
+// a variable.  Note that when using these variables, you must include parens.
+def insideContribution = { (enclosingCallName("accept") | enclosingCallName("contribute")) & inClosure() }
+
+// Ensure that the 'accept' method is available for all closures and variables that correspond to pointcuts
+(dsldFile & ( ~ insideContribution() )  & ( ~currentType(subType(Script)) )).accept { delegatesTo IPointcut }
+
+// here we store all bound names inside of the wormhole so that they can be available later
+(dsldFile & enclosingCallDeclaringType(subType(Script)) & (~ enclosingCallName("supportsVersion")) &
+        ( ~ inClosure() ) & bind(var : currentIdentifier())).accept {
+            if (enclosingNode instanceof MapEntryExpression &&
+            var.contains(((MapEntryExpression) enclosingNode).keyExpression)) {
+                def bindings = wormhole.bindings
+                if (!bindings) {
+                    bindings = [ ] 
+                    wormhole.bindings = bindings
+                }
+                var.each { bindings << it.text }
+            }
+        }
+
+// Define the kinds of pointcuts
+// note the different ways of calling the two composite pointcuts
+// Also, be careful to use parens around negation '~' since operator precedence may make the '~' apply to the call to 'accept'
+(dsldFile & ( ~ insideContribution() ) & currentType(subType(Script)) & (~enclosingCallName("registerPointcut")) &
+        isThisType()).accept {
+            provider = "the meta-DSLD script"
+
+            // in here, we can list all pointcuts explicitly, or we can access the internal PointcutFactory object
+            // A little bit naughty, but this is the easiest way to maintain consistency with all possible pointcuts
+            // ...the PointcutFactory class is a secret class that is declared by groovy-eclipse
+            // Yes, you can use many Eclipse classes here.  The editor won't like them, so they must be fully qualified
+            // and you cannot import them or use them as types for variables
+
+            Map<String, String> pointcutNames = org.codehaus.groovy.eclipse.dsl.script.PointcutFactory.docRegistry
+            pointcutNames.each { pointcutName, pointcutDoc ->
+                method name : pointcutName, type: IPointcut, params : [pointcutArg : Object], doc : pointcutDoc,
+                        isDeprecated : org.codehaus.groovy.eclipse.dsl.script.PointcutFactory.deprecatedRegistry.contains(pointcutName)
+            }
+
+            method name : "contribute", type : void, params : [pointcut : IPointcut, contributionBlock : Closure],
+                    doc : "Associates a pointcut expression with a contribution block."
+
+            method name : "supportsVersion", type : void, params : [versionKindToName : Map.class ],
+                    doc : '''Specifies that this script is only active when the specified version constraints are met.  
+	  Currently, only 3 constraints are available: groovy, groovyEclipse, sts, and grailsTooling.<br><br>
+	  Use like this: 
+	  <pre>supportsVersion(groovy:"1.7.10",groovyEclipse:"2.1.3")</pre>
+	  This means that the current scipt requires <b>both</b> Groovy 1.7.10 or later and Groovy-Eclipse 2.1.3 or later'''
+
+            method name : "registerPointcut", type : void, params : [name : String, pointcutBody : Closure],
+                    doc : '''
+	Registers a custom pointcut.  This pointcut is only available from within the current script.
+	You must specify a name for the pointcut as well as a closure that evaluates whether or not there is a match'''
+
+            property name : "log", type: void, doc: "Logs a message to the Groovy Event Console.  Useful for debugging."
+        }
+
+// Here, specify everything that can be used inside of an accept block (also called a Contribution Group)
+(dsldFile & insideContribution()).accept {
+    provider = "the meta-DSLD script"
+    property name : "provider", type : String, doc : """Specifies a <em>Provider</em> for the current contribution.  
+	    This provider is displayed during content assist and in other places to give a quick hint as to where this 
+	    contribution elementcomes from."""
+    method name : "property",
+    namedParams : [
+        name : String,
+        type : Object,
+        isStatic : boolean],
+    optionalParams : [
+        declaringType : Object,
+        provider: String,
+        isDeprecated: Boolean,
+        isStatic: Boolean,
+        doc : String],
+    doc : """
+          Specifies a new property contribution.  <b>name</b> is mandatory, but all other parameters are optional.
+          """
+
+    method name : "method",
+    namedParams : [
+        name : String,
+        type : Object,
+        params : Map],
+    optionalParams : [
+        optionalParams : Map,
+        namedParams : Map,
+        isStatic : boolean,
+        declaringType : Object,
+        provider: String,
+        isDeprecated: Boolean,
+        doc : String],
+    doc : """
+          Specifies a new property contribution.  <b>name</b> is mandatory, but all other parameters are optional.
+          Use <code>namedParams</code> to specify parameters that should be named, and use <code>optionalParams</code> 
+          to specify parameters that will not appear in content assist.
+		  """
+
+//    method name : "delegatesTo", params : [ type : Object ], doc : """
+//			Specify that the currentType delegates to the given type.  The currentType is the type being analyzed.  
+//			And the given type is specified as a parameter (either a String, Class, AnnotatedNode).  All 
+//			methods of the given type will be available from the currentType.
+//			"""
+    method name : "delegatesToCategory", isDeprecated:true, params : [ type : Object ], doc : """
+			Specify that the currentType delegates to the given type.  The currentType is the type being analyzed.  
+			And the given type is specified as a parameter (either a String, Class, AnnotatedNode).  All 
+			methods of the given type will be available from the currentType.
+			"""
+    method name : "delegatesToUseNamedArgs", isDeprecated:true, params : [ type : Object ], doc : """
+			Specify that the currentType delegates to the given type.  The currentType is the type being analyzed.  
+			And the given type is specified as a parameter (either a String, Class, or ClassNode).  All fields and 
+			methods of the given type will be available from the currentType.<br/><br/>
+			Named arguments will be used for all methods.
+			"""
+
+    method name : "delegatesTo", namedParams : [type : Object], optionalParams : [useNamed: Boolean,
+        except: 'java.util.List<java.lang.String>', asCategory:Boolean], doc : """
+            Specify that the currentType delegates to the given type.  The currentType is the type being analyzed.  
+            And the given type is specified as a parameter (either a String, Class, or ClassNode).  All fields and 
+            methods of the given type will be available from the currentType.<br/><br/>
+            This variant allows you to specify options through the optional arguments.
+            @param type (required) type to delegate to
+            @param except (optional) list of method names to exclude from the delegation
+            @param useNamed (optional) boolean and if true named arguments are used
+            @param asCategory  (optional) boolean and if true, this delegation is treated as a category and the 
+            first parameter of each method is used to see if it is applicable for the current caller.
+            """
+
+    property name : "wormhole", type : Map, doc : """Use the wormhole to stuff in values calculated in one contribution group 
+			to make it available later in another contribution group"""
+
+    property name : "currentType", type : ClassNode,
+    doc : "This is the declaring type of the current expression being evaluated."
+    property name : "currentNode", type : ASTNode, doc : "This is the ASTNode being evaluated"
+    property name : "enclosingNode", type : ASTNode, doc : "This is the ASTNode enclosing the ASTNode being evaluated"
+
+    property name : "log", type: void, doc: "Logs a message to the Groovy Event Console.  Useful for debugging,"
+
+    method name : "setDelegateType", type : void, params : [newDelegateType : String],
+    doc : '''
+    Sets the delegate type inside a closure.  This is different from <code>delegatesTo</code> in that the receiving type
+    is changed in the current scope.  In <code>delegatesTo</code>, the scope is not changed.  Rather, the methods of the
+    delegate are added to the target type's list of recognized methods.
+    '''
+
+    // Now, extract all bindings from the wormhole and add them as contributions
+    for (binding in wormhole.bindings) {
+        property name : binding, type : Collection, doc : "Binding created from pointcut"
+    }
+}
+
+// Add the contributions for inside a "registerPointcut" call.  User-registered pointcuts are
+// not fully fleshed out yet, so best not to use them yet.
+(dsldFile & inClosure() & enclosingCallName("registerPointcut")).accept {
+    // a little naughty again...reference an internal Groovy-Eclipse type.
+    // this may be removed in future versions
+    property name : "currentScope", type : org.eclipse.jdt.groovy.search.VariableScope
+    property name : "currenType", type : ClassNode
+}

@@ -22,7 +22,7 @@ import org.osgi.framework.Version;
 public enum SpecifiedVersion {
     _16(1, 6, "16"), _17(1, 7, "17"), _18(1, 8, "18"), 
     _19(1, 9, "19"), _20(2, 0, "20"), _21(2,1,"21"),
-    _22(2,2,"22"),_23(2,3,"23"),DONT_CARE(0, 0, "-1"), UNSPECIFIED(0, 0, "0");
+    _22(2,2,"22"),_23(2,3,"23"),_24(2,4,"24"),DONT_CARE(0, 0, "-1"), UNSPECIFIED(0, 0, "0");
     public final int majorVersion;
     public final int minorVersion;
     public final String versionName;
@@ -129,6 +129,9 @@ public enum SpecifiedVersion {
         }
         if ("23".equals(compilerLevel) || "2.3".equals(compilerLevel)) {
             return _23;
+        }
+        if ("24".equals(compilerLevel) || "2.4".equals(compilerLevel)) {
+            return _24;
         }
         if ("0".equals(compilerLevel)) {
             return UNSPECIFIED;

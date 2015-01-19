@@ -80,7 +80,7 @@ public class SanityTest extends TestCase {
         // JDT 3.10 test against Groovy 2.3
         
         //Reality: all tests run against latest Groovy. I.e. 2.3.x
-        assertEquals("2.3", groovyVersion.getMajor() + "." +groovyVersion.getMinor());
+        assertEquals("2.4", groovyVersion.getMajor() + "." +groovyVersion.getMinor());
 
     }
     
