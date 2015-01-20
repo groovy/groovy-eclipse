@@ -7,7 +7,7 @@
     http://www.eclipse.org/legal/epl-v10.html
  -->
 <feature
-      id="org.codehaus.groovy23.feature"
+      id="org.codehaus.groovy24.feature"
       label="%featureName"
       version="2.9.1.qualifier"
       provider-name="%providerName"
