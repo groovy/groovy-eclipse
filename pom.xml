@@ -95,6 +95,7 @@
 		<module>ide/Feature-org.codehaus.groovy21.feature</module>
 		<module>ide/Feature-org.codehaus.groovy22.feature</module>
 		<module>ide/Feature-org.codehaus.groovy23.feature</module>
+		<module>ide/Feature-org.codehaus.groovy24.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.headless.feature</module>
 
 		<module>base/org.eclipse.jdt.groovy.core</module>
@@ -103,6 +104,7 @@
 		<module>base/org.codehaus.groovy21</module>
 		<module>base/org.codehaus.groovy22</module>
  		<module>base/org.codehaus.groovy23</module>
+ 		<module>base/org.codehaus.groovy24</module>
 		<module>base/org.codehaus.groovy.eclipse.compilerResolver</module>
 
 		<module>ide/org.codehaus.groovy.eclipse.ant</module>
