@@ -6,7 +6,7 @@ Bundle-Version: 2.4.0.qualifier
 Bundle-ClassPath: groovy-eclipse.jar,
  lib/ivy-2.3.0.jar,
  lib/bsf-2.4.0.jar,
- lib/groovy-all-2.4.0-rc-2.jar,
+ lib/groovy-all-2.4.0.jar,
  eclipse-trace.jar
 Groovy-Runtime-Jars: groovy.jar
 Export-Package: groovy.beans,
