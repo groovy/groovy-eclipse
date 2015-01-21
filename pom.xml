@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.codehaus.groovy.eclipse</groupId>
 	<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
-	<version>2.9.1-SNAPSHOT</version>
+	<version>2.9.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<!-- To run this build use the following commands (depending on what you 
@@ -324,7 +324,7 @@
 			<id>release</id>
 			<properties>
 				<dist.type>release</dist.type>
-				<dist.version>2.9.1</dist.version>
+				<dist.version>2.9.2</dist.version>
 				<dist.qualifier>-RELEASE</dist.qualifier>
 				<!-- use the below for 'practice' builds, comment out to do the 'real' build -->
 				<dist.path>${dist.type}/${dist.key}/${dist.version}/${dist.target}</dist.path>
