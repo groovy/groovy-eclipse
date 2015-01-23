@@ -35,7 +35,7 @@
    <feature url="features/org.codehaus.groovy23.feature_2.9.2.qualifier.jar" id="org.codehaus.groovy23.feature" version="2.9.2.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
-   <feature url="features/org.codehaus.groovy24.feature_2.9.2.qualifier.jar" id="org.codehaus.groovy23.feature" version="2.9.2.qualifier">
+   <feature url="features/org.codehaus.groovy24.feature_2.9.2.qualifier.jar" id="org.codehaus.groovy24.feature" version="2.9.2.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
    </feature>
    
