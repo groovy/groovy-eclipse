@@ -345,14 +345,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				}
 				ref.sourceEnd = Math.max(typeEndOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
 				if (ref.sourceEnd == -1) {
+					//synthetic node. Set all source positions to 'unknown'.
 					ref.sourceEnd = -2;
+					ref.declarationSourceStart = -1;
+					ref.declarationSourceEnd = -2;
+					ref.declarationEnd = -2;
+				} else {
+					int start = importNode.getStart();
+					ref.declarationSourceStart = start;
+					int end = importNode.getEnd();
+					ref.declarationSourceEnd = end;
+					ref.declarationEnd = ref.sourceEnd;
 				}
-				int start = importNode.getStart();
-				ref.declarationSourceStart = start;
-				int end = importNode.getEnd();
-				ref.declarationSourceEnd = end;
-
-				ref.declarationEnd = ref.sourceEnd;
 				importReferences.add(ref);
 			}
 
