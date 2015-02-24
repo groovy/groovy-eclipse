@@ -60,14 +60,14 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
     }
     
     protected void assertTypeOneOf(String contents, int start, int end,
-			String... expectedTypes) throws Exception {
+			String... expectedTypes) throws Throwable {
     	boolean ok = false;
-    	Exception error = null;
+    	Throwable error = null;
     	for (int i = 0; !ok && i < expectedTypes.length; i++) {
     		try {
     			assertType(contents, expectedTypes[i]);
     			ok = true;
-    		} catch (Exception e) {
+    		} catch (Throwable e) {
     			error = e;
     		}
 		}

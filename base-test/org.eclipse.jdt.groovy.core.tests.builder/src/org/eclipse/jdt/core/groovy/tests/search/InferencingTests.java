@@ -213,7 +213,7 @@ public class InferencingTests extends AbstractInferencingTest {
     }
     
     // Should be java.util.List<java.lang.String>
-    public void testInferList2() throws Exception {
+    public void testInferList2() throws Throwable {
         String contents = "def x = [] << \"\"\nx";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
