@@ -59,6 +59,29 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
         assertType(contents, exprStart, exprEnd, expectedType, false);
     }
     
+    protected void assertTypeOneOf(String contents, int start, int end,
+			String... expectedTypes) throws Exception {
+    	boolean ok = false;
+    	Exception error = null;
+    	for (int i = 0; !ok && i < expectedTypes.length; i++) {
+    		try {
+    			assertType(contents, expectedTypes[i]);
+    			ok = true;
+    		} catch (Exception e) {
+    			error = e;
+    		}
+		}
+    	if (!ok) {
+    		if (error!=null) {
+    			throw error;
+    		} else {
+    			fail("assertTypeOneOf must be called with at least one expectedType");
+    		}
+    	}
+	}
+
+    
+    
 	public static void assertType(GroovyCompilationUnit contents, int start, int end, String expectedType) {
         assertType(contents, start, end, expectedType, false);
 	}

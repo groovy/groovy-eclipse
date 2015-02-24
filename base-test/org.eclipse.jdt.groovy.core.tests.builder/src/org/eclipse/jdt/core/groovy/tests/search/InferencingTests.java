@@ -217,11 +217,14 @@ public class InferencingTests extends AbstractInferencingTest {
         String contents = "def x = [] << \"\"\nx";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
-        assertType(contents, start, end, "java.util.Collection<java.lang.Object>");
+        assertTypeOneOf(contents, start, end, 
+        		"java.util.Collection<java.lang.Object>",
+        		"java.util.List<java.lang.Object>"
+        );
     }
     
     
-    public void testInferClosure1() throws Exception {
+	public void testInferClosure1() throws Exception {
         assertType("x.&y", "groovy.lang.Closure");
     }
     
