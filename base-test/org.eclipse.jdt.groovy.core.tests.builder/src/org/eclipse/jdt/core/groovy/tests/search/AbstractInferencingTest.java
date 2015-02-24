@@ -65,7 +65,7 @@ public abstract class AbstractInferencingTest extends AbstractGroovySearchTest {
     	Throwable error = null;
     	for (int i = 0; !ok && i < expectedTypes.length; i++) {
     		try {
-    			assertType(contents, expectedTypes[i]);
+    			assertType(contents, start, end, expectedTypes[i]);
     			ok = true;
     		} catch (Throwable e) {
     			error = e;
