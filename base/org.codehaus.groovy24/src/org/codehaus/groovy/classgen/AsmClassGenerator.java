@@ -862,7 +862,7 @@ public class AsmClassGenerator extends ClassGenerator {
             if (isSuperExpression(objectExpression)) {
                 String prefix;
                 if (controller.getCompileStack().isLHS()) {
-                    prefix = "set";
+                    throw new GroovyBugError("Unexpected super property set for:"+expression.getText());
                 } else {
                     prefix = "get";
                 }
@@ -1182,7 +1182,7 @@ public class AsmClassGenerator extends ClassGenerator {
 
             mv.visitMethodInsn(INVOKESPECIAL, "org/codehaus/groovy/runtime/ScriptReference", "<init>", "(Lgroovy/lang/Script;Ljava/lang/String;)V", false);
         } else {
-            PropertyExpression pexp = new PropertyExpression(VariableExpression.THIS_EXPRESSION, name);
+            PropertyExpression pexp = new PropertyExpression(new VariableExpression("this"), name);
             pexp.setImplicitThis(true);
             visitPropertyExpression(pexp);
         }

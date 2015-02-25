@@ -4333,9 +4333,16 @@ options {
         (
             DOLLAR_REGEXP_SYMBOL
             tt=DOLLAR_REGEXP_CTOR_END[true]
-        | {!atValidDollarEscape()}? '$'
+        | {!atValidDollarEscape() && !atDollarSlashEscape() && !atDollarDollarEscape()}? '$'
             tt=DOLLAR_REGEXP_CTOR_END[true]
-        | '$'!
+        |
+            ('$' '/') => ESCAPED_SLASH
+            tt=DOLLAR_REGEXP_CTOR_END[true]
+        |
+            ('$' '$') => ESCAPED_DOLLAR
+            tt=DOLLAR_REGEXP_CTOR_END[true]
+        |
+            '$'!
             {
                 // Yes, it's a regexp constructor, and we've got a value part.
                 tt = STRING_CTOR_START;
