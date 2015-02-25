@@ -621,7 +621,7 @@ public abstract class StaticTypeCheckingSupport {
         if (leftRedirect==rightRedirect) return true;
 
         if (leftRedirect.isArray() && rightRedirect.isArray()) {
-            return checkCompatibleAssignmentTypes(leftRedirect.getComponentType(), rightRedirect.getComponentType(), rightExpression, allowConstructorCoercion);
+            return checkCompatibleAssignmentTypes(leftRedirect.getComponentType(), rightRedirect.getComponentType(), rightExpression, false);
         }
 
         if (right==VOID_TYPE||right==void_WRAPPER_TYPE) {
@@ -692,11 +692,7 @@ public abstract class StaticTypeCheckingSupport {
 
         // if right is array, map or collection we try invoking the
         // constructor
-        if (allowConstructorCoercion && (rightRedirect.implementsInterface(MAP_TYPE) ||
-                rightRedirect.implementsInterface(Collection_TYPE) ||
-                rightRedirect.equals(MAP_TYPE) ||
-                rightRedirect.equals(Collection_TYPE) ||
-                rightRedirect.isArray())) {
+        if (allowConstructorCoercion && isGroovyConstructorCompatible(rightExpression)) {
             //TODO: in case of the array we could maybe make a partial check
             if (leftRedirect.isArray() && rightRedirect.isArray()) {
                 return checkCompatibleAssignmentTypes(leftRedirect.getComponentType(), rightRedirect.getComponentType());
@@ -725,6 +721,12 @@ public abstract class StaticTypeCheckingSupport {
         return false;
     }
     
+    private static boolean isGroovyConstructorCompatible(final Expression rightExpression) {
+        return rightExpression instanceof ListExpression
+                || rightExpression instanceof MapExpression
+                || rightExpression instanceof ArrayExpression;
+    }
+
     /**
      * Tells if a class is one of the "accept all" classes as the left hand side of an
      * assignment.
@@ -1984,9 +1986,22 @@ public abstract class StaticTypeCheckingSupport {
             Collections.addAll(instanceExtClasses, DefaultGroovyMethods.additionals);
             staticExtClasses.add(DefaultGroovyStaticMethods.class);
             instanceExtClasses.add(ObjectArrayStaticTypesHelper.class);
-            List<Class> allClasses = new ArrayList<Class>(instanceExtClasses.size()+staticExtClasses.size());
-            allClasses.addAll(instanceExtClasses);
-            allClasses.addAll(staticExtClasses);
+
+            scanClassesForDGMMethods(methods, staticExtClasses, true);
+            scanClassesForDGMMethods(methods, instanceExtClasses, false);
+            
+            return methods;
+        }
+
+        /**
+         * 
+         * @return
+         * @param accumulator
+         * @param allClasses
+         * @param isStatic
+         */
+        private static void scanClassesForDGMMethods(Map<String, List<MethodNode>> accumulator,
+                                                    Iterable<Class> allClasses, boolean isStatic) {
             for (Class dgmLikeClass : allClasses) {
                 ClassNode cn = ClassHelper.makeWithoutCaching(dgmLikeClass, true);
                 for (MethodNode metaMethod : cn.getMethods()) {
@@ -2002,22 +2017,21 @@ public abstract class StaticTypeCheckingSupport {
                                 metaMethod.getReturnType(),
                                 parameters,
                                 ClassNode.EMPTY_ARRAY, null,
-                                staticExtClasses.contains(dgmLikeClass));
+                                isStatic);
                         node.setGenericsTypes(metaMethod.getGenericsTypes());
                         ClassNode declaringClass = types[0].getType();
                         String declaringClassName = declaringClass.getName();
                         node.setDeclaringClass(declaringClass);
 
-                        List<MethodNode> nodes = methods.get(declaringClassName);
+                        List<MethodNode> nodes = accumulator.get(declaringClassName);
                         if (nodes == null) {
                             nodes = new LinkedList<MethodNode>();
-                            methods.put(declaringClassName, nodes);
+                            accumulator.put(declaringClassName, nodes);
                         }
                         nodes.add(node);
                     }
                 }
             }
-            return methods;
         }
 
     }

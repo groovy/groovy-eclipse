@@ -107,6 +107,10 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         return classNode;
     }
 
+    protected void setClassNode(ClassNode classNode) {
+        this.classNode = classNode;
+    }
+
     public MethodNode getMethodNode() {
         return methodNode;
     }
@@ -970,6 +974,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         		}
         }
         }
+        if (!Traits.isTrait(node)) {
         // GRECLIPSE - conditionally 'copy' the initializers into the ctors
         if (inlineFieldInitializersIntoInit) {
         // GRECLIPSE - end
@@ -978,6 +983,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 	        			initStmtsAfterEnumValuesInit, explicitStaticPropsInEnum);
 	        }
 	    // GRECLIPSE - start
+        }
         }
         // GRECLIPSE - end
         statements.addAll(node.getObjectInitializerStatements());
@@ -1459,7 +1465,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     }
     
     private boolean moveOptimizedConstantsInitialization(final ClassNode node) {
-        if (node.isInterface()) return false;
+        if (node.isInterface() && !Traits.isTrait(node)) return false;
 
         final int mods = Opcodes.ACC_STATIC|Opcodes.ACC_SYNTHETIC| Opcodes.ACC_PUBLIC;
         String name = SWAP_INIT;
@@ -1475,6 +1481,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             final FieldExpression fe = new FieldExpression(fn);
             if (fn.getType().equals(ClassHelper.REFERENCE_TYPE)) fe.setUseReferenceDirectly(true);
             ConstantExpression init = (ConstantExpression) fn.getInitialExpression();
+            init = new ConstantExpression(init.getValue(), true);
             ExpressionStatement statement =
                     new ExpressionStatement(
                             new BinaryExpression(
@@ -1482,7 +1489,6 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                                     Token.newSymbol(Types.EQUAL, fn.getLineNumber(), fn.getColumnNumber()),
                                     init));
             fn.setInitialValueExpression(null);
-            init.setConstantName(null);
             methodCode.addStatement(statement);
         }
         

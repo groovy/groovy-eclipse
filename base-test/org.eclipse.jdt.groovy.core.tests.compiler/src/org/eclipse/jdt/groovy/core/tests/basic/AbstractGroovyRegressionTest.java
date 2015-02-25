@@ -38,7 +38,7 @@ public abstract class AbstractGroovyRegressionTest extends AbstractRegressionTes
         try {
         	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.4.1.jar");
         	if (groovyJar==null) {
-	        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.3.7.jar");
+	        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.3.10.jar");
 	        	if (groovyJar==null) {
 		        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.2.2.jar");
 		        	if (groovyJar==null) {
