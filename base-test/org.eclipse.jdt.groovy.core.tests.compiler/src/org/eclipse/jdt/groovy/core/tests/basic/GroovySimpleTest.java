@@ -11890,23 +11890,23 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
                 "println 'done'"}, "done", augmented, true, null, options, null);
     }
 
-	public void testSts3930() {
-		this.runConformTest(new String[] {
-				"GroovyDemo.groovy",
-				"package demo\n"+
-				"class GroovyDemo {\n" +
-				"    static <T> List someMethod(Class<T> factoryClass, ClassLoader classLoader = GroovyDemo.class.classLoader) {}\n" +
-				"}",
-				"JavaDemo.java",
-				"package demo;\n"+
-				"public class JavaDemo {\n" +
-				"    public static void someMethod() {\n" +
-				"        GroovyDemo.someMethod(JavaDemo.class);\n" +
-				"    }\n" +
-				"}\n",
-				},
-				"");
-	}
+//	public void testSts3930() {
+//		this.runConformTest(new String[] {
+//				"GroovyDemo.groovy",
+//				"package demo\n"+
+//				"class GroovyDemo {\n" +
+//				"    static <T> List someMethod(Class<T> factoryClass, ClassLoader classLoader = GroovyDemo.class.classLoader) {}\n" +
+//				"}",
+//				"JavaDemo.java",
+//				"package demo;\n"+
+//				"public class JavaDemo {\n" +
+//				"    public static void someMethod() {\n" +
+//				"        GroovyDemo.someMethod(JavaDemo.class);\n" +
+//				"    }\n" +
+//				"}\n",
+//				},
+//				"");
+//	}
 
 	// FIXASC what does this actually mean to groovy?  from GrailsPluginUtils
 //  static Resource[] getPluginXmlMetadata(String pluginsDirPath) {
