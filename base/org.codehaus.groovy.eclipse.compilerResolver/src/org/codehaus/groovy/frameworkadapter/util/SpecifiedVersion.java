@@ -166,7 +166,9 @@ public enum SpecifiedVersion {
                     case 2:
                         return _22; 
                     case 3:
-                        return _23; 
+                        return _23;
+                    case 4:
+                    	return _24;
                 }                
         }
         return UNSPECIFIED;
