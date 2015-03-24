@@ -89,6 +89,10 @@ public enum SpecifiedVersion {
                                     return _21;
                                 case 2:
                                     return _22;
+                                case 3:
+                                    return _23;
+                                case 4:
+                                    return _24;
                             }
                             break;
     
@@ -141,7 +145,7 @@ public enum SpecifiedVersion {
         }
         
         System.out.println("Invalid Groovy compiler level specified: " + compilerLevel + 
-                        "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, 2.2, 23 or 2.3");
+                        "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, 2.2, 23, 2.3, 24 or 2.4");
         return UNSPECIFIED;
     }
 

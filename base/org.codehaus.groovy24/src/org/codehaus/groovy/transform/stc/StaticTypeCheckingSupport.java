@@ -443,7 +443,7 @@ public abstract class StaticTypeCheckingSupport {
         return false;
     }
 
-    static boolean isCompareToBoolean(int op) {
+    public static boolean isCompareToBoolean(int op) {
         return op == COMPARE_GREATER_THAN ||
                 op == COMPARE_GREATER_THAN_EQUAL ||
                 op == COMPARE_LESS_THAN ||
@@ -719,9 +719,20 @@ public abstract class StaticTypeCheckingSupport {
         		return true;
         }
 
-        return false;
+        if (left.isGenericsPlaceHolder()) {
+            // GROOVY-7307
+            GenericsType[] genericsTypes = left.getGenericsTypes();
+            if (genericsTypes!=null && genericsTypes.length==1) {
+                // should always be the case, but safe guard is better
+                return genericsTypes[0].isCompatibleWith(right);
+            }
     }
     
+        // GROOVY-7316 : it is an apparently legal thing to allow this. It's not type safe,
+        // but it is allowed...
+        return right.isGenericsPlaceHolder();
+    }
+
     private static boolean isGroovyConstructorCompatible(final Expression rightExpression) {
         return rightExpression instanceof ListExpression
                 || rightExpression instanceof MapExpression
@@ -1571,8 +1582,12 @@ public abstract class StaticTypeCheckingSupport {
                 compareNode = getCombinedBoundType(resolved);
                 compareNode = compareNode.redirect().getPlainNodeReference();
             } else {
+            if (!resolved.isPlaceholder()) {
                 compareNode = resolved.getType().getPlainNodeReference();
+            } else {
+                return true;
                     }
+        }
         return gt.isCompatibleWith(compareNode);
             }
 
@@ -1994,13 +2009,6 @@ public abstract class StaticTypeCheckingSupport {
             return methods;
         }
 
-        /**
-         * 
-         * @return
-         * @param accumulator
-         * @param allClasses
-         * @param isStatic
-         */
         private static void scanClassesForDGMMethods(Map<String, List<MethodNode>> accumulator,
                                                     Iterable<Class> allClasses, boolean isStatic) {
             for (Class dgmLikeClass : allClasses) {

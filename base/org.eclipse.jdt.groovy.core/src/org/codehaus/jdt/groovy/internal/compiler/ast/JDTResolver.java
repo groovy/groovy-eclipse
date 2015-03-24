@@ -38,14 +38,14 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 /**
  * An extension to the standard groovy ResolveVisitor that can ask JDT for types when groovy cannot find them. A groovy project in
  * Eclipse is typically configured with very limited knowledge of its dependencies so most lookups are through JDT.
- * 
+ *
  * Resolver lifecycle:<br>
  * The JDTResolver is created at the same time as the (Groovy) CompilationUnit. The CompilationUnit knows about all the code that is
  * to be compiled together. The resolver maintains a cache from Binding to JDTClassNode and the cache contents have the same
  * lifetime as the JDTResolver. The resolver does type lookups through the currently active scope - the active scope is set when the
  * method 'commencingResolution()' is called. This is called by the superclass (ResolveVisitor) when it is about to start resolving
  * every reference in a type.
- * 
+ *
  * @author Andy Clement
  */
 public class JDTResolver extends ResolveVisitor {
@@ -462,7 +462,7 @@ public class JDTResolver extends ResolveVisitor {
 	/**
 	 * Create a Groovy ClassNode that represents the JDT TypeBinding. Build the basic structure, mark it as 'in progress' and then
 	 * continue with initialization. This allows self referential generic declarations.
-	 * 
+	 *
 	 * @param jdtBinding the JDT binding for which to create a ClassNode
 	 * @return the new ClassNode, of type JDTClassNode
 	 */
