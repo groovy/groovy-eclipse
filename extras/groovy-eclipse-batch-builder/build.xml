@@ -124,7 +124,7 @@
           target: -init   
           create properties and filesets                   
          - - - - - - - - - - - - - - - - - -->
-	<target name="-init" depends="-fail-if-no-version-specified,-init17,-init18,-init20,-init21,-init22,-init23">
+	<target name="-init" depends="-fail-if-no-version-specified,-init17,-init18,-init20,-init21,-init22,-init23,-init24">
 		<property name="jar.prefix" value="groovy-eclipse-batch"/>
 
 		<property name="jar.name" value="${jar.prefix}-${version}.jar"/>
@@ -226,6 +226,14 @@
     	 <property name="groovy.folder" value="org.codehaus.groovy23"/>
     </target>
 	
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: -init24
+         - - - - - - - - - - - - - - - - - -->
+    <target name="-init24" if="do-24-build">
+    	<echo message="Building groovy 2.4.x"/>
+       <property name="version" value="${version2.4}"/>
+    	 <property name="groovy.folder" value="org.codehaus.groovy24"/>
+    </target>
 	
 	<target name="-check-build-version">
 		<property file="build.properties"/>
@@ -238,13 +246,14 @@
 				<isset property="do-21-build"/>
 				<isset property="do-22-build"/>
 				<isset property="do-23-build"/>
+				<isset property="do-24-build"/>
 			</or>
 			</not>
 		</condition>
 	</target>
 
 	<target name="-fail-if-no-version-specified" depends="-check-build-version" if="no-version-specified">
-		<fail message="You must set exactly one of do-17-build, do-18-build, or do-20-build to specify a groovy version to build"/>
+		<fail message="You must set exactly one of do-17-build, ... do-24-build to specify a groovy version to build"/>
 	</target>
 	
 	

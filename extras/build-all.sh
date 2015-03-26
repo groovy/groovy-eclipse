@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# rm -fr ~/.m2/repository
+rm -fr ~/.m2/repository/org/codehaus/groovy
 
 echo Building groovy-eclipse-batch and installing to maven local
 cd groovy-eclipse-batch-builder
