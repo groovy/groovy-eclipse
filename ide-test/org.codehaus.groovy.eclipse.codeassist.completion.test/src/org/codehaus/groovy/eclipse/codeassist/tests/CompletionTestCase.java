@@ -338,6 +338,9 @@ public abstract class CompletionTestCase extends BuilderTests {
         }
         
         IPath pathToGroovyClass = env.addGroovyClass(pack, "TransformerTest2", contents);
+        System.err.println("--- TransformerTest2.groovy ---");
+        System.err.println(contents);
+        System.err.println("--- TransformerTest2.groovy ---");
         fullBuild();
         // don't do this here since many completion tests intentionally have errors
         // expectingNoProblems();
