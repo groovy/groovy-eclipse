@@ -136,7 +136,8 @@
 				<repository>
 					<id>e45</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.5</url>
+					<!-- TODO: after mars release use this: <url>http://download.eclipse.org/eclipse/updates/4.5</url> -->
+					<url>http://download.eclipse.org/eclipse/updates/4.5milestones</url>
 				</repository>
 				<!-- <repository> <id>kepler</id> <layout>p2</layout> <url>http://download.eclipse.org/releases/luna</url> 
 					</repository> -->
