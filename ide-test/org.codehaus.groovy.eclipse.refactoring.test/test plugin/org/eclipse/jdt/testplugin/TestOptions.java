@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.testplugin;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -20,7 +21,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 
-import org.eclipse.jdt.internal.formatter.align.Alignment;
 
 import org.eclipse.jdt.ui.PreferenceConstants;
 
@@ -448,24 +448,43 @@ class TestFormatterOptions {
 		options.put(DefaultCodeFormatterConstants.FORMATTER_NEVER_INDENT_LINE_COMMENTS_ON_FIRST_COLUMN, this.never_indent_line_comments_on_first_column ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		return options;
 	}
+	
+	int getAlignmentOption(String name) {
+		try {
+			try {
+				// e45
+				Class<?> clazz = Class.forName("org.eclipse.jdt.internal.formatter.DefaultCodeFormatterOptions.Alignment");
+				Field f = clazz.getDeclaredField(name);
+				return f.getInt(null);
+			} catch (ClassNotFoundException cnfe) {
+				// < e45
+				Class<?> clazz = Class.forName("org.eclipse.jdt.internal.formatter.align.Alignment");
+				Field f = clazz.getDeclaredField(name);
+				return f.getInt(null);
+			}
+		} catch (Exception e) {
+			return -1;
+		}		
+	}
+	
 
 	private void setDefaultSettings() {
-		this.alignment_for_arguments_in_allocation_expression = Alignment.M_COMPACT_SPLIT;
-		this.alignment_for_arguments_in_explicit_constructor_call = Alignment.M_COMPACT_SPLIT;
-		this.alignment_for_arguments_in_method_invocation = Alignment.M_COMPACT_SPLIT;
-		this.alignment_for_arguments_in_qualified_allocation_expression = Alignment.M_COMPACT_SPLIT;
-		this.alignment_for_binary_expression = Alignment.M_COMPACT_SPLIT;
-		this.alignment_for_compact_if = Alignment.M_ONE_PER_LINE_SPLIT | Alignment.M_INDENT_BY_ONE;
-		this.alignment_for_conditional_expression = Alignment.M_ONE_PER_LINE_SPLIT;
-		this.alignment_for_expressions_in_array_initializer = Alignment.M_COMPACT_SPLIT;
-		this.alignment_for_multiple_fields = Alignment.M_COMPACT_SPLIT;
-		this.alignment_for_parameters_in_constructor_declaration = Alignment.M_COMPACT_SPLIT;
-		this.alignment_for_parameters_in_method_declaration = Alignment.M_COMPACT_SPLIT;
-		this.alignment_for_selector_in_method_invocation = Alignment.M_COMPACT_SPLIT;
-		this.alignment_for_superclass_in_type_declaration = Alignment.M_NEXT_SHIFTED_SPLIT;
-		this.alignment_for_superinterfaces_in_type_declaration = Alignment.M_NEXT_SHIFTED_SPLIT;
-		this.alignment_for_throws_clause_in_constructor_declaration = Alignment.M_COMPACT_SPLIT;
-		this.alignment_for_throws_clause_in_method_declaration = Alignment.M_COMPACT_SPLIT;
+		this.alignment_for_arguments_in_allocation_expression = getAlignmentOption("M_COMPACT_SPLIT");
+		this.alignment_for_arguments_in_explicit_constructor_call =  getAlignmentOption("M_COMPACT_SPLIT");
+		this.alignment_for_arguments_in_method_invocation =  getAlignmentOption("M_COMPACT_SPLIT");
+		this.alignment_for_arguments_in_qualified_allocation_expression =  getAlignmentOption("M_COMPACT_SPLIT");
+		this.alignment_for_binary_expression =  getAlignmentOption("M_COMPACT_SPLIT");
+		this.alignment_for_compact_if =  getAlignmentOption("M_ONE_PER_LINE_SPLIT") |  getAlignmentOption("M_INDENT_BY_ONE");
+		this.alignment_for_conditional_expression =  getAlignmentOption("M_ONE_PER_LINE_SPLIT");
+		this.alignment_for_expressions_in_array_initializer =  getAlignmentOption("M_COMPACT_SPLIT");
+		this.alignment_for_multiple_fields =  getAlignmentOption("M_COMPACT_SPLIT");
+		this.alignment_for_parameters_in_constructor_declaration =  getAlignmentOption("M_COMPACT_SPLIT");
+		this.alignment_for_parameters_in_method_declaration =  getAlignmentOption("M_COMPACT_SPLIT");
+		this.alignment_for_selector_in_method_invocation =  getAlignmentOption("M_COMPACT_SPLIT");
+		this.alignment_for_superclass_in_type_declaration =  getAlignmentOption("M_NEXT_SHIFTED_SPLIT");
+		this.alignment_for_superinterfaces_in_type_declaration =  getAlignmentOption("M_NEXT_SHIFTED_SPLIT");
+		this.alignment_for_throws_clause_in_constructor_declaration =  getAlignmentOption("M_COMPACT_SPLIT");
+		this.alignment_for_throws_clause_in_method_declaration =  getAlignmentOption("M_COMPACT_SPLIT");
 		this.align_type_members_on_columns = false;
 		this.brace_position_for_anonymous_type_declaration = DefaultCodeFormatterConstants.END_OF_LINE;
 		this.brace_position_for_array_initializer = DefaultCodeFormatterConstants.END_OF_LINE;
