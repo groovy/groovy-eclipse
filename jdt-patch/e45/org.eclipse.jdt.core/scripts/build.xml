@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) 2007, 2014 IBM Corporation and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+    
+    Contributors:
+        IBM Corporation - initial API and implementation
+ -->
+
+<project name="export-executable" default="build" basedir=".">
+
+	<property name="output" value="bin" />
+	<property name="jar_file" value="ecj.jar" />
+
+	<target name="build">
+		<delete file="${basedir}/${jar_file}" failonerror="no" />
+		<delete dir="${output}" failonerror="no" />
+		<mkdir dir="${output}" />
+
+		<javac srcdir="${basedir}" destdir="${output}"
+					debuglevel="lines,source"
+					source="1.6"
+					target="1.6">
+			<compilerarg line="-Xlint:none"/>
+		</javac>
+
+		<delete file="${basedir}/META-INF/MANIFEST.MF" failonerror="false"/>
+		<copy tofile="${basedir}/META-INF/MANIFEST.MF" file="${basedir}/scripts/binary/META-INF/MANIFEST.MF"/>
+		<zip destfile="${basedir}/${jar_file}">
+			<fileset dir="${output}" />
+			<fileset dir="${basedir}">
+				<include name="about.html"/>
+				<include name="ecj.1"/>
+				<include name="**/*.rsc"/>
+				<include name="**/readableNames.props"/>
+				<include name="META-INF/**"/>
+				<include name="**/*.properties"/>
+				<exclude name="META-INF/eclipse.inf"/>
+			</fileset>
+		</zip>
+		<delete dir="${output}" />
+	</target>
+</project>
