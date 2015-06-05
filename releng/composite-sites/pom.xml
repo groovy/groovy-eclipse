@@ -43,7 +43,7 @@
 		<dist.path>release/GRECLIPSE-test</dist.path>
 		<!-- if you change dist.targets you also have to change the list of <items> embedded in the 
 		     build-loqic below -->
-		<dist.targets>e4.4,e4.3,e4.3-j8,e4.2,e3.7</dist.targets>
+		<dist.targets>e4.5,e4.4,e4.3,e4.3-j8,e4.2,e3.7</dist.targets>
 	</properties>
 
 	<profiles>
@@ -134,6 +134,7 @@
 					<configuration> 
 						<items>
 							<!-- It would be nice to define the list of items as a variable up top but this not possible. -->
+							<item>e4.5</item>
 							<item>e4.4</item>
 							<item>e4.3</item>
 							<item>e4.3-j8</item>
