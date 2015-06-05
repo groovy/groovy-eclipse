@@ -99,7 +99,6 @@ import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.compiler.impl.IrritantSet;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.LocalTypeBinding;
@@ -165,7 +164,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		for (int c = 0, max = groovyComments.size(); c < max; c++) {
 			Comment groovyComment = groovyComments.get(c);
 			this.comments[c] = groovyComment.getPositions(compilationResult.lineSeparatorPositions);
-			// System.out.println("Comment recorded on " + groovySourceUnit.getName() + "  " + this.comments[c][0] + ">"
+			// System.out.println("Comment recorded on " + groovySourceUnit.getName() + " " + this.comments[c][0] + ">"
 			// + this.comments[c][1]);
 		}
 	}
@@ -252,9 +251,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 					// Also need to record these problems as compiler errors since some users will not think to check the log
 					// This is mostly a fix for problems like those in GRECLIPSE-1420, where a GBError is thrown when it is really
 					// just a syntax problem.
-					groovySourceUnit.getErrorCollector().addError(
-							new SyntaxErrorMessage(new SyntaxException("Internal groovy compiler error.\n" + gbr.getBugText(), gbr,
-									1, 0), groovySourceUnit));
+					groovySourceUnit.getErrorCollector()
+							.addError(new SyntaxErrorMessage(
+									new SyntaxException("Internal groovy compiler error.\n" + gbr.getBugText(), gbr, 1, 0),
+									groovySourceUnit));
 					recordProblems(groovySourceUnit.getErrorCollector().getErrors());
 				}
 			}
@@ -337,15 +337,15 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				}
 				if (importNode.getAlias() != null && importNode.getAlias().length() > 0) {
 					// FIXASC will need extra positional info for the 'as' and the alias
-					ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positionsFor(splits,
-							typeStartOffset, typeEndOffset), false, ClassFileConstants.AccDefault);
+					ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits,
+							positionsFor(splits, typeStartOffset, typeEndOffset), false, ClassFileConstants.AccDefault);
 				} else {
 					ref = new ImportReference(splits, positionsFor(splits, typeStartOffset, typeEndOffset), false,
 							ClassFileConstants.AccDefault);
 				}
 				ref.sourceEnd = Math.max(typeEndOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
 				if (ref.sourceEnd == -1) {
-					//synthetic node. Set all source positions to 'unknown'.
+					// synthetic node. Set all source positions to 'unknown'.
 					ref.sourceEnd = -2;
 					ref.declarationSourceStart = -1;
 					ref.declarationSourceEnd = -2;
@@ -389,8 +389,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				int typeEndOffset = endOffset(type);
 				if (importNode.getAlias() != null && importNode.getAlias().length() > 0) {
 					// FIXASC will need extra positional info for the 'as' and the alias
-					ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positionsFor(splits,
-							typeStartOffset, typeEndOffset), false, ClassFileConstants.AccDefault | ClassFileConstants.AccStatic);
+					ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits,
+							positionsFor(splits, typeStartOffset, typeEndOffset), false,
+							ClassFileConstants.AccDefault | ClassFileConstants.AccStatic);
 				} else {
 					ref = new ImportReference(splits, positionsFor(splits, typeStartOffset, typeEndOffset), false,
 							ClassFileConstants.AccDefault | ClassFileConstants.AccStatic);
@@ -545,7 +546,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
 								ArrayInitializer arrayInitializer = new ArrayInitializer();
 								arrayInitializer.expressions = new org.eclipse.jdt.internal.compiler.ast.Expression[listOfExpressions
-								                                                                                    .size()];
+										.size()];
 								for (int c = 0; c < listOfExpressions.size(); c++) {
 									ConstantExpression cExpression = (ConstantExpression) listOfExpressions.get(c);
 									String v = (String) cExpression.getValue();
@@ -814,8 +815,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 						ClassNode outerClass = inner.getClassNode().getOuterClass();
 						enclosingMethodGroovy = outerClass.getMethod("run", new Parameter[0]);
 						if (enclosingMethodGroovy == null) {
-							throw new GroovyEclipseBug("Failed to find the enclosing method for anonymous type "
-									+ inner.getClassNode().getName());
+							throw new GroovyEclipseBug(
+									"Failed to find the enclosing method for anonymous type " + inner.getClassNode().getName());
 						}
 					}
 					AbstractMethodDeclaration enclosingMethodJDT = enclosingMethodMap.get(enclosingMethodGroovy);
@@ -854,7 +855,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	private boolean isAnon(ClassNode classNode) {
 		// FIXADE does Groovy support non-anon local types???
 		return classNode.getEnclosingMethod() != null
-		// check to see if anon type inside of a script
+				// check to see if anon type inside of a script
 				|| (classNode.getOuterClass() != null && classNode.getOuterClass().isScript());
 	}
 
@@ -933,8 +934,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				if (!isSynthetic) {
 					// JavaStubGenerator ignores private fields but I don't
 					// think we want to here
-					FieldDeclarationWithInitializer fieldDeclaration = new FieldDeclarationWithInitializer(fieldNode.getName()
-							.toCharArray(), 0, 0);
+					FieldDeclarationWithInitializer fieldDeclaration = new FieldDeclarationWithInitializer(
+							fieldNode.getName().toCharArray(), 0, 0);
 					fieldDeclaration.annotations = transformAnnotations(fieldNode.getAnnotations());
 					if (!isEnumField) {
 						fieldDeclaration.modifiers = fieldNode.getModifiers() & ~0x4000; // 4000 == AccEnum
@@ -999,8 +1000,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			constructorDeclaration.arguments = createArguments(constructorNode.getParameters(), false);
 			constructorDeclaration.thrownExceptions = createTypeReferencesForClassNodes(constructorNode.getExceptions());
 			if (constructorNode.hasDefaultValue()) {
-				createConstructorVariants(constructorNode, constructorDeclaration, accumulatedMethodDeclarations,
-						compilationResult, isEnum);
+				createConstructorVariants(constructorNode, constructorDeclaration, accumulatedMethodDeclarations, compilationResult,
+						isEnum);
 			} else {
 				accumulatedMethodDeclarations.add(constructorDeclaration);
 			}
@@ -1193,8 +1194,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 			if (nextToLetDefault != -1) {
 				wipableParameters[nextToLetDefault] = null;
 			}
-			Argument[] argumentsVariant = (oneVariation.size() == 0 ? null : oneVariation
-					.toArray(new Argument[oneVariation.size()]));
+			Argument[] argumentsVariant = (oneVariation.size() == 0 ? null
+					: oneVariation.toArray(new Argument[oneVariation.size()]));
 			variants.add(argumentsVariant);
 		} while (nextToLetDefault != -1);
 
@@ -1686,8 +1687,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 				// references A<String>.B<Wibble>
 				TypeReference[][] typeReferences = new TypeReference[compoundName.length][];
 				typeReferences[compoundName.length - 1] = typeArguments.toArray(new TypeReference[typeArguments.size()]);
-				return new ParameterizedQualifiedTypeReference(compoundName, typeReferences, 0, positionsFor(compoundName, start,
-						end));
+				return new ParameterizedQualifiedTypeReference(compoundName, typeReferences, 0,
+						positionsFor(compoundName, start, end));
 			}
 		}
 	}
@@ -2091,8 +2092,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		// opening bracket
 		ctorDeclaration.bodyStart =
 		// try for opening bracket
-		ctorNode.getCode() != null ? ctorNode.getCode().getStart() :
-		// handle abstract constructor. not sure if this can ever happen, but you never know with Groovy
+		ctorNode.getCode() != null ? ctorNode.getCode().getStart()
+				:
+				// handle abstract constructor. not sure if this can ever happen, but you never know with Groovy
 				ctorNode.getNameEnd();
 
 		// closing bracket or ';' same as declarationSourceEnd
@@ -2121,10 +2123,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		// opening bracket
 		methodDeclaration.bodyStart =
 		// try for opening bracket
-		methodNode.getCode() != null ? methodNode.getCode().getStart() :
-		// run() method for script has no opening bracket
-		// also need to handle abstract methods
-				Math.max(methodNode.getNameEnd(), methodNode.getStart());
+		methodNode.getCode() != null ? methodNode.getCode().getStart()
+				:
+				// run() method for script has no opening bracket
+				// also need to handle abstract methods
+		Math.max(methodNode.getNameEnd(), methodNode.getStart());
 
 		// closing bracket or ';' same as declarationSourceEnd
 		methodDeclaration.bodyEnd = methodNode.getEnd() - 1;
@@ -2133,7 +2136,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	/**
 	 * Try to get the source locations for field declarations to be as correct as possible
 	 */
-	private void fixupSourceLocationsForFieldDeclaration(FieldDeclaration fieldDeclaration, FieldNode fieldNode, boolean isEnumField) {
+	private void fixupSourceLocationsForFieldDeclaration(FieldDeclaration fieldDeclaration, FieldNode fieldNode,
+			boolean isEnumField) {
 		// TODO (groovy) each area marked with a '*' is only approximate
 		// and can be revisited to make more precise
 
@@ -2369,10 +2373,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 		super.recordStringLiteral(literal, fromRecovery);
 	}
 
-	@Override
-	public void recordSuppressWarnings(IrritantSet irritants, Annotation annotation, int scopeStart, int scopeEnd) {
-		super.recordSuppressWarnings(irritants, annotation, scopeStart, scopeEnd);
-	}
+	// @Override
+	// public void recordSuppressWarnings(IrritantSet irritants, Annotation annotation, int scopeStart, int
+	// scopeEnd,ReferenceContext referenceContext) {
+	// super.recordSuppressWarnings(irritants, annotation, scopeStart, scopeEnd,referenceContext);
+	// }
 
 	@Override
 	public void tagAsHavingErrors() {
@@ -2458,8 +2463,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 	private ArrayQualifiedTypeReference createJDTArrayQualifiedTypeReference(String arrayComponentTypename, int dimensions,
 			int start, int end) {
 		char[][] compoundName = CharOperation.splitOn('.', arrayComponentTypename.toCharArray());
-		ArrayQualifiedTypeReference aqtr = new ArrayQualifiedTypeReference(compoundName, dimensions, positionsFor(compoundName,
-				start, (end == -2 ? -2 : end - dimensions * 2)));
+		ArrayQualifiedTypeReference aqtr = new ArrayQualifiedTypeReference(compoundName, dimensions,
+				positionsFor(compoundName, start, (end == -2 ? -2 : end - dimensions * 2)));
 		aqtr.sourceEnd = end == -2 ? -2 : end - 1;
 		return aqtr;
 	}
@@ -2484,8 +2489,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 					}
 				} else {
 					if (str.sourceEnd < str.sourceStart) {
-						throw new IllegalStateException("TypeReference '" + new String(str.token) + " should end at "
-								+ str.sourceStart + " or later");
+						throw new IllegalStateException(
+								"TypeReference '" + new String(str.token) + " should end at " + str.sourceStart + " or later");
 					}
 				}
 			} else {
