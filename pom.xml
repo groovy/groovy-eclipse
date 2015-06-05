@@ -131,6 +131,34 @@
 
 	<profiles>
 		<profile>
+			<id>e45</id>
+			<repositories>
+				<repository>
+					<id>e45</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/eclipse/updates/4.5</url>
+				</repository>
+				<!-- <repository> <id>kepler</id> <layout>p2</layout> <url>http://download.eclipse.org/releases/luna</url> 
+					</repository> -->
+				<!-- luna simul release update site doesn't exist yet. Add individual 
+					sites. When 4.4 is released. Replace with luna site -->
+				<repository>
+					<id>m2e</id>
+					<layout>p2</layout>
+					<url>http://download.eclipse.org/technology/m2e/milestones/1.5</url>
+				</repository>
+			</repositories>
+			<modules>
+				<module>jdt-patch/e45/Feature-org.codehaus.groovy.jdt.patch</module>
+				<module>jdt-patch/e45/org.eclipse.jdt.core</module>
+			</modules>
+			<properties>
+				<dist.target>e4.5</dist.target>
+				<greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e45${dist.qualifier}'</greclipse.build.qualifier>
+			</properties>
+		</profile>
+
+		<profile>
 			<id>e44</id>
 			<repositories>
 				<repository>
