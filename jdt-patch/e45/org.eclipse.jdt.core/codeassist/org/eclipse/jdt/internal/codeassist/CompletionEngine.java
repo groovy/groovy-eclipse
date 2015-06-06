@@ -11,11 +11,12 @@
  *								Bug 400874 - [1.8][compiler] Inference infrastructure should evolve to meet JLS8 18.x (Part G of JSR335 spec)
  *******************************************************************************/
 package org.eclipse.jdt.internal.codeassist;
-
+// GROOVY PATCHED
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
 
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.CompletionContext;
@@ -680,8 +681,12 @@ public final class CompletionEngine
 				this.problemFactory);
 		this.lookupEnvironment =
 			new LookupEnvironment(this, this.compilerOptions, this.problemReporter, nameEnvironment);
-		this.parser =
-			new CompletionParser(this.problemReporter, this.requestor.isExtendedContextRequired(), monitor);
+		// GROOVY start
+//		this.parser =
+//			new CompletionParser(this.problemReporter, this.requestor.isExtendedContextRequired(), monitor);
+		this.parser = LanguageSupportFactory.getCompletionParser(this.lookupEnvironment.globalOptions,
+				this.problemReporter, this.requestor.isExtendedContextRequired(), monitor);
+		// GROOVY end
 		this.owner = owner;
 		this.monitor = monitor;
 	}

@@ -27,7 +27,7 @@
  *    Mat Booth - Contribution for bug 405176 
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.batch;
-
+// GROOVY PATCHED
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -1792,7 +1792,10 @@ public void configure(String[] argv) {
 	boolean didSpecifyDeprecation = false;
 	boolean didSpecifyCompliance = false;
 	boolean didSpecifyDisabledAnnotationProcessing = false;
-
+	// GROOVY start
+	boolean encounteredGroovySourceFile = false;
+	// GROOVY end
+	
 	String customEncoding = null;
 	String customDestinationPath = null;
 	String currentSourceDirectory = null;
@@ -1926,8 +1929,18 @@ public void configure(String[] argv) {
 						currentArg = currentArg.substring(0, encodingStart - 1);
 					}
 				}
-
+				// GROOVY promote that suffix to a constant elsewhere - respect registered java like languages? (does that work for batch environment)
+				/* GROOVY change start: allow .groovy files through as source
+				// old code:{
 				if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java)) {
+				}new code: */
+				if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java) 
+					|| currentArg.endsWith(".groovy")) {				 //$NON-NLS-1$
+				
+					if (currentArg.endsWith(".groovy")) { //$NON-NLS-1$
+						encounteredGroovySourceFile = true;
+					}
+				// GROOVY change end				
 					if (this.filenames == null) {
 						this.filenames = new String[argCount - index];
 						this.encodings = new String[argCount - index];
@@ -2786,6 +2799,20 @@ public void configure(String[] argv) {
 			CompilerOptions.PRIVATE);
 	}
 
+	// GROOVY start
+	// grails 1.1 batch builds need the extra phase
+	//optionMap.put(CompilerOptions.OPTIONG_GroovyFlags,"1");
+	if (encounteredGroovySourceFile) {
+		this.options.put(
+				CompilerOptions.OPTIONG_BuildGroovyFiles,
+				CompilerOptions.ENABLED);
+	} else {
+		this.options.put(
+				CompilerOptions.OPTIONG_BuildGroovyFiles,
+				CompilerOptions.DISABLED);		
+	}
+	// GROOVY end
+	
 	if (printUsageRequired || (filesCount == 0 && classCount == 0)) {
 		if (usageSection ==  null) {
 			printUsage(); // default
