@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.codehaus.jdt.groovy.core.dom;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -25,7 +28,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 	 * MethodSearchVisitor is being used we don't find the method. If it was found the body would be empty and the debug code would
 	 * think the method has not changed across builds - when it may have. It is empty because we don't parse below the method level
 	 * for groovy.
-	 * 
+	 *
 	 */
 	@Override
 	protected void accept0(ASTVisitor visitor) {
@@ -37,5 +40,14 @@ public class GroovyCompilationUnit extends CompilationUnit {
 			return;
 		}
 		super.accept0(visitor);
+	}
+
+	// Not a clue in the world why we do this but it keeps the downstream code happy...
+	public List getCommentList() {
+		List l = super.getCommentList();
+		if (l == null) {
+			return Collections.emptyList();
+		}
+		return l;
 	}
 }
