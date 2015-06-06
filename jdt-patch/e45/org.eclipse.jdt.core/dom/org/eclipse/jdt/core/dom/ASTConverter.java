@@ -4923,7 +4923,7 @@ class ASTConverter {
 	protected int retrieveProperRightBracketPosition(int bracketNumber, int start, int end) {
 		// GROOVY
 		if (!this.scannerUsable) { // effectively a check for "is this groovy?"
-			if (start==-1) {
+			if (start<0) { //==-1) {
 				return -2;
 			}
 			else {
