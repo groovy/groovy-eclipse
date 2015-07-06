@@ -232,9 +232,9 @@ public void traverse(ASTVisitor visitor, BlockScope scope) {
 @Override
 public boolean doesNotCompleteNormally() {
 	Constant cst = this.condition.constant;
-	boolean isConditionTrue = cst != Constant.NotAConstant && cst.booleanValue() == true;
+	boolean isConditionTrue = cst == null || cst != Constant.NotAConstant && cst.booleanValue() == true;
 	cst = this.condition.optimizedBooleanConstant();
-	boolean isConditionOptimizedTrue = cst != Constant.NotAConstant && cst.booleanValue() == true;
+	boolean isConditionOptimizedTrue = cst == null || cst != Constant.NotAConstant && cst.booleanValue() == true;
 	
 	if (isConditionTrue || isConditionOptimizedTrue)
 		return this.action == null || !this.action.breaksOut(null);

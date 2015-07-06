@@ -64,14 +64,10 @@ class ConstraintTypeFormula extends ConstraintFormula {
 				return this.left.isCompatibleWith(this.right, inferenceContext.scope) || this.left.isBoxingCompatibleWith(this.right, inferenceContext.scope) ? TRUE : FALSE;
 			}
 			if (this.left.isPrimitiveType()) {
-				if (inferenceContext.inferenceKind == InferenceContext18.CHECK_STRICT)
-					inferenceContext.inferenceKind = InferenceContext18.CHECK_LOOSE;
 				TypeBinding sPrime = inferenceContext.environment.computeBoxingType(this.left);
 				return ConstraintTypeFormula.create(sPrime, this.right, COMPATIBLE, this.isSoft);
 			}
 			if (this.right.isPrimitiveType()) {
-				if (inferenceContext.inferenceKind == InferenceContext18.CHECK_STRICT)
-					inferenceContext.inferenceKind = InferenceContext18.CHECK_LOOSE;
 				TypeBinding tPrime = inferenceContext.environment.computeBoxingType(this.right);
 				return ConstraintTypeFormula.create(this.left, tPrime, SAME, this.isSoft);
 			}
