@@ -65,7 +65,7 @@ public class GroovyShellLaunchDelegate extends JavaLaunchDelegate {
             URL jar = resolve(enu.nextElement());
             return jar.getFile();
         } else {
-            throw new CoreException(new Status(Status.ERROR, GroovyCoreActivator.PLUGIN_ID, "Could not find $jarName on the class path.  Please add it manually"));
+            throw new CoreException(new Status(Status.ERROR, GroovyCoreActivator.PLUGIN_ID, "Could not find " + jarName + " on the class path.  Please add it manually"));
         }
     }
 
