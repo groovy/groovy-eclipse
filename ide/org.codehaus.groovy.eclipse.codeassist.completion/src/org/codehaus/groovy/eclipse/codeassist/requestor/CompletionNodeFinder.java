@@ -225,11 +225,16 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         // where initializers lie
         ConstructorNode init = findDefaultConstructor(node);
         if (init != null) {
-            blockStack.push(init.getCode());
-            for (Statement element : (Iterable<Statement>) ((BlockStatement) init.getCode()).getStatements()) {
-                element.visit(this);
+            Statement statement = init.getCode();
+            if (statement instanceof ExpressionStatement) {
+                ((ExpressionStatement) statement).visit(this);
+            } else {
+                blockStack.push(init.getCode());
+                for (Statement element : (Iterable<Statement>) ((BlockStatement) init.getCode()).getStatements()) {
+                    element.visit(this);
+                }
+                blockStack.pop();
             }
-            blockStack.pop();
         }
 
 
