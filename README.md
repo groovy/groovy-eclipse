@@ -1,6 +1,16 @@
-This is the Groovy-Eclipse project, the Eclipse tooling support for the Groovy programming language.  More information, including how to use and install is available on the [wiki](https://github.com/groovy/groovy-eclipse/wiki).
+# Groovy for Eclipse Plug-in
+
+This Eclipse plug-in adds Groovy tooling support to Eclipse, for the Groovy programming language.
+
+# Users
+
+Information on __[how to use and install](https://github.com/groovy/groovy-eclipse/wiki)__ this Groovy for Eclipse Plug-in.
+
+# Issues
 
 Please report bugs as github issues.
+
+# For Developers who want to Contribute
 
 A quick approach to getting started:
 
