@@ -124,6 +124,12 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
             return getSourceTypeInGMavenProject(plugin);
         }
         
+        // Recognize gmaven-plus
+        Plugin gmavenPlusPlugin = mavenProject.getPlugin("org.codehaus.gmavenplus:gmavenplus-plugin"); //$NON-NLS-1$
+        if (gmavenPlusPlugin != null) {
+        	 return getSourceTypeInGMavenProject(gmavenPlusPlugin);
+        }
+        
         // look to see if there is the maven-compiler-plugin
         // with a compilerId of the groovy eclipse compiler
         if (compilerPluginUsesGroovyEclipseAdapter(mavenProject, "org.apache.maven.plugins", "maven-compiler-plugin")) {
