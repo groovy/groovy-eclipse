@@ -52,11 +52,12 @@
         <execute />
       </action>
     </pluginExecution>
+    
     <pluginExecution>
     	<pluginExecutionFilter>
     		<groupId>org.codehaus.gmavenplus</groupId>
     		<artifactId>gmavenplus-plugin</artifactId>
-    		<versionRange>[1.5,)</versionRange>
+    		<versionRange>[1.0,)</versionRange>
     		<goals>
     		  <goal>addSources</goal>
 		      <goal>addTestSources</goal>
@@ -74,5 +75,6 @@
         	</configurator>
     	</action>
     </pluginExecution>
+    
   </pluginExecutions>
 </lifecycleMappingMetadata>
