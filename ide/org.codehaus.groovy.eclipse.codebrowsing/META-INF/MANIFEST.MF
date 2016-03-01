@@ -6,6 +6,7 @@ Bundle-Version: 2.9.2.qualifier
 Bundle-Activator: org.codehaus.groovy.eclipse.codebrowsing.GroovyBrowsingPlugin
 Require-Bundle: org.codehaus.groovy.eclipse.core;bundle-version="2.9.2";visibility:=reexport,
  org.eclipse.jdt.core,
+ org.eclipse.core.runtime,
  org.eclipse.jdt.groovy.core;bundle-version="2.9.2",
  org.codehaus.groovy;bundle-version="1.8.6",
  org.eclipse.core.resources;bundle-version="3.6.0"
