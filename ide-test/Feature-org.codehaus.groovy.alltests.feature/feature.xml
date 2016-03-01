@@ -38,7 +38,6 @@
       <import plugin="org.eclipse.debug.core"/>
       <import plugin="org.codehaus.groovy.eclipse.core"/>
       <import plugin="org.codehaus.groovy.eclipse.ui"/>
-      <import plugin="org.eclipse.core.runtime.compatibility"/>
       <import plugin="org.eclipse.core.runtime"/>
       <import plugin="org.codehaus.groovy"/>
    </requires>

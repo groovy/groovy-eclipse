@@ -57,7 +57,6 @@
       <import plugin="org.eclipse.ui.workbench.texteditor" version="3.2.0" match="compatible"/>
       <import plugin="org.eclipse.core.expressions" version="3.2.0" match="compatible"/>
       <import plugin="org.eclipse.core.resources" version="3.2.0" match="compatible"/>
-      <import plugin="org.eclipse.core.runtime.compatibility" version="3.1.0" match="compatible"/>
       <import plugin="org.eclipse.compare" version="3.2.0" match="compatible"/>
       <import plugin="org.eclipse.core.variables" version="3.1.0" match="compatible"/>
       <import plugin="org.eclipse.jdt.junit4.runtime"/>
