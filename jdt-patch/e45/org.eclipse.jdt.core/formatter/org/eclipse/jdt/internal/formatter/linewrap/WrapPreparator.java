@@ -221,7 +221,7 @@ public class WrapPreparator extends ASTVisitor {
 			List<TypeParameter> typeParameters = node.typeParameters();
 			if (!typeParameters.isEmpty())
 				this.wrapIndexes.add(this.tm.firstIndexIn(typeParameters.get(0), -1));
-			if (node.getReturnType2() != null)
+			if (node.getReturnType2() != null && !node.modifiers().isEmpty())
 				this.wrapIndexes.add(this.tm.firstIndexIn(node.getReturnType2(), -1));
 			this.wrapIndexes.add(this.tm.firstIndexIn(node.getName(), -1));
 			this.wrapParentIndex = this.tm.findFirstTokenInLine(this.tm.firstIndexIn(node.getName(), -1));
