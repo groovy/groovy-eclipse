@@ -1,0 +1,2020 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="IBM">
+   <title>JDT/Core Release Notes 3.8</title>
+   <link rel="stylesheet" href="jdt_core_style.css" charset="iso-8859-1" type="text/css">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<table border=0 cellspacing=5 cellpadding=2 width="100%" >
+  <tr>
+    <td align="left" width="72%" class="title1">
+      <font size="+3"><b>jdt core - build notes 3.8 stream</b></font>
+    </td>
+  </tr>
+  <tr><td align="left" width="72%" class="title2"><font size="-2">Java development tools core</font></td></tr>
+  <tr><td>&nbsp;</td></tr>
+  <tr>
+  	<td class="title3">
+	  <font size="-1">
+	  Here are the build notes for the Eclipse JDT/Core plug-in project
+	  <a href="http://www.eclipse.org/jdt/core/index.php"><b>org.eclipse.jdt.core</b></a>,
+	  describing <a href="https://bugs.eclipse.org/bugs" target=new>bug</a> resolution and substantial changes in the <a href="http://git.eclipse.org/c/jdt/eclipse.jdt.core.git/log/"><b>HEAD</b></a> branch.
+	  For more information on 3.8 planning, please refer to <a href="http://www.eclipse.org/jdt/core/r3.8/plan.php">JDT/Core release plan</a>,
+	  the next <a href="http://www.eclipse.org/jdt/core/r3.8/plan.php#current-milestone">milestone plan</a>,
+	  the overall <a href="http://www.eclipse.org/projects/project-plan.php?planurl=http://www.eclipse.org/eclipse/development/plans/eclipse_project_plan_3_7.xml">official plan</a>,
+	  or the <a href="http://www.eclipse.org/eclipse/platform-releng/buildSchedule.html">build schedule</a>.
+	  This present document covers all changes since Release 3.7 (also see a summary of <a href="http://git.eclipse.org/c/jdt/eclipse.jdt.core.git/plain/org.eclipse.jdt.core/notes/API_changes.html">API changes</a>).
+	  <br>Maintenance of previous releases of JDT/Core is performed in parallel branches:
+		  <a href="http://git.eclipse.org/c/jdt/eclipse.jdt.core.git/log/?h=R3_7_maintenance">R3.7.x</a>,
+		  <a href="http://git.eclipse.org/c/jdt/eclipse.jdt.core.git/log/?h=R3_6_maintenance">R3.6.x</a>,
+		  <a href="http://git.eclipse.org/c/jdt/eclipse.jdt.core.git/log/?h=R3_5_maintenance">R3.5.x</a>,
+		  <a href="http://git.eclipse.org/c/jdt/eclipse.jdt.core.git/log/?h=R3_4_maintenance">R3.4.x</a>,
+		  <a href="http://git.eclipse.org/c/jdt/eclipse.jdt.core.git/log/?h=R3_3_maintenance">R3.3.x</a>,
+		  <a href="http://git.eclipse.org/c/jdt/eclipse.jdt.core.git/log/?h=R3_2_maintenance">R3.2.x</a>,
+		  <a href="http://git.eclipse.org/c/jdt/eclipse.jdt.core.git/log/?h=R3_1_maintenance">R3.1.x</a>,
+		  <a href="http://git.eclipse.org/c/jdt/eclipse.jdt.core.git/log/?h=R3_0_maintenance">R3.0.x</a>,
+		  <a href="http://git.eclipse.org/c/jdt/eclipse.jdt.core.git/log/?h=R2_1_maintenance">R2.1.x</a>,
+		  <a href="http://git.eclipse.org/c/jdt/eclipse.jdt.core.git/log/?h=R2_0_1">R2.0.x</a>,
+		  <a href="http://git.eclipse.org/c/jdt/eclipse.jdt.core.git/log/?h=ECLIPSE_1_0">R1.0.x</a>.
+	  </font>
+	</td>
+  </tr>
+</table>
+<a name="v_C58"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - May 31, 2012
+<br>Project org.eclipse.jdt.core v_C58
+(<a href="http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.core/?only_with_tag=v_C58">cvs</a>).
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=380927">380927</a>
+VerifyError issue with inconsistent stack map frames with do..while and nested switch statements.
+
+<a name="v_C57"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - May 29, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=380750">380750</a>
+[compiler] local incorrectly flagged as uninitialized due to fix for bug 359495
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=380313">380313</a>
+Inconsistent stack error when using Java 1.7
+
+<a name="v_C56"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - May 23, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=380112">380112</a>
+[1.7][compiler] Incorrect unreachable catch block detection in try-with-resources
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=379726">379726</a>
+Include Eclipse-BundleShape in test plugin MANIFEST.MF
+
+<a name="v_C55"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - May 21, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=379793">379793</a>
+formatter hangs
+
+<a name="v_C54"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - May 16, 2012 - 3.8.0 RC1
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=379630">379630</a>
+Regression: NPE during reconcile/build
+
+<a name="v_C53"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - May 14, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=375971">375971</a>
+[search] Not finding method references with generics
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550">376550</a>
+&quot;Method can be static&quot; warning on method that accesses instance field in inner class
+
+<a name="v_C52"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - May 11, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=373409">373409</a>
+[code assist] Bad relevance for constructor proposals (new Thread())
+
+<a name="v_C51"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - May 8, 2012 - 3.8.0 RC1
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=378390">378390</a>
+[search] regression caused by the fix for bug 357547
+
+<a name="v_C50"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - April 30, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=376930">376930</a>
+FUP of bug 24804: Organize imports does not work when folding imports into on-demand import
+
+<a name="v_C49"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - April 30, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=374176">374176</a>
+Sticky default nullness diagnostics.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=371832">371832</a>
+The preference &quot;Suppress optional errors with '@SuppressWarnings'&quot; ends up silencing warnings it shouldn't
+
+<a name="v_C48"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - April 27, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=377806">377806</a>
+ExternalFoldersManager standalone regression
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=322977">322977</a>
+Documentation about use of &quot;SearchPattern.R_REGEXP_MATCH&quot; is wrong
+
+<a name="v_C47"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - April 26, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=376724">376724</a>
+ExternalFoldersManager still has synchronization gaps
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=374129">374129</a>
+more tests for bug 372011
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=365710">365710</a>
+FUP of bug 363293: Fix the incorrect added resource close
+
+<a name="v_C46"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - April 24, 2012 - April 10, 2012
+<br>
+<h2>What's new in this drop</h2>
+<ul>
+<li>New/changed options in JavaCore to control warnings relating to incomplete switch statements:
+<pre>
+	/**
+	 * Compiler option ID: Reporting Incomplete Enum Switch.
+	 * When enabled, the compiler will issue an error or a warning
+	 * 		regarding each enum constant for which a corresponding case label is lacking.
+	 * 		Reporting is further controlled by the option {@link #COMPILER_PB_MISSING_ENUM_CASE_DESPITE_DEFAULT}.
+	 *
+	 * Option id:"org.eclipse.jdt.core.compiler.problem.incompleteEnumSwitch"
+	 * Possible values:{ "error", "warning", "ignore" }
+	 * Default:"warning"
+	 * 
+	 * @since 3.1
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_INCOMPLETE_ENUM_SWITCH = PLUGIN_ID + ".compiler.problem.incompleteEnumSwitch"; //$NON-NLS-1$
+	/**
+	 * Compiler option ID: Reporting Missing Enum Case In Switch Despite An Existing Default Case.
+	 * This option further controls the option {@link #COMPILER_PB_INCOMPLETE_ENUM_SWITCH}:
+	 * 	
+	 *  - If enabled the compiler will report problems about missing enum constants even if a default case exists
+	 * 		in the same switch statement.
+	 *  - If disabled existence of a default case is considered as sufficient to make a switch statement complete.
+	 * 
+	 *  This option has no effect if {@link #COMPILER_PB_INCOMPLETE_ENUM_SWITCH} is set to "ignore".
+	 *
+	 * Option id:"org.eclipse.jdt.core.compiler.problem.missingEnumCaseDespiteDefault"
+	 * Possible values:{ "enabled", "disabled" }
+	 * Default:"disabled"
+	 *
+	 * @since 3.8
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_MISSING_ENUM_CASE_DESPITE_DEFAULT = PLUGIN_ID + ".compiler.problem.missingEnumCaseDespiteDefault"; //$NON-NLS-1$
+	/**
+	 * Compiler option ID: Reporting Missing Default Case In Switch.
+	 * When enabled, the compiler will issue an error or a warning 
+	 * 		against each switch statement that lacks a default case.
+	 * 
+	 * Option id:"org.eclipse.jdt.core.compiler.problem.missingDefaultCase"
+	 * Possible values:{ "error", "warning", "ignore" }
+	 * Default:"ignore"
+	 *
+	 * @since 3.8
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_SWITCH_MISSING_DEFAULT_CASE = PLUGIN_ID + ".compiler.problem.missingDefaultCase"; //$NON-NLS-1$
+</pre>
+</li>
+<li> New IProblems relating to incomplete switch statements.
+<pre>
+	/** @since 3.8 */
+	int MissingEnumDefaultCase = Internal + 766;
+	/** @since 3.8 */
+	int MissingDefaultCase = Internal + 767;
+	/** @since 3.8 */
+	int MissingEnumConstantCaseDespiteDefault = FieldRelated + 768;
+	/** @since 3.8 */
+	int UninitializedLocalVariableHintMissingDefault = Internal + 769;
+	/** @since 3.8 */
+	int UninitializedBlankFinalFieldHintMissingDefault = FieldRelated + 770;
+	/** @since 3.8 */
+	int ShouldReturnValueHintMissingDefault = MethodRelated + 771;
+</pre>
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=377401">377401</a>
+FuP of bug 372418: &quot;The type ... cannot be resolved&quot; error when there is a $ in the class name.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=376429">376429</a>
+AIOOBE when trying to create AST for invalid annotation declaration
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=376673">376673</a>
+DBCS4.2 Can not rename the class names when DBCS (Surrogate e.g. U+20B9F) is in it
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=374605">374605</a>
+Unreasonable warning for enum-based switch statements
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=372694">372694</a>
+Adjust parser generator tools
+
+<a name="v_C45"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - April 17, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=326610">326610</a>
+[content assist] code assist for package-info.java
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=376465">376465</a>
+Mixed line delimiters in org.eclipse.jdt.internal.compiler.parser.Parser.consumeRule(int)
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=376837">376837</a>
+[warning] Resource leak warning in FileManagerTest
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=375394">375394</a>
+Incorrect type checking for parameterized types
+
+<a name="v_C44"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351697">351697</a>
+ClassCastException while copying a .class file to wrong source package
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=375326">375326</a>
+try-with-resources assignment in statement produces stack map exception
+
+<a name="v_C43"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - April 3, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=375568">375568</a>
+@PolymorphicSignature methods in MethodHandle have wrong annotation on parameter
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=372687">372687</a>
+org.eclipse.jdt.core.LRUCache.get(Object key) returns an empty list from a class that has methods
+
+<a name="v_C42"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - March 27, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=374538">374538</a>
+[local] localFile service tries to set modified time on virtual files
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=375248">375248</a>
+AIOOBE inside twr with finally block
+
+<a name="v_C41"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - March 20, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=372319">372319</a>
+Unexpected 'The local variable i may not have been initialized' compile error
+
+<a name="v_C40"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - March 13, 2012 - 3.8.0 M6
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=374063">374063</a>
+[builder][regression] bug 372012 causes regular problems to be reported against the package
+
+<a name="v_C39"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - March 13, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=373953">373953</a>
+FUP of bug 127575: java.eclipse.core.runtime.Assert  is being recognized as org.eclipse.core.runtime.Assert
+
+<a name="v_C38"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - March 12, 2012
+<br>
+<h2>What's new in this drop</h2>
+<ul>
+<li> New IProblems for distinguishing null warnings based on flow analysis vs. null annotations.
+<pre>
+	/** @since 3.8 */
+	int RedundantNullCheckOnSpecdNonNullLocalVariable = Internal + 931;
+
+	/** @since 3.8 */
+	int SpecdNonNullLocalVariableComparisonYieldsFalse = Internal + 932;
+
+	/** @since 3.8 */
+	int RequiredNonNullButProvidedSpecdNullable = Internal + 933;
+</pre>
+</li>
+<li> New IProblems for reporting missing NonNullByDefault annotation on package/type.
+<pre>
+	/** @since 3.8 */
+	int MissingNonNullByDefaultAnnotationOnPackage = Internal + 913;
+	
+	/** @since 3.8 */
+	int MissingNonNullByDefaultAnnotationOnType = Internal + 930;
+</pre>
+</li>
+<li>Added new option in JavaCore to control warning for missing default nullness annotation:
+<pre>
+	/**
+	 * Compiler option ID: Reporting missing default nullness annotation.
+	 * 
+	 * When enabled, the compiler will issue an error or a warning in the following cases:
+	 * 
+	 * 1. When a package does not contain a default nullness annotation, as a result of missing package-info.java 
+	 * or missing default nullness annotation in package-info.java.
+	 * 2. When a type inside a default package does not contain a default nullness annotation.
+	 * 
+	 * This option only has an effect if the option {@link #COMPILER_ANNOTATION_NULL_ANALYSIS} is enabled.
+	 * 
+	 * Option id:"org.eclipse.jdt.core.compiler.annotation.missingNonNullByDefaultAnnotation"
+	 * Possible values:{ "error", "warning", "ignore" }
+	 * Default:"ignore"
+	 * 
+	 * @since 3.8
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_MISSING_NONNULL_BY_DEFAULT_ANNOTATION = PLUGIN_ID + ".compiler.annotation.missingNonNullByDefaultAnnotation"
+</pre>
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=365859">365859</a>
+[compiler][null] distinguish warnings based on flow analysis vs. null annotations
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=373571">373571</a>
+[null][regression] Incorrect application of null annotations to primitive types
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=367836">367836</a>
+Inconsistent source range for error from build and reconciler (declared package does not match expected)
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=368646">368646</a>
+[rename] rejects LocalVariable with initializer
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=372012">372012</a>
+[compiler][null] Warn when defaults not specified
+
+<a name="v_C37"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - March 6, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<ul>
+<li> New IProblems for reporting if an enum switch lacks a default cause (recommended by the JLS).
+<pre>
+	/** @since 3.8 */
+	int MissingEnumDefaultCase = Internal + 766;
+</pre>
+</li>
+<li>Adjusted the specification of the corresponding constant in JavaCore:
+<pre>
+	/**
+	 * Compiler option ID: Reporting Incomplete Enum Switch.
+	 *    
+	 * When enabled, the compiler will issue an error or a warning whenever
+	 * an enum switch statement lacks a default case.
+	 * If no default case is given, additionally one error or warning is issued
+	 * regarding each enum constant for which a corresponding case label is lacking.
+	 * 
+	 * Option id: "org.eclipse.jdt.core.compiler.problem.incompleteEnumSwitch"
+	 * Possible values: { "error", "warning", "ignore" }
+	 * Default: "warning"
+	 * @since 3.1
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_INCOMPLETE_ENUM_SWITCH = PLUGIN_ID + ".compiler.problem.incompleteEnumSwitch"; //$NON-NLS-1$
+</pre>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=371732">371732</a>
+Deprecate AST.JLS3
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=372909">372909</a>
+message verbiage for instanceof erasure
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=347386">347386</a>
+Cannot delete package from java project (two source and output folders)
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=372011">372011</a>
+[compiler][null] Restore behaviour of null defaults for binary types
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=127575">127575</a>
+Null reference checks don't handle Assert
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=265744">265744</a>
+Enum switch should warn about missing default
+
+<a name="v_C36"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - February 28, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=372377">372377</a>
+ASTParser#createASTs(..) should not ignore optional compile problems
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=372351">372351</a>
+Illegal implementation of 'org.eclipse.jdt.internal.compiler.env.ICompilationUnit' in Tomcat Jasper
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=220928">220928</a>
+[buildpath] Should be able to ignore warnings from certain source folders
+
+<a name="v_C35"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - February 21, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=365499">365499</a>
+Add a system property to control for JavaModelManager's jar type cache size
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=368152">368152</a>
+ConcurrentModificationException on startup in ExternalFoldersManager.createPendingFolders
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=244544">244544</a>
+codeSelect fails on constant declaration in anonymous and local classes
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=291040">291040</a>
+codeSelect(..) does not work for a deeply nested method invocation in nested and anonymous class
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=370930">370930</a>
+NonNull annotation not considered for enhanced for loops
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=366063">366063</a>
+Compiler should not add synthetic @NonNull annotations
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=365531">365531</a>
+[compiler][null] investigate alternative strategy for internally encoding nullness defaults
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=370639">370639</a>
+[compiler][resource] restore the default for resource leak warnings
+
+<a name="v_C34"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - February 14, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=123836">123836</a>
+[1.5][search] for references to overriding method with bound type variable is not polymorphic
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=368546">368546</a>
+[compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=364254">364254</a>
+Reduce console output during JDT/Core junits execution.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=362633">362633</a>
+NPE while trying to rename a class
+
+<a name="v_C33"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - January 25, 2012 - 3.8.0 M5
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=369595">369595</a>
+Javadoc fixes for IClasspathAttribute.SOURCE_ATTACHMENT_ENCODING
+
+<a name="v_C32"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - January 24, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=366829">366829</a>
+Batch compiler option and SuppressWarnings token for Overriding a Synchronized Method with a Non-synchronized Method
+
+<a name="v_C31"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - January 22, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=369251">369251</a>
+Starved worker threads
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=365208">365208</a>
+[compiler][batch] command line options for annotation based null analysis
+
+<a name="v_C30"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - January 20, 2012
+<br>
+<h2>What's new in this drop</h2>
+<ul>
+<li>New constant for the name of the encoding to be used for source attachments in IClasspathAttribute (see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=361356">361356</a> for details)
+<pre>
+	/**
+	 * Constant for the name of the encoding to be used for source attachments.
+	 *
+	 * &lt;p&gt;The value of this attribute has to be a string representation of a valid encoding. The encoding
+	 * for a source attachment is determined in the following order:  &lt;/p&gt;
+	 *
+	 * &lt;ul&gt;
+	 * &lt;li&gt; Encoding explicitly set on the source file (java or zip), i.e. <code>org.eclipse.core.resources.IFile#getCharset(false)</code> &lt;/li&gt;
+	 * &lt;li&gt; Encoding set on the corresponding classpath entry &lt;/li&gt;
+	 * &lt;li&gt; If the source attachment is a member of the project, then the project's default charSet&lt;/li&gt;
+	 * &lt;li&gt; Workspace default charSet &lt;/li&gt;
+	 * &lt;/ul&gt;
+	 *
+	 * @since 3.8
+	 */
+	String SOURCE_ATTACHMENT_ENCODING = "source_encoding";
+</pre>
+</li>
+<li> New IProblems for messages relating to contradictory or redundant null annotations
+<pre>
+	/** @since 3.8 */
+	int RedundantNullDefaultAnnotation = Internal + 925;
+	/** @since 3.8 */
+	int RedundantNullDefaultAnnotationPackage = Internal + 926;
+	/** @since 3.8 */
+	int RedundantNullDefaultAnnotationType = Internal + 927;
+	/** @since 3.8 */
+	int RedundantNullDefaultAnnotationMethod = Internal + 928;
+	/** @since 3.8 */
+	int ContradictoryNullAnnotations = Internal + 929;
+</pre>
+</li>
+</ul>
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=361356">361356</a>
+Allow to specify encoding for source attachments
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=365582">365582</a>
+FUP of bug 361938: Other error code pattern
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=365662">365662</a>
+[compiler][null] warn on contradictory and redundant null annotations
+
+<a name="v_C29"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - January 17, 2012
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=368842">368842</a>
+test failure because test case refers to java.util.Objects
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=368709">368709</a>
+Endless loop in FakedTrackingVariable.markPassedToOutside
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=361407">361407</a>
+Resource leak warning when resource is assigned to a field outside of constructor
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=362331">362331</a>
+Resource leak not detected when closeable not assigned to variable
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=362332">362332</a>
+Only report potential leak when closeable not created in the local scope
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=360908">360908</a>
+Avoid resource leak warning when the underlying/chained resource is closed explicitly
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=361073">361073</a>
+Avoid resource leak warning when the top level resource is closed explicitly
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=358903">358903</a>
+Filter practically unimportant resource leak warnings
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=365387">365387</a>
+[compiler][null] bug 186342: Issues to follow up post review and verification.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=365519">365519</a>
+editorial cleanup after bug 186342 and bug 365387
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=368435">368435</a>
+[compiler] NPE while compile a method with unused local
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=361963">361963</a>
+Stack overflow when trying to code complete a generic list
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=365437">365437</a>
+Private methods tagged with @Inject should not be flagged with unused warning
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=366131">366131</a>
+[1.5][compiler] New generics compile error in Indigo SR1 for code that compiles in earlier Eclipse and javac
+
+<a name="v_C28"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - January 10, 2012
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=367023">367023</a>
+Error in JDT Core during AST creation
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=354229">354229</a>
+[compiler][1.7] Name clash error not being reported by ecj.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=367879">367879</a>
+Incorrect &quot;Potential null pointer access&quot; warning on statement after try-with-resources within try-finally
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=366999">366999</a>
+VerifyError: Inconsistent stackmap frames
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=346175">346175</a>
+@SuppressWarnings should clear all errors including fatal optional errors
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=366544">366544</a>
+[index] Test testUseIndexInternalJarAfterRestart failed on Mac and Linux
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=302850">302850</a>
+13 failures in JavaModel tests for the N20100214-2000 Mac OS X - Cocoa test machine
+
+<a name="v_C27"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - January 3, 2012 - 3.8.0 M5
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=367566">367566</a>
+In try-with-resources statement close() method of resource is not called
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=364890">364890</a>
+BinaryTypeBinding should use char constants from Util
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=365992">365992</a>
+[builder] [null] Change of nullness for a parameter doesn't trigger a build for the files that call the method
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=367203">367203</a>
+[compiler][null] detect assigning null to nonnull argument
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=367154">367154</a>
+[compiler][null]  Problem in propagating null defaults.
+
+<a name="v_C26"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - December 20, 2011
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=362711">362711</a>
+possibly incorrect JDT POST_CHANGE event fired when a file is replaced
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=365835">365835</a>
+[compiler][null] inconsistent error reporting.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=365836">365836</a>
+[compiler][null] Incomplete propagation of null defaults.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=365983">365983</a>
+[compiler][null] AIOOB with null annotation analysis and varargs
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=366003">366003</a>
+CCE in ASTNode.resolveAnnotations(ASTNode.java:639)
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=366829">366829</a>
+Batch compiler option and SuppressWarnings token for Overriding a Synchronized Method with a Non-synchronized Method
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=364450">364450</a>
+Dubious class path error triggers a full rebuild
+
+<a name="v_C25"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - December 13, 2011
+<h2>What's new in this drop</h2>
+<ul>
+<li>New constant for the name of index location class path attribute in IClasspathAttribute(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=356620">356620</a> for details)
+<pre>
+   /**
+     * Constant for the name of the index location attribute.
+     * 
+     * The value for this attribute has to be the string representation of a URL.
+     * It should point to an existing index file in a folder or a jar. The URL can also be of platform protocol.
+     * 
+     * @since 3.8
+     */
+     String INDEX_LOCATION_ATTRIBUTE_NAME = "index_location"; 
+</pre>
+</li>
+<li>New API org.eclipse.jdt.core.index.JavaIndexer.generateIndexForJar to generate the index file for a given jar
+<pre>
+   /**
+     * Generates the index file for the specified jar.
+     *
+     * @param pathToJar The full path to the jar that needs to be indexed
+     * @param pathToIndexFile The full path to the index file that needs to be generated
+     * @throws IOException if the jar is not found or could not write into the index file
+     * @since 3.8
+     */
+     public static void generateIndexForJar(String pathToJar, String pathToIndexFile) throws IOException;
+</pre>
+</li>
+<li> New application org.eclipse.jdt.core.JavaIndexer to generate index file for the given jar
+</li>
+<li> New ant task eclipse.buildJarIndex to generate the index file for the given jar </li>
+</ul>
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=356620">356620</a>
+Make it possible to provide indexes for defined libraries
+
+<a name="v_C24"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - December 5, 2011 - 3.8.1 M4
+
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=365566">365566</a>
+set resource leak diagnostic to &quot;ignore&quot; until bug 358903 is fixed
+
+<a name="v_C23"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0
+<h2>What's new in this drop</h2>
+<ul>
+<li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_ANNOTATION_NULL_ANALYSIS (see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=186342">186342</a> for details):
+<pre>
+    /**
+     * Compiler option ID: Annotation-based Null Analysis.
+     * 
+     * This option controls whether the compiler will use null annotations for
+     * improved analysis of (potential) null references.
+     * 
+     * When enabled, the compiler will interpret the annotation types defined using
+     * {@link #COMPILER_NONNULL_ANNOTATION_NAME} and {@link #COMPILER_NULLABLE_ANNOTATION_NAME}
+     * as specifying whether or not a given type includes the value <code>null</code>.
+     * 
+     * The effect of these analyses is further controlled by the options
+     * {@link #COMPILER_PB_NULL_SPECIFICATION_VIOLATION},
+     * {@link #COMPILER_PB_POTENTIAL_NULL_SPECIFICATION_VIOLATION} and
+     * {@link #COMPILER_PB_NULL_SPECIFICATION_INSUFFICIENT_INFO}.
+     * 
+     * Option id: <code>"org.eclipse.jdt.core.compiler.annotation.nullanalysis"</code>
+     * Possible values: <code>{ "disabled", "enabled" }</code>
+     * Default: <code>"disabled"</code>
+     * @since 3.8
+     * @category CompilerOptionID
+     */
+    public static final String COMPILER_ANNOTATION_NULL_ANALYSIS = PLUGIN_ID + ".compiler.annotation.nullanalysis";
+</pre></li>
+<li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_NULLABLE_ANNOTATION_NAME (see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=186342">186342</a> for details):
+<pre>
+    /**
+     * Compiler option ID: Name of Annotation Type for Nullable Types.
+     * 
+     * This option defines a fully qualified Java type name that the compiler may use
+     * to perform special null analysis.
+     * 
+     * If the annotation specified by this option is applied to a type in a method
+     * signature or variable declaration, this will be interpreted as a specification
+     * that <code>null</code> is a legal value in that position. Currently supported
+     * positions are: method parameters, method return type and local variables.
+     * 
+     * If a value whose type
+     * is annotated with this annotation is dereferenced without checking for null,
+     * the compiler will trigger a diagnostic as further controlled by
+     * {@link #COMPILER_PB_POTENTIAL_NULL_REFERENCE}.
+     * 
+     * The compiler may furthermore check adherence to the null specification as
+     * further controlled by {@link #COMPILER_PB_NULL_SPECIFICATION_VIOLATION},
+     * {@link #COMPILER_PB_POTENTIAL_NULL_SPECIFICATION_VIOLATION} and
+     * {@link #COMPILER_PB_NULL_SPECIFICATION_INSUFFICIENT_INFO}.
+     * 
+     * This option only has an effect if the the option {@link #COMPILER_ANNOTATION_NULL_ANALYSIS} is enabled.
+     * 
+     * Option id: <code>"org.eclipse.jdt.core.compiler.annotation.nullable"</code>
+     * Possible values: any legal, fully qualified Java type name; must resolve to an annotation type.
+     * Default: <code>"org.eclipse.jdt.annotation.Nullable"</code>
+     * @since 3.8
+     * @category CompilerOptionID
+     */
+    public static final String COMPILER_NULLABLE_ANNOTATION_NAME = PLUGIN_ID + ".compiler.annotation.nullable";
+</pre></li>
+<li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_NONNULL_ANNOTATION_NAME (see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=186342">186342</a> for details):
+<pre>
+    /**
+     * Compiler option ID: Name of Annotation Type for Non-Null Types.
+     * 
+     * This option defines a fully qualified Java type name that the compiler may use
+     * to perform special null analysis.
+     * 
+     * If the annotation specified by this option is applied to a type in a method
+     * signature or variable declaration, this will be interpreted as a specification
+     * that <code>null</code> is <b>not</b> a legal value in that position. Currently
+     * supported positions are: method parameters, method return type and local variables.
+     * 
+     * For values declared with this annotation, the compiler will never trigger a null
+     * reference diagnostic (as controlled by {@link #COMPILER_PB_POTENTIAL_NULL_REFERENCE}
+     * and {@link #COMPILER_PB_NULL_REFERENCE}), because the assumption is made that null
+     * will never occur at runtime in these positions.
+     * 
+     * The compiler may furthermore check adherence to the null specification as further
+     * controlled by {@link #COMPILER_PB_NULL_SPECIFICATION_VIOLATION},
+     * {@link #COMPILER_PB_POTENTIAL_NULL_SPECIFICATION_VIOLATION} and
+     * {@link #COMPILER_PB_NULL_SPECIFICATION_INSUFFICIENT_INFO}.
+     * 
+     * This option only has an effect if the the option {@link #COMPILER_ANNOTATION_NULL_ANALYSIS} is enabled.
+     * 
+     * Option id: <code>"org.eclipse.jdt.core.compiler.annotation.nonnull"</code>
+     * Possible values: any legal, fully qualified Java type name; must resolve to an annotation type.
+     * Default: <code>"org.eclipse.jdt.annotation.NonNull"</code>
+     * @since 3.8
+     * @category CompilerOptionID
+     */
+    public static final String COMPILER_NONNULL_ANNOTATION_NAME = PLUGIN_ID + ".compiler.annotation.nonnull";
+</pre></li>
+<li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_NONNULL_BY_DEFAULT_ANNOTATION_NAME (see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=186342">186342</a> for details):
+<pre>
+    /**
+     * Compiler option ID: Name of Annotation Type to specify a nullness default for unannotated types.
+     * 
+     * This option defines a fully qualified Java type name that the compiler may use
+     * to perform special null analysis.
+     * 
+     * If the annotation is applied without an argument, all unannotated types in method signatures
+     * within the annotated element will be treated as if they were specified with the non-null annotation
+     * (see {@link #COMPILER_NONNULL_ANNOTATION_NAME}).
+     * 
+     * If the annotation is applied with the constant <code>false</code> as its argument
+     * all corresponding defaults at outer scopes will be canceled for the annotated element.
+     * This includes defaults specified using this annotation type or a default defined using
+     * the compiler option {@link #COMPILER_NONNULL_IS_DEFAULT}.
+     * 
+     * This option only has an effect if the the option {@link #COMPILER_ANNOTATION_NULL_ANALYSIS} is enabled.
+     * 
+     * Option id: <code>"org.eclipse.jdt.core.compiler.annotation.nonnullbydefault"</code>
+     * Possible values: any legal, fully qualified Java type name; must resolve to an annotation type.
+     *     That annotation type should have exactly one boolean parameter.
+     * Default: <code>"org.eclipse.jdt.annotation.NonNullByDefault"</code>
+     * @since 3.8
+     * @category CompilerOptionID
+     */
+    public static final String COMPILER_NONNULL_BY_DEFAULT_ANNOTATION_NAME = PLUGIN_ID + ".compiler.annotation.nonnullbydefault";
+</pre></li>
+<li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_NONNULL_IS_DEFAULT (see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=186342">186342</a> for details):
+<pre>
+    /**
+     * Compiler option ID: Globally specify non-null as the assumed default for unannotated types.
+     * 
+     * When enabled this option globally achieves the same effect 
+     * as specifying {@link #COMPILER_NONNULL_ANNOTATION_NAME} does for individual elements.
+     * 
+     * This option only has an effect if the the option {@link #COMPILER_ANNOTATION_NULL_ANALYSIS} is enabled.
+     *
+     * Option id: <code>"org.eclipse.jdt.core.compiler.annotation.nonnullisdefault"</code>
+     * Possible values: <code>{ "disabled", "enabled" }</code>.
+     * Default: <code>"disabled"</code>
+     * @since 3.8
+     * @category CompilerOptionID
+     */
+    public static final String COMPILER_NONNULL_IS_DEFAULT = PLUGIN_ID + ".compiler.annotation.nonnullisdefault";
+</pre></li>
+<li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_PB_NULL_SPECIFICATION_VIOLATION (see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=186342">186342</a> for details):
+<pre>
+    /**
+     * Compiler option ID: Reporting Violations of Null Specifications.
+     * 
+     * Depending on this option, the compiler will issue either an error or a warning
+     * whenever one of the following situations is detected:
+     * 
+     * 1. A method declared with a nonnull annotation returns an expression that is
+     *    statically known to evaluate to a null value.
+     * 2. An expression that is statically known to evaluate to a null value is passed
+     *    as an argument in a method call where the corresponding parameter of the called
+     *    method is declared with a nonnull annotation.
+     * 3. An expression that is statically known to evaluate to a null value is assigned
+     *    to a local variable that is declared with a nonnull annotation.
+     * 4. A method that overrides an inherited method declared with a nonnull annotation
+     *    tries to relax that contract by specifying a nullable annotation
+     *    (prohibition of contravariant return).
+     * 5. A method that overrides an inherited method which has a nullable declaration
+     *    for at least one of its parameters, tries to tighten that null contract by
+     *    specifying a nonnull annotation for its corresponding parameter
+     *    (prohibition of covariant parameters).
+     * 
+     * The compiler options {@link #COMPILER_NONNULL_ANNOTATION_NAME} and
+     * {@link #COMPILER_NULLABLE_ANNOTATION_NAME} control which annotations the compiler
+     * shall interpret as nonnull or nullable annotations, respectively.
+     * 
+     * This option only has an effect if the the option {@link #COMPILER_ANNOTATION_NULL_ANALYSIS} is enabled.
+     *
+     * Option id: <code>"org.eclipse.jdt.core.compiler.problem.nullSpecViolation"</code>
+     * Possible values: <code>{ "error", "warning" }</code>
+     * Default: <code>"error"</code>
+     * 
+     * @since 3.8
+     * @category CompilerOptionID
+     */
+    public static final String COMPILER_PB_NULL_SPECIFICATION_VIOLATION = PLUGIN_ID + ".compiler.problem.nullSpecViolation";
+</pre></li>
+<li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_PB_POTENTIAL_NULL_SPECIFICATION_VIOLATION (see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=186342">186342</a> for details):
+<pre>
+    /**
+     * Compiler option ID: Reporting Violations of Null Specifications with Potential Null Value.
+     * 
+     * When enabled, the compiler will issue an error or a warning whenever one of the
+     * following situations is detected:
+     *
+     * 1. A method declared with a nonnull annotation returns an expression that is
+     *    statically known to evaluate to a null value on some flow.
+     * 2. An expression that is statically known to evaluate to a null value on some flow
+     *    is passed as an argument in a method call where the corresponding parameter of
+     *    the called method is declared with a nonnull annotation.
+     * 3. An expression that is statically known to evaluate to a null value on some flow
+     *    is assigned to a local variable that is declared with a nonnull annotation.
+     * 
+     * The compiler options {@link #COMPILER_NONNULL_ANNOTATION_NAME} and
+     * {@link #COMPILER_NULLABLE_ANNOTATION_NAME} control which annotations the compiler
+     * shall interpret as nonnull or nullable annotations, respectively.
+     * 
+     * 
+     * This option only has an effect if the the option {@link #COMPILER_ANNOTATION_NULL_ANALYSIS} is enabled.
+     *
+     * Option id: <code>"org.eclipse.jdt.core.compiler.problem.potentialNullSpecViolation"</code>
+     * Possible values: <code>{ "error", "warning", "ignore" }</code>
+     * Default: <code>"error"</code>
+     * 
+     * @since 3.8
+     * @category CompilerOptionID
+     */
+    public static final String COMPILER_PB_POTENTIAL_NULL_SPECIFICATION_VIOLATION = PLUGIN_ID + ".compiler.problem.potentialNullSpecViolation";
+</pre></li>
+<li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_PB_NULL_SPECIFICATION_INSUFFICIENT_INFO (see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=186342">186342</a> for details):
+<pre>
+    /**
+     * Compiler option ID: Reporting Insufficient Information for Analysing Adherence to Null Specifications.
+     * 
+     * When enabled, the compiler will issue an error or a warning whenever one of the
+     * following situations is detected:
+     *
+     * 1. A method declared with a nonnull annotation returns an expression for which
+     *    insufficient nullness information is available for statically proving that no
+     *    flow will pass a null value at runtime.
+     * 2. An expression for which insufficient nullness information is available for
+     *    statically proving that it will never evaluate to a null value at runtime
+     *    is passed as an argument in a method call where the corresponding parameter of
+     *    the called method is declared with a nonnull annotation.
+     * 3. An expression for which insufficient nullness information is available for
+     *    statically proving that it will never evaluate to a null value at runtime
+     *    is assigned to a local variable that is declared with a nonnull annotation.
+     *
+     * Insufficient nullness information is usually a consequence of using other unannotated
+     * variables or methods.
+     * 
+     * The compiler options {@link #COMPILER_NONNULL_ANNOTATION_NAME} and
+     * {@link #COMPILER_NULLABLE_ANNOTATION_NAME} control which annotations the compiler
+     * shall interpret as nonnull or nullable annotations, respectively.
+     * 
+     * This option only has an effect if the the option {@link #COMPILER_ANNOTATION_NULL_ANALYSIS} is enabled.
+     * 
+     * Option id: <code>"org.eclipse.jdt.core.compiler.problem.nullSpecInsufficientInfo"</code>
+     * Possible values: <code>{ "error", "warning", "ignore" }</code>
+     * Default: <code>"warning"</code>
+     * 
+     * @since 3.8
+     * @category CompilerOptionID
+     */
+    public static final String COMPILER_PB_NULL_SPECIFICATION_INSUFFICIENT_INFO = PLUGIN_ID + ".compiler.problem.nullSpecInsufficientInfo";
+</pre></li>
+<li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_PB_REDUNDANT_NULL_ANNOTATION (see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=186342">186342</a> for details):
+<pre>
+    /**
+     * Compiler option ID: Reporting Redundant Null Annotations.
+     * 
+     * When enabled, the compiler will issue an error or a warning when a non-null annotation
+     * (see {@link #COMPILER_NONNULL_ANNOTATION_NAME})
+     * is applied although the same effect is already achieved by a default applicable at the
+     * current location. Such a default may be effective by enabling the option
+     * {@link #COMPILER_NONNULL_IS_DEFAULT} or by using the annotation specified by the option
+     * {@link #COMPILER_NONNULL_BY_DEFAULT_ANNOTATION_NAME}.
+     * 
+     * This option only has an effect if the the option {@link #COMPILER_ANNOTATION_NULL_ANALYSIS} is enabled.
+     * 
+     * Option id: <code>"org.eclipse.jdt.core.compiler.problem.redundantNullAnnotation"</code>
+     * Possible values: <code>{ "error", "warning", "ignore" }</code>
+     * Default: <code>"warning"</code>
+     * 
+     * @since 3.8
+     * @category CompilerOptionID
+     */
+    public static final String COMPILER_PB_REDUNDANT_NULL_ANNOTATION = PLUGIN_ID + ".compiler.problem.redundantNullAnnotation";
+</pre>
+</li>
+<li>New API added to org.eclipse.jdt.core.compiler.IProblem to signal null-related issues:
+	<ul>
+	<li> int RequiredNonNullButProvidedNull</li>
+	<li> int RequiredNonNullButProvidedPotentialNull</li>
+	<li> int RequiredNonNullButProvidedUnknown</li>
+	<li> int MissingNullAnnotationType</li>
+	<li> int IllegalReturnNullityRedefinition</li>
+	<li> int IllegalRedefinitionToNonNullParameter</li>
+	<li> int IllegalDefinitionToNonNullParameter</li>
+	<li> int ParameterLackingNonNullAnnotation</li>
+	<li> int ParameterLackingNullableAnnotation</li>
+	<li> int PotentialNullMessageSendReference</li>
+	<li> int RedundantNullCheckOnNonNullMessageSend</li>
+	<li> int CannotImplementIncompatibleNullness</li>
+	<li> int RedundantNullAnnotation</li>
+	<li> int IllegalAnnotationForBaseType</li>
+	</ul>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=363858">363858</a>
+[dom] early throwing of AbortCompilation causes NPE in CompilationUnitResolver
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=331647">331647</a>
+[compiler][null] support flexible default mechanism for null-annotations
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=334457">334457</a>
+[compiler][null] check compatibility of inherited null contracts
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=186342">186342</a>
+[compiler][null] Using annotations for null checking
+
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - November 29, 2011
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340945">340945</a>
+Extension Request of JavaContentAssistInvocationContext
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=364672">364672</a>
+[compiler] ecj fails to compile valid calls to varargs method
+
+<a name="v_C21"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - November 22, 2011
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350738">350738</a>
+&quot;The method is never used locally&quot; is not shown for parameterized recursive methods
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=361053">361053</a>
+java.lang.VerifyError on try-with-resources
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=346038">346038</a>
+[1.5][compiler] ecj vs. javac differ for methods using vararg parameters of different primitive types
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=346039">346039</a>
+[1.5][compiler] ecj vs. javac differ for varargs overloading
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=362279">362279</a>
+ecj vs. javac differ for automatic boxing of implicitly converted types
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=362591">362591</a>
+VerifyError: Inconsistent stackmap frames
+
+<a name="v_C20"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - November 15, 2011
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=361327">361327</a>
+Static import resolution does not record all static elements being imported
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=346042">346042</a>
+[1.5][compiler] ecj compiles code rejected by javac for varargs parameters of inaccessible type
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=361938">361938</a>
+Formerly working JLS3 parser not working -- Scanner reports com.sun.jdi.InvocationException occurred invoking method.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359284">359284</a>
+Unnecessary checkast from null
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=361441">361441</a>
+Error in JDT Core during AST creation
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=363293">363293</a>
+resource leaks in org.eclipse.jdt.compiler.tool.tests
+
+<a name="v_C19"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - November 8, 2011
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=361922">361922</a>
+Fup of 357425: ensure all reported regressions are witnessed by tests
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=354766">354766</a>
+Javadoc content does not appear in content assist info window for non-static inner class constructors
+
+<a name="v_C18"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - October 25, 2011 - 3.8.0 M3
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+
+<a name="v_C17"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - October 20, 2011
+<br>
+<h2>What's new in this drop</h2>
+<ul>
+<li>Added a new API OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=287164">287164</a> for details):
+<pre>
+/**
+ * Status constant indicating that the default or specific output folder is overlapping
+ * with another source location.
+ * @since 3.8 
+ */
+public static final int OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE = 1013;
+</pre>
+</li>
+
+<li>Added a new option CORE_OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE to report an output location overlapping another source location(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=287164">287164</a> for details):
+<pre>
+/**
+ * Core option ID: Reporting an output location overlapping another source location.
+ * Indicate the severity of the problem reported when a source entry's output location overlaps another
+ * source entry.
+ * 
+ * Option id:"org.eclipse.jdt.core.classpath.outputOverlappingAnotherSource"
+ * Possible values:{ "error", "warning", "ignore" }
+ * Default:"error"
+ * 
+ * @since 3.8
+ */
+public static final String CORE_OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE = PLUGIN_ID + ".classpath.outputOverlappingAnotherSource";
+</pre>
+</li>
+</ul>
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=287164">287164</a>
+Report build path error if source folder has other source folder as output folder
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359721">359721</a>
+[options] add command line option for new warning token &quot;resource&quot;
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=343480">343480</a>
+[compiler] Incorrect/confusing error message on inner class static field declaration
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=318401">318401</a>
+FUP of 317858: Clarify eclipse compiler behavior on imports &amp; shadowing
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=360317">360317</a>
+[compiler] report switch over enum in 1.4- mode
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=360164">360164</a>
+Compile error in XSDImpl
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359727">359727</a>
+[1.7][doc] Update doc for new resource leak warnings
+
+<a name="v_C16"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - October 18, 2011
+<br>
+<h2>What's new in this drop</h2>
+<ul>
+<li>Added a new API IBootstrapMethodsEntry to describe the bootstrap method table entry(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359943">359943</a> for details):
+<pre>
+/**
+ * Description of a bootstrap method table entry as specified in the JVM specifications.
+ *
+ * This interface may be implemented by clients.
+ *
+ * @since 3.8
+ */
+public interface IBootstrapMethodsEntry;
+</pre>
+</li>
+
+<li>Added a new API IBootstrapMethodsAttribute to describe the bootstrap method attribute(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359943">359943</a> for details):
+<pre>
+/**
+ * Description of a bootstrap methods attribute as described in the JVM specifications.
+ *
+ * This interface may be implemented by clients.
+ *
+ * @since 3.8
+ */
+public interface IBootstrapMethodsAttribute
+</pre>
+</li>
+
+<li>Added a new API in IBootstrapMethodsAttribute to obtain the number of bootstrap methods of this entry(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359943">359943</a> for details):
+<pre>
+/**
+ * Answer back the number of bootstrap methods of this entry as specified in
+ * the JVM specifications.
+ *
+ * @return the number of bootstrap methods of this entry as specified in
+ * the JVM specifications
+ */
+int getBootstrapMethodsLength();
+</pre>
+</li>
+
+<li>Added a new API in IBootstrapMethodsAttribute to obtain the bootstrap methods table of this entry(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359943">359943</a> for details):
+<pre>
+/**
+ * Answer back the bootstrap methods table of this entry as specified in
+ * the JVM specifications. Answer an empty array if none.
+ *
+ * @return the bootstrap methods table of this entry as specified in
+ * the JVM specifications. Answer an empty array if none
+ */
+IBootstrapMethodsEntry[] getBootstrapMethods();
+</pre>
+</li>
+
+<li>Added IConstantPoolEntry2 to describe the new constant pool entry from Java 7 onwards(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359943">359943</a> for details):
+<pre>
+/**
+ * Description of the new constant pool entry as described in the JVM specifications
+ * added for Java 7 support.
+ * Its contents is initialized according to its kind.
+ *
+ * This interface may be implemented by clients.
+ *
+ * @since 3.8
+ */
+public interface IConstantPoolEntry2
+</pre>
+</li>
+
+<li>Added new API in IConstantPoolEntry2 to return the descriptor index for MethodType entry(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359943">359943</a> for details):
+<pre>
+/**
+ * Returns the descriptor index. This value is set only when decoding a MethodType entry.
+ * The value is unspecified otherwise. The corresponding UTF8 value can be retrieved by using
+ * {@link #getMethodDescriptor()}.
+ *
+ * @return the descriptor index. This value is set only when decoding a MethodType entry.
+ * @see IConstantPoolConstant#CONSTANT_MethodType
+ */
+int getDescriptorIndex();
+</pre>
+</li>
+
+<li>Added new API in IConstantPoolEntry2 to return the reference kind for MethodHandle entry(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359943">359943</a> for details):
+<pre>
+/**
+ * Returns the reference kind. This value is set only when decoding a MethodHandle entry.
+ * The value is unspecified otherwise.
+ *
+ * @return the reference kind. This value is set only when decoding a MethodHandle entry.
+ * @see IConstantPoolConstant#CONSTANT_MethodHandle
+ */
+int getReferenceKind();
+</pre>
+</li>
+
+<li>Added new API in IConstantPoolEntry2 to return the reference index for MethodHandle entry(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359943">359943</a> for details):
+<pre>
+/**
+ * Returns the reference index. This value is set only when decoding a MethodHandle entry.
+ * The value is unspecified otherwise.
+ *
+ * @return the reference kind. This value is set only when decoding a MethodHandle entry.
+ * @see IConstantPoolConstant#CONSTANT_MethodHandle
+ */
+int getReferenceIndex();
+</pre>
+</li>
+
+<li>Added new API in IConstantPoolEntry2 to return the bootstrap method attribute index(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359943">359943</a> for details):
+<pre>
+/**
+ * Returns the bootstrap method attribute index. This value is set only when decoding a InvokeDynamic entry.
+ * The value is unspecified otherwise.
+ *
+ * @return the reference kind. This value is set only when decoding a MethodHandle entry.
+ * @see IConstantPoolConstant#CONSTANT_InvokeDynamic
+ */
+int getBootstrapMethodAttributeIndex();
+</pre>
+</li>
+
+<li>Added new API in IByteCodeVisitor(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359943">359943</a> for details):
+<pre>
+	/**
+	 * @since 3.8
+	 */
+	void _invokedynamic(
+			int pc,
+			int index,
+			IConstantPoolEntry invokeDynamic);
+</pre>
+<p>
+This has been added in place of the deprecated API
+<pre>
+	void _invokedynamic(
+			int pc,
+			int index,
+			IConstantPoolEntry nameEntry,
+			IConstantPoolEntry descriptorEntry);
+</pre>
+</li>
+</ul>
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359943">359943</a>
+invokedynamic in generated class file is not correctly recognized by the eclipse compiler
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=360644">360644</a>
+Scope.isDefinedInSameUnit(ReferenceBinding) fails for a ParameterizedTypeBinding
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=358762">358762</a>
+NPE in JDT compiler
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=360328">360328</a>
+[compiler][null] detect null problems in nested code (local class inside a loop)
+
+<a name="v_C15"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - October 11, 2011
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350285">350285</a>
+ASTRewrite destroys formatting on CatchClause#setBody(copyTarget)
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353474">353474</a>
+type converters should include more annotations
+
+<a name="v_C14"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - October 5, 2011
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=354181">354181</a>
+migrate jdt.core to git
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359831">359831</a>
+Fix messages for &quot;new warning for missing try-with-resources&quot;
+
+<a name="v_C13"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - October 3, 2011
+<br>
+<h2>What's new in this drop</h2>
+<ul>
+<li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE to raise a warning or error
+  when a resource of type Closeable or AutoCloseable is not closed locally.  
+(see details in bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349326">349326</a>):
+<pre>
+	/**
+	 * Compiler option ID: Reporting a resource that is not closed properly.
+	 *
+	 * When enabled, the compiler will issue an error or a warning if
+	 * a local variable holds a value of type <code>java.lang.AutoCloseable</code> (compliance&gt;=1.7) 
+	 * or a value of type <code>java.io.Closeable</code> (compliance&lt;=1.6) and if
+	 * flow analysis shows that the method <code>close()</code> is not invoked locally on that value.
+	 * 
+	 * Option id: <code>"org.eclipse.jdt.core.compiler.problem.reportUnclosedCloseable"</code>
+	 * Possible values: <code>{ "error", "warning", "ignore" }</code>
+	 * Default: <code>"warning"</code>
+	 *
+	 * @since 3.8
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_UNCLOSED_CLOSEABLE = PLUGIN_ID + ".compiler.problem.unclosedCloseable"; //$NON-NLS-1$
+</pre>
+</li>
+<li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE to raise a warning or error
+  when a resource of type Closeable or AutoCloseable is not definitely closed locally.
+(see details in bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349326">349326</a>):
+<pre>
+	/**
+	 * Compiler option ID: Reporting a resource that may not be closed properly.
+	 * 
+	 * When enabled, the compiler will issue an error or a warning if
+	 * a local variable holds a value of type <code>java.lang.AutoCloseable</code> (compliance&gt;=1.7) 
+	 * or a value of type <code>java.io.Closeable</code> (compliance&lt;=1.6) and if
+	 * flow analysis shows that the method <code>close()</code> is 
+	 * not invoked locally on that value for all execution paths.
+	 * 
+	 * Option id: <code>"org.eclipse.jdt.core.compiler.problem.reportPotentiallyUnclosedCloseable"</code>
+	 * Possible values: <code>{ "error", "warning", "ignore" }</code>
+	 * Default: <code>"ignore"</code>
+	 * 
+	 * @since 3.8
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE = PLUGIN_ID + ".compiler.problem.potentiallyUnclosedCloseable"; //$NON-NLS-1$
+</pre>
+</li>
+<li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_PB_EXPLICITLY_CLOSED_AUTOCLOSEABLE to raise a warning or error
+  when a resource of type AutoCloseable is closed explicitly rather than using a try-with-resources block.
+(see details in bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349326">349326</a>):
+<pre>
+	/**
+	 * Compiler option ID: Reporting a resource that is not managed by try-with-resources.
+	 * 
+	 * When enabled, the compiler will issue an error or a warning if a local variable 
+	 * holds a value of type <code>java.lang.AutoCloseable</code>, and if the method
+	 * <code>close()</code> is explicitly invoked on that resource, but the resource is
+	 * not managed by a try-with-resources block.
+	 * 
+	 * Option id: <code>"org.eclipse.jdt.core.compiler.problem.reportPotentiallyUnclosedCloseable"</code>
+	 * Possible values: <code>{ "error", "warning", "ignore" }</code>
+	 * Default: <code>"ignore"</code>
+	 * 
+	 * @since 3.8
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_EXPLICITLY_CLOSED_AUTOCLOSEABLE = PLUGIN_ID + ".compiler.problem.explicitlyClosedAutoCloseable"; //$NON-NLS-1$
+</pre>
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359495">359495</a>
+[1.7][compiler] VerifyError in try-finally block with lock encompassing for-each block and unlock in finally clause
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=161129">161129</a>
+[batch][compiler] Add -warn:all to report all warnings
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359646">359646</a>
+Formatter fails silently if Java source contains 0x8000000000000000L
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=256796">256796</a>
+[compiler] dead code detection: &quot;if (DEBUG) return;&quot; should also be trivial IF stmt
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359334">359334</a>
+Analysis for resource leak warnings does not consider exceptions as method exit points
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=359362">359362</a>
+FUP of bug 349326: Resource leak on non-Closeable resource.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348186">348186</a>
+[compiler] Improve wording for the warning for masked/hidden catch block
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=355838">355838</a>
+[compiler] ecj compiles the code that javac6 rejects
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349326">349326</a>
+[1.7] new warning for missing try-with-resources
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=354502">354502</a>
+Incorrect Compiler Warning: &quot;Method can be declared as static&quot;
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=241834">241834</a>
+[search] ClassCastException during move class refactoring
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=358827">358827</a>
+[1.7] exception analysis for t-w-r spoils null analysis
+
+<a name="v_C12"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - September 23, 2011
+<br>
+<h2>What's new in this drop</h2>
+<ul>
+<li>Tagging to prepare for the git migration</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+
+<a name="v_C11"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - September 20, 2011
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=357110">357110</a>
+Problem with inner classes referenced from jars or class folders: &quot;The type ... cannot be resolved&quot;
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=357471">357471</a>
+ASTParser cannot resolve binding of PackageDeclaration if class name is equal to the first segment of the package name
+
+<a name="v_C10"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - September 13, 2011 - 3.8.0 M2
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=357259">357259</a>
+[dom] AST#newArrayType(Type, int) should allow array type as argument
+
+<a name="v_C09"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - September 9, 2011
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=354332">354332</a>
+DeltaProcessor exhibits O(N^2) behavior
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=355605">355605</a>
+NPE in HierarchyResolver
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=347396">347396</a>
+ASTParser returns empty or partial AST if we parse the the body contains empty for loop
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=356746">356746</a>
+ECJ accepts illegal unicode escape sequences
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=337935">337935</a>
+Test failures when run as an IDE (org.eclipse.sdk.ide)
+
+<a name="v_C08"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - September 6, 2011
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=356325">356325</a>
+[select] Open declaration on a constructor of a local class with type parameters doesn't work
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=24804">24804</a>
+Organize imports wipes comments between statements [code manipulation]
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=356363">356363</a>
+Many links to java.sun.com are broken
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=346529">346529</a>
+Don't show &quot;The method * from the type * is never used locally&quot; warning for private methods annotated with standard annotations like @PostConstruct
+
+<a name="v_C07"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - August 30, 2011
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=356002">356002</a>
+VerifyError &quot;Inconsistent stackmap frames&quot; for switch-string statement with nested for-loop
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350095">350095</a>
+The 2000th (0-based) enum constant is null
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=234074">234074</a>
+Compliance_1_5#test088 fails when launched with JRE 6 and -Dcompliance=1.5
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350612">350612</a>
+OutOfMemoryError while &quot;Initializing Java Tooling&quot;
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348024">348024</a>
+Empty AST for class with static inner class in a package with package-info.java
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=346010">346010</a>
+[model] strange initialization dependency in OptionTests
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353640">353640</a>
+AIOOBE in ParameterizedTypeBinding.substitute
+
+<a name="v_C06"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - August 23, 2011
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348507">348507</a>
+[search] Hyperlinks from the Java Stack Trace console should search the workspace in CLASSPATH order
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345949">345949</a>
+[compiler] Inconsistent name clash behavior vis-a-vis javac7
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=354766">354766</a>
+Javadoc content does not appear in content assist info window for non-static inner class constructors
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353535">353535</a>
+Eclipse compiler generates wrong bytecode for nested try-with-resources statements
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=354579">354579</a>
+Fup of bug 289247: Investigate validity of the fix vis-a-vis JLS.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=354078">354078</a>
+[dom] ASTConverter.removeTrailingCommentFromExpressionEndingWithAParen() ??
+
+<a name="v_C05"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - August 16, 2011
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=354554">354554</a>
+[null] conditional with redundant condition yields weak error message
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=354536">354536</a>
+compiling package-info.java still depends on the order of compilation units
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=292087">292087</a>
+anonymous class in array member initializer confuses content assist
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=352412">352412</a>
+Switching on strings in 1.6- modes produces misleading message
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=317719">317719</a>
+Method incorrectly flagged as having same erasure output when return type differs
+
+<a name="v_C04"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - August 9, 2011
+<br>
+<h2>What's new in this drop</h2>
+<ul>
+<li>Added a new API in BindingKey to return it's declaring type(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351165">351165</a> for details):
+<pre>
+/**
+ * Returns the binding key of the declaring type of the element represented by this binding key. If the binding key
+ * does not represent a member or if the member doesn't have a declaring type, returns <code>null</code>.
+ * 
+ * Note that only binding keys for references to methods and fields
+ * are fully supported. The binding keys for declarations will not have type parameters.
+ * 
+ * @return the type binding key or <code>null</code>
+ * @since 3.7.1
+ */
+public BindingKey getDeclaringType();
+</pre>
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=354052">354052</a>
+[1.7] NPE in org.eclipse.jdt.internal.compiler.ClassFile.traverse(ClassFile.java:4507)
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=346741">346741</a>
+[1.7][doc] Update doc when java 1.7 support is done
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353238">353238</a>
+[1.7] update unusedTypeArgs option description for the batch compiler
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353089">353089</a>
+[1.7][compiler] Incorrect name clash error with ecj
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351165">351165</a>
+[1.7] API to get the type arguments of the declaring type for constructor invocations
+
+<a name="v_C03"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - August 3, 2011 - 3.8.0 M1
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353553">353553</a>
+Rename readableNames.properties to avoid translation
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353085">353085</a>
+[1.7] Cannot cast from Object to boolean
+
+<a name="v_C02"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - July 28, 2011
+<br>
+<h2>What's new in this drop</h2>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353250">353250</a>
+[1.7] merging Java 7 work to HEAD
+
+<a name="v_C01"></a>
+<hr><h1>
+Eclipse Platform Build Notes<br>
+Java development tools core</h1>
+Eclipse SDK 3.8.0 - July 27, 2011
+<br>
+<h2>What's new in this drop</h2>
+<ul>
+<li>Bundle version has been incremented to 3.8.0.qualifier</li>
+<li>Added a new API in CompletionProposal to tell whether it diamond operator can be used (see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351444">351444</a> for details):
+<pre>
+/** 
+ * Returns whether it is safe to use the '&lt;&gt;' (diamond) operator in place of explicitly specifying
+ * type arguments for this proposal. 
+ * 
+ * This is only relevant for source level 1.7 or greater.
+ * 
+ * @param coreContext the completion context associated with the proposal
+ * @since 3.7.1
+ * @return <code>true</code> if it is safe to use the diamond operator for the constructor invocation, 
+ * <code>false</code> otherwise. Also returns <code>false</code> for source levels below 1.7
+ */
+public boolean canUseDiamond(CompletionContext coreContext);
+</pre>
+</li>
+<li>New Javacore option org.eclipse.jdt.core.JavaCore.COMPILER_PB_REDUNDANT_TYPE_ARGUMENTS added to raise warning or error for redundant
+usage of type arguments when diamond operator can be used instead. (see details in bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340747">340747</a>):
+<pre>
+	/**
+	 * Compiler option ID: Reporting redundant specification of type arguments in class instance creation expressions.
+	 * When enabled, the compiler will issue an error or a warning if type arguments are used in a class instance creation,
+	 * when the '&lt;&gt;' operator can be used instead.
+	 *
+	 * This option only has an effect if the compiler compliance is 1.7 or greater.
+	 * 
+	 * Option id:<code>"org.eclipse.jdt.core.compiler.problem.redundantSpecificationOfTypeArguments"</code>
+	 * Possible values:<code>{ "error", "warning", "ignore" }</code>
+	 * Default:<code>"ignore"</code>
+	 * 
+	 * @since 3.7.1
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_REDUNDANT_TYPE_ARGUMENTS = PLUGIN_ID + ".compiler.problem.redundantSpecificationOfTypeArguments";
+	</pre>
+</li>
+<li>Added a new API in ClassInstanceCreation to tell whether the resolved type is inferred from the assignment context:
+<br>(see bug <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350897">350897</a> for details):
+<pre>
+	/**
+	 * Returns <code>true</code> if the resolved class type has been inferred
+	 * from the assignment context (JLS4 15.12.2.8), <code>false</code> otherwise.
+	 *
+	 * This information is available only when bindings are requested when the AST is being built.
+	 *
+	 * @return <code>true</code> if the resolved class type has been inferred
+	 * 	from the assignment context (JLS3 15.12.2.8), <code>false</code> otherwise
+	 * @since 3.7.1
+	 */
+	public boolean isResolvedTypeInferredFromExpectedType();
+</pre>
+</li>
+</ul>
+
+<h3>Problem Reports Fixed</h3>
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=342936">342936</a>
+NPEs and inconsistencies when running jdt.compiler.tool.tests against Java 7
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351426">351426</a>
+[1.7][code assist] CompletionContext.getExpectedTypesKeys() returns wrong type
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353137">353137</a>
+[1.7] Make sure TagBits.AnnotationSafeVarargs and AnnotationPolymorphicSignature are handled everywhere
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=353093">353093</a>
+IMethod#getAnnotations() doesn't return @SafeVarargs of java.util.Arrays#asList(T...)
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=352464">352464</a>
+[1.7] Incorrect Javadoc shown for reference of invokeExact
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351498">351498</a>
+[model]java.util.ConcurrentModificationException upon startup
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=352699">352699</a>
+[1.7][compiler] Improve error range for redundant type parameter warning
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=352665">352665</a>
+[1.6][compiler] Internal compiler Error: ArrayIndexOutOfBoundsException when compiling certain classes with outer access error
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=352553">352553</a>
+[1.7] 'char a\u200b' is being accepted in 1.6 mode
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=352496">352496</a>
+tests using wrong version of JCL
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=300576">300576</a>
+NPE Computing type hierarchy when compliance doesn't match libraries
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=352145">352145</a>
+[1.7][compiler] VerifyError with aload0 being involved into ConditionalExpression
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351965">351965</a>
+[1.7] CCE when using diamond in 1.4
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351444">351444</a>
+[1.7][content assist] Need to know whether I can use diamond
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=352014">352014</a>
+\u1369 no longer accepted as a valid java identifier part
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351653">351653</a>
+[1.7][compiler]: VerifyError in try statement with finally and return statements
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340747">340747</a>
+[1.7][compiler] compiler option to warn when diamond can be used, but type args are used instead.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350895">350895</a>
+[1.7][formatter] New option to wrap before/after '|' in multi-catch
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350652">350652</a>
+[1.7][assist] Completion issues with multicatch (FUP of 343637)
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=347503">347503</a>
+[DOM] ASTParser.setEnvironment() ignores includeRunningVMBootclasspath parameter
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350897">350897</a>
+[1.7][api] ClassInstanceCreation#isResolvedTypeInferredFromExpectedType()
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=351170">351170</a>
+[1.7] ASTRewrite issues in Try with resources
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348493">348493</a>
+[1.7] Improve error msg for Diamond operator in 1.5 mode
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350885">350885</a>
+[Search] The pull up refactoring throws an NPE when pulling up a member that already exists in the superclass
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350611">350611</a>
+[1.7] Inconsistent error msg and error location for illegal diamond
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350579">350579</a>
+[1.7][compiler] VerifyError running example from bug 338402 comment 5
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350767">350767</a>
+[1.7][assist] CCE while invoking assist on a multi-catch block
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349312">349312</a>
+[1.7][compiler] improved problem messages
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350003">350003</a>
+[1.7] [compiler] AnnotationPolymorphicSignature tag is not being set to invokeExact while compiling MethodHandle source file
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350496">350496</a>
+[1.7] @PolymorphicSignature IMethods are missing the annotation
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349314">349314</a>
+[1.7][formatter] Line wrapping for multi-catch arguments
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350039">350039</a>
+[1.7] ASTParser#createASTs(..) doesn't resolve IMethodBinding for @PolymorphicSignature method reference
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349396">349396</a>
+[1.7][formatter] Line wrapping and indentation options for try with resources
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=350361">350361</a>
+[1.7] Unhandled exception type Exception
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349488">349488</a>
+[1.7] IMethodBinding#getMethodDeclaration() should return the declaration of @PolymorphicSignature methods
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349487">349487</a>
+[1.7] IMethodBinding#getJavaElement() returns inexistent element for @PolymorphicSignature methods
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349862">349862</a>
+[1.7] NPE when trying to use UnionType as TryStatement resource
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349864">349864</a>
+[1.7][compiler] Error message considers AutoCloseable as class
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348956">348956</a>
+[1.7] ITypeBinding#isAssignmentCompatible(ITypeBinding) returns different result
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349312">349312</a>
+[1.7][compiler] improved problem messages
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349008">349008</a>
+[1.7] Ugly formatting for try with resources
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=349072">349072</a>
+[1.7] &quot;Cannot infer elided type(s)&quot; sounds too elite
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348705">348705</a>
+[1.7][compiler] Improve error message for unhandled IOException generated due to compiler-generated close()
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348050">348050</a>
+[1.7] Error in JDT Core during AST creation
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348406">348406</a>
+[1.7] Incorrect error msg on try with resources in 1.5 mode 
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348492">348492</a>
+[1.7] Improve error msg on strings in switch in 1.5 mode
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348491">348491</a>
+[1.7] Rename IProblem.IllegalBinaryLiteral to BinaryLiteralNotBelow17 and IProblem.IllegalUsageOfUnderscore to UnderscoreInLiteralsNotBelow17
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348369">348369</a>
+[1.7] Missing error &quot;No exception of type Exception[] can be thrown&quot;
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=348379">348379</a>
+[1.7][compiler] Null pointer access warning for strings in switch
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=346415">346415</a>
+[1.7][assist] No proposal inside catch statement from 3rd catch block onwards
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=346454">346454</a>
+[1.7][content assist]Getting NegativeArraySizeException while trying content assist after diamond
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=347600">347600</a>
+[1.7][compiler] Suspect bounds check failure after inference.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=347746">347746</a>
+[1.7][compiler] Bounds check failure during method inference
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=283353">283353</a>
+[1.5][compiler] Eclipse compiler shows error on javac-valid construct: Bound mismatch
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=347145">347145</a>
+[1.7][compiler] Bounds check issue with raw types in method inference
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=347426">347426</a>
+[1.7][compiler] ecj behavior differs from javac
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=344522">344522</a>
+[1.7] Incorrect source range for ParameterizedType in case of Diamond
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=341795">341795</a>
+[1.7][compiler] Cannot assign a generic method with multiple bounds return value to any variable
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=242159">242159</a>
+[1.7][compiler] type inference with unbounded wildcard in result type
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=343693">343693</a>
+[1.7] Adjust subclasses of AllocationExpression for &lt;&gt; support
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=343637">343637</a>
+[1.7] Already used exception offered again in a Mulicatch block
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345968">345968</a>
+[1.7][compiler] NPE while using diamond for inner class allocation
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=334313">334313</a>
+[1.5][compiler] Bug in the way eclipse handles overriding of generic abstract method by a non-abstract method
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=346029">346029</a>
+[1.7][compiler] Eclipse compiles code rejected by JDK7
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345628">345628</a>
+[1.7] Rename disjunctive type to union type
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345559">345559</a>
+[1.7][compiler] Type inference for generic allocation can be avoided for invalid constructor
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=342819">342819</a>
+Code rejected by javac with name clash error compiles under eclipse.
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=334306">334306</a>
+[1.7][compiler] name clash reported in javac 1.7 and not in javac 1.6
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345579">345579</a>
+[1.7][compiler] Weird error message in rethrow site
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345522">345522</a>
+[1.7][compiler] Compilers fails to compute precisely rethrown types
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=344824">344824</a>
+[1.7][compiler] Incorrect error range for unreachable catch block error in multi-catch
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340486">340486</a>
+[1.7][compiler] Missing error in multi catch scenario
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345359">345359</a>
+[1.7][compiler] AIOOB on diamond construct with argument error
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=345239">345239</a>
+[1.7][compiler] Compiler should issue better diagnostics for use of &lt;&gt; with anonymous classes
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=344655">344655</a>
+[1.7][compiler] Prohibit use of &lt;&gt; with explicit type arguments to generic constructor
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=328575">328575</a>
+Inheritance of annotation fails with generic classes
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=343785">343785</a>
+[1.7] Incorrect line numbers in stack trace with try with resources
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=343687">343687</a>
+[1.7] IAE in NumberLiteral#setToken(String) for binary tokens and tokens with underscore
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=339478">339478</a>
+[1.7][compiler] support for diamond case
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=343476">343476</a>
+[1.7][assist] propose String variables and fields inside catch expression
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=292087">292087</a>
+anonymous class in array member initializer confuses content assist
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=343475">343475</a>
+[1.7] Compiler warning for invalid type inside switch needs to be improved
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=342416">342416</a>
+[1.7] Signature#createIntersectionTypeSignature(..) should take array of signatures
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340059">340059</a>
+[1.7] IAE when dealing with Signature of disjunctive type
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=338789">338789</a>
+[1.7][assist] No proposal inside a multi catch statement after '|'
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=341333">341333</a>
+[1.7][compiler] DisjunctiveTypeReference#resolveType(..) does not set the value for DisjunctiveTypeReference$resolvedType
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340634">340634</a>
+[1.7][compiler][multicatch] Compiler accepts type variables as catch parameter type
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340626">340626</a>
+[1.7][compiler] Inconsistent source pinpointing in multi-catch blocks
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340513">340513</a>
+[1.7][compiler] Unicode 6.0 characters work at compiler compliance level 1.5 and 1.6
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340445">340445</a>
+[1.7] ASTRewriteAnalyzer and ASTRewriteFlattener need updates
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340372">340372</a>
+[1.7] NaiveASTFlattener needs to support the new AST nodes
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340365">340365</a>
+[1.7] Problems in new APIs (TryStatementWithResources, DisjunctiveType)
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340375">340375</a>
+[1.7] Merge TryStatementWithResources into TryStatement
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=340022">340022</a>
+[1.7][compiler] Support for precise rethrow
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=339837">339837</a>
+[1.7][compiler] Multicatch syntax not rejected at 1.6-
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=339864">339864</a>
+[1.7] Add recovery in ASTConverter for all new constructs in JLS3 mode
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=338402">338402</a>
+[1.7][compiler][enh] Open issues in try with resources implementation
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=337795">337795</a>
+[1.7][compiler] Missing unchecked warning at varargs method/ctor declaration site
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=337802">337802</a>
+[1.7][compiler] Usage of 0x0ffffffff is being reported as out of range.
+<a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=337799">337799</a>
+[1.7][compiler][varargs] Eclipse fails to report error on incorrect SafeVarargs usage
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=337738">337738</a>
+[1.7][content assist]Test CompletionParserTest#testEA_1 fails
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=336782">336782</a>
+[1.7][recovery]Extra error tokens with invalid unary operator
+<br><a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=336322">336322</a>
+[1.7][search]CCE while searching for a type reference in multiple catch parameters
+
+<hr>
+<p>For earlier build notes, also see <a href="http://git.eclipse.org/c/jdt/eclipse.jdt.core.git/plain/org.eclipse.jdt.core/notes/R37_buildnotes_jdt-core.html">build notes up to Release 3.7</a>.</p>
+<br>
+  <p>
+    <a href="http://validator.w3.org/check?uri=referer"><img
+        src="http://www.w3.org/Icons/valid-html401"
+        alt="Valid HTML 4.01 Transitional" height="31" width="88"></a>
+  </p>
+</body>
+</html>
+
