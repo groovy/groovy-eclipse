@@ -137,8 +137,9 @@
 	  	 <id>e46</id>
 		 <layout>p2</layout>
 		 <!-- TODO: after neon release change this: -->
-                 <url>http://download.eclipse.org/eclipse/updates/4.6milestones</url> 
+                 <url>http://download.eclipse.org/eclipse/updates/4.6milestones</url>
 <!--
+                 <url>http://download.eclipse.org/eclipse/updates/4.6milestones</url> 
                  <url>http://download.eclipse.org/eclipse/updates/4.6</url> 
 -->
 	       </repository>
@@ -158,7 +159,7 @@
 	       </modules>
 	       <properties>
 	  	 <dist.target>e4.6</dist.target>
-	 	 <greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e45${dist.qualifier}'</greclipse.build.qualifier>
+	 	 <greclipse.build.qualifier>'xx-'yyyyMMddHHmm'-e46${dist.qualifier}'</greclipse.build.qualifier>
 	       </properties>
 	     </profile>
 
