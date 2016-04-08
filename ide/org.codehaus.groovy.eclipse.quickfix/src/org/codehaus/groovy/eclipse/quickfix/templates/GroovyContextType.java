@@ -44,7 +44,7 @@ public class GroovyContextType extends AbstractJavaContextType {
         // global
         addResolver(new GlobalTemplateVariables.Cursor());
         addResolver(new GlobalTemplateVariables.WordSelection());
-        addResolver(new SurroundWithLineSelection());
+//        addResolver(new SurroundWithLineSelection());
         addResolver(new GlobalTemplateVariables.Dollar());
         addResolver(new GlobalTemplateVariables.Date());
         addResolver(new GlobalTemplateVariables.Year());
