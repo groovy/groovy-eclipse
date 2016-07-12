@@ -12,12 +12,16 @@
  *******************************************************************************/
 package org.codehaus.groovy.m2eclipse;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.runtime.CoreException;
@@ -37,7 +41,10 @@ import org.eclipse.m2e.jdt.internal.AbstractJavaProjectConfigurator;
 public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
         implements IJavaProjectConfigurator {
 
-    @Override
+    private static final String SRC_MAIN_GROOVY = "src/main/groovy";
+	private static final String SRC_TEST_GROOVY = "src/test/groovy";
+	
+	@Override
     public void configure(ProjectConfigurationRequest request,
             IProgressMonitor monitor) throws CoreException {
         super.configure(request, monitor);
@@ -69,28 +76,38 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
             IJavaProject javaProject = JavaCore.create(facade.getProject());
             IPath projectPath = facade.getFullPath();
 
-            if (sourceType == SourceType.TEST || sourceType == SourceType.BOTH) {
-                IPath testPath = projectPath.append("src/test/groovy"); //$NON-NLS-1$
+            Set<IPath> toRemove = new HashSet<IPath>();
+
+            IFolder testFolder = javaProject.getProject().getFolder(SRC_TEST_GROOVY);
+            IPath testPath = testFolder.getFullPath(); //$NON-NLS-1$
+            if (testFolder.exists() && (sourceType == SourceType.TEST || sourceType == SourceType.BOTH)) {
                 IPath testOutPath = projectPath.append("target/test-classes"); //$NON-NLS-1$
                 if (!hasEntry(javaProject, testPath)) {
                     GroovyRuntime.addClassPathEntryToFront(javaProject, JavaCore.newSourceEntry(testPath, new Path[0], testOutPath));
                 }
+            } else {
+                toRemove.add(testPath);
             }
             
-            if (sourceType == SourceType.MAIN || sourceType == SourceType.BOTH) {
-            	IPath sourcePath = projectPath.append("src/main/groovy"); //$NON-NLS-1$
+            IFolder sourceFolder = javaProject.getProject().getFolder(SRC_MAIN_GROOVY);
+        	IPath sourcePath = sourceFolder.getFullPath();
+            if (sourceFolder.exists() && (sourceType == SourceType.MAIN || sourceType == SourceType.BOTH)) {
             	IPath sourceOutPath = projectPath.append("target/classes"); //$NON-NLS-1$
             	if (!hasEntry(javaProject, sourcePath)) {
             		GroovyRuntime.addClassPathEntryToFront(javaProject, JavaCore.newSourceEntry(sourcePath, new Path[0], sourceOutPath));
             	}
+            } else {
+            	toRemove.add(sourcePath);
             }
 
-            // now remove the generated sources from the classpath if it exists
+            // We should remove the generated sources from the classpath if it exists
+            toRemove.add(projectPath.append("target/generated-sources/groovy-stubs/main"));
+            
+            // Also remove stuff that was there already which we control, but that shouldn't be there according to the gmaven conf
             IClasspathEntry[] allEntries = javaProject.getRawClasspath();
             for (IClasspathEntry entry : allEntries) {
-                if (entry.getPath().equals(javaProject.getProject().getFolder("target/generated-sources/groovy-stubs/main").getFullPath())) {
+                if (toRemove.contains(entry.getPath())) {
                     GroovyRuntime.removeClassPathEntry(javaProject, entry);
-                    break;
                 }
             }
         }
@@ -186,8 +203,8 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator
      */
     private SourceType getSourceTypeInGECProject(IMavenProjectFacade facade) {
         IProject project = facade.getProject();
-        boolean srcMainGroovy = project.getFolder("src/main/groovy").exists();
-        boolean srcTestGroovy = project.getFolder("src/test/groovy").exists();
+        boolean srcMainGroovy = project.getFolder(SRC_MAIN_GROOVY).exists();
+        boolean srcTestGroovy = project.getFolder(SRC_TEST_GROOVY).exists();
         if (srcMainGroovy) {
             if (srcTestGroovy) {
                 return SourceType.BOTH;
