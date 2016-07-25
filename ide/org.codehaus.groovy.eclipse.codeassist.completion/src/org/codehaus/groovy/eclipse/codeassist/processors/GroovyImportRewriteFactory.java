@@ -130,7 +130,7 @@ public class GroovyImportRewriteFactory {
 
             ASTParser parser = ASTParser.newParser(getAstLevel());
 			parser.setSource(unit.cloneCachingContents(CharOperation.concat(
-					imports.chars(), "\nclass X { }".toCharArray())));
+                    imports.getChars(), "\nclass X { }".toCharArray())));
 			parser.setKind(ASTParser.K_COMPILATION_UNIT);
 			ASTNode result = null;
 			try {

@@ -32,7 +32,7 @@ public class CharArraySequence implements CharSequence {
         this.chars = contents.toCharArray();
     }
 
-    public char[] chars() {
+    public char[] getChars() {
         return chars;
     }
 
