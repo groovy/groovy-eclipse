@@ -2674,14 +2674,14 @@ public abstract class Scope {
 								if (compatibleMethod != null) {
 									if (compatibleMethod.isValidBinding()) {
 										if (compatibleMethod.canBeSeenBy(unitScope.fPackage)) {
+											if (!skipOnDemand && !importBinding.onDemand) {
+												visible = null; // forget previous matches from on demand imports
+												skipOnDemand = true;
+											}
 											if (visible == null || !visible.contains(compatibleMethod)) {
 												ImportReference importReference = importBinding.reference;
 												if (importReference != null) {
 													importReference.bits |= ASTNode.Used;
-												}
-												if (!skipOnDemand && !importBinding.onDemand) {
-													visible = null; // forget previous matches from on demand imports
-													skipOnDemand = true;
 												}
 												if (visible == null)
 													visible = new ObjectVector(3);
