@@ -126,7 +126,7 @@ public class ClassHelper {
         GROOVY_OBJECT_TYPE, GROOVY_INTERCEPTABLE_TYPE, Enum_Type, Annotation_TYPE
     };
 
-    
+    @SuppressWarnings("unused")
     private static ClassNode[] numbers = new ClassNode[] {
         char_TYPE, byte_TYPE, short_TYPE, int_TYPE, long_TYPE, 
         double_TYPE, float_TYPE, Short_TYPE, Byte_TYPE, Character_TYPE,

@@ -235,6 +235,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     public static GroovyRecognizer make(InputBuffer in) { return make(new GroovyLexer(in)); }
     public static GroovyRecognizer make(LexerSharedInputState in) { return make(new GroovyLexer(in)); }
 
+    @SuppressWarnings("unused")
     private static GroovySourceAST dummyVariableToforceClassLoaderToFindASTClass = new GroovySourceAST();
 
     List warningList;
@@ -251,6 +252,8 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     GroovyLexer lexer;
     public GroovyLexer getLexer() { return lexer; }
     public void setFilename(String f) { super.setFilename(f); lexer.setFilename(f); }
+
+    @SuppressWarnings("unused")
     private SourceBuffer sourceBuffer;
     public void setSourceBuffer(SourceBuffer sourceBuffer) {
         this.sourceBuffer = sourceBuffer;
@@ -513,6 +516,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         return cname.equals(x.getText());
     }
     
+    @SuppressWarnings("unused")
     private void dumpTree(AST ast, String offset) {
         dump(ast, offset);
         for (AST node = ast.getFirstChild(); node != null; node = node.getNextSibling()) {
@@ -569,6 +573,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     // an enclosing loop, which is why this ugly hack (a fake
     // empty alternative with always-false semantic predicate)
     // is necessary.
+    @SuppressWarnings("unused")
     private static final boolean ANTLR_LOOP_EXIT = false;
 
 protected GroovyRecognizer(TokenBuffer tokenBuf, int k) {
@@ -2782,7 +2787,7 @@ inputState.guessing--;
                 }
                 if (!(matchGenericTypeBrackets(((currentLtLevel != 0) || ltCounter == currentLtLevel),
         "Missing closing bracket '>' for generics types", "Please specify the missing bracket!")))
-                  throw new SemanticException("matchGenericTypeBrackets(((currentLtLevel != 0) || ltCounter == currentLtLevel),\r\n        \"Missing closing bracket '>' for generics types\", \"Please specify the missing bracket!\")");
+                  throw new SemanticException("matchGenericTypeBrackets(((currentLtLevel != 0) || ltCounter == currentLtLevel),\n        \"Missing closing bracket '>' for generics types\", \"Please specify the missing bracket!\")");
                 if ( inputState.guessing==0 ) {
                         typeParameters_AST = (AST)currentAST.root;
                         typeParameters_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(TYPE_PARAMETERS,"TYPE_PARAMETERS",first,LT(1))).add(typeParameters_AST));
@@ -3593,7 +3598,7 @@ inputState.guessing--;
                 }
                 if (!(matchGenericTypeBrackets(((currentLtLevel != 0) || ltCounter == currentLtLevel),
         "Missing closing bracket '>' for generics types", "Please specify the missing bracket!")))
-                  throw new SemanticException("matchGenericTypeBrackets(((currentLtLevel != 0) || ltCounter == currentLtLevel),\r\n        \"Missing closing bracket '>' for generics types\", \"Please specify the missing bracket!\")");
+                  throw new SemanticException("matchGenericTypeBrackets(((currentLtLevel != 0) || ltCounter == currentLtLevel),\n        \"Missing closing bracket '>' for generics types\", \"Please specify the missing bracket!\")");
                 if ( inputState.guessing==0 ) {
                         typeArguments_AST = (AST)currentAST.root;
                         typeArguments_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(TYPE_ARGUMENTS,"TYPE_ARGUMENTS",first,LT(1))).add(typeArguments_AST));

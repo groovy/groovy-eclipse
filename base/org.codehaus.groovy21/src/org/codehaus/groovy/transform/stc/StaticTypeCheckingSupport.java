@@ -136,21 +136,24 @@ public abstract class StaticTypeCheckingSupport {
     protected final static ClassNode Matcher_TYPE = makeWithoutCaching(Matcher.class);
     protected final static ClassNode ArrayList_TYPE = makeWithoutCaching(ArrayList.class);
     protected final static ExtensionMethodCache EXTENSION_METHOD_CACHE = new ExtensionMethodCache();
-    protected final static Map<ClassNode, Integer> NUMBER_TYPES = Collections.unmodifiableMap(
-            new HashMap<ClassNode, Integer>() {{
-                put(ClassHelper.byte_TYPE, 0);
-                put(ClassHelper.Byte_TYPE, 0);
-                put(ClassHelper.short_TYPE, 1);
-                put(ClassHelper.Short_TYPE, 1);
-                put(ClassHelper.int_TYPE, 2);
-                put(ClassHelper.Integer_TYPE, 2);
-                put(ClassHelper.Long_TYPE, 3);
-                put(ClassHelper.long_TYPE, 3);
-                put(ClassHelper.float_TYPE, 4);
-                put(ClassHelper.Float_TYPE, 4);
-                put(ClassHelper.double_TYPE, 5);
-                put(ClassHelper.Double_TYPE, 5);
-            }});
+    protected final static Map<ClassNode, Integer> NUMBER_TYPES;
+    static {
+        final Map<ClassNode, Integer> types = new HashMap<ClassNode, Integer>(16);
+        types.put(ClassHelper.byte_TYPE, 0);
+        types.put(ClassHelper.Byte_TYPE, 0);
+        types.put(ClassHelper.short_TYPE, 1);
+        types.put(ClassHelper.Short_TYPE, 1);
+        types.put(ClassHelper.int_TYPE, 2);
+        types.put(ClassHelper.Integer_TYPE, 2);
+        types.put(ClassHelper.Long_TYPE, 3);
+        types.put(ClassHelper.long_TYPE, 3);
+        types.put(ClassHelper.float_TYPE, 4);
+        types.put(ClassHelper.Float_TYPE, 4);
+        types.put(ClassHelper.double_TYPE, 5);
+        types.put(ClassHelper.Double_TYPE, 5);
+
+        NUMBER_TYPES = Collections.unmodifiableMap(types);
+    }
 
     protected final static ClassNode GSTRING_STRING_CLASSNODE = WideningCategories.lowestUpperBound(
             ClassHelper.STRING_TYPE,
@@ -1311,6 +1314,7 @@ public abstract class StaticTypeCheckingSupport {
      * A DGM-like method which adds support for method calls which are handled
      * specifically by the Groovy compiler.
      */
+    @SuppressWarnings("unused")
     private static class ObjectArrayStaticTypesHelper {
         public static <T> T getAt(T[] arr, int index) { return null;} 
         public static <T,U extends T> void putAt(T[] arr, int index, U object) { }
@@ -1325,6 +1329,7 @@ public abstract class StaticTypeCheckingSupport {
     private static class ExtensionMethodCache {
 
         private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        @SuppressWarnings("unused")
         private List<ExtensionModule> modules = Collections.emptyList();
         private Map<String, List<MethodNode>> cachedMethods = null;
         private WeakReference<ClassLoader> origin = new WeakReference<ClassLoader>(null);
