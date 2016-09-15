@@ -3,12 +3,12 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Groovy Runtime Plug-in
 Bundle-SymbolicName: org.codehaus.groovy
 Bundle-Vendor: Codehaus.org
-Bundle-Version: 2.4.3.qualifier
+Bundle-Version: 2.4.7.qualifier
 Bundle-ClassPath: eclipse-trace.jar,
  groovy-eclipse.jar,
  lib/bsf-2.4.0.jar,
- lib/ivy-2.3.0.jar,
- lib/groovy-all-2.4.3.jar
+ lib/ivy-2.4.0.jar,
+ lib/groovy-all-2.4.7.jar
 Export-Package: groovy.beans,
  groovy.grape,
  groovy.inspect,
@@ -145,9 +145,7 @@ Export-Package: groovy.beans,
  org.codehaus.groovy.vmplugin.v6,
  org.codehaus.groovy.vmplugin.v7
 Require-Bundle: org.eclipse.core.runtime,
- org.apache.ant,
- org.apache.commons.logging;resolution:=optional,
- org.mozilla.javascript;resolution:=optional
+ org.apache.ant
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.activator.GroovyActivator
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6

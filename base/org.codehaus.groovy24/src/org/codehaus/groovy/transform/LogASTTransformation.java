@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.transform;
 
@@ -27,7 +30,6 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -41,7 +43,6 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Iterator;
 
 /**
  * This class provides an AST Transformation to add a log field to a class.
@@ -170,11 +171,11 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
     }
 
     private String lookupCategoryName(AnnotationNode logAnnotation) {
-         Expression member = logAnnotation.getMember("category");
-         if (member != null && member.getText() != null) {
-             return member.getText();
-         }
-         return DEFAULT_CATEGORY_NAME;
+        Expression member = logAnnotation.getMember("category");
+        if (member != null && member.getText() != null) {
+            return member.getText();
+        }
+        return DEFAULT_CATEGORY_NAME;
     }
 
     private LoggingStrategy createLoggingStrategy(AnnotationNode logAnnotation, GroovyClassLoader loader) {
@@ -229,8 +230,8 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
          * In this method, you are given a ClassNode, a field name and a category name, and you must add a new Field
          * onto the class. Return the result of the ClassNode.addField operations.
          *
-         * @param classNode the class that was originally annotated with the Log transformation.
-         * @param fieldName the name of the logger field
+         * @param classNode    the class that was originally annotated with the Log transformation.
+         * @param fieldName    the name of the logger field
          * @param categoryName the name of the logging category
          * @return the FieldNode instance that was created and added to the class
          */
@@ -254,28 +255,25 @@ public class LogASTTransformation extends AbstractASTTransformation implements C
             this(null);
         }
 
-        public String getCategoryName(ClassNode classNode, String categoryName){
-            if(categoryName.equals(DEFAULT_CATEGORY_NAME)){
+        public String getCategoryName(ClassNode classNode, String categoryName) {
+            if (categoryName.equals(DEFAULT_CATEGORY_NAME)) {
                 return classNode.getName();
             }
             return categoryName;
         }
 
         protected ClassNode classNode(String name) {
-            ClassLoader cl = loader==null?this.getClass().getClassLoader():loader;
+            ClassLoader cl = loader == null ? this.getClass().getClassLoader() : loader;
             try {
                 return ClassHelper.make(Class.forName(name, false, cl));
             } catch (ClassNotFoundException e) {
-                // GRECLIPSE: old
-                /*
-                throw new GroovyRuntimeException(e);
-                new*/
-                // See https://jira.codehaus.org/browse/GROOVY-5736
+                // GRECLIPSE edit
+                //throw new GroovyRuntimeException("Unable to load logging class", e);
                 // don't throw an exception, rather just make the class from text
+                // See https://jira.codehaus.org/browse/GROOVY-5736
                 // might be fixed in Groovy 2.0.5 and later
                 return ClassHelper.make(name);
-                //end
-                //GRECLIPSE
+                // GRECLIPSE end
             }
         }
     }

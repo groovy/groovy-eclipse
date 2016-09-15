@@ -1,37 +1,44 @@
 /*
- * Copyright 2003-2012 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
-
 package org.codehaus.groovy.transform.stc;
 
-import groovy.lang.*;
-
+import groovy.lang.Binding;
+import groovy.lang.Closure;
+import groovy.lang.GroovyClassLoader;
+import groovy.lang.GroovyShell;
+import groovy.lang.Script;
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.*;
-import org.codehaus.groovy.ast.expr.*;
-import org.codehaus.groovy.ast.stmt.EmptyStatement;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.AttributeExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MethodCall;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
-import org.codehaus.groovy.classgen.asm.InvocationWriter;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.runtime.InvokerHelper;
-
-import groovyjarjarasm.asm.Opcodes;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -45,8 +52,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.logging.Logger;
 
 /**
  * Base class for type checking extensions written in Groovy. Compared to its superclass, {@link TypeCheckingExtension},
@@ -59,26 +64,28 @@ import java.util.logging.Logger;
 public class GroovyTypeCheckingExtensionSupport extends AbstractTypeCheckingExtension {
 
     // method name to DSL name
-    private static final Map<String, String> METHOD_ALIASES = Collections.unmodifiableMap(
-            new HashMap<String, String>() {{
-                put("onMethodSelection", "onMethodSelection");
-                put("afterMethodCall", "afterMethodCall");
-                put("beforeMethodCall", "beforeMethodCall");
-                put("unresolvedVariable", "handleUnresolvedVariableExpression");
-                put("unresolvedProperty", "handleUnresolvedProperty");
-                put("unresolvedAttribute", "handleUnresolvedAttribute");
-                put("ambiguousMethods", "handleAmbiguousMethods");
-                put("methodNotFound", "handleMissingMethod");
-                put("afterVisitMethod", "afterVisitMethod");
-                put("beforeVisitMethod", "beforeVisitMethod");
-                put("afterVisitClass", "afterVisitClass");
-                put("beforeVisitClass", "beforeVisitClass");
-                put("incompatibleAssignment", "handleIncompatibleAssignment");
-                put("incompatibleReturnType", "handleIncompatibleReturnType");
-                put("setup","setup");
-                put("finish", "finish");
-            }}
-    );
+    private static final Map<String, String> METHOD_ALIASES;
+    static {
+        final Map<String, String> aliases = new HashMap<String, String>(20);
+        aliases.put("onMethodSelection", "onMethodSelection");
+        aliases.put("afterMethodCall", "afterMethodCall");
+        aliases.put("beforeMethodCall", "beforeMethodCall");
+        aliases.put("unresolvedVariable", "handleUnresolvedVariableExpression");
+        aliases.put("unresolvedProperty", "handleUnresolvedProperty");
+        aliases.put("unresolvedAttribute", "handleUnresolvedAttribute");
+        aliases.put("ambiguousMethods", "handleAmbiguousMethods");
+        aliases.put("methodNotFound", "handleMissingMethod");
+        aliases.put("afterVisitMethod", "afterVisitMethod");
+        aliases.put("beforeVisitMethod", "beforeVisitMethod");
+        aliases.put("afterVisitClass", "afterVisitClass");
+        aliases.put("beforeVisitClass", "beforeVisitClass");
+        aliases.put("incompatibleAssignment", "handleIncompatibleAssignment");
+        aliases.put("incompatibleReturnType", "handleIncompatibleReturnType");
+        aliases.put("setup","setup");
+        aliases.put("finish", "finish");
+
+        METHOD_ALIASES = Collections.unmodifiableMap(aliases);
+    }
 
     // the following fields are closures executed in event-based methods
     private final Map<String, List<Closure>> eventHandlers = new HashMap<String, List<Closure>>();
@@ -142,7 +149,7 @@ public class GroovyTypeCheckingExtensionSupport extends AbstractTypeCheckingExte
                     );
                 } catch (InvocationTargetException e) {
                     addLoadingError(config);
-            }
+                }
             }
         } catch (ClassNotFoundException e) {
             // silent
@@ -152,36 +159,30 @@ public class GroovyTypeCheckingExtensionSupport extends AbstractTypeCheckingExte
             addLoadingError(config);
         }
         if (script==null) {
-        ClassLoader cl = typeCheckingVisitor.getSourceUnit().getClassLoader();
-        // cast to prevent incorrect @since 1.7 warning
-        InputStream is = ((ClassLoader)transformLoader).getResourceAsStream(scriptPath);
-        if (is == null) {
-            // fallback to the source unit classloader
-            is = cl.getResourceAsStream(scriptPath);
-        }
-        if (is == null) {
-            // fallback to the compiler classloader
-            cl = GroovyTypeCheckingExtensionSupport.class.getClassLoader();
-            is = cl.getResourceAsStream(scriptPath);
-        }
-        // GRECLIPSE
-        // don't place an error here if file not found during reconcile.
-        // might be because build hasn't happened yet.
-//        /*old{
-        if (is == null) {
-//        }new*/
-//        if (is == null && !typeCheckingVisitor.getSourceUnit().isReconcile) {
-            //GRECLIPSE end
-            // if the input stream is still null, we've not found the extension
-            context.getErrorCollector().addFatalError(
-                    new SimpleMessage("Static type checking extension '" + scriptPath + "' was not found on the classpath.",
-                            config.getDebug(), typeCheckingVisitor.getSourceUnit()));
-        }
-        try {
-            GroovyShell shell = new GroovyShell(transformLoader, new Binding(), config);
+            ClassLoader cl = typeCheckingVisitor.getSourceUnit().getClassLoader();
+            // cast to prevent incorrect @since 1.7 warning
+            InputStream is = ((ClassLoader)transformLoader).getResourceAsStream(scriptPath);
+            if (is == null) {
+                // fallback to the source unit classloader
+                is = cl.getResourceAsStream(scriptPath);
+            }
+            if (is == null) {
+                // fallback to the compiler classloader
+                cl = GroovyTypeCheckingExtensionSupport.class.getClassLoader();
+                is = cl.getResourceAsStream(scriptPath);
+            }
+            // GRECLIPSE add condition
+            if (is == null && !typeCheckingVisitor.getSourceUnit().isReconcile) {
+                // if the input stream is still null, we've not found the extension
+                context.getErrorCollector().addFatalError(
+                        new SimpleMessage("Static type checking extension '" + scriptPath + "' was not found on the classpath.",
+                                config.getDebug(), typeCheckingVisitor.getSourceUnit()));
+            }
+            try {
+                GroovyShell shell = new GroovyShell(transformLoader, new Binding(), config);
                 script = (TypeCheckingDSL) shell.parse(
-                    new InputStreamReader(is, typeCheckingVisitor.getSourceUnit().getConfiguration().getSourceEncoding())
-            );
+                        new InputStreamReader(is, typeCheckingVisitor.getSourceUnit().getConfiguration().getSourceEncoding())
+                );
             } catch (CompilationFailedException e) {
                 throw new GroovyBugError("An unexpected error was thrown during custom type checking", e);
             } catch (UnsupportedEncodingException e) {

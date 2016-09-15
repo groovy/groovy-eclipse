@@ -1,20 +1,22 @@
 /*
- * Copyright 2003-2007 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.ast;
-
 
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.*;
@@ -25,15 +27,16 @@ import java.util.List;
 /**
  * Abstract base class for any GroovyCodeVisitor which by default
  * just walks the code and expression tree
- * 
+ *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision$
  */
 public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
 
     public void visitBlockStatement(BlockStatement block) {
-        for (Statement statement : block.getStatements() ) {
-        	if (statement!=null) //GRECLIPSE
+        for (Statement statement : block.getStatements()) {
+            // GRECLIPSE add
+            if (statement != null)
+            // GRECLIPSE end
             statement.visit(this);
         }
     }
@@ -57,11 +60,11 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
         ifElse.getBooleanExpression().visit(this);
         ifElse.getIfBlock().visit(this);
 
-        Statement elseBlock = ifElse.getElseBlock(); 
+        Statement elseBlock = ifElse.getElseBlock();
         if (elseBlock instanceof EmptyStatement) {
             // dispatching to EmptyStatement will not call back visitor, 
             // must call our visitEmptyStatement explicitly
-            visitEmptyStatement((EmptyStatement)elseBlock); 
+            visitEmptyStatement((EmptyStatement) elseBlock);
         } else {
             elseBlock.visit(this);
         }
@@ -82,14 +85,14 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
 
     public void visitTryCatchFinally(TryCatchStatement statement) {
         statement.getTryStatement().visit(this);
-        for (CatchStatement catchStatement : statement.getCatchStatements() ) {
+        for (CatchStatement catchStatement : statement.getCatchStatements()) {
             catchStatement.visit(this);
         }
-        Statement finallyStatement = statement.getFinallyStatement(); 
+        Statement finallyStatement = statement.getFinallyStatement();
         if (finallyStatement instanceof EmptyStatement) {
             // dispatching to EmptyStatement will not call back visitor, 
             // must call our visitEmptyStatement explicitly
-            visitEmptyStatement((EmptyStatement)finallyStatement); 
+            visitEmptyStatement((EmptyStatement) finallyStatement);
         } else {
             finallyStatement.visit(this);
         }
@@ -101,7 +104,7 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
 
     public void visitSwitch(SwitchStatement statement) {
         statement.getExpression().visit(this);
-        for (CaseStatement caseStatement : statement.getCaseStatements() ) {
+        for (CaseStatement caseStatement : statement.getCaseStatements()) {
             caseStatement.visit(this);
         }
         statement.getDefaultStatement().visit(this);
@@ -151,7 +154,7 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
         expression.getTrueExpression().visit(this);
         expression.getFalseExpression().visit(this);
     }
-    
+
     public void visitShortTernaryExpression(ElvisOperatorExpression expression) {
         visitTernaryExpression(expression);
     }
@@ -165,17 +168,17 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
     }
 
     public void visitBooleanExpression(BooleanExpression expression) {
-		expression.getExpression().visit(this);
-	}
+        expression.getExpression().visit(this);
+    }
 
-	public void visitNotExpression(NotExpression expression) {
-		expression.getExpression().visit(this);
-	}
+    public void visitNotExpression(NotExpression expression) {
+        expression.getExpression().visit(this);
+    }
 
     public void visitClosureExpression(ClosureExpression expression) {
         expression.getCode().visit(this);
     }
-    
+
     public void visitTupleExpression(TupleExpression expression) {
         visitListOfExpressions(expression.getExpressions());
     }
@@ -188,16 +191,16 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
         visitListOfExpressions(expression.getExpressions());
         visitListOfExpressions(expression.getSizeExpression());
     }
-    
+
     public void visitMapExpression(MapExpression expression) {
         visitListOfExpressions(expression.getMapEntryExpressions());
-        
+
     }
 
     public void visitMapEntryExpression(MapEntryExpression expression) {
         expression.getKeyExpression().visit(this);
         expression.getValueExpression().visit(this);
-        
+
     }
 
     public void visitRangeExpression(RangeExpression expression) {
@@ -208,7 +211,7 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
     public void visitSpreadExpression(SpreadExpression expression) {
         expression.getExpression().visit(this);
     }
- 
+
     public void visitSpreadMapExpression(SpreadMapExpression expression) {
         expression.getExpression().visit(this);
     }
@@ -221,7 +224,7 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
     public void visitUnaryMinusExpression(UnaryMinusExpression expression) {
         expression.getExpression().visit(this);
     }
-    
+
     public void visitUnaryPlusExpression(UnaryPlusExpression expression) {
         expression.getExpression().visit(this);
     }
@@ -229,7 +232,7 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
     public void visitBitwiseNegationExpression(BitwiseNegationExpression expression) {
         expression.getExpression().visit(this);
     }
-    
+
     public void visitCastExpression(CastExpression expression) {
         expression.getExpression().visit(this);
     }
@@ -246,15 +249,15 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
     public void visitDeclarationExpression(DeclarationExpression expression) {
         visitBinaryExpression(expression);
     }
-    
+
     public void visitPropertyExpression(PropertyExpression expression) {
-    	expression.getObjectExpression().visit(this);
-    	expression.getProperty().visit(this);
+        expression.getObjectExpression().visit(this);
+        expression.getProperty().visit(this);
     }
 
     public void visitAttributeExpression(AttributeExpression expression) {
-    	expression.getObjectExpression().visit(this);
-    	expression.getProperty().visit(this);
+        expression.getObjectExpression().visit(this);
+        expression.getProperty().visit(this);
     }
 
     public void visitFieldExpression(FieldExpression expression) {
@@ -266,36 +269,33 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
     }
 
     protected void visitListOfExpressions(List<? extends Expression> list) {
-        if (list==null) return;
+        if (list == null) return;
         for (Expression expression : list) {
             if (expression instanceof SpreadExpression) {
                 Expression spread = ((SpreadExpression) expression).getExpression();
                 spread.visit(this);
-            } else {
-            	// GRECLIPSE: start: could be null for malformed code (GRE290)
-            	if (expression!=null) 
-            	// end
-            		expression.visit(this);
+            } else if (expression != null) { // GRECLIPSE null check
+                expression.visit(this);
             }
         }
     }
-    
+
     public void visitCatchStatement(CatchStatement statement) {
-    	statement.getCode().visit(this);
+        statement.getCode().visit(this);
     }
-    
+
     public void visitArgumentlistExpression(ArgumentListExpression ale) {
-    	visitTupleExpression(ale);
+        visitTupleExpression(ale);
     }
-    
+
     public void visitClosureListExpression(ClosureListExpression cle) {
         visitListOfExpressions(cle.getExpressions());
     }
 
     public void visitBytecodeExpression(BytecodeExpression cle) {
     }
-    
-    // GRECLIPSE start: empty
+
+    // GRECLIPSE add
     public void visitEmptyExpression(EmptyExpression expression) {
     }
     // GRECLIPSE end

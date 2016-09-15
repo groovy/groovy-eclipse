@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2012 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.classgen;
 
@@ -81,7 +84,7 @@ public class AnnotationVisitor {
         VMPluginFactory.getPlugin().configureAnnotation(node);
         return this.annotation;
     }
-
+    
     private boolean checkIfValidEnumConstsAreUsed(AnnotationNode node) {
         Map<String, Expression> attributes = node.getMembers();
         for (Map.Entry<String, Expression> entry : attributes.entrySet()) {
@@ -99,7 +102,7 @@ public class AnnotationVisitor {
                 ClassExpression ce = (ClassExpression) pe.getObjectExpression();
                 ClassNode type = ce.getType();
                 if (type.isEnum()) {
-                    boolean ok = false; 
+                    boolean ok = false;
                     try {
                         FieldNode enumField = type.getDeclaredField(name);
                         ok = enumField != null && enumField.getType().equals(type);
@@ -126,23 +129,23 @@ public class AnnotationVisitor {
                     return exp;
 
                 try {
+                    // GRECLIPSE add
                     type.getFields();
-                    // GRECLIPSE: start
                     if (type.hasClass()) {
-                    // end
-	                    Field field = type.getTypeClass().getField(pe.getPropertyAsString());
-	                    if (field != null && Modifier.isStatic(field.getModifiers()) && Modifier.isFinal(field.getModifiers())) {
-	                        return new ConstantExpression(field.get(null));
-	                    }
-	              // GRECLIPSE: start
-                    } else {
-                  	  FieldNode fieldNode = type.getField(pe.getPropertyAsString());
-                  	  if (fieldNode!=null && Modifier.isStatic(fieldNode.getModifiers()) && Modifier.isFinal(fieldNode.getModifiers())) {
-                  		  Expression e = fieldNode.getInitialExpression();
-                  		  return (ConstantExpression)e;
-                  	  }
+                    // GRECLIPSE end
+                    Field field = type.getTypeClass().getField(pe.getPropertyAsString());
+                    if (field != null && Modifier.isStatic(field.getModifiers()) && Modifier.isFinal(field.getModifiers())) {
+                        return new ConstantExpression(field.get(null));
                     }
-                    // end
+                    // GRECLIPSE add
+                    } else {
+                        FieldNode fieldNode = type.getField(pe.getPropertyAsString());
+                        if (fieldNode != null && Modifier.isStatic(fieldNode.getModifiers()) && Modifier.isFinal(fieldNode.getModifiers())) {
+                            Expression e = fieldNode.getInitialExpression();
+                            return e;
+                        }
+                    }
+                    // GRECLIPSE end
                 } catch(Exception e) {
                     // ignore, leave property expression in place and we'll report later
                 }
@@ -160,18 +163,19 @@ public class AnnotationVisitor {
 
     private boolean checkIfMandatoryAnnotationValuesPassed(AnnotationNode node) {
         boolean ok = true;
-        Map attributes = node.getMembers();
-        ClassNode classNode = node.getClassNode();
-        for (MethodNode mn : classNode.getMethods()) {
-            String methodName = mn.getName();
-            // if the annotation attribute has a default, getCode() returns a ReturnStatement with the default value
-            // GRECLIPSE: start: temp hack, cannot rely on getCode()
-//            if (mn.getCode() == null && !attributes.containsKey(methodName)) {
-//                addError("No explicit/default value found for annotation attribute '" + methodName + "' in annotation " + classNode, node);
-//                ok = false;
-//            }
-            // end
-        }
+        // GRECLIPSE edit
+        // temp hack; can't rely on getCode()
+        //Map attributes = node.getMembers();
+        //ClassNode classNode = node.getClassNode();
+        //for (MethodNode mn : classNode.getMethods()) {
+        //    String methodName = mn.getName();
+        //    // if the annotation attribute has a default, getCode() returns a ReturnStatement with the default value
+        //    if (mn.getCode() == null && !attributes.containsKey(methodName)) {
+        //        addError("No explicit/default value found for annotation attribute '" + methodName + "'", node);
+        //        ok = false;
+        //    }
+        //}
+        // GRECLIPSE end
         return ok;
     }
 
@@ -181,7 +185,7 @@ public class AnnotationVisitor {
         // if size is >1, then the method was overwritten or something, we ignore that
         // if it is an error, we have to test it at another place. But size==0 is
         // an error, because it means that no such attribute exists.
-        if (methods.size() == 0) {
+        if (methods.isEmpty()) {
             addError("'" + attrName + "'is not part of the annotation " + classNode, node);
             return ClassHelper.OBJECT_TYPE;
         }
@@ -189,7 +193,7 @@ public class AnnotationVisitor {
         return method.getReturnType();
     }
 
-    private boolean isValidAnnotationClass(ClassNode node) {
+    private static boolean isValidAnnotationClass(ClassNode node) {
         return node.implementsInterface(ClassHelper.Annotation_TYPE);
     }
 
@@ -258,15 +262,15 @@ public class AnnotationVisitor {
             return (ConstantExpression) exp;
         }
         String base = "Expected '" + exp.getText() + "' to be an inline constant of type " + attrType.getName();
-            if (exp instanceof PropertyExpression) {
-                addError(base + " not a property expression", exp);
-            } else if (exp instanceof VariableExpression && ((VariableExpression)exp).getAccessedVariable() instanceof FieldNode) {
-                addError(base + " not a field expression", exp);
-            } else {
-                addError(base, exp);
-            }
-            return ConstantExpression.EMPTY_EXPRESSION;
+        if (exp instanceof PropertyExpression) {
+            addError(base + " not a property expression", exp);
+        } else if (exp instanceof VariableExpression && ((VariableExpression)exp).getAccessedVariable() instanceof FieldNode) {
+            addError(base + " not a field expression", exp);
+        } else {
+            addError(base, exp);
         }
+        return ConstantExpression.EMPTY_EXPRESSION;
+    }
 
     /**
      * @param attrName   the name
@@ -295,7 +299,7 @@ public class AnnotationVisitor {
         }
     }
 
-    private boolean hasCompatibleType(ClassNode attrType, ClassNode wrapperType) {
+    private static boolean hasCompatibleType(ClassNode attrType, ClassNode wrapperType) {
         return wrapperType.isDerivedFrom(ClassHelper.getWrapper(attrType));
     }
 

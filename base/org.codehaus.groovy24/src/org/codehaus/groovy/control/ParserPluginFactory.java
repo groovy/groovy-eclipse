@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2007 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.control;
 
@@ -20,19 +23,14 @@ import org.codehaus.groovy.antlr.AntlrParserPluginFactory;
 /**
  * A factory of parser plugin instances
  *
- * @version $Revision$
  */
 public abstract class ParserPluginFactory {
     public static ParserPluginFactory newInstance(boolean useNewParser) {
         if (useNewParser) {
             Class type = null;
-            // GRECLIPSE: start
-            // oldcode
-            //String name = "org.codehaus.groovy.antlr.AntlrParserPluginFactory";
-            // newcode
-            String name = "org.codehaus.groovy.antlr.ErrorRecoveredCSTParserPluginFactory";
-            // end
- 
+            // GRECLIPSE edit
+            String name = "org.codehaus.groovy.antlr.ErrorRecoveredCSTParserPluginFactory"/*"org.codehaus.groovy.antlr.AntlrParserPluginFactory"*/;
+            // GRECLIPSE end
             try {
                 type = Class.forName(name);
             }
@@ -58,12 +56,9 @@ public abstract class ParserPluginFactory {
                     return (ParserPluginFactory) type.newInstance();
                 }
                 catch (Exception e) {
-          	 // GRECLIPSE: start
-          	 /*oldcode{
-                   throw new RuntimeException("Could not create AntlrParserPluginFactory: " + e, e);
-             }newcode*/
-                    throw new RuntimeException("Could not create ErrorRecoveredCSTParserPluginFactory: " + e, e);
-                    //end
+                    // GRECLIPSE edit
+                    throw new RuntimeException("Could not create ErrorRecoveredCSTParserPluginFactory: "/*"Could not create AntlrParserPluginFactory: "*/ + e, e);
+                    // GRECLIPSE end
                 }
             }
             // can't find Antlr parser, so lets use the Classic one

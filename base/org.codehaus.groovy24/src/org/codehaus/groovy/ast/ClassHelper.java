@@ -1,22 +1,23 @@
 /*
- * Copyright 2003-2007 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
-
 package org.codehaus.groovy.ast;
 
-import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE;
 import groovy.lang.*;
 
 import org.codehaus.groovy.runtime.GeneratedClosure;
@@ -25,7 +26,6 @@ import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.groovy.util.ManagedConcurrentMap;
 import org.codehaus.groovy.util.ReferenceBundle;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
-
 import groovyjarjarasm.asm.Opcodes;
 
 import java.math.BigDecimal;
@@ -48,7 +48,7 @@ import java.lang.reflect.Modifier;
  */
 public class ClassHelper {
 
-    // GRECLIPSE: start: made public, was private
+    // GRECLIPSE private->public
     public static final Class[] classes = new Class[] {
         Object.class, Boolean.TYPE, Character.TYPE, Byte.TYPE, Short.TYPE,
         Integer.TYPE, Long.TYPE, Double.TYPE, Float.TYPE, Void.TYPE,
@@ -69,11 +69,11 @@ public class ClassHelper {
         DYNAMIC_TYPE = makeCached(Object.class),  OBJECT_TYPE = DYNAMIC_TYPE,
         VOID_TYPE = makeCached(Void.TYPE),        CLOSURE_TYPE = makeCached(Closure.class),
         GSTRING_TYPE = makeCached(GString.class), LIST_TYPE = makeWithoutCaching(List.class),
-        MAP_TYPE = makeWithoutCaching(Map.class),         RANGE_TYPE = makeCached(Range.class),
+        MAP_TYPE = makeWithoutCaching(Map.class), RANGE_TYPE = makeCached(Range.class),
         PATTERN_TYPE = makeCached(Pattern.class), STRING_TYPE = makeCached(String.class),
         SCRIPT_TYPE = makeCached(Script.class),   REFERENCE_TYPE = makeWithoutCaching(Reference.class),
         BINDING_TYPE = makeCached(Binding.class),
-        
+
         boolean_TYPE = makeCached(boolean.class),     char_TYPE = makeCached(char.class),
         byte_TYPE = makeCached(byte.class),           int_TYPE = makeCached(int.class),
         long_TYPE = makeCached(long.class),           short_TYPE = makeCached(short.class),
@@ -88,7 +88,7 @@ public class ClassHelper {
         
         void_WRAPPER_TYPE = makeCached(Void.class),   METACLASS_TYPE = makeCached(MetaClass.class),
         Iterator_TYPE = makeCached(Iterator.class),
-        
+
         // uncached constants.
         CLASS_Type = makeWithoutCaching(Class.class), COMPARABLE_TYPE = makeWithoutCaching(Comparable.class),        
         GENERATED_CLOSURE_Type = makeWithoutCaching(GeneratedClosure.class),
@@ -96,24 +96,20 @@ public class ClassHelper {
         GROOVY_OBJECT_TYPE = makeWithoutCaching(GroovyObject.class),
         GROOVY_INTERCEPTABLE_TYPE = makeWithoutCaching(GroovyInterceptable.class),
         
-        // GRECLIPSE start: GROOVY-6184 Resolve the enum and annotation ClassNodes
-        // old
-//                Enum_Type = new ClassNode("java.lang.Enum",0,OBJECT_TYPE),
-//                Annotation_TYPE = new ClassNode("java.lang.annotation.Annotation",0,OBJECT_TYPE),
-        // new
+        // GRECLIPSE GROOVY-6184 Resolve the enum and annotation ClassNodes
+        //Enum_Type = new ClassNode("java.lang.Enum",0,OBJECT_TYPE),
+        //Annotation_TYPE = new ClassNode("java.lang.annotation.Annotation",0,OBJECT_TYPE),
         Enum_Type = make(Enum.class, true),
         Annotation_TYPE = make(Annotation.class, true),
         // GRECLIPSE end
         ELEMENT_TYPE_TYPE = new ClassNode("java.lang.annotation.ElementType",0,Enum_Type)
         ;
         
-        
-    // GRECLIPSE start: GROOVY-6184
-    // old
-//            static {
-//                Enum_Type.isPrimaryNode = false;
-//                Annotation_TYPE.isPrimaryNode = false;
-//            }
+    // GRECLIPSE GROOVY-6184
+    //static {
+    //    Enum_Type.isPrimaryNode = false;
+    //    Annotation_TYPE.isPrimaryNode = false;
+    //}
     // GRECLIPSE end
     
     private static ClassNode[] types = new ClassNode[] {
@@ -124,7 +120,7 @@ public class ClassHelper {
         LIST_TYPE, MAP_TYPE, RANGE_TYPE, PATTERN_TYPE,
         SCRIPT_TYPE, STRING_TYPE, Boolean_TYPE, Character_TYPE,
         Byte_TYPE, Short_TYPE, Integer_TYPE, Long_TYPE,
-        Double_TYPE, Float_TYPE, BigDecimal_TYPE, BigInteger_TYPE, 
+        Double_TYPE, Float_TYPE, BigDecimal_TYPE, BigInteger_TYPE,
         Number_TYPE,
         void_WRAPPER_TYPE, REFERENCE_TYPE, CLASS_Type, METACLASS_TYPE,
         Iterator_TYPE, GENERATED_CLOSURE_Type, GROOVY_OBJECT_SUPPORT_TYPE, 
@@ -139,18 +135,13 @@ public class ClassHelper {
     
     public static final String OBJECT = "java.lang.Object";
 
-
     public static ClassNode makeCached(Class c){
         final SoftReference<ClassNode> classNodeSoftReference = ClassHelperCache.classCache.get(c);
         ClassNode classNode;
         if (classNodeSoftReference == null || (classNode = classNodeSoftReference.get()) == null) {
-            // GRECLIPSE: start: made public, was private
-            /* old
-            classNode = new ClassNode(c);
-            */
-            // new
-            classNode = new ImmutableClassNode(c);
-            // GRECLIPSE: end
+            // GRECLIPSE edit
+            classNode = new /*ClassNode*/ImmutableClassNode(c);
+            // GRECLIPSE end
             ClassHelperCache.classCache.put(c, new SoftReference<ClassNode>(classNode));
 
             VMPluginFactory.getPlugin().setAdditionalClassInformation(classNode);
@@ -375,33 +366,26 @@ public class ClassHelper {
     }
 
     public static boolean isNumberType(ClassNode cn) {
-    	// GRECLIPSE: start
-    	return  cn.equals(Byte_TYPE) ||
+        // GRECLIPSE edit
+        //return  cn == Byte_TYPE ||
+        //        cn == Short_TYPE ||
+        //        cn == Integer_TYPE ||
+        //        cn == Long_TYPE ||
+        //        cn == Float_TYPE ||
+        //        cn == Double_TYPE ||
+        return  cn.equals(Byte_TYPE) ||
                 cn.equals(Short_TYPE) ||
                 cn.equals(Integer_TYPE) ||
                 cn.equals(Long_TYPE) ||
                 cn.equals(Float_TYPE) ||
                 cn.equals(Double_TYPE) ||
+        // GRECLIPSE end
                 cn == byte_TYPE ||
                 cn == short_TYPE ||
                 cn == int_TYPE ||
                 cn == long_TYPE ||
                 cn == float_TYPE ||
                 cn == double_TYPE;
-    	// old:
-//        return  cn == Byte_TYPE ||
-//                cn == Short_TYPE ||
-//                cn == Integer_TYPE ||
-//                cn == Long_TYPE ||
-//                cn == Float_TYPE ||
-//                cn == Double_TYPE ||
-//                cn == byte_TYPE ||
-//                cn == short_TYPE ||
-//                cn == int_TYPE ||
-//                cn == long_TYPE ||
-//                cn == float_TYPE ||
-//                cn == double_TYPE;
-    	// GRECLIPSE: end
     }
 
     public static ClassNode makeReference() {
@@ -462,7 +446,7 @@ public class ClassHelper {
             return found;
         }
     }
-   
+
     private static boolean hasUsableImplementation(ClassNode c, MethodNode m) {
         if (c==m.getDeclaringClass()) return false;
         MethodNode found = c.getDeclaredMethod(m.getName(), m.getParameters());
