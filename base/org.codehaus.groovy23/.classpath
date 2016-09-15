@@ -5,7 +5,7 @@
 
 	<classpathentry kind="lib" path="lib/bsf-2.4.0.jar" sourcepath="lib/bsf-2.4.0-sources.jar" exported="true"/>
 	<classpathentry kind="lib" path="lib/ivy-2.3.0.jar" sourcepath="lib/ivy-2.3.0-sources.jar" exported="true"/>
-	<classpathentry kind="lib" path="lib/groovy-all-2.3.10.jar" sourcepath="lib/groovy-2.3.10-sources.jar" exported="true"/>
+	<classpathentry kind="lib" path="lib/groovy-all-2.3.11.jar" sourcepath="lib/groovy-all-2.3.11-sources.jar" exported="true"/>
 
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
