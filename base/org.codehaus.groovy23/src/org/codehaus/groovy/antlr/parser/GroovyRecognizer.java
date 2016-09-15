@@ -235,6 +235,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     public static GroovyRecognizer make(InputBuffer in) { return make(new GroovyLexer(in)); }
     public static GroovyRecognizer make(LexerSharedInputState in) { return make(new GroovyLexer(in)); }
 
+    @SuppressWarnings("unused")
     private static GroovySourceAST dummyVariableToforceClassLoaderToFindASTClass = new GroovySourceAST();
 
     List warningList;
@@ -249,6 +250,8 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     GroovyLexer lexer;
     public GroovyLexer getLexer() { return lexer; }
     public void setFilename(String f) { super.setFilename(f); lexer.setFilename(f); }
+
+    @SuppressWarnings("unused")
     private SourceBuffer sourceBuffer;
     public void setSourceBuffer(SourceBuffer sourceBuffer) {
         this.sourceBuffer = sourceBuffer;
@@ -507,6 +510,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         return cname.equals(x.getText());
     }
 
+    @SuppressWarnings("unused")
     private void dumpTree(AST ast, String offset) {
         dump(ast, offset);
         for (AST node = ast.getFirstChild(); node != null; node = node.getNextSibling()) {
@@ -563,6 +567,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     // an enclosing loop, which is why this ugly hack (a fake
     // empty alternative with always-false semantic predicate)
     // is necessary.
+    @SuppressWarnings("unused")
     private static final boolean ANTLR_LOOP_EXIT = false;
 
 protected GroovyRecognizer(TokenBuffer tokenBuf, int k) {
