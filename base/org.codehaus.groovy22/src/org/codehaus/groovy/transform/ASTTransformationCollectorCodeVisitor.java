@@ -187,6 +187,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     }
         
     // GRECLIPSE: start: slight refactoring to provide a new method that can work with a real annotation
+    @SuppressWarnings("unused")
     private void addTransformsToClassNode(AnnotationNode annotation, Annotation transformClassAnnotation) {
         String[] transformClassNames = getTransformClassNames(annotation.getClassNode()); 
         Class[] transformClasses = getTransformClasses(transformClassAnnotation);
@@ -307,6 +308,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         return null;
     }
 
+    @SuppressWarnings("unused")
     private List<String> getTransformClassNames(AnnotationNode annotation, Annotation transformClassAnnotation) {
         List<String> result = new ArrayList<String>();
 
