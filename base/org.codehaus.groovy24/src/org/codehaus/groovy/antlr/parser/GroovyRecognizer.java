@@ -218,7 +218,7 @@ import groovyjarjarantlr.collections.impl.ASTArray;
 public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implements GroovyTokenTypes
  {
 
-        /** This factory is the correct way to wire together a Groovy parser and lexer. */
+    /** This factory is the correct way to wire together a Groovy parser and lexer. */
     public static GroovyRecognizer make(GroovyLexer lexer) {
         GroovyRecognizer parser = new GroovyRecognizer(lexer.plumb());
         // TODO: set up a common error-handling control block, to avoid excessive tangle between these guys
@@ -243,9 +243,9 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     List errorList;
     public List getErrorList() { return errorList; }
 
-	List<Comment> comments = new ArrayList<Comment>();
-	public List<Comment> getComments() { return comments; }
-	
+    List<Comment> comments = new ArrayList<Comment>();
+    public List<Comment> getComments() { return comments; }
+
     GroovyLexer lexer;
     public GroovyLexer getLexer() { return lexer; }
     public void setFilename(String f) { super.setFilename(f); lexer.setFilename(f); }
@@ -276,10 +276,10 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     public AST create2(int type, String txt, Token first, Token last) {
         return setEndLocationBasedOnThisNode(create(type, txt, astFactory.create(first)), last);
     }
-    
+
     // GRE292
     private AST setEndLocationBasedOnThisNode(AST ast, Object node) {
-    	if ((ast instanceof GroovySourceAST) && (node instanceof SourceInfo)) {
+        if ((ast instanceof GroovySourceAST) && (node instanceof SourceInfo)) {
             SourceInfo lastInfo = (SourceInfo) node;
             GroovySourceAST groovySourceAst = (GroovySourceAST)ast;
             groovySourceAst.setColumnLast(lastInfo.getColumnLast());
@@ -287,7 +287,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
       }
       return ast;
     }
-    
+
     private AST attachLast(AST t, Object last) {
         if ((t instanceof GroovySourceAST) && (last instanceof SourceInfo)) {
             SourceInfo lastInfo = (SourceInfo) last;
@@ -311,32 +311,32 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     public AST create(int type, String txt, AST first, AST last) {
         return attachLast(create(type, txt, first), last);
     }
-    
+
     // GRECLIPSE start
-	private Stack<Integer> commentStartPositions = new Stack<Integer>();
+    private Stack<Integer> commentStartPositions = new Stack<Integer>();
 
-	public void startComment(int line, int column) {
-		// System.out.println(">> comment at l"+line+"c"+column);
-		commentStartPositions.push((line<<16)+column);
-	}
+    public void startComment(int line, int column) {
+        // System.out.println(">> comment at l"+line+"c"+column);
+        commentStartPositions.push((line<<16)+column);
+    }
 
-	public void endComment(int type, int line, int column,String text) {
-		// System.out.println("<< comment at l"+line+"c"+column+" ["+text+"]");
-		int lineAndColumn = commentStartPositions.pop();
-		int startLine = lineAndColumn>>>16;
-		int startColumn = lineAndColumn&0xffff;
-		if (type==0) {
-			Comment comment = Comment.makeSingleLineComment(startLine,startColumn,line,column,text);
-			comments.add(comment);
-		} else if (type==1) {
-			Comment comment = Comment.makeMultiLineComment(startLine,startColumn,line,column,text);
-			comments.add(comment);
-		} 
-	}
+    public void endComment(int type, int line, int column,String text) {
+        // System.out.println("<< comment at l"+line+"c"+column+" ["+text+"]");
+        int lineAndColumn = commentStartPositions.pop();
+        int startLine = lineAndColumn>>>16;
+        int startColumn = lineAndColumn&0xffff;
+        if (type==0) {
+            Comment comment = Comment.makeSingleLineComment(startLine,startColumn,line,column,text);
+            comments.add(comment);
+        } else if (type==1) {
+            Comment comment = Comment.makeMultiLineComment(startLine,startColumn,line,column,text);
+            comments.add(comment);
+        }
+    }
     // GRECLIPSE end
-	
-	
-    /** 
+
+
+    /**
     *   Clones the token
     */
     public Token cloneToken(Token t) {
@@ -413,7 +413,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         row.put("column", new Integer(lt.getColumn()));
         errorList.add(row);
     }
-    
+
     /**
      * Report a recovered error and specify the token.
      */
@@ -425,7 +425,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         row.put("column", new Integer(lt.getColumn()));
         errorList.add(row);
     }
-    
+
     /**
      * Report a recovered error and specify the token.
      */
@@ -437,7 +437,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         row.put("column", new Integer(lt.getColumn()));
         errorList.add(row);
     }
-    
+
     /**
      * Report a recovered exception.
      */
@@ -506,9 +506,9 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         if (x == null || x.getType() != IDENT)  return false;  // cannot happen?
         return cname.equals(x.getText());
     }
-    
+
     private void dumpTree(AST ast, String offset) {
-    	dump(ast, offset);
+        dump(ast, offset);
         for (AST node = ast.getFirstChild(); node != null; node = node.getNextSibling()) {
             dumpTree(node, offset+"\t");
         }
@@ -517,7 +517,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     private void dump(AST node, String offset) {
         System.out.println(offset+"Type: " + getTokenName(node) + " text: " + node.getText());
     }
-    
+
     private String getTokenName(AST node) {
         if (node == null) return "null";
         return getTokenName(node.getType());
@@ -894,8 +894,8 @@ inputState.guessing--;
 			if (inputState.guessing==0) {
 				
 				// report the error but don't throw away what we've successfully parsed
-					reportError(e);
-							compilationUnit_AST = (AST)currentAST.root;
+				reportError(e);
+				compilationUnit_AST = (AST)currentAST.root;
 				
 			} else {
 				throw e;
@@ -992,10 +992,10 @@ inputState.guessing--;
 			packageDefinition_AST = (AST)currentAST.root;
 			// error recovery for missing package name
 			if (id_AST==null) {
-							reportError("Invalid package specification",LT(0));
-						} else {
+			reportError("Invalid package specification",LT(0));
+			} else {
 			packageDefinition_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(PACKAGE_DEF,"package",first,LT(1))).add(an_AST).add(id_AST));
-						}
+			}
 			
 			currentAST.root = packageDefinition_AST;
 			currentAST.child = packageDefinition_AST!=null &&packageDefinition_AST.getFirstChild()!=null ?
@@ -1483,7 +1483,7 @@ inputState.guessing--;
 								
 								// GRECLIPSE1048
 								// If the pfx_AST is not null (i.e. a label was encountered) then attempt recovery if something has gone
-								// wrong.  Recovery means reporting the error and then proceeding as best we can.  Basically if the 
+								// wrong.  Recovery means reporting the error and then proceeding as best we can.  Basically if the
 								// NoViableAltException hit a problem and the token it encountered was on the same line as the prefix,
 								// skip to the end of the line, otherwise assume we can continue from where we are.
 								// GRECLIPSE1046
@@ -1494,22 +1494,22 @@ inputState.guessing--;
 								boolean bang = true;
 								
 								if (pfx_AST!=null) {
-									bang=false;	
-									reportError(e);
-									if (e instanceof NoViableAltException) {
-										NoViableAltException nvae = (NoViableAltException)e;
-										if (pfx_AST.getLine()==nvae.token.getLine()) {
-											consumeUntil(NLS);										
-										}
-									}
+								bang=false;
+								reportError(e);
+								if (e instanceof NoViableAltException) {
+								NoViableAltException nvae = (NoViableAltException)e;
+								if (pfx_AST.getLine()==nvae.token.getLine()) {
+								consumeUntil(NLS);
 								}
-								if (ale_AST!=null && ifCbs_AST==null) {	
-									// likely missing close paren
-									statement_AST = (AST)astFactory.make( (new ASTArray(4)).add(create(LITERAL_if,"if",first,LT(1))).add(ale_AST).add(ifCbs_AST).add(elseCbs_AST));
-									bang=false;
+								}
+								}
+								if (ale_AST!=null && ifCbs_AST==null) {
+								// likely missing close paren
+								statement_AST = (AST)astFactory.make( (new ASTArray(4)).add(create(LITERAL_if,"if",first,LT(1))).add(ale_AST).add(ifCbs_AST).add(elseCbs_AST));
+								bang=false;
 								}
 								if (bang) {
-									throw e;
+								throw e;
 								}
 								
 							} else {
@@ -2037,11 +2037,11 @@ inputState.guessing--;
 		catch (RecognitionException e) {
 			if (inputState.guessing==0) {
 				
-					reportError("Invalid import ",first);
+				reportError("Invalid import ",first);
 				identifierStar_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(DOT,".",first,LT(1))).add(i1_AST).add((AST)astFactory.make( (new ASTArray(1)).add(create(STAR,"*",null)))));
 				// Give up on this line and just go to the next
-							rewind(mark);
-							consumeUntil(NLS);
+				rewind(mark);
+				consumeUntil(NLS);
 				
 			} else {
 				throw e;
@@ -2238,10 +2238,10 @@ inputState.guessing--;
 			
 			if (cb_AST!=null) {
 			classDefinition_AST = (AST)astFactory.make( (new ASTArray(7)).add(create(CLASS_DEF,"CLASS_DEF",first,LT(1))).add(modifiers).add(tmp29_AST).add(tp_AST).add(sc_AST).add(ic_AST).add(cb_AST));
-					} else {
-					  reportError("Malformed class declaration",LT(1));
-					  classDefinition_AST = (AST)astFactory.make( (new ASTArray(7)).add(create(CLASS_DEF,"CLASS_DEF",first,LT(1))).add(modifiers).add(tmp29_AST).add(tp_AST).add(sc_AST).add(ic_AST).add(null));    
-			}                                            
+			} else {
+			reportError("Malformed class declaration",LT(1));
+			classDefinition_AST = (AST)astFactory.make( (new ASTArray(7)).add(create(CLASS_DEF,"CLASS_DEF",first,LT(1))).add(modifiers).add(tmp29_AST).add(tp_AST).add(sc_AST).add(ic_AST).add(null));
+			}
 			
 			currentAST.root = classDefinition_AST;
 			currentAST.child = classDefinition_AST!=null &&classDefinition_AST.getFirstChild()!=null ?
@@ -2866,7 +2866,7 @@ inputState.guessing--;
 		}
 		if (!(matchGenericTypeBrackets(((currentLtLevel != 0) || ltCounter == currentLtLevel),
         "Missing closing bracket '>' for generics types", "Please specify the missing bracket!")))
-		  throw new SemanticException("matchGenericTypeBrackets(((currentLtLevel != 0) || ltCounter == currentLtLevel),\r\n        \"Missing closing bracket '>' for generics types\", \"Please specify the missing bracket!\")");
+		  throw new SemanticException("matchGenericTypeBrackets(((currentLtLevel != 0) || ltCounter == currentLtLevel),\n        \"Missing closing bracket '>' for generics types\", \"Please specify the missing bracket!\")");
 		if ( inputState.guessing==0 ) {
 			typeParameters_AST = (AST)currentAST.root;
 			typeParameters_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(TYPE_PARAMETERS,"TYPE_PARAMETERS",first,LT(1))).add(typeParameters_AST));
@@ -3678,7 +3678,7 @@ inputState.guessing--;
 		}
 		if (!(matchGenericTypeBrackets(((currentLtLevel != 0) || ltCounter == currentLtLevel),
         "Missing closing bracket '>' for generics types", "Please specify the missing bracket!")))
-		  throw new SemanticException("matchGenericTypeBrackets(((currentLtLevel != 0) || ltCounter == currentLtLevel),\r\n        \"Missing closing bracket '>' for generics types\", \"Please specify the missing bracket!\")");
+		  throw new SemanticException("matchGenericTypeBrackets(((currentLtLevel != 0) || ltCounter == currentLtLevel),\n        \"Missing closing bracket '>' for generics types\", \"Please specify the missing bracket!\")");
 		if ( inputState.guessing==0 ) {
 			typeArguments_AST = (AST)currentAST.root;
 			typeArguments_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(TYPE_ARGUMENTS,"TYPE_ARGUMENTS",first,LT(1))).add(typeArguments_AST));
@@ -5616,14 +5616,14 @@ inputState.guessing--;
 		catch (RecognitionException e) {
 			if (inputState.guessing==0) {
 				
-							if (errorList.isEmpty()) { // dirty hack to avoid having trouble with cascading problems
-						classBlock_AST = (AST)currentAST.root;
-					}
-					reportError(e);
-				classBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(OBJBLOCK,"OBJBLOCK",first,LT(1))).add(classBlock_AST));  	
-					currentAST.root = classBlock_AST;
-							currentAST.child = classBlock_AST!=null &&classBlock_AST.getFirstChild()!=null ? classBlock_AST.getFirstChild() : classBlock_AST;
-							currentAST.advanceChildToEnd();	
+				if (errorList.isEmpty()) { // dirty hack to avoid having trouble with cascading problems
+				classBlock_AST = (AST)currentAST.root;
+				}
+				reportError(e);
+				classBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(OBJBLOCK,"OBJBLOCK",first,LT(1))).add(classBlock_AST));
+				currentAST.root = classBlock_AST;
+				currentAST.child = classBlock_AST!=null &&classBlock_AST.getFirstChild()!=null ? classBlock_AST.getFirstChild() : classBlock_AST;
+				currentAST.advanceChildToEnd();
 				
 			} else {
 				throw e;
@@ -6381,11 +6381,11 @@ inputState.guessing--;
 						catch (RecognitionException e) {
 							if (inputState.guessing==0) {
 								
-									reportError(e);
-									// Create a fake variable definition for this 'thing' and get the position right.  
-									// Type is object
-									classField_AST = (AST)astFactory.make( (new ASTArray(4)).add(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1))).add(null).add(create(TYPE,"java.lang.Object",LT(1),LT(2))).add(create(IDENT,first.getText(),LT(1),LT(2)))); 
-									consumeUntil(NLS);
+								reportError(e);
+								// Create a fake variable definition for this 'thing' and get the position right.
+								// Type is object
+								classField_AST = (AST)astFactory.make( (new ASTArray(4)).add(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1))).add(null).add(create(TYPE,"java.lang.Object",LT(1),LT(2))).add(create(IDENT,first.getText(),LT(1),LT(2))));
+								consumeUntil(NLS);
 								
 							} else {
 								throw e;
@@ -10706,7 +10706,7 @@ inputState.guessing--;
 		AST pc_AST = null;
 		AST ca_AST = null;
 		
-			AST prev = head;
+		AST prev = head;
 		
 		
 		{
@@ -11402,7 +11402,7 @@ inputState.guessing--;
 			if (inputState.guessing==0) {
 				
 				// GRECLIPSE1192
-				// Do we need better recognition of the specific problem here? 
+				// Do we need better recognition of the specific problem here?
 				// (if so, see the label recovery for GRECLIPSE1048)
 				reportError(e);
 				
@@ -12070,10 +12070,10 @@ inputState.guessing--;
 		catch (RecognitionException e) {
 			if (inputState.guessing==0) {
 				
-					if (pathElement_AST==null) {
-								throw e;
-							}
-					reportError(e);
+				if (pathElement_AST==null) {
+				throw e;
+				}
+				reportError(e);
 				
 			} else {
 				throw e;
@@ -12508,17 +12508,17 @@ inputState.guessing--;
 			if (inputState.guessing==0) {
 				
 				if (al_AST!=null) {
-					reportError(e);
-					// copy of the block above - lets build it (assuming that all that was missing was the RPAREN)
-					if (callee != null && callee.getFirstChild() != null) {
-						//method call like obj.method()
-						methodCallArgs_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(METHOD_CALL,"(",callee.getFirstChild(),LT(1))).add(callee).add(al_AST));
-					} else {
-						//method call like method() or new Expr(), in the latter case "callee" is null
-						methodCallArgs_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(METHOD_CALL,"(",callee,LT(1))).add(callee).add(al_AST));
-					}
+				reportError(e);
+				// copy of the block above - lets build it (assuming that all that was missing was the RPAREN)
+				if (callee != null && callee.getFirstChild() != null) {
+				//method call like obj.method()
+				methodCallArgs_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(METHOD_CALL,"(",callee.getFirstChild(),LT(1))).add(callee).add(al_AST));
 				} else {
-					throw e;
+				//method call like method() or new Expr(), in the latter case "callee" is null
+				methodCallArgs_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(METHOD_CALL,"(",callee,LT(1))).add(callee).add(al_AST));
+				}
+				} else {
+				throw e;
 				}
 				
 			} else {
@@ -12753,9 +12753,9 @@ inputState.guessing--;
 		catch (RecognitionException e) {
 			if (inputState.guessing==0) {
 				
-					// GRECLIPSE1213 - missing closing paren
-					reportError(e); 
-					parenthesizedExpression_AST = (AST)currentAST.root;
+				// GRECLIPSE1213 - missing closing paren
+				reportError(e);
+				parenthesizedExpression_AST = (AST)currentAST.root;
 				
 			} else {
 				throw e;
@@ -14218,32 +14218,32 @@ inputState.guessing--;
 			if (inputState.guessing==0) {
 				
 				if (t_AST==null) {
-							    reportError("missing type for constructor call",first);
-								newExpression_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_new,"new",first,LT(1))).add(ta_AST).add(null)); 
+				reportError("missing type for constructor call",first);
+				newExpression_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_new,"new",first,LT(1))).add(ta_AST).add(null));
 				// currentAST.root = newExpression_AST;
-								// currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
-								// newExpression_AST.getFirstChild() : newExpression_AST;
-								// currentAST.advanceChildToEnd();
-								// probably others to include - or make this the default?
-								if (e instanceof MismatchedTokenException || e instanceof NoViableAltException) {
-									// int i = ((MismatchedTokenException)e).token.getType();
-									rewind(jumpBack);
-									consumeUntil(NLS);
-								}      
+				// currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
+				// newExpression_AST.getFirstChild() : newExpression_AST;
+				// currentAST.advanceChildToEnd();
+				// probably others to include - or make this the default?
+				if (e instanceof MismatchedTokenException || e instanceof NoViableAltException) {
+				// int i = ((MismatchedTokenException)e).token.getType();
+				rewind(jumpBack);
+				consumeUntil(NLS);
+				}
 				} else if (mca_AST==null && ad_AST==null) {
 				reportError("expecting '(' or '[' after type name to continue new expression",t_AST);
-				newExpression_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_new,"new",first,LT(1))).add(ta_AST).add(t_AST));               
-								//currentAST.root = newExpression_AST;
-								//currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
-								//newExpression_AST.getFirstChild() : newExpression_AST;
-								//currentAST.advanceChildToEnd();
-								if (e instanceof MismatchedTokenException) {
-									Token t =  ((MismatchedTokenException)e).token;
-									int i = ((MismatchedTokenException)e).token.getType();
-									rewind(jumpBack);
-									consume();
-									consumeUntil(NLS);
-								}   
+				newExpression_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_new,"new",first,LT(1))).add(ta_AST).add(t_AST));
+				//currentAST.root = newExpression_AST;
+				//currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
+				//newExpression_AST.getFirstChild() : newExpression_AST;
+				//currentAST.advanceChildToEnd();
+				if (e instanceof MismatchedTokenException) {
+				Token t =  ((MismatchedTokenException)e).token;
+				int i = ((MismatchedTokenException)e).token.getType();
+				rewind(jumpBack);
+				consume();
+				consumeUntil(NLS);
+				}
 				} else {
 				throw e;
 				}

@@ -1766,7 +1766,7 @@ tryAgain:
 			if (parser!=null) {
 			parser.endComment(0,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
 			}
-			if (!whitespaceIncluded)  _ttype = Token.SKIP; 
+			if (!whitespaceIncluded)  _ttype = Token.SKIP;
 			
 		}
 		if ( _createToken && _token==null && _ttype!=Token.SKIP ) {
@@ -1828,7 +1828,7 @@ inputState.guessing--;
 			if (parser!=null) {
 			parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
 			}
-			if (!whitespaceIncluded)  _ttype = Token.SKIP; 
+			if (!whitespaceIncluded)  _ttype = Token.SKIP;
 			
 		}
 		if ( _createToken && _token==null && _ttype!=Token.SKIP ) {
