@@ -15,21 +15,19 @@
  */
 package dsld
 
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.GenericsType
+import org.codehaus.groovy.ast.FieldNode
 
-import groovy.transform.IndexedProperty;
-
+import groovy.transform.IndexedProperty
 
 /**
  * This is the DSLD for AST Transforms shipped with Groovy-core 1.8.x
  * And this script is not applicable for earlier versions of Groovy
- * 
+ *
  * @author Andrew Eisenberg
  * @since 2.5.1
  */
-
 
 // IndexedProperty
 // 1.8 only
@@ -56,4 +54,3 @@ def findElementType(FieldNode field) {
        Object
    }
 }
-

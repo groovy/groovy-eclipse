@@ -31,7 +31,7 @@ import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
  * @author Kris De Volder
  */
 public class GroovyTokenTypeBridge {
- 
+
     // Only the GroovyTokenTypes that we use inside Greclipse are represented here.
     // More can be added on an as needed basis.
 
@@ -39,24 +39,23 @@ public class GroovyTokenTypeBridge {
     public static int LBRACK            = GroovyTokenTypes.LBRACK;
     public static int LCURLY            = GroovyTokenTypes.LCURLY;
     public static int LPAREN            = GroovyTokenTypes.LPAREN;
-    public static int NLS               = GroovyTokenTypes.NLS;
     public static int RPAREN            = GroovyTokenTypes.RPAREN;
+    public static int RBRACK            = GroovyTokenTypes.RBRACK;
+    public static int RCURLY            = GroovyTokenTypes.RCURLY;
     public static int STRING_CTOR_START = GroovyTokenTypes.STRING_CTOR_START;
-    public static int WS                = GroovyTokenTypes.WS;
+    public static int STRING_CTOR_END   = GroovyTokenTypes.STRING_CTOR_END;
     public static int COMMA             = GroovyTokenTypes.COMMA;
     public static int SEMI              = GroovyTokenTypes.SEMI;
-    public static int RCURLY            = GroovyTokenTypes.RCURLY;
+    public static int EOF               = GroovyTokenTypes.EOF;
+    public static int NLS               = GroovyTokenTypes.NLS;
+    public static int WS                = GroovyTokenTypes.WS;
+    public static int ML_COMMENT        = GroovyTokenTypes.ML_COMMENT;
     public static int SL_COMMENT        = GroovyTokenTypes.SL_COMMENT;
     public static int CLOSABLE_BLOCK_OP = GroovyTokenTypes.CLOSABLE_BLOCK_OP;
-    public static int EOF               = GroovyTokenTypes.EOF;
+    public static int LITERAL_as        = GroovyTokenTypes.LITERAL_as;
     public static int LITERAL_if        = GroovyTokenTypes.LITERAL_if;
     public static int LITERAL_else      = GroovyTokenTypes.LITERAL_else;
     public static int LITERAL_for       = GroovyTokenTypes.LITERAL_for;
     public static int LITERAL_switch    = GroovyTokenTypes.LITERAL_switch;
     public static int LITERAL_while     = GroovyTokenTypes.LITERAL_while;
-    public static int RBRACK            = GroovyTokenTypes.RBRACK;
-    public static int ML_COMMENT        = GroovyTokenTypes.ML_COMMENT;
-    public static int STRING_CTOR_END   = GroovyTokenTypes.STRING_CTOR_END;
-    public static int LITERAL_as          = GroovyTokenTypes.LITERAL_as;
-    
 }

@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package dsld
+
+import groovy.transform.AutoExternalize
+
 /**
  * Hackergarten contribution
- * 
+ *
  * @author Andres Almiray
  */
-package dsld
- 
-import groovy.transform.AutoExternalize
- 
 contribute(enclosingClass(annotatedBy(AutoExternalize))) {
     provider = "AutoExternalize AST Transform"
     delegatesTo type: Externalizable
 }
- 

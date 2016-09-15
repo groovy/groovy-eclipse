@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,25 +18,26 @@ package org.codehaus.groovy.ast;
 import java.util.Iterator;
 
 /**
- * Some static methods that access values on ASTNodes available 
+ * Some static methods that access values on ASTNodes available
  * in the 1.7 stream, but not in the 1.6 stream
+ *
  * @author andrew
  * @created Jun 17, 2010
  */
 public class ASTNodeCompatibilityWrapper {
-	
-	private ASTNodeCompatibilityWrapper() {
-		// not instantiable
+
+    private ASTNodeCompatibilityWrapper() {
+        // not instantiable
     }
 
-	/**
-	 * This method will never return null
-	 */
-	public static ClassNode getScriptClassDummy(ModuleNode module) {
-	    return module.getScriptClassDummy();
-	}
-	
-	public static Iterator<InnerClassNode> getInnerClasses(ClassNode clazz) {
-		return clazz.getInnerClasses();
-	}
+    /**
+     * This method will never return null
+     */
+    public static ClassNode getScriptClassDummy(ModuleNode module) {
+        return module.getScriptClassDummy();
+    }
+
+    public static Iterator<InnerClassNode> getInnerClasses(ClassNode clazz) {
+        return clazz.getInnerClasses();
+    }
 }
