@@ -1276,7 +1276,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         end = start + "bar".length();
         assertType(contents, start, end, "p.D");
 
-        // As of Groovy 2.4.6, 'bar.foo = X' is compiled to 'bar.setFoo(X)'.
+        // As of Groovy 2.4.6, 'bar.foo = X' is seen as 'bar.setFoo(X)' for some cases.
+        // See StaticTypeCheckingVisitor.existsProperty(), circa 'checkGetterOrSetter'.
         Version version = CompilerUtils.getActiveGroovyBundle().getVersion();
         if (version.compareTo(new Version(2, 4, 6)) < 0) {
             start = contents.indexOf("foo", end);
@@ -1314,7 +1315,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         end = start + "bar".length();
         assertType(contents, start, end, "p.D");
 
-        // As of Groovy 2.4.6, 'bar.foo = X' is compiled to 'bar.setFoo(X)'.
+        // As of Groovy 2.4.6, 'bar.foo = X' is seen as 'bar.setFoo(X)' for some cases.
+        // See StaticTypeCheckingVisitor.existsProperty(), circa 'checkGetterOrSetter'.
         Version version = CompilerUtils.getActiveGroovyBundle().getVersion();
         if (version.compareTo(new Version(2, 4, 6)) < 0) {
             start = contents.indexOf("foo", end);
