@@ -135,7 +135,8 @@ Export-Package: groovy.beans,
  org.codehaus.groovy.vmplugin.v5,
  org.codehaus.groovy.vmplugin.v6
 Require-Bundle: org.eclipse.core.runtime,
- org.apache.ant
+ org.apache.ant;resolution:=optional,
+ org.junit;resolution:=optional
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.activator.GroovyActivator
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
