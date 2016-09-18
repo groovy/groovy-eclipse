@@ -20,9 +20,11 @@ import java.util.List;
 import junit.framework.Test;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
+import org.osgi.framework.Version;
 
 /**
  * Lots of tests to see that expressions have the proper type associated with them.
@@ -1274,9 +1276,13 @@ public final class InferencingTests extends AbstractInferencingTest {
         end = start + "bar".length();
         assertType(contents, start, end, "p.D");
 
-        start = contents.indexOf("foo", end);
-        end = start + "foo".length();
-        assertType(contents, start, end, "java.lang.String");
+        // As of Groovy 2.4.6, 'bar.foo = X' is compiled to 'bar.setFoo(X)'.
+        Version version = CompilerUtils.getActiveGroovyBundle().getVersion();
+        if (version.compareTo(new Version(2, 4, 6)) < 0) {
+            start = contents.indexOf("foo", end);
+            end = start + "foo".length();
+            assertType(contents, start, end, "java.lang.String");
+        }
     }
 
     public void testWithAndClosure4() throws Exception {
@@ -1308,9 +1314,13 @@ public final class InferencingTests extends AbstractInferencingTest {
         end = start + "bar".length();
         assertType(contents, start, end, "p.D");
 
-        start = contents.indexOf("foo", end);
-        end = start + "foo".length();
-        assertType(contents, start, end, "java.lang.String");
+        // As of Groovy 2.4.6, 'bar.foo = X' is compiled to 'bar.setFoo(X)'.
+        Version version = CompilerUtils.getActiveGroovyBundle().getVersion();
+        if (version.compareTo(new Version(2, 4, 6)) < 0) {
+            start = contents.indexOf("foo", end);
+            end = start + "foo".length();
+            assertType(contents, start, end, "java.lang.String");
+        }
     }
 
     public void testInScriptDeclaringType() throws Exception {
