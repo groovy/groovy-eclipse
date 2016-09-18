@@ -130,7 +130,7 @@ public class AnnotationVisitor {
 
                 try {
                     // GRECLIPSE add
-                    type.getFields();
+                    type.getFields(); // <-- Is this needed?
                     if (type.hasClass()) {
                     // GRECLIPSE end
                     Field field = type.getTypeClass().getField(pe.getPropertyAsString());

@@ -450,12 +450,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      */
     public ClassNode[] getInterfaces() {
         if (!redirect().lazyInitDone) redirect().lazyClassInit();
-        if (redirect!=null) return redirect().getInterfaces();
         // GRECLIPSE add
-        if (hasInconsistentHierarchy()) {
-            return EMPTY_ARRAY;
-        }
+        if (hasInconsistentHierarchy()) return EMPTY_ARRAY;
         // GRECLIPSE end
+        if (redirect!=null) return redirect().getInterfaces();
         return interfaces;
     }
 
@@ -1454,7 +1452,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public boolean isResolved(){
         return redirect().isReallyResolved() || // GRECLIPSE add
-            redirect().clazz!=null || (componentType != null && componentType.isResolved());
+            redirect().clazz!=null || (componentType!=null && componentType.isResolved());
     }
 
     // GRECLIPSE hacky; rework (remove?) this if it behaves as an approach
@@ -1661,7 +1659,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (redirect.hasClass()) {
             return true;
         }
-        return (redirect.innerClasses != null && redirect.innerClasses.size() > 0);
+        return (redirect.innerClasses != null && !redirect.innerClasses.isEmpty());
     }
     // GRECLIPSE end
 
@@ -1674,7 +1672,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         }
         return transformInstances;
     }
-    
+
     public boolean isRedirectNode() {
         return redirect!=null;
     }

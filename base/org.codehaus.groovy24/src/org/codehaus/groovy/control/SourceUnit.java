@@ -57,10 +57,6 @@ import groovyjarjarantlr.NoViableAltForCharException;
 
 public class SourceUnit extends ProcessingUnit {
 
-    // GRECLIPSE add
-    private List<Comment> comments;
-    // GRECLIPSE end
-
     /**
      * The pluggable parser used to generate the AST - we allow
      * pluggability currently as we need to have Classic and JSR support
@@ -92,6 +88,14 @@ public class SourceUnit extends ProcessingUnit {
 
     // GRECLIPSE add
     public boolean isReconcile;
+
+    private List<Comment> comments;
+    public List<Comment> getComments() {
+        return comments;
+    }
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
+    }
     // GRECLIPSE end
 
     /**
@@ -304,22 +308,22 @@ public class SourceUnit extends ProcessingUnit {
         });
 
         if ("xml".equals(property)) {
-            // GRECLIPSE edit
-            //saveAsXML(name, ast);
-            // GRECLIPSE end
+            saveAsXML(name, ast);
         }
     }
 
-    /*private static void saveAsXML(String name, ModuleNode ast) {
-        XStream xstream = new XStream();
-        try {
-            xstream.toXML(ast, new FileWriter(name + ".xml"));
-            System.out.println("Written AST to " + name + ".xml");
-        } catch (Exception e) {
-            System.out.println("Couldn't write to " + name + ".xml");
-            e.printStackTrace();
-        }
-    }*/
+    private static void saveAsXML(String name, ModuleNode ast) {
+        // GRECLIPSE edit
+        //XStream xstream = new XStream();
+        //try {
+        //    xstream.toXML(ast, new FileWriter(name + ".xml"));
+        //    System.out.println("Written AST to " + name + ".xml");
+        //} catch (Exception e) {
+        //    System.out.println("Couldn't write to " + name + ".xml");
+        //    e.printStackTrace();
+        //}
+        // GRECLIPSE end
+    }
 
     //---------------------------------------------------------------------------    // SOURCE SAMPLING
 
@@ -379,14 +383,4 @@ public class SourceUnit extends ProcessingUnit {
     }
 
     public ReaderSource getSource() { return source; }
-
-    // GRECLIPSE add
-    public List<Comment> getComments() {
-        return comments;
-    }
-
-    public void setComments(List<Comment> comments) {
-        this.comments = comments;
-    }
-    // GRECLIPSE end
 }

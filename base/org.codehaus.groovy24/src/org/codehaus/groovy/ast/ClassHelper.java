@@ -48,8 +48,7 @@ import java.lang.reflect.Modifier;
  */
 public class ClassHelper {
 
-    // GRECLIPSE private->public
-    public static final Class[] classes = new Class[] {
+    private static final Class[] classes = new Class[] {
         Object.class, Boolean.TYPE, Character.TYPE, Byte.TYPE, Short.TYPE,
         Integer.TYPE, Long.TYPE, Double.TYPE, Float.TYPE, Void.TYPE,
         Closure.class, GString.class, List.class, Map.class, Range.class,
@@ -373,12 +372,12 @@ public class ClassHelper {
         //        cn == Long_TYPE ||
         //        cn == Float_TYPE ||
         //        cn == Double_TYPE ||
-        return  cn.equals(Byte_TYPE) ||
-                cn.equals(Short_TYPE) ||
-                cn.equals(Integer_TYPE) ||
-                cn.equals(Long_TYPE) ||
-                cn.equals(Float_TYPE) ||
-                cn.equals(Double_TYPE) ||
+        return  Byte_TYPE.equals(cn) ||
+                Short_TYPE.equals(cn) ||
+                Integer_TYPE.equals(cn) ||
+                Long_TYPE.equals(cn) ||
+                Float_TYPE.equals(cn) ||
+                Double_TYPE.equals(cn) ||
         // GRECLIPSE end
                 cn == byte_TYPE ||
                 cn == short_TYPE ||

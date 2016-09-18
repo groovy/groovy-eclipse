@@ -291,10 +291,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     // GRECLIPSE add
     private String toNiceName(ClassNode node) {
         if (node.isArray()) {
-            StringBuilder sb = new StringBuilder();
-            sb.append(toNiceName(node.getComponentType()));
-            sb.append("[]");
-            return sb.toString();
+            return toNiceName(node.getComponentType()) + "[]";
         }
         return node.getName();
     }
@@ -393,7 +390,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         for (ClassNode classToCheck : hierClasses.values()) {
             // GRECLIPSE add
-            if (classToCheck.mightHaveInners() && existsAsInnerClass(classToCheck, classToCheck.getName()+"$"+firstComponent)) {
+            if (classToCheck.mightHaveInners() && existsAsInnerClass(classToCheck, classToCheck.getName() + "$" + firstComponent)) {
             // GRECLIPSE end
             val = new ConstructedNestedClass(classToCheck,type.getName());
             if (resolveFromCompileUnit(val)) {
@@ -1600,10 +1597,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (module.hasPackageName() && name.indexOf('.') == -1) return type.isResolved();
         // type may be resolved through the classloader before
         return type.isResolved();
-    }
-
-    protected ClassNode resolveNewName(String fullname) {
-        return null;
     }
 
     /**

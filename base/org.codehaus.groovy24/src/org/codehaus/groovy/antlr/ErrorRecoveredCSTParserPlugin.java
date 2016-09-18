@@ -51,18 +51,12 @@ public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
 
         setController(sourceUnit);
 
-        // GRECLIPSE: start
-        /* old {
-        UnicodeEscapingReader unicodeReader = new UnicodeEscapingReader(reader,sourceBuffer);
-        GroovyLexer lexer = new GroovyLexer(unicodeReader);
-        } */
         // GRECLIPSE-805 Support for unicode escape sequences
         UnicodeEscapingReader unicodeReader = new UnicodeEscapingReader(reader, sourceBuffer);
         GroovyLexer lexer = new GroovyLexer(new UnicodeLexerSharedInputState(unicodeReader));
-        // end
         unicodeReader.setLexer(lexer);
         GroovyRecognizer parser = GroovyRecognizer.make(lexer);
-        //parser.setSourceBuffer(sourceBuffer);
+        parser.setSourceBuffer(sourceBuffer);
         super.tokenNames = parser.getTokenNames();
         parser.setFilename(sourceUnit.getName());
 
@@ -73,8 +67,7 @@ public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
         } catch (TokenStreamRecognitionException tsre) {
             configureLocationSupport(sourceBuffer);
             RecognitionException e = tsre.recog;
-            SyntaxException se = new SyntaxException(e.getMessage(), e, e
-                    .getLine(), e.getColumn());
+            SyntaxException se = new SyntaxException(e.getMessage(), e, e.getLine(), e.getColumn());
             se.setFatal(true);
             sourceUnit.addError(se);
         } catch (RecognitionException e) {
@@ -86,16 +79,13 @@ public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
             int[] newInts = fixLineColumn(origLine, origColumn);
             int newLine = newInts[0];
             int newColumn = newInts[1];
-            SyntaxException se = new SyntaxException(
-                    e.getMessage(), e, newLine, newColumn);
+            SyntaxException se = new SyntaxException(e.getMessage(), e, newLine, newColumn);
             se.setFatal(true);
             sourceUnit.addError(se);
         } catch (TokenStreamException e) {
             configureLocationSupport(sourceBuffer);
-            // GRECLIPSE
             boolean handled = false;
             if (e instanceof TokenStreamIOException) {
-                //TokenStreamIOException tsioe = (TokenStreamIOException)e;
                 // GRECLIPSE-896: "Did not find four digit hex character code. line: 1 col:7"
                 String m = e.getMessage();
                 if (m != null && m.startsWith("Did not find four digit hex character code.")) {
@@ -104,23 +94,19 @@ public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
                         int colpos = m.indexOf("col:");
                         int line = Integer.valueOf(m.substring(linepos + 5, colpos).trim());
                         int col = Integer.valueOf(m.substring(colpos + 4).trim());
-                        SyntaxException se = new SyntaxException(
-                                e.getMessage(), e, line, col);
+                        SyntaxException se = new SyntaxException(e.getMessage(), e, line, col);
                         se.setFatal(true);
                         sourceUnit.addError(se);
                         handled = true;
                     } catch (Throwable t) {
                         System.err.println(m);
-                        t.printStackTrace(System.err);
+                        t.printStackTrace();
                     }
                 }
             }
             if (!handled) {
-                // end
                 sourceUnit.addException(e);
-            // GRECLIPSE
             }
-            // end
         }
 
         super.ast = parser.getAST();
@@ -129,9 +115,7 @@ public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
         reportCST(sourceUnit, parser);
     }
 
-    @SuppressWarnings("unchecked")
-    private void reportCST(final SourceUnit sourceUnit,
-            final GroovyRecognizer parser) {
+    private void reportCST(final SourceUnit sourceUnit, final GroovyRecognizer parser) {
         final List errorList = parser.getErrorList();
         final GroovySourceAST cst = (GroovySourceAST) parser.getAST();
 
@@ -151,8 +135,7 @@ public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
                 int[] newInts = fixLineColumn(origLine, origColumn);
                 int newLine = newInts[0];
                 int newColumn = newInts[1];
-                SyntaxException se = new SyntaxException((String) error.get("error"),
-                        newLine, newColumn);
+                SyntaxException se = new SyntaxException((String) error.get("error"), newLine, newColumn);
                 sourceUnit.addError(se);
             }
         }
@@ -168,6 +151,6 @@ public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
                 return locations.getRowCol(locations.getEnd() - 1);
             }
         }
-        return new int[] { origLine, origColumn };
+        return new int[] {origLine, origColumn};
     }
 }

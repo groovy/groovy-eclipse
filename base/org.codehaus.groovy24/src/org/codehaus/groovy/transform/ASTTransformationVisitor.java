@@ -19,7 +19,6 @@
 package org.codehaus.groovy.transform;
 
 import groovy.transform.CompilationUnitAware;
-
 import org.codehaus.groovy.GroovyException;
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.classgen.GeneratorContext;
@@ -139,7 +138,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                         boolean okToSet = (source != null && source.getErrorCollector() != null);
                         try {
                             if (okToSet) {
-                                source.getErrorCollector().transformActive = true; 
+                                source.getErrorCollector().transformActive = true;
                             }
                     // GRECLIPSE end
                     if (snt instanceof CompilationUnitAware) {
@@ -155,7 +154,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                         long etime = System.nanoTime(); 
                         if (GroovyLogManager.manager.hasLoggers()) {
                             try {
-                                GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,"Local transform "+snt.getClass().getName()+" on "+classNode.getName()+":"+node[1]+" = "+((etime-stime)/1000000)+"ms");
+                                GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM, "Local transform " + snt.getClass().getName() + " on " + classNode.getName() + ":" + node[1] + " = " + ((etime - stime) / 1000000) + "ms");
                             } catch (Throwable t) {
                                 t.printStackTrace();
                             }
@@ -163,7 +162,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                     } catch (NoClassDefFoundError ncdfe) {
                         String transformName = snt.getClass().getName();
                         StringBuilder sb = new StringBuilder();
-                        sb.append("Unable to run AST transform "+transformName+": missing class "+ncdfe.getMessage());
+                        sb.append("Unable to run AST transform ").append(transformName).append(": missing class ").append(ncdfe.getMessage());
                         sb.append(": are you attempting to use groovy classes in an AST transform in the same project in which it is defined? http://groovy.codehaus.org/Eclipse+Plugin+2.0.0+FAQ#EclipsePlugin2.0.0FAQ-Q.DoesitsupportcustomASTtransformations%3F");
                         source.addError(new SyntaxException(sb.toString(), ncdfe, 0, 0));
                     }
@@ -243,9 +242,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 String className;
                 // GRECLIPSE add
                 // don't consume our own META-INF entries - bit of a hack...
-                if (skipManifest(compilationUnit, service)) {
-                    continue;
-                }
+                if (skipManifest(compilationUnit, service)) continue;
                 // GRECLIPSE end
                 BufferedReader svcIn = null;
                 try {
@@ -356,8 +353,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         }
         String proto = service.getProtocol();
         if ("file".equals(proto)) {
-            boolean isExclude = service.getPath().startsWith(exclude);
-            return isExclude;
+            return service.getPath().startsWith(exclude);
         }
         return false;
     }
@@ -418,7 +414,6 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                             try {
                                 long stime = System.nanoTime();
                                 boolean okToSet = (source != null && source.getErrorCollector() != null);
-    
                                 try {
                                     if (okToSet) {
                                         source.getErrorCollector().transformActive = true;
@@ -436,7 +431,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                                     long timetaken = (etime - stime) / 1000000;
                                     if (timetaken > 0) {
                                         try {
-                                            GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,"Global transform "+instance.getClass().getName()+" on "+source.getName()+" = "+timetaken+"ms");
+                                            GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM, "Global transform " + instance.getClass().getName() + " on " + source.getName() + " = " + timetaken + "ms");
                                         } catch (Throwable t) {
                                             t.printStackTrace();
                                         }

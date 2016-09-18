@@ -46,7 +46,8 @@ import org.codehaus.groovy.syntax.SyntaxException;
 public class CompileUnit {
 
     private final List<ModuleNode> modules = new ArrayList<ModuleNode>();
-    // GRECLIPSE cached list of sort operation
+    // GRECLIPSE add
+    /** cached list of sort operation */
     private List<ModuleNode> sortedModules;
     // GRECLIPSE end
     private Map<String, ClassNode> classes = new HashMap<String, ClassNode>();

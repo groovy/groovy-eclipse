@@ -1959,7 +1959,7 @@ inputState.guessing--;
 		AST s_AST = null;
 		Token  alias = null;
 		AST alias_AST = null;
-		Token first = LT(1); /* GRECLIPSE add: */ int mark=mark();
+		Token first = LT(1); int mark=mark();
 		
 		try {      // for error handling
 			i1 = LT(1);

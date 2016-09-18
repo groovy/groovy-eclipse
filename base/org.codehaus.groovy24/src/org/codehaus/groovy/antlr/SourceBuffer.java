@@ -28,25 +28,19 @@ import java.util.ArrayList;
  * @author <a href="mailto:groovy@ross-rayner.com">Jeremy Rayner</a>
  */
 public class SourceBuffer {
-    private final List lines;
-    private StringBuffer current;
-    // GRECLIPSE add
-    private final List<Integer> lineEndings;
-    // GRECLIPSE-805 Support for unicode escape sequences
+    // GRECLIPSE edit
+    private final List<StringBuilder> lines = new ArrayList<StringBuilder>();
+    private final List<Integer> lineEndings = new ArrayList<Integer>();
+    private StringBuilder current = new StringBuilder();
+    // GRECLIPSE-805: Support for unicode escape sequences
     private UnicodeEscapingReader unescaper = new NoEscaper();
     // GRECLIPSE end
 
     public SourceBuffer() {
-        lines = new ArrayList();
-        //lines.add(new StringBuffer()); // dummy row for position [0] in the List
-
-        // GRECLIPSE add
-        lineEndings = new ArrayList<Integer>();
+        // GRECLIPSE edit
+        lines.add(current);
         lineEndings.add(0);
         // GRECLIPSE end
-
-        current = new StringBuffer();
-        lines.add(current);
     }
 
     /**
@@ -78,7 +72,7 @@ public class SourceBuffer {
         // obtain the snippet from the buffer within specified bounds
         StringBuffer snippet = new StringBuffer();
         for (int i = startLine - 1; i < endLine;i++) {
-            String line = ((StringBuffer)lines.get(i)).toString();
+            String line = lines.get(i).toString();
             if (startLine == endLine) {
                 // reset any out of bounds requests (again)
                 if (startColumn > line.length()) { startColumn = line.length();}
@@ -104,45 +98,36 @@ public class SourceBuffer {
         return snippet.toString();
     }
 
-    // GRECLIPSE edit
-    //public void write(int c) {
-    //    if (c != -1) {
-    //        current.append((char)c);
-    //    }
-    //    if (c == '\n') {
-    //        current = new StringBuffer();
-    //        lines.add(current);
-    //    }
-    //}
-    private boolean prevWasCarriageReturn = false;
-    private int col = 0;
     /**
      * Writes the specified character into the buffer
      * @param c
      */
     public void write(int c) {
-        // FIXASC tidy this up, looks slow
         if (c != -1) {
-            col++;
+            // GRECLIPSE add
+            col += 1;
+            // GRECLIPSE end
             current.append((char)c);
         }
         if (c == '\n') {
+            current = new StringBuilder();
+            // GRECLIPSE add
             if (!prevWasCarriageReturn) {
-                current = new StringBuffer();
-                lines.add(current);
-                lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount());
-            } else {
-                // \r\n was found
+            // GRECLIPSE end
+            lines.add(current);
+            // GRECLIPSE add
+            } else { // \r\n was found
                 // back out previous line and add a \n to the line
-                current = new StringBuffer();
-                ((StringBuffer)lines.get(lines.size() - 1)).append('\n');
+                lines.get(lines.size() - 1).append('\n');
                 lineEndings.remove(lineEndings.size() - 1);
-                lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount());
             }
+            lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount());
+            // GRECLIPSE end
         }
+        // GRECLIPSE add
         // handle carriage returns as well as newlines
         if (c == '\r') {
-            current = new StringBuffer();
+            current = new StringBuilder();
             lines.add(current);
             lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount());
             // this may be a \r\n, but may not be
@@ -150,12 +135,15 @@ public class SourceBuffer {
         } else {
             prevWasCarriageReturn = false;
         }
+        // GRECLIPSE end
     }
+    private int col;
+    private boolean prevWasCarriageReturn;
 
     public LocationSupport getLocationSupport() {
         lineEndings.add(col + unescaper.getUnescapedUnicodeOffsetCount()); // last line ends where the data runs out
         int[] lineEndingsArray = new int[lineEndings.size()];
-        for (int i = 0, max = lineEndings.size(); i < max; i++) {
+        for (int i = 0, max = lineEndings.size(); i < max; i += 1) {
             lineEndingsArray[i] = lineEndings.get(i).intValue();
         }
         return new LocationSupport(lineEndingsArray);
@@ -168,7 +156,7 @@ public class SourceBuffer {
 }
 
 /**
- * GRECLIPSE-805 Support for unicode escape sequences
+ * GRECLIPSE-805: Support for unicode escape sequences
  * @author Andrew Eisenberg
  * @created Mar 3, 2011
  */

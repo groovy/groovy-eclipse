@@ -320,7 +320,7 @@ public class CompilationUnit extends ProcessingUnit {
         this.debug = configuration.getDebug();
 
         // GRECLIPSE edit
-        if (!this.configured /*&& this.classLoader instanceof GroovyClassLoader*/) {
+        if (!this.configured && this.classLoader != null/*instanceof GroovyClassLoader*/) {
             appendCompilerConfigurationClasspathToClassLoader(configuration, /*(GroovyClassLoader)*/ this.classLoader);
         }
         // GRECLIPSE end
@@ -465,7 +465,7 @@ public class CompilationUnit extends ProcessingUnit {
         }
         // GRECLIPSE add
         if (iterating) {
-            GroovyBugError gbe = new GroovyBugError("Queuing new source whilst already iterating.  Queued source is '"+source.getName()+"'");
+            GroovyBugError gbe = new GroovyBugError("Queuing new source whilst already iterating.  Queued source is '" + source.getName() + "'");
             gbe.printStackTrace();
             throw gbe;
         }
@@ -562,8 +562,10 @@ public class CompilationUnit extends ProcessingUnit {
     // GRECLIPSE add
     public interface ProgressListener {
         void parseComplete(int phase, String sourceUnitName);
-        void generateComplete(int phase, ClassNode classNode);    
+        void generateComplete(int phase, ClassNode classNode);
     }
+
+    private ProgressListener listener;
 
     public ProgressListener getProgressListener() {
         return this.listener;
@@ -572,8 +574,6 @@ public class CompilationUnit extends ProcessingUnit {
     public void setProgressListener(ProgressListener listener) {
         this.listener = listener;
     }
-
-    private ProgressListener listener;
     // GRECLIPSE end
 
     //---------------------------------------------------------------------------
@@ -692,7 +692,7 @@ public class CompilationUnit extends ProcessingUnit {
             String name = su.getName();
             // GRECLIPSE add
             if (iterating) {
-                GroovyBugError gbe = new GroovyBugError("Damaging 'names' whilst already iterating.  Name getting added is '"+su.getName()+"'");
+                GroovyBugError gbe = new GroovyBugError("Damaging 'names' whilst already iterating.  Name getting added is '" + su.getName() + "'");
                 gbe.printStackTrace();
                 throw gbe;
             }
@@ -877,7 +877,7 @@ public class CompilationUnit extends ProcessingUnit {
             AsmClassGenerator generator = new AsmClassGenerator(source, context, visitor, sourceName);
 
             // GRECLIPSE add
-            // if there are errors, don't generate code. 
+            // if there are errors, don't generate code.
             // code gen can fail unexpectedly if there was an earlier error.
             // source can be null for class nodes created by StaticTypeCheckingSupport
             if (source == null || !source.getErrorCollector().hasErrors()) {
@@ -1015,6 +1015,11 @@ public class CompilationUnit extends ProcessingUnit {
             if ((source.phase < phase) || (source.phase == phase && !source.phaseComplete)) {
                 try {
                     body.call(source);
+                    // GRECLIPSE add
+                    if (phase == Phases.CONVERSION && getProgressListener() != null && body == phaseOperations[phase].getLast()) {
+                        getProgressListener().parseComplete(phase, name);
+                    }
+                    // GRECLIPSE end
                 } catch (CompilationFailedException e) {
                     throw e;
                 } catch (Exception e) {
@@ -1031,6 +1036,7 @@ public class CompilationUnit extends ProcessingUnit {
         } finally {
             iterating = false;
         }
+        // GRECLIPSE end
 
         getErrorCollector().failIfErrors();
     }
@@ -1080,7 +1086,7 @@ public class CompilationUnit extends ProcessingUnit {
                 return sortedModules;
             } 
         }
-        //
+        // GRECLIPSE end
         List<ClassNode> unsorted = new ArrayList<ClassNode>();
         for (ModuleNode module : this.ast.getModules()) {
             for (ClassNode classNode : module.getClasses()) {
@@ -1127,24 +1133,23 @@ public class CompilationUnit extends ProcessingUnit {
             for (Iterator iter = unsorted.iterator(); iter.hasNext(); i++) {
                 ClassNode node = (ClassNode) iter.next();
                 if (node.isInterface()) {
-                    countIndexPairs.add((getSuperInterfaceCount(node)<<16)+i);
+                    countIndexPairs.add((getSuperInterfaceCount(node) << 16) + i);
                 } else {
-                    countIndexPairs.add(((getSuperClassCount(node)+2000)<<16)+i);
+                    countIndexPairs.add(((getSuperClassCount(node) + 2000) << 16) + i);
                 }
             }
         }
         Collections.sort(countIndexPairs);
         List sorted = new ArrayList();
         for (int i: countIndexPairs) {
-            sorted.add(unsorted.get(i&0xffff));
+            sorted.add(unsorted.get(i & 0xffff));
         }
         this.ast.setSortedModules(sorted);
         // GRECLIPSE end
         return sorted;
     }
 
-    @SuppressWarnings("unused")
-    private static List<ClassNode> getSorted(int[] index, List<ClassNode> unsorted) {
+    /*private static List<ClassNode> getSorted(int[] index, List<ClassNode> unsorted) {
         List<ClassNode> sorted = new ArrayList<ClassNode>(unsorted.size());
         for (int i = 0; i < unsorted.size(); i++) {
             int min = -1;
@@ -1159,7 +1164,7 @@ public class CompilationUnit extends ProcessingUnit {
             index[min] = -1;
         }
         return sorted;
-    }
+    }*/
 
     /**
      * A loop driver for applying operations to all primary ClassNodes in
@@ -1167,11 +1172,7 @@ public class CompilationUnit extends ProcessingUnit {
      * through the current phase.
      */
     public void applyToPrimaryClassNodes(PrimaryClassNodeOperation body) throws CompilationFailedException {
-        // GRECLIPSE edit
-        //Iterator classNodes = getPrimaryClassNodes(body.needSortedInput()).iterator();
-        List primaryClassNodes = getPrimaryClassNodes(body.needSortedInput());
-        Iterator classNodes = primaryClassNodes.iterator();
-        // GRECLIPSE end
+        Iterator classNodes = getPrimaryClassNodes(body.needSortedInput()).iterator();
         while (classNodes.hasNext()) {
             SourceUnit context = null;
             try {

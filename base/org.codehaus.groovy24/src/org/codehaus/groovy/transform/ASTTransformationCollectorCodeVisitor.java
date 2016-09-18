@@ -112,10 +112,8 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
             //    continue;
             //}
             //addTransformsToClassNode(annotation, transformClassAnnotation);
-            if (!this.allowTransforms) {
-                if (!isAllowed(annotation.getClassNode().getName())) {
-                    continue;
-                }
+            if (!this.allowTransforms && !isAllowed(annotation.getClassNode().getName())) {
+                continue;
             }
             String[] transformClassNames = getTransformClassNames(annotation.getClassNode());
             Class[] transformClasses = getTransformClasses(annotation.getClassNode());
@@ -371,7 +369,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
                     break;
                 }
             }  
-            if (transformAnnotation!=null) {
+            if (transformAnnotation != null) {
                 // will work so long as signature for the member 'value' is String[]
                 Expression expr2 = transformAnnotation.getMember("value");
                 String[] values = null;
@@ -424,7 +422,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
                 // Will need to extract the classnames
                 if (expr instanceof ListExpression) {
                     List<Class<?>> loadedClasses = new ArrayList<Class<?>>();
-                    ListExpression expression = (ListExpression)expr;
+                    ListExpression expression = (ListExpression) expr;
                     List<Expression> expressions = expression.getExpressions();
                     for (Expression oneExpr: expressions) {
                         String classname = ((ClassExpression) oneExpr).getType().getName();
@@ -435,7 +433,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
                             source.getErrorCollector().addError(new SimpleMessage("Ast transform processing, cannot find " + classname, source));
                         }
                     }
-                    if (loadedClasses.size() != 0) {
+                    if (!loadedClasses.isEmpty()) {
                         values = loadedClasses.toArray(new Class<?>[loadedClasses.size()]);
                     }
                     return values;

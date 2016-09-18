@@ -652,7 +652,7 @@ packageDefinition
     //:   an:annotationsOpt! "package"! id:identifier!
     //    {#packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)),an,id);}
     :   an:annotationsOpt! "package"! (id:identifier!)?
-        {   // error recovery for missing package name
+        { // error recovery for missing package name
             if (id_AST==null) {
                 reportError("Invalid package specification",LT(0));
             } else {
@@ -1064,7 +1064,7 @@ identifier {Token first = LT(1);}
         {#identifier = #i1;}
     ;
 
-identifierStar {Token first = LT(1); /* GRECLIPSE add: */ int mark=mark();}
+identifierStar {Token first = LT(1); int mark=mark();} // GRECLIPSE add
     :   i1:IDENT!
         (   options { greedy = true; } :
             d1:DOT! nls! i2:IDENT!
@@ -3456,7 +3456,6 @@ identPrimary
 //    :   "new"! nls! (ta:typeArguments!)? t:type!
 newExpression {Token first = LT(1); int jumpBack=mark();}
     :   "new"! nls! (ta:typeArguments!)? (t:type!)?
-// GRECLIPSE end
         (   nls!
             mca:methodCallArgs[null]!
 

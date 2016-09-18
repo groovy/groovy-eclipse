@@ -184,11 +184,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // straight xstream output of AST
         String formatProp = System.getProperty("ANTLR.AST".toLowerCase()); // uppercase to hide from jarjar
 
-        // GRECLIPSE removed
-        //if ("xml".equals(formatProp)) {
-        //    saveAsXML(sourceUnit.getName(), ast);
-        //}
-        // GRECLIPSE end
+        if ("xml".equals(formatProp)) {
+            saveAsXML(sourceUnit.getName(), ast);
+        }
 
         // 'pretty printer' output of AST
         if ("groovy".equals(formatProp)) {
@@ -243,19 +241,19 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
     }
 
-    // GRECLIPSE unused
-    /*private static void saveAsXML(String name, AST ast) {
-        XStream xstream = new XStream();
-        try {
-            xstream.toXML(ast, new FileWriter(name + ".antlr.xml"));
-            System.out.println("Written AST to " + name + ".antlr.xml");
-        }
-        catch (Exception e) {
-            System.out.println("Couldn't write to " + name + ".antlr.xml");
-            e.printStackTrace();
-        }
-    }*/
-    // GRECLIPSE end
+    private static void saveAsXML(String name, AST ast) {
+        // GRECLIPSE edit
+        //XStream xstream = new XStream();
+        //try {
+        //    xstream.toXML(ast, new FileWriter(name + ".antlr.xml"));
+        //    System.out.println("Written AST to " + name + ".antlr.xml");
+        //}
+        //catch (Exception e) {
+        //    System.out.println("Couldn't write to " + name + ".antlr.xml");
+        //    e.printStackTrace();
+        //}
+        // GRECLIPSE end
+    }
 
     public ModuleNode buildAST(SourceUnit sourceUnit, ClassLoader classLoader, Reduction cst) throws ParserException {
         setClassLoader(classLoader);
@@ -270,9 +268,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
             // GRECLIPSE edit
             //if (output.getStatementBlock().isEmpty() && output.getMethods().isEmpty() && output.getClasses().isEmpty()) {
-            //    output.addStatement(ReturnStatement.RETURN_NULL_OR_VOID);
-            //}
-            // does it look broken? (ie. have we built a script for it containing rubbish)
+            // does it look broken (i.e. have we built a script for it containing rubbish)
             boolean hasNoMethods = output.getMethods().isEmpty();
             if (hasNoMethods && sourceUnit.getErrorCollector().hasErrors() && looksBroken(output)) {
                 output.setEncounteredUnrecoverableError(true);
@@ -281,9 +277,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 if (ast == null && sourceUnit.getErrorCollector().hasErrors()) {
                     output.setEncounteredUnrecoverableError(true);
                 }
+            // GRECLIPSE end
                 output.addStatement(ReturnStatement.RETURN_NULL_OR_VOID);
             }
-            // GRECLIPSE end
 
             // set the script source position
 
@@ -408,7 +404,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         //PackageNode packageNode = setPackage(name, annotations);
         //configureAST(packageNode, packageDef);
         setPackageName(name);
-        if (name != null && name.length() > 0) {
+        if (name != null && !name.isEmpty()) {
             name += '.';
         }
         PackageNode packageNode = new PackageNode(name);
@@ -486,7 +482,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     addStarImport(packageName, annotations);
                     // GRECLIPSE add
                     // must configure sloc for import node
-                    ASTNode imp = output.getStarImports().get(output.getStarImports().size()-1);
+                    ASTNode imp = output.getStarImports().get(output.getStarImports().size() - 1);
                     configureAST(imp, importNode);
                     // GRECLIPSE end
                 }
@@ -517,9 +513,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 } else {
                     // import is like "import foo.Bar"
                     ClassNode type = ClassHelper.make(packageName + "." + name);
-                    // GRECLIPSE add
+                    // GRECLIPSE edit
                     // sloc for importNode configured by the ModuleNode
-                    configureAST(type, nameNode/*importNode*/);
+                    configureAST(type, /*importNode*/nameNode);
                     // GRECLIPSE end
                     addImport(type, name, alias, annotations);
                     // GRECLIPSE add
@@ -895,7 +891,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         classNode.setNameEnd(nameEnd);
         configureAST(classNode, enumNode);
         // GRECLIPSE end
-
         classNode = oldNode;
 
         output.addClass(enumClass);
@@ -2551,7 +2546,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE add
         // GRECLIPSE-768 check to see if the sloc is definitely wrong for empty map expressions
         // if so, make an educated guess that the text looks like '[:]'
-        if (expressions.size() == 0 && mapExpression.getLength() <= 1) {
+        if (expressions.isEmpty() && mapExpression.getLength() <= 1) {
             mapExpression.setEnd(mapExpression.getStart() + 3);
             mapExpression.setLastColumnNumber(mapExpression.getColumnNumber() + 3);
         }
@@ -3712,7 +3707,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     private boolean hasScriptStatements(BlockStatement statements) {
         return statements != null && statements.getStatements() != null && statements.getStatements().size() > 0;
     }
-    // end fix source locations
 
     // FIXASC (groovychange) new method for correctly configuring the position of the annotation - based on configureAST
     protected void configureAnnotationAST(ASTNode node, AST ast) {

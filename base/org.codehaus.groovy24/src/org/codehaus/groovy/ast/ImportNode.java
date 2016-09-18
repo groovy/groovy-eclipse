@@ -18,9 +18,8 @@
  */
 package org.codehaus.groovy.ast;
 
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-
 import groovyjarjarasm.asm.Opcodes;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 
 /**
  * Represents an import statement of a single class
@@ -156,7 +155,7 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     private boolean unresolvable;
     private ConstantExpression aliasExpr;
     private ConstantExpression fieldNameExpr;
-    
+
     public ConstantExpression getFieldNameExpr() {
         return fieldNameExpr;
     }
@@ -174,13 +173,13 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     }
 
     public void markAsUnresolvable() {
-        unresolvable=true;
+        unresolvable = true;
     }
-    
+
     public boolean isUnresolvable() {
         return unresolvable;
     }
-    
+
     // see GROOVY-44578 static star imports are not marked as static
     public boolean isStaticStar() {
         return type != null && alias == null;
