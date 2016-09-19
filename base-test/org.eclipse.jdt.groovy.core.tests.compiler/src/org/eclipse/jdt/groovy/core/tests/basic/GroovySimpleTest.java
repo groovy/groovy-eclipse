@@ -64,23 +64,19 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 		super(name);
 	}
 
-	public static Test suite() {
-		return buildUniqueComplianceTestSuite(testClass(),ClassFileConstants.JDK1_5);
-//		return buildUniqueComplianceTestSuite(testClass(),F_1_5);
-//		return buildAllCompliancesTestSuite(testClass());
-//		return buildMinimalComplianceTestSuite(testClass(),F_1_5);
-	} 
-	
-	
-	protected void setUp() throws Exception {
-		super.setUp();
-		complianceLevel = ClassFileConstants.JDK1_5;
-	}
-
 	public static Class testClass() {
 		return GroovySimpleTest.class;
 	}
-	
+
+	public static Test suite() {
+		return buildMinimalComplianceTestSuite(testClass(), F_1_6);
+	}
+
+	protected void setUp() throws Exception {
+		super.setUp();
+		complianceLevel = ClassFileConstants.JDK1_6;
+	}
+
     // demonstrates the incorrect use of closure syntax on groovy 1.6 that compiles OK.
     // On 1.7 it is recognized as incorrect (it is too similar to the inner class syntax)
     public void testClosureSyntax() {
@@ -5275,7 +5271,7 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
 			"	}\n"+
 			"}\n",
 			
-		},"test");		
+		},"test");
 	}
 
 
@@ -10931,8 +10927,6 @@ public class GroovySimpleTest extends AbstractGroovyRegressionTest {
                         
 	        });
 	    }
-
-	
 
 	// Testcode based on article: http://www.infoq.com/articles/groovy-1.5-new
 	// The groups of tests are loosely based on the article contents - but what is really exercised here is the accessibility of
