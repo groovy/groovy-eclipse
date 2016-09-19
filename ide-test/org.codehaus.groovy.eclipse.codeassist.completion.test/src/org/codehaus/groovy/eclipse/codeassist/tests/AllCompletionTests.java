@@ -14,38 +14,39 @@ package org.codehaus.groovy.eclipse.codeassist.tests;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-
 /**
  * @author Andrew Eisenberg
  * @created Jun 3, 2009
- *
  */
 public class AllCompletionTests {
+
     public static Test suite() throws Exception {
-        TestSuite suite = new TestSuite("Run of all Completion Tests");
-        suite.addTestSuite(DefaultGroovyMethodCompletionTests.class);
-        suite.addTestSuite(LocalVariableCompletionTests.class);
-        suite.addTestSuite(InferencingCompletionTests.class);
-        suite.addTestSuite(FieldCompletionTests.class);
-        suite.addTestSuite(MethodCompletionTests.class);
-        suite.addTestSuite(TypeCompletionTests.class);
-        suite.addTestSuite(TypeCompletionTests2.class);
-        suite.addTestSuite(GroovyLikeCompletionTests.class);
-        suite.addTestSuite(InnerTypeCompletionTests.class);
-        suite.addTestSuite(OtherCompletionTests.class);
-        suite.addTestSuite(FindImportsRegionTests.class);
-        suite.addTestSuite(RelevanceTests.class);
-        suite.addTestSuite(ProposalProviderAndFilterTests.class);
+        TestSuite suite = new TestSuite(AllCompletionTests.class.getName());
+
+        suite.addTestSuite(CommandChainCompletionTests.class);
         suite.addTestSuite(ConstructorCompletionTests.class);
-        suite.addTestSuite(StaticImportsCompletionTests.class);
-        suite.addTestSuite(GenericCompletionTests.class);
-        suite.addTestSuite(ExtendedCompletionContextTests.class);
         suite.addTestSuite(ContentAssistLocationTests.class);
         suite.addTestSuite(ContextInformationTests.class);
-        suite.addTestSuite(GuessingCompletionTests.class);
+        suite.addTestSuite(DefaultGroovyMethodCompletionTests.class);
         suite.addTestSuite(DefaultMethodContentAssistTests.class);
-        suite.addTestSuite(CommandChainCompletionTests.class);
-        
+        suite.addTestSuite(ExtendedCompletionContextTests.class);
+        suite.addTestSuite(FieldCompletionTests.class);
+        suite.addTestSuite(FindImportsRegionTests.class);
+        suite.addTestSuite(GenericCompletionTests.class);
+        suite.addTestSuite(GroovyLikeCompletionTests.class);
+        suite.addTestSuite(GuessingCompletionTests.class);
+        suite.addTestSuite(InferencingCompletionTests.class);
+        suite.addTestSuite(InnerTypeCompletionTests.class);
+        suite.addTestSuite(LocalVariableCompletionTests.class);
+        suite.addTestSuite(MethodCompletionTests.class);
+        suite.addTestSuite(NewFieldCompletionTests.class);
+        suite.addTestSuite(OtherCompletionTests.class);
+        suite.addTestSuite(ProposalProviderAndFilterTests.class);
+        suite.addTestSuite(RelevanceTests.class);
+        suite.addTestSuite(StaticImportsCompletionTests.class);
+        suite.addTestSuite(TypeCompletionTests.class);
+        suite.addTestSuite(TypeCompletionTests2.class);
+
         return suite;
     }
 }
