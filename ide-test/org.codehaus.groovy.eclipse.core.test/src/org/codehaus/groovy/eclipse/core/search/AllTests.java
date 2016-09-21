@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2003-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,27 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.core;
+package org.codehaus.groovy.eclipse.core.search;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-/**
- * @author Andrew Eisenberg
- * @created Aug 29, 2009
- */
-public class AllCoreTests {
-
+public class AllTests {
     public static Test suite() {
-        TestSuite suite = new TestSuite(AllCoreTests.class.getName());
-
-        suite.addTestSuite(ClasspathContainerTest.class);
-
-        suite.addTest(org.codehaus.groovy.eclipse.core.compiler.AllTests.suite());
-        suite.addTest(org.codehaus.groovy.eclipse.core.impl.AllTests.suite());
-        suite.addTest(org.codehaus.groovy.eclipse.core.search.AllTests.suite());
-        suite.addTest(org.codehaus.groovy.eclipse.core.util.AllTests.suite());
-
+        TestSuite suite = new TestSuite(AllTests.class.getName());
+        suite.addTestSuite(SyntheticMemberSearchTests.class);
         return suite;
     }
 }

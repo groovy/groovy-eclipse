@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2003-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.core.impl;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-public class AllTests
-{
-    public static Test suite()
-    {
-        final TestSuite suite = new TestSuite( "Test for " + AllTests.class.getPackage().getName() );
-        //$JUnit-BEGIN$
-        suite.addTestSuite( StringSourceBufferTests.class );
-        //$JUnit-END$
+public class AllTests {
+    public static Test suite() {
+        TestSuite suite = new TestSuite(AllTests.class.getName());
+        suite.addTestSuite(StringSourceBufferTests.class);
         return suite;
     }
 }
