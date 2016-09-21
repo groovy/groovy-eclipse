@@ -19,8 +19,6 @@ import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public class GroovySimpleTests_Compliance_1_8 extends AbstractGroovyRegressionTest {
-	
-	public static long JDK1_8 = 0x340000; /* ClassFileConstants.JDK1_8 */
 
 	public GroovySimpleTests_Compliance_1_8(String name) {
 		super(name);

@@ -28,7 +28,7 @@ import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
-public class AbstractCompilerTest extends TestCase {
+public abstract class AbstractCompilerTest extends TestCase {
 
 	public static final int F_1_3 = 0x01;
 	public static final int F_1_4 = 0x02;
@@ -57,6 +57,7 @@ public class AbstractCompilerTest extends TestCase {
 		buildAllCompliancesTestSuite(suite, evaluationTestClass);
 		return suite;
 	}
+
 	public static void buildAllCompliancesTestSuite(TestSuite suite, Class evaluationTestClass) {
 		int complianceLevels = AbstractCompilerTest.getPossibleComplianceLevels();
 		if ((complianceLevels & AbstractCompilerTest.F_1_3) != 0) {
@@ -78,7 +79,6 @@ public class AbstractCompilerTest extends TestCase {
 			suite.addTest(buildUniqueComplianceTestSuite(evaluationTestClass, JDK1_8));
 		}
 	}
-	
 
 	/**
 	 * Build a test suite made of test suites for all possible running VM compliances .
@@ -280,9 +280,9 @@ public class AbstractCompilerTest extends TestCase {
 	}
 
 	// here for now as CompilerOptions.version_1_8 exists only if using the java8 patched jdt
-	public static final String VERSION_1_8 = "1.8"; //$NON-NLS-1$
-	private static int MAJOR_VERSION_1_8 = 52;
-	private static long JDK1_8 = ((long)MAJOR_VERSION_1_8 << 16) + ClassFileConstants.MINOR_VERSION_0;
+	protected static final String VERSION_1_8 = "1.8";
+	protected static final int MAJOR_VERSION_1_8 = 52;
+	public static final long JDK1_8 = ((long) MAJOR_VERSION_1_8 << 16) + ClassFileConstants.MINOR_VERSION_0;
 
 	/*
 	 * Returns the possible compliance levels this VM instance can run.
