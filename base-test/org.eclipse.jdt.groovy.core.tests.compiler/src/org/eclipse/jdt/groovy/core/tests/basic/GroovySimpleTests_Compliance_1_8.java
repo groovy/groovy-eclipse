@@ -25,26 +25,23 @@ public class GroovySimpleTests_Compliance_1_8 extends AbstractGroovyRegressionTe
 	}
 
 	public static Test suite() {
-		return buildUniqueComplianceTestSuite(testClass(),
-				JDK1_8);
+		return buildUniqueComplianceTestSuite(testClass(), JDK1_8);
 	}
 
 	public static Class testClass() {
 		return GroovySimpleTests_Compliance_1_8.class;
 	}
 
-    protected void setUp() throws Exception {
+	protected void setUp() throws Exception {
 		super.setUp();
 		complianceLevel = JDK1_8;
 	}
 
-    public void testDefaultAndStaticMethodInInterface() {
-		assertTrue("Groovy compiler levele is less than 2.3",
-				GroovyUtils.GROOVY_LEVEL >= 23);
-		assertTrue("JRE Compliance level is less than 1.8",
-				isJRELevel(AbstractCompilerTest.F_1_8));
-		Map customOptions= getCompilerOptions();
-		customOptions.put(CompilerOptions.OPTION_Source, "1.8" /* CompilerOptions.VERSION_1_8 */);		
+	public void testDefaultAndStaticMethodInInterface() {
+		assertTrue("Groovy compiler level is less than 2.3", GroovyUtils.GROOVY_LEVEL >= 23);
+		assertTrue("JRE Compliance level is less than 1.8", isJRELevel(AbstractCompilerTest.F_1_8));
+		Map customOptions = getCompilerOptions();
+		customOptions.put(CompilerOptions.OPTION_Source, VERSION_1_8);
 		this.runConformTest(
 				// test directory preparation
 				true, /* flush output directory */
@@ -68,5 +65,4 @@ public class GroovySimpleTests_Compliance_1_8 extends AbstractGroovyRegressionTe
 						// javac options
 						new JavacTestOptions("-source 1.8") /* javac test options */);
 	}
-
 }
