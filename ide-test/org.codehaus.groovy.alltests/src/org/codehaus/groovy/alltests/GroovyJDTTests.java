@@ -49,10 +49,14 @@ public class GroovyJDTTests {
 
         // Compiler tests
         suite.addTest(ErrorRecoveryTests.suite());
+        suite.addTest(GenericsTests.suite());
         suite.addTest(GroovySimpleTest.suite());
         suite.addTest(GroovySimpleTests_Compliance_1_8.suite());
         suite.addTest(ScriptFolderTests.suite());
         suite.addTest(STCScriptsTests.suite());
+        if (org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy(23))
+            suite.addTest(TraitsTests.suite());
+        suite.addTest(TransformationsTests.suite());
 
         // Location tests
         suite.addTest(ASTConverterTests.suite());

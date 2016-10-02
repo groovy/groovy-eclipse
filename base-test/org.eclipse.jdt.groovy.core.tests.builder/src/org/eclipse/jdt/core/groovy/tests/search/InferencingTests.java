@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2014 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import java.util.List;
@@ -21,18 +20,20 @@ import java.util.List;
 import junit.framework.Test;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
+import org.osgi.framework.Version;
 
 /**
- * Lots of tests to see that expressions have the proper type associated with them
+ * Lots of tests to see that expressions have the proper type associated with them.
+ *
  * @author Andrew Eisenberg
  * @created Nov 4, 2009
- *
  */
 public class InferencingTests extends AbstractInferencingTest {
- 
+
     private static final String GET_AT = "getAt";
 
     public static Test suite() {
@@ -1242,9 +1243,14 @@ public class InferencingTests extends AbstractInferencingTest {
         end = start + "bar".length();
         assertType(contents, start, end, "p.D");
 
-        start = contents.indexOf("foo", end);
-        end = start + "foo".length();
-        assertType(contents, start, end, "java.lang.String");
+        // As of Groovy 2.4.6, 'bar.foo = X' is seen as 'bar.setFoo(X)' for some cases.
+        // See StaticTypeCheckingVisitor.existsProperty(), circa 'checkGetterOrSetter'.
+        Version version = CompilerUtils.getActiveGroovyBundle().getVersion();
+        if (version.compareTo(new Version(2, 4, 6)) < 0) {
+            start = contents.indexOf("foo", end);
+            end = start + "foo".length();
+            assertType(contents, start, end, "java.lang.String");
+        }
     }
 
     // Another test 'with' operator. @CompileStatic annotation.
@@ -1276,9 +1282,14 @@ public class InferencingTests extends AbstractInferencingTest {
         end = start + "bar".length();
         assertType(contents, start, end, "p.D");
 
-        start = contents.indexOf("foo", end);
-        end = start + "foo".length();
-        assertType(contents, start, end, "java.lang.String");
+        // As of Groovy 2.4.6, 'bar.foo = X' is seen as 'bar.setFoo(X)' for some cases.
+        // See StaticTypeCheckingVisitor.existsProperty(), circa 'checkGetterOrSetter'.
+        Version version = CompilerUtils.getActiveGroovyBundle().getVersion();
+        if (version.compareTo(new Version(2, 4, 6)) < 0) {
+            start = contents.indexOf("foo", end);
+            end = start + "foo".length();
+            assertType(contents, start, end, "java.lang.String");
+        }
     }
 
     // Unknown references should have the declaring type of the enclosing closure
