@@ -22,6 +22,8 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.contentassist.ICompletionProposalExtension6;
+import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.ltk.core.refactoring.Refactoring;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.TextChange;
@@ -33,7 +35,7 @@ import org.eclipse.text.edits.MalformedTreeException;
  * @author Alex Boyko
  *
  */
-public abstract class TextRefactoringProposal extends AbstractGroovyCompletionProposal {
+public abstract class TextRefactoringProposal extends AbstractGroovyCompletionProposal implements ICompletionProposalExtension6 {
 	
 	protected Refactoring refactoring;
 	
@@ -57,6 +59,12 @@ public abstract class TextRefactoringProposal extends AbstractGroovyCompletionPr
 
 	public String getDisplayString() {
 		return refactoring.getName();
+	}
+	
+	public StyledString getStyledDisplayString() {
+		StyledString styledString = new StyledString();
+		styledString.append(getDisplayString());
+		return styledString;
 	}
 	
 	@Override
