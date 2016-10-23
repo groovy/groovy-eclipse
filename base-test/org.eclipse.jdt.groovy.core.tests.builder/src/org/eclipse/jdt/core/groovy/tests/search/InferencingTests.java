@@ -1878,6 +1878,59 @@ public class InferencingTests extends AbstractInferencingTest {
 		assertType(contents, start, end, "A");
 	}
 
+	public void testGRECLIPSE1798() {
+		createJavaUnit("Wrapper",
+				"public class Wrapper<T> {\n" +
+				"    private final T wrapped;\n" +
+				"    public Wrapper(T wrapped) { this.wrapped = wrapped; }\n" +
+				"    public T getWrapped() { return wrapped; }\n" +
+				"}\n");
+		createJavaUnit("MyBean",
+				"public class MyBean {\n" +
+				"    private Wrapper<String> foo = new Wrapper<>(\"foo\");\n" +
+				"    public String getFoo() { return foo.getWrapped(); }\n" +
+				"}\n");
+		String contents =
+				"class GroovyTest {\n" +
+				"    static void main(String[] args) {\n" +
+				"        def b = new MyBean()\n" +
+				"        println b.foo.toUpperCase()\n" +
+				"    }\n" +
+				"}\n";
+		int start = contents.lastIndexOf("foo");
+		int end = start + "foo".length();
+		assertType(contents, start, end, "java.lang.String");
+	}
+
+	public void testGRECLIPSE1545() {
+		createJavaUnit("JavaBean",
+				"public class JavaBean {\n" +
+				"    private String name;\n" +
+				"    public String getName() { return name; }\n" +
+				"    public void setName(String name) { this.name = name; }\n" +
+				"    public String getOther() { return \"other\"; }\n" +
+				"    public void setOther(final String other) { }\n" +
+				"}\n");
+		String contents =
+				"class Test {\n" +
+				"    static void main(String[] args) {\n" +
+				"        def j = new JavaBean()\n" +
+				"        j.name = \"ciao\"\n" +
+				"        def a = j.name\n" +
+				"        j.other = \"maybe\"\n" +
+				"        def o = j.other\n" +
+				"    }\n" +
+				"}\n";
+
+		int start = contents.lastIndexOf("name");
+		int end = start + "name".length();
+		assertType(contents, start, end, "java.lang.String");
+
+		start = contents.lastIndexOf("other");
+		end = start + "other".length();
+		assertType(contents, start, end, "java.lang.String");
+	}
+
     protected void assertNoUnknowns(String contents) {
         GroovyCompilationUnit unit = createUnit("Search", contents);
         
