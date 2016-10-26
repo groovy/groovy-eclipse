@@ -324,7 +324,7 @@ public class DSLInferencingTests extends AbstractDSLInferencingTest {
             if (loc > 0) {
                 if (num %3 == 0) {
                     assertType(contents, loc, loc+len, "java.lang.Integer", true);
-                } else if (num %3 == 2) {
+                } else if (num %3 == 1) {
                     assertUnknownConfidence(contents, loc, loc+len, "Foo", true);
                 } else if (num %3 == 2) {
                     assertUnknownConfidence(contents, loc, loc+len, "java.util.List<E>", true);
