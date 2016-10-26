@@ -238,7 +238,7 @@ tokens {
 }
 
 {
-        /** This factory is the correct way to wire together a Groovy parser and lexer. */
+    /** This factory is the correct way to wire together a Groovy parser and lexer. */
     public static GroovyRecognizer make(GroovyLexer lexer) {
         GroovyRecognizer parser = new GroovyRecognizer(lexer.plumb());
         // TODO: set up a common error-handling control block, to avoid excessive tangle between these guys
@@ -255,6 +255,7 @@ tokens {
     public static GroovyRecognizer make(InputBuffer in) { return make(new GroovyLexer(in)); }
     public static GroovyRecognizer make(LexerSharedInputState in) { return make(new GroovyLexer(in)); }
 
+    @SuppressWarnings("unused")
     private static GroovySourceAST dummyVariableToforceClassLoaderToFindASTClass = new GroovySourceAST();
 
     List warningList;
@@ -269,6 +270,8 @@ tokens {
     GroovyLexer lexer;
     public GroovyLexer getLexer() { return lexer; }
     public void setFilename(String f) { super.setFilename(f); lexer.setFilename(f); }
+
+    @SuppressWarnings("unused")
     private SourceBuffer sourceBuffer;
     public void setSourceBuffer(SourceBuffer sourceBuffer) {
         this.sourceBuffer = sourceBuffer;
@@ -527,8 +530,9 @@ tokens {
         return cname.equals(x.getText());
     }
     
+    @SuppressWarnings("unused")
     private void dumpTree(AST ast, String offset) {
-    	dump(ast, offset);
+        dump(ast, offset);
         for (AST node = ast.getFirstChild(); node != null; node = node.getNextSibling()) {
             dumpTree(node, offset+"\t");
         }
@@ -583,6 +587,7 @@ tokens {
     // an enclosing loop, which is why this ugly hack (a fake
     // empty alternative with always-false semantic predicate)
     // is necessary.
+    @SuppressWarnings("unused")
     private static final boolean ANTLR_LOOP_EXIT = false;
 }
 
