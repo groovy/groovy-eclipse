@@ -21,19 +21,21 @@ import org.codehaus.groovy.control.ParserPluginFactory;
 // FIXASC (groovychange) new type
 /**
  * Plugin factory creating plugin that reports on creation of error recovered ASTs.
- * 
+ *
  * @author empovazan
  */
 public class ErrorRecoveredCSTParserPluginFactory extends ParserPluginFactory {
-	private ICSTReporter cstReporter;
+    private final ICSTReporter cstReporter;
+
     public ErrorRecoveredCSTParserPluginFactory(ICSTReporter cstReporter) {
         this.cstReporter = cstReporter;
     }
+
     public ErrorRecoveredCSTParserPluginFactory() {
         this.cstReporter = null;
     }
 
-	public ParserPlugin createParserPlugin() {
-		return new ErrorRecoveredCSTParserPlugin(cstReporter);
-	}
+    public ParserPlugin createParserPlugin() {
+        return new ErrorRecoveredCSTParserPlugin(cstReporter);
+    }
 }

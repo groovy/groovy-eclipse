@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2012 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.control;
 
@@ -23,7 +26,6 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.syntax.Types;
 
 import java.util.*;
-
 
 /**
  * Visitor to resolve constants and method calls from static Imports
@@ -42,11 +44,11 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
     private Expression foundArgs;
     private boolean inAnnotation;
     private boolean inLeftExpression;
-    
-    // GRECLIPSE: GRECLIPSE-1371 and GRECLIPSE-1363 ability to toggle behavior based on reconcile or not
-    boolean isReconcile = false;
-    // end
-    
+
+    // GRECLIPE-1371 and GRECLIPSE-1363 ability to toggle behavior based on reconcile or not
+    boolean isReconcile;
+    // GRECLIPSE end
+
     public void visitClass(ClassNode node, SourceUnit source) {
         this.currentClass = node;
         this.source = source;
@@ -188,7 +190,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
      * @param toSet resulting node
      * @param origNode original node
      */
-    private void setSourcePosition(Expression toSet, Expression origNode) {
+    private static void setSourcePosition(Expression toSet, Expression origNode) {
         toSet.setSourcePosition(origNode);
         if (toSet instanceof PropertyExpression) {
             ((PropertyExpression) toSet).getProperty().setSourcePosition(origNode);
@@ -219,7 +221,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         return exp;
     }
 
-    private Expression findConstant(FieldNode fn) {
+    private static Expression findConstant(FieldNode fn) {
         if (fn != null && !fn.isEnum() && fn.isStatic() && fn.isFinal()) {
             if (fn.getInitialValueExpression() instanceof ConstantExpression) {
                 return fn.getInitialValueExpression();
@@ -394,17 +396,15 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         //   import static MyClass.prop [as otherProp]
         // when resolving prop or field reference
         if (importNodes.containsKey(name)) {
-            // GRECLIPSE: turn off during reconcile
             ImportNode importNode = importNodes.get(name);
-            /*old{
+            // GRECLIPSE add
+            if (!isReconcile) {
+            // GRECLIPSE end
             expression = findStaticPropertyAccessor(importNode.getType(), importNode.getFieldName());
             if (expression != null) return expression;
-            } new:*/
-            if (!isReconcile) {
-                expression = findStaticPropertyAccessor(importNode.getType(), importNode.getFieldName());
-                if (expression != null) return expression;
+            // GRECLIPSE add
             }
-            // end
+            // GRECLIPSE end
             expression = findStaticField(importNode.getType(), importNode.getFieldName());
             if (expression != null) return expression;
         }
@@ -479,18 +479,18 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         return null;
     }
 
-    private String prefix(String name) {
+    private static String prefix(String name) {
         return name.startsWith("is") ? "is" : name.substring(0, 3);
     }
 
-    private String getPropNameForAccessor(String fieldName) {
+    private static String getPropNameForAccessor(String fieldName) {
         int prefixLength = fieldName.startsWith("is") ? 2 : 3;
         if (fieldName.length() < prefixLength + 1) return fieldName;
         if (!validPropName(fieldName)) return fieldName;
         return String.valueOf(fieldName.charAt(prefixLength)).toLowerCase() + fieldName.substring(prefixLength + 1);
     }
 
-    private boolean validPropName(String propName) {
+    private static boolean validPropName(String propName) {
         return propName.startsWith("get") || propName.startsWith("is") || propName.startsWith("set");
     }
 
@@ -519,7 +519,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         return accessor;
     }
 
-    private boolean hasStaticProperty(ClassNode staticImportType, String propName) {
+    private static boolean hasStaticProperty(ClassNode staticImportType, String propName) {
         ClassNode classNode = staticImportType;
         while (classNode != null) {
             for (PropertyNode pn : classNode.getProperties()) {
@@ -537,7 +537,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         return findStaticMethod(staticImportType, accessorMethodName, (inLeftExpression ? dummyArgs : ArgumentListExpression.EMPTY_ARGUMENTS));
     }
 
-    private Expression findStaticField(ClassNode staticImportType, String fieldName) {
+    private static Expression findStaticField(ClassNode staticImportType, String fieldName) {
         if (staticImportType.isPrimaryClassNode() || staticImportType.isResolved()) {
             FieldNode field = staticImportType.getField(fieldName);
             if (field != null && field.isStatic())
@@ -546,7 +546,7 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         return null;
     }
 
-    private Expression findStaticMethod(ClassNode staticImportType, String methodName, Expression args) {
+    private static Expression findStaticMethod(ClassNode staticImportType, String methodName, Expression args) {
         if (staticImportType.isPrimaryClassNode() || staticImportType.isResolved()) {
             if (staticImportType.hasPossibleStaticMethod(methodName, args)) {
                 return new StaticMethodCallExpression(staticImportType, methodName, args);

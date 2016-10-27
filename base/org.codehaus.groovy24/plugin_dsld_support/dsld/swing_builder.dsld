@@ -27,13 +27,13 @@ import java.awt.*
 
 /**
  * This is the DSLD for SwingBuilder
- * 
+ *
  * @author Andrew Eisenberg
  * @since 2.5.1
  */
 currentType(SwingBuilder).accept {
         provider = "SwingBuilder DSL"
-        
+
         method name: "action", type: Action, useNamedArgs: true, params: [name: String, shortDescription: String, smallIcon: String, accelerator:String, closure: Closure], doc: """
         Actions are the lifeblood of a full fledged swing application. Other sources can expound on their usefullness.
         <br/> see <a href="http://groovy.codehaus.org/SwingBuilder.action">http://groovy.codehaus.org/SwingBuilder.action</a>
@@ -43,12 +43,12 @@ currentType(SwingBuilder).accept {
         Generates a JFrame.
         <br/> see <a href="http://groovy.codehaus.org/SwingBuilder.frame">http://groovy.codehaus.org/SwingBuilder.frame</a>
         """
-        
+
         def add = { name, type ->
             def docText = "See <a href=\"http://groovy.codehaus.org/SwingBuilder.${name}\">SwingBuilder.${name}</a>"
             method name:name, type:type, doc:docText
         }
-        
+
         // and so on...
         add("actions", List)
         add("bean", Void)

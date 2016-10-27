@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.classgen;
 
@@ -163,20 +166,16 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
         for (MethodNode mn : cn.getMethods()) {
             String pName = getPropertyName(mn);
-            // GRECLIPSE: start
-            // must set the declaringClass
-            /*old{
-            if (pName != null && pName.equals(name))
-                return new PropertyNode(pName, mn.getModifiers(), getPropertyType(mn), cn, null, null, null);
-                */
-            // newcode
+            // GRECLIPSE edit
+            //if (pName != null && pName.equals(name))
+            //    return new PropertyNode(pName, mn.getModifiers(), ClassHelper.OBJECT_TYPE, cn, null, null, null);
             if (pName != null && pName.equals(name)) {
                 PropertyNode property = new PropertyNode(pName, mn.getModifiers(), getPropertyType(mn), cn, null, null, null);
                 property.setDeclaringClass(cn);
                 property.getField().setDeclaringClass(cn);
                 return property;
             }
-            // GRECLIPSE: end
+            // GRECLIPSE end
         }
 
         for (PropertyNode pn : cn.getProperties()) {
@@ -188,14 +187,16 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         return findClassMember(cn.getOuterClass(), name);
     }
 
+    // GRECLIPSE add
     private ClassNode getPropertyType(MethodNode m) {
         if (m.getReturnType() != ClassHelper.VOID_TYPE) {
             return m.getReturnType();
         }
         return m.getParameters()[0].getType();
     }
+    // GRECLIPSE end
 
-    private String getPropertyName(MethodNode m) {
+    private static String getPropertyName(MethodNode m) {
         String name = m.getName();
         if (!(name.startsWith("set") || name.startsWith("get"))) return null;
         String pname = name.substring(3);
@@ -344,7 +345,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         ifElse.getElseBlock().visit(this);
         popState();
     }
-    
+
     public void visitDeclarationExpression(DeclarationExpression expression) {
         // visit right side first to avoid the usage of a
         // variable before its declaration

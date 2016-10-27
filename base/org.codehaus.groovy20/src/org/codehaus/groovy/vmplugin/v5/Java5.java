@@ -119,7 +119,7 @@ public class Java5 implements VMPlugin {
         ClassNode[] lowers = configureTypes(wildcardType.getLowerBounds());
         ClassNode lower = null;
         // TODO: is it safe to remove this? What was the original intention?
-        if (lower != null) lower = lowers[0];
+        if (lowers != null) lower = lowers[0];
 
         ClassNode[] upper = configureTypes(wildcardType.getUpperBounds());
         GenericsType t = new GenericsType(base, upper, lower);
@@ -216,7 +216,7 @@ public class Java5 implements VMPlugin {
 	            PropertyExpression pe = (PropertyExpression) exp;
 	            String name = pe.getPropertyAsString();
 	            RetentionPolicy policy = RetentionPolicy.valueOf(name);
-	            setRetentionPolicy(policy,root);        		
+	            setRetentionPolicy(policy,root);
         	} else if (typename.equals("java.lang.annotation.Target")) {
         		Expression exp = definition.getMember("value");
  	            if (!(exp instanceof ListExpression)) return;
@@ -381,7 +381,7 @@ public class Java5 implements VMPlugin {
             setAnnotationMetaData(classNode.getTypeClass().getPackage().getAnnotations(), packageNode);
         }
     }
-    
+
     private void makeInterfaceTypes(CompileUnit cu, ClassNode classNode, Class clazz) {
         Type[] interfaceTypes = clazz.getGenericInterfaces();
         if (interfaceTypes.length == 0) {

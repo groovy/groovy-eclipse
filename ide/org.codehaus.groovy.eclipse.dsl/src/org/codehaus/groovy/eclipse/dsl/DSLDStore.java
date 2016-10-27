@@ -12,12 +12,12 @@ package org.codehaus.groovy.eclipse.dsl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.codehaus.groovy.eclipse.GroovyLogManager;
@@ -31,20 +31,20 @@ import org.eclipse.core.resources.IStorage;
 import org.eclipse.jdt.internal.core.NonJavaResource;
 
 /**
- * Stores the pointcuts for a single project
+ * Stores the pointcuts for a single project.
+ *
  * @author andrew
  * @created Nov 17, 2010
  */
 public class DSLDStore {
 
-    private final Map<IPointcut, List<IContributionGroup>> pointcutContributionMap;  // maps pointcuts to their contributors
-    private final Map<IStorage, Set<IPointcut>> keyContextMap;  // maps unique keys (such as script names) to all the pointcuts that they produce
-    public DSLDStore() {
-        // use linked hash map because order matters
-        pointcutContributionMap = new LinkedHashMap<IPointcut, List<IContributionGroup>>();
-        keyContextMap = new HashMap<IStorage, Set<IPointcut>>();
-    }
-    
+    /** Maps pointcuts to their contributors. */
+    private final Map<IPointcut, List<IContributionGroup>> pointcutContributionMap =
+            Collections.synchronizedMap(new LinkedHashMap<IPointcut, List<IContributionGroup>>());
+    /** Maps keys (such as script names) to the pointcuts they produce. */
+    private final Map<IStorage, Set<IPointcut>> keyContextMap =
+            new HashMap<IStorage, Set<IPointcut>>();
+
     public void addContributionGroup(IPointcut pointcut, IContributionGroup contribution) {
         List<IContributionGroup> contributions = pointcutContributionMap.get(pointcut);
         if (contributions == null) {
@@ -91,7 +91,7 @@ public class DSLDStore {
      */
     public DSLDStore createSubStore(GroovyDSLDContext pattern) {
         DSLDStore subStore = new DSLDStore();
-        for (Entry<IPointcut, List<IContributionGroup>> entry : pointcutContributionMap.entrySet()) {
+        for (Map.Entry<IPointcut, List<IContributionGroup>> entry : pointcutContributionMap.entrySet()) {
             if (entry.getKey().fastMatch(pattern)) {
                 subStore.addAllContributions(entry.getKey(), entry.getValue());
             }
@@ -122,7 +122,7 @@ public class DSLDStore {
      */
     public List<IContributionElement> findContributions(GroovyDSLDContext pattern, Set<String> disabledScripts) {
         List<IContributionElement> elts = new ArrayList<IContributionElement>();
-        for (Entry<IPointcut, List<IContributionGroup>> entry : pointcutContributionMap.entrySet()) {
+        for (Map.Entry<IPointcut, List<IContributionGroup>> entry : pointcutContributionMap.entrySet()) {
             IPointcut pointcut = entry.getKey();
             if (! disabledScripts.contains(DSLDStore.toUniqueString(pointcut.getContainerIdentifier()))) {
                 pattern.resetBinding();

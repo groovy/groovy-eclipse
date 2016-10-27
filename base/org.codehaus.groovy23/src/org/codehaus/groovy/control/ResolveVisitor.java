@@ -944,9 +944,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 addError("The usage of 'Class.this' and 'Class.super' is only allowed in nested/inner classes.", expression);
             return;
         }
-            if (!currentScope.isInStaticContext() && Traits.isTrait(type) && "super".equals(prop) && directlyImplementsTrait(type)) {
-                return;
-            }
+        if (currentScope != null && !currentScope.isInStaticContext() && Traits.isTrait(type) && "super".equals(prop) && directlyImplementsTrait(type)) {
+            return;
+        }
         ClassNode iterType = currentClass;
         while (iterType!=null) {
             if (iterType.equals(type)) break;
@@ -956,13 +956,11 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 addError("The class '" + type.getName() + "' needs to be an outer class of '" +
                         currentClass.getName() + "' when using '.this' or '.super'.", expression);
         }
-
-        
         if ((currentClass.getModifiers() & Opcodes.ACC_STATIC)==0) return;
-        if (!currentScope.isInStaticContext()) return;
+        if (currentScope != null && !currentScope.isInStaticContext()) return;
             addError("The usage of 'Class.this' and 'Class.super' within static nested class '" +
                     currentClass.getName() + "' is not allowed in a static context.", expression);
-    }
+        }
     }
 
     protected Expression transformVariableExpression(VariableExpression ve) {
@@ -1508,6 +1506,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     // NOTE: copied from GroovyClassLoader
+    @SuppressWarnings("unused")
     private boolean isSourceNewer(URL source, Class cls) {
         try {
             long lastMod;

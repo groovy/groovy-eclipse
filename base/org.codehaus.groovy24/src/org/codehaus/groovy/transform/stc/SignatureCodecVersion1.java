@@ -1,24 +1,24 @@
 /*
- * Copyright 2003-2012 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
-
 package org.codehaus.groovy.transform.stc;
 
 import groovy.lang.GroovyRuntimeException;
-
-
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
@@ -29,6 +29,7 @@ import org.codehaus.groovy.runtime.EncodingGroovyMethods;
 import java.io.*;
 
 import static org.codehaus.groovy.ast.ClassHelper.*;
+
 /**
  * First implementation of an inferred type signature codec.
  *
@@ -39,7 +40,9 @@ public class SignatureCodecVersion1 implements SignatureCodec {
     private final ClassLoader classLoader;
 
     public SignatureCodecVersion1(final ClassLoader classLoader) {
-        this.classLoader = classLoader;
+        // GRECLIPSE edit
+        this.classLoader = /*classLoader*/Thread.currentThread().getContextClassLoader();
+        // GRECLIPSE end
     }
 
     private void doEncode(final ClassNode node, DataOutputStream dos) throws IOException {
@@ -152,12 +155,7 @@ public class SignatureCodecVersion1 implements SignatureCodec {
             // object type
             String className = typedesc.replace('/', '.').substring(1, typedesc.length() - 1);
             try {
-                // GRECLIPSE use context class loader here
-                /*{old
-                result = ClassHelper.make(Class.forName(className)).getPlainNodeReference();
-                 }new*/
-                result = ClassHelper.make(Class.forName(className, false, Thread.currentThread().getContextClassLoader())).getPlainNodeReference();
-                // GRECLIPSE end
+                result = ClassHelper.make(Class.forName(className, false, classLoader)).getPlainNodeReference();
             } catch (ClassNotFoundException e) {
                 result = ClassHelper.make(className);
             }

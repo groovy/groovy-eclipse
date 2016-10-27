@@ -1,37 +1,35 @@
 // $ANTLR 2.7.7 (20060906): "groovy.g" -> "GroovyRecognizer.java"$
 
 package org.codehaus.groovy.antlr.parser;
-import groovyjarjarantlr.ASTFactory;
-import groovyjarjarantlr.ASTPair;
-import groovyjarjarantlr.CommonToken;
-import groovyjarjarantlr.InputBuffer;
-import groovyjarjarantlr.LexerSharedInputState;
-import groovyjarjarantlr.MismatchedTokenException;
-import groovyjarjarantlr.NoViableAltException;
-import groovyjarjarantlr.ParserSharedInputState;
-import groovyjarjarantlr.RecognitionException;
-import groovyjarjarantlr.SemanticException;
-import groovyjarjarantlr.Token;
-import groovyjarjarantlr.TokenBuffer;
-import groovyjarjarantlr.TokenStream;
-import groovyjarjarantlr.TokenStreamException;
-import groovyjarjarantlr.TokenStreamRecognitionException;
-import groovyjarjarantlr.collections.AST;
-import groovyjarjarantlr.collections.impl.ASTArray;
-import groovyjarjarantlr.collections.impl.BitSet;
-
+import org.codehaus.groovy.antlr.*;
+import java.util.*;
 import java.io.InputStream;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
-
-import org.codehaus.groovy.antlr.GroovySourceAST;
-import org.codehaus.groovy.antlr.SourceBuffer;
-import org.codehaus.groovy.antlr.SourceInfo;
+import groovyjarjarantlr.InputBuffer;
+import groovyjarjarantlr.LexerSharedInputState;
+import groovyjarjarantlr.CommonToken;
+import org.codehaus.groovy.GroovyBugError;
+import groovyjarjarantlr.TokenStreamRecognitionException;
 import org.codehaus.groovy.ast.Comment;
+
+import groovyjarjarantlr.TokenBuffer;
+import groovyjarjarantlr.TokenStreamException;
+import groovyjarjarantlr.TokenStreamIOException;
+import groovyjarjarantlr.ANTLRException;
+import groovyjarjarantlr.LLkParser;
+import groovyjarjarantlr.Token;
+import groovyjarjarantlr.TokenStream;
+import groovyjarjarantlr.RecognitionException;
+import groovyjarjarantlr.NoViableAltException;
+import groovyjarjarantlr.MismatchedTokenException;
+import groovyjarjarantlr.SemanticException;
+import groovyjarjarantlr.ParserSharedInputState;
+import groovyjarjarantlr.collections.impl.BitSet;
+import groovyjarjarantlr.collections.AST;
+import java.util.Hashtable;
+import groovyjarjarantlr.ASTFactory;
+import groovyjarjarantlr.ASTPair;
+import groovyjarjarantlr.collections.impl.ASTArray;
 
 /** JSR-241 Groovy Recognizer.
  *
@@ -237,6 +235,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     public static GroovyRecognizer make(InputBuffer in) { return make(new GroovyLexer(in)); }
     public static GroovyRecognizer make(LexerSharedInputState in) { return make(new GroovyLexer(in)); }
 
+    @SuppressWarnings("unused")
     private static GroovySourceAST dummyVariableToforceClassLoaderToFindASTClass = new GroovySourceAST();
 
     List warningList;
@@ -247,10 +246,12 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
 
 	List<Comment> comments = new ArrayList<Comment>();
 	public List<Comment> getComments() { return comments; }
-	
+
     GroovyLexer lexer;
     public GroovyLexer getLexer() { return lexer; }
     public void setFilename(String f) { super.setFilename(f); lexer.setFilename(f); }
+
+    @SuppressWarnings("unused")
     private SourceBuffer sourceBuffer;
     public void setSourceBuffer(SourceBuffer sourceBuffer) {
         this.sourceBuffer = sourceBuffer;
@@ -278,7 +279,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     public AST create2(int type, String txt, Token first, Token last) {
         return setEndLocationBasedOnThisNode(create(type, txt, astFactory.create(first)), last);
     }
-    
+
     // GRE292
     private AST setEndLocationBasedOnThisNode(AST ast, Object node) {
     	if ((ast instanceof GroovySourceAST) && (node instanceof SourceInfo)) {
@@ -289,7 +290,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
       }
       return ast;
     }
-    
+
     private AST attachLast(AST t, Object last) {
         if ((t instanceof GroovySourceAST) && (last instanceof SourceInfo)) {
             SourceInfo lastInfo = (SourceInfo) last;
@@ -313,7 +314,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     public AST create(int type, String txt, AST first, AST last) {
         return attachLast(create(type, txt, first), last);
     }
-    
+
 	private Stack<Integer> commentStartPositions = new Stack<Integer>();
 
 	public void startComment(int line, int column) {
@@ -332,11 +333,11 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
 		} else if (type==1) {
 			Comment comment = Comment.makeMultiLineComment(startLine,startColumn,line,column,text);
 			comments.add(comment);
-		} 
+		}
 	}
-	
-	
-    /** 
+
+
+    /**
     *   Clones the token
     */
     public Token cloneToken(Token t) {
@@ -413,7 +414,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         row.put("column", new Integer(lt.getColumn()));
         errorList.add(row);
     }
-    
+
     /**
      * Report a recovered error and specify the token.
      */
@@ -425,7 +426,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         row.put("column", new Integer(lt.getColumn()));
         errorList.add(row);
     }
-    
+
     /**
      * Report a recovered error and specify the token.
      */
@@ -437,7 +438,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         row.put("column", new Integer(lt.getColumn()));
         errorList.add(row);
     }
-    
+
     /**
      * Report a recovered exception.
      */
@@ -506,9 +507,10 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         if (x == null || x.getType() != IDENT)  return false;  // cannot happen?
         return cname.equals(x.getText());
     }
-    
+
+    @SuppressWarnings("unused")
     private void dumpTree(AST ast, String offset) {
-    	dump(ast, offset);
+        dump(ast, offset);
         for (AST node = ast.getFirstChild(); node != null; node = node.getNextSibling()) {
             dumpTree(node, offset+"\t");
         }
@@ -517,7 +519,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     private void dump(AST node, String offset) {
         System.out.println(offset+"Type: " + getTokenName(node) + " text: " + node.getText());
     }
-    
+
     private String getTokenName(AST node) {
         if (node == null) return "null";
         return getTokenName(node.getType());
@@ -563,6 +565,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     // an enclosing loop, which is why this ugly hack (a fake
     // empty alternative with always-false semantic predicate)
     // is necessary.
+    @SuppressWarnings("unused")
     private static final boolean ANTLR_LOOP_EXIT = false;
 
 protected GroovyRecognizer(TokenBuffer tokenBuf, int k) {
@@ -1479,7 +1482,7 @@ inputState.guessing--;
 								
 								// GRECLIPSE1048
 								// If the pfx_AST is not null (i.e. a label was encountered) then attempt recovery if something has gone
-								// wrong.  Recovery means reporting the error and then proceeding as best we can.  Basically if the 
+								// wrong.  Recovery means reporting the error and then proceeding as best we can.  Basically if the
 								// NoViableAltException hit a problem and the token it encountered was on the same line as the prefix,
 								// skip to the end of the line, otherwise assume we can continue from where we are.
 								// GRECLIPSE1046
@@ -1490,16 +1493,16 @@ inputState.guessing--;
 								boolean bang = true;
 								
 								if (pfx_AST!=null) {
-									bang=false;	
+									bang=false;
 									reportError(e);
 									if (e instanceof NoViableAltException) {
 										NoViableAltException nvae = (NoViableAltException)e;
 										if (pfx_AST.getLine()==nvae.token.getLine()) {
-											consumeUntil(NLS);										
+											consumeUntil(NLS);
 										}
 									}
 								}
-								if (ale_AST!=null && ifCbs_AST==null) {	
+								if (ale_AST!=null && ifCbs_AST==null) {
 									// likely missing close paren
 									statement_AST = (AST)astFactory.make( (new ASTArray(4)).add(create(LITERAL_if,"if",first,LT(1))).add(ale_AST).add(ifCbs_AST).add(elseCbs_AST));
 									bang=false;
@@ -2217,8 +2220,8 @@ inputState.guessing--;
 			classDefinition_AST = (AST)astFactory.make( (new ASTArray(7)).add(create(CLASS_DEF,"CLASS_DEF",first,LT(1))).add(modifiers).add(tmp29_AST).add(tp_AST).add(sc_AST).add(ic_AST).add(cb_AST));
 					} else {
 					  reportError("Malformed class declaration",LT(1));
-					  classDefinition_AST = (AST)astFactory.make( (new ASTArray(7)).add(create(CLASS_DEF,"CLASS_DEF",first,LT(1))).add(modifiers).add(tmp29_AST).add(tp_AST).add(sc_AST).add(ic_AST).add(null));    
-			}                                            
+					  classDefinition_AST = (AST)astFactory.make( (new ASTArray(7)).add(create(CLASS_DEF,"CLASS_DEF",first,LT(1))).add(modifiers).add(tmp29_AST).add(tp_AST).add(sc_AST).add(ic_AST).add(null));
+			}
 			
 			currentAST.root = classDefinition_AST;
 			currentAST.child = classDefinition_AST!=null &&classDefinition_AST.getFirstChild()!=null ?
@@ -5571,10 +5574,10 @@ inputState.guessing--;
 						classBlock_AST = (AST)currentAST.root;
 					}
 					reportError(e);
-				classBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(OBJBLOCK,"OBJBLOCK",first,LT(1))).add(classBlock_AST));  	
+				classBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(OBJBLOCK,"OBJBLOCK",first,LT(1))).add(classBlock_AST));
 					currentAST.root = classBlock_AST;
 							currentAST.child = classBlock_AST!=null &&classBlock_AST.getFirstChild()!=null ? classBlock_AST.getFirstChild() : classBlock_AST;
-							currentAST.advanceChildToEnd();	
+							currentAST.advanceChildToEnd();
 				
 			} else {
 				throw e;
@@ -6327,9 +6330,9 @@ inputState.guessing--;
 							if (inputState.guessing==0) {
 								
 									reportError(e);
-									// Create a fake variable definition for this 'thing' and get the position right.  
+									// Create a fake variable definition for this 'thing' and get the position right.
 									// Type is object
-									classField_AST = (AST)astFactory.make( (new ASTArray(4)).add(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1))).add(null).add(create(TYPE,"java.lang.Object",LT(1),LT(2))).add(create(IDENT,first.getText(),LT(1),LT(2)))); 
+									classField_AST = (AST)astFactory.make( (new ASTArray(4)).add(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1))).add(null).add(create(TYPE,"java.lang.Object",LT(1),LT(2))).add(create(IDENT,first.getText(),LT(1),LT(2))));
 									consumeUntil(NLS);
 								
 							} else {
@@ -11113,7 +11116,7 @@ inputState.guessing--;
 			if (inputState.guessing==0) {
 				
 				// GRECLIPSE1192
-				// Do we need better recognition of the specific problem here? 
+				// Do we need better recognition of the specific problem here?
 				// (if so, see the label recovery for GRECLIPSE1048)
 				reportError(e);
 				
@@ -12448,7 +12451,7 @@ inputState.guessing--;
 			if (inputState.guessing==0) {
 				
 					// GRECLIPSE1213 - missing closing paren
-					reportError(e); 
+					reportError(e);
 					parenthesizedExpression_AST = (AST)currentAST.root;
 				
 			} else {
@@ -13913,7 +13916,7 @@ inputState.guessing--;
 				
 				if (t_AST==null) {
 							    reportError("missing type for constructor call",first);
-								newExpression_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_new,"new",first,LT(1))).add(ta_AST).add(null)); 
+								newExpression_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_new,"new",first,LT(1))).add(ta_AST).add(null));
 				// currentAST.root = newExpression_AST;
 								// currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
 								// newExpression_AST.getFirstChild() : newExpression_AST;
@@ -13923,10 +13926,10 @@ inputState.guessing--;
 									// int i = ((MismatchedTokenException)e).token.getType();
 									rewind(jumpBack);
 									consumeUntil(NLS);
-								}      
+								}
 				} else if (mca_AST==null && ad_AST==null) {
 				reportError("expecting '(' or '[' after type name to continue new expression",t_AST);
-				newExpression_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_new,"new",first,LT(1))).add(ta_AST).add(t_AST));               
+				newExpression_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(LITERAL_new,"new",first,LT(1))).add(ta_AST).add(t_AST));
 								//currentAST.root = newExpression_AST;
 								//currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
 								//newExpression_AST.getFirstChild() : newExpression_AST;
@@ -13937,7 +13940,7 @@ inputState.guessing--;
 									rewind(jumpBack);
 									consume();
 									consumeUntil(NLS);
-								}   
+								}
 				} else {
 				throw e;
 				}

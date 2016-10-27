@@ -180,7 +180,7 @@ public static Test suite() {
 		TestCase.TESTS_NUMBERS= null;
 		TestCase.TESTS_RANGE = null;
 		TestCase.RUN_ONLY_ID = null;
-		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(GroovySimpleTests_Compliance_1_8.JDK1_8, tests_1_8));
+		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(AbstractCompilerTest.JDK1_8, tests_1_8));
 	}
 
 	return all;

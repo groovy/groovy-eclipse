@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2014 the original author or authors.
+/*
+ * Copyright 2011-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
@@ -21,12 +20,13 @@ import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import junit.framework.Test;
 
 /**
- * tests of closures inside DGM methods
+ * Tests of closures inside DGM methods.
+ *
  * @author Andrew Eisenberg
  * @created Sep 29, 2011
  */
 public class DGMInferencingTests extends AbstractInferencingTest {
- 
+
     public static Test suite() {
         return buildTestSuite(DGMInferencingTests.class);
     }
@@ -35,7 +35,6 @@ public class DGMInferencingTests extends AbstractInferencingTest {
         super(name);
     }
 
-    
     public void testDGM1() throws Exception {
         String contents = "[1].collectNested { it }";
         String str = "it";
@@ -99,9 +98,8 @@ public class DGMInferencingTests extends AbstractInferencingTest {
         int end = start + str.length();
         assertType(contents, start, end, "java.lang.Integer");
     }
-    // this one is not working since Inferencing engine gets tripped up with
-    // the different variants of 'metaClass'
     public void _testDGM10() throws Exception {
+        // this one is not working since Inferencing Engine gets tripped up with the different variants of 'metaClass'
         String contents = "Integer.metaClass { this }";
         String str = "this";
         int start = contents.lastIndexOf(str);
@@ -339,19 +337,32 @@ public class DGMInferencingTests extends AbstractInferencingTest {
         int end = start + str.length();
         assertType(contents, start, end, "java.lang.String");
     }
-    public void testDGM_JIRA1695() throws Exception {
-    	String contents = "List<String> myList = new ArrayList<String>()\n" + 
-    		"myList.sort { a, b ->\n" + 
-    		"a.trim() <=> b.trim()\n" + 
-    		"}.each {\n" +
-    		"it\n" +
-    		"}\n";
+    public void testDGM_GRECLIPSE1695() throws Exception {
+        String contents = "List<String> myList = new ArrayList<String>()\n" +
+            "myList.toSorted { a, b ->\n" +
+            "  a.trim() <=> b.trim()\n" +
+            "}.each {\n" +
+            "  it\n" +
+            "}\n";
         int start = contents.lastIndexOf("it");
         int end = start + "it".length();
         assertType(contents, start, end, "java.lang.String");
     }
-    // with groovy 2.0, there are some new DGM classes.  need to ensure that we are using those classes as the declaring type, but only for 2.0 or later
+    public void testDGM_GRECLIPSE1695_redux() throws Throwable {
+        // Java 8 adds default method sort(Comparator) to List interface...
+        // TypeInferencingVisitorWithRequestor.lookupExpressionType replaces DGM (from CategoryTypeLookup) with JDK (from SimpleTypeLookup)
+        String contents = "List<String> myList = new ArrayList<String>()\n" +
+            "myList.sort { a, b ->\n" +
+            "  a.trim() <=> b.trim()\n" +
+            "}.each {\n" +
+            "  it\n" +
+            "}\n";
+        int start = contents.lastIndexOf("it");
+        int end = start + "it".length();
+        assertTypeOneOf(contents, start, end, "java.lang.Void", "java.lang.String");
+    }
     public void testDGMDeclaring1() throws Exception {
+        // With groovy 2.0, there are some new DGM classes.  Need to ensure that we are using those classes as the declaring type, but only for 2.0 or later.
         String contents = "\"\".eachLine";
         String str = "eachLine";
         int start = contents.lastIndexOf(str);

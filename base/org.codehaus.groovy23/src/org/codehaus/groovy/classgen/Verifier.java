@@ -289,6 +289,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         node.addConstructor(constructor);
     }
 
+    @SuppressWarnings("unused")
     private static boolean isInnerClassOf(ClassNode a, ClassNode b) {
         if (a.redirect()==b) return true;
         if (b.redirect() instanceof InnerClassNode) return isInnerClassOf(a, b.redirect().getOuterClass());

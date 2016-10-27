@@ -1,23 +1,28 @@
 /*
- * Copyright 2003-2013 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.ast;
 
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.util.ListHashMap;
-import java.util.*;
+
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Base class for any AST node. This class supports basic information used in all nodes of the AST:
@@ -32,7 +37,7 @@ import java.util.*;
  * transform. The only requirement is that the other phase operation or transform
  * runs after the part storing the information. If the information transport is 
  * done it is strongly recommended to remove that meta data.</li> 
- * <li> a text representation of this node trough getText(). This was in the 
+ * <li> a text representation of this node trough getText(). This was in the
  * past used for assertion messages. Since the usage of power asserts this 
  * method will not be called for this purpose anymore and might be removed in
  * future versions of Groovy</li>
@@ -48,11 +53,10 @@ public class ASTNode {
     private int lastLineNumber = -1;
     private int lastColumnNumber = -1;
     private ListHashMap metaDataMap = null;
-    
-    // GRECLIPSE: start
+    // GRECLIPSE add
     private int start = 0;
     private int end = 0;
-    // end
+    // GRECLIPSE end
 
     public void visit(GroovyCodeVisitor visitor) {
         throw new RuntimeException("No visit() method implemented for class: " + getClass().getName());
@@ -93,7 +97,8 @@ public class ASTNode {
     public void setLastColumnNumber(int lastColumnNumber) {
         this.lastColumnNumber = lastColumnNumber;
     }
-    // GRECLIPSE: start
+
+    // GRECLIPSE add
     public int getStart() {
         return start;
     }
@@ -109,16 +114,13 @@ public class ASTNode {
     public int getLength() {
         return end >= 0 && start >= 0 ? end-start : -1;
     }
-    // end
-    
+    // GRECLIPSE end
+
     /**
      * Sets the source position using another ASTNode.
      * The sourcePosition consists of a line/column pair for
      * the start and a line/column pair for the end of the
      * expression or statement 
-     // GRECLIPSE: start
-     * as well as the absolute start and end positions in the file
-     // end
      * 
      * @param node - the node used to configure the position information
      */
@@ -127,10 +129,10 @@ public class ASTNode {
         this.lastLineNumber = node.getLastLineNumber();
         this.lastColumnNumber = node.getLastColumnNumber();
         this.lineNumber = node.getLineNumber();
-        // GRECLIPSE: start
+        // GRECLIPSE add
         this.start = node.getStart();
         this.end = node.getEnd();
-        // end
+        // GRECLIPSE end
     }
     
     /**
@@ -145,7 +147,7 @@ public class ASTNode {
         }
         return (T) metaDataMap.get(key);
     }
-    
+
     /**
      * Copies all node meta data from the other node to this one
      * @param other - the other node
@@ -176,7 +178,7 @@ public class ASTNode {
         Object old = metaDataMap.put(key,value);
         if (old!=null) throw new GroovyBugError("Tried to overwrite existing meta data "+this+".");
     }
-    
+
     /**
      * Sets the node meta data but allows overwriting values.
      *

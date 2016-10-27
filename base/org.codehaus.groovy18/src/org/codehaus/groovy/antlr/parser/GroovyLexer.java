@@ -1,31 +1,40 @@
 // $ANTLR 2.7.7 (20060906): "groovy.g" -> "GroovyLexer.java"$
 
 package org.codehaus.groovy.antlr.parser;
-
-import groovyjarjarantlr.ANTLRHashString;
-import groovyjarjarantlr.ByteBuffer;
-import groovyjarjarantlr.CharBuffer;
-import groovyjarjarantlr.CharStreamException;
-import groovyjarjarantlr.CharStreamIOException;
+import org.codehaus.groovy.antlr.*;
+import java.util.*;
+import java.io.InputStream;
+import java.io.Reader;
 import groovyjarjarantlr.InputBuffer;
 import groovyjarjarantlr.LexerSharedInputState;
-import groovyjarjarantlr.MismatchedCharException;
-import groovyjarjarantlr.NoViableAltForCharException;
-import groovyjarjarantlr.RecognitionException;
-import groovyjarjarantlr.SemanticException;
-import groovyjarjarantlr.Token;
-import groovyjarjarantlr.TokenStream;
+import groovyjarjarantlr.CommonToken;
+import org.codehaus.groovy.GroovyBugError;
+import groovyjarjarantlr.TokenStreamRecognitionException;
+import org.codehaus.groovy.ast.Comment;
+
+import java.io.InputStream;
 import groovyjarjarantlr.TokenStreamException;
 import groovyjarjarantlr.TokenStreamIOException;
 import groovyjarjarantlr.TokenStreamRecognitionException;
-import groovyjarjarantlr.collections.impl.BitSet;
-
-import java.io.InputStream;
+import groovyjarjarantlr.CharStreamException;
+import groovyjarjarantlr.CharStreamIOException;
+import groovyjarjarantlr.ANTLRException;
 import java.io.Reader;
-import java.util.ArrayList;
 import java.util.Hashtable;
-
-import org.codehaus.groovy.antlr.GroovySourceToken;
+import groovyjarjarantlr.CharScanner;
+import groovyjarjarantlr.InputBuffer;
+import groovyjarjarantlr.ByteBuffer;
+import groovyjarjarantlr.CharBuffer;
+import groovyjarjarantlr.Token;
+import groovyjarjarantlr.CommonToken;
+import groovyjarjarantlr.RecognitionException;
+import groovyjarjarantlr.NoViableAltForCharException;
+import groovyjarjarantlr.MismatchedCharException;
+import groovyjarjarantlr.TokenStream;
+import groovyjarjarantlr.ANTLRHashString;
+import groovyjarjarantlr.LexerSharedInputState;
+import groovyjarjarantlr.collections.impl.BitSet;
+import groovyjarjarantlr.SemanticException;
 
 public class GroovyLexer extends groovyjarjarantlr.CharScanner implements GroovyTokenTypes, TokenStream
  {
@@ -1750,7 +1759,7 @@ tryAgain:
 			if (parser!=null) {
 			parser.endComment(0,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
 			}
-			if (!whitespaceIncluded)  _ttype = Token.SKIP; 
+			if (!whitespaceIncluded)  _ttype = Token.SKIP;
 			
 		}
 		if ( _createToken && _token==null && _ttype!=Token.SKIP ) {
@@ -1812,7 +1821,7 @@ inputState.guessing--;
 			if (parser!=null) {
 			parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
 			}
-			if (!whitespaceIncluded)  _ttype = Token.SKIP; 
+			if (!whitespaceIncluded)  _ttype = Token.SKIP;
 			
 		}
 		if ( _createToken && _token==null && _ttype!=Token.SKIP ) {

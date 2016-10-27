@@ -63,7 +63,7 @@ public class BytecodeHelper implements Opcodes {
         }
         return name;
 		// end
-		
+
     }
 
     public static String getClassInternalName(Class t) {
@@ -275,6 +275,10 @@ public class BytecodeHelper implements Opcodes {
      * @param name
      */
     public static String formatNameForClassLoading(String name) {
+        if (name == null) {
+            return "java.lang.Object;";
+        }
+
         if (name.equals("int")
                 || name.equals("long")
                 || name.equals("short")
@@ -286,10 +290,6 @@ public class BytecodeHelper implements Opcodes {
                 || name.equals("void")
                 ) {
             return name;
-        }
-
-        if (name == null) {
-            return "java.lang.Object;";
         }
 
         if (name.startsWith("[")) {
@@ -529,7 +529,7 @@ public class BytecodeHelper implements Opcodes {
             mv.visitVarInsn(ALOAD, idx);
         }
     }
-    
+
 
     public static void doCast(MethodVisitor mv, ClassNode type) {
         if (type == ClassHelper.OBJECT_TYPE) return;
@@ -538,12 +538,12 @@ public class BytecodeHelper implements Opcodes {
         } else {
             mv.visitTypeInsn(
                     CHECKCAST,
-                    type.isArray() ? 
-                            BytecodeHelper.getTypeDescription(type) : 
+                    type.isArray() ?
+                            BytecodeHelper.getTypeDescription(type) :
                             BytecodeHelper.getClassInternalName(type.getName()));
         }
     }
-    
+
     /**
      * Given a wrapped number type (Byte, Integer, Short, ...), generates bytecode
      * to convert it to a primitive number (int, long, double) using calls to
@@ -568,8 +568,8 @@ public class BytecodeHelper implements Opcodes {
         } else {
             mv.visitTypeInsn(
                     CHECKCAST,
-                    type.isArray() ? 
-                            BytecodeHelper.getTypeDescription(type) : 
+                    type.isArray() ?
+                            BytecodeHelper.getTypeDescription(type) :
                                 BytecodeHelper.getClassInternalName(type.getName()));
         }
     }
@@ -607,7 +607,7 @@ public class BytecodeHelper implements Opcodes {
         return box(mv, type.getTypeClass());
     }
 
-    
+
     /**
      * Generates the bytecode to autobox the current value on the stack
      */

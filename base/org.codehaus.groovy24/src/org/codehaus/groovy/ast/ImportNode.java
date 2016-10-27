@@ -1,22 +1,24 @@
 /*
- * Copyright 2003-2013 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.ast;
 
 import groovyjarjarasm.asm.Opcodes;
-
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 
 /**
@@ -149,11 +151,11 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     public void visit(GroovyCodeVisitor visitor) {
     }
 
-    // GRECLIPSE - start
-    private boolean unresolvable = false;
+    // GRECLIPSE add
+    private boolean unresolvable;
     private ConstantExpression aliasExpr;
     private ConstantExpression fieldNameExpr;
-    
+
     public ConstantExpression getFieldNameExpr() {
         return fieldNameExpr;
     }
@@ -171,17 +173,16 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     }
 
     public void markAsUnresolvable() {
-    	unresolvable=true;
+        unresolvable = true;
     }
-    
+
     public boolean isUnresolvable() {
-    	return unresolvable;
+        return unresolvable;
     }
-    
+
     // see GROOVY-44578 static star imports are not marked as static
     public boolean isStaticStar() {
         return type != null && alias == null;
     }
-    // GRECLIPSE - end
-
+    // GRECLIPSE end
 }

@@ -35,7 +35,7 @@
          id="org.codehaus.groovy"
          download-size="0"
          install-size="0"
-         version="2.4.3.qualifier"/>
+         version="2.4.7.qualifier"/>
 
    <plugin
          id="org.codehaus.groovy.eclipse"

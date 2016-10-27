@@ -39,7 +39,9 @@ public class SignatureCodecVersion1 implements SignatureCodec {
     private final ClassLoader classLoader;
 
     public SignatureCodecVersion1(final ClassLoader classLoader) {
-        this.classLoader = classLoader;
+        // GRECLIPSE edit
+        this.classLoader = /*classLoader*/ Thread.currentThread().getContextClassLoader();
+        // GRECLIPSE end
     }
 
     private void doEncode(final ClassNode node, DataOutputStream dos) throws IOException {
@@ -152,12 +154,7 @@ public class SignatureCodecVersion1 implements SignatureCodec {
             // object type
             String className = typedesc.replace('/', '.').substring(1, typedesc.length() - 1);
             try {
-                // GRECLIPSE use context class loader here
-                /*{old
-                result = ClassHelper.make(Class.forName(className)).getPlainNodeReference();
-                 }new*/
-                result = ClassHelper.make(Class.forName(className, false, Thread.currentThread().getContextClassLoader())).getPlainNodeReference();
-                // GRECLIPSE end
+                result = ClassHelper.make(Class.forName(className, false, classLoader)).getPlainNodeReference();
             } catch (ClassNotFoundException e) {
                 result = ClassHelper.make(className);
             }

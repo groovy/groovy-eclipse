@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -17,7 +17,6 @@ import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.groovy.eclipse.editor.outline.GroovyOutlinePage;
-import org.codehaus.groovy.eclipse.editor.outline.GroovyScriptOutlineExtender;
 import org.codehaus.groovy.eclipse.editor.outline.OCompilationUnit;
 import org.codehaus.groovy.eclipse.editor.outline.OField;
 import org.codehaus.groovy.eclipse.editor.outline.OMethod;
@@ -93,8 +92,9 @@ public class OutlineExtenderTests extends EclipseTestCase {
     }
 
     public void testFirstDeclaredWins1() throws Exception {
-        testProject.addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
+        // NOTE: addNature() appends to the head of the array
         testProject.addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
+        testProject.addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
 
         String contents = "class XY { }";
         GroovyOutlinePage outline = openFile("XY", contents);
@@ -106,8 +106,9 @@ public class OutlineExtenderTests extends EclipseTestCase {
     }
 
     public void testFirstDeclaredWins2() throws Exception {
-        testProject.addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
+        // NOTE: addNature() appends to the head of the array
         testProject.addNature(OutlineExtender1.NATURE); // applies to *X*.groovy files
+        testProject.addNature(OutlineExtender2.NATURE); // applies to *Y*.groovy files
 
         String contents = "class XY { }";
         GroovyOutlinePage outline = openFile("XY", contents);
@@ -253,10 +254,11 @@ public class OutlineExtenderTests extends EclipseTestCase {
         String contents = 
             "class X {  }\n int o( \n}";
         GroovyOutlinePage outline = openFile("Problem", contents);
-        OCompilationUnit unit = outline.getOutlineCompilationUnit();
-        IJavaElement[] children = unit.getChildren();
-        assertEquals(1, children.length);
-        assertEquals("Problem" + GroovyScriptOutlineExtender.NO_STRUCTURE_FOUND, children[0].getElementName());
+        assertNull("X is not a script, so no Groovy outline should be available", outline);
+        //OCompilationUnit unit = outline.getOutlineCompilationUnit();
+        //IJavaElement[] children = unit.getChildren();
+        //assertEquals(1, children.length);
+        //assertEquals("Problem" + GroovyScriptOutlineExtender.NO_STRUCTURE_FOUND, children[0].getElementName());
     }
 
     private GroovyOutlinePage openFile(String className, String contents)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,14 @@
 package org.codehaus.groovy.eclipse;
 
 /**
- * A means to send log messages to a logger
+ * A means to send log messages to a logger.
+ *
  * @author Andrew Eisenberg
  * @created Nov 24, 2010
  */
 public interface IGroovyLogger {
+
     void log(TraceCategory category, String message);
+
     boolean isCategoryEnabled(TraceCategory category);
 }

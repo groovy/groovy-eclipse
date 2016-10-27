@@ -20,14 +20,12 @@ import org.codehaus.groovy.ast.expr.ClassExpression
 import org.codehaus.groovy.ast.expr.Expression
 import org.codehaus.groovy.ast.expr.ListExpression
 
-
 /**
  * This is the DSLD for AST Transforms shipped with Groovy-core 1.8.x
- * 
+ *
  * @author Andrew Eisenberg
  * @since 2.5.1
  */
-
 
 // Singleton
 currentType(annotatedBy(Singleton)).accept {

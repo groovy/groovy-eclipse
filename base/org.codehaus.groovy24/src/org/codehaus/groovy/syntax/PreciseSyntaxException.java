@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2007 the original author or authors.
+ * Copyright 2007 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,30 +14,30 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.syntax;
+
 // FIXASC (groovychange) new type - could be merged into existing SyntaxException
 /**
  * A more precise form of SyntaxException that is aware of the precise start/end offsets.
- * 
+ *
  * @author Andy Clement
  */
 @SuppressWarnings("serial")
 public class PreciseSyntaxException extends SyntaxException {
 
-	private int startOffset;
-	private int endOffset;
+    private int startOffset;
+    private int endOffset;
 
-	public PreciseSyntaxException(String message, int line, int col, int startOffset, int endOffset) {
-		super(message, line, col);
-		this.startOffset = startOffset;
-		this.endOffset = endOffset;
-	}
+    public PreciseSyntaxException(String message, int line, int col, int startOffset, int endOffset) {
+        super(message, line, col);
+        this.startOffset = startOffset;
+        this.endOffset = endOffset;
+    }
 
-	public int getStartOffset() {
-		return startOffset;
-	}
-	
-	public int getEndOffset() {
-		return endOffset;
-	}
+    public int getStartOffset() {
+        return startOffset;
+    }
 
+    public int getEndOffset() {
+        return endOffset;
+    }
 }

@@ -123,27 +123,29 @@ import org.codehaus.groovy.runtime.metaclass.MetaClassRegistryImpl;
  * Static support methods for {@link StaticTypeCheckingVisitor}.
  */
 public abstract class StaticTypeCheckingSupport {
-    final static ClassNode
-            Collection_TYPE = makeWithoutCaching(Collection.class);
+    final static ClassNode Collection_TYPE = makeWithoutCaching(Collection.class);
     final static ClassNode Deprecated_TYPE = makeWithoutCaching(Deprecated.class);
     final static ClassNode Matcher_TYPE = makeWithoutCaching(Matcher.class);
     final static ClassNode ArrayList_TYPE = makeWithoutCaching(ArrayList.class);
     final static ExtensionMethodCache EXTENSION_METHOD_CACHE = new ExtensionMethodCache();
-    final static Map<ClassNode, Integer> NUMBER_TYPES = Collections.unmodifiableMap(
-            new HashMap<ClassNode, Integer>() {{
-                put(ClassHelper.byte_TYPE, 0);
-                put(ClassHelper.Byte_TYPE, 0);
-                put(ClassHelper.short_TYPE, 1);
-                put(ClassHelper.Short_TYPE, 1);
-                put(ClassHelper.int_TYPE, 2);
-                put(ClassHelper.Integer_TYPE, 2);
-                put(ClassHelper.Long_TYPE, 3);
-                put(ClassHelper.long_TYPE, 3);
-                put(ClassHelper.float_TYPE, 4);
-                put(ClassHelper.Float_TYPE, 4);
-                put(ClassHelper.double_TYPE, 5);
-                put(ClassHelper.Double_TYPE, 5);
-            }});
+    final static Map<ClassNode, Integer> NUMBER_TYPES;
+    static {
+        final Map<ClassNode, Integer> types = new HashMap<ClassNode, Integer>(16);
+        types.put(ClassHelper.byte_TYPE, 0);
+        types.put(ClassHelper.Byte_TYPE, 0);
+        types.put(ClassHelper.short_TYPE, 1);
+        types.put(ClassHelper.Short_TYPE, 1);
+        types.put(ClassHelper.int_TYPE, 2);
+        types.put(ClassHelper.Integer_TYPE, 2);
+        types.put(ClassHelper.Long_TYPE, 3);
+        types.put(ClassHelper.long_TYPE, 3);
+        types.put(ClassHelper.float_TYPE, 4);
+        types.put(ClassHelper.Float_TYPE, 4);
+        types.put(ClassHelper.double_TYPE, 5);
+        types.put(ClassHelper.Double_TYPE, 5);
+
+        NUMBER_TYPES = Collections.unmodifiableMap(types);
+    }
 
     final static ClassNode GSTRING_STRING_CLASSNODE = WideningCategories.lowestUpperBound(
             ClassHelper.STRING_TYPE,
@@ -628,7 +630,7 @@ public abstract class StaticTypeCheckingSupport {
         // anything can be assigned to an Object, String, boolean, Boolean
         // or Class typed variable
         if (isWildcardLeftHandSide(leftRedirect)) return true;
-        
+
         // GRECLIPSE: start
         /*old{
         if (leftRedirect == OBJECT_TYPE ||
@@ -694,13 +696,13 @@ public abstract class StaticTypeCheckingSupport {
         if (WideningCategories.isFloatingCategory(leftRedirect) && BigDecimal_TYPE.equals(rightRedirect)) {
             return true;
         }
-        
+
         if (GROOVY_OBJECT_TYPE.equals(leftRedirect) && isBeingCompiled(right)) {
         		return true;
         }
         return false;
     }
-    
+
     /**
      * Tells if a class is one of the "accept all" classes as the left hand side of an
      * assignment.
@@ -1165,7 +1167,7 @@ public abstract class StaticTypeCheckingSupport {
                             }
                         }
                     }
-                }                
+                }
             }
         }
         if (toBeRemoved.isEmpty()) return list;
@@ -1173,7 +1175,7 @@ public abstract class StaticTypeCheckingSupport {
         result.removeAll(toBeRemoved);
         return result;
     }
-    
+
     /**
      * Given a receiver and a method node, parameterize the method arguments using
      * available generic type information.
@@ -1252,8 +1254,9 @@ public abstract class StaticTypeCheckingSupport {
      * A DGM-like method which adds support for method calls which are handled
      * specifically by the Groovy compiler.
      */
+    @SuppressWarnings("unused")
     private static class ObjectArrayStaticTypesHelper {
-        public static <T> T getAt(T[] arr, int index) { return null;} 
+        public static <T> T getAt(T[] arr, int index) { return null;}
         public static <T,U extends T> void putAt(T[] arr, int index, U object) { }
     }
 

@@ -1,19 +1,21 @@
 /*
- * Copyright 2003-2011 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
-
 package org.codehaus.groovy.ast;
 
 import static org.codehaus.groovy.ast.ClassHelper.GROOVY_OBJECT_TYPE;
@@ -35,22 +37,16 @@ import java.util.Set;
 public class GenericsType extends ASTNode {
     public static final GenericsType[] EMPTY_ARRAY = new GenericsType[0];
 
-	/**
-	 * Andys observations:
-	 * - this is used to represent either a type variable with bounds (T extends I) or type parameter value (<String>).  In the former I think
-	 * just the name and bounds are used, whilst in the latter the type is used.  If the name is used then it is a placeholder.
-	 * but why does the first constructor take a set of parameters that wouldn't seem to make sense together?
-	 * 
-	 */
-	// GRECLIPSE: start: five from private to protected and first two non-final 
-    protected ClassNode[] upperBounds;
-    protected ClassNode lowerBound;
-    protected ClassNode type;
-    protected String name;
-    protected boolean placeholder;
+    // GRECLIPSE edit
+    private /*final*/ ClassNode[] upperBounds;
+    private /*final*/ ClassNode lowerBound;
+    // GRECLIPSE end
+    private ClassNode type;
+    private String name;
+    private boolean placeholder;
     private boolean resolved;
     private boolean wildcard;
-    
+
     public GenericsType(ClassNode type, ClassNode[] upperBounds, ClassNode lowerBound) {
         this.type = type;
         this.name = type.isGenericsPlaceHolder() ? type.getUnresolvedName() : type.getName();
@@ -59,42 +55,44 @@ public class GenericsType extends ASTNode {
         placeholder = type.isGenericsPlaceHolder();
         resolved = false;
     }
-    // GRECLIPSE: start
-    public GenericsType() {}
-    
-    public String toDetailsString() {
-    	StringBuilder s = new StringBuilder();
-    	s.append("GenericsType[name=").append(name).append(",placeholder=").append(placeholder);
-    	s.append(",resolved=").append(resolved).append(",wildcard=").append(wildcard);
-    	s.append(",type=").append(type);
-    	if (lowerBound!=null) {
-    		s.append(",lowerBound=").append(lowerBound);
-    	}
-    	if (upperBounds!=null) {
-    	s.append(",upperBounds=[");
-    	for (int i=0;i<upperBounds.length;i++) {
-    		if (i>0) { s.append(","); }
-    		s.append(upperBounds[i]);
-    	}
-    	}
-    	s.append("]]");
-    	s.append(this.getClass().getName());
-    	return s.toString();
-    }
-    // end
-        
+
     public GenericsType(ClassNode basicType) {
-        this(basicType,null,null);
+        this(basicType, null, null);
     }
+
+    // GRECLIPSE add
+    public GenericsType() {
+    }
+
+    public String toDetailsString() {
+        StringBuilder s = new StringBuilder();
+        s.append("GenericsType[name=").append(name).append(",placeholder=").append(placeholder);
+        s.append(",resolved=").append(resolved).append(",wildcard=").append(wildcard);
+        s.append(",type=").append(type);
+        if (lowerBound != null) {
+            s.append(",lowerBound=").append(lowerBound);
+        }
+        if (upperBounds != null) {
+        s.append(",upperBounds=[");
+        for (int i = 0, n = upperBounds.length; i < n; i++) {
+            if (i > 0) s.append(",");
+            s.append(upperBounds[i]);
+        }
+        }
+        s.append("]]");
+        s.append(this.getClass().getName());
+        return s.toString();
+    }
+    // GRECLIPSE end
 
     public ClassNode getType() {
         return type;
     }
-    
+
     public void setType(ClassNode type) {
         this.type = type;
     }
-    
+
     public String toString() {
         Set<String> visited = new HashSet<String>();
         return toString(visited);
@@ -142,7 +140,7 @@ public class GenericsType extends ASTNode {
             if (Modifier.isStatic(innerClassNode.getModifiers()) || innerClassNode.isInterface()) {
                 ret.append(innerClassNode.getOuterClass().getName());
             } else {
-            	ret.append(genericsBounds(innerClassNode.getOuterClass(), new HashSet<String>()));
+                ret.append(genericsBounds(innerClassNode.getOuterClass(), new HashSet<String>()));
             }
             ret.append(".");
             String typeName = theType.getName();
@@ -167,12 +165,12 @@ public class GenericsType extends ASTNode {
             GenericsType type = genericsTypes[i];
             if (type.isPlaceholder() && visited.contains(type.getName())) {
                 ret.append(type.getName());
-        }
+            }
             else {
                 ret.append(type.toString(visited));
             }
         }
-       ret.append(">");
+        ret.append(">");
 
         return ret.toString();
     }
@@ -180,8 +178,8 @@ public class GenericsType extends ASTNode {
     public ClassNode[] getUpperBounds() {
         return upperBounds;
     }
-    
-    public String getName(){
+
+    public String getName() {
         return name;
     }
 
@@ -193,11 +191,11 @@ public class GenericsType extends ASTNode {
         this.placeholder = placeholder;
         type.setGenericsPlaceHolder(placeholder);
     }
-    
+
     public boolean isResolved() {
         return resolved || placeholder;
     }
-    
+
     public void setResolved(boolean res) {
         resolved = res;
     }
@@ -213,11 +211,21 @@ public class GenericsType extends ASTNode {
     public void setWildcard(boolean wildcard) {
         this.wildcard = wildcard;
     }
-    
+
     public ClassNode getLowerBound() {
         return lowerBound;
     }
-       /**
+
+    // GRECLIPSE add
+    public void setLowerBound(ClassNode bound) {
+        this.lowerBound = bound;
+    }
+    public void setUpperBounds(ClassNode[] bounds) {
+        this.upperBounds = bounds;
+    }
+    // GRECLIPSE end
+
+    /**
      * Tells if the provided class node is compatible with this generic type definition
      * @param classNode the class node to be checked
      * @return true if the class node is compatible with this generics type definition
@@ -309,6 +317,8 @@ public class GenericsType extends ASTNode {
                     // but with reversed arguments
                     return implementsInterfaceOrIsSubclassOf(lowerBound, classNode) && checkGenerics(classNode);
                 }
+                // If there are no bounds, the generic type is basically Object, and everything is compatible.
+                return true;
             }
             // if this is not a generics placeholder, first compare that types represent the same type
             if ((type!=null && !type.equals(classNode))) {
@@ -385,8 +395,8 @@ public class GenericsType extends ASTNode {
                             success &= compareGenericsWithBound(classNode, anInterface);
                             if (!success) break;
                         }
-                    if (success) return true;
-                }
+                        if (success) return true;
+                    }
                 }
                 return compareGenericsWithBound(getParameterizedSuperClass(classNode), bound);
             }
@@ -492,8 +502,8 @@ public class GenericsType extends ASTNode {
             return true;
         }
     }
-    
-     /**
+
+    /**
      * If you have a class which extends a class using generics, returns the superclass with parameterized types. For
      * example, if you have:
      * <code>class MyList&lt;T&gt; extends LinkedList&lt;T&gt;
@@ -528,14 +538,4 @@ public class GenericsType extends ASTNode {
         }
         return superClass;
     }
-    
-    // GRECLIPSE: start
-	public void setUpperBounds(ClassNode[] bounds) {
-		this.upperBounds = bounds;		
-	}
-
-	public void setLowerBound(ClassNode bound) {
-		this.lowerBound = bound;		
-	}
-	// end
 }
