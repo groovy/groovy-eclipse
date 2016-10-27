@@ -139,6 +139,5 @@ Require-Bundle: org.eclipse.core.runtime,
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.activator.GroovyActivator
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
-Groovy-Runtime-Jars: groovy.jar
 Eclipse-BuddyPolicy: registered
 Eclipse-BundleShape: dir
