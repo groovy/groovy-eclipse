@@ -52,6 +52,7 @@ public class ErrorLogTest extends TestCase {
         "org.eclipse.test.performance.win32.translated_host_properties",
         "Listener failed",
         "org.eclipse.mylyn.tasks.core",
+        "Duplicate template id:",
         "Unable to run embedded server",
         "Test.groovy"
     };
