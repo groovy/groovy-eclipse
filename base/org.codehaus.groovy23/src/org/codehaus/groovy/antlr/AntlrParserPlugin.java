@@ -2887,6 +2887,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return expression;
     }
 
+    @SuppressWarnings("unused")
     private int getTypeInParenthesis(AST node) {
         if (! isType(EXPR,node) ) node = node.getFirstChild();
         while (node!=null &&isType(EXPR,node) && node.getNextSibling()==null) {
@@ -3369,6 +3370,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
     }
     
+    @SuppressWarnings("unused")
     private static AST getTypeArgumentsNode(AST root) {
         while (root!=null && !isType(TYPE_ARGUMENTS,root)) {
             root = root.getNextSibling();
@@ -3866,6 +3868,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
     }
     
+    @SuppressWarnings("unused")
     private void configureClassNodeForClassDefAST(ASTNode node, AST ast) {
         if (ast == null) {
         	throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure "+node.getClass().getName()+" with null Node");

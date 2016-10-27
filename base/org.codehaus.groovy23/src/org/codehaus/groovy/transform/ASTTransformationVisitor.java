@@ -65,8 +65,11 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
     private SourceUnit source;
     private List<ASTNode[]> targetNodes;
     private Map<ASTNode, List<ASTTransformation>> transforms;
+    @SuppressWarnings("unused")
     private Map<Class<? extends ASTTransformation>, ASTTransformation> transformInstances;
+    @SuppressWarnings("unused")
     private static CompilationUnit compUnit;
+    @SuppressWarnings("unused")
     private static Set<String> globalTransformNames = new HashSet<String>();
 
     private ASTTransformationVisitor(final CompilePhase phase, final ASTTransformationsContext context) {

@@ -49,26 +49,28 @@ import java.util.logging.Logger;
 public class GroovyTypeCheckingExtensionSupport extends AbstractTypeCheckingExtension {
 
     // method name to DSL name
-    private static final Map<String, String> METHOD_ALIASES = Collections.unmodifiableMap(
-            new HashMap<String, String>() {{
-                put("onMethodSelection", "onMethodSelection");
-                put("afterMethodCall", "afterMethodCall");
-                put("beforeMethodCall", "beforeMethodCall");
-                put("unresolvedVariable", "handleUnresolvedVariableExpression");
-                put("unresolvedProperty", "handleUnresolvedProperty");
-                put("unresolvedAttribute", "handleUnresolvedAttribute");
-                put("ambiguousMethods", "handleAmbiguousMethods");
-                put("methodNotFound", "handleMissingMethod");
-                put("afterVisitMethod", "afterVisitMethod");
-                put("beforeVisitMethod", "beforeVisitMethod");
-                put("afterVisitClass", "afterVisitClass");
-                put("beforeVisitClass", "beforeVisitClass");
-                put("incompatibleAssignment", "handleIncompatibleAssignment");
-                put("incompatibleReturnType", "handleIncompatibleReturnType");
-                put("setup","setup");
-                put("finish", "finish");
-            }}
-    );
+    private static final Map<String, String> METHOD_ALIASES;
+    static {
+        final Map<String, String> aliases = new HashMap<String, String>(20);
+        aliases.put("onMethodSelection", "onMethodSelection");
+        aliases.put("afterMethodCall", "afterMethodCall");
+        aliases.put("beforeMethodCall", "beforeMethodCall");
+        aliases.put("unresolvedVariable", "handleUnresolvedVariableExpression");
+        aliases.put("unresolvedProperty", "handleUnresolvedProperty");
+        aliases.put("unresolvedAttribute", "handleUnresolvedAttribute");
+        aliases.put("ambiguousMethods", "handleAmbiguousMethods");
+        aliases.put("methodNotFound", "handleMissingMethod");
+        aliases.put("afterVisitMethod", "afterVisitMethod");
+        aliases.put("beforeVisitMethod", "beforeVisitMethod");
+        aliases.put("afterVisitClass", "afterVisitClass");
+        aliases.put("beforeVisitClass", "beforeVisitClass");
+        aliases.put("incompatibleAssignment", "handleIncompatibleAssignment");
+        aliases.put("incompatibleReturnType", "handleIncompatibleReturnType");
+        aliases.put("setup","setup");
+        aliases.put("finish", "finish");
+
+        METHOD_ALIASES = Collections.unmodifiableMap(aliases);
+    }
 
     // the following fields are closures executed in event-based methods
     private final Map<String, List<Closure>> eventHandlers = new HashMap<String, List<Closure>>();

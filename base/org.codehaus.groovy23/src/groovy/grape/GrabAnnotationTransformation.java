@@ -245,7 +245,7 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                             String mval = getMemberStringValue(node, s);
                             if (mval != null && mval.isEmpty()) mval = null;
                             Expression member = node.getMember(s);
-                            if (member == null || mval == null) {
+                            if (member == null) {
                                 addError("The missing attribute \"" + s + "\" is required in @" + node.getClassNode().getNameWithoutPackage() + " annotations", node);
                                 continue grabResolverAnnotationLoop;
                             } else if (mval == null) {

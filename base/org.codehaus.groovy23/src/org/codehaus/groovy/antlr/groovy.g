@@ -1,9 +1,9 @@
 // Note: Please don't use physical tabs.  Logical tabs for indent are width 4.
 
-// Note that this grammar has error recovery rules and code. It should not be used to compile class files. It is 
+// Note that this grammar has error recovery rules and code. It should not be used to compile class files. It is
 // intended for IDE tooling and analysis in the face of incorrect code.
 // Recovery rules/code is near comment tag 'RECOVERY:'
-// This file was last merged from revision 12059 of file - 
+// This file was last merged from revision 12059 of file -
 // groovy/tags/GROOVY_1_5_6/src/main/org/codehaus/groovy/antlr/groovy.g
 
 header {
@@ -18,7 +18,7 @@ import antlr.CommonToken;
 import org.codehaus.groovy.GroovyBugError;
 import antlr.TokenStreamRecognitionException;
 import org.codehaus.groovy.ast.Comment;
-} 
+}
 
 /** JSR-241 Groovy Recognizer.
  *
@@ -238,7 +238,7 @@ tokens {
 }
 
 {
-        /** This factory is the correct way to wire together a Groovy parser and lexer. */
+    /** This factory is the correct way to wire together a Groovy parser and lexer. */
     public static GroovyRecognizer make(GroovyLexer lexer) {
         GroovyRecognizer parser = new GroovyRecognizer(lexer.plumb());
         // TODO: set up a common error-handling control block, to avoid excessive tangle between these guys
@@ -255,6 +255,7 @@ tokens {
     public static GroovyRecognizer make(InputBuffer in) { return make(new GroovyLexer(in)); }
     public static GroovyRecognizer make(LexerSharedInputState in) { return make(new GroovyLexer(in)); }
 
+    @SuppressWarnings("unused")
     private static GroovySourceAST dummyVariableToforceClassLoaderToFindASTClass = new GroovySourceAST();
 
     List warningList;
@@ -263,12 +264,14 @@ tokens {
     List errorList;
     public List getErrorList() { return errorList; }
 
-	List<Comment> comments = new ArrayList<Comment>();
-	public List<Comment> getComments() { return comments; }
-	
+    List<Comment> comments = new ArrayList<Comment>();
+    public List<Comment> getComments() { return comments; }
+
     GroovyLexer lexer;
     public GroovyLexer getLexer() { return lexer; }
     public void setFilename(String f) { super.setFilename(f); lexer.setFilename(f); }
+
+    @SuppressWarnings("unused")
     private SourceBuffer sourceBuffer;
     public void setSourceBuffer(SourceBuffer sourceBuffer) {
         this.sourceBuffer = sourceBuffer;
@@ -296,10 +299,10 @@ tokens {
     public AST create2(int type, String txt, Token first, Token last) {
         return setEndLocationBasedOnThisNode(create(type, txt, astFactory.create(first)), last);
     }
-    
+
     // GRE292
     private AST setEndLocationBasedOnThisNode(AST ast, Object node) {
-    	if ((ast instanceof GroovySourceAST) && (node instanceof SourceInfo)) {
+        if ((ast instanceof GroovySourceAST) && (node instanceof SourceInfo)) {
             SourceInfo lastInfo = (SourceInfo) node;
             GroovySourceAST groovySourceAst = (GroovySourceAST)ast;
             groovySourceAst.setColumnLast(lastInfo.getColumnLast());
@@ -307,7 +310,7 @@ tokens {
       }
       return ast;
     }
-    
+
     private AST attachLast(AST t, Object last) {
         if ((t instanceof GroovySourceAST) && (last instanceof SourceInfo)) {
             SourceInfo lastInfo = (SourceInfo) last;
@@ -331,32 +334,32 @@ tokens {
     public AST create(int type, String txt, AST first, AST last) {
         return attachLast(create(type, txt, first), last);
     }
-    
+
     // GRECLIPSE start
-	private Stack<Integer> commentStartPositions = new Stack<Integer>();
+    private Stack<Integer> commentStartPositions = new Stack<Integer>();
 
-	public void startComment(int line, int column) {
-		// System.out.println(">> comment at l"+line+"c"+column);
-		commentStartPositions.push((line<<16)+column);
-	}
+    public void startComment(int line, int column) {
+        // System.out.println(">> comment at l"+line+"c"+column);
+        commentStartPositions.push((line<<16)+column);
+    }
 
-	public void endComment(int type, int line, int column,String text) {
-		// System.out.println("<< comment at l"+line+"c"+column+" ["+text+"]");
-		int lineAndColumn = commentStartPositions.pop();
-		int startLine = lineAndColumn>>>16;
-		int startColumn = lineAndColumn&0xffff;
-		if (type==0) {
-			Comment comment = Comment.makeSingleLineComment(startLine,startColumn,line,column,text);
-			comments.add(comment);
-		} else if (type==1) {
-			Comment comment = Comment.makeMultiLineComment(startLine,startColumn,line,column,text);
-			comments.add(comment);
-		} 
-	}
+    public void endComment(int type, int line, int column,String text) {
+        // System.out.println("<< comment at l"+line+"c"+column+" ["+text+"]");
+        int lineAndColumn = commentStartPositions.pop();
+        int startLine = lineAndColumn>>>16;
+        int startColumn = lineAndColumn&0xffff;
+        if (type==0) {
+            Comment comment = Comment.makeSingleLineComment(startLine,startColumn,line,column,text);
+            comments.add(comment);
+        } else if (type==1) {
+            Comment comment = Comment.makeMultiLineComment(startLine,startColumn,line,column,text);
+            comments.add(comment);
+        }
+    }
     // GRECLIPSE end
-	
-	
-    /** 
+
+
+    /**
     *   Clones the token
     */
     public Token cloneToken(Token t) {
@@ -433,7 +436,7 @@ tokens {
         row.put("column", new Integer(lt.getColumn()));
         errorList.add(row);
     }
-    
+
     /**
      * Report a recovered error and specify the token.
      */
@@ -445,7 +448,7 @@ tokens {
         row.put("column", new Integer(lt.getColumn()));
         errorList.add(row);
     }
-    
+
     /**
      * Report a recovered error and specify the token.
      */
@@ -457,7 +460,7 @@ tokens {
         row.put("column", new Integer(lt.getColumn()));
         errorList.add(row);
     }
-    
+
     /**
      * Report a recovered exception.
      */
@@ -526,9 +529,10 @@ tokens {
         if (x == null || x.getType() != IDENT)  return false;  // cannot happen?
         return cname.equals(x.getText());
     }
-    
+
+    @SuppressWarnings("unused")
     private void dumpTree(AST ast, String offset) {
-    	dump(ast, offset);
+        dump(ast, offset);
         for (AST node = ast.getFirstChild(); node != null; node = node.getNextSibling()) {
             dumpTree(node, offset+"\t");
         }
@@ -537,7 +541,7 @@ tokens {
     private void dump(AST node, String offset) {
         System.out.println(offset+"Type: " + getTokenName(node) + " text: " + node.getText());
     }
-    
+
     private String getTokenName(AST node) {
         if (node == null) return "null";
         return getTokenName(node.getType());
@@ -583,6 +587,7 @@ tokens {
     // an enclosing loop, which is why this ugly hack (a fake
     // empty alternative with always-false semantic predicate)
     // is necessary.
+    @SuppressWarnings("unused")
     private static final boolean ANTLR_LOOP_EXIT = false;
 }
 
@@ -605,11 +610,11 @@ compilationUnit
         // Semicolons and/or significant newlines serve as separators.
         ( sep! (statement[sepToken])? )*
         EOF!
-		exception
-        catch [RecognitionException e] {  
+        exception
+        catch [RecognitionException e] {
             // report the error but don't throw away what we've successfully parsed
-        	reportError(e);
-			compilationUnit_AST = (AST)currentAST.root;
+            reportError(e);
+            compilationUnit_AST = (AST)currentAST.root;
         }
         ;
 
@@ -626,10 +631,10 @@ packageDefinition
     :   an:annotationsOpt! "package"! (id:identifier!)?
         { // error recovery for missing package name
             if (id_AST==null) {
-				reportError("Invalid package specification",LT(0));
-			} else {
+                reportError("Invalid package specification",LT(0));
+            } else {
                 #packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)),an,id);
-			}
+            }
         }
     ;
 
@@ -673,8 +678,8 @@ importStatement
          }
         }
     ;
-    
-    
+
+
 
 // TODO REMOVE
 // A type definition is either a class, interface, enum or annotation with possible additional semis.
@@ -1043,7 +1048,7 @@ identifierStar {Token first = LT(1); int mark=mark();}
         (   options { greedy = true; } :
             d1:DOT! nls! i2:IDENT!
             {#i1 = #(create(DOT,".",first,LT(1)),i1,i2);}
-        )*         
+        )*
         (d2:DOT!  nls! s:STAR!
             {#i1 = #(create(DOT,".",first,LT(1)),i1,s);}
         |   "as"! nls! alias:IDENT!
@@ -1058,11 +1063,11 @@ identifierStar {Token first = LT(1); int mark=mark();}
          */
         exception
         catch [RecognitionException e] {
-        	reportError("Invalid import ",first);
+            reportError("Invalid import ",first);
             #identifierStar = #(create(DOT,".",first,LT(1)),i1,#(create(STAR,"*",null)));
             // Give up on this line and just go to the next
-			rewind(mark);
-			consumeUntil(NLS);
+            rewind(mark);
+            consumeUntil(NLS);
         }
     ;
 
@@ -1241,11 +1246,11 @@ if (modifiers != null) {
         if (cb_AST!=null) {
           #classDefinition = #(create(CLASS_DEF,"CLASS_DEF",first,LT(1)),
                                                             modifiers,IDENT,tp,sc,ic,cb);
- 		} else {
- 		  reportError("Malformed class declaration",LT(1));
- 		  #classDefinition = #(create(CLASS_DEF,"CLASS_DEF",first,LT(1)),
-                                                            modifiers,IDENT,tp,sc,ic,null);    
-        }                                            
+         } else {
+           reportError("Malformed class declaration",LT(1));
+           #classDefinition = #(create(CLASS_DEF,"CLASS_DEF",first,LT(1)),
+                                                            modifiers,IDENT,tp,sc,ic,null);
+        }
         }
         { currentClass = prevCurrentClass; }
     ;
@@ -1360,15 +1365,15 @@ classBlock  {Token first = LT(1);}
         {#classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);}
 // general recovery when class parsing goes haywire in some way - probably needs duplicating for interface/enum/anno/etc *sigh*
         exception
-        catch [RecognitionException e] {  
-			if (errorList.isEmpty()) { // dirty hack to avoid having trouble with cascading problems
-        		classBlock_AST = (AST)currentAST.root;
-        	}
-        	reportError(e);
-            #classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);  	
-        	currentAST.root = classBlock_AST;
-			currentAST.child = classBlock_AST!=null &&classBlock_AST.getFirstChild()!=null ? classBlock_AST.getFirstChild() : classBlock_AST;
-			currentAST.advanceChildToEnd();	
+        catch [RecognitionException e] {
+            if (errorList.isEmpty()) { // dirty hack to avoid having trouble with cascading problems
+                classBlock_AST = (AST)currentAST.root;
+            }
+            reportError(e);
+            #classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);
+            currentAST.root = classBlock_AST;
+            currentAST.child = classBlock_AST!=null &&classBlock_AST.getFirstChild()!=null ? classBlock_AST.getFirstChild() : classBlock_AST;
+            currentAST.advanceChildToEnd();
         }
     ;
 
@@ -1590,14 +1595,14 @@ classField!  {Token first = LT(1);}
     // "{ ... }" instance initializer
     |   s4:compoundStatement
         {#classField = #(create(INSTANCE_INIT,"INSTANCE_INIT",first,LT(1)), s4);}
-	// RECOVERY: GRECLIPSE-494
+    // RECOVERY: GRECLIPSE-494
         exception
         catch [RecognitionException e] {
-        	reportError(e);
-        	// Create a fake variable definition for this 'thing' and get the position right.  
-        	// Type is object
-        	#classField = #(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)),null,#create(TYPE,"java.lang.Object",LT(1),LT(2)),#create(IDENT,first.getText(),LT(1),LT(2))); 
-        	consumeUntil(NLS);
+            reportError(e);
+            // Create a fake variable definition for this 'thing' and get the position right.
+            // Type is object
+            #classField = #(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)),null,#create(TYPE,"java.lang.Object",LT(1),LT(2)),#create(IDENT,first.getText(),LT(1),LT(2)));
+            consumeUntil(NLS);
         }    ;
 
 // Now the various things that can be defined inside an interface
@@ -1909,13 +1914,13 @@ parameterDeclaration!
       /*  exception
         catch [RecognitionException e] {
         if (t_AST==null) { // possibly 'public void foo(XMLConstant'
-					// create the best thing we can... all we have is the type - no name
-					parameterDeclaration_AST = (AST)astFactory.make( (new ASTArray(5)).add(create(PARAMETER_DEF,"PARAMETER_DEF",first,LT(1))).add(pm_AST).add((AST)astFactory.make( (new ASTArray(2)).add(create(TYPE,"TYPE",first,LT(1))).add(t_AST))));
-			}
-        	//if (pathElement_AST==null) {
-			//	throw e;
-			//}
-        	reportError(e);
+                    // create the best thing we can... all we have is the type - no name
+                    parameterDeclaration_AST = (AST)astFactory.make( (new ASTArray(5)).add(create(PARAMETER_DEF,"PARAMETER_DEF",first,LT(1))).add(pm_AST).add((AST)astFactory.make( (new ASTArray(2)).add(create(TYPE,"TYPE",first,LT(1))).add(t_AST))));
+            }
+            //if (pathElement_AST==null) {
+            //    throw e;
+            //}
+            reportError(e);
         }*/
     ;
 
@@ -2153,11 +2158,11 @@ statement[int prevToken]
     *OBS*/
 
     |   branchStatement
-	exception
+    exception
 catch [RecognitionException e] {
 // GRECLIPSE1048
 // If the pfx_AST is not null (i.e. a label was encountered) then attempt recovery if something has gone
-// wrong.  Recovery means reporting the error and then proceeding as best we can.  Basically if the 
+// wrong.  Recovery means reporting the error and then proceeding as best we can.  Basically if the
 // NoViableAltException hit a problem and the token it encountered was on the same line as the prefix,
 // skip to the end of the line, otherwise assume we can continue from where we are.
 // GRECLIPSE1046
@@ -2168,24 +2173,24 @@ catch [RecognitionException e] {
 boolean bang = true;
 
 if (pfx_AST!=null) {
-	bang=false;	
-	reportError(e);
-	if (e instanceof NoViableAltException) {
-		NoViableAltException nvae = (NoViableAltException)e;
-		if (pfx_AST.getLine()==nvae.token.getLine()) {
-			consumeUntil(NLS);										
-		}
-	}
+    bang=false;
+    reportError(e);
+    if (e instanceof NoViableAltException) {
+        NoViableAltException nvae = (NoViableAltException)e;
+        if (pfx_AST.getLine()==nvae.token.getLine()) {
+            consumeUntil(NLS);
+        }
+    }
 }
-if (ale_AST!=null && ifCbs_AST==null) {	
-	// likely missing close paren
-	#statement = #(create(LITERAL_if,"if",first,LT(1)),ale,ifCbs,elseCbs);
-	bang=false;
+if (ale_AST!=null && ifCbs_AST==null) {
+    // likely missing close paren
+    #statement = #(create(LITERAL_if,"if",first,LT(1)),ale,ifCbs,elseCbs);
+    bang=false;
 }
 if (bang) {
-	throw e;
+    throw e;
 }
-}    
+}
     ;
 
 forStatement {Token first = LT(1);}
@@ -2276,7 +2281,7 @@ compatibleBodyStatement
 catch [RecognitionException e] {
 // GRECLIPSE1046
 reportError(e);
-}    
+}
     ;
 
 /** In Groovy, return, break, continue, throw, and assert can be used in a parenthesized expression context.
@@ -2289,7 +2294,7 @@ branchStatement {Token first = LT(1);}
         "return"!
         ( returnE:expression[0]! )?
         // GRE292
-		{#branchStatement = #(create2(LITERAL_return,"return",first,LT(0)),returnE);}
+        {#branchStatement = #(create2(LITERAL_return,"return",first,LT(0)),returnE);}
 
 
     // break:  get out of a loop, or switch, or method call
@@ -2523,20 +2528,20 @@ commandArguments[AST head]
         exception
 catch [RecognitionException e] {
 // GRECLIPSE1192
-// Do we need better recognition of the specific problem here? 
+// Do we need better recognition of the specific problem here?
 // (if so, see the label recovery for GRECLIPSE1048)
 reportError(e);
-}    
+}
     ;
 
 commandArgumentsGreedy[AST head]
-{ 
-	AST prev = #head;
+{
+    AST prev = #head;
 }
     :
-    
+
         // argument to the already existing method name
-        (   ({#prev==null || #prev.getType()!=METHOD_CALL}? commandArgument)=> (   
+        (   ({#prev==null || #prev.getType()!=METHOD_CALL}? commandArgument)=> (
                 first : commandArguments[head]!
                 { #prev = #first; }
         )
@@ -2549,12 +2554,12 @@ commandArgumentsGreedy[AST head]
                 // method name
             pre:primaryExpression!
             { #prev = #(create(DOT, ".", #prev), #prev, #pre); }
-                // what follows is either a normal argument, parens, 
+                // what follows is either a normal argument, parens,
                 // an appended block, an index operation, or nothing
-                // parens (a b already processed): 
+                // parens (a b already processed):
                 //      a b c() d e -> a(b).c().d(e)
                 //      a b c()() d e -> a(b).c().call().d(e)
-                // index (a b already processed): 
+                // index (a b already processed):
                 //      a b c[x] d e -> a(b).c[x].d(e)
                 //      a b c[x][y] d e -> a(b).c[x][y].d(e)
                 // block (a b already processed):
@@ -2562,9 +2567,9 @@ commandArgumentsGreedy[AST head]
                 //
                 // parens/block completes method call
                 // index makes method call to property get with index
-                // 
+                //
                 (   options { greedy = true; } :
-                (pathElementStart)=>   
+                (pathElementStart)=>
                 (
                         pc:pathChain[LC_STMT,#prev]!
                         { #prev = #pc; }
@@ -2575,9 +2580,9 @@ commandArgumentsGreedy[AST head]
                 )?
         )*
         )
-        { #commandArgumentsGreedy = prev; } 
+        { #commandArgumentsGreedy = prev; }
     ;
-    
+
 commandArgument
     :
         (argumentLabel COLON nls!) => (
@@ -2723,14 +2728,14 @@ pathExpression[int lc_stmt]
             nlsWarn!
             apb:appendedBlock[prefix]!
             { prefix = #apb; }
-       	|
-       		// RECOVERY:
-       		// Ignore error of dot followed by no match: 'a.' and 'a.b.' and '].' and '}.' and ').' etc.
-       		// Report it, but continue compiling. The dot is thrown away.
-       		// NOTE: emp - if anyone knows a better/proper way to do this, please tell me. In the other error recovery
-       		// in rule pathElement, the .* is ignored. Here we want to keep the prefix and ignore the '.'.
-       		(DOT! | SPREAD_DOT! | OPTIONAL_DOT)
-      		{ reportError("Expecting an identifier, found a trailing '.' instead."); }
+           |
+               // RECOVERY:
+               // Ignore error of dot followed by no match: 'a.' and 'a.b.' and '].' and '}.' and ').' etc.
+               // Report it, but continue compiling. The dot is thrown away.
+               // NOTE: emp - if anyone knows a better/proper way to do this, please tell me. In the other error recovery
+               // in rule pathElement, the .* is ignored. Here we want to keep the prefix and ignore the '.'.
+               (DOT! | SPREAD_DOT! | OPTIONAL_DOT)
+              { reportError("Expecting an identifier, found a trailing '.' instead."); }
         )*
 
         {
@@ -2759,10 +2764,10 @@ pathElement[AST prefix] {Token operator = LT(1);}
         // RECOVERY: a.{
         exception
         catch [RecognitionException e] {
-        	if (pathElement_AST==null) {
-				throw e;
-			}
-        	reportError(e);
+            if (pathElement_AST==null) {
+                throw e;
+            }
+            reportError(e);
         }
     |
         mca:methodCallArgs[prefix]!
@@ -2934,19 +2939,19 @@ methodCallArgs[AST callee]
 exception
 catch [RecognitionException e] {
 if (#al!=null) {
-	reportError(e);
-	// copy of the block above - lets build it (assuming that all that was missing was the RPAREN)
-	if (callee != null && callee.getFirstChild() != null) {
-		//method call like obj.method()
-		#methodCallArgs = #(create(METHOD_CALL, "(",callee.getFirstChild(),LT(1)), callee, al);
-	} else {
-		//method call like method() or new Expr(), in the latter case "callee" is null
-		#methodCallArgs = #(create(METHOD_CALL, "(",callee, LT(1)), callee, al);
-	}
+    reportError(e);
+    // copy of the block above - lets build it (assuming that all that was missing was the RPAREN)
+    if (callee != null && callee.getFirstChild() != null) {
+        //method call like obj.method()
+        #methodCallArgs = #(create(METHOD_CALL, "(",callee.getFirstChild(),LT(1)), callee, al);
+    } else {
+        //method call like method() or new Expr(), in the latter case "callee" is null
+        #methodCallArgs = #(create(METHOD_CALL, "(",callee, LT(1)), callee, al);
+    }
 } else {
-	throw e;
+    throw e;
 }
-}        
+}
     ;
 
 /** An appended block follows any expression.
@@ -3250,12 +3255,12 @@ parenthesizedExpression
                 #parenthesizedExpression = #(create(CLOSURE_LIST,"CLOSURE_LIST",first,LT(1)),#parenthesizedExpression);
             }
         }
-        
+
 exception
 catch [RecognitionException e] {
-	// GRECLIPSE1213 - missing closing paren
-	reportError(e); 
-	#parenthesizedExpression = (AST)currentAST.root;
+    // GRECLIPSE1213 - missing closing paren
+    reportError(e);
+    #parenthesizedExpression = (AST)currentAST.root;
 }
     ;
 
@@ -3474,42 +3479,42 @@ newExpression {Token first = LT(1); int jumpBack = mark();}
             // Groovy does not support Java syntax for initialized new arrays.
             // Use sequence constructors instead.
             {#newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t,#ad);}
-		)
+        )
         // RECOVERY: missing '(' or '['
         exception
         catch [RecognitionException e] {
             if (#t==null) {
-			    reportError("missing type for constructor call",first);
-				#newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,null); 
+                reportError("missing type for constructor call",first);
+                #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,null);
                 // currentAST.root = newExpression_AST;
-				// currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
-				// newExpression_AST.getFirstChild() : newExpression_AST;
-				// currentAST.advanceChildToEnd();
-				// probably others to include - or make this the default?
-				if (e instanceof MismatchedTokenException || e instanceof NoViableAltException) {
-					// int i = ((MismatchedTokenException)e).token.getType();
-					rewind(jumpBack);
-					consumeUntil(NLS);
-				}      
+                // currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
+                // newExpression_AST.getFirstChild() : newExpression_AST;
+                // currentAST.advanceChildToEnd();
+                // probably others to include - or make this the default?
+                if (e instanceof MismatchedTokenException || e instanceof NoViableAltException) {
+                    // int i = ((MismatchedTokenException)e).token.getType();
+                    rewind(jumpBack);
+                    consumeUntil(NLS);
+                }
             } else if (#mca==null && #ad==null) {
                 reportError("expecting '(' or '[' after type name to continue new expression",t_AST);
-                #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t);               
-				//currentAST.root = newExpression_AST;
-				//currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
-				//newExpression_AST.getFirstChild() : newExpression_AST;
-				//currentAST.advanceChildToEnd();
-				if (e instanceof MismatchedTokenException) {
-					Token t =  ((MismatchedTokenException)e).token;
-					int i = ((MismatchedTokenException)e).token.getType();
-					rewind(jumpBack);
-					consume();
-					consumeUntil(NLS);
-				}   
+                #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t);
+                //currentAST.root = newExpression_AST;
+                //currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
+                //newExpression_AST.getFirstChild() : newExpression_AST;
+                //currentAST.advanceChildToEnd();
+                if (e instanceof MismatchedTokenException) {
+                    Token t =  ((MismatchedTokenException)e).token;
+                    int i = ((MismatchedTokenException)e).token.getType();
+                    rewind(jumpBack);
+                    consume();
+                    consumeUntil(NLS);
+                }
             } else {
               throw e;
             }
         }
-        
+
     ;
 
 argList
@@ -3709,7 +3714,7 @@ nlsWarn!
         )?
         nls!
     ;
-    
+
 
 //----------------------------------------------------------------------------
 // The Groovy scanner
@@ -4107,7 +4112,7 @@ options {
             newlineCheck(check);
         }
     ;
-    
+
     protected
 ONE_NL_KEEP[boolean check]
 options {
@@ -4168,7 +4173,7 @@ options {
         { if (parser!=null) {
               parser.endComment(0,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
           }
-          if (!whitespaceIncluded)  $setType(Token.SKIP); 
+          if (!whitespaceIncluded)  $setType(Token.SKIP);
         }
         //This might be significant, so don't swallow it inside the comment:
         //ONE_NL
@@ -4213,11 +4218,11 @@ options {
         |   ~('*'|'\n'|'\r'|'\uffff')
         )*
         "*/"
-        { 
+        {
           if (parser!=null) {
                parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
           }
-          if (!whitespaceIncluded)  $setType(Token.SKIP); 
+          if (!whitespaceIncluded)  $setType(Token.SKIP);
         }
     ;
 
