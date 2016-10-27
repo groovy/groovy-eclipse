@@ -36,22 +36,12 @@ public abstract class AbstractGroovyRegressionTest extends AbstractRegressionTes
         String[] newcps = new String[cps.length+2];
         System.arraycopy(cps,0,newcps,0,cps.length);
         try {
-        	URL groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.4.3.jar");
-        	if (groovyJar==null) {
-	        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.3.10.jar");
-	        	if (groovyJar==null) {
-		        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.2.2.jar");
-		        	if (groovyJar==null) {
-			        	groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.1.8.jar");
-			        	if (groovyJar==null) {
-				            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-2.0.7.jar");
-				            if (groovyJar==null) {
-								groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-1.8.6.jar");
-				            }
-			        	}
-		        	}
-	        	}
-        	}
+            URL groovyJar = null;
+            String[] groovyVer = {"2.4.3", "2.3.10", "2.2.2", "2.1.9", "2.0.7", "1.8.6"};
+            for (int i = 0, n = groovyVer.length; i < n; i += 1) {
+                groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-"+groovyVer[i]+".jar");
+                if (groovyJar != null) break;
+            }
             newcps[newcps.length-1] = FileLocator.resolve(groovyJar).getFile();
 	        // FIXASC think more about why this is here... the tests that need it specify the option but that is just for
 	        // the groovy class loader to access it.  The annotation within this jar needs to be resolvable by the compiler when

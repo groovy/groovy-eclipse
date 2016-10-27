@@ -452,6 +452,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     // NOTE: copied from GroovyClassLoader
+    @SuppressWarnings("unused")
     private boolean isSourceNewer(URL source, Class cls) {
         try {
             long lastMod;

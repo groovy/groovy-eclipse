@@ -1164,6 +1164,7 @@ public class CompilationUnit extends ProcessingUnit {
         return sorted;
     }
     
+    @SuppressWarnings("unused")
     private List<ClassNode> getSorted(int[] index, List<ClassNode> unsorted) {
         List<ClassNode> sorted = new ArrayList<ClassNode>(unsorted.size());
         for (int i = 0; i < unsorted.size(); i++) {

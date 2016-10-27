@@ -302,7 +302,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         IJavaProject javaProject = getCu().getJavaProject();
 
         sb.append(CodeFormatterUtil.createIndentString(getIndentLevel(), javaProject));
-        if (!getVisibility().isEmpty()) {
+        if (getVisibility().length() > 0) {
             sb.append(getVisibility()).append(" ");
         }
         sb.append(MODIFIER).append(" ").append(getConstantTypeName()).append(constantName).append(" = ").append(

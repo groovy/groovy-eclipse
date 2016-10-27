@@ -316,15 +316,13 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     // GRECLIPSE end
     
     // GRECLIPSE: start: slight refactoring to provide a new method that can work with a real annotation
+    @SuppressWarnings("unused")
     private void addTransformsToClassNode(AnnotationNode annotation, Annotation transformClassAnnotation) {
         String[] transformClassNames = getTransformClassNames(annotation.getClassNode()); 
         Class[] transformClasses = getTransformClasses(transformClassAnnotation);
         addTransformsToClassNode(annotation,transformClassNames,transformClasses);
     }
-    
 
-
-        
     private void addTransformsToClassNode(AnnotationNode annotation, String[] transformClassNames, Class[] transformClasses) {
 
         if(transformClassNames.length == 0 && transformClasses.length == 0) {
@@ -435,6 +433,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         }
     }
 
+    @SuppressWarnings("unused")
     private List<String> getTransformClassNames(AnnotationNode annotation, Annotation transformClassAnnotation) {
         List<String> result = new ArrayList<String>();
 

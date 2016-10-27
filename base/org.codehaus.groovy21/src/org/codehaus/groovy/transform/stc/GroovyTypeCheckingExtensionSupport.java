@@ -48,24 +48,26 @@ import java.util.concurrent.Callable;
 public class GroovyTypeCheckingExtensionSupport extends TypeCheckingExtension {
 
     // method name to DSL name
-    private final static Map<String, String> METHOD_ALIASES = Collections.unmodifiableMap(
-            new HashMap<String, String>() {{
-                put("onMethodSelection", "onMethodSelection");
-                put("afterMethodCall", "afterMethodCall");
-                put("beforeMethodCall", "beforeMethodCall");
-                put("unresolvedVariable", "handleUnresolvedVariableExpression");
-                put("unresolvedProperty", "handleUnresolvedProperty");
-                put("unresolvedAttribute", "handleUnresolvedAttribute");
-                put("methodNotFound", "handleMissingMethod");
-                put("afterVisitMethod", "afterVisitMethod");
-                put("beforeVisitMethod", "beforeVisitMethod");
-                put("afterVisitClass", "afterVisitClass");
-                put("beforeVisitClass", "beforeVisitClass");
-                put("incompatibleAssignment", "handleIncompatibleAssignment");
-                put("setup","setup");
-                put("finish", "finish");
-            }}
-    );
+    private final static Map<String, String> METHOD_ALIASES;
+    static {
+        final Map<String, String> aliases = new HashMap<String, String>(20);
+        aliases.put("onMethodSelection", "onMethodSelection");
+        aliases.put("afterMethodCall", "afterMethodCall");
+        aliases.put("beforeMethodCall", "beforeMethodCall");
+        aliases.put("unresolvedVariable", "handleUnresolvedVariableExpression");
+        aliases.put("unresolvedProperty", "handleUnresolvedProperty");
+        aliases.put("unresolvedAttribute", "handleUnresolvedAttribute");
+        aliases.put("methodNotFound", "handleMissingMethod");
+        aliases.put("afterVisitMethod", "afterVisitMethod");
+        aliases.put("beforeVisitMethod", "beforeVisitMethod");
+        aliases.put("afterVisitClass", "afterVisitClass");
+        aliases.put("beforeVisitClass", "beforeVisitClass");
+        aliases.put("incompatibleAssignment", "handleIncompatibleAssignment");
+        aliases.put("setup","setup");
+        aliases.put("finish", "finish");
+
+        METHOD_ALIASES = Collections.unmodifiableMap(aliases);
+    }
 
     private final Set<MethodNode> generatedMethods = new LinkedHashSet<MethodNode>();
     private final LinkedList<TypeCheckingScope> scopeData = new LinkedList<TypeCheckingScope>();
@@ -588,6 +590,7 @@ public class GroovyTypeCheckingExtensionSupport extends TypeCheckingExtension {
     // end of delegate to the type checking context
     // --------------------------------------------
 
+    @SuppressWarnings("serial")
     private class TypeCheckingScope extends LinkedHashMap<String, Object> {
         private final TypeCheckingScope parent;
 
@@ -595,6 +598,7 @@ public class GroovyTypeCheckingExtensionSupport extends TypeCheckingExtension {
             this.parent = parentScope;
         }
 
+        @SuppressWarnings("unused")
         public TypeCheckingScope getParent() {
             return parent;
         }

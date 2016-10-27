@@ -302,10 +302,10 @@ public class GroovyIndentation {
         if (edit instanceof DeleteEdit && edit.getLength() == 0) {
             return;
         }
-        if (edit instanceof ReplaceEdit && edit.getLength() == 0 && ((ReplaceEdit) edit).getText().isEmpty()) {
+        if (edit instanceof ReplaceEdit && edit.getLength() == 0 && ((ReplaceEdit) edit).getText().length() < 1) {
             return;
         }
-        if (edit instanceof InsertEdit && ((InsertEdit) edit).getText().isEmpty()) {
+        if (edit instanceof InsertEdit && ((InsertEdit) edit).getText().length() < 1) {
             return;
         }
 		if(edit != null && edit.getOffset() >= formatter.formatOffset &&

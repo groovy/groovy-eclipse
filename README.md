@@ -16,3 +16,5 @@ A quick approach to getting started:
 	- Any project prefixed with groovy-eclipse- is part of the maven compiler plugin for groovy-eclipse.  You only need to import these projects if you plan on working on the maven support.
 	- The org.codehaus.groovy.eclipse.pluginbuilder project contains the releng code to build Groovy-Eclipse and publish the update site.
 5. If any of the imported projects has an error about Groovy Compiler version then open Eclipse Preferences, navigate to Groovy -> Compiler and set the required Groovy Compiler version, apply the changes and restart Eclipse.
+
+If you wish to contribute to this project, see the [Getting Started with Groovy Eclipse Source Code Guide](docs/Getting-Started-with-Groovy-Eclipse-Source-Code.md) for more detailed information.
