@@ -15,7 +15,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 
 import junit.framework.Test;
@@ -58,25 +58,21 @@ public class DebugEvaluationTest extends EvaluationTest {
 			return true;
 		}
 	}
-	
+
 	protected static final String SOURCE_DIRECTORY = Util.getOutputDirectory() + File.separator + "source";
-	
+
 	public JDIStackFrame jdiStackFrame;
 	VirtualMachine jdiVM;
-	
+
 	public DebugEvaluationTest(String name) {
 		super(name);
 	}
-	public static Test setupSuite(Class clazz) {
-		ArrayList testClasses = new ArrayList();
-		testClasses.add(clazz);
-		return buildAllCompliancesTestSuite(clazz, DebugEvaluationSetup.class, testClasses);
+	@SuppressWarnings("unchecked")
+	public static Test setupSuite(Class<? extends Test> clazz) {
+		return buildAllCompliancesTestSuite(clazz, DebugEvaluationSetup.class, Arrays.<Class<? extends Test>>asList(clazz));
 	}
 	public static Test suite() {
-		return setupSuite(testClass());
-	}
-	public static Class testClass() {
-		return DebugEvaluationTest.class;
+		return setupSuite(DebugEvaluationTest.class);
 	}
 	public void compileAndDeploy(String source, String className) {
 		resetEnv(); // needed to reinitialize the caches
@@ -143,8 +139,8 @@ public class DebugEvaluationTest extends EvaluationTest {
 	/**
 	 * Generate local variable attribute for these tests.
 	 */
-	public Map getCompilerOptions() {
-		Map options = super.getCompilerOptions();
+	public Map<String, String> getCompilerOptions() {
+		Map<String, String> options = super.getCompilerOptions();
 		options.put(CompilerOptions.OPTION_LocalVariableAttribute, CompilerOptions.GENERATE);
 		options.put(CompilerOptions.OPTION_PreserveUnusedLocal, CompilerOptions.PRESERVE);
 		options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_2);
@@ -174,10 +170,10 @@ public class DebugEvaluationTest extends EvaluationTest {
 		String userCode =
 			"";
 		JDIStackFrame stackFrame = new JDIStackFrame(
-			this.jdiVM, 
+			this.jdiVM,
 			this,
 			userCode);
-		
+
 		DebugRequestor requestor = new DebugRequestor();
 		char[] snippet = "return 1;".toCharArray();
 		try {
@@ -189,9 +185,9 @@ public class DebugEvaluationTest extends EvaluationTest {
 				stackFrame.declaringTypeName(),
 				stackFrame.isStatic(),
 				stackFrame.isConstructorCall(),
-				getEnv(), 
-				getCompilerOptions(), 
-				requestor, 
+				getEnv(),
+				getCompilerOptions(),
+				requestor,
 				getProblemFactory());
 		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
@@ -221,7 +217,7 @@ public void test002() {
 		String userCode =
 			"new A002().foo();";
 		JDIStackFrame stackFrame = new JDIStackFrame(
-			this.jdiVM, 
+			this.jdiVM,
 			this,
 			userCode,
 			"A002",
@@ -238,9 +234,9 @@ public void test002() {
 				stackFrame.declaringTypeName(),
 				stackFrame.isStatic(),
 				stackFrame.isConstructorCall(),
-				getEnv(), 
-				getCompilerOptions(), 
-				requestor, 
+				getEnv(),
+				getCompilerOptions(),
+				requestor,
 				getProblemFactory());
 		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
@@ -273,7 +269,7 @@ public void test003() {
 		String userCode =
 			"new A003().foo();";
 		JDIStackFrame stackFrame = new JDIStackFrame(
-			this.jdiVM, 
+			this.jdiVM,
 			this,
 			userCode,
 			"A003",
@@ -290,9 +286,9 @@ public void test003() {
 				null, // declaring type -- NO DELEGATE THIS
 				stackFrame.isStatic(),
 				stackFrame.isConstructorCall(),
-				getEnv(), 
-				getCompilerOptions(), 
-				requestor, 
+				getEnv(),
+				getCompilerOptions(),
+				requestor,
 				getProblemFactory());
 		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
@@ -316,7 +312,7 @@ public void test004() {
 		"  }\n" +
 		"};";
 	JDIStackFrame stackFrame = new JDIStackFrame(
-		this.jdiVM, 
+		this.jdiVM,
 		this,
 		userCode);
 
@@ -331,9 +327,9 @@ public void test004() {
 			stackFrame.declaringTypeName(),
 			stackFrame.isStatic(),
 			stackFrame.isConstructorCall(),
-			getEnv(), 
-			getCompilerOptions(), 
-			requestor, 
+			getEnv(),
+			getCompilerOptions(),
+			requestor,
 			getProblemFactory());
 	} catch (InstallException e) {
 		assertTrue("No targetException " + e.getMessage(), false);
@@ -362,7 +358,7 @@ public void test005() {
 		String userCode =
 			"new A005().foo();";
 		JDIStackFrame stackFrame = new JDIStackFrame(
-			this.jdiVM, 
+			this.jdiVM,
 			this,
 			userCode,
 			"A005",
@@ -380,9 +376,9 @@ public void test005() {
 				stackFrame.declaringTypeName(),
 				stackFrame.isStatic(),
 				stackFrame.isConstructorCall(),
-				getEnv(), 
-				getCompilerOptions(), 
-				requestor, 
+				getEnv(),
+				getCompilerOptions(),
+				requestor,
 				getProblemFactory());
 		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
@@ -414,7 +410,7 @@ public void test006() {
 		String userCode =
 			"new A006().foo();";
 		JDIStackFrame stackFrame = new JDIStackFrame(
-			this.jdiVM, 
+			this.jdiVM,
 			this,
 			userCode,
 			"A006",
@@ -432,9 +428,9 @@ public void test006() {
 				stackFrame.declaringTypeName(),
 				stackFrame.isStatic(),
 				stackFrame.isConstructorCall(),
-				getEnv(), 
-				getCompilerOptions(), 
-				requestor, 
+				getEnv(),
+				getCompilerOptions(),
+				requestor,
 				getProblemFactory());
 		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
@@ -466,7 +462,7 @@ public void test007() {
 		String userCode =
 			"new A007().foo();";
 		JDIStackFrame stackFrame = new JDIStackFrame(
-			this.jdiVM, 
+			this.jdiVM,
 			this,
 			userCode,
 			"A007",
@@ -484,9 +480,9 @@ public void test007() {
 				stackFrame.declaringTypeName(),
 				stackFrame.isStatic(),
 				stackFrame.isConstructorCall(),
-				getEnv(), 
-				getCompilerOptions(), 
-				requestor, 
+				getEnv(),
+				getCompilerOptions(),
+				requestor,
 				getProblemFactory());
 		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
@@ -518,7 +514,7 @@ public void test008() {
 		String userCode =
 			"new A008().foo();";
 		JDIStackFrame stackFrame = new JDIStackFrame(
-			this.jdiVM, 
+			this.jdiVM,
 			this,
 			userCode,
 			"A008",
@@ -536,9 +532,9 @@ public void test008() {
 				stackFrame.declaringTypeName(),
 				stackFrame.isStatic(),
 				stackFrame.isConstructorCall(),
-				getEnv(), 
-				getCompilerOptions(), 
-				requestor, 
+				getEnv(),
+				getCompilerOptions(),
+				requestor,
 				getProblemFactory());
 		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
@@ -560,7 +556,7 @@ public void test009() {
 	String userCode =
 		"String s = \"test009\";\n";
 	JDIStackFrame stackFrame = new JDIStackFrame(
-		this.jdiVM, 
+		this.jdiVM,
 		this,
 		userCode);
 
@@ -575,9 +571,9 @@ public void test009() {
 			stackFrame.declaringTypeName(),
 			stackFrame.isStatic(),
 			stackFrame.isConstructorCall(),
-			getEnv(), 
-			getCompilerOptions(), 
-			requestor, 
+			getEnv(),
+			getCompilerOptions(),
+			requestor,
 			getProblemFactory());
 	} catch (InstallException e) {
 		assertTrue("No targetException " + e.getMessage(), false);
@@ -610,7 +606,7 @@ public void test010() {
 			"};\n" +
 			"a.foo();";
 		JDIStackFrame stackFrame = new JDIStackFrame(
-			this.jdiVM, 
+			this.jdiVM,
 			this,
 			userCode,
 			"A010",
@@ -628,9 +624,9 @@ public void test010() {
 				stackFrame.declaringTypeName(),
 				stackFrame.isStatic(),
 				stackFrame.isConstructorCall(),
-				getEnv(), 
-				getCompilerOptions(), 
-				requestor, 
+				getEnv(),
+				getCompilerOptions(),
+				requestor,
 				getProblemFactory());
 		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
@@ -654,10 +650,10 @@ public void test011() {
 		"java.util.Vector v = new java.util.Vector();\n" +
 		"v.addElement(s);\n";
 	JDIStackFrame stackFrame = new JDIStackFrame(
-		this.jdiVM, 
+		this.jdiVM,
 		this,
 		userCode);
-	
+
 	DebugRequestor requestor = new DebugRequestor();
 	char[] snippet = "return v;".toCharArray();
 	try {
@@ -669,9 +665,9 @@ public void test011() {
 			stackFrame.declaringTypeName(),
 			stackFrame.isStatic(),
 			stackFrame.isConstructorCall(),
-			getEnv(), 
-			getCompilerOptions(), 
-			requestor, 
+			getEnv(),
+			getCompilerOptions(),
+			requestor,
 			getProblemFactory());
 	} catch (InstallException e) {
 		assertTrue("No targetException " + e.getMessage(), false);
@@ -692,7 +688,7 @@ public void test012() {
 		"java.util.Date date = cal.getGregorianChange();\n" +
 		"date.toString();";
 	JDIStackFrame stackFrame = new JDIStackFrame(
-		this.jdiVM, 
+		this.jdiVM,
 		this,
 		userCode);
 
@@ -707,9 +703,9 @@ public void test012() {
 			stackFrame.declaringTypeName(),
 			stackFrame.isStatic(),
 			stackFrame.isConstructorCall(),
-			getEnv(), 
-			getCompilerOptions(), 
-			requestor, 
+			getEnv(),
+			getCompilerOptions(),
+			requestor,
 			getProblemFactory());
 	} catch (InstallException e) {
 		assertTrue("No targetException " + e.getMessage(), false);
@@ -725,9 +721,9 @@ public void test012() {
 			stackFrame.declaringTypeName(),
 			stackFrame.isStatic(),
 			stackFrame.isConstructorCall(),
-			getEnv(), 
-			getCompilerOptions(), 
-			requestor, 
+			getEnv(),
+			getCompilerOptions(),
+			requestor,
 			getProblemFactory());
 	} catch (InstallException e) {
 		assertTrue("No targetException " + e.getMessage(), false);
@@ -748,7 +744,7 @@ public void test012() {
 public void _test013() {
 	String userCode = "int i = 0;";
 	JDIStackFrame stackFrame = new JDIStackFrame(
-		this.jdiVM, 
+		this.jdiVM,
 		this,
 		userCode);
 
@@ -763,9 +759,9 @@ public void _test013() {
 			stackFrame.declaringTypeName(),
 			stackFrame.isStatic(),
 			stackFrame.isConstructorCall(),
-			getEnv(), 
-			getCompilerOptions(), 
-			requestor, 
+			getEnv(),
+			getCompilerOptions(),
+			requestor,
 			getProblemFactory());
 	} catch (InstallException e) {
 		assertTrue("No targetException " + e.getMessage(), false);
@@ -781,9 +777,9 @@ public void _test013() {
 			stackFrame.declaringTypeName(),
 			stackFrame.isStatic(),
 			stackFrame.isConstructorCall(),
-			getEnv(), 
-			getCompilerOptions(), 
-			requestor, 
+			getEnv(),
+			getCompilerOptions(),
+			requestor,
 			getProblemFactory());
 	} catch (InstallException e) {
 		assertTrue("No targetException " + e.getMessage(), false);
@@ -804,7 +800,7 @@ public void _test013() {
 public void _test014() {
 	String userCode = "int i = 0;";
 	JDIStackFrame stackFrame = new JDIStackFrame(
-		this.jdiVM, 
+		this.jdiVM,
 		this,
 		userCode);
 
@@ -819,9 +815,9 @@ public void _test014() {
 			stackFrame.declaringTypeName(),
 			stackFrame.isStatic(),
 			stackFrame.isConstructorCall(),
-			getEnv(), 
-			getCompilerOptions(), 
-			requestor, 
+			getEnv(),
+			getCompilerOptions(),
+			requestor,
 			getProblemFactory());
 	} catch (InstallException e) {
 		assertTrue("No targetException " + e.getMessage(), false);
@@ -837,9 +833,9 @@ public void _test014() {
 			stackFrame.declaringTypeName(),
 			stackFrame.isStatic(),
 			stackFrame.isConstructorCall(),
-			getEnv(), 
-			getCompilerOptions(), 
-			requestor, 
+			getEnv(),
+			getCompilerOptions(),
+			requestor,
 			getProblemFactory());
 	} catch (InstallException e) {
 		assertTrue("No targetException " + e.getMessage(), false);
@@ -860,7 +856,7 @@ public void _test014() {
 public void _test015() {
 	String userCode = "int i = 0;";
 	JDIStackFrame stackFrame = new JDIStackFrame(
-		this.jdiVM, 
+		this.jdiVM,
 		this,
 		userCode);
 
@@ -875,13 +871,13 @@ public void _test015() {
 			stackFrame.declaringTypeName(),
 			stackFrame.isStatic(),
 			stackFrame.isConstructorCall(),
-			getEnv(), 
-			getCompilerOptions(), 
-			requestor, 
+			getEnv(),
+			getCompilerOptions(),
+			requestor,
 			getProblemFactory());
 	} catch (InstallException e) {
 		assertTrue("No targetException " + e.getMessage(), false);
-	}	
+	}
 
 	requestor = new DebugRequestor();
 	snippet = "return java.lang.System.out != null;".toCharArray();
@@ -894,9 +890,9 @@ public void _test015() {
 			stackFrame.declaringTypeName(),
 			stackFrame.isStatic(),
 			stackFrame.isConstructorCall(),
-			getEnv(), 
-			getCompilerOptions(), 
-			requestor, 
+			getEnv(),
+			getCompilerOptions(),
+			requestor,
 			getProblemFactory());
 	} catch (InstallException e) {
 		assertTrue("No targetException " + e.getMessage(), false);
@@ -914,7 +910,7 @@ public void _test015() {
 public void test016() {
 	String userCode = "";
 	JDIStackFrame stackFrame = new JDIStackFrame(
-		this.jdiVM, 
+		this.jdiVM,
 		this,
 		userCode);
 
@@ -929,9 +925,9 @@ public void test016() {
 			stackFrame.declaringTypeName(),
 			stackFrame.isStatic(),
 			stackFrame.isConstructorCall(),
-			getEnv(), 
-			getCompilerOptions(), 
-			requestor, 
+			getEnv(),
+			getCompilerOptions(),
+			requestor,
 			getProblemFactory());
 	} catch (InstallException e) {
 		assertTrue("No targetException " + e.getMessage(), false);
@@ -947,9 +943,9 @@ public void test016() {
 			stackFrame.declaringTypeName(),
 			stackFrame.isStatic(),
 			stackFrame.isConstructorCall(),
-			getEnv(), 
-			getCompilerOptions(), 
-			requestor, 
+			getEnv(),
+			getCompilerOptions(),
+			requestor,
 			getProblemFactory());
 	} catch (InstallException e) {
 		assertTrue("No targetException " + e.getMessage(), false);
@@ -1045,7 +1041,7 @@ public void test018() {
 		String userCode =
 			"new A018().foo();";
 		JDIStackFrame stackFrame = new JDIStackFrame(
-			this.jdiVM, 
+			this.jdiVM,
 			this,
 			userCode,
 			"A018",
@@ -1063,9 +1059,9 @@ public void test018() {
 				stackFrame.declaringTypeName(),
 				stackFrame.isStatic(),
 				stackFrame.isConstructorCall(),
-				getEnv(), 
-				getCompilerOptions(), 
-				requestor, 
+				getEnv(),
+				getCompilerOptions(),
+				requestor,
 				getProblemFactory());
 		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
@@ -1081,9 +1077,9 @@ public void test018() {
 				stackFrame.declaringTypeName(),
 				stackFrame.isStatic(),
 				stackFrame.isConstructorCall(),
-				getEnv(), 
-				getCompilerOptions(), 
-				requestor, 
+				getEnv(),
+				getCompilerOptions(),
+				requestor,
 				getProblemFactory());
 		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
@@ -1102,7 +1098,7 @@ public void test018() {
  * Access to super reference
  */
 public void _test019() {
-  try {
+	try {
 		String sourceA019 =
 			"public class A019 {\n" +
 			"  public int x = 1;\n" +
@@ -1115,7 +1111,7 @@ public void _test019() {
 		String userCode =
 			"new A019().foo();";
 		JDIStackFrame stackFrame = new JDIStackFrame(
-			this.jdiVM, 
+			this.jdiVM,
 			this,
 			userCode,
 			"A019",
@@ -1133,9 +1129,9 @@ public void _test019() {
 				stackFrame.declaringTypeName(),
 				stackFrame.isStatic(),
 				stackFrame.isConstructorCall(),
-				getEnv(), 
-				getCompilerOptions(), 
-				requestor, 
+				getEnv(),
+				getCompilerOptions(),
+				requestor,
 				getProblemFactory());
 		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
@@ -1296,7 +1292,7 @@ public void test022() {
 				+ "\tpublic String s = null;\n"
 				+ "}";
 		compileAndDeploy(sourceB22, "B22");
-		
+
 		String sourceA22 =
 			"public class A22 {\n"
 				+ "\tpublic B22 b = new B22();\n"
@@ -1387,13 +1383,13 @@ public void test023() {
 				+ "}";
 		compileAndDeploy(sourceC23, "C23");
 
-		
+
 		String sourceB23 =
 			"public class B23 {\n"
 				+ "\tpublic C23 c = new C23();\n"
 				+ "}";
 		compileAndDeploy(sourceB23, "B23");
-		
+
 		String sourceA23 =
 			"public class A23 {\n"
 				+ "\tpublic B23 b = new B23();\n"
@@ -1469,7 +1465,7 @@ public void test023() {
 		assertEquals("Value", "toto".toCharArray(), result.getValueDisplayString());
 		assertEquals("Type", "java.lang.String".toCharArray(), result.getValueTypeName());
 	} finally {
-		removeTempClass("C23");     
+		removeTempClass("C23");
 		removeTempClass("B23");
 		removeTempClass("A23");
 	}
@@ -1485,13 +1481,13 @@ public void test024() {
 				+ "}";
 		compileAndDeploy(sourceC24, "C24");
 
-		
+
 		String sourceB24 =
 			"public class B24 {\n"
 				+ "\tpublic C24 c = new C24();\n"
 				+ "}";
 		compileAndDeploy(sourceB24, "B24");
-		
+
 		String sourceA24 =
 			"public class A24 {\n"
 				+ "\tpublic B24 b = new B24();\n"
@@ -1567,7 +1563,7 @@ public void test024() {
 		assertEquals("Value", "8".toCharArray(), result.getValueDisplayString());
 		assertEquals("Type", "int".toCharArray(), result.getValueTypeName());
 	} finally {
-		removeTempClass("C24");     
+		removeTempClass("C24");
 		removeTempClass("B24");
 		removeTempClass("A24");
 	}
@@ -1681,7 +1677,7 @@ public void test026() {
 				-1);
 
 		DebugRequestor requestor = new DebugRequestor();
-		char[] snippet = 
+		char[] snippet =
 			("int[] tab = new int[1];\n"
 			+ "tab[0] = foo();\n"
 			+ "tab[0]").toCharArray();
@@ -1731,7 +1727,7 @@ public void test027() {
 				+ "\t\t} else {\n"
 				+ "\t\t\treturn 4;\n"
 				+ "\t\t}\n"
-				+ "\t}\n"               
+				+ "\t}\n"
 				+ "}";
 		compileAndDeploy(sourceA27, "A27");
 
@@ -1746,7 +1742,7 @@ public void test027() {
 				-1);
 
 		DebugRequestor requestor = new DebugRequestor();
-		char[] snippet = 
+		char[] snippet =
 			("int[] tab = new int[] { 1, 2, 3, 4, 5};\n"
 			+ "switch(foo()) {\n"
 			+ "case 1 : return -1;\n"
@@ -1798,7 +1794,7 @@ public void test028() {
 				+ "\t\t} else {\n"
 				+ "\t\t\treturn 4;\n"
 				+ "\t\t}\n"
-				+ "\t}\n"               
+				+ "\t}\n"
 				+ "}";
 		compileAndDeploy(sourceA28, "A28");
 
@@ -1813,7 +1809,7 @@ public void test028() {
 				-1);
 
 		DebugRequestor requestor = new DebugRequestor();
-		char[] snippet = 
+		char[] snippet =
 			("int[] tab = new int[] { 1, 2, 3, 4, 5};\n"
 			+ "int i =3;\n"
 			+ "switch(foo()) {\n"
@@ -1867,7 +1863,7 @@ public void test029() {
 				+ "\t\t} else {\n"
 				+ "\t\t\treturn 4;\n"
 				+ "\t\t}\n"
-				+ "\t}\n"               
+				+ "\t}\n"
 				+ "}";
 		compileAndDeploy(sourceA29, "A29");
 
@@ -1882,7 +1878,7 @@ public void test029() {
 				-1);
 
 		DebugRequestor requestor = new DebugRequestor();
-		char[] snippet = 
+		char[] snippet =
 			("int[] tab = new int[] { 1, 2, 3, 4, 5};\n"
 			+ "int i =3;\n"
 			+ "switch(foo()) {\n"
@@ -1936,7 +1932,7 @@ public void test030() {
 				+ "\t\t} else {\n"
 				+ "\t\t\treturn 4;\n"
 				+ "\t\t}\n"
-				+ "\t}\n"               
+				+ "\t}\n"
 				+ "}";
 		compileAndDeploy(sourceA30, "A30");
 
@@ -1951,7 +1947,7 @@ public void test030() {
 				-1);
 
 		DebugRequestor requestor = new DebugRequestor();
-		char[] snippet = 
+		char[] snippet =
 			("try {\n"
 			+ "int[] tab = new int[] { 1, 2, 3, 4};\n"
 			+ "int i =3;\n"
@@ -1976,7 +1972,7 @@ public void test030() {
 				getCompilerOptions(),
 				requestor,
 				getProblemFactory());
-		} catch (InstallException e) { 
+		} catch (InstallException e) {
 			assertTrue("One targetException : ArrayIndexOutOfBoundsException " + e.getMessage(), true);
 		}
 		assertTrue(
@@ -2029,7 +2025,7 @@ public void test031() {
 				getCompilerOptions(),
 				requestor,
 				getProblemFactory());
-		} catch (InstallException e) { 
+		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
 		}
 		assertTrue(
@@ -2090,7 +2086,7 @@ public void test032() {
 				getCompilerOptions(),
 				requestor,
 				getProblemFactory());
-		} catch (InstallException e) { 
+		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
 		}
 		assertTrue(
@@ -2109,7 +2105,7 @@ public void test032() {
 		}
 		assertEquals("Unexpected errors",
 			"The field B32.j is not visible|",
-			buffer == null ? "none" : buffer.toString());       
+			buffer == null ? "none" : buffer.toString());
 	} finally {
 		removeTempClass("B32");
 		removeTempClass("A32");
@@ -2149,7 +2145,7 @@ public void test033() {
 			"} catch(Exception e) {}\n" +
 			"return l;").toCharArray();
 		try {
-			final Map compilerOptions = getCompilerOptions();
+			final Map<String, String> compilerOptions = getCompilerOptions();
 			compilerOptions.put(CompilerOptions.OPTION_ReportUncheckedTypeOperation, CompilerOptions.IGNORE);
 
 			context.evaluate(
@@ -2164,7 +2160,7 @@ public void test033() {
 				compilerOptions,
 				requestor,
 				getProblemFactory());
-		} catch (InstallException e) { 
+		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
 		}
 		assertTrue(
@@ -2266,7 +2262,7 @@ public void test035() {
 				getCompilerOptions(),
 				requestor,
 				getProblemFactory());
-		} catch (InstallException e) { 
+		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
 		}
 		assertTrue(
@@ -2810,7 +2806,7 @@ public void test047() {
 		String sourceA47 =
 			"public class A47 {\n"
 				+ "\tstatic private A47 instance = new A47();\n"
-				+ "\tstatic private int Counter = 2;\n"             
+				+ "\tstatic private int Counter = 2;\n"
 				+ "\tpublic void bar() {\n"
 				+ "\t}\n"
 				+ "}";
@@ -2859,7 +2855,7 @@ public void test048() {
 		String sourceA48 =
 			"public class A48 {\n"
 				+ "\tstatic private A48 instance = new A48();\n"
-				+ "\tstatic private int Counter = 2;\n"             
+				+ "\tstatic private int Counter = 2;\n"
 				+ "\tpublic void bar() {\n"
 				+ "\t}\n"
 				+ "}";
@@ -2908,7 +2904,7 @@ public void test049() {
 		String sourceA49 =
 			"public class A49 {\n"
 				+ "\tstatic private A49 instance = new A49();\n"
-				+ "\tstatic private int Counter = 2;\n"             
+				+ "\tstatic private int Counter = 2;\n"
 				+ "\tpublic void bar() {\n"
 				+ "\t}\n"
 				+ "}";
@@ -2957,7 +2953,7 @@ public void test050() {
 		String sourceA50 =
 			"public class A50 {\n"
 				+ "\tstatic private A50 instance = new A50();\n"
-				+ "\tstatic private int Counter = 2;\n"             
+				+ "\tstatic private int Counter = 2;\n"
 				+ "\tpublic void bar() {\n"
 				+ "\t}\n"
 				+ "}";
@@ -3006,7 +3002,7 @@ public void test051() {
 		String sourceA51 =
 			"public class A51 {\n"
 				+ "\tstatic private A51 instance = new A51();\n"
-				+ "\tstatic private int Counter = 2;\n"             
+				+ "\tstatic private int Counter = 2;\n"
 				+ "\tpublic void bar() {\n"
 				+ "\t}\n"
 				+ "}";
@@ -3055,7 +3051,7 @@ public void test052() {
 		String sourceA52 =
 			"public class A52 {\n"
 				+ "\tstatic private A52 instance = new A52();\n"
-				+ "\tstatic private int Counter = 2;\n"             
+				+ "\tstatic private int Counter = 2;\n"
 				+ "\tpublic void bar() {\n"
 				+ "\t}\n"
 				+ "}";
@@ -3104,7 +3100,7 @@ public void test053() {
 		String sourceA53 =
 			"public class A53 {\n"
 				+ "\tstatic private A53 instance = new A53();\n"
-				+ "\tstatic private int Counter = 2;\n"             
+				+ "\tstatic private int Counter = 2;\n"
 				+ "\tpublic void bar() {\n"
 				+ "\t}\n"
 				+ "}";
@@ -3153,7 +3149,7 @@ public void test054() {
 		String sourceA54 =
 			"public class A54 {\n"
 				+ "\tstatic private A54 instance = new A54();\n"
-				+ "\tstatic private long Counter = 2L;\n"               
+				+ "\tstatic private long Counter = 2L;\n"
 				+ "\tpublic void bar() {\n"
 				+ "\t}\n"
 				+ "}";
@@ -3200,9 +3196,9 @@ public void test055() {
 	try {
 		String sourceA55 =
 			"public class A55 {\n"
-				+ "\tprivate int foo() {;\n"                
+				+ "\tprivate int foo() {;\n"
 				+ "\t\treturn 3;\n"
-				+ "\t}\n"               
+				+ "\t}\n"
 				+ "\tpublic void bar() {\n"
 				+ "\t}\n"
 				+ "}";
@@ -3249,9 +3245,9 @@ public void test056() {
 	try {
 		String sourceA56 =
 			"public class A56 {\n"
-				+ "\tprivate Integer foo() {;\n"                
+				+ "\tprivate Integer foo() {;\n"
 				+ "\t\treturn new Integer(3);\n"
-				+ "\t}\n"               
+				+ "\t}\n"
 				+ "\tpublic void bar() {\n"
 				+ "\t}\n"
 				+ "}";
@@ -3298,9 +3294,9 @@ public void test057() {
 	try {
 		String sourceA57 =
 			"public class A57 {\n"
-				+ "\tprivate Integer foo(int i) {;\n"               
+				+ "\tprivate Integer foo(int i) {;\n"
 				+ "\t\treturn new Integer(i);\n"
-				+ "\t}\n"               
+				+ "\t}\n"
 				+ "\tpublic void bar() {\n"
 				+ "\t}\n"
 				+ "}";
@@ -3349,7 +3345,7 @@ public void test058() {
 			"public class A58 {\n"
 				+ "\tprivate Integer foo(int i, int[] tab) {;\n"
 				+ "\t\treturn new Integer(i + tab.length);\n"
-				+ "\t}\n"               
+				+ "\t}\n"
 				+ "\tpublic void bar() {\n"
 				+ "\t}\n"
 				+ "}";
@@ -3398,7 +3394,7 @@ public void test059() {
 			"public class A59 {\n"
 				+ "\tprivate Integer foo(int i, Object[][] tab) {;\n"
 				+ "\t\treturn new Integer(i + tab.length);\n"
-				+ "\t}\n"               
+				+ "\t}\n"
 				+ "\tpublic void bar() {\n"
 				+ "\t}\n"
 				+ "}";
@@ -3450,7 +3446,7 @@ public void test060() {
 				+ "\t}\n"
 				+ "\tprivate A60(int i) {;\n"
 				+ "\t\tthis.i = i;\n"
-				+ "\t}\n"               
+				+ "\t}\n"
 				+ "\tpublic void bar() {\n"
 				+ "\t}\n"
 				+ "}";
@@ -3502,7 +3498,7 @@ public void test061() {
 				+ "\t}\n"
 				+ "\tprivate A61(int[] tab) {;\n"
 				+ "\t\tthis.i = tab.length;\n"
-				+ "\t}\n"               
+				+ "\t}\n"
 				+ "\tpublic void bar() {\n"
 				+ "\t}\n"
 				+ "}";
@@ -3605,7 +3601,7 @@ public void testNegative001() {
 		String userCode =
 			"new ANegative001().foo();";
 		JDIStackFrame stackFrame = new JDIStackFrame(
-			this.jdiVM, 
+			this.jdiVM,
 			this,
 			userCode,
 			"ANegative001",
@@ -3623,9 +3619,9 @@ public void testNegative001() {
 				stackFrame.declaringTypeName(),
 				true, // force is static
 				stackFrame.isConstructorCall(),
-				getEnv(), 
-				getCompilerOptions(), 
-				requestor, 
+				getEnv(),
+				getCompilerOptions(),
+				requestor,
 				getProblemFactory());
 		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
@@ -3665,7 +3661,7 @@ public void testNegative002() {
 		String userCode =
 			"new ANegative002().foo();";
 		JDIStackFrame stackFrame = new JDIStackFrame(
-			this.jdiVM, 
+			this.jdiVM,
 			this,
 			userCode,
 			"ANegative002",
@@ -3683,9 +3679,9 @@ public void testNegative002() {
 				stackFrame.declaringTypeName(),
 				true, // force is static
 				stackFrame.isConstructorCall(),
-				getEnv(), 
-				getCompilerOptions(), 
-				requestor, 
+				getEnv(),
+				getCompilerOptions(),
+				requestor,
 				getProblemFactory());
 		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
@@ -3725,7 +3721,7 @@ public void testNegative003() {
 		String userCode =
 			"new ANegative003().foo();";
 		JDIStackFrame stackFrame = new JDIStackFrame(
-			this.jdiVM, 
+			this.jdiVM,
 			this,
 			userCode,
 			"ANegative003",
@@ -3743,9 +3739,9 @@ public void testNegative003() {
 				stackFrame.declaringTypeName(),
 				true, // force is static
 				stackFrame.isConstructorCall(),
-				getEnv(), 
-				getCompilerOptions(), 
-				requestor, 
+				getEnv(),
+				getCompilerOptions(),
+				requestor,
 				getProblemFactory());
 		} catch (InstallException e) {
 			assertTrue("No targetException " + e.getMessage(), false);
@@ -3774,7 +3770,7 @@ public void testNegative003() {
 public void testNegative004() {
 	String userCode = "";
 	JDIStackFrame stackFrame = new JDIStackFrame(
-		this.jdiVM, 
+		this.jdiVM,
 		this,
 		userCode);
 
@@ -3789,9 +3785,9 @@ public void testNegative004() {
 			stackFrame.declaringTypeName(),
 			stackFrame.isStatic(),
 			stackFrame.isConstructorCall(),
-			getEnv(), 
-			getCompilerOptions(), 
-			requestor, 
+			getEnv(),
+			getCompilerOptions(),
+			requestor,
 			getProblemFactory());
 	} catch (InstallException e) {
 		assertTrue("No targetException " + e.getMessage(), false);
@@ -3835,7 +3831,7 @@ public void test063() {
 				"	sum += i;\n" +
 				"}\n" +
 				"sum").toCharArray();
-		Map compilerOpts = getCompilerOptions();
+		Map<String, String> compilerOpts = getCompilerOptions();
 		compilerOpts.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_5);
 		compilerOpts.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
 		compilerOpts.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_2);
@@ -3874,7 +3870,7 @@ public void test063() {
 public void testNegative005() {
 	String userCode = "";
 	JDIStackFrame stackFrame = new JDIStackFrame(
-		this.jdiVM, 
+		this.jdiVM,
 		this,
 		userCode);
 
@@ -3889,9 +3885,9 @@ public void testNegative005() {
 			stackFrame.declaringTypeName(),
 			stackFrame.isStatic(),
 			stackFrame.isConstructorCall(),
-			getEnv(), 
-			getCompilerOptions(), 
-			requestor, 
+			getEnv(),
+			getCompilerOptions(),
+			requestor,
 			getProblemFactory());
 	} catch (InstallException e) {
 		assertTrue("No targetException " + e.getMessage(), false);

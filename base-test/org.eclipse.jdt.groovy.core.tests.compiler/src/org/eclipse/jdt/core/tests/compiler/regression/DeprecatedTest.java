@@ -23,121 +23,121 @@ public DeprecatedTest(String name) {
 	super(name);
 }
 public static Test suite() {
-	return buildAllCompliancesTestSuite(testClass());
+	return buildAllCompliancesTestSuite(DeprecatedTest.class);
 }
 public void test001() {
 	this.runNegativeTest(new String[] {
 		"p/B.java",
-		"package p;\n" + 
-		"class B extends A {\n" + 
-		"    float x = super.x;\n" + 
+		"package p;\n" +
+		"class B extends A {\n" +
+		"    float x = super.x;\n" +
 		"}\n",
 
 		"p/A.java",
-		"package p;\n" + 
-		"class A {\n" + 
-		"    /** @deprecated */\n" + 
-		"    int x = 1;\n" + 
+		"package p;\n" +
+		"class A {\n" +
+		"    /** @deprecated */\n" +
+		"    int x = 1;\n" +
 		"}\n",
-	}, 
-	"----------\n" + 
-	"1. WARNING in p\\B.java (at line 3)\n" + 
-	"	float x = super.x;\n" + 
-	"	      ^\n" + 
-	"The field B.x is hiding a field from type A\n" + 
-	"----------\n" + 
-	"2. WARNING in p\\B.java (at line 3)\n" + 
-	"	float x = super.x;\n" + 
-	"	                ^\n" + 
-	"The field A.x is deprecated\n" + 
+	},
+	"----------\n" +
+	"1. WARNING in p\\B.java (at line 3)\n" +
+	"	float x = super.x;\n" +
+	"	      ^\n" +
+	"The field B.x is hiding a field from type A\n" +
+	"----------\n" +
+	"2. WARNING in p\\B.java (at line 3)\n" +
+	"	float x = super.x;\n" +
+	"	                ^\n" +
+	"The field A.x is deprecated\n" +
 	"----------\n"
 	);
 }
 public void test002() {
 	this.runNegativeTest(new String[] {
 		"p/C.java",
-		"package p;\n" + 
-		"class C {\n" + 
-		"    static int x = new A().x;\n" + 
-		"}\n",
-		
-		"p/A.java",
-		"package p;\n" + 
-		"class A {\n" + 
-		"    /** @deprecated */\n" + 
-		"    int x = 1;\n" + 
+		"package p;\n" +
+		"class C {\n" +
+		"    static int x = new A().x;\n" +
 		"}\n",
 
-	}, 
-		"----------\n" + 
-		"1. WARNING in p\\C.java (at line 3)\n" + 
-		"	static int x = new A().x;\n" + 
-		"	                       ^\n" + 
-		"The field A.x is deprecated\n" + 
+		"p/A.java",
+		"package p;\n" +
+		"class A {\n" +
+		"    /** @deprecated */\n" +
+		"    int x = 1;\n" +
+		"}\n",
+
+	},
+		"----------\n" +
+		"1. WARNING in p\\C.java (at line 3)\n" +
+		"	static int x = new A().x;\n" +
+		"	                       ^\n" +
+		"The field A.x is deprecated\n" +
 		"----------\n"
 	);
 }
 public void test003() {
 	this.runNegativeTest(new String[] {
 		"p/Top.java",
-		"package p;\n" + 
-		"public class Top {\n" + 
-		"  \n" + 
-		"  class M1 {\n" + 
-		"    class M2 {}\n" + 
-		"  };\n" + 
-		"  \n" + 
-		"  static class StaticM1 {\n" + 
-		"    static class StaticM2 {\n" + 
-		"      class NonStaticM3{}};\n" + 
-		"  };\n" + 
-		"  \n" + 
-		"public static void main(String argv[]){\n" + 
-		"  Top tip = new Top();\n" + 
-		"  System.out.println(\"Still alive 0\");\n" + 
-		"  tip.testStaticMember();\n" + 
-		"  System.out.println(\"Still alive 1\");\n" + 
-		"  tip.testStaticMember1();\n" + 
-		"  System.out.println(\"Still alive 2\");\n" + 
-		"  tip.testStaticMember2();\n" + 
-		"  System.out.println(\"Still alive 3\");\n" + 
-		"  tip.testStaticMember3();\n" + 
-		"  System.out.println(\"Still alive 4\");\n" + 
-		"  tip.testStaticMember4();\n" + 
-		"  System.out.println(\"Completed\");\n" + 
-		"}\n" + 
-		"  void testMember(){\n" + 
-		"    new M1().new M2();}\n" + 
-		"  void testStaticMember(){\n" + 
-		"    new StaticM1().new StaticM2();}\n" + 
-		"  void testStaticMember1(){\n" + 
-		"    new StaticM1.StaticM2();}\n" + 
-		"  void testStaticMember2(){\n" + 
-		"    new StaticM1.StaticM2().new NonStaticM3();}\n" + 
-		"  void testStaticMember3(){\n" + 
-		"    // define an anonymous subclass of the non-static M3\n" + 
-		"    new StaticM1.StaticM2().new NonStaticM3(){};\n" + 
-		"  }   \n" + 
-		"  void testStaticMember4(){\n" + 
-		"    // define an anonymous subclass of the non-static M3\n" + 
-		"    new StaticM1.StaticM2().new NonStaticM3(){\n" + 
-		"      Object hello(){\n" + 
-		"        return new StaticM1.StaticM2().new NonStaticM3();\n" + 
-		"      }};\n" + 
-		"      \n" + 
-		"  }    \n" + 
+		"package p;\n" +
+		"public class Top {\n" +
+		"  \n" +
+		"  class M1 {\n" +
+		"    class M2 {}\n" +
+		"  };\n" +
+		"  \n" +
+		"  static class StaticM1 {\n" +
+		"    static class StaticM2 {\n" +
+		"      class NonStaticM3{}};\n" +
+		"  };\n" +
+		"  \n" +
+		"public static void main(String argv[]){\n" +
+		"  Top tip = new Top();\n" +
+		"  System.out.println(\"Still alive 0\");\n" +
+		"  tip.testStaticMember();\n" +
+		"  System.out.println(\"Still alive 1\");\n" +
+		"  tip.testStaticMember1();\n" +
+		"  System.out.println(\"Still alive 2\");\n" +
+		"  tip.testStaticMember2();\n" +
+		"  System.out.println(\"Still alive 3\");\n" +
+		"  tip.testStaticMember3();\n" +
+		"  System.out.println(\"Still alive 4\");\n" +
+		"  tip.testStaticMember4();\n" +
+		"  System.out.println(\"Completed\");\n" +
+		"}\n" +
+		"  void testMember(){\n" +
+		"    new M1().new M2();}\n" +
+		"  void testStaticMember(){\n" +
+		"    new StaticM1().new StaticM2();}\n" +
+		"  void testStaticMember1(){\n" +
+		"    new StaticM1.StaticM2();}\n" +
+		"  void testStaticMember2(){\n" +
+		"    new StaticM1.StaticM2().new NonStaticM3();}\n" +
+		"  void testStaticMember3(){\n" +
+		"    // define an anonymous subclass of the non-static M3\n" +
+		"    new StaticM1.StaticM2().new NonStaticM3(){};\n" +
+		"  }   \n" +
+		"  void testStaticMember4(){\n" +
+		"    // define an anonymous subclass of the non-static M3\n" +
+		"    new StaticM1.StaticM2().new NonStaticM3(){\n" +
+		"      Object hello(){\n" +
+		"        return new StaticM1.StaticM2().new NonStaticM3();\n" +
+		"      }};\n" +
+		"      \n" +
+		"  }    \n" +
 		"}\n",
-		}, 
-		"----------\n" + 
-		"1. ERROR in p\\Top.java (at line 30)\n" + 
-		"	new StaticM1().new StaticM2();}\n" + 
-		"	^^^^^^^^^^^^^^\n" + 
-		"Illegal enclosing instance specification for type Top.StaticM1.StaticM2\n" + 
-		"----------\n" + 
-		"2. WARNING in p\\Top.java (at line 42)\n" + 
-		"	Object hello(){\n" + 
-		"	       ^^^^^^^\n" + 
-		"The method hello() from the type new Top.StaticM1.StaticM2.NonStaticM3(){} is never used locally\n" + 
+		},
+		"----------\n" +
+		"1. ERROR in p\\Top.java (at line 30)\n" +
+		"	new StaticM1().new StaticM2();}\n" +
+		"	^^^^^^^^^^^^^^\n" +
+		"Illegal enclosing instance specification for type Top.StaticM1.StaticM2\n" +
+		"----------\n" +
+		"2. WARNING in p\\Top.java (at line 42)\n" +
+		"	Object hello(){\n" +
+		"	       ^^^^^^^\n" +
+		"The method hello() from the type new Top.StaticM1.StaticM2.NonStaticM3(){} is never used locally\n" +
 		"----------\n");
 }
 /**
@@ -146,7 +146,7 @@ public void test003() {
 public void test004() {
 	this.runNegativeTest(new String[] {
 		"p/Warning.java",
-		"package p;\n" + 
+		"package p;\n" +
 		"import java.util.Date;\n" +
 		"public class Warning {\n" +
 		"public Warning() {\n" +
@@ -155,24 +155,24 @@ public void test004() {
 		"     dateObj.UTC(1,2,3,4,5,6);\n" +
 		"}\n" +
 		"}\n",
-		}, 
-		"----------\n" + 
-		"1. WARNING in p\\Warning.java (at line 7)\n" + 
-		"	dateObj.UTC(1,2,3,4,5,6);\n" + 
-		"	^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"The static method UTC(int, int, int, int, int, int) from the type Date should be accessed in a static way\n" + 
-		"----------\n" + 
-		"2. WARNING in p\\Warning.java (at line 7)\n" + 
-		"	dateObj.UTC(1,2,3,4,5,6);\n" + 
-		"	^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"The method UTC(int, int, int, int, int, int) from the type Date is deprecated\n" + 
+		},
+		"----------\n" +
+		"1. WARNING in p\\Warning.java (at line 7)\n" +
+		"	dateObj.UTC(1,2,3,4,5,6);\n" +
+		"	^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"The static method UTC(int, int, int, int, int, int) from the type Date should be accessed in a static way\n" +
+		"----------\n" +
+		"2. WARNING in p\\Warning.java (at line 7)\n" +
+		"	dateObj.UTC(1,2,3,4,5,6);\n" +
+		"	^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"The method UTC(int, int, int, int, int, int) from the type Date is deprecated\n" +
 		"----------\n");
 }
 public void test005() {
 	this.runConformTest(
 		new String[] {
 			"X.java",
-		  "public class X {\n"
+			"public class X {\n"
 			+ "/**\n"
 			+ " * @deprecated\n"
 			+ " */\n"
@@ -194,11 +194,11 @@ public void test005() {
 			"A.java",
 			"public class A extends X.Y {}"
 		},
-		"----------\n" + 
-		"1. WARNING in A.java (at line 1)\n" + 
-		"	public class A extends X.Y {}\n" + 
-		"	                       ^^^\n" + 
-		"The type X.Y is deprecated\n" + 
+		"----------\n" +
+		"1. WARNING in A.java (at line 1)\n" +
+		"	public class A extends X.Y {}\n" +
+		"	                       ^^^\n" +
+		"The type X.Y is deprecated\n" +
 		"----------\n",// expected output
 		null,
 		false, // flush previous output dir content
@@ -228,7 +228,7 @@ public void test006() {
 		null); // custom requestor
 		runConformTest(
 			// test directory preparation
-	 		false /* do not flush output directory */,
+			false /* do not flush output directory */,
 			new String[] { /* test files */
 				"A.java",
 				"public class A {\n" +
@@ -250,34 +250,34 @@ public void test007() {
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
-			"/**\n" + 
-			" * @deprecated\n" + 
-			" */\n" + 
-			"public class X {\n" + 
+			"/**\n" +
+			" * @deprecated\n" +
+			" */\n" +
+			"public class X {\n" +
 			"}\n",
-			
+
 			"Y.java",
-			"/**\n" + 
-			" * @deprecated\n" + 
-			" */\n" + 
-			"public class Y {\n" + 
+			"/**\n" +
+			" * @deprecated\n" +
+			" */\n" +
+			"public class Y {\n" +
 			"  Zork z;\n" +
 			"  X x;\n" +
-			"  X foo() {\n" + 
-			"    X x; // unexpected deprecated warning here\n" + 
-			"  }\n" + 
+			"  X foo() {\n" +
+			"    X x; // unexpected deprecated warning here\n" +
+			"  }\n" +
 			"}\n",
-		}, 
-		"----------\n" + 
-		"1. ERROR in Y.java (at line 5)\n" + 
-		"	Zork z;\n" + 
-		"	^^^^\n" + 
-		"Zork cannot be resolved to a type\n" + 
-		"----------\n" + 
-		"2. WARNING in Y.java (at line 8)\n" + 
-		"	X x; // unexpected deprecated warning here\n" + 
-		"	  ^\n" + 
-		"The local variable x is hiding a field from type Y\n" + 
+		},
+		"----------\n" +
+		"1. ERROR in Y.java (at line 5)\n" +
+		"	Zork z;\n" +
+		"	^^^^\n" +
+		"Zork cannot be resolved to a type\n" +
+		"----------\n" +
+		"2. WARNING in Y.java (at line 8)\n" +
+		"	X x; // unexpected deprecated warning here\n" +
+		"	  ^\n" +
+		"The local variable x is hiding a field from type Y\n" +
 		"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=88124 - variation
@@ -285,31 +285,31 @@ public void test008() {
 	this.runConformTest(
 		new String[] {
 			"X.java",
-			"/**\n" + 
-			" * @deprecated\n" + 
-			" */\n" + 
-			"public class X {\n" + 
+			"/**\n" +
+			" * @deprecated\n" +
+			" */\n" +
+			"public class X {\n" +
 			"}\n",
 		},
 		"");
 	this.runNegativeTest(
 		new String[] {
 			"Y.java",
-			"/**\n" + 
-			" * @deprecated\n" + 
-			" */\n" + 
-			"public class Y {\n" + 
+			"/**\n" +
+			" * @deprecated\n" +
+			" */\n" +
+			"public class Y {\n" +
 			"  Zork z;\n" +
-			"  void foo() {\n" + 
-			"    X x; // unexpected deprecated warning here\n" + 
-			"  }\n" + 
+			"  void foo() {\n" +
+			"    X x; // unexpected deprecated warning here\n" +
+			"  }\n" +
 			"}\n",
-		}, 
-		"----------\n" + 
-		"1. ERROR in Y.java (at line 5)\n" + 
-		"	Zork z;\n" + 
-		"	^^^^\n" + 
-		"Zork cannot be resolved to a type\n" + 
+		},
+		"----------\n" +
+		"1. ERROR in Y.java (at line 5)\n" +
+		"	Zork z;\n" +
+		"	^^^^\n" +
+		"Zork cannot be resolved to a type\n" +
 		"----------\n",// expected output
 		null,
 		false, // flush previous output dir content
@@ -320,70 +320,70 @@ public void test009() {
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
-			"/**\n" + 
-			" * @deprecated\n" + 
-			" */\n" + 
-			"public class X {\n" + 
+			"/**\n" +
+			" * @deprecated\n" +
+			" */\n" +
+			"public class X {\n" +
 			"}\n",
-			
+
 			"Y.java",
-			"/**\n" + 
-			" * @deprecated\n" + 
-			" */\n" + 
-			"public class Y {\n" + 
+			"/**\n" +
+			" * @deprecated\n" +
+			" */\n" +
+			"public class Y {\n" +
 			"  Zork z;\n" +
-			"  void foo() {\n" + 
-			"    X x; // unexpected deprecated warning here\n" + 
-			"  }\n" + 
+			"  void foo() {\n" +
+			"    X x; // unexpected deprecated warning here\n" +
+			"  }\n" +
 			"}\n",
-		}, 
-		"----------\n" + 
-		"1. ERROR in Y.java (at line 5)\n" + 
-		"	Zork z;\n" + 
-		"	^^^^\n" + 
-		"Zork cannot be resolved to a type\n" + 
+		},
+		"----------\n" +
+		"1. ERROR in Y.java (at line 5)\n" +
+		"	Zork z;\n" +
+		"	^^^^\n" +
+		"Zork cannot be resolved to a type\n" +
 		"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=88187
 public void test010() {
-	Map customOptions = getCompilerOptions();
+	Map<String, String> customOptions = getCompilerOptions();
 //	customOptions.put(CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);
 //	customOptions.put(CompilerOptions.OPTION_ReportInvalidAnnotation, CompilerOptions.WARNING);
 	this.runNegativeTest(
 		new String[] {
-            "X.java",
-            "/**\n" + 
-            " * @deprecated\n" + 
-            " */\n" + 
-            "public class X {\n" + 
-            "        /**\n" + 
-            "         * @see I2#foo()\n" + 
-            "         */\n" + 
-            "        I1 foo() {\n" + 
-            "                return null;\n" + 
-            "        }\n" + 
-            "       Zork z;\n" +
-            "}\n",              
+			"X.java",
+			"/**\n" +
+			" * @deprecated\n" +
+			" */\n" +
+			"public class X {\n" +
+			"        /**\n" +
+			"         * @see I2#foo()\n" +
+			"         */\n" +
+			"        I1 foo() {\n" +
+			"                return null;\n" +
+			"        }\n" +
+			"       Zork z;\n" +
+			"}\n",
 			"I1.java",
-			"/**\n" + 
-			" * @deprecated\n" + 
-			" */\n" + 
-			"public interface I1 {\n" + 
-			"		 // empty block\n" + 
+			"/**\n" +
+			" * @deprecated\n" +
+			" */\n" +
+			"public interface I1 {\n" +
+			"		 // empty block\n" +
 			"}\n",
 			"I2.java",
-			"/**\n" + 
-			" * @deprecated\n" + 
-			" */\n" + 
-			"public interface I2 {\n" + 
-			"		 I1 foo(); // unexpected warning here\n" + 
+			"/**\n" +
+			" * @deprecated\n" +
+			" */\n" +
+			"public interface I2 {\n" +
+			"		 I1 foo(); // unexpected warning here\n" +
 			"}\n",
-		}, 
-		"----------\n" + 
-		"1. ERROR in X.java (at line 11)\n" + 
-		"	Zork z;\n" + 
-		"	^^^^\n" + 
-		"Zork cannot be resolved to a type\n" + 
+		},
+		"----------\n" +
+		"1. ERROR in X.java (at line 11)\n" +
+		"	Zork z;\n" +
+		"	^^^^\n" +
+		"Zork cannot be resolved to a type\n" +
 		"----------\n",
 		null,
 		true,
@@ -397,60 +397,60 @@ public void test011() {
 				"package p1;\n" +
 				"import p2.I;\n" +
 				"/** @deprecated */\n" +
-				"public class X {\n" + 
+				"public class X {\n" +
 				"	Zork z;\n" +
 				"}\n", // =================
 				"p2/I.java", // =================
 				"package p2;\n" +
-				"/** @deprecated */\n" + 
-				"public interface I {\n" + 
+				"/** @deprecated */\n" +
+				"public interface I {\n" +
 				"}\n", // =================
 		},
-		"----------\n" + 
-		"1. ERROR in p1\\X.java (at line 5)\n" + 
-		"	Zork z;\n" + 
-		"	^^^^\n" + 
-		"Zork cannot be resolved to a type\n" + 
+		"----------\n" +
+		"1. ERROR in p1\\X.java (at line 5)\n" +
+		"	Zork z;\n" +
+		"	^^^^\n" +
+		"Zork cannot be resolved to a type\n" +
 		"----------\n");
-}         
+}
 
 // @deprecated upon locals do not influence the deprecation diagnostic
 // JLS3 9.6
 public void test012() {
-	Map customOptions = getCompilerOptions();
-	customOptions.put(CompilerOptions.OPTION_ReportDeprecation, 
+	Map<String, String> customOptions = getCompilerOptions();
+	customOptions.put(CompilerOptions.OPTION_ReportDeprecation,
 		CompilerOptions.ERROR);
-	customOptions.put(CompilerOptions.OPTION_ReportDeprecationInDeprecatedCode, 
+	customOptions.put(CompilerOptions.OPTION_ReportDeprecationInDeprecatedCode,
 		CompilerOptions.IGNORE);
 	runNegativeTest(
 		// test directory preparation
-		true /* flush output directory */, 
+		true /* flush output directory */,
 		new String[] { /* test files */
-            "X.java",
-			"public class X {\n" + 
-			"    void foo() {\n" + 
-			"        /** @deprecated */\n" + 
-			"        int i1 = Y.m;\n" + 
-			"    }\n" + 
-			"    /** @deprecated */\n" + 
-			"    void bar() {\n" + 
-			"        int i1 = Y.m;\n" + 
-			"    }\n" + 
+			"X.java",
+			"public class X {\n" +
+			"    void foo() {\n" +
+			"        /** @deprecated */\n" +
+			"        int i1 = Y.m;\n" +
+			"    }\n" +
+			"    /** @deprecated */\n" +
+			"    void bar() {\n" +
+			"        int i1 = Y.m;\n" +
+			"    }\n" +
 			"}\n",
-            "Y.java",
-			"public class Y {\n" + 
-			"    /** @deprecated */\n" + 
-			"    static int m;\n" +			
+			"Y.java",
+			"public class Y {\n" +
+			"    /** @deprecated */\n" +
+			"    static int m;\n" +
 			"}\n",	},
 			// compiler options
 			null /* no class libraries */,
 			customOptions /* custom options */,
 			// compiler results
 			"----------\n" + /* expected compiler log */
-			"1. ERROR in X.java (at line 4)\n" + 
-			"	int i1 = Y.m;\n" + 
-			"	           ^\n" + 
-			"The field Y.m is deprecated\n" + 
+			"1. ERROR in X.java (at line 4)\n" +
+			"	int i1 = Y.m;\n" +
+			"	           ^\n" +
+			"The field Y.m is deprecated\n" +
 			"----------\n",
 			// javac options
 			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);
@@ -461,30 +461,30 @@ public void test012() {
 // @Deprecated variant
 public void test013() {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		Map customOptions = getCompilerOptions();
-		customOptions.put(CompilerOptions.OPTION_ReportDeprecation, 
+		Map<String, String> customOptions = getCompilerOptions();
+		customOptions.put(CompilerOptions.OPTION_ReportDeprecation,
 			CompilerOptions.ERROR);
-		customOptions.put(CompilerOptions.OPTION_ReportDeprecationInDeprecatedCode, 
+		customOptions.put(CompilerOptions.OPTION_ReportDeprecationInDeprecatedCode,
 			CompilerOptions.IGNORE);
 		runNegativeTest(
 			// test directory preparation
-			true /* flush output directory */, 
+			true /* flush output directory */,
 			new String[] { /* test files */
-	            "X.java",
-				"public class X {\n" + 
-				"    void foo() {\n" + 
-				"        @Deprecated\n" + 
-				"        int i1 = Y.m;\n" + 
-				"    }\n" + 
-				"    @Deprecated\n" + 
-				"    void bar() {\n" + 
-				"        int i1 = Y.m;\n" + 
-				"    }\n" + 
+				"X.java",
+				"public class X {\n" +
+				"    void foo() {\n" +
+				"        @Deprecated\n" +
+				"        int i1 = Y.m;\n" +
+				"    }\n" +
+				"    @Deprecated\n" +
+				"    void bar() {\n" +
+				"        int i1 = Y.m;\n" +
+				"    }\n" +
 				"}\n",
-	            "Y.java",
-				"public class Y {\n" + 
-				"    @Deprecated\n" + 
-				"    static int m;\n" +			
+				"Y.java",
+				"public class Y {\n" +
+				"    @Deprecated\n" +
+				"    static int m;\n" +
 				"}\n",
 			},
 			// compiler options
@@ -492,10 +492,10 @@ public void test013() {
 			customOptions /* custom options */,
 			// compiler results
 			"----------\n" + /* expected compiler log */
-			"1. ERROR in X.java (at line 4)\n" + 
-			"	int i1 = Y.m;\n" + 
-			"	           ^\n" + 
-			"The field Y.m is deprecated\n" + 
+			"1. ERROR in X.java (at line 4)\n" +
+			"	int i1 = Y.m;\n" +
+			"	           ^\n" +
+			"The field Y.m is deprecated\n" +
 			"----------\n",
 			// javac options
 			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);
@@ -507,65 +507,65 @@ public void test014() {
 		new String[] {
 			"p/X.java",
 			"package p;\n" +
-			"/**\n" + 
-			" * @deprecated\n" + 
-			" */\n" + 
-			"public class X {\n" + 
+			"/**\n" +
+			" * @deprecated\n" +
+			" */\n" +
+			"public class X {\n" +
 			"}\n",
 			"Y.java",
 			"import p.X;\n" +
-			"public class Y {\n" + 
+			"public class Y {\n" +
 			"  Zork z;\n" +
-			"  void foo() {\n" + 
-			"    X x;\n" + 
-			"    X[] xs = { x };\n" + 
-			"  }\n" + 
-			"  void bar() {\n" + 
-			"    p.X x;\n" + 
-			"    p.X[] xs = { x };\n" + 
-			"  }\n" + 
+			"  void foo() {\n" +
+			"    X x;\n" +
+			"    X[] xs = { x };\n" +
+			"  }\n" +
+			"  void bar() {\n" +
+			"    p.X x;\n" +
+			"    p.X[] xs = { x };\n" +
+			"  }\n" +
 			"}\n",
-		}, 
-		"----------\n" + 
-		"1. WARNING in Y.java (at line 1)\n" + 
-		"	import p.X;\n" + 
-		"	       ^^^\n" + 
-		"The type X is deprecated\n" + 
-		"----------\n" + 
-		"2. ERROR in Y.java (at line 3)\n" + 
-		"	Zork z;\n" + 
-		"	^^^^\n" + 
-		"Zork cannot be resolved to a type\n" + 
-		"----------\n" + 
-		"3. WARNING in Y.java (at line 5)\n" + 
-		"	X x;\n" + 
-		"	^\n" + 
-		"The type X is deprecated\n" + 
-		"----------\n" + 
-		"4. WARNING in Y.java (at line 6)\n" + 
-		"	X[] xs = { x };\n" + 
-		"	^\n" + 
-		"The type X is deprecated\n" + 
-		"----------\n" + 
-		"5. WARNING in Y.java (at line 9)\n" + 
-		"	p.X x;\n" + 
-		"	^^^\n" + 
-		"The type X is deprecated\n" + 
-		"----------\n" + 
-		"6. WARNING in Y.java (at line 10)\n" + 
-		"	p.X[] xs = { x };\n" + 
-		"	^^^\n" + 
-		"The type X is deprecated\n" + 
+		},
+		"----------\n" +
+		"1. WARNING in Y.java (at line 1)\n" +
+		"	import p.X;\n" +
+		"	       ^^^\n" +
+		"The type X is deprecated\n" +
+		"----------\n" +
+		"2. ERROR in Y.java (at line 3)\n" +
+		"	Zork z;\n" +
+		"	^^^^\n" +
+		"Zork cannot be resolved to a type\n" +
+		"----------\n" +
+		"3. WARNING in Y.java (at line 5)\n" +
+		"	X x;\n" +
+		"	^\n" +
+		"The type X is deprecated\n" +
+		"----------\n" +
+		"4. WARNING in Y.java (at line 6)\n" +
+		"	X[] xs = { x };\n" +
+		"	^\n" +
+		"The type X is deprecated\n" +
+		"----------\n" +
+		"5. WARNING in Y.java (at line 9)\n" +
+		"	p.X x;\n" +
+		"	^^^\n" +
+		"The type X is deprecated\n" +
+		"----------\n" +
+		"6. WARNING in Y.java (at line 10)\n" +
+		"	p.X[] xs = { x };\n" +
+		"	^^^\n" +
+		"The type X is deprecated\n" +
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=159709
-// the order of the CUs must not modify the behavior, see also test016 
+// the order of the CUs must not modify the behavior, see also test016
 public void test015() {
-	Map customOptions = new HashMap();
+	Map<String, String> customOptions = new HashMap<String, String>();
 	customOptions.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.ERROR);
 	runNegativeTest(
 		// test directory preparation
-		true /* flush output directory */, 
+		true /* flush output directory */,
 		new String[] { /* test files */
 			"p/M1.java",
 			"package p;\n" +
@@ -573,12 +573,12 @@ public void test015() {
 			"  void bar() {\n" +
 			"    a.N1.N2.N3 m = null;\n" +
 			"    m.foo();\n" +
-			"  }\n" + 
+			"  }\n" +
 			"}\n",
 			"a/N1.java",
 			"package a;\n" +
 			"public class N1 {\n" +
-			"  /** @deprecated */\n" + 
+			"  /** @deprecated */\n" +
 			"  public class N2 {" +
 			"    public class N3 {" +
 			"      public void foo() {}" +
@@ -591,37 +591,37 @@ public void test015() {
 		customOptions /* custom options */,
 		// compiler results
 		"----------\n" + /* expected compiler log */
-		"1. ERROR in p\\M1.java (at line 4)\n" + 
-		"	a.N1.N2.N3 m = null;\n" + 
-		"	^^^^^^^^^^\n" + 
-		"The type N1.N2 is deprecated\n" + 
-		"----------\n" + 
-		"2. ERROR in p\\M1.java (at line 4)\n" + 
-		"	a.N1.N2.N3 m = null;\n" + 
-		"	^^^^^^^^^^\n" + 
-		"The type N1.N2.N3 is deprecated\n" + 
-		"----------\n" + 
-		"3. ERROR in p\\M1.java (at line 5)\n" + 
-		"	m.foo();\n" + 
-		"	^^^^^^^\n" + 
-		"The method foo() from the type N1.N2.N3 is deprecated\n" + 
+		"1. ERROR in p\\M1.java (at line 4)\n" +
+		"	a.N1.N2.N3 m = null;\n" +
+		"	^^^^^^^^^^\n" +
+		"The type N1.N2 is deprecated\n" +
+		"----------\n" +
+		"2. ERROR in p\\M1.java (at line 4)\n" +
+		"	a.N1.N2.N3 m = null;\n" +
+		"	^^^^^^^^^^\n" +
+		"The type N1.N2.N3 is deprecated\n" +
+		"----------\n" +
+		"3. ERROR in p\\M1.java (at line 5)\n" +
+		"	m.foo();\n" +
+		"	^^^^^^^\n" +
+		"The method foo() from the type N1.N2.N3 is deprecated\n" +
 		"----------\n",
 		// javac options
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);
-	
+
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=159709
 public void test016() {
-	Map customOptions = new HashMap();
+	Map<String, String> customOptions = new HashMap<String, String>();
 	customOptions.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.ERROR);
 	runNegativeTest(
 		// test directory preparation
-		true /* flush output directory */, 
+		true /* flush output directory */,
 		new String[] { /* test files */
 			"a/N1.java",
 			"package a;\n" +
 			"public class N1 {\n" +
-			"  /** @deprecated */\n" + 
+			"  /** @deprecated */\n" +
 			"  public class N2 {" +
 			"    public class N3 {" +
 			"      public void foo() {}" +
@@ -634,7 +634,7 @@ public void test016() {
 			"  void bar() {\n" +
 			"    a.N1.N2.N3 m = null;\n" +
 			"    m.foo();\n" +
-			"  }\n" + 
+			"  }\n" +
 			"}\n",
 		},
 		// compiler options
@@ -642,20 +642,20 @@ public void test016() {
 		customOptions /* custom options */,
 		// compiler results
 		"----------\n" + /* expected compiler log */
-		"1. ERROR in p\\M1.java (at line 4)\n" + 
-		"	a.N1.N2.N3 m = null;\n" + 
-		"	^^^^^^^^^^\n" + 
-		"The type N1.N2 is deprecated\n" + 
-		"----------\n" + 
-		"2. ERROR in p\\M1.java (at line 4)\n" + 
-		"	a.N1.N2.N3 m = null;\n" + 
-		"	^^^^^^^^^^\n" + 
-		"The type N1.N2.N3 is deprecated\n" + 
-		"----------\n" + 
-		"3. ERROR in p\\M1.java (at line 5)\n" + 
-		"	m.foo();\n" + 
-		"	^^^^^^^\n" + 
-		"The method foo() from the type N1.N2.N3 is deprecated\n" + 
+		"1. ERROR in p\\M1.java (at line 4)\n" +
+		"	a.N1.N2.N3 m = null;\n" +
+		"	^^^^^^^^^^\n" +
+		"The type N1.N2 is deprecated\n" +
+		"----------\n" +
+		"2. ERROR in p\\M1.java (at line 4)\n" +
+		"	a.N1.N2.N3 m = null;\n" +
+		"	^^^^^^^^^^\n" +
+		"The type N1.N2.N3 is deprecated\n" +
+		"----------\n" +
+		"3. ERROR in p\\M1.java (at line 5)\n" +
+		"	m.foo();\n" +
+		"	^^^^^^^\n" +
+		"The method foo() from the type N1.N2.N3 is deprecated\n" +
 		"----------\n",
 		// javac options
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);
@@ -664,7 +664,7 @@ public void test016() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=159709
 // variant: self-contained case, hence no report
 public void test017() {
-	Map customOptions = new HashMap();
+	Map<String, String> customOptions = new HashMap<String, String>();
 	customOptions.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.ERROR);
 	customOptions.put(CompilerOptions.OPTION_ReportDeprecationInDeprecatedCode, CompilerOptions.ERROR);
 	this.runConformTest(
@@ -672,7 +672,7 @@ public void test017() {
 			"a/N1.java",
 			"package a;\n" +
 			"public class N1 {\n" +
-			"  /** @deprecated */\n" + 
+			"  /** @deprecated */\n" +
 			"  public class N2 {" +
 			"    public class N3 {" +
 			"      public void foo() {}" +
@@ -681,9 +681,9 @@ public void test017() {
 			"  void bar() {\n" +
 			"    a.N1.N2.N3 m = null;\n" +
 			"    m.foo();\n" +
-			"  }\n" + 
+			"  }\n" +
 			"}\n"
-		}, 
+		},
 		"",
 		null,
 		true,
@@ -696,7 +696,7 @@ public void test017() {
 // variant: using a binary class
 // **
 public void test018() {
-	Map customOptions = new HashMap();
+	Map<String, String> customOptions = new HashMap<String, String>();
 	customOptions.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.ERROR);
 	customOptions.put(CompilerOptions.OPTION_ReportDeprecationInDeprecatedCode, CompilerOptions.ERROR);
 	this.runConformTest(
@@ -704,14 +704,14 @@ public void test018() {
 			"a/N1.java",
 			"package a;\n" +
 			"public class N1 {\n" +
-			"  /** @deprecated */\n" + 
+			"  /** @deprecated */\n" +
 			"  public class N2 {" +
 			"    public class N3 {" +
 			"      public void foo() {}" +
 			"    }" +
 			"  }" +
 			"}\n"
-		}, 
+		},
 		"",
 		null,
 		true,
@@ -721,7 +721,7 @@ public void test018() {
 		false);
 	runNegativeTest(
 		// test directory preparation
-		false /* do not flush output directory */, 
+		false /* do not flush output directory */,
 		new String[] { /* test files */
 			"p/M1.java",
 			"package p;\n" +
@@ -729,7 +729,7 @@ public void test018() {
 			"  void bar() {\n" +
 			"    a.N1.N2.N3 m = null;\n" +
 			"    m.foo();\n" +
-			"  }\n" + 
+			"  }\n" +
 			"}\n"
 		},
 		// compiler options
@@ -737,45 +737,45 @@ public void test018() {
 		customOptions /* custom options */,
 		// compiler results
 		"----------\n" + /* expected compiler log */
-		"1. ERROR in p\\M1.java (at line 4)\n" + 
-		"	a.N1.N2.N3 m = null;\n" + 
-		"	^^^^^^^^^^\n" + 
-		"The type N1.N2 is deprecated\n" + 
-		"----------\n" + 
-		"2. ERROR in p\\M1.java (at line 4)\n" + 
-		"	a.N1.N2.N3 m = null;\n" + 
-		"	^^^^^^^^^^\n" + 
-		"The type N1.N2.N3 is deprecated\n" + 
-		"----------\n" + 
-		"3. ERROR in p\\M1.java (at line 5)\n" + 
-		"	m.foo();\n" + 
-		"	^^^^^^^\n" + 
-		"The method foo() from the type N1.N2.N3 is deprecated\n" + 
+		"1. ERROR in p\\M1.java (at line 4)\n" +
+		"	a.N1.N2.N3 m = null;\n" +
+		"	^^^^^^^^^^\n" +
+		"The type N1.N2 is deprecated\n" +
+		"----------\n" +
+		"2. ERROR in p\\M1.java (at line 4)\n" +
+		"	a.N1.N2.N3 m = null;\n" +
+		"	^^^^^^^^^^\n" +
+		"The type N1.N2.N3 is deprecated\n" +
+		"----------\n" +
+		"3. ERROR in p\\M1.java (at line 5)\n" +
+		"	m.foo();\n" +
+		"	^^^^^^^\n" +
+		"The method foo() from the type N1.N2.N3 is deprecated\n" +
 		"----------\n",
 		// javac options
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=191909 (1.4 variant)
 public void test019() {
-	Map customOptions = new HashMap();
+	Map<String, String> customOptions = new HashMap<String, String>();
 	customOptions.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.ERROR);
 	runNegativeTest(
 		// test directory preparation
-		true /* flush output directory */, 
+		true /* flush output directory */,
 		new String[] { /* test files */
 			"test1/E01.java",
-			"package test1;\n" + 
-			"public class E01 {\n" + 
-			"	/** @deprecated */\n" + 
-			"	public static int x = 5, y= 10;\n" + 
+			"package test1;\n" +
+			"public class E01 {\n" +
+			"	/** @deprecated */\n" +
+			"	public static int x = 5, y= 10;\n" +
 			"}",
 			"test1/E02.java",
-			"package test1;\n" + 
-			"public class E02 {\n" + 
-			"	public void foo() {\n" + 
-			"		System.out.println(E01.x);\n" + 
-			"		System.out.println(E01.y);\n" + 
-			"	}\n" + 
+			"package test1;\n" +
+			"public class E02 {\n" +
+			"	public void foo() {\n" +
+			"		System.out.println(E01.x);\n" +
+			"		System.out.println(E01.y);\n" +
+			"	}\n" +
 			"}"
 		},
 		// compiler options
@@ -783,20 +783,17 @@ public void test019() {
 		customOptions /* custom options */,
 		// compiler results
 		"----------\n" + /* expected compiler log */
-		"1. ERROR in test1\\E02.java (at line 4)\n" + 
-		"	System.out.println(E01.x);\n" + 
-		"	                       ^\n" + 
-		"The field E01.x is deprecated\n" + 
-		"----------\n" + 
-		"2. ERROR in test1\\E02.java (at line 5)\n" + 
-		"	System.out.println(E01.y);\n" + 
-		"	                       ^\n" + 
-		"The field E01.y is deprecated\n" + 
+		"1. ERROR in test1\\E02.java (at line 4)\n" +
+		"	System.out.println(E01.x);\n" +
+		"	                       ^\n" +
+		"The field E01.x is deprecated\n" +
+		"----------\n" +
+		"2. ERROR in test1\\E02.java (at line 5)\n" +
+		"	System.out.println(E01.y);\n" +
+		"	                       ^\n" +
+		"The field E01.y is deprecated\n" +
 		"----------\n",
 		// javac options
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);
-}
-public static Class testClass() {
-	return DeprecatedTest.class;
 }
 }

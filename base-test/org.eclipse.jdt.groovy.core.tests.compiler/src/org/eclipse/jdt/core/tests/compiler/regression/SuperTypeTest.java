@@ -28,13 +28,9 @@ public class SuperTypeTest extends AbstractRegressionTest {
 //		TESTS_NUMBERS = new int[] { 42, 43, 44 };
 //		TESTS_RANGE = new int[] { 11, -1 };
 	}
-	
-	public static Test suite() {
-		return buildAllCompliancesTestSuite(testClass());
-	}
 
-	public static Class testClass() {
-		return SuperTypeTest.class;
+	public static Test suite() {
+		return buildAllCompliancesTestSuite(SuperTypeTest.class);
 	}
 
 	/**
@@ -45,26 +41,26 @@ public class SuperTypeTest extends AbstractRegressionTest {
 			new String[] {
 				/* org.eclipse.curiosity.A */
 				"org/eclipse/curiosity/A.java",
-				"package org.eclipse.curiosity;\n" + 
-				"public abstract class A implements InterfaceA {\n" + 
-				"	private void e() {\n" + 
-				"	}\n" + 
-				"	public void f() {\n" + 
-				"		this.e();\n" + 
-				"	}\n" + 
+				"package org.eclipse.curiosity;\n" +
+				"public abstract class A implements InterfaceA {\n" +
+				"	private void e() {\n" +
+				"	}\n" +
+				"	public void f() {\n" +
+				"		this.e();\n" +
+				"	}\n" +
 				"}",
 				/* org.eclipse.curiosity.InterfaceA */
 				"org/eclipse/curiosity/InterfaceA.java",
-				"package org.eclipse.curiosity;\n" + 
+				"package org.eclipse.curiosity;\n" +
 				"public interface InterfaceA extends InterfaceBase {}\n",
 				"org/eclipse/curiosity/InterfaceBase.java",
 				/* org.eclipse.curiosity.InterfaceBase */
-				"package org.eclipse.curiosity;\n" + 
-				"public interface InterfaceBase {\n" + 
-				"    public void a();\n" + 
-				"    public void b();\n" + 
-				"    public void c();\n" + 
-				"    public void d();\n" + 
+				"package org.eclipse.curiosity;\n" +
+				"public interface InterfaceBase {\n" +
+				"    public void a();\n" +
+				"    public void b();\n" +
+				"    public void c();\n" +
+				"    public void d();\n" +
 				"}"
 			}
 		);
@@ -94,18 +90,18 @@ public void test002() {
 	if (this.complianceLevel == ClassFileConstants.JDK1_3) {
 		runNegativeTest(
 			sources,
-			"----------\n" + 
-			"1. ERROR in p1\\Test.java (at line 10)\n" + 
-			"	M m; \n" + 
-			"	^\n" + 
-			"The type M is defined in an inherited type and an enclosing scope\n" + 
+			"----------\n" +
+			"1. ERROR in p1\\Test.java (at line 10)\n" +
+			"	M m; \n" +
+			"	^\n" +
+			"The type M is defined in an inherited type and an enclosing scope\n" +
 			"----------\n");
 	} else {
 		runConformTest(
 			sources,
 			"SUCCESS");
 	}
-}	
+}
 
 // was Compliance_1_x#test002
 public void test003() {
@@ -133,11 +129,11 @@ public void test003() {
 	if (this.complianceLevel == ClassFileConstants.JDK1_3) {
 		runNegativeTest(
 			sources,
-			"----------\n" + 
-			"1. ERROR in p1\\Test.java (at line 11)\n" + 
-			"	String z = bar();	\n" + 
-			"	           ^^^\n" + 
-			"The method bar is defined in an inherited type and an enclosing scope\n" + 
+			"----------\n" +
+			"1. ERROR in p1\\Test.java (at line 11)\n" +
+			"	String z = bar();	\n" +
+			"	           ^^^\n" +
+			"The method bar is defined in an inherited type and an enclosing scope\n" +
 			"----------\n");
 	} else {
 		runConformTest(
@@ -170,11 +166,11 @@ public void test004() {
 	if (this.complianceLevel == ClassFileConstants.JDK1_3) {
 		runNegativeTest(
 			sources,
-			"----------\n" + 
-			"1. ERROR in p1\\Test.java (at line 8)\n" + 
-			"	String z = bar; \n" + 
-			"	           ^^^\n" + 
-			"The field bar is defined in an inherited type and an enclosing scope \n" + 
+			"----------\n" +
+			"1. ERROR in p1\\Test.java (at line 8)\n" +
+			"	String z = bar; \n" +
+			"	           ^^^\n" +
+			"The field bar is defined in an inherited type and an enclosing scope \n" +
 			"----------\n");
 	} else {
 		runConformTest(
@@ -259,11 +255,11 @@ public void test007() {
 			"	String bar(int i){ return \"SUCCESS\"; } \n" +
 			"} \n"
 		},
-		"----------\n" + 
-		"1. ERROR in p1\\Test.java (at line 11)\n" + 
-		"	String z = bar();	\n" + 
-		"	           ^^^\n" + 
-		"The method bar(int) in the type Secondary is not applicable for the arguments ()\n" + 
+		"----------\n" +
+		"1. ERROR in p1\\Test.java (at line 11)\n" +
+		"	String z = bar();	\n" +
+		"	           ^^^\n" +
+		"The method bar(int) in the type Secondary is not applicable for the arguments ()\n" +
 		"----------\n"
 	);
 }
@@ -273,9 +269,9 @@ public void test008() {
 	this.runConformTest(
 		new String[] {
 			"X.java",
-			"public class X implements I {}\n" + 
-			"class Y extends X implements I, J {}" + 
-			"interface I {}\n" + 
+			"public class X implements I {}\n" +
+			"class Y extends X implements I, J {}" +
+			"interface I {}\n" +
 			"interface J {}\n"
 		},
 		""
@@ -284,16 +280,16 @@ public void test008() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=77918
 // raising an error
 public void test009() {
-	Map customOptions = getCompilerOptions();
+	Map<String, String> customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportRedundantSuperinterface,  CompilerOptions.ERROR);
 	runNegativeTest(
 		// test directory preparation
-		true /* flush output directory */, 
+		true /* flush output directory */,
 		new String[] { /* test files */
 			"X.java",
-			"public class X implements I {}\n" + 
-			"class Y extends X implements I, J {}\n" + 
-			"interface I {}\n" + 
+			"public class X implements I {}\n" +
+			"class Y extends X implements I, J {}\n" +
+			"interface I {}\n" +
 			"interface J {}\n"
 		},
 		// compiler options
@@ -301,28 +297,28 @@ public void test009() {
 		customOptions /* custom options */,
 		// compiler results
 		"----------\n" + /* expected compiler log */
-		"1. ERROR in X.java (at line 2)\n" + 
-		"	class Y extends X implements I, J {}\n" + 
-		"	                             ^\n" + 
-		"Redundant superinterface I for the type Y, already defined by X\n" + 
+		"1. ERROR in X.java (at line 2)\n" +
+		"	class Y extends X implements I, J {}\n" +
+		"	                             ^\n" +
+		"Redundant superinterface I for the type Y, already defined by X\n" +
 		"----------\n",
 		// javac options
-		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);	
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=77918
 // raising an error - deeper hierarchy
 public void test010() {
-	Map customOptions = getCompilerOptions();
+	Map<String, String> customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportRedundantSuperinterface, CompilerOptions.ERROR);
 	runNegativeTest(
 		// test directory preparation
-		true /* flush output directory */, 
+		true /* flush output directory */,
 		new String[] { /* test files */
 			"X.java",
-			"public class X implements I {}\n" + 
-			"class Y extends X {}\n" + 
-			"class Z extends Y implements J, I {}\n" + 
-			"interface I {}\n" + 
+			"public class X implements I {}\n" +
+			"class Y extends X {}\n" +
+			"class Z extends Y implements J, I {}\n" +
+			"interface I {}\n" +
 			"interface J {}\n"
 		},
 		// compiler options
@@ -330,31 +326,31 @@ public void test010() {
 		customOptions /* custom options */,
 		// compiler results
 		"----------\n" + /* expected compiler log */
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	class Z extends Y implements J, I {}\n" + 
-		"	                                ^\n" + 
-		"Redundant superinterface I for the type Z, already defined by X\n" + 
+		"1. ERROR in X.java (at line 3)\n" +
+		"	class Z extends Y implements J, I {}\n" +
+		"	                                ^\n" +
+		"Redundant superinterface I for the type Z, already defined by X\n" +
 		"----------\n",
 		// javac options
-		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);	
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=77918
 // no error - deeper hierarchy
 public void test011() {
-	Map customOptions = getCompilerOptions();
+	Map<String, String> customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportRedundantSuperinterface,  CompilerOptions.ERROR);
 	this.runConformTest(
 		new String[] {
 			"X.java",
-			"public class X implements I {}\n" + 
-			"class Y extends X {}\n" + 
-			"class Z extends Y implements J {}" + 
-			"interface I {}\n" + 
+			"public class X implements I {}\n" +
+			"class Y extends X {}\n" +
+			"class Z extends Y implements J {}" +
+			"interface I {}\n" +
 			"interface J {}\n"
 		},
 		"",
-		null /* no extra class libraries */, 
-		true /* flush output directory */, 
+		null /* no extra class libraries */,
+		true /* flush output directory */,
 		null /* no vm arguments */,
 		customOptions,
 		null /* no custom requestor*/);
@@ -362,16 +358,16 @@ public void test011() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=77918
 // error - extending interfaces
 public void test012() {
-	Map customOptions = getCompilerOptions();
+	Map<String, String> customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_ReportRedundantSuperinterface,  CompilerOptions.ERROR);
 	runNegativeTest(
 		// test directory preparation
-		true /* flush output directory */, 
+		true /* flush output directory */,
 		new String[] { /* test files */
 			"X.java",
-			"public class X implements J {}\n" + 
-			"class Y extends X implements I {}\n" + 
-			"interface I {}\n" + 
+			"public class X implements J {}\n" +
+			"class Y extends X implements I {}\n" +
+			"interface I {}\n" +
 			"interface J extends I {}\n"
 		},
 		// compiler options
@@ -379,12 +375,12 @@ public void test012() {
 		customOptions /* custom options */,
 		// compiler results
 		"----------\n" + /* expected compiler log */
-		"1. ERROR in X.java (at line 2)\n" + 
-		"	class Y extends X implements I {}\n" + 
-		"	                             ^\n" + 
-		"Redundant superinterface I for the type Y, already defined by J\n" + 
+		"1. ERROR in X.java (at line 2)\n" +
+		"	class Y extends X implements I {}\n" +
+		"	                             ^\n" +
+		"Redundant superinterface I for the type Y, already defined by J\n" +
 		"----------\n",
 		// javac options
-		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);	
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError /* javac test options */);
 }
 }

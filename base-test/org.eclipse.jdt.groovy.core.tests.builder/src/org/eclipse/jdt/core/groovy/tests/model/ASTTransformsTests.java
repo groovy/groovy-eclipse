@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.util.List;
 import junit.framework.Test;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -38,67 +37,69 @@ import org.eclipse.jdt.core.tests.builder.BuilderTests;
 import org.eclipse.jdt.core.tests.util.Util;
 
 /**
- * 
+ *
  * @author Andrew Eisenberg
  * @created May 3, 2010
  */
-public class AnnotationsTests extends BuilderTests {
-    public AnnotationsTests(String name) {
+public class ASTTransformsTests extends BuilderTests {
+
+    public static Test suite() {
+        return buildTestSuite(ASTTransformsTests.class);
+    }
+
+    public ASTTransformsTests(String name) {
         super(name);
     }
-    public static Test suite() {
-        return buildTestSuite(AnnotationsTests.class);
-    }
-    
+
     private IProject project;
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+        IPath projectPath = env.addProject("Project");
         project = ResourcesPlugin.getWorkspace().getRoot().getProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
         fullBuild(projectPath);
-        
+
         // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-        env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-        env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+        env.removePackageFragmentRoot(projectPath, "");
+        env.addPackageFragmentRoot(projectPath, "src");
+        env.setOutputFolder(projectPath, "bin");
     }
-    
+
     public void testDelegateAnnotationFromOtherField() throws Exception {
-        createUnit("Other", 
+        createUnit("Other",
                 "class Other {\n" +
-        		"  @Delegate Date me\n" +
-        		"  int compareTo(arg0) { }\n" +
+                "  @Delegate Date me\n" +
+                "  int compareTo(arg0) { }\n" +
                 "}");
-        
+
         GroovyCompilationUnit unit = createUnit("ThisUnit", "Other");
         env.fullBuild();
         expectingNoProblems();
         FieldNode field = getMeField(unit);
         assertAnnotation("groovy.lang.Delegate", field);
     }
-    
+
     public void testDelegateAnnotationFromOtherMethod() throws Exception {
-	        createUnit("Other", 
-	                "class Other {\n" +
-	        		"  @Delegate Date me\n" +
-	        		"  @Newify int compareTo(arg0) { }\n" +
-	                "}");
-	        
-	        GroovyCompilationUnit unit = createUnit("ThisUnit", "Other");
-	        env.fullBuild();
-	        expectingNoProblems();
-	        MethodNode method = getMethod(unit,"compareTo");
-	        assertAnnotation("groovy.lang.Newify", method);
-	    }
-    
+        createUnit("Other",
+                "class Other {\n" +
+                "  @Delegate Date me\n" +
+                "  @Newify int compareTo(arg0) { }\n" +
+                "}");
+
+        GroovyCompilationUnit unit = createUnit("ThisUnit", "Other");
+        env.fullBuild();
+        expectingNoProblems();
+        MethodNode method = getMethod(unit,"compareTo");
+        assertAnnotation("groovy.lang.Newify", method);
+    }
+
     public void testSingletonAnnotationFromOtherClass() throws Exception {
-        createUnit("Other", 
+        createUnit("Other",
                 "@Singleton class Other { }");
-        
+
         GroovyCompilationUnit unit = createUnit("ThisUnit", "Other");
         env.fullBuild();
         expectingNoProblems();
@@ -108,7 +109,7 @@ public class AnnotationsTests extends BuilderTests {
 
     private void assertAnnotation(String aName, AnnotatedNode node) {
         assertEquals("Expecting @" + aName + " but no annotations found.", 1, node.getAnnotations().size());
-        assertEquals(aName, ((AnnotationNode) node.getAnnotations().get(0)).getClassNode().getName());
+        assertEquals(aName, node.getAnnotations().get(0).getClassNode().getName());
     }
 
     private FieldNode getMeField(GroovyCompilationUnit unit) {
@@ -122,9 +123,9 @@ public class AnnotationsTests extends BuilderTests {
         clazz.getFields();  // force lazy initialization
         List<MethodNode> ms = clazz.getMethods();
         for (MethodNode m: ms) {
-      	  if (m.getName().equals(name)) {
-      		  return m;
-      	  }
+            if (m.getName().equals(name)) {
+                return m;
+            }
         }
         return null;
     }
@@ -147,7 +148,7 @@ public class AnnotationsTests extends BuilderTests {
                 assertEquals("Should be type string", "QString;", parameters[0].getTypeSignature());
             }
         }
-        
+
         if (!foundConstructor) {
             fail("Should have found exactly one constructor");
         }
@@ -171,12 +172,12 @@ public class AnnotationsTests extends BuilderTests {
                 assertEquals("Should be type string", "QString;", parameters[0].getTypeSignature());
             }
         }
-        
+
         if (!foundConstructor) {
             fail("Should have found exactly one constructor");
         }
     }
-    
+
     public void testImmutableAnnotation2() throws Exception {
         GroovyCompilationUnit unit = createUnit("Thiz", "import groovy.transform.Immutable\n @Immutable class Thiz { }");
         env.fullBuild();
@@ -191,7 +192,7 @@ public class AnnotationsTests extends BuilderTests {
         }
         assertEquals("Should have found no constructors", 0, constructorCount);
     }
-    
+
     public void testImmutableAnnotation3() throws Exception {
         createUnit("p", "Immutable", "package p\n@interface Immutable { }");
         GroovyCompilationUnit unit = createUnit("Thiz", "import p.Immutable\n@Immutable class Thiz { String foo }");
@@ -207,7 +208,6 @@ public class AnnotationsTests extends BuilderTests {
         }
         assertEquals("Should have found no constructors", 0, constructorCount);
     }
-    
 
     private ClassNode getClassFromScript(GroovyCompilationUnit unit) {
         return ((ClassExpression) ((ReturnStatement) unit.getModuleNode().getStatementBlock().getStatements().get(0)).getExpression()).getType();
@@ -217,6 +217,7 @@ public class AnnotationsTests extends BuilderTests {
         IPath path = env.addGroovyClass(project.getFolder("src").getFullPath(), name, contents);
         return (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(env.getWorkspace().getRoot().getFile(path));
     }
+
     protected GroovyCompilationUnit createUnit(String pkg, String name, String contents) {
         IPath pkgPath = env.addPackage(project.getFolder("src").getFullPath(), pkg);
         IPath path = env.addGroovyClass(pkgPath, name, contents);

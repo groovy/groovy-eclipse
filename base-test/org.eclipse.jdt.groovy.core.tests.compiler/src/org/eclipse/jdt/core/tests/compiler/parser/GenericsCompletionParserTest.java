@@ -23,11 +23,11 @@ public GenericsCompletionParserTest(String testName) {
 public static Test suite() {
 	return buildAllCompliancesTestSuite(GenericsCompletionParserTest.class);
 }
-protected Map getCompilerOptions() {
-	Map options = super.getCompilerOptions();
+protected Map<String, String> getCompilerOptions() {
+	Map<String, String> options = super.getCompilerOptions();
 	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_5);
-	options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);	
-	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_5);	
+	options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
+	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_5);
 	return options;
 }
 public void test0001(){
@@ -43,9 +43,9 @@ public void test0001(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Z<Y>.";
 	String expectedUnitDisplayString =
-		"public class X<T extends <CompleteOnType:Z<Y>.>> {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X<T extends <CompleteOnType:Z<Y>.>> {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -71,9 +71,9 @@ public void test0002(){
 	String completionIdentifier = "W";
 	String expectedReplacedSource = "Z<Y>.W";
 	String expectedUnitDisplayString =
-		"public class X<T extends <CompleteOnType:Z<Y>.W>> {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X<T extends <CompleteOnType:Z<Y>.W>> {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -99,9 +99,9 @@ public void test0003(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "test0001.X<Y>.Z";
 	String expectedUnitDisplayString =
-		"public class Test<T extends <CompleteOnType:test0001.X<Y>.Z>> {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
+		"public class Test<T extends <CompleteOnType:test0001.X<Y>.Z>> {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -117,7 +117,7 @@ public void test0003(){
 public void test0004(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>.\n" + 
+		"  public Y<Z>.\n" +
 		"}";
 
 
@@ -128,10 +128,10 @@ public void test0004(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  <CompleteOnType:Y<Z>.>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  <CompleteOnType:Y<Z>.>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -147,7 +147,7 @@ public void test0004(){
 public void test0005(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>. foo\n" + 
+		"  public Y<Z>. foo\n" +
 		"}";
 
 
@@ -158,10 +158,10 @@ public void test0005(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  <CompleteOnType:Y<Z>.>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  <CompleteOnType:Y<Z>.>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -177,7 +177,7 @@ public void test0005(){
 public void test0006(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>. foo;\n" + 
+		"  public Y<Z>. foo;\n" +
 		"}";
 
 
@@ -188,10 +188,10 @@ public void test0006(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  <CompleteOnType:Y<Z>.>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  <CompleteOnType:Y<Z>.>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -207,7 +207,7 @@ public void test0006(){
 public void test0007(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>. foo()\n" + 
+		"  public Y<Z>. foo()\n" +
 		"}";
 
 
@@ -218,11 +218,11 @@ public void test0007(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  public <CompleteOnType:Y<Z>.> foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  public <CompleteOnType:Y<Z>.> foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -238,7 +238,7 @@ public void test0007(){
 public void test0008(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>. foo(){}\n" + 
+		"  public Y<Z>. foo(){}\n" +
 		"}";
 
 
@@ -249,11 +249,11 @@ public void test0008(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  public <CompleteOnType:Y<Z>.> foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  public <CompleteOnType:Y<Z>.> foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -269,7 +269,7 @@ public void test0008(){
 public void test0009(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>.V<W>.\n" + 
+		"  public Y<Z>.V<W>.\n" +
 		"}";
 
 
@@ -280,10 +280,10 @@ public void test0009(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.V<W>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  <CompleteOnType:Y<Z>.V<W>.>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  <CompleteOnType:Y<Z>.V<W>.>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -299,7 +299,7 @@ public void test0009(){
 public void test0010(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>.V<W>. foo\n" + 
+		"  public Y<Z>.V<W>. foo\n" +
 		"}";
 
 
@@ -310,10 +310,10 @@ public void test0010(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.V<W>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  <CompleteOnType:Y<Z>.V<W>.>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  <CompleteOnType:Y<Z>.V<W>.>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -329,7 +329,7 @@ public void test0010(){
 public void test0011(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>.V<W>. foo;\n" + 
+		"  public Y<Z>.V<W>. foo;\n" +
 		"}";
 
 
@@ -340,10 +340,10 @@ public void test0011(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.V<W>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  <CompleteOnType:Y<Z>.V<W>.>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  <CompleteOnType:Y<Z>.V<W>.>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -359,7 +359,7 @@ public void test0011(){
 public void test0012(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>.V<W>. foo()\n" + 
+		"  public Y<Z>.V<W>. foo()\n" +
 		"}";
 
 
@@ -370,11 +370,11 @@ public void test0012(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.V<W>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  public <CompleteOnType:Y<Z>.V<W>.> foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  public <CompleteOnType:Y<Z>.V<W>.> foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -390,7 +390,7 @@ public void test0012(){
 public void test0013(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>.V<W>. foo(){}\n" + 
+		"  public Y<Z>.V<W>. foo(){}\n" +
 		"}";
 
 
@@ -401,11 +401,11 @@ public void test0013(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.V<W>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  public <CompleteOnType:Y<Z>.V<W>.> foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  public <CompleteOnType:Y<Z>.V<W>.> foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -421,7 +421,7 @@ public void test0013(){
 public void test0014(){
 	String str =
 		"public class X extends  Y<Z>. {\n" +
-		"  \n" + 
+		"  \n" +
 		"}";
 
 
@@ -432,9 +432,9 @@ public void test0014(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X extends <CompleteOnClass:Y<Z>.> {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X extends <CompleteOnClass:Y<Z>.> {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -450,7 +450,7 @@ public void test0014(){
 public void test0015(){
 	String str =
 		"public class X implements I1, Y<Z>. {\n" +
-		"  \n" + 
+		"  \n" +
 		"}";
 
 
@@ -461,9 +461,9 @@ public void test0015(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X implements I1, <CompleteOnInterface:Y<Z>.> {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X implements I1, <CompleteOnInterface:Y<Z>.> {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -479,9 +479,9 @@ public void test0015(){
 public void test0016(){
 	String str =
 		"public class X {\n" +
-		"  void foo(Y<Z>.){\n" + 
-		"  \n" + 
-		"  }\n" + 
+		"  void foo(Y<Z>.){\n" +
+		"  \n" +
+		"  }\n" +
 		"}";
 
 
@@ -492,14 +492,14 @@ public void test0016(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  <CompleteOnType:Y<Z>.>;\n" + 
-		"  {\n" + 
-		"  }\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  <CompleteOnType:Y<Z>.>;\n" +
+		"  {\n" +
+		"  }\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -515,9 +515,9 @@ public void test0016(){
 public void test0017(){
 	String str =
 		"public class X {\n" +
-		"  void foo(Y<Z>. bar){\n" + 
-		"  \n" + 
-		"  }\n" + 
+		"  void foo(Y<Z>. bar){\n" +
+		"  \n" +
+		"  }\n" +
 		"}";
 
 
@@ -528,11 +528,11 @@ public void test0017(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo(<CompleteOnType:Y<Z>.> bar) {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo(<CompleteOnType:Y<Z>.> bar) {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -548,9 +548,9 @@ public void test0017(){
 public void test0018(){
 	String str =
 		"public class X {\n" +
-		"  Y<Z>. foo(){\n" + 
-		"  \n" + 
-		"  }\n" + 
+		"  Y<Z>. foo(){\n" +
+		"  \n" +
+		"  }\n" +
 		"}";
 
 
@@ -561,11 +561,11 @@ public void test0018(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <CompleteOnType:Y<Z>.> foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <CompleteOnType:Y<Z>.> foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -581,9 +581,9 @@ public void test0018(){
 public void test0019(){
 	String str =
 		"public class X  {\n" +
-		"  void foo() throws Y<Z>. {\n" + 
-		"  \n" + 
-		"  }\n" + 
+		"  void foo() throws Y<Z>. {\n" +
+		"  \n" +
+		"  }\n" +
 		"}";
 
 
@@ -594,11 +594,11 @@ public void test0019(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() throws <CompleteOnException:Y<Z>.> {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() throws <CompleteOnException:Y<Z>.> {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -614,9 +614,9 @@ public void test0019(){
 public void test0020(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z>.> void foo(){\n" + 
-		"  \n" + 
-		"  }\n" + 
+		"  <T extends Y<Z>.> void foo(){\n" +
+		"  \n" +
+		"  }\n" +
 		"}";
 
 
@@ -627,11 +627,11 @@ public void test0020(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends <CompleteOnType:Y<Z>.>>void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends <CompleteOnType:Y<Z>.>>void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -647,7 +647,7 @@ public void test0020(){
 public void test0021(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z>.> void foo(\n" + 
+		"  <T extends Y<Z>.> void foo(\n" +
 		"}";
 
 
@@ -658,11 +658,11 @@ public void test0021(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends <CompleteOnType:Y<Z>.>>void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends <CompleteOnType:Y<Z>.>>void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -678,7 +678,7 @@ public void test0021(){
 public void test0022(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z>.> int foo\n" + 
+		"  <T extends Y<Z>.> int foo\n" +
 		"}";
 
 
@@ -689,10 +689,10 @@ public void test0022(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends <CompleteOnType:Y<Z>.>>\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends <CompleteOnType:Y<Z>.>>\n" +
 		"}\n";
 
 	checkDietParse(
@@ -708,7 +708,7 @@ public void test0022(){
 public void test0023(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z>.> X\n" + 
+		"  <T extends Y<Z>.> X\n" +
 		"}";
 
 
@@ -719,10 +719,10 @@ public void test0023(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends <CompleteOnType:Y<Z>.>>\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends <CompleteOnType:Y<Z>.>>\n" +
 		"}\n";
 
 	checkDietParse(
@@ -738,7 +738,7 @@ public void test0023(){
 public void test0024(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z>.>\n" + 
+		"  <T extends Y<Z>.>\n" +
 		"}";
 
 
@@ -749,10 +749,10 @@ public void test0024(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends <CompleteOnType:Y<Z>.>>\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends <CompleteOnType:Y<Z>.>>\n" +
 		"}\n";
 
 	checkDietParse(
@@ -768,9 +768,9 @@ public void test0024(){
 public void test0025(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z>. void foo(){\n" + 
-		"  \n" + 
-		"  }\n" + 
+		"  <T extends Y<Z>. void foo(){\n" +
+		"  \n" +
+		"  }\n" +
 		"}";
 
 
@@ -781,12 +781,12 @@ public void test0025(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends <CompleteOnType:Y<Z>.>>\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends <CompleteOnType:Y<Z>.>>\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -802,7 +802,7 @@ public void test0025(){
 public void test0026(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z>. void foo(\n" + 
+		"  <T extends Y<Z>. void foo(\n" +
 		"}";
 
 
@@ -813,12 +813,12 @@ public void test0026(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends <CompleteOnType:Y<Z>.>>\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends <CompleteOnType:Y<Z>.>>\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -834,7 +834,7 @@ public void test0026(){
 public void test0027(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z>. int foo\n" + 
+		"  <T extends Y<Z>. int foo\n" +
 		"}";
 
 
@@ -845,11 +845,11 @@ public void test0027(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  int foo;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends <CompleteOnType:Y<Z>.>>\n" + 
+		"public class X {\n" +
+		"  int foo;\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends <CompleteOnType:Y<Z>.>>\n" +
 		"}\n";
 
 	checkDietParse(
@@ -865,7 +865,7 @@ public void test0027(){
 public void test0028(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z>. X\n" + 
+		"  <T extends Y<Z>. X\n" +
 		"}";
 
 
@@ -876,10 +876,10 @@ public void test0028(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends <CompleteOnType:Y<Z>.>>\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends <CompleteOnType:Y<Z>.>>\n" +
 		"}\n";
 
 	checkDietParse(
@@ -895,7 +895,7 @@ public void test0028(){
 public void test0029(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z>.\n" + 
+		"  <T extends Y<Z>.\n" +
 		"}";
 
 
@@ -906,10 +906,10 @@ public void test0029(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends <CompleteOnType:Y<Z>.>>\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends <CompleteOnType:Y<Z>.>>\n" +
 		"}\n";
 
 	checkDietParse(
@@ -925,9 +925,9 @@ public void test0029(){
 public void test0030_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Y<Z>.\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Y<Z>.\n" +
+		"  }\n" +
 		"}";
 
 
@@ -938,11 +938,11 @@ public void test0030_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -958,9 +958,9 @@ public void test0030_Diet(){
 public void test0030_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Y<Z>.\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Y<Z>.\n" +
+		"  }\n" +
 		"}";
 
 
@@ -971,12 +971,12 @@ public void test0030_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -992,9 +992,9 @@ public void test0030_Method(){
 public void test0031_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Y<Z>. var\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Y<Z>. var\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1005,11 +1005,11 @@ public void test0031_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -1025,9 +1025,9 @@ public void test0031_Diet(){
 public void test0031_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Y<Z>. var\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Y<Z>. var\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1038,12 +1038,12 @@ public void test0031_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -1059,9 +1059,9 @@ public void test0031_Method(){
 public void test0032_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Y<Z>.W\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Y<Z>.W\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1072,11 +1072,11 @@ public void test0032_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -1092,9 +1092,9 @@ public void test0032_Diet(){
 public void test0032_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Y<Z>.W\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Y<Z>.W\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1105,12 +1105,12 @@ public void test0032_Method(){
 	String completionIdentifier = "W";
 	String expectedReplacedSource = "Y<Z>.W";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnType:Y<Z>.W>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnType:Y<Z>.W>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -1126,9 +1126,9 @@ public void test0032_Method(){
 public void test0033_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Y<Z>.W var\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Y<Z>.W var\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1139,11 +1139,11 @@ public void test0033_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -1159,9 +1159,9 @@ public void test0033_Diet(){
 public void test0033_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Y<Z>.W var\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Y<Z>.W var\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1172,12 +1172,12 @@ public void test0033_Method(){
 	String completionIdentifier = "W";
 	String expectedReplacedSource = "Y<Z>.W";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnType:Y<Z>.W>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnType:Y<Z>.W>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -1193,9 +1193,9 @@ public void test0033_Method(){
 public void test0034_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>.>bar();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>.>bar();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1206,11 +1206,11 @@ public void test0034_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -1226,9 +1226,9 @@ public void test0034_Diet(){
 public void test0034_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>.>bar();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>.>bar();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1239,12 +1239,12 @@ public void test0034_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -1260,9 +1260,9 @@ public void test0034_Method(){
 public void test0035_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>.>bar(\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>.>bar(\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1273,11 +1273,11 @@ public void test0035_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -1293,9 +1293,9 @@ public void test0035_Diet(){
 public void test0035_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>.>bar(\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>.>bar(\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1306,12 +1306,12 @@ public void test0035_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -1327,9 +1327,9 @@ public void test0035_Method(){
 public void test0036_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>.>bar\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>.>bar\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1340,11 +1340,11 @@ public void test0036_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -1360,9 +1360,9 @@ public void test0036_Diet(){
 public void test0036_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>.>bar\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>.>bar\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1373,12 +1373,12 @@ public void test0036_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -1394,9 +1394,9 @@ public void test0036_Method(){
 public void test0037_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>.>\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>.>\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1407,11 +1407,11 @@ public void test0037_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -1427,9 +1427,9 @@ public void test0037_Diet(){
 public void test0037_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>.>\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>.>\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1440,12 +1440,12 @@ public void test0037_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -1461,9 +1461,9 @@ public void test0037_Method(){
 public void test0038_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>.\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>.\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1474,11 +1474,11 @@ public void test0038_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -1494,9 +1494,9 @@ public void test0038_Diet(){
 public void test0038_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>.\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>.\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1507,12 +1507,12 @@ public void test0038_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -1528,9 +1528,9 @@ public void test0038_Method(){
 public void test0039_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new <Y, Y<Z>.>X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new <Y, Y<Z>.>X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1541,11 +1541,11 @@ public void test0039_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -1561,9 +1561,9 @@ public void test0039_Diet(){
 public void test0039_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new <Y, Y<Z>.>X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new <Y, Y<Z>.>X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1574,12 +1574,12 @@ public void test0039_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -1595,9 +1595,9 @@ public void test0039_Method(){
 public void test0040_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    aaa.new <Y, Y<Z>.>X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    aaa.new <Y, Y<Z>.>X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1608,11 +1608,11 @@ public void test0040_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -1628,9 +1628,9 @@ public void test0040_Diet(){
 public void test0040_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    aaa.new <Y, Y<Z>.>X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    aaa.new <Y, Y<Z>.>X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1641,12 +1641,12 @@ public void test0040_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -1662,9 +1662,9 @@ public void test0040_Method(){
 public void test0041_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new V().new <Y, Y<Z>.>X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new V().new <Y, Y<Z>.>X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1675,11 +1675,11 @@ public void test0041_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -1695,9 +1695,9 @@ public void test0041_Diet(){
 public void test0041_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new V().new <Y, Y<Z>.>X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new V().new <Y, Y<Z>.>X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1708,12 +1708,12 @@ public void test0041_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -1729,9 +1729,9 @@ public void test0041_Method(){
 public void test0042_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    for(Y<Z>. var;;){}\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    for(Y<Z>. var;;){}\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1742,11 +1742,11 @@ public void test0042_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -1762,9 +1762,9 @@ public void test0042_Diet(){
 public void test0042_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    for(Y<Z>. var;;){}\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    for(Y<Z>. var;;){}\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1775,12 +1775,12 @@ public void test0042_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -1796,9 +1796,9 @@ public void test0042_Method(){
 public void test0043_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    for(Y<Z>.\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    for(Y<Z>.\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1809,11 +1809,11 @@ public void test0043_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -1829,9 +1829,9 @@ public void test0043_Diet(){
 public void test0043_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    for(Y<Z>.\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    for(Y<Z>.\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1842,12 +1842,12 @@ public void test0043_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -1863,11 +1863,11 @@ public void test0043_Method(){
 public void test0044_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    try {\n" + 
+		"  void foo() {\n" +
+		"    try {\n" +
 		"    } catch(Y<Z>. e) {\n" +
-		"   }\n" + 
-		"  }\n" + 
+		"   }\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1878,11 +1878,11 @@ public void test0044_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -1898,11 +1898,11 @@ public void test0044_Diet(){
 public void test0044_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    try {\n" + 
+		"  void foo() {\n" +
+		"    try {\n" +
 		"    } catch(Y<Z>. e) {\n" +
-		"   }\n" + 
-		"  }\n" + 
+		"   }\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1910,24 +1910,24 @@ public void test0044_Method(){
 	int cursorLocation = str.indexOf("Y<Z>.") + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnException:Y<Z>.>";
 	String expectedParentNodeToString =
-			"try \n" + 
-			"  {\n" + 
-			"  }\n" + 
-			"catch (<CompleteOnException:Y<Z>.>  )   {\n" + 
+			"try \n" +
+			"  {\n" +
+			"  }\n" +
+			"catch (<CompleteOnException:Y<Z>.>  )   {\n" +
 			"  }";
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    try \n" + 
-			"      {\n" + 
-			"      }\n" + 
-			"    catch (<CompleteOnException:Y<Z>.>  )       {\n" + 
-			"      }\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    try \n" +
+			"      {\n" +
+			"      }\n" +
+			"    catch (<CompleteOnException:Y<Z>.>  )       {\n" +
+			"      }\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -1943,10 +1943,10 @@ public void test0044_Method(){
 public void test0045_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    try {\n" + 
-		"    } catch(Y<Z>. e\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    try {\n" +
+		"    } catch(Y<Z>. e\n" +
+		"  }\n" +
 		"}";
 
 
@@ -1957,11 +1957,11 @@ public void test0045_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -1977,35 +1977,35 @@ public void test0045_Diet(){
 public void test0045_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    try {\n" + 
-		"    } catch(Y<Z>. e\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    try {\n" +
+		"    } catch(Y<Z>. e\n" +
+		"  }\n" +
 		"}";
 
 
 	String completeBehind = "Y<Z>.";
 	int cursorLocation = str.indexOf("Y<Z>.") + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnException:Y<Z>.>";
-	String expectedParentNodeToString = 
-			"try \n" + 
-			"  {\n" + 
-			"  }\n" + 
-			"catch (<CompleteOnException:Y<Z>.>  )   {\n" + 
+	String expectedParentNodeToString =
+			"try \n" +
+			"  {\n" +
+			"  }\n" +
+			"catch (<CompleteOnException:Y<Z>.>  )   {\n" +
 			"  }";
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    try \n" + 
-			"      {\n" + 
-			"      }\n" + 
-			"    catch (<CompleteOnException:Y<Z>.>  )       {\n" + 
-			"      }\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    try \n" +
+			"      {\n" +
+			"      }\n" +
+			"    catch (<CompleteOnException:Y<Z>.>  )       {\n" +
+			"      }\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -2021,9 +2021,9 @@ public void test0045_Method(){
 public void test0046_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    catch(Y<Z>. e\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    catch(Y<Z>. e\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2034,11 +2034,11 @@ public void test0046_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -2054,9 +2054,9 @@ public void test0046_Diet(){
 public void test0046_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    catch(Y<Z>. e\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    catch(Y<Z>. e\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2067,12 +2067,12 @@ public void test0046_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnException:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnException:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -2088,9 +2088,9 @@ public void test0046_Method(){
 public void test0047_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object a = (Y<Z>.) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object a = (Y<Z>.) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2101,11 +2101,11 @@ public void test0047_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -2121,9 +2121,9 @@ public void test0047_Diet(){
 public void test0047_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object a = (Y<Z>.) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object a = (Y<Z>.) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2134,12 +2134,12 @@ public void test0047_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Object a = <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Object a = <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -2155,9 +2155,9 @@ public void test0047_Method(){
 public void test0048_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object a = (Y<Z>.) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object a = (Y<Z>.) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2168,11 +2168,11 @@ public void test0048_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -2188,9 +2188,9 @@ public void test0048_Diet(){
 public void test0048_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object a = (Y<Z>.) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object a = (Y<Z>.) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2201,12 +2201,12 @@ public void test0048_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Object a = <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Object a = <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -2222,9 +2222,9 @@ public void test0048_Method(){
 public void test0049_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    (Y<Z>.) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    (Y<Z>.) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2235,11 +2235,11 @@ public void test0049_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -2255,9 +2255,9 @@ public void test0049_Diet(){
 public void test0049_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    (Y<Z>.) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    (Y<Z>.) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2268,12 +2268,12 @@ public void test0049_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -2289,9 +2289,9 @@ public void test0049_Method(){
 public void test0050_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object[] o = new Y<Z>.[0];\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object[] o = new Y<Z>.[0];\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2302,11 +2302,11 @@ public void test0050_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -2322,9 +2322,9 @@ public void test0050_Diet(){
 public void test0050_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object[] o = new Y<Z>.[0];\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object[] o = new Y<Z>.[0];\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2335,11 +2335,11 @@ public void test0050_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -2355,9 +2355,9 @@ public void test0050_Method(){
 public void test0051_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object[] o = new Y<Z>.\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object[] o = new Y<Z>.\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2368,11 +2368,11 @@ public void test0051_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -2388,9 +2388,9 @@ public void test0051_Diet(){
 public void test0051_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object[] o = new Y<Z>.\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object[] o = new Y<Z>.\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2401,11 +2401,11 @@ public void test0051_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -2421,9 +2421,9 @@ public void test0051_Method(){
 public void test0052_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new Y<Z>.\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new Y<Z>.\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2434,11 +2434,11 @@ public void test0052_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -2454,9 +2454,9 @@ public void test0052_Diet(){
 public void test0052_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new Y<Z>.\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new Y<Z>.\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2467,11 +2467,11 @@ public void test0052_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -2487,9 +2487,9 @@ public void test0052_Method(){
 public void test0053_Diet(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    <Y<Z>.>super();\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    <Y<Z>.>super();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2500,9 +2500,9 @@ public void test0053_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -2518,9 +2518,9 @@ public void test0053_Diet(){
 public void test0053_Method(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    <Y<Z>.>super();\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    <Y<Z>.>super();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2531,11 +2531,11 @@ public void test0053_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"    super();\n" + 
-			"    <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"    super();\n" +
+			"    <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -2551,9 +2551,9 @@ public void test0053_Method(){
 public void test0054_Diet(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    aaa.<Y<Z>.>super();\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    aaa.<Y<Z>.>super();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2564,9 +2564,9 @@ public void test0054_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -2582,9 +2582,9 @@ public void test0054_Diet(){
 public void test0054_Method(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    aaa.<Y<Z>.>super();\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    aaa.<Y<Z>.>super();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2595,11 +2595,11 @@ public void test0054_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"    super();\n" + 
-			"    <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"    super();\n" +
+			"    <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -2615,9 +2615,9 @@ public void test0054_Method(){
 public void test0055_Diet(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    A.this.<Y<Z>.>super();\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    A.this.<Y<Z>.>super();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2628,9 +2628,9 @@ public void test0055_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -2646,9 +2646,9 @@ public void test0055_Diet(){
 public void test0055_Method(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    A.this.<Y<Z>.>super();\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    A.this.<Y<Z>.>super();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2659,11 +2659,11 @@ public void test0055_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "Y<Z>.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"    super();\n" + 
-			"    <CompleteOnType:Y<Z>.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"    super();\n" +
+			"    <CompleteOnType:Y<Z>.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -2680,9 +2680,9 @@ public void test0055_Method(){
 public void test0056_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Y<Z\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Y<Z\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2693,11 +2693,11 @@ public void test0056_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -2713,9 +2713,9 @@ public void test0056_Diet(){
 public void test0056_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Y<Z\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Y<Z\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2726,12 +2726,12 @@ public void test0056_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -2747,9 +2747,9 @@ public void test0056_Method(){
 public void test0057_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Y<V,Z\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Y<V,Z\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2760,11 +2760,11 @@ public void test0057_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -2780,9 +2780,9 @@ public void test0057_Diet(){
 public void test0057_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Y<V,Z\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Y<V,Z\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2793,12 +2793,12 @@ public void test0057_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<V, <CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<V, <CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -2814,9 +2814,9 @@ public void test0057_Method(){
 public void test0058_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    W<U>.Y<V,Z\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    W<U>.Y<V,Z\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2827,11 +2827,11 @@ public void test0058_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -2847,9 +2847,9 @@ public void test0058_Diet(){
 public void test0058_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    W<U>.Y<V,Z\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    W<U>.Y<V,Z\n" +
+		"  }\n" +
 		"}";
 
 
@@ -2860,12 +2860,12 @@ public void test0058_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    W<U>.Y<V, <CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    W<U>.Y<V, <CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -2891,10 +2891,10 @@ public void test0059(){
 	String completionIdentifier = "Y";
 	String expectedReplacedSource = "Y";
 	String expectedUnitDisplayString =
-		"public class X<T> {\n" + 
-		"  Z<<CompleteOnType:Y>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X<T> {\n" +
+		"  Z<<CompleteOnType:Y>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -2910,7 +2910,7 @@ public void test0059(){
 public void test0060(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z\n" + 
+		"  public Y<Z\n" +
 		"}";
 
 
@@ -2921,10 +2921,10 @@ public void test0060(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -2940,7 +2940,7 @@ public void test0060(){
 public void test0061(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>\n" + 
+		"  public Y<Z>\n" +
 		"}";
 
 
@@ -2951,10 +2951,10 @@ public void test0061(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -2970,7 +2970,7 @@ public void test0061(){
 public void test0062(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z> var\n" + 
+		"  public Y<Z> var\n" +
 		"}";
 
 
@@ -2981,10 +2981,10 @@ public void test0062(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-	"  public Y<<CompleteOnType:Z>> var;\n" + 
-	"  public X() {\n" + 
-	"  }\n" + 
+		"public class X {\n" +
+	"  public Y<<CompleteOnType:Z>> var;\n" +
+	"  public X() {\n" +
+	"  }\n" +
 	"}\n";
 
 	checkDietParse(
@@ -3000,7 +3000,7 @@ public void test0062(){
 public void test0063(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z> var;\n" + 
+		"  public Y<Z> var;\n" +
 		"}";
 
 
@@ -3011,10 +3011,10 @@ public void test0063(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public Y<<CompleteOnType:Z>> var;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public Y<<CompleteOnType:Z>> var;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3030,7 +3030,7 @@ public void test0063(){
 public void test0064(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z foo()\n" + 
+		"  public Y<Z foo()\n" +
 		"}";
 
 
@@ -3041,12 +3041,12 @@ public void test0064(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3062,7 +3062,7 @@ public void test0064(){
 public void test0065(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z> foo()\n" + 
+		"  public Y<Z> foo()\n" +
 		"}";
 
 
@@ -3073,11 +3073,11 @@ public void test0065(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  public Y<<CompleteOnType:Z>> foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  public Y<<CompleteOnType:Z>> foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3093,7 +3093,7 @@ public void test0065(){
 public void test0066(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z foo(){}\n" + 
+		"  public Y<Z foo(){}\n" +
 		"}";
 
 
@@ -3104,12 +3104,12 @@ public void test0066(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3125,7 +3125,7 @@ public void test0066(){
 public void test0067(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z> foo(){}\n" + 
+		"  public Y<Z> foo(){}\n" +
 		"}";
 
 
@@ -3136,11 +3136,11 @@ public void test0067(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  public Y<<CompleteOnType:Z>> foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  public Y<<CompleteOnType:Z>> foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3156,7 +3156,7 @@ public void test0067(){
 public void test0068(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>.V<W\n" + 
+		"  public Y<Z>.V<W\n" +
 		"}";
 
 
@@ -3167,10 +3167,10 @@ public void test0068(){
 	String completionIdentifier = "W";
 	String expectedReplacedSource = "W";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<Z>.V<<CompleteOnType:W>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<Z>.V<<CompleteOnType:W>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3186,7 +3186,7 @@ public void test0068(){
 public void test0069(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>.V<W>\n" + 
+		"  public Y<Z>.V<W>\n" +
 		"}";
 
 
@@ -3197,10 +3197,10 @@ public void test0069(){
 	String completionIdentifier = "W";
 	String expectedReplacedSource = "W";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<Z>.V<<CompleteOnType:W>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<Z>.V<<CompleteOnType:W>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3216,7 +3216,7 @@ public void test0069(){
 public void test0070(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>.V<W> var\n" + 
+		"  public Y<Z>.V<W> var\n" +
 		"}";
 
 
@@ -3227,10 +3227,10 @@ public void test0070(){
 	String completionIdentifier = "W";
 	String expectedReplacedSource = "W";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public Y<Z>.V<<CompleteOnType:W>> var;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public Y<Z>.V<<CompleteOnType:W>> var;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3246,7 +3246,7 @@ public void test0070(){
 public void test0071(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>.V<W> var;\n" + 
+		"  public Y<Z>.V<W> var;\n" +
 		"}";
 
 
@@ -3257,10 +3257,10 @@ public void test0071(){
 	String completionIdentifier = "W";
 	String expectedReplacedSource = "W";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public Y<Z>.V<<CompleteOnType:W>> var;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public Y<Z>.V<<CompleteOnType:W>> var;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3276,7 +3276,7 @@ public void test0071(){
 public void test0072(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>.V<W foo()\n" + 
+		"  public Y<Z>.V<W foo()\n" +
 		"}";
 
 
@@ -3287,12 +3287,12 @@ public void test0072(){
 	String completionIdentifier = "W";
 	String expectedReplacedSource = "W";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<Z>.V<<CompleteOnType:W>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<Z>.V<<CompleteOnType:W>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3308,7 +3308,7 @@ public void test0072(){
 public void test0073(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>.V<W> foo()\n" + 
+		"  public Y<Z>.V<W> foo()\n" +
 		"}";
 
 
@@ -3319,11 +3319,11 @@ public void test0073(){
 	String completionIdentifier = "W";
 	String expectedReplacedSource = "W";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  public Y<Z>.V<<CompleteOnType:W>> foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  public Y<Z>.V<<CompleteOnType:W>> foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3339,7 +3339,7 @@ public void test0073(){
 public void test0074(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>.V<W foo(){}\n" + 
+		"  public Y<Z>.V<W foo(){}\n" +
 		"}";
 
 
@@ -3350,12 +3350,12 @@ public void test0074(){
 	String completionIdentifier = "W";
 	String expectedReplacedSource = "W";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<Z>.V<<CompleteOnType:W>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<Z>.V<<CompleteOnType:W>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3371,7 +3371,7 @@ public void test0074(){
 public void test0075(){
 	String str =
 		"public class X {\n" +
-		"  public Y<Z>.V<W> foo(){}\n" + 
+		"  public Y<Z>.V<W> foo(){}\n" +
 		"}";
 
 
@@ -3382,11 +3382,11 @@ public void test0075(){
 	String completionIdentifier = "W";
 	String expectedReplacedSource = "W";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  public Y<Z>.V<<CompleteOnType:W>> foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  public Y<Z>.V<<CompleteOnType:W>> foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3402,7 +3402,7 @@ public void test0075(){
 public void test0076(){
 	String str =
 		"public class X extends  Y<Z {\n" +
-		"  \n" + 
+		"  \n" +
 		"}";
 
 
@@ -3413,10 +3413,10 @@ public void test0076(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3432,7 +3432,7 @@ public void test0076(){
 public void test0077(){
 	String str =
 		"public class X extends  Y<Z> {\n" +
-		"  \n" + 
+		"  \n" +
 		"}";
 
 
@@ -3443,9 +3443,9 @@ public void test0077(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X extends Y<<CompleteOnType:Z>> {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X extends Y<<CompleteOnType:Z>> {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3461,7 +3461,7 @@ public void test0077(){
 public void test0078(){
 	String str =
 		"public class X implements I1, Y<Z {\n" +
-		"  \n" + 
+		"  \n" +
 		"}";
 
 
@@ -3472,10 +3472,10 @@ public void test0078(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X implements I1 {\n" + 
-		"  Y<<CompleteOnType:Z>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X implements I1 {\n" +
+		"  Y<<CompleteOnType:Z>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3491,7 +3491,7 @@ public void test0078(){
 public void test0079(){
 	String str =
 		"public class X implements I1, Y<Z> {\n" +
-		"  \n" + 
+		"  \n" +
 		"}";
 
 
@@ -3502,9 +3502,9 @@ public void test0079(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X implements I1, Y<<CompleteOnType:Z>> {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X implements I1, Y<<CompleteOnType:Z>> {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3520,9 +3520,9 @@ public void test0079(){
 public void test0080(){
 	String str =
 		"public class X {\n" +
-		"  void foo(Y<Z){\n" + 
-		"  \n" + 
-		"  }\n" + 
+		"  void foo(Y<Z){\n" +
+		"  \n" +
+		"  }\n" +
 		"}";
 
 
@@ -3533,12 +3533,12 @@ public void test0080(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"    Y<<CompleteOnType:Z>>;\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"    Y<<CompleteOnType:Z>>;\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3554,9 +3554,9 @@ public void test0080(){
 public void test0081(){
 	String str =
 		"public class X {\n" +
-		"  void foo(Y<Z>){\n" + 
-		"  \n" + 
-		"  }\n" + 
+		"  void foo(Y<Z>){\n" +
+		"  \n" +
+		"  }\n" +
 		"}";
 
 
@@ -3567,12 +3567,12 @@ public void test0081(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"    Y<<CompleteOnType:Z>>;\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"    Y<<CompleteOnType:Z>>;\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3588,9 +3588,9 @@ public void test0081(){
 public void test0082(){
 	String str =
 		"public class X {\n" +
-		"  void foo(Y<Z> var){\n" + 
-		"  \n" + 
-		"  }\n" + 
+		"  void foo(Y<Z> var){\n" +
+		"  \n" +
+		"  }\n" +
 		"}";
 
 
@@ -3601,11 +3601,11 @@ public void test0082(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo(Y<<CompleteOnType:Z>> var) {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo(Y<<CompleteOnType:Z>> var) {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3621,9 +3621,9 @@ public void test0082(){
 public void test0083(){
 	String str =
 		"public class X {\n" +
-		"  Y<Z foo(){\n" + 
-		"  \n" + 
-		"  }\n" + 
+		"  Y<Z foo(){\n" +
+		"  \n" +
+		"  }\n" +
 		"}";
 
 
@@ -3634,12 +3634,12 @@ public void test0083(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3655,9 +3655,9 @@ public void test0083(){
 public void test0084(){
 	String str =
 		"public class X {\n" +
-		"  Y<Z> foo(){\n" + 
-		"  \n" + 
-		"  }\n" + 
+		"  Y<Z> foo(){\n" +
+		"  \n" +
+		"  }\n" +
 		"}";
 
 
@@ -3668,11 +3668,11 @@ public void test0084(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  Y<<CompleteOnType:Z>> foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  Y<<CompleteOnType:Z>> foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3688,9 +3688,9 @@ public void test0084(){
 public void test0085(){
 	String str =
 		"public class X  {\n" +
-		"  void foo() throws Y<Z {\n" + 
-		"  \n" + 
-		"  }\n" + 
+		"  void foo() throws Y<Z {\n" +
+		"  \n" +
+		"  }\n" +
 		"}";
 
 
@@ -3701,12 +3701,12 @@ public void test0085(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"    Y<<CompleteOnType:Z>>;\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"    Y<<CompleteOnType:Z>>;\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3722,9 +3722,9 @@ public void test0085(){
 public void test0086(){
 	String str =
 		"public class X  {\n" +
-		"  void foo() throws Y<Z> {\n" + 
-		"  \n" + 
-		"  }\n" + 
+		"  void foo() throws Y<Z> {\n" +
+		"  \n" +
+		"  }\n" +
 		"}";
 
 
@@ -3735,11 +3735,11 @@ public void test0086(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() throws Y<<CompleteOnType:Z>> {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() throws Y<<CompleteOnType:Z>> {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3755,9 +3755,9 @@ public void test0086(){
 public void test0087(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z void foo(){\n" + 
-		"  \n" + 
-		"  }\n" + 
+		"  <T extends Y<Z void foo(){\n" +
+		"  \n" +
+		"  }\n" +
 		"}";
 
 
@@ -3768,12 +3768,12 @@ public void test0087(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3789,9 +3789,9 @@ public void test0087(){
 public void test0088(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z> void foo(){\n" + 
-		"  \n" + 
-		"  }\n" + 
+		"  <T extends Y<Z> void foo(){\n" +
+		"  \n" +
+		"  }\n" +
 		"}";
 
 
@@ -3802,12 +3802,12 @@ public void test0088(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends Y<<CompleteOnType:Z>>>\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends Y<<CompleteOnType:Z>>>\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3823,9 +3823,9 @@ public void test0088(){
 public void test0089(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z>> void foo(){\n" + 
-		"  \n" + 
-		"  }\n" + 
+		"  <T extends Y<Z>> void foo(){\n" +
+		"  \n" +
+		"  }\n" +
 		"}";
 
 
@@ -3836,11 +3836,11 @@ public void test0089(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends Y<<CompleteOnType:Z>>>void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends Y<<CompleteOnType:Z>>>void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3856,7 +3856,7 @@ public void test0089(){
 public void test0090(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z int foo\n" + 
+		"  <T extends Y<Z int foo\n" +
 		"}";
 
 
@@ -3867,11 +3867,11 @@ public void test0090(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>;\n" + 
-		"  int foo;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>;\n" +
+		"  int foo;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3887,7 +3887,7 @@ public void test0090(){
 public void test0091(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z> int foo\n" + 
+		"  <T extends Y<Z> int foo\n" +
 		"}";
 
 
@@ -3898,11 +3898,11 @@ public void test0091(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  int foo;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends Y<<CompleteOnType:Z>>>\n" + 
+		"public class X {\n" +
+		"  int foo;\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends Y<<CompleteOnType:Z>>>\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3918,7 +3918,7 @@ public void test0091(){
 public void test0092(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z>> int foo\n" + 
+		"  <T extends Y<Z>> int foo\n" +
 		"}";
 
 
@@ -3929,10 +3929,10 @@ public void test0092(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends Y<<CompleteOnType:Z>>>\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends Y<<CompleteOnType:Z>>>\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3948,7 +3948,7 @@ public void test0092(){
 public void test0093(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z X\n" + 
+		"  <T extends Y<Z X\n" +
 		"}";
 
 
@@ -3959,10 +3959,10 @@ public void test0093(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -3978,7 +3978,7 @@ public void test0093(){
 public void test0094(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z> X\n" + 
+		"  <T extends Y<Z> X\n" +
 		"}";
 
 
@@ -3989,10 +3989,10 @@ public void test0094(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends Y<<CompleteOnType:Z>>>\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends Y<<CompleteOnType:Z>>>\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4008,7 +4008,7 @@ public void test0094(){
 public void test0095(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z>> X\n" + 
+		"  <T extends Y<Z>> X\n" +
 		"}";
 
 
@@ -4019,10 +4019,10 @@ public void test0095(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends Y<<CompleteOnType:Z>>>\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends Y<<CompleteOnType:Z>>>\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4038,7 +4038,7 @@ public void test0095(){
 public void test0096(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z\n" + 
+		"  <T extends Y<Z\n" +
 		"}";
 
 
@@ -4049,10 +4049,10 @@ public void test0096(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4068,7 +4068,7 @@ public void test0096(){
 public void test0097(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z>\n" + 
+		"  <T extends Y<Z>\n" +
 		"}";
 
 
@@ -4079,10 +4079,10 @@ public void test0097(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends Y<<CompleteOnType:Z>>>\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends Y<<CompleteOnType:Z>>>\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4098,7 +4098,7 @@ public void test0097(){
 public void test0098(){
 	String str =
 		"public class X {\n" +
-		"  <T extends Y<Z>>\n" + 
+		"  <T extends Y<Z>>\n" +
 		"}";
 
 
@@ -4109,10 +4109,10 @@ public void test0098(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends Y<<CompleteOnType:Z>>>\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends Y<<CompleteOnType:Z>>>\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4128,9 +4128,9 @@ public void test0098(){
 public void test0099_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z bar();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z bar();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4141,11 +4141,11 @@ public void test0099_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4161,9 +4161,9 @@ public void test0099_Diet(){
 public void test0099_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z bar();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z bar();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4174,12 +4174,12 @@ public void test0099_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -4195,9 +4195,9 @@ public void test0099_Method(){
 public void test0100_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z> bar();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z> bar();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4208,11 +4208,11 @@ public void test0100_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4228,9 +4228,9 @@ public void test0100_Diet(){
 public void test0100_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z> bar();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z> bar();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4241,12 +4241,12 @@ public void test0100_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -4262,9 +4262,9 @@ public void test0100_Method(){
 public void test0101_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>> bar();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>> bar();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4275,11 +4275,11 @@ public void test0101_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4295,9 +4295,9 @@ public void test0101_Diet(){
 public void test0101_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>> bar();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>> bar();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4308,12 +4308,12 @@ public void test0101_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -4329,9 +4329,9 @@ public void test0101_Method(){
 public void test0102_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z bar\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z bar\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4342,11 +4342,11 @@ public void test0102_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4362,9 +4362,9 @@ public void test0102_Diet(){
 public void test0102_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z bar\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z bar\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4375,12 +4375,12 @@ public void test0102_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -4396,9 +4396,9 @@ public void test0102_Method(){
 public void test0103_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z> bar\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z> bar\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4409,11 +4409,11 @@ public void test0103_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4429,9 +4429,9 @@ public void test0103_Diet(){
 public void test0103_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z> bar\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z> bar\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4442,12 +4442,12 @@ public void test0103_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -4463,9 +4463,9 @@ public void test0103_Method(){
 public void test0104_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>> bar\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>> bar\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4476,11 +4476,11 @@ public void test0104_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4496,9 +4496,9 @@ public void test0104_Diet(){
 public void test0104_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>> bar\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>> bar\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4509,12 +4509,12 @@ public void test0104_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -4530,9 +4530,9 @@ public void test0104_Method(){
 public void test0105_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4543,11 +4543,11 @@ public void test0105_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4563,9 +4563,9 @@ public void test0105_Diet(){
 public void test0105_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4576,12 +4576,12 @@ public void test0105_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -4597,9 +4597,9 @@ public void test0105_Method(){
 public void test0106_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4610,11 +4610,11 @@ public void test0106_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4630,9 +4630,9 @@ public void test0106_Diet(){
 public void test0106_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4643,12 +4643,12 @@ public void test0106_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -4664,9 +4664,9 @@ public void test0106_Method(){
 public void test0107_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>>\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>>\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4677,11 +4677,11 @@ public void test0107_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4697,9 +4697,9 @@ public void test0107_Diet(){
 public void test0107_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    this.<Y, Y<Z>>\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    this.<Y, Y<Z>>\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4710,12 +4710,12 @@ public void test0107_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -4731,9 +4731,9 @@ public void test0107_Method(){
 public void test0108_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new <Y, Y<Z X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new <Y, Y<Z X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4744,11 +4744,11 @@ public void test0108_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4764,9 +4764,9 @@ public void test0108_Diet(){
 public void test0108_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new <Y, Y<Z X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new <Y, Y<Z X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4777,12 +4777,12 @@ public void test0108_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -4798,9 +4798,9 @@ public void test0108_Method(){
 public void test0109_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new <Y, Y<Z> X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new <Y, Y<Z> X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4811,11 +4811,11 @@ public void test0109_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4831,9 +4831,9 @@ public void test0109_Diet(){
 public void test0109_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new <Y, Y<Z> X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new <Y, Y<Z> X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4844,12 +4844,12 @@ public void test0109_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -4865,9 +4865,9 @@ public void test0109_Method(){
 public void test0110_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new <Y, Y<Z>> X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new <Y, Y<Z>> X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4878,11 +4878,11 @@ public void test0110_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4898,9 +4898,9 @@ public void test0110_Diet(){
 public void test0110_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new <Y, Y<Z>> X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new <Y, Y<Z>> X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4911,12 +4911,12 @@ public void test0110_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -4932,9 +4932,9 @@ public void test0110_Method(){
 public void test0111_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    aaa.new <Y, Y<Z X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    aaa.new <Y, Y<Z X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4945,11 +4945,11 @@ public void test0111_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -4965,9 +4965,9 @@ public void test0111_Diet(){
 public void test0111_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    aaa.new <Y, Y<Z X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    aaa.new <Y, Y<Z X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -4978,12 +4978,12 @@ public void test0111_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -4999,9 +4999,9 @@ public void test0111_Method(){
 public void test0112_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    aaa.new <Y, Y<Z> X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    aaa.new <Y, Y<Z> X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5012,11 +5012,11 @@ public void test0112_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -5032,9 +5032,9 @@ public void test0112_Diet(){
 public void test0112_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    aaa.new <Y, Y<Z> X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    aaa.new <Y, Y<Z> X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5045,12 +5045,12 @@ public void test0112_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -5066,9 +5066,9 @@ public void test0112_Method(){
 public void test0113_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    aaa.new <Y, Y<Z>> X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    aaa.new <Y, Y<Z>> X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5079,11 +5079,11 @@ public void test0113_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -5099,9 +5099,9 @@ public void test0113_Diet(){
 public void test0113_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    aaa.new <Y, Y<Z>> X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    aaa.new <Y, Y<Z>> X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5112,12 +5112,12 @@ public void test0113_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -5133,9 +5133,9 @@ public void test0113_Method(){
 public void test0114_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new V().new <Y, Y<Z X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new V().new <Y, Y<Z X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5146,11 +5146,11 @@ public void test0114_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -5166,9 +5166,9 @@ public void test0114_Diet(){
 public void test0114_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new V().new <Y, Y<Z X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new V().new <Y, Y<Z X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5179,12 +5179,12 @@ public void test0114_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -5200,9 +5200,9 @@ public void test0114_Method(){
 public void test0115_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new V().new <Y, Y<Z> X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new V().new <Y, Y<Z> X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5213,11 +5213,11 @@ public void test0115_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -5233,9 +5233,9 @@ public void test0115_Diet(){
 public void test0115_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new V().new <Y, Y<Z> X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new V().new <Y, Y<Z> X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5246,12 +5246,12 @@ public void test0115_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -5267,9 +5267,9 @@ public void test0115_Method(){
 public void test0116_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new V().new <Y, Y<Z>> X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new V().new <Y, Y<Z>> X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5280,11 +5280,11 @@ public void test0116_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -5300,9 +5300,9 @@ public void test0116_Diet(){
 public void test0116_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new V().new <Y, Y<Z>> X();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new V().new <Y, Y<Z>> X();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5313,12 +5313,12 @@ public void test0116_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -5334,9 +5334,9 @@ public void test0116_Method(){
 public void test0117_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    for(Y<Z var;;){}\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    for(Y<Z var;;){}\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5347,11 +5347,11 @@ public void test0117_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -5367,9 +5367,9 @@ public void test0117_Diet(){
 public void test0117_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    for(Y<Z var;;){}\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    for(Y<Z var;;){}\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5380,12 +5380,12 @@ public void test0117_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -5401,9 +5401,9 @@ public void test0117_Method(){
 public void test0118_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    for(Y<Z> var;;){}\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    for(Y<Z> var;;){}\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5414,11 +5414,11 @@ public void test0118_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -5434,9 +5434,9 @@ public void test0118_Diet(){
 public void test0118_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    for(Y<Z> var;;){}\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    for(Y<Z> var;;){}\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5447,12 +5447,12 @@ public void test0118_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -5468,9 +5468,9 @@ public void test0118_Method(){
 public void test0119_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    for(Y<Z\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    for(Y<Z\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5481,11 +5481,11 @@ public void test0119_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -5501,9 +5501,9 @@ public void test0119_Diet(){
 public void test0119_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    for(Y<Z\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    for(Y<Z\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5514,12 +5514,12 @@ public void test0119_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -5535,9 +5535,9 @@ public void test0119_Method(){
 public void test0120_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    for(Y<Z>\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    for(Y<Z>\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5548,11 +5548,11 @@ public void test0120_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -5568,9 +5568,9 @@ public void test0120_Diet(){
 public void test0120_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    for(Y<Z>\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    for(Y<Z>\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5581,12 +5581,12 @@ public void test0120_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -5602,11 +5602,11 @@ public void test0120_Method(){
 public void test0121_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    try {\n" + 
+		"  void foo() {\n" +
+		"    try {\n" +
 		"    } catch(Y<Z e) {\n" +
-		"   }\n" + 
-		"  }\n" + 
+		"   }\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5617,11 +5617,11 @@ public void test0121_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -5637,11 +5637,11 @@ public void test0121_Diet(){
 public void test0121_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    try {\n" + 
+		"  void foo() {\n" +
+		"    try {\n" +
 		"    } catch(Y<Z e) {\n" +
-		"   }\n" + 
-		"  }\n" + 
+		"   }\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5652,12 +5652,12 @@ public void test0121_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -5673,11 +5673,11 @@ public void test0121_Method(){
 public void test0122_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    try {\n" + 
+		"  void foo() {\n" +
+		"    try {\n" +
 		"    } catch(Y<Z> e) {\n" +
-		"   }\n" + 
-		"  }\n" + 
+		"   }\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5688,11 +5688,11 @@ public void test0122_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -5708,11 +5708,11 @@ public void test0122_Diet(){
 public void test0122_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    try {\n" + 
+		"  void foo() {\n" +
+		"    try {\n" +
 		"    } catch(Y<Z> e) {\n" +
-		"   }\n" + 
-		"  }\n" + 
+		"   }\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5723,12 +5723,12 @@ public void test0122_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -5744,10 +5744,10 @@ public void test0122_Method(){
 public void test0123_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    try {\n" + 
-		"    } catch(Y<Z e\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    try {\n" +
+		"    } catch(Y<Z e\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5758,11 +5758,11 @@ public void test0123_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -5778,10 +5778,10 @@ public void test0123_Diet(){
 public void test0123_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    try {\n" + 
-		"    } catch(Y<Z e\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    try {\n" +
+		"    } catch(Y<Z e\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5792,12 +5792,12 @@ public void test0123_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -5813,10 +5813,10 @@ public void test0123_Method(){
 public void test0124_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    try {\n" + 
-		"    } catch(Y<Z> e\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    try {\n" +
+		"    } catch(Y<Z> e\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5827,11 +5827,11 @@ public void test0124_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -5847,10 +5847,10 @@ public void test0124_Diet(){
 public void test0124_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    try {\n" + 
-		"    } catch(Y<Z> e\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    try {\n" +
+		"    } catch(Y<Z> e\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5861,12 +5861,12 @@ public void test0124_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -5882,9 +5882,9 @@ public void test0124_Method(){
 public void test0125_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    catch(Y<Z e\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    catch(Y<Z e\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5895,11 +5895,11 @@ public void test0125_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -5915,9 +5915,9 @@ public void test0125_Diet(){
 public void test0125_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    catch(Y<Z e\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    catch(Y<Z e\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5928,12 +5928,12 @@ public void test0125_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -5949,9 +5949,9 @@ public void test0125_Method(){
 public void test0126_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    catch(Y<Z> e\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    catch(Y<Z> e\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5962,11 +5962,11 @@ public void test0126_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -5982,9 +5982,9 @@ public void test0126_Diet(){
 public void test0126_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    catch(Y<Z> e\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    catch(Y<Z> e\n" +
+		"  }\n" +
 		"}";
 
 
@@ -5995,12 +5995,12 @@ public void test0126_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -6016,9 +6016,9 @@ public void test0126_Method(){
 public void test0127_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object a = (Y<Z ) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object a = (Y<Z ) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6029,11 +6029,11 @@ public void test0127_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -6049,9 +6049,9 @@ public void test0127_Diet(){
 public void test0127_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object a = (Y<Z ) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object a = (Y<Z ) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6062,12 +6062,12 @@ public void test0127_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Object a = (Y < <CompleteOnName:Z>);\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Object a = (Y < <CompleteOnName:Z>);\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -6083,9 +6083,9 @@ public void test0127_Method(){
 public void test0128_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object a = (Y<Z> ) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object a = (Y<Z> ) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6096,11 +6096,11 @@ public void test0128_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -6116,9 +6116,9 @@ public void test0128_Diet(){
 public void test0128_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object a = (Y<Z> ) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object a = (Y<Z> ) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6129,12 +6129,12 @@ public void test0128_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Object a = (Y < <CompleteOnName:Z>);\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Object a = (Y < <CompleteOnName:Z>);\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -6150,9 +6150,9 @@ public void test0128_Method(){
 public void test0129_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    (Y<Z) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    (Y<Z) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6163,11 +6163,11 @@ public void test0129_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -6183,9 +6183,9 @@ public void test0129_Diet(){
 public void test0129_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    (Y<Z) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    (Y<Z) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6196,12 +6196,12 @@ public void test0129_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    (Y < <CompleteOnName:Z>);\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    (Y < <CompleteOnName:Z>);\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -6217,9 +6217,9 @@ public void test0129_Method(){
 public void test0130_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    (Y<Z>) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    (Y<Z>) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6230,11 +6230,11 @@ public void test0130_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -6250,9 +6250,9 @@ public void test0130_Diet(){
 public void test0130_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    (Y<Z>) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    (Y<Z>) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6263,12 +6263,12 @@ public void test0130_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    (Y < <CompleteOnName:Z>);\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    (Y < <CompleteOnName:Z>);\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -6284,9 +6284,9 @@ public void test0130_Method(){
 public void test0131_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object[] o = new Y<Z[0];\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object[] o = new Y<Z[0];\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6297,11 +6297,11 @@ public void test0131_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -6317,9 +6317,9 @@ public void test0131_Diet(){
 public void test0131_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object[] o = new Y<Z[0];\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object[] o = new Y<Z[0];\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6330,12 +6330,12 @@ public void test0131_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Object[] o = Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Object[] o = Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -6351,9 +6351,9 @@ public void test0131_Method(){
 public void test0132_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object[] o = new Y<Z>[0];\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object[] o = new Y<Z>[0];\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6364,11 +6364,11 @@ public void test0132_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -6384,9 +6384,9 @@ public void test0132_Diet(){
 public void test0132_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object[] o = new Y<Z>[0];\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object[] o = new Y<Z>[0];\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6397,12 +6397,12 @@ public void test0132_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Object[] o = Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Object[] o = Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -6418,9 +6418,9 @@ public void test0132_Method(){
 public void test0133_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object[] o = new Y<Z\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object[] o = new Y<Z\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6431,11 +6431,11 @@ public void test0133_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -6451,9 +6451,9 @@ public void test0133_Diet(){
 public void test0133_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object[] o = new Y<Z\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object[] o = new Y<Z\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6464,12 +6464,12 @@ public void test0133_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Object[] o = Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Object[] o = Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -6485,9 +6485,9 @@ public void test0133_Method(){
 public void test0134_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object[] o = new Y<Z>\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object[] o = new Y<Z>\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6498,11 +6498,11 @@ public void test0134_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -6518,9 +6518,9 @@ public void test0134_Diet(){
 public void test0134_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object[] o = new Y<Z>\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object[] o = new Y<Z>\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6531,12 +6531,12 @@ public void test0134_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Object[] o = Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Object[] o = Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -6552,9 +6552,9 @@ public void test0134_Method(){
 public void test0135_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new Y<Z\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new Y<Z\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6565,11 +6565,11 @@ public void test0135_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -6585,9 +6585,9 @@ public void test0135_Diet(){
 public void test0135_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new Y<Z\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new Y<Z\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6598,12 +6598,12 @@ public void test0135_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -6619,9 +6619,9 @@ public void test0135_Method(){
 public void test0136_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new Y<Z>\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new Y<Z>\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6632,11 +6632,11 @@ public void test0136_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -6652,9 +6652,9 @@ public void test0136_Diet(){
 public void test0136_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    new Y<Z>\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    new Y<Z>\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6665,12 +6665,12 @@ public void test0136_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -6686,9 +6686,9 @@ public void test0136_Method(){
 public void test0137_Diet(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    <Y<Z super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    <Y<Z super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6699,9 +6699,9 @@ public void test0137_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -6717,9 +6717,9 @@ public void test0137_Diet(){
 public void test0137_Method(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    <Y<Z super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    <Y<Z super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6730,11 +6730,11 @@ public void test0137_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"    super();\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"    super();\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -6750,9 +6750,9 @@ public void test0137_Method(){
 public void test0138_Diet(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    <Y<Z> super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    <Y<Z> super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6763,9 +6763,9 @@ public void test0138_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -6781,9 +6781,9 @@ public void test0138_Diet(){
 public void test0138_Method(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    <Y<Z> super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    <Y<Z> super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6794,11 +6794,11 @@ public void test0138_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"    super();\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"    super();\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -6814,9 +6814,9 @@ public void test0138_Method(){
 public void test0139_Diet(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    <Y<Z>> super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    <Y<Z>> super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6827,9 +6827,9 @@ public void test0139_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -6845,9 +6845,9 @@ public void test0139_Diet(){
 public void test0139_Method(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    <Y<Z>> super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    <Y<Z>> super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6858,11 +6858,11 @@ public void test0139_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"    super();\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"    super();\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -6878,9 +6878,9 @@ public void test0139_Method(){
 public void test0140_Diet(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    aaa.<Y<Z super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    aaa.<Y<Z super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6891,9 +6891,9 @@ public void test0140_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -6909,9 +6909,9 @@ public void test0140_Diet(){
 public void test0140_Method(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    aaa.<Y<Z super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    aaa.<Y<Z super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6922,11 +6922,11 @@ public void test0140_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"    super();\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"    super();\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -6942,9 +6942,9 @@ public void test0140_Method(){
 public void test0141_Diet(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    aaa.<Y<Z> super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    aaa.<Y<Z> super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6955,9 +6955,9 @@ public void test0141_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -6973,9 +6973,9 @@ public void test0141_Diet(){
 public void test0141_Method(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    aaa.<Y<Z> super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    aaa.<Y<Z> super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -6986,11 +6986,11 @@ public void test0141_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"    super();\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"    super();\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -7006,9 +7006,9 @@ public void test0141_Method(){
 public void test0142_Diet(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    aaa.<Y<Z>> super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    aaa.<Y<Z>> super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -7019,9 +7019,9 @@ public void test0142_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7037,9 +7037,9 @@ public void test0142_Diet(){
 public void test0142_Method(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    aaa.<Y<Z>> super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    aaa.<Y<Z>> super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -7050,11 +7050,11 @@ public void test0142_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"    super();\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"    super();\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -7070,9 +7070,9 @@ public void test0142_Method(){
 public void test0143_Diet(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    A.this.<Y<Z super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    A.this.<Y<Z super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -7083,9 +7083,9 @@ public void test0143_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7101,9 +7101,9 @@ public void test0143_Diet(){
 public void test0143_Method(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    A.this.<Y<Z super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    A.this.<Y<Z super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -7114,11 +7114,11 @@ public void test0143_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"    super();\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"    super();\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -7134,9 +7134,9 @@ public void test0143_Method(){
 public void test0144_Diet(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    A.this.<Y<Z> super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    A.this.<Y<Z> super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -7147,9 +7147,9 @@ public void test0144_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7165,9 +7165,9 @@ public void test0144_Diet(){
 public void test0144_Method(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    A.this.<Y<Z> super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    A.this.<Y<Z> super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -7178,11 +7178,11 @@ public void test0144_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"    super();\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"    super();\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -7198,9 +7198,9 @@ public void test0144_Method(){
 public void test0145_Diet(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    A.this.<Y<Z>> super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    A.this.<Y<Z>> super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -7211,9 +7211,9 @@ public void test0145_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7229,9 +7229,9 @@ public void test0145_Diet(){
 public void test0145_Method(){
 	String str =
 		"public class X {\n" +
-		"  public X() {\n" + 
-		"    A.this.<Y<Z>> super(0);\n" + 
-		"  }\n" + 
+		"  public X() {\n" +
+		"    A.this.<Y<Z>> super(0);\n" +
+		"  }\n" +
 		"}";
 
 
@@ -7242,11 +7242,11 @@ public void test0145_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"    super();\n" + 
-			"    Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"    super();\n" +
+			"    Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -7262,7 +7262,7 @@ public void test0145_Method(){
 public void test0146(){
 	String str =
 		"public class X {\n" +
-		"  W<Y<Z\n" + 
+		"  W<Y<Z\n" +
 		"}";
 
 
@@ -7273,10 +7273,10 @@ public void test0146(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7292,7 +7292,7 @@ public void test0146(){
 public void test0147(){
 	String str =
 		"public class X {\n" +
-		"  W<Y<Z>\n" + 
+		"  W<Y<Z>\n" +
 		"}";
 
 
@@ -7303,10 +7303,10 @@ public void test0147(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7322,7 +7322,7 @@ public void test0147(){
 public void test0148(){
 	String str =
 		"public class X {\n" +
-		"  W<Y<Z>>\n" + 
+		"  W<Y<Z>>\n" +
 		"}";
 
 
@@ -7333,10 +7333,10 @@ public void test0148(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7352,7 +7352,7 @@ public void test0148(){
 public void test0149(){
 	String str =
 		"public class X {\n" +
-		"  W<Y<Z>> var\n" + 
+		"  W<Y<Z>> var\n" +
 		"}";
 
 
@@ -7363,10 +7363,10 @@ public void test0149(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  W<Y<<CompleteOnType:Z>>> var;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  W<Y<<CompleteOnType:Z>>> var;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7382,7 +7382,7 @@ public void test0149(){
 public void test0150(){
 	String str =
 		"public class X {\n" +
-		"  W<Y<Z>> var;\n" + 
+		"  W<Y<Z>> var;\n" +
 		"}";
 
 
@@ -7393,10 +7393,10 @@ public void test0150(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  W<Y<<CompleteOnType:Z>>> var;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  W<Y<<CompleteOnType:Z>>> var;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7412,7 +7412,7 @@ public void test0150(){
 public void test0151(){
 	String str =
 		"public class X {\n" +
-		"  W<A,B,C\n" + 
+		"  W<A,B,C\n" +
 		"}";
 
 
@@ -7423,10 +7423,10 @@ public void test0151(){
 	String completionIdentifier = "B";
 	String expectedReplacedSource = "B";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  W<A, <CompleteOnType:B>, C>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  W<A, <CompleteOnType:B>, C>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7442,7 +7442,7 @@ public void test0151(){
 public void test0152(){
 	String str =
 		"public class X {\n" +
-		"  W<A,B,C>\n" + 
+		"  W<A,B,C>\n" +
 		"}";
 
 
@@ -7453,10 +7453,10 @@ public void test0152(){
 	String completionIdentifier = "B";
 	String expectedReplacedSource = "B";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  W<A, <CompleteOnType:B>, C>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  W<A, <CompleteOnType:B>, C>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7472,7 +7472,7 @@ public void test0152(){
 public void test0153(){
 	String str =
 		"public class X {\n" +
-		"  W<A,B,C> var\n" + 
+		"  W<A,B,C> var\n" +
 		"}";
 
 
@@ -7483,10 +7483,10 @@ public void test0153(){
 	String completionIdentifier = "B";
 	String expectedReplacedSource = "B";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  W<A, <CompleteOnType:B>, C> var;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  W<A, <CompleteOnType:B>, C> var;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7502,7 +7502,7 @@ public void test0153(){
 public void test0154(){
 	String str =
 		"public class X {\n" +
-		"  W<A,B,C> var;\n" + 
+		"  W<A,B,C> var;\n" +
 		"}";
 
 
@@ -7513,10 +7513,10 @@ public void test0154(){
 	String completionIdentifier = "B";
 	String expectedReplacedSource = "B";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  W<A, <CompleteOnType:B>, C> var;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  W<A, <CompleteOnType:B>, C> var;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7532,7 +7532,7 @@ public void test0154(){
 public void test0155(){
 	String str =
 		"public class X {\n" +
-		"  Y<Z>.V<W> var;\n" + 
+		"  Y<Z>.V<W> var;\n" +
 		"}";
 
 
@@ -7543,10 +7543,10 @@ public void test0155(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>.V<W> var;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>.V<W> var;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7562,7 +7562,7 @@ public void test0155(){
 public void test0156(){
 	String str =
 		"public class X {\n" +
-		"  Y<Z>.V<W> var\n" + 
+		"  Y<Z>.V<W> var\n" +
 		"}";
 
 
@@ -7573,10 +7573,10 @@ public void test0156(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>.V<W> var;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>.V<W> var;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7592,7 +7592,7 @@ public void test0156(){
 public void test0157(){
 	String str =
 		"public class X {\n" +
-		"  Y<Z>.V<W>\n" + 
+		"  Y<Z>.V<W>\n" +
 		"}";
 
 
@@ -7603,10 +7603,10 @@ public void test0157(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>.V<W>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>.V<W>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7622,7 +7622,7 @@ public void test0157(){
 public void test0158(){
 	String str =
 		"public class X {\n" +
-		"  Y<Z>.V<W\n" + 
+		"  Y<Z>.V<W\n" +
 		"}";
 
 
@@ -7633,10 +7633,10 @@ public void test0158(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Y<<CompleteOnType:Z>>.V<W>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Y<<CompleteOnType:Z>>.V<W>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7652,9 +7652,9 @@ public void test0158(){
 public void test0159_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object a = (W<Y<Z> ) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object a = (W<Y<Z> ) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -7665,11 +7665,11 @@ public void test0159_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7685,9 +7685,9 @@ public void test0159_Diet(){
 public void test0159_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object a = (W<Y<Z> ) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object a = (W<Y<Z> ) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -7698,12 +7698,12 @@ public void test0159_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Object a = Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Object a = Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -7719,9 +7719,9 @@ public void test0159_Method(){
 public void test0160_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    ((Y<Z>) e).foo();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    ((Y<Z>) e).foo();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -7732,11 +7732,11 @@ public void test0160_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7752,9 +7752,9 @@ public void test0160_Diet(){
 public void test0160_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    ((Y<Z>) e).foo();\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    ((Y<Z>) e).foo();\n" +
+		"  }\n" +
 		"}";
 
 
@@ -7765,12 +7765,12 @@ public void test0160_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    (Y < <CompleteOnName:Z>);\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    (Y < <CompleteOnName:Z>);\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -7796,9 +7796,9 @@ public void test0161(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X<T extends <CompleteOnType:Z>> {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X<T extends <CompleteOnType:Z>> {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7824,9 +7824,9 @@ public void test0162(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "X.Z";
 	String expectedUnitDisplayString =
-		"public class X<T extends <CompleteOnType:X.Z>> {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X<T extends <CompleteOnType:X.Z>> {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7852,9 +7852,9 @@ public void test0163(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "X<W>.Z";
 	String expectedUnitDisplayString =
-		"public class X<T extends <CompleteOnType:X<W>.Z>> {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X<T extends <CompleteOnType:X<W>.Z>> {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7881,11 +7881,11 @@ public void test0164(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "X<W>.Z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <T extends <CompleteOnType:X<W>.Z>>foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <T extends <CompleteOnType:X<W>.Z>>foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7901,9 +7901,9 @@ public void test0164(){
 public void test0165_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object a = (W.Y<Z>) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object a = (W.Y<Z>) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -7914,11 +7914,11 @@ public void test0165_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -7934,9 +7934,9 @@ public void test0165_Diet(){
 public void test0165_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object a = (W.Y<Z>) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object a = (W.Y<Z>) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -7947,12 +7947,12 @@ public void test0165_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Object a = (W.Y < <CompleteOnName:Z>);\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Object a = (W.Y < <CompleteOnName:Z>);\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -7968,9 +7968,9 @@ public void test0165_Method(){
 public void test0166_Diet(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object a = (W<U>.Y<Z>) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object a = (W<U>.Y<Z>) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -7981,11 +7981,11 @@ public void test0166_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -8001,9 +8001,9 @@ public void test0166_Diet(){
 public void test0166_Method(){
 	String str =
 		"public class X {\n" +
-		"  void foo() {\n" + 
-		"    Object a = (W<U>.Y<Z>) e;\n" + 
-		"  }\n" + 
+		"  void foo() {\n" +
+		"    Object a = (W<U>.Y<Z>) e;\n" +
+		"  }\n" +
 		"}";
 
 
@@ -8014,12 +8014,12 @@ public void test0166_Method(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    Object a = W<U>.Y<<CompleteOnType:Z>>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    Object a = W<U>.Y<<CompleteOnType:Z>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -8042,8 +8042,8 @@ public void test0167_Diet(){
 		"    List<Integer> cont=new ArrayList<Integer>();\n" +
 		"    for (Integer i:cont){\n" +
 		"      i.\n" +
-		"    }\n" + 
-		"  }\n" + 
+		"    }\n" +
+		"  }\n" +
 		"}";
 
 
@@ -8054,11 +8054,11 @@ public void test0167_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -8081,8 +8081,8 @@ public void test0167_Method(){
 		"    List<Integer> cont=new ArrayList<Integer>();\n" +
 		"    for (Integer i:cont){\n" +
 		"      i.\n" +
-		"    }\n" + 
-		"  }\n" + 
+		"    }\n" +
+		"  }\n" +
 		"}";
 
 
@@ -8093,16 +8093,16 @@ public void test0167_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "i.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    List<Integer> cont;\n" + 
-			"    Integer i;\n" + 
-			"    {\n" + 
-			"      <CompleteOnName:i.>;\n" + 
-			"    }\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    List<Integer> cont;\n" +
+			"    Integer i;\n" +
+			"    {\n" +
+			"      <CompleteOnName:i.>;\n" +
+			"    }\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -8124,9 +8124,9 @@ public void test0168_Diet(){
 		"  void foo(){\n" +
 		"    List<Integer> cont=new ArrayList<Integer>();\n" +
 		"    for (Integer i:cont){\n" +
-		"    }\n" + 
+		"    }\n" +
 		"    i.\n" +
-		"  }\n" + 
+		"  }\n" +
 		"}";
 
 
@@ -8137,11 +8137,11 @@ public void test0168_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -8163,9 +8163,9 @@ public void test0168_Method(){
 		"  void foo(){\n" +
 		"    List<Integer> cont=new ArrayList<Integer>();\n" +
 		"    for (Integer i:cont){\n" +
-		"    }\n" + 
+		"    }\n" +
 		"    i.\n" +
-		"  }\n" + 
+		"  }\n" +
 		"}";
 
 
@@ -8176,13 +8176,13 @@ public void test0168_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "i.";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    List<Integer> cont;\n" + 
-			"    <CompleteOnName:i.>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    List<Integer> cont;\n" +
+			"    <CompleteOnName:i.>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -8216,12 +8216,12 @@ public void test0169(){
 	String completionIdentifier = "Object";
 	String expectedReplacedSource = "Object";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  <CompleteOnType:Object>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo(int[] a, int[] b) {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  <CompleteOnType:Object>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo(int[] a, int[] b) {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -8254,12 +8254,12 @@ public void test0170(){
 	String completionIdentifier = "bar";
 	String expectedReplacedSource = "bar";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  <CompleteOnType:bar>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  <CompleteOnType:bar>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -8285,9 +8285,9 @@ public void _testXXX2(){
 	String completionIdentifier = "Z";
 	String expectedReplacedSource = "Z";
 	String expectedUnitDisplayString =
-		"public class X extends <CompleteOnClass:Y> {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X extends <CompleteOnClass:Y> {\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -8305,12 +8305,12 @@ public void _testXXX2(){
  */
 public void test0171_Diet(){
 	String str =
-		"public class X{\n" + 
-		"  public void foo() {\n" + 
-		"    Object o =(A<B>) tmp;\n" + 
-		"    bar\n" + 
-		"  }\n" + 
-		"}\n" + 
+		"public class X{\n" +
+		"  public void foo() {\n" +
+		"    Object o =(A<B>) tmp;\n" +
+		"    bar\n" +
+		"  }\n" +
+		"}\n" +
 		"\n";
 
 
@@ -8321,11 +8321,11 @@ public void test0171_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  public void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  public void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -8343,12 +8343,12 @@ public void test0171_Diet(){
  */
 public void test0171_Method(){
 	String str =
-		"public class X{\n" + 
-		"  public void foo() {\n" + 
-		"    Object o =(A<B>) tmp;\n" + 
-		"    bar\n" + 
-		"  }\n" + 
-		"}\n" + 
+		"public class X{\n" +
+		"  public void foo() {\n" +
+		"    Object o =(A<B>) tmp;\n" +
+		"    bar\n" +
+		"  }\n" +
+		"}\n" +
 		"\n";
 
 
@@ -8359,13 +8359,13 @@ public void test0171_Method(){
 	String completionIdentifier = "bar";
 	String expectedReplacedSource = "bar";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  public void foo() {\n" + 
-			"    Object o;\n" + 
-			"    <CompleteOnName:bar>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public void foo() {\n" +
+			"    Object o;\n" +
+			"    <CompleteOnName:bar>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -8383,12 +8383,12 @@ public void test0171_Method(){
  */
 public void test0172_Diet(){
 	String str =
-		"public class X{\n" + 
-		"  public void foo() {\n" + 
-		"    Object o =(A<B>[]) tmp;\n" + 
-		"    bar\n" + 
-		"  }\n" + 
-		"}\n" + 
+		"public class X{\n" +
+		"  public void foo() {\n" +
+		"    Object o =(A<B>[]) tmp;\n" +
+		"    bar\n" +
+		"  }\n" +
+		"}\n" +
 		"\n";
 
 
@@ -8399,11 +8399,11 @@ public void test0172_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  public void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  public void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -8421,12 +8421,12 @@ public void test0172_Diet(){
  */
 public void test0172_Method(){
 	String str =
-		"public class X{\n" + 
-		"  public void foo() {\n" + 
-		"    Object o =(A<B>[]) tmp;\n" + 
-		"    bar\n" + 
-		"  }\n" + 
-		"}\n" + 
+		"public class X{\n" +
+		"  public void foo() {\n" +
+		"    Object o =(A<B>[]) tmp;\n" +
+		"    bar\n" +
+		"  }\n" +
+		"}\n" +
 		"\n";
 
 
@@ -8437,13 +8437,13 @@ public void test0172_Method(){
 	String completionIdentifier = "bar";
 	String expectedReplacedSource = "bar";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  public void foo() {\n" + 
-			"    Object o;\n" + 
-			"    <CompleteOnName:bar>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public void foo() {\n" +
+			"    Object o;\n" +
+			"    <CompleteOnName:bar>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -8461,12 +8461,12 @@ public void test0172_Method(){
  */
 public void test0173_Diet(){
 	String str =
-		"public class X{\n" + 
-		"  public void foo() {\n" + 
-		"    Object o =(A<B>.C) tmp;\n" + 
-		"    bar\n" + 
-		"  }\n" + 
-		"}\n" + 
+		"public class X{\n" +
+		"  public void foo() {\n" +
+		"    Object o =(A<B>.C) tmp;\n" +
+		"    bar\n" +
+		"  }\n" +
+		"}\n" +
 		"\n";
 
 
@@ -8477,11 +8477,11 @@ public void test0173_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  public void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  public void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -8499,12 +8499,12 @@ public void test0173_Diet(){
  */
 public void test0173_Method(){
 	String str =
-		"public class X{\n" + 
-		"  public void foo() {\n" + 
-		"    Object o =(A<B>.C) tmp;\n" + 
-		"    bar\n" + 
-		"  }\n" + 
-		"}\n" + 
+		"public class X{\n" +
+		"  public void foo() {\n" +
+		"    Object o =(A<B>.C) tmp;\n" +
+		"    bar\n" +
+		"  }\n" +
+		"}\n" +
 		"\n";
 
 
@@ -8515,13 +8515,13 @@ public void test0173_Method(){
 	String completionIdentifier = "bar";
 	String expectedReplacedSource = "bar";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  public void foo() {\n" + 
-			"    Object o;\n" + 
-			"    <CompleteOnName:bar>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public void foo() {\n" +
+			"    Object o;\n" +
+			"    <CompleteOnName:bar>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -8539,12 +8539,12 @@ public void test0173_Method(){
  */
 public void test0174_Diet(){
 	String str =
-		"public class X{\n" + 
-		"  public void foo() {\n" + 
-		"    Object o =(A<B>.C[]) tmp;\n" + 
-		"    bar\n" + 
-		"  }\n" + 
-		"}\n" + 
+		"public class X{\n" +
+		"  public void foo() {\n" +
+		"    Object o =(A<B>.C[]) tmp;\n" +
+		"    bar\n" +
+		"  }\n" +
+		"}\n" +
 		"\n";
 
 
@@ -8555,11 +8555,11 @@ public void test0174_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  public void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  public void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -8577,12 +8577,12 @@ public void test0174_Diet(){
  */
 public void test0174_Method(){
 	String str =
-		"public class X{\n" + 
-		"  public void foo() {\n" + 
-		"    Object o =(A<B>.C[]) tmp;\n" + 
-		"    bar\n" + 
-		"  }\n" + 
-		"}\n" + 
+		"public class X{\n" +
+		"  public void foo() {\n" +
+		"    Object o =(A<B>.C[]) tmp;\n" +
+		"    bar\n" +
+		"  }\n" +
+		"}\n" +
 		"\n";
 
 
@@ -8593,13 +8593,13 @@ public void test0174_Method(){
 	String completionIdentifier = "bar";
 	String expectedReplacedSource = "bar";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  public void foo() {\n" + 
-			"    Object o;\n" + 
-			"    <CompleteOnName:bar>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public void foo() {\n" +
+			"    Object o;\n" +
+			"    <CompleteOnName:bar>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -8617,12 +8617,12 @@ public void test0174_Method(){
  */
 public void test0175_Diet(){
 	String str =
-		"public class X{\n" + 
-		"  public void foo() {\n" + 
-		"    Object o =(A<B>.C<D>) tmp;\n" + 
-		"    bar\n" + 
-		"  }\n" + 
-		"}\n" + 
+		"public class X{\n" +
+		"  public void foo() {\n" +
+		"    Object o =(A<B>.C<D>) tmp;\n" +
+		"    bar\n" +
+		"  }\n" +
+		"}\n" +
 		"\n";
 
 
@@ -8633,11 +8633,11 @@ public void test0175_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  public void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  public void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -8655,12 +8655,12 @@ public void test0175_Diet(){
  */
 public void test0175_Method(){
 	String str =
-		"public class X{\n" + 
-		"  public void foo() {\n" + 
-		"    Object o =(A<B>.C<D>) tmp;\n" + 
-		"    bar\n" + 
-		"  }\n" + 
-		"}\n" + 
+		"public class X{\n" +
+		"  public void foo() {\n" +
+		"    Object o =(A<B>.C<D>) tmp;\n" +
+		"    bar\n" +
+		"  }\n" +
+		"}\n" +
 		"\n";
 
 
@@ -8671,13 +8671,13 @@ public void test0175_Method(){
 	String completionIdentifier = "bar";
 	String expectedReplacedSource = "bar";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  public void foo() {\n" + 
-			"    Object o;\n" + 
-			"    <CompleteOnName:bar>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public void foo() {\n" +
+			"    Object o;\n" +
+			"    <CompleteOnName:bar>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -8695,12 +8695,12 @@ public void test0175_Method(){
  */
 public void test0176_Diet(){
 	String str =
-		"public class X{\n" + 
-		"  public void foo() {\n" + 
-		"    Object o =(A<B>.C<D>[]) tmp;\n" + 
-		"    bar\n" + 
-		"  }\n" + 
-		"}\n" + 
+		"public class X{\n" +
+		"  public void foo() {\n" +
+		"    Object o =(A<B>.C<D>[]) tmp;\n" +
+		"    bar\n" +
+		"  }\n" +
+		"}\n" +
 		"\n";
 
 
@@ -8711,11 +8711,11 @@ public void test0176_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  public void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  public void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -8733,12 +8733,12 @@ public void test0176_Diet(){
  */
 public void test0176_Method(){
 	String str =
-		"public class X{\n" + 
-		"  public void foo() {\n" + 
-		"    Object o =(A<B>.C<D>[]) tmp;\n" + 
-		"    bar\n" + 
-		"  }\n" + 
-		"}\n" + 
+		"public class X{\n" +
+		"  public void foo() {\n" +
+		"    Object o =(A<B>.C<D>[]) tmp;\n" +
+		"    bar\n" +
+		"  }\n" +
+		"}\n" +
 		"\n";
 
 
@@ -8749,13 +8749,13 @@ public void test0176_Method(){
 	String completionIdentifier = "bar";
 	String expectedReplacedSource = "bar";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  public void foo() {\n" + 
-			"    Object o;\n" + 
-			"    <CompleteOnName:bar>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public void foo() {\n" +
+			"    Object o;\n" +
+			"    <CompleteOnName:bar>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -8773,9 +8773,9 @@ public void test0176_Method(){
  */
 public void test0177(){
 	String str =
-		"public class X{\n" + 
-		"  Stack<List<Object>> o = null;\n" + 
-		"}\n" + 
+		"public class X{\n" +
+		"  Stack<List<Object>> o = null;\n" +
+		"}\n" +
 		"\n";
 
 
@@ -8786,10 +8786,10 @@ public void test0177(){
 	String completionIdentifier = "Stack";
 	String expectedReplacedSource = "Stack";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  <CompleteOnType:Stack>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  <CompleteOnType:Stack>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n"
 ;
 
@@ -8809,9 +8809,9 @@ public void test0177(){
  */
 public void test0178(){
 	String str =
-		"public class X <T>{\n" + 
-		"  X<ZZZ<\n" + 
-		"}\n" + 
+		"public class X <T>{\n" +
+		"  X<ZZZ<\n" +
+		"}\n" +
 		"\n";
 
 	String completeBehind = "ZZZ";
@@ -8821,10 +8821,10 @@ public void test0178(){
 	String completionIdentifier = "ZZZ";
 	String expectedReplacedSource = "ZZZ";
 	String expectedUnitDisplayString =
-		"public class X<T> {\n" + 
-		"  X<<CompleteOnType:ZZZ>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X<T> {\n" +
+		"  X<<CompleteOnType:ZZZ>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n"
 ;
 
@@ -8843,9 +8843,9 @@ public void test0178(){
  */
 public void test0179(){
 	String str =
-		"public class X <T>{\n" + 
-		"  X<ZZZ.\n" + 
-		"}\n" + 
+		"public class X <T>{\n" +
+		"  X<ZZZ.\n" +
+		"}\n" +
 		"\n";
 
 	String completeBehind = "ZZZ";
@@ -8855,10 +8855,10 @@ public void test0179(){
 	String completionIdentifier = "ZZZ";
 	String expectedReplacedSource = "ZZZ";
 	String expectedUnitDisplayString =
-		"public class X<T> {\n" + 
-		"  X<<CompleteOnType:ZZZ>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X<T> {\n" +
+		"  X<<CompleteOnType:ZZZ>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n"
 ;
 
@@ -8877,9 +8877,9 @@ public void test0179(){
  */
 public void test0180(){
 	String str =
-		"public class X <T>{\n" + 
-		"  X<ZZZ\n" + 
-		"}\n" + 
+		"public class X <T>{\n" +
+		"  X<ZZZ\n" +
+		"}\n" +
 		"\n";
 
 	String completeBehind = "ZZZ";
@@ -8889,10 +8889,10 @@ public void test0180(){
 	String completionIdentifier = "ZZZ";
 	String expectedReplacedSource = "ZZZ";
 	String expectedUnitDisplayString =
-		"public class X<T> {\n" + 
-		"  X<<CompleteOnType:ZZZ>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X<T> {\n" +
+		"  X<<CompleteOnType:ZZZ>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n"
 ;
 
@@ -8911,9 +8911,9 @@ public void test0180(){
  */
 public void test0181(){
 	String str =
-		"public class X <T>{\n" + 
-		"  X<ZZZ>\n" + 
-		"}\n" + 
+		"public class X <T>{\n" +
+		"  X<ZZZ>\n" +
+		"}\n" +
 		"\n";
 
 	String completeBehind = "ZZZ";
@@ -8923,10 +8923,10 @@ public void test0181(){
 	String completionIdentifier = "ZZZ";
 	String expectedReplacedSource = "ZZZ";
 	String expectedUnitDisplayString =
-		"public class X<T> {\n" + 
-		"  X<<CompleteOnType:ZZZ>>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X<T> {\n" +
+		"  X<<CompleteOnType:ZZZ>>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n"
 ;
 
@@ -8945,9 +8945,9 @@ public void test0181(){
  */
 public void test0182(){
 	String str =
-		"public class X <T>{\n" + 
-		"  X<\n" + 
-		"}\n" + 
+		"public class X <T>{\n" +
+		"  X<\n" +
+		"}\n" +
 		"\n";
 
 	String completeBehind = "X";
@@ -8957,10 +8957,10 @@ public void test0182(){
 	String completionIdentifier = "X";
 	String expectedReplacedSource = "X";
 	String expectedUnitDisplayString =
-		"public class X<T> {\n" + 
-		"  <CompleteOnType:X>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X<T> {\n" +
+		"  <CompleteOnType:X>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -8978,9 +8978,9 @@ public void test0182(){
  */
 public void test0183(){
 	String str =
-		"public class X <T>{\n" + 
-		"  X<Object\n" + 
-		"}\n" + 
+		"public class X <T>{\n" +
+		"  X<Object\n" +
+		"}\n" +
 		"\n";
 
 	String completeBehind = "X";
@@ -8990,10 +8990,10 @@ public void test0183(){
 	String completionIdentifier = "X";
 	String expectedReplacedSource = "X";
 	String expectedUnitDisplayString =
-		"public class X<T> {\n" + 
-		"  <CompleteOnType:X>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X<T> {\n" +
+		"  <CompleteOnType:X>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9011,11 +9011,11 @@ public void test0183(){
  */
 public void test0184_Diet(){
 	String str =
-		"public class X <T>{\n" + 
-		"  void foo() {\n" + 
-		"    X<? extends String> s;\n" + 
-		"  }\n" + 
-		"}\n" + 
+		"public class X <T>{\n" +
+		"  void foo() {\n" +
+		"    X<? extends String> s;\n" +
+		"  }\n" +
+		"}\n" +
 		"\n";
 
 	String completeBehind = "Strin";
@@ -9025,11 +9025,11 @@ public void test0184_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X<T> {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X<T> {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9047,11 +9047,11 @@ public void test0184_Diet(){
  */
 public void test0184_Method(){
 	String str =
-		"public class X <T>{\n" + 
-		"  void foo() {\n" + 
-		"    X<? extends String> s;\n" + 
-		"  }\n" + 
-		"}\n" + 
+		"public class X <T>{\n" +
+		"  void foo() {\n" +
+		"    X<? extends String> s;\n" +
+		"  }\n" +
+		"}\n" +
 		"\n";
 
 	String completeBehind = "Strin";
@@ -9061,12 +9061,12 @@ public void test0184_Method(){
 	String completionIdentifier = "Strin";
 	String expectedReplacedSource = "String";
 	String expectedUnitDisplayString =
-			"public class X<T> {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    X<? extends <CompleteOnType:Strin>>;\n" + 
-			"  }\n" + 
+			"public class X<T> {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    X<? extends <CompleteOnType:Strin>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -9084,12 +9084,12 @@ public void test0184_Method(){
  */
 public void test0185(){
 	String str =
-		"public class Test {\n" + 
-		"  Boolean\n" + 
-		"   * some text <b>bold<i>both</i></b>\n" + 
-		"   */\n" + 
-		"  public void foo(String s) {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  Boolean\n" +
+		"   * some text <b>bold<i>both</i></b>\n" +
+		"   */\n" +
+		"  public void foo(String s) {\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "Boolean";
@@ -9099,14 +9099,14 @@ public void test0185(){
 	String completionIdentifier = "Boolean";
 	String expectedReplacedSource = "Boolean";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  <CompleteOnType:Boolean>;\n" + 
-		"  some text;\n" + 
-		"  bold<i> both;\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  public void foo(String s) {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  <CompleteOnType:Boolean>;\n" +
+		"  some text;\n" +
+		"  bold<i> both;\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  public void foo(String s) {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9124,8 +9124,8 @@ public void test0185(){
  */
 public void test0186(){
 	String str =
-		"public class Test {\n" + 
-		"  List<? ext\n" + 
+		"public class Test {\n" +
+		"  List<? ext\n" +
 		"}\n";
 
 	String completeBehind = "ext";
@@ -9135,10 +9135,10 @@ public void test0186(){
 	String completionIdentifier = "ext";
 	String expectedReplacedSource = "ext";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  List<? extends <CompleteOnKeyword:ext>>;\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  List<? extends <CompleteOnKeyword:ext>>;\n" +
+		"  public Test() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9156,10 +9156,10 @@ public void test0186(){
  */
 public void test0187_Diet(){
 	String str =
-		"public class Test {\n" + 
-		"  void foo() {\n" + 
-		"    List<? ext\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void foo() {\n" +
+		"    List<? ext\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "ext";
@@ -9169,11 +9169,11 @@ public void test0187_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9191,10 +9191,10 @@ public void test0187_Diet(){
  */
 public void test0187_Method(){
 	String str =
-		"public class Test {\n" + 
-		"  void foo() {\n" + 
-		"    List<? ext\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void foo() {\n" +
+		"    List<? ext\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "ext";
@@ -9204,12 +9204,12 @@ public void test0187_Method(){
 	String completionIdentifier = "ext";
 	String expectedReplacedSource = "ext";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    List<? extends <CompleteOnKeyword:ext>>;\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    List<? extends <CompleteOnKeyword:ext>>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -9227,12 +9227,12 @@ public void test0187_Method(){
  */
 public void test0188_Diet(){
 	String str =
-		"public class Test {\n" + 
-		"  void foo() {\n" + 
-		"    for(;;) {\n" + 
-		"      bar(toto.\n" + 
-		"    }\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void foo() {\n" +
+		"    for(;;) {\n" +
+		"      bar(toto.\n" +
+		"    }\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "toto.";
@@ -9242,11 +9242,11 @@ public void test0188_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9264,12 +9264,12 @@ public void test0188_Diet(){
  */
 public void test0188_Method(){
 	String str =
-		"public class Test {\n" + 
-		"  void foo() {\n" + 
-		"    for(;;) {\n" + 
-		"      bar(toto.\n" + 
-		"    }\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void foo() {\n" +
+		"    for(;;) {\n" +
+		"      bar(toto.\n" +
+		"    }\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "toto.";
@@ -9279,14 +9279,14 @@ public void test0188_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "toto.";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    {\n" + 
-			"      bar(<CompleteOnName:toto.>);\n" + 
-			"    }\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    {\n" +
+			"      bar(<CompleteOnName:toto.>);\n" +
+			"    }\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -9304,10 +9304,10 @@ public void test0188_Method(){
  */
 public void test0189_Diet(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    zzz.<String>foo(new Runtime());\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    zzz.<String>foo(new Runtime());\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "Runtime";
@@ -9317,11 +9317,11 @@ public void test0189_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9339,10 +9339,10 @@ public void test0189_Diet(){
  */
 public void test0189_Method(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    zzz.<String>foo(new Runtime());\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    zzz.<String>foo(new Runtime());\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "Runtime";
@@ -9352,12 +9352,12 @@ public void test0189_Method(){
 	String completionIdentifier = "Runtime";
 	String expectedReplacedSource = "Runtime";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  void bar() {\n" + 
-			"    zzz.foo(new <CompleteOnType:Runtime>());\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  void bar() {\n" +
+			"    zzz.foo(new <CompleteOnType:Runtime>());\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -9375,10 +9375,10 @@ public void test0189_Method(){
  */
 public void test0190_Diet(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    zzz.<String>foo(var);\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    zzz.<String>foo(var);\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "var";
@@ -9388,11 +9388,11 @@ public void test0190_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9410,10 +9410,10 @@ public void test0190_Diet(){
  */
 public void test0190_Method(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    zzz.<String>foo(var);\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    zzz.<String>foo(var);\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "var";
@@ -9423,12 +9423,12 @@ public void test0190_Method(){
 	String completionIdentifier = "var";
 	String expectedReplacedSource = "var";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  void bar() {\n" + 
-			"    zzz.foo(<CompleteOnName:var>);\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  void bar() {\n" +
+			"    zzz.foo(<CompleteOnName:var>);\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -9446,10 +9446,10 @@ public void test0190_Method(){
  */
 public void test0191_Diet(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    zzz.<String>foo();\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    zzz.<String>foo();\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "foo(";
@@ -9459,11 +9459,11 @@ public void test0191_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9481,10 +9481,10 @@ public void test0191_Diet(){
  */
 public void test0191_Method(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    zzz.<String>foo();\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    zzz.<String>foo();\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "foo(";
@@ -9494,12 +9494,12 @@ public void test0191_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "foo(";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  void bar() {\n" + 
-			"    <CompleteOnMessageSend:zzz.foo()>;\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  void bar() {\n" +
+			"    <CompleteOnMessageSend:zzz.foo()>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -9517,10 +9517,10 @@ public void test0191_Method(){
  */
 public void test0192_Diet(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    zzz.<String>foo();\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    zzz.<String>foo();\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "fo";
@@ -9530,11 +9530,11 @@ public void test0192_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9552,10 +9552,10 @@ public void test0192_Diet(){
  */
 public void test0192_Method(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    zzz.<String>foo();\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    zzz.<String>foo();\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "fo";
@@ -9565,12 +9565,12 @@ public void test0192_Method(){
 	String completionIdentifier = "fo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  void bar() {\n" + 
-			"    <CompleteOnMessageSendName:zzz.<String>fo()>;\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  void bar() {\n" +
+			"    <CompleteOnMessageSendName:zzz.<String>fo()>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -9588,10 +9588,10 @@ public void test0192_Method(){
  */
 public void test0193_Diet(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    new Foo<X>();\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    new Foo<X>();\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = ">(";
@@ -9601,11 +9601,11 @@ public void test0193_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9623,10 +9623,10 @@ public void test0193_Diet(){
  */
 public void test0193_Method(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    new Foo<X>();\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    new Foo<X>();\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = ">(";
@@ -9636,12 +9636,12 @@ public void test0193_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  void bar() {\n" + 
-			"    <CompleteOnAllocationExpression:new Foo<X>()>;\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  void bar() {\n" +
+			"    <CompleteOnAllocationExpression:new Foo<X>()>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -9659,10 +9659,10 @@ public void test0193_Method(){
  */
 public void test0194_Diet(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    new Foo<X<X>>();\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    new Foo<X<X>>();\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = ">(";
@@ -9672,11 +9672,11 @@ public void test0194_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9694,10 +9694,10 @@ public void test0194_Diet(){
  */
 public void test0194_Method(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    new Foo<X<X>>();\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    new Foo<X<X>>();\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = ">(";
@@ -9707,12 +9707,12 @@ public void test0194_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  void bar() {\n" + 
-			"    <CompleteOnAllocationExpression:new Foo<X<X>>()>;\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  void bar() {\n" +
+			"    <CompleteOnAllocationExpression:new Foo<X<X>>()>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -9730,10 +9730,10 @@ public void test0194_Method(){
  */
 public void test0195_Diet(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    new Foo<X<X<X>>>();\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    new Foo<X<X<X>>>();\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = ">(";
@@ -9743,11 +9743,11 @@ public void test0195_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9765,10 +9765,10 @@ public void test0195_Diet(){
  */
 public void test0195_Method(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    new Foo<X<X<X>>>();\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    new Foo<X<X<X>>>();\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = ">(";
@@ -9778,12 +9778,12 @@ public void test0195_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  void bar() {\n" + 
-			"    <CompleteOnAllocationExpression:new Foo<X<X<X>>>()>;\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  void bar() {\n" +
+			"    <CompleteOnAllocationExpression:new Foo<X<X<X>>>()>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -9801,9 +9801,9 @@ public void test0195_Method(){
  */
 public void test0196(){
 	String str =
-		"public class Test<T> ext{\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test<T> ext{\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "ext";
@@ -9813,13 +9813,13 @@ public void test0196(){
 	String completionIdentifier = "ext";
 	String expectedReplacedSource = "ext";
 	String expectedUnitDisplayString =
-		"public class Test<T> extends <CompleteOnKeyword:ext> {\n" + 
-		"  {\n" + 
-		"  }\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test<T> extends <CompleteOnKeyword:ext> {\n" +
+		"  {\n" +
+		"  }\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9837,9 +9837,9 @@ public void test0196(){
  */
 public void test0197(){
 	String str =
-		"public class Test<T> imp{\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test<T> imp{\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "imp";
@@ -9849,13 +9849,13 @@ public void test0197(){
 	String completionIdentifier = "imp";
 	String expectedReplacedSource = "imp";
 	String expectedUnitDisplayString =
-		"public class Test<T> extends <CompleteOnKeyword:imp> {\n" + 
-		"  {\n" + 
-		"  }\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test<T> extends <CompleteOnKeyword:imp> {\n" +
+		"  {\n" +
+		"  }\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9873,9 +9873,9 @@ public void test0197(){
  */
 public void test0198(){
 	String str =
-		"public class Test<T> extends X ext {\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test<T> extends X ext {\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "X ext";
@@ -9885,13 +9885,13 @@ public void test0198(){
 	String completionIdentifier = "ext";
 	String expectedReplacedSource = "ext";
 	String expectedUnitDisplayString =
-		"public class Test<T> extends <CompleteOnKeyword:ext> {\n" + 
-		"  {\n" + 
-		"  }\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test<T> extends <CompleteOnKeyword:ext> {\n" +
+		"  {\n" +
+		"  }\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9909,9 +9909,9 @@ public void test0198(){
  */
 public void test0199(){
 	String str =
-		"public class Test<T> extends X imp {\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test<T> extends X imp {\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "X imp";
@@ -9921,13 +9921,13 @@ public void test0199(){
 	String completionIdentifier = "imp";
 	String expectedReplacedSource = "imp";
 	String expectedUnitDisplayString =
-		"public class Test<T> extends <CompleteOnKeyword:imp> {\n" + 
-		"  {\n" + 
-		"  }\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test<T> extends <CompleteOnKeyword:imp> {\n" +
+		"  {\n" +
+		"  }\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9945,9 +9945,9 @@ public void test0199(){
  */
 public void test0200(){
 	String str =
-		"public interface Test<T> ext{\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public interface Test<T> ext{\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "ext";
@@ -9957,13 +9957,13 @@ public void test0200(){
 	String completionIdentifier = "ext";
 	String expectedReplacedSource = "ext";
 	String expectedUnitDisplayString =
-		"public interface Test<T> extends <CompleteOnKeyword:ext> {\n" + 
-		"  {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public interface Test<T> extends <CompleteOnKeyword:ext> {\n" +
+		"  {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -9981,9 +9981,9 @@ public void test0200(){
  */
 public void test0201(){
 	String str =
-		"public interface Test<T> imp{\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public interface Test<T> imp{\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "imp";
@@ -9993,13 +9993,13 @@ public void test0201(){
 	String completionIdentifier = "imp";
 	String expectedReplacedSource = "imp";
 	String expectedUnitDisplayString =
-		"public interface Test<T> extends <CompleteOnKeyword:imp> {\n" + 
-		"  {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public interface Test<T> extends <CompleteOnKeyword:imp> {\n" +
+		"  {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -10017,12 +10017,12 @@ public void test0201(){
  */
 public void test0202_Diet(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    for (Entry entry : (Set<Entry>) var) {\n" + 
-		"      entry.\n" + 
-		"    }\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    for (Entry entry : (Set<Entry>) var) {\n" +
+		"      entry.\n" +
+		"    }\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "entry.";
@@ -10032,11 +10032,11 @@ public void test0202_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -10054,12 +10054,12 @@ public void test0202_Diet(){
  */
 public void test0202_Method(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    for (Entry entry : (Set<Entry>) var) {\n" + 
-		"      entry.\n" + 
-		"    }\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    for (Entry entry : (Set<Entry>) var) {\n" +
+		"      entry.\n" +
+		"    }\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "entry.";
@@ -10069,15 +10069,15 @@ public void test0202_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "entry.";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  void bar() {\n" + 
-			"    Entry entry;\n" + 
-			"    {\n" + 
-			"      <CompleteOnName:entry.>;\n" + 
-			"    }\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  void bar() {\n" +
+			"    Entry entry;\n" +
+			"    {\n" +
+			"      <CompleteOnName:entry.>;\n" +
+			"    }\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -10095,12 +10095,12 @@ public void test0202_Method(){
  */
 public void test0203_Diet(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    for (Entry entry : (ZZZ<YYY>.Set<Entry>) var) {\n" + 
-		"      entry.\n" + 
-		"    }\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    for (Entry entry : (ZZZ<YYY>.Set<Entry>) var) {\n" +
+		"      entry.\n" +
+		"    }\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "entry.";
@@ -10110,11 +10110,11 @@ public void test0203_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -10132,12 +10132,12 @@ public void test0203_Diet(){
  */
 public void test0203_Method(){
 	String str =
-		"public class Test {\n" + 
-		"  void bar() {\n" + 
-		"    for (Entry entry : (ZZZ<YYY>.Set<Entry>) var) {\n" + 
-		"      entry.\n" + 
-		"    }\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  void bar() {\n" +
+		"    for (Entry entry : (ZZZ<YYY>.Set<Entry>) var) {\n" +
+		"      entry.\n" +
+		"    }\n" +
+		"  }\n" +
 		"}\n";
 
 	String completeBehind = "entry.";
@@ -10147,15 +10147,15 @@ public void test0203_Method(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "entry.";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  void bar() {\n" + 
-			"    Entry entry;\n" + 
-			"    {\n" + 
-			"      <CompleteOnName:entry.>;\n" + 
-			"    }\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  void bar() {\n" +
+			"    Entry entry;\n" +
+			"    {\n" +
+			"      <CompleteOnName:entry.>;\n" +
+			"    }\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -10188,18 +10188,18 @@ public void test0204_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public enum MyEnum {\n" + 
-		"    A(),\n" + 
-		"    <clinit>() {\n" + 
-		"    }\n" + 
-		"    public MyEnum() {\n" + 
-		"    }\n" + 
-		"  }\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  public static void foo() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public enum MyEnum {\n" +
+		"    A(),\n" +
+		"    <clinit>() {\n" +
+		"    }\n" +
+		"    public MyEnum() {\n" +
+		"    }\n" +
+		"  }\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  public static void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -10232,19 +10232,19 @@ public void test0204_Method(){
 	String completionIdentifier = "zzz";
 	String expectedReplacedSource = "zzz";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public enum MyEnum {\n" + 
-			"    A(),\n" + 
-			"    <clinit>() {\n" + 
-			"    }\n" + 
-			"    public MyEnum() {\n" + 
-			"    }\n" + 
-			"  }\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  public static void foo() {\n" + 
-			"    <CompleteOnName:zzz>;\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public enum MyEnum {\n" +
+			"    A(),\n" +
+			"    <clinit>() {\n" +
+			"    }\n" +
+			"    public MyEnum() {\n" +
+			"    }\n" +
+			"  }\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  public static void foo() {\n" +
+			"    <CompleteOnName:zzz>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -10272,10 +10272,10 @@ public void test0205(){
 	String completionIdentifier = "";
 	String expectedReplacedSource = "K";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  HashMap<<CompleteOnType:>, V>;\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  HashMap<<CompleteOnType:>, V>;\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -10306,11 +10306,11 @@ public void test0206_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -10341,12 +10341,12 @@ public void test0206_Method(){
 	String completionIdentifier = "zzz";
 	String expectedReplacedSource = "zzz";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnMessageSendName:Collections.<B>zzz()>;\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnMessageSendName:Collections.<B>zzz()>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -10377,11 +10377,11 @@ public void test0207_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -10412,12 +10412,12 @@ public void test0207_Method(){
 	String completionIdentifier = "zzz";
 	String expectedReplacedSource = "zzz";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnMessageSendName:bar().<B>zzz()>;\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnMessageSendName:bar().<B>zzz()>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -10448,11 +10448,11 @@ public void test0208_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -10483,12 +10483,12 @@ public void test0208_Method(){
 	String completionIdentifier = "zzz";
 	String expectedReplacedSource = "zzz";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnName:zzz>;\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnName:zzz>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -10519,11 +10519,11 @@ public void test0209_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -10554,12 +10554,12 @@ public void test0209_Method(){
 	String completionIdentifier = "zzz";
 	String expectedReplacedSource = "zzz";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnMessageSendName:this.<B>zzz()>;\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnMessageSendName:this.<B>zzz()>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -10590,11 +10590,11 @@ public void test0210_Diet(){
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  public Test() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -10625,12 +10625,12 @@ public void test0210_Method(){
 	String completionIdentifier = "zzz";
 	String expectedReplacedSource = "zzz";
 	String expectedUnitDisplayString =
-			"public class Test {\n" + 
-			"  public Test() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnMessageSendName:super.<B>zzz()>;\n" + 
-			"  }\n" + 
+			"public class Test {\n" +
+			"  public Test() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnMessageSendName:super.<B>zzz()>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -10646,8 +10646,8 @@ public void test0210_Method(){
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=83685
 public void test0211(){
 	String str =
-		"public class Test{\n" + 
-		"  Test.\n" + 
+		"public class Test{\n" +
+		"  Test.\n" +
 		"}\n";
 
 	String completeBehind = "Test";
@@ -10657,10 +10657,10 @@ public void test0211(){
 	String completionIdentifier = "Test";
 	String expectedReplacedSource = "Test";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  <CompleteOnType:Test>;\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  <CompleteOnType:Test>;\n" +
+		"  public Test() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -10675,8 +10675,8 @@ public void test0211(){
 }
 public void test0212(){
 	String str =
-		"public class Test {\n" + 
-		"  List<? extends Obj>\n" + 
+		"public class Test {\n" +
+		"  List<? extends Obj>\n" +
 		"}\n";
 
 	String completeBehind = "Obj";
@@ -10686,10 +10686,10 @@ public void test0212(){
 	String completionIdentifier = "Obj";
 	String expectedReplacedSource = "Obj";
 	String expectedUnitDisplayString =
-		"public class Test {\n" + 
-		"  List<? extends <CompleteOnType:Obj>>;\n" + 
-		"  public Test() {\n" + 
-		"  }\n" + 
+		"public class Test {\n" +
+		"  List<? extends <CompleteOnType:Obj>>;\n" +
+		"  public Test() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -10705,7 +10705,7 @@ public void test0212(){
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=157584
 public void test0213_Diet() {
 
-	String str = 
+	String str =
 		"public class X {\n" +
 		"	public boolean foo() {\n" +
 		"      try {\n" +
@@ -10717,7 +10717,7 @@ public void test0213_Diet() {
 		"      catch (Top<Object>.IZZ) {\n" +
 		"      }\n" +
 		"   }" +
-		"}\n"; 
+		"}\n";
 
 	String completeBehind = "IZZ";
 	int cursorLocation = str.lastIndexOf("IZZ") + completeBehind.length() - 1;
@@ -10726,11 +10726,11 @@ public void test0213_Diet() {
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  public boolean foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  public boolean foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -10746,7 +10746,7 @@ public void test0213_Diet() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=157584
 public void test0213_Method() {
 
-	String str = 
+	String str =
 		"public class X {\n" +
 		"	public boolean foo() {\n" +
 		"      try {\n" +
@@ -10758,36 +10758,36 @@ public void test0213_Method() {
 		"      catch (Top<Object>.IZZ) {\n" +
 		"      }\n" +
 		"   }" +
-		"}\n"; 
+		"}\n";
 
 	String completeBehind = "IZZ";
 	int cursorLocation = str.lastIndexOf("IZZ") + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnException:Top<Object>.IZZ>";
 	String expectedParentNodeToString =
-			"try \n" + 
-			"  {\n" + 
-			"    throwing();\n" + 
-			"  }\n" + 
-			"catch (IllegalAccessException e)   {\n" + 
-			"  }\n" + 
-			"catch (<CompleteOnException:Top<Object>.IZZ>  )   {\n" + 
+			"try \n" +
+			"  {\n" +
+			"    throwing();\n" +
+			"  }\n" +
+			"catch (IllegalAccessException e)   {\n" +
+			"  }\n" +
+			"catch (<CompleteOnException:Top<Object>.IZZ>  )   {\n" +
 			"  }";
 	String completionIdentifier = "IZZ";
 	String expectedReplacedSource = "Top<Object>.IZZ";
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  public boolean foo() {\n" + 
-			"    try \n" + 
-			"      {\n" + 
-			"        throwing();\n" + 
-			"      }\n" + 
-			"    catch (IllegalAccessException e)       {\n" + 
-			"      }\n" + 
-			"    catch (<CompleteOnException:Top<Object>.IZZ>  )       {\n" + 
-			"      }\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  public boolean foo() {\n" +
+			"    try \n" +
+			"      {\n" +
+			"        throwing();\n" +
+			"      }\n" +
+			"    catch (IllegalAccessException e)       {\n" +
+			"      }\n" +
+			"    catch (<CompleteOnException:Top<Object>.IZZ>  )       {\n" +
+			"      }\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -10803,12 +10803,12 @@ public void test0213_Method() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=197400
 public void test0214_Diet() {
 
-	String str = 
+	String str =
 		"public class X {\n" +
 		"	static {\n" +
 		"      <>\n" +
 		"   }" +
-		"}\n"; 
+		"}\n";
 
 	String completeBehind = "<";
 	int cursorLocation = str.lastIndexOf("<") + completeBehind.length() - 1;
@@ -10817,13 +10817,13 @@ public void test0214_Diet() {
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  static {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  static {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -10839,12 +10839,12 @@ public void test0214_Diet() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=197400
 public void test0214_Method() {
 
-	String str = 
+	String str =
 		"public class X {\n" +
 		"	static {\n" +
 		"      <>\n" +
 		"   }" +
-		"}\n"; 
+		"}\n";
 
 	String completeBehind = "<";
 	int cursorLocation = str.lastIndexOf("<") + completeBehind.length() - 1;
@@ -10854,13 +10854,13 @@ public void test0214_Method() {
 	String expectedReplacedSource = "";
 	// we are not in a constructor then the completion node isn't attached to the ast
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  static {\n" + 
-			"  }\n" + 
-			"  <clinit>() {\n" + 
-			"  }\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  static {\n" +
+			"  }\n" +
+			"  <clinit>() {\n" +
+			"  }\n" +
+			"  public X() {\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -10876,12 +10876,12 @@ public void test0214_Method() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=210273
 public void test0215_Diet() {
 
-	String str = 
+	String str =
 		"public class X {\n" +
 		"	void foo() {\n" +
 		"      this.<X>bar();\n" +
 		"   }" +
-		"}\n"; 
+		"}\n";
 
 	String completeBehind = "bar(";
 	int cursorLocation = str.lastIndexOf("bar(") + completeBehind.length() - 1;
@@ -10890,11 +10890,11 @@ public void test0215_Diet() {
 	String completionIdentifier = "<NONE>";
 	String expectedReplacedSource = "<NONE>";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -10910,12 +10910,12 @@ public void test0215_Diet() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=210273
 public void test0215_Method() {
 
-	String str = 
+	String str =
 		"public class X {\n" +
 		"	void foo() {\n" +
 		"      this.<X>bar();\n" +
 		"   }" +
-		"}\n"; 
+		"}\n";
 
 	String completeBehind = "bar(";
 	int cursorLocation = str.lastIndexOf("bar(") + completeBehind.length() - 1;
@@ -10925,12 +10925,12 @@ public void test0215_Method() {
 	String expectedReplacedSource = "bar(";
 	// we are not in a constructor then the completion node isn't attached to the ast
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    <CompleteOnMessageSend:this.bar()>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    <CompleteOnMessageSend:this.bar()>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -10945,7 +10945,7 @@ public void test0215_Method() {
 }
 public void test0216_Diet() {
 
-	String str = 
+	String str =
 		"public class X {\n" +
 		"	Object field = new Object(){\n" +
 		"		void foo(List<String> ss) {\n" +
@@ -10954,7 +10954,7 @@ public void test0216_Diet() {
 		"			}\n" +
 		"		}\n" +
 		"	};\n" +
-		"}\n"; 
+		"}\n";
 
 	String completeBehind = "s.z";
 	int cursorLocation = str.lastIndexOf("s.z") + completeBehind.length() - 1;
@@ -10963,17 +10963,17 @@ public void test0216_Diet() {
 	String completionIdentifier = "z";
 	String expectedReplacedSource = "s.z";
 	String expectedUnitDisplayString =
-		"public class X {\n" + 
-		"  Object field = new Object() {\n" + 
-		"    void foo(List<String> ss) {\n" + 
-		"      String s;\n" + 
-		"      {\n" + 
-		"        <CompleteOnName:s.z>;\n" + 
-		"      }\n" + 
-		"    }\n" + 
-		"  };\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+		"public class X {\n" +
+		"  Object field = new Object() {\n" +
+		"    void foo(List<String> ss) {\n" +
+		"      String s;\n" +
+		"      {\n" +
+		"        <CompleteOnName:s.z>;\n" +
+		"      }\n" +
+		"    }\n" +
+		"  };\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(
@@ -10989,13 +10989,13 @@ public void test0216_Diet() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=207631
 public void test0217_Method() {
 
-	String str = 
+	String str =
 		"public class X {\n" +
 		"	void foo() {\n" +
 		"      int y = (x >> (1));\n" +
 		"      foo\n" +
 		"   }" +
-		"}\n"; 
+		"}\n";
 
 	String completeBehind = "foo";
 	int cursorLocation = str.lastIndexOf("foo") + completeBehind.length() - 1;
@@ -11005,13 +11005,13 @@ public void test0217_Method() {
 	String expectedReplacedSource = "foo";
 	// we are not in a constructor then the completion node isn't attached to the ast
 	String expectedUnitDisplayString =
-			"public class X {\n" + 
-			"  public X() {\n" + 
-			"  }\n" + 
-			"  void foo() {\n" + 
-			"    int y;\n" + 
-			"    <CompleteOnName:foo>;\n" + 
-			"  }\n" + 
+			"public class X {\n" +
+			"  public X() {\n" +
+			"  }\n" +
+			"  void foo() {\n" +
+			"    int y;\n" +
+			"    <CompleteOnName:foo>;\n" +
+			"  }\n" +
 			"}\n";
 
 	checkMethodParse(
@@ -11027,10 +11027,10 @@ public void test0217_Method() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=227546
 public void test0218_Diet() {
 
-	String str = 
-		"public enum X {\n" + 
-		"	SUCCESS { ZZZ }\n" + 
-		"}\n"; 
+	String str =
+		"public enum X {\n" +
+		"	SUCCESS { ZZZ }\n" +
+		"}\n";
 
 	String completeBehind = "ZZZ";
 	int cursorLocation = str.lastIndexOf("ZZZ") + completeBehind.length() - 1;
@@ -11039,14 +11039,14 @@ public void test0218_Diet() {
 	String completionIdentifier = "ZZZ";
 	String expectedReplacedSource = "ZZZ";
 	String expectedUnitDisplayString =
-		"public enum X {\n" + 
-		"  SUCCESS() {\n" + 
-		"    <CompleteOnType:ZZZ>;\n" + 
-		"  },\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+		"public enum X {\n" +
+		"  SUCCESS() {\n" +
+		"    <CompleteOnType:ZZZ>;\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
 
 	checkDietParse(

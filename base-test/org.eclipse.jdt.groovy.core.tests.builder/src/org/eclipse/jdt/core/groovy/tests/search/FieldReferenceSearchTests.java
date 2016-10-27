@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import junit.framework.Test;
@@ -27,15 +26,16 @@ import org.eclipse.jdt.core.search.IJavaSearchConstants;
  *
  */
 public class FieldReferenceSearchTests extends AbstractGroovySearchTest {
+
     public FieldReferenceSearchTests(String name) {
         super(name);
     }
-    
+
     public static Test suite() {
         return buildTestSuite(FieldReferenceSearchTests.class);
     }
 
-    
+
     public void testFieldReferencesInScript1() throws Exception {
         doTestForTwoFieldReferencesInScript("new First().xxx\nnew First()\n.\nxxx");
     }
@@ -61,12 +61,12 @@ public class FieldReferenceSearchTests extends AbstractGroovySearchTest {
     public void testFieldReferencesInScript8() throws Exception {
         doTestForTwoFieldReferencesInScript(
                 "class SubClass extends First { } \n " +
-        		"def f = new SubClass()\n " +
-        		"f.xxx\n" + // here
-        		"f = 9\n" +
-        		"f.xxx\n" +  // invalid reference
-        		"f = new SubClass()\n" +
-        		"f.xxx");  // here
+                "def f = new SubClass()\n " +
+                "f.xxx\n" + // here
+                "f = 9\n" +
+                "f.xxx\n" +  // invalid reference
+                "f = new SubClass()\n" +
+                "f.xxx");  // here
     }
     public void testFieldReferencesInClass1() throws Exception {
         doTestForTwoFieldReferencesInClass("class Second extends First { \ndef method() { this.xxx }\ndef xxx() { }\n def method2() { super.xxx }}");
@@ -78,18 +78,18 @@ public class FieldReferenceSearchTests extends AbstractGroovySearchTest {
 
     public void testFieldReferencesInClass3() throws Exception {
         doTestForTwoFieldReferencesInClass(
-        		"class Second extends First {\n" +
-        		"  def method() {\n" +
-        		"    this.xxx = 'nothing'\n" + // yes
-        		"  }\n" +
+                "class Second extends First {\n" +
+                "  def method() {\n" +
+                "    this.xxx = 'nothing'\n" + // yes
+                "  }\n" +
                 "  def xxx() { }\n" +  // no
-        		"  def method2() {\n" +  // no
-        		"    def nothing = super.xxx()\n" +  // yes...field reference used as a closure
-        		"  }\n" +
-        		"}");
+                "  def method2() {\n" +  // no
+                "    def nothing = super.xxx()\n" +  // yes...field reference used as a closure
+                "  }\n" +
+                "}");
     }
     public void testFieldReferencesInClass4() throws Exception {
-        createUnit("Third",  
+        createUnit("Third",
                 "class Third {\n" +
                 "  def xxx\n" + // no
         "}\n");
@@ -101,13 +101,13 @@ public class FieldReferenceSearchTests extends AbstractGroovySearchTest {
                 "  def xxx() { }\n" +  // no
                 "  def method3(xxx) {\n" +  // no
                 "    new Third().xxx\n" + // no
-                "    xxx()\n" + // no 
+                "    xxx()\n" + // no
                 "    xxx = xxx\n" +  // no, no
                 "    def nothing = super.xxx()\n" +  // yes...field reference used as a closure
                 "  }\n" +
         "}");
     }
-    
+
     public void testFieldReferenceInGString1() throws Exception {
         doTestForTwoFieldReferencesInGString("class Second extends First {\ndef x() { \"${xxx}\"\n\"${xxx.toString()}\" }");
     }
@@ -120,14 +120,14 @@ public class FieldReferenceSearchTests extends AbstractGroovySearchTest {
     public void testFieldReferenceInGString4() throws Exception {
         doTestForTwoFieldReferencesInGString("class Second extends First {\ndef x() { \"${foo(xxx)} ${super.xxx}\" }");
     }
-    
+
     protected void doTestForTwoFieldReferencesInGString(
             String secondContents) throws JavaModelException {
         super.doTestForTwoFieldReferencesInGString(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents,
                 "xxx");
     }
 
-    
+
     public void testFieldWritesInScript1() throws Exception {
         doTestForTwoFieldWritesInScript(
                 "new First().xxx = 1\n" +
@@ -144,8 +144,8 @@ public class FieldReferenceSearchTests extends AbstractGroovySearchTest {
                 "def f = new First()\n" +
         "f.xxx = f.xxx");
     }
-    
-    
+
+
     private void doTestForTwoFieldWritesInScript(String secondContents) throws JavaModelException {
         doTestForTwoFieldReferences(FIRST_CONTENTS_CLASS_FOR_FIELDS, secondContents, true, 3, "xxx", IJavaSearchConstants.WRITE_ACCESSES);
     }

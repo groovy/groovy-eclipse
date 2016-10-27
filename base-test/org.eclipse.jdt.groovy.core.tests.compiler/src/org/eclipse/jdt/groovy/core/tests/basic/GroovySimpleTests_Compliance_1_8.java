@@ -39,7 +39,7 @@ public final class GroovySimpleTests_Compliance_1_8 extends AbstractGroovyRegres
     public void testDefaultAndStaticMethodInInterface() {
         if (GroovyUtils.GROOVY_LEVEL < 23 || !isJRELevel(AbstractCompilerTest.F_1_8)) return;
 
-        Map customOptions = getCompilerOptions();
+        Map<String, String> customOptions = getCompilerOptions();
         customOptions.put(CompilerOptions.OPTION_Source, VERSION_1_8);
 
         runConformTest(

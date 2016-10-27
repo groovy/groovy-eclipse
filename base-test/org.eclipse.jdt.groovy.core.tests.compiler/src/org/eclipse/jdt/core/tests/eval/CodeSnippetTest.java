@@ -41,7 +41,7 @@ private IRequestor getNoResultRequestor() {
 	};
 }
 public static Test suite() {
-	return setupSuite(testClass());
+	return setupSuite(CodeSnippetTest.class);
 }
 /**
  * Tests code snippet that throws a checked exception.
@@ -53,11 +53,8 @@ public void testCheckedException() {
 		"	throw new java.io.IOException();",
 		"} finally {",
 		"	System.err.println(\"This is an expected exception printed by the target VM:\");",
-		"}"}), 
+		"}"}),
 		null);
-}
-public static Class testClass() {
-	return CodeSnippetTest.class;
 }
 /**
  * Tests that no errors are reported for an empty statement followed by an expression.
@@ -74,7 +71,7 @@ public void testEmptyStatement() {
 		"		return fact0(n - 1, acc * n);",
 		"	}",
 		"};",
-		"new X().fact(10)"}), 
+		"new X().fact(10)"}),
 		"3628800".toCharArray());
 }
 /**
@@ -217,7 +214,7 @@ public void testFinallyError() {
 		"	throw new Error();",
 		"} finally {",
 		"	System.err.println(\"This is an expected error printed by the target VM:\");",
-		"}"}), 
+		"}"}),
 		null);
 }
 /**
@@ -229,9 +226,9 @@ public void testFinallyOneBlock() {
 		"	return 1;",
 		"} finally {",
 		"	return 2;",
-		"}"}), 
+		"}"}),
 		new CategorizedProblem[] {
-			newProblem(IProblem.FinallyMustCompleteNormally, ProblemSeverities.Warning, 30, 40, 4), 
+			newProblem(IProblem.FinallyMustCompleteNormally, ProblemSeverities.Warning, 30, 40, 4),
 		},
 		"2".toCharArray());
 }
@@ -248,10 +245,10 @@ public void testFinallyTwoBlock() {
 		"	}",
 		"} finally {",
 		"	return 3;",
-		"}"}), 
+		"}"}),
 		new CategorizedProblem[] {
-			newProblem(IProblem.FinallyMustCompleteNormally, ProblemSeverities.Warning, 40, 51, 5), 
-			newProblem(IProblem.FinallyMustCompleteNormally, ProblemSeverities.Warning, 66, 76, 8), 
+			newProblem(IProblem.FinallyMustCompleteNormally, ProblemSeverities.Warning, 40, 51, 5),
+			newProblem(IProblem.FinallyMustCompleteNormally, ProblemSeverities.Warning, 66, 76, 8),
 		},
 		"3".toCharArray());
 }
@@ -265,7 +262,7 @@ public void testFreeReturnAnonymous() {
 		"	public String toString() {",
 		"		return \"an object\";",
 		"	}",
-		"}"}), 
+		"}"}),
 		"an object".toCharArray());
 }
 /**
@@ -282,7 +279,7 @@ public void testFreeReturnClassDeclaration() {
 		"		this.y = y;",
 		"	}",
 		"}",
-		"new Point(56, 99).x"}), 
+		"new Point(56, 99).x"}),
 		"56".toCharArray());
 }
 /**
@@ -306,7 +303,7 @@ public void testFreeReturnInteger() {
 public void testFreeReturnLocalVar() {
 	evaluateWithExpectedDisplayString(buildCharArray(new String[] {
 		"int i = 99;",
-		"i + 4"}), 
+		"i + 4"}),
 		"103".toCharArray());
 }
 /**
@@ -319,7 +316,7 @@ public void testFreeReturnStatement() {
 		"for (int j=0;j<10;j++) {",
 		"	i++;",
 		"}",
-		"i"}), 
+		"i"}),
 		"12".toCharArray());
 }
 /**
@@ -378,7 +375,7 @@ public void testInnerClassNamed() {
 		"class X {",
 		"	int foo = 1;",
 		"}",
-		"return new X().foo;"}), 
+		"return new X().foo;"}),
 		"1".toCharArray());
 }
 /**
@@ -457,7 +454,7 @@ public void testReturnDisplayStringObject() {
 		"	public String toString() {",
 		"		return \"an object\";",
 		"	}",
-		"};"}), 
+		"};"}),
 		"an object".toCharArray());
 }
 /**
@@ -671,7 +668,7 @@ public void testRunMethodInAnonymous() {
 		"	}",
 		"}).start();",
 		"while (!x.finished) Thread.currentThread().sleep(100);",
-		"x.i"}), 
+		"x.i"}),
 		"10".toCharArray());
 }
 /**
@@ -693,7 +690,7 @@ public void testFor89632() {
 					"	buffer.append(i.next());\n" +
 					"}" +
 					"return String.valueOf(buffer);"
-				}), 
+				}),
 				"abc".toCharArray());
 	} finally {
 		// clean up

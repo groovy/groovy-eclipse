@@ -19,12 +19,12 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 public class PerformanceTestSuite extends TestSuite {
-	
+
 	/**
 	 * Constructs a TestSuite from the given class. Adds all the methods
 	 * starting with "testPerf" as test cases to the suite.
 	 */
-	 public PerformanceTestSuite(final Class theClass) {
+	public PerformanceTestSuite(final Class<? extends TestCase> theClass) {
 		setName(theClass.getName());
 		try {
 			getTestConstructor(theClass); // Avoid generating multiple error messages
@@ -38,8 +38,8 @@ public class PerformanceTestSuite extends TestSuite {
 			return;
 		}
 
-		Class superClass= theClass;
-		Vector names= new Vector();
+		Class<?> superClass= theClass;
+		Vector<String> names= new Vector<String>();
 		while (Test.class.isAssignableFrom(superClass)) {
 			Method[] methods= superClass.getDeclaredMethods();
 			for (int i= 0; i < methods.length; i++) {
@@ -50,12 +50,12 @@ public class PerformanceTestSuite extends TestSuite {
 		if (countTestCases() == 0)
 			addTest(addWarningTest("No tests found in "+theClass.getName()));
 	}
-	
+
 	public PerformanceTestSuite(String name) {
 		setName(name);
 	}
-	
-	private void addTestMethod(Method m, Vector names, Class theClass) {
+
+	private void addTestMethod(Method m, Vector<String> names, Class<?> theClass) {
 		String name= m.getName();
 		if (names.contains(name))
 			return;
@@ -68,21 +68,22 @@ public class PerformanceTestSuite extends TestSuite {
 		addTest(createTest(theClass, name));
 	}
 
-	public void addTestSuite(Class theClass) {
+	@Override
+	public void addTestSuite(Class<? extends TestCase> theClass) {
 		addTest(new PerformanceTestSuite(theClass));
 	}
-	
+
 	private boolean isPublicTestMethod(Method m) {
 		return isTestMethod(m) && Modifier.isPublic(m.getModifiers());
-	 }
-	 
+	}
+
 	private boolean isTestMethod(Method m) {
 		String name= m.getName();
-		Class[] parameters= m.getParameterTypes();
-		Class returnType= m.getReturnType();
+		Class<?>[] parameters= m.getParameterTypes();
+		Class<?> returnType= m.getReturnType();
 		return parameters.length == 0 && name.startsWith("testPerf") && returnType.equals(Void.TYPE);
-	 }
-	 
+	}
+
 	/**
 	 * Returns a test which will fail and log a warning message.
 	 */

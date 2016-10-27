@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -25,7 +24,6 @@ import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 /**
  * @author Andrew Eisenberg
  * @created Sep 1, 2009
- *
  */
 public class MockPossibleMatch extends PossibleMatch {
 
@@ -33,14 +31,12 @@ public class MockPossibleMatch extends PossibleMatch {
         super(null, unit.getResource(), unit, new JavaSearchDocument(unit.getResource().getFullPath().toPortableString(), new JavaSearchParticipant()), false);
     }
 
-    
     static String printMatch(SearchMatch match) {
         return "Match at: (" + match.getOffset() + ", " + match.getLength() + "), accuracy: " + accuracy(match) +
                 "\n Matched object: " + match.getElement() + "\n";
     }
-    
+
     static String accuracy(SearchMatch match) {
         return match.getAccuracy() == SearchMatch.A_ACCURATE ? "ACCURATE" : "INACCURATE";
     }
-
 }

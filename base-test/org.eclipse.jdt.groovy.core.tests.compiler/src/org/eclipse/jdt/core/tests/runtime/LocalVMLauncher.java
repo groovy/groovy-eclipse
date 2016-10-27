@@ -37,7 +37,7 @@ public abstract class LocalVMLauncher implements RuntimeConstants {
 	public static final boolean TARGET_HAS_FILE_SYSTEM = true;
 	public static final String REGULAR_CLASSPATH_DIRECTORY = "regularPath";
 	public static final String BOOT_CLASSPATH_DIRECTORY = "bootPath";
-	
+
 	protected String[] bootPath;
 	protected String[] classPath;
 	protected int debugPort = -1;
@@ -45,10 +45,10 @@ public abstract class LocalVMLauncher implements RuntimeConstants {
 	protected String evalTargetPath;
 	protected String[] programArguments;
 	protected String programClass;
-	protected Vector runningVMs = new Vector(); // a Vector of LocalVirtualMachine
+	protected Vector<LocalVirtualMachine> runningVMs = new Vector<LocalVirtualMachine>();
 	protected String[] vmArguments;
 	protected String vmPath;
-	
+
 /**
  * Returns a launcher that will launch the same kind of VM that is currently running
  */
@@ -82,7 +82,7 @@ public static LocalVMLauncher getLauncher() {
 protected String buildClassPath() {
 	StringBuffer classPathString = new StringBuffer();
 	char pathSeparator = File.pathSeparatorChar;
-	
+
 	// Add jar support if in evaluation mode
 	if (this.evalPort != -1) {
 		classPathString.append(new File(this.evalTargetPath, SUPPORT_ZIP_FILE_NAME).getPath());
@@ -97,7 +97,7 @@ protected String buildClassPath() {
 			classPathString.append(pathSeparator);
 		}
 	}
-	
+
 	// Add regular classpath directory if needed
 	if (this.evalPort != -1 && TARGET_HAS_FILE_SYSTEM) {
 		classPathString.append(this.evalTargetPath);
@@ -115,7 +115,7 @@ protected Process execCommandLine() throws TargetException {
 	if (this.vmPath == null) {
 		throw new TargetException("Path to the VM has not been specified");
 	}
-	
+
 	// Check that the program class has been specified if not in evaluation mode
 	if ((this.programClass == null) && (this.evalPort == -1)) {
 		throw new TargetException("Program class has not been specified");
@@ -127,14 +127,7 @@ protected Process execCommandLine() throws TargetException {
 		// Use Runtime.exec(String[]) with tokens because Runtime.exec(String) with commandLineString
 		// does not properly handle spaces in arguments on Unix/Linux platforms.
 		String[] commandLine = getCommandLine();
-		
-		// DEBUG
-		/*for (int i = 0; i < commandLine.length; i++) {
-			System.out.print(commandLine[i] + " ");
-		}
-		System.out.println();
-		*/
-		
+
 		vmProcess= Runtime.getRuntime().exec(commandLine);
 	} catch (IOException e) {
 		throw new TargetException("Error launching VM at " + this.vmPath);
@@ -159,7 +152,7 @@ public String[] getClassPath() {
  * <p><ul>
  * <li> VM path,
  * <li> VM arguments,
- * <li> the class path, 
+ * <li> the class path,
  * <li> the program class
  * <li> the program arguments
  * </ul>
@@ -200,7 +193,7 @@ public String[] getProgramArguments() {
 	return this.programArguments;
 }
 /**
- * Returns the dot-separated, fully qualified name of the class to run.  
+ * Returns the dot-separated, fully qualified name of the class to run.
  * It must implement main(String[] args).
  * Returns null if the VM is being launched for evaluation support only.
  */
@@ -211,21 +204,21 @@ public String getProgramClass() {
 	return this.programClass;
 }
 /**
- * Returns all the target VMs that are running at this launcher's target 
+ * Returns all the target VMs that are running at this launcher's target
  * address.
- * Note that these target VMs may or may not have been launched by this 
+ * Note that these target VMs may or may not have been launched by this
  * launcher.
  * Note also that if the list of running VMs doesn't change on the target,
  * two calls to this method return VMs that are equal.
- * 
+ *
  * @return the list of running target VMs
  */
 public LocalVirtualMachine[] getRunningVirtualMachines() {
 	// Select the VMs that are actually running
-	Vector actuallyRunning = new Vector();
-	Enumeration en = this.runningVMs.elements();
+	Vector<LocalVirtualMachine> actuallyRunning = new Vector<LocalVirtualMachine>();
+	Enumeration<LocalVirtualMachine> en = this.runningVMs.elements();
 	while (en.hasMoreElements()) {
-		LocalVirtualMachine vm = (LocalVirtualMachine)en.nextElement();
+		LocalVirtualMachine vm = en.nextElement();
 		if (vm.isRunning())
 			actuallyRunning.addElement(vm);
 	}
@@ -235,7 +228,7 @@ public LocalVirtualMachine[] getRunningVirtualMachines() {
 	int size = actuallyRunning.size();
 	LocalVirtualMachine[] result = new LocalVirtualMachine[size];
 	for (int i=0; i<size; i++)
-		result[i] = (LocalVirtualMachine)actuallyRunning.elementAt(i);
+		result[i] = actuallyRunning.elementAt(i);
 	return result;
 }
 /**
@@ -267,7 +260,7 @@ public String getVMPath() {
 	return this.vmPath;
 }
 /**
- * Initializes this context's target path by copying the jar file for the code snippet support 
+ * Initializes this context's target path by copying the jar file for the code snippet support
  * and by creating the 2 directories that will contain the code snippet classes (see TARGET_HAS_FILE_SYSTEM).
  * Add the code snipport root class to the boot path directory so that code snippets can be run in
  * java.* packages
@@ -448,7 +441,7 @@ public void setProgramArguments(String[] args) {
 	this.programArguments = args;
 }
 /**
- * Sets the dot-separated, fully qualified name of the class to run.  
+ * Sets the dot-separated, fully qualified name of the class to run.
  * It must implement main(String[] args).
  * This is ignored if the VM is being launched for evaluation support only.
  */

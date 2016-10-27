@@ -14,6 +14,7 @@ import java.util.Enumeration;
 
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
+import junit.framework.Test;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
@@ -33,15 +34,15 @@ public class CompilerTestSetup extends TestSuite {
 			return;
 		}
 		if (test instanceof TestSuite) {
-			TestSuite testSuite = (TestSuite)test;
-			Enumeration evaluationTestClassTests = testSuite.tests();
+			TestSuite testSuite = (TestSuite) test;
+			Enumeration<Test> evaluationTestClassTests = testSuite.tests();
 			while (evaluationTestClassTests.hasMoreElements()) {
 				initTest(evaluationTestClassTests.nextElement());
 			}
 			return;
 		}
 		if (test instanceof Enumeration) {
-			Enumeration evaluationTestClassTests = (Enumeration) test;
+			Enumeration<Object> evaluationTestClassTests = Enumeration.class.cast(test);
 			while (evaluationTestClassTests.hasMoreElements()) {
 				initTest(evaluationTestClassTests.nextElement());
 			}

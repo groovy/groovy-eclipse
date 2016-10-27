@@ -35,7 +35,7 @@ public StandardVMLauncher() {
 protected String buildBootClassPath() {
 	StringBuffer bootPathString = new StringBuffer();
 	char pathSeparator = File.pathSeparatorChar;
-	
+
 	if (this.bootPath != null) {
 		// Add boot class path given by client
 		int length = this.bootPath.length;
@@ -56,7 +56,7 @@ protected String buildBootClassPath() {
 		bootPathString.append("rt.jar");
 		bootPathString.append(pathSeparator);
 	}
-	
+
 	// Add boot class path directory if needed
 	if (this.evalTargetPath != null && TARGET_HAS_FILE_SYSTEM) {
 		bootPathString.append(this.evalTargetPath);
@@ -75,9 +75,9 @@ public String getBatchFileName() {
 /**
  * @see LocalVMLauncher#getCommandLine
  */
-public String[] getCommandLine() {	
-	Vector commandLine= new Vector();
-	
+public String[] getCommandLine() {
+	Vector<String> commandLine= new Vector<String>();
+
 	// VM binary
 	StringBuffer vmLocation = new StringBuffer(this.vmPath);
 	vmLocation
@@ -122,7 +122,7 @@ public String[] getCommandLine() {
 	if (this.evalPort != -1) {
 		commandLine.addElement(CODE_SNIPPET_RUNNER_CLASS_NAME);
 	}
-	
+
 	// code snippet runner arguments
 	if (this.evalPort != -1) {
 		commandLine.addElement(EVALPORT_ARG);
@@ -139,7 +139,7 @@ public String[] getCommandLine() {
 	if (this.programClass != null) {
 		commandLine.addElement(this.programClass);
 	}
-	
+
 	// program arguments
 	if (this.programArguments != null) {
 		for (int i=0;i<this.programArguments.length;i++) {
@@ -164,31 +164,32 @@ public String[] getCommandLine() {
 			result[i] = "\"" + argument + "\"";
 		}
 	}
-	
+
 	return result;
 }
 /**
  * Sets the name of the batch file used to launch the VM.
- * When this option is set, the launcher writes the command line to the given batch file, 
- * and it launches the  batch file. This causes a DOS console to be opened. Note it 
+ * When this option is set, the launcher writes the command line to the given batch file,
+ * and it launches the  batch file. This causes a DOS console to be opened. Note it
  * doesn't delete the batch file when done.
  */
 public void setBatchFileName(String batchFileName) {
 	this.batchFileName = batchFileName;
 }
-protected void writeBatchFile(String fileName, Vector commandLine) {
+protected void writeBatchFile(String fileName, Vector<String> commandLine) {
 	FileOutputStream output = null;
 	try {
 		output = new FileOutputStream(fileName);
 		PrintWriter out= new PrintWriter(output);
-		for (Enumeration e = commandLine.elements(); e.hasMoreElements();) {
-			out.print((String)e.nextElement());
+		for (Enumeration<String> e = commandLine.elements(); e.hasMoreElements();) {
+			out.print(e.nextElement());
 			out.print(" ");
 		}
 		out.println("pause");
 		out.close();
 	} catch (IOException e) {
 		e.printStackTrace();
+	} finally {
 		if (output != null) {
 			try {
 				output.close();

@@ -22,64 +22,64 @@ public class ExecutionTests extends BuilderTests {
 	public ExecutionTests(String name) {
 		super(name);
 	}
-	
+
 	public static Test suite() {
 		return buildTestSuite(ExecutionTests.class);
 	}
-	
+
 	public void testSuccess() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-		
-		env.addClass(root, "p1", "Hello", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public class Hello {\n"+ //$NON-NLS-1$
-			"   public static void main(String args[]) {\n"+ //$NON-NLS-1$
-			"      System.out.print(\"Hello world\");\n"+ //$NON-NLS-1$
-			"   }\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		env.addClass(root, "p1", "Hello",
+			"package p1;\n"+
+			"public class Hello {\n"+
+			"   public static void main(String args[]) {\n"+
+			"      System.out.print(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
 			);
-			
+
 		incrementalBuild(projectPath);
 		expectingNoProblems();
-		executeClass(projectPath, "p1.Hello", "Hello world", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		executeClass(projectPath, "p1.Hello", "Hello world", "");
 	}
-	
+
 	public void testFailure() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-		
-		IPath helloPath = env.addClass(root, "p1", "Hello", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public class Hello {\n"+ //$NON-NLS-1$
-			"   public static void main(String args[]) {\n"+ //$NON-NLS-1$
-			"      System.out.println(\"Hello world\")\n"+ //$NON-NLS-1$
-			"   }\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		IPath helloPath = env.addClass(root, "p1", "Hello",
+			"package p1;\n"+
+			"public class Hello {\n"+
+			"   public static void main(String args[]) {\n"+
+			"      System.out.println(\"Hello world\")\n"+
+			"   }\n"+
+			"}\n"
 			);
 		// public static void main(String args[]) {
 		//    System.out.println("Hello world") <-- missing ";"
 		// }
-			
+
 		incrementalBuild(projectPath);
 		expectingOnlyProblemsFor(helloPath);
-		executeClass(projectPath, "p1.Hello", "", //$NON-NLS-1$ //$NON-NLS-2$
-			"java.lang.Error: Unresolved compilation problem: \n" +  //$NON-NLS-1$
-			"	Syntax error, insert \";\" to complete BlockStatements\n" //$NON-NLS-1$
+		executeClass(projectPath, "p1.Hello", "",
+			"java.lang.Error: Unresolved compilation problem: \n" +
+			"	Syntax error, insert \";\" to complete BlockStatements\n"
 		);
 	}
 }

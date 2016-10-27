@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,73 +19,71 @@ import org.eclipse.core.runtime.IProgressMonitor;
 
 /**
  * A basic progress monitor that can be waited upon (via waitForCompletion()).
- * 
+ *
  * @author Andy Clement
  */
 public class SimpleProgressMonitor implements IProgressMonitor {
 
-	private static boolean debug = true;
-	
-	public String description = null;
-	public boolean done = false;
+    public String description;
+    public volatile int incomplete;
+    private static boolean debug = false;
 
-	public SimpleProgressMonitor(String description) {
-		this.description = description;
-	}
-	
-	public void beginTask(String name, int totalWork) {
-	}
+    public SimpleProgressMonitor(String description) {
+        this.description = description;
+    }
 
-	public void done() {
-		this.done = true;
-	}
+    public void beginTask(String name, int totalWork) {
+        incomplete += 1;
+    }
 
-	public void internalWorked(double work) {
-	}
+    public void done() {
+        incomplete -= 1;
+    }
 
-	public boolean isCanceled() {
-		return false;
-	}
+    public void internalWorked(double work) {
+    }
 
-	public void setCanceled(boolean value) {
-	}
+    public boolean isCanceled() {
+        return false;
+    }
 
-	public void setTaskName(String name) {
-	}
+    public void setCanceled(boolean value) {
+    }
 
-	public void subTask(String name) {
-	}
+    public void setTaskName(String name) {
+    }
 
-	public void worked(int work) {
-	}
-	
-	/**
-	 * Wait up to 5seconds for this progress monitor to be called with 'done()'.
-	 * If it times out then an IllegalStateException is thrown.
-	 */
-	public void waitForCompletion() {
-		waitForCompletion(5);
-	}
+    public void subTask(String name) {
+    }
 
-	/**
-	 * Wait up to the specified number of seconds for this progress monitor to be called with 'done()'.
-	 * If it times out then an IllegalStateException is thrown.
-	 */
-	public void waitForCompletion(int timeoutSeconds) {
-		int count = 0;
-		while (!this.done) {
-			try {
-				Thread.sleep(250);
-			} catch (Exception e) {
-			}
-			count++;
-			if (count > (timeoutSeconds * 4)) {
-				throw new IllegalStateException(description
-						+ " timed out after " + timeoutSeconds + " seconds");
-			}
-		}
-		if (this.done && debug) {
-			System.err.println(description + " completed");
-		}
-	}
+    public void worked(int work) {
+    }
+
+    /**
+     * Wait up to 5seconds for this progress monitor to be called with 'done()'.
+     * If it times out then an IllegalStateException is thrown.
+     */
+    public void waitForCompletion() {
+        waitForCompletion(5);
+    }
+
+    /**
+     * Wait up to the specified number of seconds for this progress monitor to be called with 'done()'.
+     * If it times out then an IllegalStateException is thrown.
+     */
+    public void waitForCompletion(int timeoutSeconds) {
+        int count = 0;
+        while (incomplete > 0) {
+            try { Thread.sleep(250);
+            } catch (Exception e) {
+            }
+            count += 1;
+            if (count > (timeoutSeconds * 4)) {
+                throw new IllegalStateException(description + " timed out after " + timeoutSeconds + " seconds");
+            }
+        }
+        if (debug && incomplete < 1) {
+            System.err.println(description + " completed");
+        }
+    }
 }

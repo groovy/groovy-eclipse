@@ -11,6 +11,7 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -29,10 +30,10 @@ public class TestAll extends junit.framework.TestCase {
 public TestAll(String testName) {
 	super(testName);
 }
+
 public static Test suite() {
-	
 	// Common test suites
-	ArrayList standardTests = new ArrayList();
+	List<Class<? extends Test>> standardTests = new ArrayList<Class<? extends Test>>();
 	standardTests.add(GroovySimpleTest.class);
 //	standardTests.add(ArrayTest.class);
 //	standardTests.add(AssignmentTest.class);
@@ -72,18 +73,18 @@ public static Test suite() {
 //	standardTests.add(SerialVersionUIDTests.class);
 //	standardTests.add(LineNumberAttributeTest.class);
 //	standardTests.add(ProgrammingProblemsTest.class);
-//	
+//
 //	// add all javadoc tests
 //	for (int i=0, l=JavadocTest.ALL_CLASSES.size(); i<l; i++) {
 //		standardTests.add(JavadocTest.ALL_CLASSES.get(i));
 //	}
 //
 	// Tests to run when compliance is greater than 1.3
-	ArrayList since_1_4 = new ArrayList();
+	List<Class<? extends Test>> since_1_4 = new ArrayList<Class<? extends Test>>();
 //	since_1_4.add(AssertionTest.class);
 
 	// Tests to run when compliance is greater than 1.4
-	ArrayList since_1_5 = new ArrayList();
+	List<Class<? extends Test>> since_1_5 = new ArrayList<Class<? extends Test>>();
 //	since_1_5.addAll(RunComparableTests.ALL_CLASSES);
 //	since_1_5.add(ClassFileReaderTest_1_5.class);
 //	since_1_5.add(GenericTypeSignatureTest.class);
@@ -94,17 +95,17 @@ public static Test suite() {
 //	since_1_5.add(Deprecated15Test.class);
 
 	// Tests to run when compliance is greater than 1.5
-	ArrayList since_1_6 = new ArrayList();
+	List<Class<? extends Test>> since_1_6 = new ArrayList<Class<? extends Test>>();
 //	since_1_6.add(StackMapAttributeTest.class);
-	
-	ArrayList since_1_8 = new ArrayList();
+
+	List<Class<? extends Test>> since_1_8 = new ArrayList<Class<? extends Test>>();
 	since_1_8.add(GroovySimpleTests_Compliance_1_8.class);
 
 	// Build final test suite
 	TestSuite all = new TestSuite(TestAll.class.getName());
 	int possibleComplianceLevels = AbstractCompilerTest.getPossibleComplianceLevels();
 	if ((possibleComplianceLevels & AbstractCompilerTest.F_1_3) != 0) {
-		ArrayList tests_1_3 = (ArrayList)standardTests.clone();
+		List<Class<? extends Test>> tests_1_3 = new ArrayList<Class<? extends Test>>(standardTests);
 //		tests_1_3.add(Compliance_1_3.class);
 //		tests_1_3.add(JavadocTest_1_3.class);
 //		tests_1_3.add(Compliance_CLDC.class);
@@ -117,7 +118,7 @@ public static Test suite() {
 		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK1_3, tests_1_3));
 	}
 	if ((possibleComplianceLevels & AbstractCompilerTest.F_1_4) != 0) {
-		ArrayList tests_1_4 = (ArrayList)standardTests.clone();
+		List<Class<? extends Test>> tests_1_4 = new ArrayList<Class<? extends Test>>(standardTests);
 		tests_1_4.addAll(since_1_4);
 //		tests_1_4.add(Compliance_1_4.class);
 //		tests_1_4.add(ClassFileReaderTest_1_4.class);
@@ -131,7 +132,7 @@ public static Test suite() {
 		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK1_4, tests_1_4));
 	}
 	if ((possibleComplianceLevels & AbstractCompilerTest.F_1_5) != 0) {
-		ArrayList tests_1_5 = (ArrayList)standardTests.clone();
+		List<Class<? extends Test>> tests_1_5 = new ArrayList<Class<? extends Test>>(standardTests);
 		tests_1_5.addAll(since_1_4);
 		tests_1_5.addAll(since_1_5);
 		// Reset forgotten subsets tests
@@ -143,7 +144,7 @@ public static Test suite() {
 		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK1_5, tests_1_5));
 	}
 	if ((possibleComplianceLevels & AbstractCompilerTest.F_1_6) != 0) {
-		ArrayList tests_1_6 = (ArrayList)standardTests.clone();
+		List<Class<? extends Test>> tests_1_6 = new ArrayList<Class<? extends Test>>(standardTests);
 		tests_1_6.addAll(since_1_4);
 		tests_1_6.addAll(since_1_5);
 		tests_1_6.addAll(since_1_6);
@@ -156,7 +157,7 @@ public static Test suite() {
 		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK1_6, tests_1_6));
 	}
 	if ((possibleComplianceLevels & AbstractCompilerTest.F_1_7) != 0) {
-		ArrayList tests_1_7 = (ArrayList)standardTests.clone();
+		List<Class<? extends Test>> tests_1_7 = new ArrayList<Class<? extends Test>>(standardTests);
 		tests_1_7.addAll(since_1_4);
 		tests_1_7.addAll(since_1_5);
 		tests_1_7.addAll(since_1_6);
@@ -169,7 +170,7 @@ public static Test suite() {
 		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK1_7, tests_1_7));
 	}
 	if ((possibleComplianceLevels & AbstractCompilerTest.F_1_8) != 0) {
-		ArrayList tests_1_8 = (ArrayList)standardTests.clone();
+		List<Class<? extends Test>> tests_1_8 = new ArrayList<Class<? extends Test>>(standardTests);
 		tests_1_8.addAll(since_1_4);
 		tests_1_8.addAll(since_1_5);
 		tests_1_8.addAll(since_1_6);

@@ -30,8 +30,8 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 
 public class EnumDietRecoveryTest extends AbstractCompilerTest {
 	public static boolean optimizeStringLiterals = false;
-	public static long sourceLevel = ClassFileConstants.JDK1_3; //$NON-NLS-1$
-	
+	public static long sourceLevel = ClassFileConstants.JDK1_3;
+
 public EnumDietRecoveryTest(String testName){
 	super(testName);
 }
@@ -39,35 +39,35 @@ public EnumDietRecoveryTest(String testName){
 /*
  * Toggle compiler in mode -1.5
  */
-protected Map getCompilerOptions() {
-	Map options = super.getCompilerOptions();
+protected Map<String, String> getCompilerOptions() {
+	Map<String, String> options = super.getCompilerOptions();
 	options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_5);
-	options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);	
-	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_5);	
+	options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_5);
+	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_5);
 	return options;
 }
 
 public void checkParse(
-	char[] source, 
+	char[] source,
 	String expectedDietUnitToString,
-	String expectedDietPlusBodyUnitToString,	
+	String expectedDietPlusBodyUnitToString,
 	String expectedFullUnitToString,
-	String expectedCompletionDietUnitToString, 
+	String expectedCompletionDietUnitToString,
 	String testName) {
 
 	/* using regular parser in DIET mode */
 	{
-		Parser parser = 
+		Parser parser =
 			new Parser(
 				new ProblemReporter(
-					DefaultErrorHandlingPolicies.proceedWithAllProblems(), 
-					new CompilerOptions(getCompilerOptions()), 
+					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+					new CompilerOptions(getCompilerOptions()),
 					new DefaultProblemFactory(Locale.getDefault())),
 				optimizeStringLiterals);
 
 		ICompilationUnit sourceUnit = new CompilationUnit(source, testName, null);
-		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);	
-		
+		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);
+
 		CompilationUnitDeclaration computedUnit = parser.dietParse(sourceUnit, compilationResult);
 		String computedUnitToString = computedUnit.toString();
 		if (!expectedDietUnitToString.equals(computedUnitToString)){
@@ -80,17 +80,17 @@ public void checkParse(
 	}
 	/* using regular parser in DIET mode + getMethodBodies */
 	{
-		Parser parser = 
+		Parser parser =
 			new Parser(
 				new ProblemReporter(
-					DefaultErrorHandlingPolicies.proceedWithAllProblems(), 
-					new CompilerOptions(getCompilerOptions()), 
+					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+					new CompilerOptions(getCompilerOptions()),
 					new DefaultProblemFactory(Locale.getDefault())),
 				optimizeStringLiterals);
 
 		ICompilationUnit sourceUnit = new CompilationUnit(source, testName, null);
-		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);	
-		
+		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);
+
 		CompilationUnitDeclaration computedUnit = parser.dietParse(sourceUnit, compilationResult);
 		String computedUnitToString = computedUnit.toString();
 		if (!expectedDietUnitToString.equals(computedUnitToString)){
@@ -109,7 +109,7 @@ public void checkParse(
 		if (!expectedDietPlusBodyUnitToString.equals(computedUnitToString)){
 			System.out.println(Util.displayString(computedUnitToString));
 		}
-		
+
 		assertEquals(
 			"Invalid unit diet+body structure" + testName,
 			expectedDietPlusBodyUnitToString,
@@ -117,17 +117,17 @@ public void checkParse(
 	}
 	/* using regular parser in FULL mode */
 	{
-		Parser parser = 
+		Parser parser =
 			new Parser(
 				new ProblemReporter(
-					DefaultErrorHandlingPolicies.proceedWithAllProblems(), 
-					new CompilerOptions(getCompilerOptions()), 
+					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+					new CompilerOptions(getCompilerOptions()),
 					new DefaultProblemFactory(Locale.getDefault())),
 				optimizeStringLiterals);
 
 		ICompilationUnit sourceUnit = new CompilationUnit(source, testName, null);
-		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);	
-		
+		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);
+
 		CompilationUnitDeclaration computedUnit = parser.parse(sourceUnit, compilationResult);
 		String computedUnitToString = computedUnit.toString();
 		if (!expectedFullUnitToString.equals(computedUnitToString)){
@@ -148,10 +148,10 @@ public void checkParse(
 				new CompilerOptions(getCompilerOptions()),
 				false/*don't record local declarations*/,
 				true/*optimize string literals*/);
-			
+
 		ICompilationUnit sourceUnit = new CompilationUnit(source, testName, null);
-		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);	
-		
+		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);
+
 		CompilationUnitDeclaration computedUnit = parser.dietParse(sourceUnit, compilationResult);
 		String computedUnitToString = computedUnit.toString();
 		if (!expectedDietUnitToString.equals(computedUnitToString)){
@@ -171,10 +171,10 @@ public void checkParse(
 				new CompilerOptions(getCompilerOptions()),
 				false/*don't record local declarations*/,
 				true/*optimize string literals*/);
-			
+
 		ICompilationUnit sourceUnit = new CompilationUnit(source, testName, null);
-		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);	
-		
+		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);
+
 		CompilationUnitDeclaration computedUnit = parser.parse(sourceUnit, compilationResult);
 		String computedUnitToString = computedUnit.toString();
 		if (!expectedFullUnitToString.equals(computedUnitToString)){
@@ -184,21 +184,21 @@ public void checkParse(
 			"Invalid source element full structure" + testName,
 			expectedFullUnitToString,
 			computedUnitToString);
-	}	
+	}
 	/* using completion parser in DIET mode */
 	{
 		CompilerOptions options = new CompilerOptions(getCompilerOptions());
 		CompletionParser parser =
 			new CompletionParser(
 				new ProblemReporter(
-					DefaultErrorHandlingPolicies.proceedWithAllProblems(), 
-					options, 
+					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+					options,
 					new DefaultProblemFactory(Locale.getDefault())),
 				false);
-			
+
 		ICompilationUnit sourceUnit = new CompilationUnit(source, testName, null);
-		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);	
-		
+		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);
+
 		CompilationUnitDeclaration computedUnit = parser.dietParse(sourceUnit, compilationResult, Integer.MAX_VALUE);
 		String computedUnitToString = computedUnit.toString();
 		if (!expectedCompletionDietUnitToString.equals(computedUnitToString)){
@@ -213,144 +213,144 @@ public void checkParse(
 
 public void test0001() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "#\n"
 			+ "public enum X {								\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+	String expectedDietUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	String expectedDietPlusBodyUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  public X() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+
+	String expectedDietPlusBodyUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  public X() {\n" +
+		"    super();\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString = expectedDietUnitToString;
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 public void test0002() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "#\n"
 			+ "public enum X {								\n"
 			+ "  A,											\n"
 			+ "  B;											\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  A(),\n" + 
-		"  B(),\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+	String expectedDietUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  A(),\n" +
+		"  B(),\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	String expectedDietPlusBodyUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  A(),\n" + 
-		"  B(),\n" + 
-		"  public X() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+
+	String expectedDietPlusBodyUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  A(),\n" +
+		"  B(),\n" +
+		"  public X() {\n" +
+		"    super();\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString = expectedDietUnitToString;
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 public void test0003() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "#\n"
 			+ "public enum X {								\n"
 			+ "  A(10),										\n"
 			+ "  B(){};										\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  A(10),\n" + 
-		"  B() {\n" + 
-		"  },\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+	String expectedDietUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  A(10),\n" +
+		"  B() {\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	String expectedDietPlusBodyUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  A(10),\n" + 
-		"  B() {\n" + 
-		"  },\n" +  
-		"  public X() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+
+	String expectedDietPlusBodyUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  A(10),\n" +
+		"  B() {\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"    super();\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString = expectedDietUnitToString;
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 public void test0004() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "#\n"
 			+ "public enum X {								\n"
@@ -358,52 +358,52 @@ public void test0004() {
 			+ "    void foo(){								\n"
 			+ "    }										\n"
 			+ "  }  										\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B() {\n" + 
-        "    void foo() {\n" + 
-        "    }\n" + 
-		"  },\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+	String expectedDietUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B() {\n" +
+		"    void foo() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	String expectedDietPlusBodyUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B() {\n" + 
-        "    void foo() {\n" + 
-        "    }\n" + 
-		"  },\n" +  
-		"  public X() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+
+	String expectedDietPlusBodyUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B() {\n" +
+		"    void foo() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"    super();\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString = expectedDietUnitToString;
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 public void test0005() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "#\n"
 			+ "public enum X {								\n"
@@ -412,52 +412,52 @@ public void test0005() {
 			+ "    }										\n"
 			+ "  };  										\n"
 			+ "  public X(){}								\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B() {\n" + 
-        "    void foo() {\n" + 
-        "    }\n" + 
-		"  },\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+	String expectedDietUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B() {\n" +
+		"    void foo() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	String expectedDietPlusBodyUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B() {\n" + 
-        "    void foo() {\n" + 
-        "    }\n" + 
-		"  },\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  public X() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
+
+	String expectedDietPlusBodyUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B() {\n" +
+		"    void foo() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  public X() {\n" +
+		"    super();\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString = expectedDietUnitToString;
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 public void test0006() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "#\n"
 			+ "public enum X {								\n"
@@ -466,56 +466,56 @@ public void test0006() {
 			+ "    }										\n"
 			+ "  }  										\n"
 			+ "  public X(){} 								\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
+	String expectedDietUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
 		"  B() {\n" +
-        "    void foo() {\n" + 
-        "    }\n" + 
-		"  },\n" + 
-		"  public X() {\n" + 
-		"  },\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+		"    void foo() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	String expectedDietPlusBodyUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B() {\n" + 
-        "    void foo() {\n" + 
-        "    }\n" + 
-		"  },\n" + 
-		"  public X() {\n" + 
-		"  },\n" + 
-		"  public X() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+
+	String expectedDietPlusBodyUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B() {\n" +
+		"    void foo() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"    super();\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString = expectedDietUnitToString;
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 public void test0007() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "#\n"
 			+ "public enum X {								\n"
@@ -524,109 +524,109 @@ public void test0007() {
 			+ "    }										\n"
 			+ "  }  										\n"
 			+ "  X(){} 								\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B() {\n" + 
-        "    void foo() {\n" + 
-        "    }\n" + 
-		"  },\n" + 
-		"  X() {\n" + 
-		"  },\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+	String expectedDietUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B() {\n" +
+		"    void foo() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  X() {\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	String expectedDietPlusBodyUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B() {\n" + 
-        "    void foo() {\n" + 
-        "    }\n" + 
-		"  },\n" + 
-		"  X() {\n" + 
-		"  },\n" + 
-		"  public X() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+
+	String expectedDietPlusBodyUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B() {\n" +
+		"    void foo() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  X() {\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"    super();\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString = expectedDietUnitToString;
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 public void test0008() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "public enum X {								\n"
 			+ "  B(){										\n"
 			+ "    void foo(){								\n"
 			+ "    }										\n"
 			+ "  }  										\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B() {\n" + 
-		"    void foo() {\n" + 
-		"    }\n" + 
-		"  },\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+	String expectedDietUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B() {\n" +
+		"    void foo() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	String expectedDietPlusBodyUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B() {\n" + 
-		"    void foo() {\n" + 
-		"    }\n" + 
-		"  },\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  public X() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
+
+	String expectedDietPlusBodyUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B() {\n" +
+		"    void foo() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  public X() {\n" +
+		"    super();\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString =
 		expectedDietPlusBodyUnitToString;
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 public void test0009() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "#              								\n"
 			+ "public enum X {								\n"
@@ -634,52 +634,52 @@ public void test0009() {
 			+ "    void foo(){								\n"
 			+ "    }										\n"
 			+ "  }  										\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B() {\n" + 
-        "    void foo() {\n" + 
-        "    }\n" + 
-		"  },\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+	String expectedDietUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B() {\n" +
+		"    void foo() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	String expectedDietPlusBodyUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B() {\n" + 
-        "    void foo() {\n" + 
-        "    }\n" + 
-		"  },\n" + 
-		"  public X() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+
+	String expectedDietPlusBodyUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B() {\n" +
+		"    void foo() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"    super();\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString = expectedDietUnitToString;
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 public void test0010() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "#              								\n"
 			+ "public enum X {								\n"
@@ -688,57 +688,57 @@ public void test0010() {
 			+ "    }										\n"
 			+ "  ;  										\n"
 			+ "  void bar(){}  								\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B() {\n" + 
-        "    void foo() {\n" + 
-        "    }\n" + 
-        "    void bar() {\n" + 
-        "    }\n" + 
-		"  },\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+	String expectedDietUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B() {\n" +
+		"    void foo() {\n" +
+		"    }\n" +
+		"    void bar() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	String expectedDietPlusBodyUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B() {\n" + 
 
-        "    void foo() {\n" + 
-        "    }\n" + 
-        "    void bar() {\n" + 
-        "    }\n" + 
-		"  },\n" + 
-		"  public X() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+	String expectedDietPlusBodyUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B() {\n" +
+
+		"    void foo() {\n" +
+		"    }\n" +
+		"    void bar() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"    super();\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString = expectedDietUnitToString;
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 public void test0011() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "#              								\n"
 			+ "public enum X {								\n"
@@ -747,56 +747,56 @@ public void test0011() {
 			+ "    }										\n"
 			+ "  ;  										\n"
 			+ "  X(){}      								\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B() {\n" + 
-        "    void foo() {\n" + 
-        "    }\n" + 
-        "    X() {\n" + 
-        "    }\n" + 
-		"  },\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+	String expectedDietUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B() {\n" +
+		"    void foo() {\n" +
+		"    }\n" +
+		"    X() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	String expectedDietPlusBodyUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B() {\n" + 
-        "    void foo() {\n" + 
-        "    }\n" + 
-        "    X() {\n" + 
-        "    }\n" + 
-		"  },\n" + 
-		"  public X() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+
+	String expectedDietPlusBodyUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B() {\n" +
+		"    void foo() {\n" +
+		"    }\n" +
+		"    X() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  public X() {\n" +
+		"    super();\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString = expectedDietUnitToString;
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 public void test0012() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "#              								\n"
 			+ "public enum X {								\n"
@@ -805,58 +805,58 @@ public void test0012() {
 			+ "    }										\n"
 			+ "  };  										\n"
 			+ "  void bar(){}  								\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B(),\n" + 
-		"  {\n" + 
-		"  }\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+	String expectedDietUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B(),\n" +
+		"  {\n" +
+		"  }\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	String expectedDietPlusBodyUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B(),\n" + 
-		"  {\n" + 
-		"  }\n" + 
-		"  public X() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+
+	String expectedDietPlusBodyUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B(),\n" +
+		"  {\n" +
+		"  }\n" +
+		"  public X() {\n" +
+		"    super();\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString = expectedDietUnitToString;
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 public void test0013() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "#              								\n"
 			+ "public enum X {								\n"
@@ -865,59 +865,59 @@ public void test0013() {
 			+ "    }										\n"
 			+ "  };  										\n"
 			+ "  void bar(){}  								\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B,\n" + 
-		"  {\n" + 
-		"  }\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+	String expectedDietUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B,\n" +
+		"  {\n" +
+		"  }\n" +
+		"  public X() {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	
-	String expectedDietPlusBodyUnitToString = 
-		"package a;\n" + 
-		"public enum X {\n" + 
-		"  B,\n" + 
-		"  {\n" + 
-		"  }\n" + 
-		"  public X() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  void foo() {\n" + 
-		"  }\n" + 
-		"  void bar() {\n" + 
-		"  }\n" + 
+
+
+	String expectedDietPlusBodyUnitToString =
+		"package a;\n" +
+		"public enum X {\n" +
+		"  B,\n" +
+		"  {\n" +
+		"  }\n" +
+		"  public X() {\n" +
+		"    super();\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  void foo() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString = expectedDietUnitToString;
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 public void test0014() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "#              								\n"
 			+ "public class X {								\n"
@@ -932,75 +932,75 @@ public void test0014() {
 			+ "  }            								\n"
 			+ "  class W {     								\n"
 			+ "  }             								\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"package a;\n" + 
-		"public class X {\n" + 
-		"  class Y {\n" + 
-		"    Y() {\n" + 
-		"    }\n" + 
-		"  }\n" + 
-		"  enum Z {\n" + 
-		"    B() {\n" + 
-        "      void foo() {\n" + 
-        "      }\n" + 
-		"    },\n" + 
-		"    <clinit>() {\n" + 
-		"    }\n" + 
-		"    Z() {\n" + 
-		"    }\n" + 
-		"  }\n" + 
-		"  class W {\n" + 
-		"    W() {\n" + 
-		"    }\n" + 
-		"  }\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+	String expectedDietUnitToString =
+		"package a;\n" +
+		"public class X {\n" +
+		"  class Y {\n" +
+		"    Y() {\n" +
+		"    }\n" +
+		"  }\n" +
+		"  enum Z {\n" +
+		"    B() {\n" +
+		"      void foo() {\n" +
+		"      }\n" +
+		"    },\n" +
+		"    <clinit>() {\n" +
+		"    }\n" +
+		"    Z() {\n" +
+		"    }\n" +
+		"  }\n" +
+		"  class W {\n" +
+		"    W() {\n" +
+		"    }\n" +
+		"  }\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	
-	String expectedDietPlusBodyUnitToString = 
-		"package a;\n" + 
-		"public class X {\n" + 
-		"  class Y {\n" + 
-		"    Y() {\n" + 
-		"      super();\n" + 
-		"    }\n" + 
-		"  }\n" + 
-		"  enum Z {\n" + 
-		"    B() {\n" + 
-        "      void foo() {\n" + 
-        "      }\n" + 
-		"    },\n" + 
-		"    <clinit>() {\n" + 
-		"    }\n" + 
-		"    Z() {\n" + 
-		"      super();\n" + 
-		"    }\n" + 
-		"  }\n" + 
-		"  class W {\n" + 
-		"    W() {\n" + 
-		"      super();\n" + 
-		"    }\n" + 
-		"  }\n" + 
-		"  public X() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
+
+
+	String expectedDietPlusBodyUnitToString =
+		"package a;\n" +
+		"public class X {\n" +
+		"  class Y {\n" +
+		"    Y() {\n" +
+		"      super();\n" +
+		"    }\n" +
+		"  }\n" +
+		"  enum Z {\n" +
+		"    B() {\n" +
+		"      void foo() {\n" +
+		"      }\n" +
+		"    },\n" +
+		"    <clinit>() {\n" +
+		"    }\n" +
+		"    Z() {\n" +
+		"      super();\n" +
+		"    }\n" +
+		"  }\n" +
+		"  class W {\n" +
+		"    W() {\n" +
+		"      super();\n" +
+		"    }\n" +
+		"  }\n" +
+		"  public X() {\n" +
+		"    super();\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString = expectedDietUnitToString;
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 /*
@@ -1008,7 +1008,7 @@ public void test0014() {
  */
 public void test0015() {
 
-	String s = 
+	String s =
 		"public enum Enum1 {						\n"
 			+ "  BLEU(){   									\n"
 			+ "    void foo() {                             \n"
@@ -1019,144 +1019,144 @@ public void test0015() {
 			+ "  ROUGE;										\n"
 			+ "                								\n"
 			+ "  main         								\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"public enum Enum1 {\n" + 
-		"  BLEU() {\n" + 
-        "    void foo() {\n" + 
-        "    }\n" + 
-		"  },\n" + 
-		"  BLANC(),\n" + 
-		"  ROUGE(),\n" + 
-		"  public Enum1() {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+	String expectedDietUnitToString =
+		"public enum Enum1 {\n" +
+		"  BLEU() {\n" +
+		"    void foo() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  BLANC(),\n" +
+		"  ROUGE(),\n" +
+		"  public Enum1() {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	
-	String expectedDietPlusBodyUnitToString = 
-		"public enum Enum1 {\n" + 
-		"  BLEU() {\n" + 
-        "    void foo() {\n" + 
-        "    }\n" + 
-		"  },\n" + 
-		"  BLANC(),\n" + 
-		"  ROUGE(),\n" + 
-		"  public Enum1() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+
+
+	String expectedDietPlusBodyUnitToString =
+		"public enum Enum1 {\n" +
+		"  BLEU() {\n" +
+		"    void foo() {\n" +
+		"    }\n" +
+		"  },\n" +
+		"  BLANC(),\n" +
+		"  ROUGE(),\n" +
+		"  public Enum1() {\n" +
+		"    super();\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString = expectedDietUnitToString;
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 /*
  * https://bugs.eclipse.org/bugs/show_bug.cgi?id=107580
  */
 public void test0016() {
-	String s = 
+	String s =
 		"public enum Enum {								\n"
 			+ "  BEGIN(\"blabla\"),						\n"
 			+ "  END(\"blabla\").							\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"public enum Enum {\n" + 
-		"  BEGIN(\"blabla\"),\n" + 
-		"  END(\"blabla\"),\n" + 
-		"  public Enum() {\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+	String expectedDietUnitToString =
+		"public enum Enum {\n" +
+		"  BEGIN(\"blabla\"),\n" +
+		"  END(\"blabla\"),\n" +
+		"  public Enum() {\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	
-	String expectedDietPlusBodyUnitToString = 
-		"public enum Enum {\n" + 
-		"  BEGIN(\"blabla\"),\n" + 
-		"  END(\"blabla\"),\n" + 
-		"  public Enum() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
+
+
+	String expectedDietPlusBodyUnitToString =
+		"public enum Enum {\n" +
+		"  BEGIN(\"blabla\"),\n" +
+		"  END(\"blabla\"),\n" +
+		"  public Enum() {\n" +
+		"    super();\n" +
+		"  }\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString = expectedDietUnitToString;
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 public void test0017() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "public enum X <T> {							\n"
-			+ "}											\n"; 	
+			+ "}											\n";
 
-	String expectedDietUnitToString = 
-		"package a;\n" + 
-		"public enum X<T> {\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  public X() {\n" + 
-		"  }\n" + 
+	String expectedDietUnitToString =
+		"package a;\n" +
+		"public enum X<T> {\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  public X() {\n" +
+		"  }\n" +
 		"}\n";
-	
-	String expectedDietPlusBodyUnitToString = 
-		"package a;\n" + 
-		"public enum X<T> {\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  public X() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
+
+	String expectedDietPlusBodyUnitToString =
+		"package a;\n" +
+		"public enum X<T> {\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  public X() {\n" +
+		"    super();\n" +
+		"  }\n" +
 		"}\n";
 
 	String expectedFullUnitToString =
-		"package a;\n" + 
-		"public enum X<T> {\n" + 
-		"  <clinit>() {\n" + 
-		"  }\n" + 
-		"  public X() {\n" + 
-		"    super();\n" + 
-		"  }\n" + 
+		"package a;\n" +
+		"public enum X<T> {\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  public X() {\n" +
+		"    super();\n" +
+		"  }\n" +
 		"}\n";
-	
-	String expectedCompletionDietUnitToString = 
+
+	String expectedCompletionDietUnitToString =
 		expectedDietUnitToString;
-	
+
 	String testName = "<enum type recovery>";
 	checkParse(
 		s.toCharArray(),
 		expectedDietUnitToString,
 		expectedDietPlusBodyUnitToString,
 		expectedFullUnitToString,
-		expectedCompletionDietUnitToString,	
+		expectedCompletionDietUnitToString,
 		testName);
 }
 }

@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import java.util.List;
@@ -30,7 +29,6 @@ import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.internal.core.Openable;
 
 /**
  * @author Andrew Eisenberg
@@ -41,16 +39,15 @@ public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
     public MethodReferenceSearchTests(String name) {
         super(name);
     }
-    
+
     public static Test suite() {
         return buildTestSuite(MethodReferenceSearchTests.class);
     }
 
-    
     public void testMethodReferencesInScript1() throws Exception {
         doTestForTwoMethodReferencesInScript("new First().xxx\nnew First()\n.\nxxx");
     }
-    
+
     public void testMethodReferencesInScript1GRE_1180() throws Exception {
         doTestForTwoMethodReferencesInScript("new First().xxx\n'xxx'\n\"xxx\"\n\"\"\"xxx\"\"\"\nnew First()\n.\nxxx");
     }
@@ -77,12 +74,12 @@ public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
     public void testMethodReferencesInScript8() throws Exception {
         doTestForTwoMethodReferencesInScript(
                 "class SubClass extends First { } \n " +
-        		"def f = new SubClass()\n " +
-        		"f.xxx\n" + // here
-        		"f = 9\n" +
-        		"f.xxx\n" +  // invalid reference
-        		"f = new SubClass()\n" +
-        		"f.xxx");  // here
+                "def f = new SubClass()\n " +
+                "f.xxx\n" + // here
+                "f = 9\n" +
+                "f.xxx\n" +  // invalid reference
+                "f = new SubClass()\n" +
+                "f.xxx");  // here
     }
     public void testMethodReferencesInClass1() throws Exception {
         doTestForTwoMethodReferencesInClass("class Second extends First { \ndef method() { this.xxx }\ndef xxx() { }\n def method2() { super.xxx }}");
@@ -94,18 +91,18 @@ public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
 
     public void testMethodReferencesInClass3() throws Exception {
         doTestForTwoMethodReferencesInClass(
-        		"class Second extends First {\n" +
-        		"  def method() {\n" +
-        		"    this.xxx = 'nothing'\n" + // yes
-        		"  }\n" +
+                "class Second extends First {\n" +
+                "  def method() {\n" +
+                "    this.xxx = 'nothing'\n" + // yes
+                "  }\n" +
                 "  def xxx() { }\n" +  // no
-        		"  def method2() {\n" +  // no
-        		"    def nothing = super.xxx()\n" +  // yes...field reference used as a closure
-        		"  }\n" +
-        		"}");
+                "  def method2() {\n" +  // no
+                "    def nothing = super.xxx()\n" +  // yes...field reference used as a closure
+                "  }\n" +
+                "}");
     }
     public void testMethodReferencesInClass4() throws Exception {
-        createUnit("Third",  
+        createUnit("Third",
                 "class Third {\n" +
                 "  def xxx() { }\n" + // no
         "}\n");
@@ -117,41 +114,41 @@ public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
                 "  def xxx() { }\n" +  // no
                 "  def method3(xxx) {\n" +  // no
                 "    new Third().xxx()\n" + // no
-                "    xxx()\n" + // no...this will try to execute the xxx parameter, not the method 
+                "    xxx()\n" + // no...this will try to execute the xxx parameter, not the method
                 "    xxx = xxx\n" +  // no, no
                 "    def nothing = super.xxx\n" +  // yes...method reference passed as a closure
                 "  }\n" +
         "}");
     }
-    
+
     public void testOverloadedMethodReferences1() throws Exception {
-    	// should match on the method reference with precise # of args as well as method reference with unmatched number of args
-    	doTestForTwoMethodReferences(
-    			"interface First {\n" + 
-    			"    void xxx()\n" + 
-    			"    void xxx(a)\n" + 
-    			"}",
-    			"public class Second implements First {\n" + 
-		        "    public void other() {\n" +
-		        "        xxx()\n" +
-		        "    }\n" +
-    			"    public void xxx() {\n" +
-    			"        xxx(a)\n" +
-    			"    }\n" +
-    			"    void xxx(a) {\n" +
-    			"        xxx(a,b)\n" +
-    			"    }\n" +
-    			"}", false, 0, "xxx" );
+        // should match on the method reference with precise # of args as well as method reference with unmatched number of args
+        doTestForTwoMethodReferences(
+                "interface First {\n" +
+                "    void xxx()\n" +
+                "    void xxx(a)\n" +
+                "}",
+                "public class Second implements First {\n" +
+                "    public void other() {\n" +
+                "        xxx()\n" +
+                "    }\n" +
+                "    public void xxx() {\n" +
+                "        xxx(a)\n" +
+                "    }\n" +
+                "    void xxx(a) {\n" +
+                "        xxx(a,b)\n" +
+                "    }\n" +
+                "}", false, 0, "xxx" );
     }
-    
+
     public void testOverloadedMethodReferences2() throws Exception {
         // should match on the method reference with precise # of args as well as method reference with unmatched number of args
         doTestForTwoMethodReferences(
-                "interface First {\n" + 
-                "    void xxx(a)\n" + 
-                "    void xxx()\n" + 
+                "interface First {\n" +
+                "    void xxx(a)\n" +
+                "    void xxx()\n" +
                 "}",
-                "public class Second implements First {\n" + 
+                "public class Second implements First {\n" +
                 "    public void other() {\n" +
                 "        xxx(a)\n" +
                 "    }\n" +
@@ -163,17 +160,17 @@ public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
                 "    }\n" +
                 "}", false, 0, "xxx" );
     }
-    
+
     public void testOverloadedMethodReferences3() throws Exception {
         // should match on the method reference with precise # of args as well as method reference with unmatched number of args
-    	createUnit("Sub", 
+        createUnit("Sub",
                 "interface Sub extends First { void xxx(a) }");
         doTestForTwoMethodReferences(
-        		"interface First {\n" + 
-                        "    void xxx(a)\n" + 
-                        "    void xxx()\n" + 
+                "interface First {\n" +
+                        "    void xxx(a)\n" +
+                        "    void xxx()\n" +
                         "}",
-                "public class Second implements Sub {\n" + 
+                "public class Second implements Sub {\n" +
                 "    public void other() {\n" +
                 "        xxx(a)\n" +
                 "    }\n" +
@@ -185,20 +182,20 @@ public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
                 "    }\n" +
                 "}", false, 0, "xxx" );
     }
-    
+
     public void testOverloadedMethodReferences4() throws Exception {
         // should match on the method reference with precise # of args as well as method reference with unmatched number of args
-        createUnit("Sub", 
+        createUnit("Sub",
                 "interface Sub extends First {\n" +
                 "    void xxx(a)\n" +
                 "    void xxx(a,b,c)\n" +
                 "}");
         doTestForTwoMethodReferences(
-                "interface First {\n" + 
-                "    void xxx(a,b)\n" + 
-                "    void xxx(a)\n" + 
+                "interface First {\n" +
+                "    void xxx(a,b)\n" +
+                "    void xxx(a)\n" +
                 "}",
-                "public class Second implements Sub {\n" + 
+                "public class Second implements Sub {\n" +
                 "    public void other() {\n" +
                 "        First f\n" +
                 "        f.xxx(a,b,c)\n" +
@@ -216,14 +213,14 @@ public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
                 "    }\n" +
                 "}", false, 0, "xxx" );
     }
-    
+
     public void testMethodWithDefaultParameters1() throws Exception {
         doTestForTwoMethodReferences(
                 "class First {\n" +
                 "    void xxx(a, b = 9) { }\n" +
                 "    void xxx(a, b, c) { }\n" +
                 "}",
-                "class Second {\n" + 
+                "class Second {\n" +
                 "    void other0() {\n" +
                 "        First f\n" +
                 "        f.xxx(a)\n" +
@@ -236,17 +233,17 @@ public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
                 "        First f\n" +
                 "        f.xxx(a,b)\n" +
                 "    }\n" +
-                "}", 
+                "}",
                 false, 0, "xxx" );
     }
-    
+
     public void testMethodWithDefaultParameters2() throws Exception {
         doTestForTwoMethodReferences(
                 "class First {\n" +
                 "    void xxx(a, b = 9) { }\n" +
                 "    void xxx(a, b, c) { }\n" +
                 "}",
-                "class Second {\n" + 
+                "class Second {\n" +
                 "    void other0() {\n" +
                 "        First f\n" +
                 "        f.xxx(a)\n" +
@@ -261,10 +258,10 @@ public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
                 "    }\n" +
                 "}", false, 0, "xxx" );
     }
-    
-    
+
+
     public void testConstructorReferenceSearch() throws Exception {
-        String groovyContents = 
+        String groovyContents =
                 "package p\n"
                 + "class Foo {\n"
                 + "  Foo() {\n"
@@ -274,26 +271,26 @@ public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
                 + "    new Foo(a)\n"
                 + "  }\n"
                 + "}";
-        String otherContents = 
+        String otherContents =
                 "import p.Foo\n"
                 + "new Foo()\n"
                 + "new Foo(a)\n"
                 + "new p.Foo()\n"
                 + "new p.Foo(a)\n";
-        
+
         GroovyCompilationUnit first = createUnit("p", "Foo", groovyContents);
         createUnit("", "Other", otherContents);
-       
+
         IMethod constructor = first.getType("Foo").getMethods()[0];
         MockSearchRequestor requestor = new MockSearchRequestor();
         SearchEngine engine = new SearchEngine();
-        engine.search(SearchPattern.createPattern(constructor, IJavaSearchConstants.REFERENCES), 
-                new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() }, 
-                SearchEngine.createJavaSearchScope(new IJavaElement[] { first.getPackageFragmentRoot() }, false), 
+        engine.search(SearchPattern.createPattern(constructor, IJavaSearchConstants.REFERENCES),
+                new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() },
+                SearchEngine.createJavaSearchScope(new IJavaElement[] { first.getPackageFragmentRoot() }, false),
                 requestor, new NullProgressMonitor());
         List<SearchMatch> matches = requestor.matches;
         assertEquals("Incorrect number of matches:\n" + matches, 6, matches.size());
-        
+
         // two from Foo and two from other
         int fooCnt = 0, otherCnt = 0;
         for (SearchMatch match : matches) {
@@ -308,7 +305,7 @@ public class MethodReferenceSearchTests extends AbstractGroovySearchTest {
         assertEquals("Should have found 2 matches in Foo.groovy", 2, fooCnt);
         assertEquals("Should have found 4 matches in Other.groovy", 4, otherCnt);
     }
-    
+
     private void doTestForTwoMethodReferencesInScript(String secondContents) throws JavaModelException {
         doTestForTwoMethodReferences(FIRST_CONTENTS_CLASS_FOR_METHODS, secondContents, true, 3, "xxx");
     }

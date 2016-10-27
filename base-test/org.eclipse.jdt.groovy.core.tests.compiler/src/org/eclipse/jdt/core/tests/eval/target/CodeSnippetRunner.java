@@ -24,18 +24,18 @@ import java.util.*;
  * lets the system class loader (or the bootstrap class loader if it is a "java" class) load
  * the class.
  * If the regular classpath directory is null, it uses a code snippet class loader to load the classes
- * it gets from the IDE. 
+ * it gets from the IDE.
  * <p>
  * IMPORTANT NOTE:
  * Using a code snippet class loader has the following limitation when the code snippet is ran:
  * <ul>
  * <li>The code snippet class can access only public classes, and public members or these classes.
  *	   This is because the "runtime package" of the code snippet class is always different from
- *	   the "runtime package" of the class it is trying to access since the class loaders are 
+ *	   the "runtime package" of the class it is trying to access since the class loaders are
  * 	   different.
- * <li>The code snippet class cannot be defined in a "java.*" package. Only the bootstrap class 
+ * <li>The code snippet class cannot be defined in a "java.*" package. Only the bootstrap class
  *	   loader can load such a class.
- * </ul> 
+ * </ul>
  */
 public class CodeSnippetRunner {
 	public static CodeSnippetRunner theRunner;
@@ -43,14 +43,14 @@ public class CodeSnippetRunner {
 	static final String RUN_METHOD_NAME = "run";
 	static final String GET_RESULT_TYPE_METHOD_NAME = "getResultType";
 	static final String GET_RESULT_VALUE_METHOD_NAME = "getResultValue";
-	
+
 	IDEInterface ide;
 	String classPathDirectory;
 	String bootclassPathDirectory;
 	CodeSnippetClassLoader loader;
-	Class codeSnippetClass = null;
+	Class<?> codeSnippetClass = null;
 /**
- * Creates a new code snippet runner. 
+ * Creates a new code snippet runner.
  */
 public CodeSnippetRunner(int portNumber, String classPathDirectory, String bootclassPathDirectory) {
 	this.ide = new IDEInterface(portNumber);
@@ -67,7 +67,7 @@ public CodeSnippetRunner(int portNumber, String classPathDirectory, String bootc
  * Returns the forward slash separated class name from the given class definition.
  */
 private String className(byte[] classDefinition) {
-	// NB: The following code was copied from org.eclipse.jdt.internal.compiler.cfmt, 
+	// NB: The following code was copied from org.eclipse.jdt.internal.compiler.cfmt,
 	//     thus it is highly dependent on the class file format.
 	int readOffset = 10;
 	try {
@@ -141,7 +141,7 @@ private String className(byte[] classDefinition) {
  * Creates a new instance of the given class. It is
  * assumed that it is a subclass of CodeSnippet.
  */
-Object createCodeSnippet(Class snippetClass) {
+Object createCodeSnippet(Class<?> snippetClass) {
 	Object object = null;
 	try {
 		object = snippetClass.newInstance();
@@ -165,7 +165,7 @@ public boolean isRunning() {
 /**
  * Starts a new CodeSnippetRunner that will serve code snippets from the IDE.
  * It waits for a connection on the given evaluation port number.
- * <p> 
+ * <p>
  * Usage: java org.eclipse.jdt.tests.eval.target.CodeSnippetRunner -evalport <portNumber> [-options] [<mainClassName>] [<arguments>]
  * where options include:
  * -cscp <codeSnippetClasspath> the the classpath directory for the code snippet classes.
@@ -173,7 +173,7 @@ public boolean isRunning() {
  * -csbp <codeSnippetBootClasspath> the bootclasspath directory for the code snippet classes
  * that are defined in a "java.*" package.
  * <p>
- * The mainClassName and its arguments are optional: when not present only the server will start 
+ * The mainClassName and its arguments are optional: when not present only the server will start
  * and run until the VM is shut down, when present the server will start, the main class will run
  * but the server will exit when the main class has finished running.
  */
@@ -225,9 +225,9 @@ public static void main(String[] args) {
 		String[] mainArgs = new String[mainArgsLength];
 		System.arraycopy(args, mainClass+1, mainArgs, 0, mainArgsLength);
 		try {
-			Class clazz = Class.forName(args[mainClass]);
+			Class<?> clazz = Class.forName(args[mainClass]);
 			Method mainMethod = clazz.getMethod("main", new Class[] {String[].class});
-			mainMethod.invoke(null, new String[][] {mainArgs});
+			mainMethod.invoke(null, (Object) mainArgs);
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} catch (NoSuchMethodException e) {
@@ -251,8 +251,8 @@ private static void printUsage() {
  * Loads the given class definitions. The way these class definitions are loaded is described
  * in the CodeSnippetRunner constructor.
  * The class definitions are code snippet classes and/or global variable classes.
- * Code snippet classes are assumed be direct or indirect subclasses of CodeSnippet and implement 
- * only the run()V method. 
+ * Code snippet classes are assumed be direct or indirect subclasses of CodeSnippet and implement
+ * only the run()V method.
  * They are instanciated and run.
  * Global variable classes are assumed to be direct subclasses of CodeSnippet. Their fields are assumed
  * to be static. The value of each field is sent back to the IDE.
@@ -273,10 +273,10 @@ void processClasses(boolean mustRun, byte[][] classDefinitions) {
 	}
 
 	// load the classes and collect code snippet classes
-	Vector codeSnippetClasses = new Vector();
+	Vector<Class<?>> codeSnippetClasses = new Vector<Class<?>>();
 	for (int i = 0; i < newClasses.length; i++) {
 		String className = newClasses[i];
-		Class clazz = null;
+		Class<?> clazz = null;
 		if (this.loader != null) {
 			clazz = this.loader.loadIfNeeded(className);
 			if (clazz == null) {
@@ -293,8 +293,8 @@ void processClasses(boolean mustRun, byte[][] classDefinitions) {
 				break;
 			}
 		}
-		
-		Class superclass = clazz.getSuperclass();
+
+		Class<?> superclass = clazz.getSuperclass();
 		Method[] methods = clazz.getDeclaredMethods();
 		if (this.codeSnippetClass == null) {
 			if (superclass.equals(Object.class) && clazz.getName().equals(CODE_SNIPPET_CLASS_NAME)) {
@@ -330,8 +330,8 @@ void processClasses(boolean mustRun, byte[][] classDefinitions) {
 
 	// run the code snippet classes
 	if (codeSnippetClasses.size() != 0 && mustRun) {
-		for (Enumeration e = codeSnippetClasses.elements(); e.hasMoreElements();) {
-			Object codeSnippet = this.createCodeSnippet((Class) e.nextElement());
+		for (Enumeration<Class<?>> e = codeSnippetClasses.elements(); e.hasMoreElements();) {
+			Object codeSnippet = this.createCodeSnippet(e.nextElement());
 			if (codeSnippet != null) {
 				this.runCodeSnippet(codeSnippet);
 			}
@@ -350,7 +350,7 @@ void runCodeSnippet(final Object snippet) {
 					runMethod.invoke(snippet, new Object[] {});
 				} finally {
 					Method getResultTypeMethod = codeSnippetClass.getMethod(GET_RESULT_TYPE_METHOD_NAME, new Class[] {});
-					Class resultType = (Class)getResultTypeMethod.invoke(snippet, new Object[] {});
+					Class<?> resultType = (Class<?>)getResultTypeMethod.invoke(snippet, new Object[] {});
 					Method getResultValueMethod = codeSnippetClass.getMethod(GET_RESULT_VALUE_METHOD_NAME, new Class[] {});
 					Object resultValue = getResultValueMethod.invoke(snippet, new Object[] {});
 					CodeSnippetRunner.this.ide.sendResult(resultType, resultValue);
@@ -362,7 +362,7 @@ void runCodeSnippet(final Object snippet) {
 			} catch (IllegalArgumentException e) {
 				System.out.println("codeSnippetClass = " + codeSnippetClass.getName());
 				System.out.println("snippet.class = " + snippet.getClass().getName());
-				Class superclass = snippet.getClass().getSuperclass();
+				Class<?> superclass = snippet.getClass().getSuperclass();
 				System.out.println("snippet.superclass = " + (superclass == null ? "null" : superclass.getName()));
 				e.printStackTrace();
 			} catch (InvocationTargetException e) {
@@ -446,9 +446,9 @@ private void writeClassOnDisk(String className, byte[] classDefinition) {
 	try {
 		String fileName = className.replace('/', File.separatorChar) + ".class";
 		File classFile = new File(
-			(this.bootclassPathDirectory != null && 
-			(className.startsWith("java") || className.replace('/', '.').equals(CODE_SNIPPET_CLASS_NAME))) ? 
-				this.bootclassPathDirectory : 
+			(this.bootclassPathDirectory != null &&
+			(className.startsWith("java") || className.replace('/', '.').equals(CODE_SNIPPET_CLASS_NAME))) ?
+				this.bootclassPathDirectory :
 				this.classPathDirectory, fileName);
 		File parent = new File(classFile.getParent());
 		parent.mkdirs();

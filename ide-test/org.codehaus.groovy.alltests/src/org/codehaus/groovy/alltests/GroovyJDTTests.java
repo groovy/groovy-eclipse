@@ -48,6 +48,7 @@ public class GroovyJDTTests {
         suite.addTest(FullProjectTests.suite());
 
         // Compiler tests
+        suite.addTest(AnnotationsTests.suite());
         suite.addTest(ErrorRecoveryTests.suite());
         suite.addTest(GenericsTests.suite());
         suite.addTest(GroovySimpleTest.suite());
@@ -65,7 +66,7 @@ public class GroovyJDTTests {
         suite.addTest(SourceLocationsTests.suite());
 
         // Model tests
-        suite.addTest(AnnotationsTests.suite());
+        suite.addTest(ASTTransformsTests.suite());
         suite.addTest(GroovyClassFileTests.suite());
         suite.addTest(GroovyCompilationUnitTests.suite());
         suite.addTest(GroovyContentTypeTests.suite());
