@@ -13,23 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/**
- * Hackergarten contribution
- *  
- * @author Lukasz Pielak 
- * @author Max Rydahl Andersen
- * @author Andres Almiray
- */
 package dsld
 
-import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
 import org.codehaus.groovy.ast.GenericsType
-import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.MethodNode
 import groovy.beans.ListenerList
 
+/**
+ * Hackergarten contribution
+ *
+ * @author Lukasz Pielak
+ * @author Max Rydahl Andersen
+ * @author Andres Almiray
+ */
 contribute(currentType(fields : fields(annotatedBy(ListenerList)))) {
     provider = "ListenerList AST Transform"
 
@@ -63,7 +62,7 @@ private getShortName(String className){
 }
 
 private ClassNode findElementType(FieldNode field) {
-    ClassNode type = field.type 
+    ClassNode type = field.type
     if (type.isArray()) {
         return type.componentType
     }

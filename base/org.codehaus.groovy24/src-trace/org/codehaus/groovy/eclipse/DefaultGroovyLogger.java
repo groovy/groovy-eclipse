@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.util.Date;
 
 /**
  * Default logger logs to sysout and includes a timestamp
+ *
  * @author Andrew Eisenberg
  * @created Nov 24, 2010
  */
@@ -32,5 +33,4 @@ public class DefaultGroovyLogger implements IGroovyLogger {
     public boolean isCategoryEnabled(TraceCategory category) {
         return true;
     }
-
 }

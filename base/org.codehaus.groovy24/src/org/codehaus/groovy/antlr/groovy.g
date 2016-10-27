@@ -1,24 +1,39 @@
+/*
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ */
 // Note: Please don't use physical tabs.  Logical tabs for indent are width 4.
 
-// Note that this grammar has error recovery rules and code. It should not be used to compile class files. It is 
-// intended for IDE tooling and analysis in the face of incorrect code.
-// Recovery rules/code is near comment tag 'RECOVERY:'
-// This file was last merged from revision 12059 of file - 
-// groovy/tags/GROOVY_1_5_6/src/main/org/codehaus/groovy/antlr/groovy.g
+// Note: This grammar has error recovery rules and code. It should not be used
+// to compile class files.  It is intended for IDE tooling and analysis in the
+// face of incorrect code.  Recovery rules/code is near comment tag 'RECOVERY:'
 
 header {
 package org.codehaus.groovy.antlr.parser;
-import org.codehaus.groovy.antlr.*;
+
+import java.io.*;
 import java.util.*;
-import java.io.InputStream;
-import java.io.Reader;
+import antlr.CommonToken;
 import antlr.InputBuffer;
 import antlr.LexerSharedInputState;
-import antlr.CommonToken;
-import org.codehaus.groovy.GroovyBugError;
 import antlr.TokenStreamRecognitionException;
+import org.codehaus.groovy.antlr.*;
 import org.codehaus.groovy.ast.Comment;
-} 
+}
 
 /** JSR-241 Groovy Recognizer.
  *
@@ -194,15 +209,13 @@ import org.codehaus.groovy.ast.Comment;
  *    o I have taken java.g for Java1.5 from Michael Studman (1.22.4)
  *      and have applied the groovy.diff from java.g (1.22) by John Rose
  *      back onto the new root (1.22.4) - Jeremy Rayner (Jan 2005)
- *    o for a map of the task see...
- *      http://groovy.javanicus.com/java-g.png
  *
  * Version 1.22.4.g.2
  *    o mkempf, rkleeb, Dec 2007
  *    o fixed various rules so that they call the correct Create Method
  *      to make sure that the line information are correct
  *
- * This grammar is in the PUBLIC DOMAIN
+ * Based on an original grammar released in the PUBLIC DOMAIN
  */
 
 class GroovyRecognizer extends Parser;
@@ -238,7 +251,7 @@ tokens {
 }
 
 {
-        /** This factory is the correct way to wire together a Groovy parser and lexer. */
+    /** This factory is the correct way to wire together a Groovy parser and lexer. */
     public static GroovyRecognizer make(GroovyLexer lexer) {
         GroovyRecognizer parser = new GroovyRecognizer(lexer.plumb());
         // TODO: set up a common error-handling control block, to avoid excessive tangle between these guys
@@ -246,7 +259,9 @@ tokens {
         lexer.parser = parser;
         parser.getASTFactory().setASTNodeClass(GroovySourceAST.class);
         parser.warningList = new ArrayList();
+        // GRECLIPSE add
         parser.errorList = new ArrayList();
+        // GRECLIPSE end
         return parser;
     }
     // Create a scanner that reads from the input stream passed to us...
@@ -255,20 +270,25 @@ tokens {
     public static GroovyRecognizer make(InputBuffer in) { return make(new GroovyLexer(in)); }
     public static GroovyRecognizer make(LexerSharedInputState in) { return make(new GroovyLexer(in)); }
 
+    @SuppressWarnings("unused")
     private static GroovySourceAST dummyVariableToforceClassLoaderToFindASTClass = new GroovySourceAST();
 
     List warningList;
     public List getWarningList() { return warningList; }
 
+    // GRECLIPSE add
     List errorList;
     public List getErrorList() { return errorList; }
 
-	List<Comment> comments = new ArrayList<Comment>();
-	public List<Comment> getComments() { return comments; }
-	
+    List<Comment> comments = new ArrayList<Comment>();
+    public List<Comment> getComments() { return comments; }
+    // GRECLIPSE end
+
     GroovyLexer lexer;
     public GroovyLexer getLexer() { return lexer; }
     public void setFilename(String f) { super.setFilename(f); lexer.setFilename(f); }
+
+    @SuppressWarnings("unused")
     private SourceBuffer sourceBuffer;
     public void setSourceBuffer(SourceBuffer sourceBuffer) {
         this.sourceBuffer = sourceBuffer;
@@ -292,14 +312,13 @@ tokens {
         return t;
     }
 
-    // GRE292
+    // GRECLIPSE add
     public AST create2(int type, String txt, Token first, Token last) {
         return setEndLocationBasedOnThisNode(create(type, txt, astFactory.create(first)), last);
     }
-    
-    // GRE292
+
     private AST setEndLocationBasedOnThisNode(AST ast, Object node) {
-    	if ((ast instanceof GroovySourceAST) && (node instanceof SourceInfo)) {
+        if ((ast instanceof GroovySourceAST) && (node instanceof SourceInfo)) {
             SourceInfo lastInfo = (SourceInfo) node;
             GroovySourceAST groovySourceAst = (GroovySourceAST)ast;
             groovySourceAst.setColumnLast(lastInfo.getColumnLast());
@@ -307,7 +326,8 @@ tokens {
       }
       return ast;
     }
-    
+    // GRECLIPSE end
+
     private AST attachLast(AST t, Object last) {
         if ((t instanceof GroovySourceAST) && (last instanceof SourceInfo)) {
             SourceInfo lastInfo = (SourceInfo) last;
@@ -331,32 +351,31 @@ tokens {
     public AST create(int type, String txt, AST first, AST last) {
         return attachLast(create(type, txt, first), last);
     }
-    
-    // GRECLIPSE start
-	private Stack<Integer> commentStartPositions = new Stack<Integer>();
 
-	public void startComment(int line, int column) {
-		// System.out.println(">> comment at l"+line+"c"+column);
-		commentStartPositions.push((line<<16)+column);
-	}
+    // GRECLIPSE add
+    private Stack<Integer> commentStartPositions = new Stack<Integer>();
 
-	public void endComment(int type, int line, int column,String text) {
-		// System.out.println("<< comment at l"+line+"c"+column+" ["+text+"]");
-		int lineAndColumn = commentStartPositions.pop();
-		int startLine = lineAndColumn>>>16;
-		int startColumn = lineAndColumn&0xffff;
-		if (type==0) {
-			Comment comment = Comment.makeSingleLineComment(startLine,startColumn,line,column,text);
-			comments.add(comment);
-		} else if (type==1) {
-			Comment comment = Comment.makeMultiLineComment(startLine,startColumn,line,column,text);
-			comments.add(comment);
-		} 
-	}
+    public void startComment(int line, int column) {
+        // System.out.println(">> comment at l"+line+"c"+column);
+        commentStartPositions.push((line<<16)+column);
+    }
+
+    public void endComment(int type, int line, int column,String text) {
+        // System.out.println("<< comment at l"+line+"c"+column+" ["+text+"]");
+        int lineAndColumn = commentStartPositions.pop();
+        int startLine = lineAndColumn>>>16;
+        int startColumn = lineAndColumn&0xffff;
+        if (type==0) {
+            Comment comment = Comment.makeSingleLineComment(startLine,startColumn,line,column,text);
+            comments.add(comment);
+        } else if (type==1) {
+            Comment comment = Comment.makeMultiLineComment(startLine,startColumn,line,column,text);
+            comments.add(comment);
+        }
+    }
     // GRECLIPSE end
-	
-	
-    /** 
+
+    /**
     *   Clones the token
     */
     public Token cloneToken(Token t) {
@@ -417,6 +436,7 @@ tokens {
         warningList.add(row);
     }
 
+    // GRECLIPSE add
     /**
      * Report a recovered error.
      */
@@ -474,6 +494,7 @@ tokens {
         row.put("column",   Integer.valueOf(lt.getColumn()));
         errorList.add(row);
     }
+    // GRECLIPSE end
 
     // Convenience method for checking of expected error syndromes.
     private void require(boolean z, String problem, String solution) throws SemanticException {
@@ -526,9 +547,10 @@ tokens {
         if (x == null || x.getType() != IDENT)  return false;  // cannot happen?
         return cname.equals(x.getText());
     }
-    
+
+    @SuppressWarnings("unused")
     private void dumpTree(AST ast, String offset) {
-    	dump(ast, offset);
+        dump(ast, offset);
         for (AST node = ast.getFirstChild(); node != null; node = node.getNextSibling()) {
             dumpTree(node, offset+"\t");
         }
@@ -583,6 +605,7 @@ tokens {
     // an enclosing loop, which is why this ugly hack (a fake
     // empty alternative with always-false semantic predicate)
     // is necessary.
+    @SuppressWarnings("unused")
     private static final boolean ANTLR_LOOP_EXIT = false;
 }
 
@@ -605,13 +628,15 @@ compilationUnit
         // Semicolons and/or significant newlines serve as separators.
         ( sep! (statement[sepToken])? )*
         EOF!
-		exception
-        catch [RecognitionException e] {  
+        // GRECLIPSE add
+        exception
+        catch [RecognitionException e] {
             // report the error but don't throw away what we've successfully parsed
-        	reportError(e);
-			compilationUnit_AST = (AST)currentAST.root;
+            reportError(e);
+            compilationUnit_AST = (AST) currentAST.root;
         }
-        ;
+        // GRECLIPSE end
+    ;
 
 /** A Groovy script or simple expression.  Can be anything legal inside {...}. */
 snippetUnit
@@ -623,14 +648,18 @@ snippetUnit
 packageDefinition
         {Token first = LT(1);}
         //TODO? options {defaultErrorHandler = true;} // let ANTLR handle errors
+    // GRECLIPSE edit
+    //:   an:annotationsOpt! "package"! id:identifier!
+    //    {#packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)),an,id);}
     :   an:annotationsOpt! "package"! (id:identifier!)?
         { // error recovery for missing package name
             if (id_AST==null) {
-				reportError("Invalid package specification",LT(0));
-			} else {
+                reportError("Invalid package specification",LT(0));
+            } else {
                 #packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)),an,id);
-			}
+            }
         }
+    // GRECLIPSE end
     ;
 
 
@@ -638,43 +667,40 @@ packageDefinition
 importStatement
         //TODO? options {defaultErrorHandler = true;}
         { Token first = LT(1); boolean isStatic = false; }
-    /* old{
-    :   an:annotationsOpt "import"! ( "static"! {isStatic=true;} )? is:identifierStar!
-        {if (isStatic)
-            #importStatement = #(create(STATIC_IMPORT,"static_import",first,LT(1)),an,is);
-         else
-            #importStatement = #(create(IMPORT,"import",first,LT(1)),an,is);}
-    ;
-    }*/
+    // GRECLIPSE edit
+    //:   an:annotationsOpt "import"! ( "static"! {isStatic=true;} )? is:identifierStar!
+    //    {if (isStatic)
+    //        #importStatement = #(create(STATIC_IMPORT,"static_import",first,LT(1)),an,is);
+    //     else
+    //        #importStatement = #(create(IMPORT,"import",first,LT(1)),an,is);}
     /* RECOVERY: NOTES:
-     * THe aim here is just to allow for the type to be optional.  If not specified
+     * The aim here is just to allow for the type to be optional.  If not specified
      * it is clearly an error but we want to recover and continue parsing the file.
      * Here if the type is missing (is_AST==null) then we report an error and create
      * a fake import statement with a null type reference.  There is a corresponding
      * change in AntlrParserPlugin that deals with a null type reference and constructs
      * a suitable 'fake' ImportNode.
      */
-    :   an:annotationsOpt "import"! ( "static"! {isStatic=true;})? (is:identifierStar!)?
+    :   an:annotationsOpt "import"! ( "static"! {isStatic=true;} )? (is:identifierStar!)?
         {
-         if (isStatic) {
-           if (is_AST==null) {
-             reportError("Invalid import static specification",first);
-             #importStatement = #(create(STATIC_IMPORT,"static_import",first,null),an,is);
-           } else {
-             #importStatement = #(create(STATIC_IMPORT,"static_import",first,LT(1)),an,is);
-           }
-         } else {
-           if (is_AST==null) {
-             reportError("Invalid import specification",LT(0));
-             #importStatement = #(create(IMPORT,"import",first,null),an,is);
-           } else {
-             #importStatement = #(create(IMPORT,"import",first,LT(1)),an,is);
-           }
-         }
+          if (isStatic) {
+            if (is_AST==null) {
+              reportError("Invalid import static specification",first);
+              #importStatement = #(create(STATIC_IMPORT,"static_import",first,null),an,is);
+            } else {
+              #importStatement = #(create(STATIC_IMPORT,"static_import",first,LT(1)),an,is);
+            }
+          } else {
+            if (is_AST==null) {
+              reportError("Invalid import specification",LT(0));
+              #importStatement = #(create(IMPORT,"import",first,null),an,is);
+            } else {
+              #importStatement = #(create(IMPORT,"import",first,LT(1)),an,is);
+            }
+          }
         }
+    // GRECLIPSE end
     ;
-    
-    
 
 // TODO REMOVE
 // A type definition is either a class, interface, enum or annotation with possible additional semis.
@@ -1038,18 +1064,19 @@ identifier {Token first = LT(1);}
         {#identifier = #i1;}
     ;
 
-identifierStar {Token first = LT(1); int mark=mark();}
+identifierStar {Token first = LT(1); int mark=mark();} // GRECLIPSE add
     :   i1:IDENT!
         (   options { greedy = true; } :
             d1:DOT! nls! i2:IDENT!
             {#i1 = #(create(DOT,".",first,LT(1)),i1,i2);}
-        )*         
-        (d2:DOT!  nls! s:STAR!
+        )*
+        (   d2:DOT!  nls! s:STAR!
             {#i1 = #(create(DOT,".",first,LT(1)),i1,s);}
         |   "as"! nls! alias:IDENT!
             {#i1 = #(create(LITERAL_as,"as",first,LT(1)),i1,alias);}
         )?
         {#identifierStar = #i1;}
+        // GRECLIPSE add
         /* RECOVERY: notes:
          * The start of parsing this structure was marked.  If there is a problem an exception
          * is caught, error logged, fake ast node created (to satisfy the parent rule) and
@@ -1058,12 +1085,13 @@ identifierStar {Token first = LT(1); int mark=mark();}
          */
         exception
         catch [RecognitionException e] {
-        	reportError("Invalid import ",first);
+            reportError("Invalid import ",first);
             #identifierStar = #(create(DOT,".",first,LT(1)),i1,#(create(STAR,"*",null)));
             // Give up on this line and just go to the next
-			rewind(mark);
-			consumeUntil(NLS);
+            rewind(mark);
+            consumeUntil(NLS);
         }
+        // GRECLIPSE end
     ;
 
 modifiersInternal
@@ -1192,7 +1220,6 @@ annotationMemberArrayInitializer
         )?
         RCURLY!
     ;
-*OBS*/
 
 // The two things that can initialize an annotation array element are a conditional expression
 // and an annotation (nested annotation array initialisers are not valid)
@@ -1200,6 +1227,7 @@ annotationMemberArrayValueInitializer
     :   conditionalExpression[0]
     |   annotation nls!
     ;
+*OBS*/
 
 superClassClause!
     {Token first = LT(1);}
@@ -1224,11 +1252,10 @@ if (modifiers != null) {
         // it might implement some interfaces...
         ic:implementsClause
         // now parse the body of the class
-        /*old{
-        cb:classBlock
-        {#classDefinition = #(create(CLASS_DEF,"CLASS_DEF",first,LT(1)),
-                                                            modifiers,IDENT,tp,sc,ic,cb);}
-        }new*/
+        // GRECLIPSE edit
+        //cb:classBlock
+        //{#classDefinition = #(create(CLASS_DEF,"CLASS_DEF",first,LT(1)),
+        //                                                    modifiers,IDENT,tp,sc,ic,cb);}
         /* RECOVERY: notes:
          * Here we allow for the classBlock to be optional, the user may be typing:
          * class Foo extends Ba<Ctrl+Space>
@@ -1238,15 +1265,14 @@ if (modifiers != null) {
          */
         (cb:classBlock)?
         {
-        if (cb_AST!=null) {
-          #classDefinition = #(create(CLASS_DEF,"CLASS_DEF",first,LT(1)),
-                                                            modifiers,IDENT,tp,sc,ic,cb);
- 		} else {
- 		  reportError("Malformed class declaration",LT(1));
- 		  #classDefinition = #(create(CLASS_DEF,"CLASS_DEF",first,LT(1)),
-                                                            modifiers,IDENT,tp,sc,ic,null);    
-        }                                            
+          if (cb_AST!=null) {
+            #classDefinition = #(create(CLASS_DEF,"CLASS_DEF",first,LT(1)),modifiers,IDENT,tp,sc,ic,cb);
+          } else {
+            reportError("Malformed class declaration",LT(1));
+            #classDefinition = #(create(CLASS_DEF,"CLASS_DEF",first,LT(1)),modifiers,IDENT,tp,sc,ic,null);
+          }
         }
+        // GRECLIPSE end
         { currentClass = prevCurrentClass; }
     ;
 
@@ -1314,7 +1340,7 @@ annotationDefinition![AST modifiers]  {Token first = cloneToken(LT(1));
                                           first.setLine(modifiers.getLine());
                                           first.setColumn(modifiers.getColumn());
                                       }}
-    :   AT "interface" IDENT
+    :   AT "interface" IDENT nls!
         // now parse the body of the annotation
         ab:annotationBlock
         {#annotationDefinition = #(create(ANNOTATION_DEF,"ANNOTATION_DEF",first,LT(1)),
@@ -1358,18 +1384,20 @@ classBlock  {Token first = LT(1);}
         ( classField )? ( sep! ( classField )? )*
         RCURLY!
         {#classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);}
-// general recovery when class parsing goes haywire in some way - probably needs duplicating for interface/enum/anno/etc *sigh*
+        // GRECLIPSE add
+        // general recovery when class parsing goes haywire in some way - probably needs duplicating for interface/enum/anno/etc *sigh*
         exception
-        catch [RecognitionException e] {  
-			if (errorList.isEmpty()) { // dirty hack to avoid having trouble with cascading problems
-        		classBlock_AST = (AST)currentAST.root;
-        	}
-        	reportError(e);
-            #classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);  	
-        	currentAST.root = classBlock_AST;
-			currentAST.child = classBlock_AST!=null &&classBlock_AST.getFirstChild()!=null ? classBlock_AST.getFirstChild() : classBlock_AST;
-			currentAST.advanceChildToEnd();	
+        catch [RecognitionException e] {
+            if (errorList.isEmpty()) { // dirty hack to avoid having trouble with cascading problems
+                classBlock_AST = (AST)currentAST.root;
+            }
+            reportError(e);
+            #classBlock = #(create(OBJBLOCK, "OBJBLOCK",first,LT(1)), #classBlock);
+            currentAST.root = classBlock_AST;
+            currentAST.child = classBlock_AST!=null && classBlock_AST.getFirstChild()!=null ? classBlock_AST.getFirstChild() : classBlock_AST;
+            currentAST.advanceChildToEnd(); 
         }
+        // GRECLIPSE end
     ;
 
 // This is the body of an interface. You can have interfaceField and extra semicolons.
@@ -1416,12 +1444,12 @@ enumConstants
     :
         enumConstant
         (    options {generateAmbigWarnings=false;} :
-            (nls (RCURLY | classField)) => { break; /* leave ()* loop */ }
+            (nls (SEMI! | RCURLY | classField)) => { break; /* leave ()* loop */ }
         |   nls! COMMA!
             (
-                (nls (RCURLY | classField)) => { break; /* leave ()* loop */ }
-            |
                 (nls annotationsOpt IDENT) => nls! enumConstant
+            |
+                (nls (SEMI! | RCURLY | classField)) => { break; /* leave ()* loop */ }
             )
         )*
     ;
@@ -1482,7 +1510,7 @@ enumConstantBlock  {Token first = LT(1);}
 
 // TODO - maybe allow 'declaration' production within this production,
 // but how to disallow constructors and static initializers...
-enumConstantField!  {Token first = LT(1);}
+enumConstantField! {Token first = LT(1);}
     :   (
             (typeDeclarationStart)=>
             mods:modifiersOpt!
@@ -1510,20 +1538,20 @@ protected enumConstantFieldInternal![AST mods, AST tp, AST t, Token first]
         (IDENT LPAREN)=>
         IDENT
 
-                // parse the formal parameter declarations.
-                LPAREN! param:parameterDeclarationList RPAREN!
+        // parse the formal parameter declarations.
+        LPAREN! param:parameterDeclarationList RPAREN!
 
         // get the list of declared exceptions
-                ((nls "throws") => tc:throwsClause)?
+        ((nls "throws") => tc:throwsClause)?
 
-                ( s2:compoundStatement )?
+        ( s2:compoundStatement )?
         {
             #enumConstantFieldInternal = #(create(METHOD_DEF,"METHOD_DEF",first,LT(1)),
-                                         mods,
-                                         #(create(TYPE,"TYPE",first,LT(1)),t),
-                                         IDENT,
-                                         param,
-                                         tc,
+                    mods,
+                    #(create(TYPE,"TYPE",first,LT(1)),t),
+                    IDENT,
+                    param,
+                    tc,
                     s2);
             if (tp != null) {
                 AST old = #enumConstantFieldInternal.getFirstChild();
@@ -1532,7 +1560,7 @@ protected enumConstantFieldInternal![AST mods, AST tp, AST t, Token first]
             }
         }
 
-            |   v:variableDefinitions[#mods,#t]
+    |   v:variableDefinitions[#mods,#t]
         {#enumConstantFieldInternal = #v;}
     ;
 
@@ -1590,15 +1618,18 @@ classField!  {Token first = LT(1);}
     // "{ ... }" instance initializer
     |   s4:compoundStatement
         {#classField = #(create(INSTANCE_INIT,"INSTANCE_INIT",first,LT(1)), s4);}
-	// RECOVERY: GRECLIPSE-494
+    // GRECLIPSE add
+    // RECOVERY: GRECLIPSE-494
         exception
         catch [RecognitionException e] {
-        	reportError(e);
-        	// Create a fake variable definition for this 'thing' and get the position right.  
-        	// Type is object
-        	#classField = #(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)),null,#create(TYPE,"java.lang.Object",LT(1),LT(2)),#create(IDENT,first.getText(),LT(1),LT(2))); 
-        	consumeUntil(NLS);
-        }    ;
+            reportError(e);
+            // Create a fake variable definition for this 'thing' and get the position right.
+            // Type is object
+            #classField = #(create(VARIABLE_DEF,"VARIABLE_DEF",first,LT(1)),null,#create(TYPE,"java.lang.Object",LT(1),LT(2)),#create(IDENT,first.getText(),LT(1),LT(2)));
+            consumeUntil(NLS);
+        }
+    // GRECLIPSE end
+    ;
 
 // Now the various things that can be defined inside an interface
 interfaceField!
@@ -1615,7 +1646,6 @@ interfaceField!
         // type declaration
         (typeDeclarationStart)=>
         mods:modifiersOpt
-
         (   td:typeDefinitionInternal[#mods]
             {#interfaceField = #td;}
         )
@@ -1837,21 +1867,6 @@ initializer
     ;
 *OBS*/
 
-/*OBS???
-// This is the header of a method. It includes the name and parameters
-// for the method.
-// This also watches for a list of exception classes in a "throws" clause.
-ctorHead
-    :   IDENT // the name of the method
-
-        // parse the formal parameter declarations.
-        LPAREN! parameterDeclarationList RPAREN!
-
-        // get the list of exceptions that this method is declared to throw
-        (throwsClause)?
-    ;
-*OBS*/
-
 // This is a list of exception classes that the method is declared to throw
 throwsClause
     :   nls! "throws"^ nls! identifier ( COMMA! nls! identifier )*
@@ -1905,18 +1920,21 @@ parameterDeclaration!
                       pm, #(create(TYPE,"TYPE",first,LT(1)),t), id, exp);
             }
         }
+        // GRECLIPSE add
         // RECOVERY:
-      /*  exception
+        /*exception
         catch [RecognitionException e] {
-        if (t_AST==null) { // possibly 'public void foo(XMLConstant'
-					// create the best thing we can... all we have is the type - no name
-					parameterDeclaration_AST = (AST)astFactory.make( (new ASTArray(5)).add(create(PARAMETER_DEF,"PARAMETER_DEF",first,LT(1))).add(pm_AST).add((AST)astFactory.make( (new ASTArray(2)).add(create(TYPE,"TYPE",first,LT(1))).add(t_AST))));
-			}
-        	//if (pathElement_AST==null) {
-			//	throw e;
-			//}
-        	reportError(e);
+        if (t_AST==null) {
+            // possibly 'public void foo(XMLConstant'
+            // create the best thing we can... all we have is the type - no name
+            parameterDeclaration_AST = (AST)astFactory.make( (new ASTArray(5)).add(create(PARAMETER_DEF,"PARAMETER_DEF",first,LT(1))).add(pm_AST).add((AST)astFactory.make( (new ASTArray(2)).add(create(TYPE,"TYPE",first,LT(1))).add(t_AST))));
+        }
+        //if (pathElement_AST==null) {
+        //  throw e;
+        //}
+        reportError(e);
         }*/
+        // GRECLIPSE end
     ;
 
 multicatch_types
@@ -1938,11 +1956,12 @@ multicatch
           #multicatch = #(create(MULTICATCH,"MULTICATCH",first, LT(1)),m,id);
         }
     ;
+
 /*OBS*
 variableLengthParameterDeclaration!  {Token first = LT(1);}
     :   pm:parameterModifier t:typeSpec[false] TRIPLE_DOT! id:IDENT
 
-        /*OBS* pd:declaratorBrackets[#t]* /
+        pd:declaratorBrackets[#t]
         {#variableLengthParameterDeclaration = #(create(VARIABLE_PARAMETER_DEF,"VARIABLE_PARAMETER_DEF",first,LT(1)),
                                                                                             pm, #(create(TYPE,"TYPE",first,LT(1)),t), id);}
     ;
@@ -2153,39 +2172,40 @@ statement[int prevToken]
     *OBS*/
 
     |   branchStatement
-	exception
-catch [RecognitionException e] {
-// GRECLIPSE1048
-// If the pfx_AST is not null (i.e. a label was encountered) then attempt recovery if something has gone
-// wrong.  Recovery means reporting the error and then proceeding as best we can.  Basically if the 
-// NoViableAltException hit a problem and the token it encountered was on the same line as the prefix,
-// skip to the end of the line, otherwise assume we can continue from where we are.
-// GRECLIPSE1046
-// two situations to support: 'if (f.) ' where the 'then' condition is missing.  THis is now handled
-// by a recovery rule in then then clause parsing.  And 'if (f.' where even the trailing paren is
-// missing, that is dealt with here by noticing the condition exists but there is no then clause value.
-// we build a basic if clause and soldier on.
-boolean bang = true;
-
-if (pfx_AST!=null) {
-	bang=false;	
-	reportError(e);
-	if (e instanceof NoViableAltException) {
-		NoViableAltException nvae = (NoViableAltException)e;
-		if (pfx_AST.getLine()==nvae.token.getLine()) {
-			consumeUntil(NLS);										
-		}
-	}
-}
-if (ale_AST!=null && ifCbs_AST==null) {	
-	// likely missing close paren
-	#statement = #(create(LITERAL_if,"if",first,LT(1)),ale,ifCbs,elseCbs);
-	bang=false;
-}
-if (bang) {
-	throw e;
-}
-}    
+    // GRECLIPSE add
+    exception
+    catch [RecognitionException e] {
+        // GRECLIPSE1048
+        // If the pfx_AST is not null (i.e. a label was encountered) then attempt recovery if something has gone
+        // wrong.  Recovery means reporting the error and then proceeding as best we can.  Basically if the
+        // NoViableAltException hit a problem and the token it encountered was on the same line as the prefix,
+        // skip to the end of the line, otherwise assume we can continue from where we are.
+        // GRECLIPSE1046
+        // two situations to support: 'if (f.) ' where the 'then' condition is missing.  THis is now handled
+        // by a recovery rule in then then clause parsing.  And 'if (f.' where even the trailing paren is
+        // missing, that is dealt with here by noticing the condition exists but there is no then clause value.
+        // we build a basic if clause and soldier on.
+        boolean bang = true;
+        if (pfx_AST!=null) {
+            bang=false;
+            reportError(e);
+            if (e instanceof NoViableAltException) {
+                NoViableAltException nvae = (NoViableAltException) e;
+                if (pfx_AST.getLine()==nvae.token.getLine()) {
+                    consumeUntil(NLS);
+                }
+            }
+        }
+        if (ale_AST!=null && ifCbs_AST==null) {
+            // likely missing close paren
+            #statement = #(create(LITERAL_if,"if",first,LT(1)),ale,ifCbs,elseCbs);
+            bang=false;
+        }
+        if (bang) {
+            throw e;
+        }
+    }
+    // GRECLIPSE end
     ;
 
 forStatement {Token first = LT(1);}
@@ -2272,11 +2292,13 @@ compatibleBodyStatement
         compoundStatement
     |
         statement[EOF]
-         exception
-catch [RecognitionException e] {
-// GRECLIPSE1046
-reportError(e);
-}    
+    // GRECLIPSE add
+    exception
+    catch [RecognitionException e] {
+        // GRECLIPSE-1046
+        reportError(e);
+    }
+    // GRECLIPSE end
     ;
 
 /** In Groovy, return, break, continue, throw, and assert can be used in a parenthesized expression context.
@@ -2288,9 +2310,10 @@ branchStatement {Token first = LT(1);}
     // Return an expression
         "return"!
         ( returnE:expression[0]! )?
-        // GRE292
-		{#branchStatement = #(create2(LITERAL_return,"return",first,LT(0)),returnE);}
-
+        // GRECLIPSE edit
+        //{#branchStatement = #(create(LITERAL_return,"return",first,LT(1)),returnE);}
+        {#branchStatement = #(create2(LITERAL_return,"return",first,LT(0)),returnE);}
+        // GRECLIPSE end
 
     // break:  get out of a loop, or switch, or method call
     // continue:  do next iteration of a loop, or leave a closure
@@ -2341,7 +2364,7 @@ statementLabelPrefix
 expressionStatement[int prevToken]
         { Token first = LT(1); }
     :
-        (   (suspiciousExpressionStatementStart)=>
+        ( (suspiciousExpressionStatementStart) =>
             checkSuspiciousExpressionStatement[prevToken]
         )?
         esn:expressionStatementNoCheck
@@ -2353,7 +2376,7 @@ expressionStatementNoCheck
     :
         // Checks are now out of the way; here's the real rule:
         head:expression[LC_STMT]
-        {   isPathExpr = (#head == lastPathExpression);  }
+        { isPathExpr = (#head == lastPathExpression); }
         (
             // A path expression (e.g., System.out.print) can take arguments.
             {LA(1)!=LITERAL_else && isPathExpr /*&& #head.getType()==METHOD_CALL*/}?
@@ -2502,9 +2525,9 @@ handler {Token first = LT(1);}
  *  without labels or spread operators.
  */
 commandArguments[AST head]
-  {
-      Token first = LT(1);
-  }
+{
+    Token first = LT(1);
+}
     :
         commandArgument ( options {greedy=true;}: COMMA! nls! commandArgument )*
         // println 2+2 //OK
@@ -2520,35 +2543,37 @@ commandArguments[AST head]
             AST headid = #(create(METHOD_CALL,"<command>",first,LT(1)), head, elist);
             #commandArguments = headid;
         }
+        // GRECLIPSE add
         exception
-catch [RecognitionException e] {
-// GRECLIPSE1192
-// Do we need better recognition of the specific problem here? 
-// (if so, see the label recovery for GRECLIPSE1048)
-reportError(e);
-}    
+        catch [RecognitionException e] {
+            // GRECLIPSE-1192
+            // Do we need better recognition of the specific problem here? 
+            // (if so, see the label recovery for GRECLIPSE-1048)
+            reportError(e);
+        }
+        // GRECLIPSE end
     ;
 
 commandArgumentsGreedy[AST head]
 { 
-	AST prev = #head;
+    AST prev = #head;
 }
     :
-    
+       
         // argument to the already existing method name
         (   ({#prev==null || #prev.getType()!=METHOD_CALL}? commandArgument)=> (   
                 first : commandArguments[head]!
                 { #prev = #first; }
-        )
+            )
             |
         )
-
+        
         // we start a series of methods and arguments
         (   options { greedy = true; } :
-        (   options { greedy = true; } :
+            (   options { greedy = true; } :
                 // method name
-            pre:primaryExpression!
-            { #prev = #(create(DOT, ".", #prev), #prev, #pre); }
+                pre:primaryExpression!
+                { #prev = #(create(DOT, ".", #prev), #prev, #pre); }
                 // what follows is either a normal argument, parens, 
                 // an appended block, an index operation, or nothing
                 // parens (a b already processed): 
@@ -2563,17 +2588,17 @@ commandArgumentsGreedy[AST head]
                 // parens/block completes method call
                 // index makes method call to property get with index
                 // 
-                (   options { greedy = true; } :
+                (options {greedy=true;}:
                 (pathElementStart)=>   
-                (
+                    (   
                         pc:pathChain[LC_STMT,#prev]!
                         { #prev = #pc; }
-                    )
-                    |
+                    )      
+                |
                     (   ca:commandArguments[#prev]!
                         { #prev = #ca; })
                 )?
-        )*
+            )*
         )
         { #commandArgumentsGreedy = prev; } 
     ;
@@ -2592,27 +2617,28 @@ commandArgument
 //         nextHigherPrecedenceExpression
 //                 (OPERATOR nextHigherPrecedenceExpression)*
 // which is a standard recursive definition for a parsing an expression.
-// The operators in java have the following precedences:
-//      lowest  ( 15)  = **= *= /= %= += -= <<= >>= >>>= &= ^= |=
+// The operators have the following precedences:
+//      lowest  ( 15)  = **= *= /= %= += -= <<= >>= >>>= &= ^= |= (assignments)
 //              ( 14)  ?: (conditional expression and elvis)
-//              ( 13)  ||
-//              ( 12)  &&
-//              ( 11)  |
-//              ( 10)  ^
-//              (  9)  &
-//              (8.5)  =~ ==~
-//              (  8)  == != <=> === !==
-//              (  7)  < <= > >= instanceof as in
-//              (  6)  << >> .. ..<
-//              (  5)  +(binary) -(binary)
-//              (  4)  * / %
-//              (  3)  **(power)
-//              (  2)  ++(pre) --(pre) +(unary) -(unary)
-//              (  1)  ~  ! $ (type) ++(post) --(post)
-//                     . ?. *. (dot -- identifier qualification)
-//                     []   () (method call)  {} (closableBlock)  [] (list/map)
-//                     new  () (explicit parenthesis)
-//                     $x (scope escape)
+//              ( 13)  || (logical or)
+//              ( 12)  && (logical and)
+//              ( 11)  | ()binary or
+//              ( 10)  ^ (binary xor)
+//              (  9)  & (binary and)
+//              (8.5)  =~ ==~ (regex find/match)
+//              (  8)  == != <=> === !== (equals, not equals, compareTo)
+//              (  7)  < <= > >= instanceof as in (relational, in, instanceof, type coercion)
+//              (  6)  << >> >>> .. ..< (shift, range)
+//              (  5)  + - (addition, subtraction)
+//              (  4)  * / % (multiply div modulo)
+//              (  3)  ++ -- + - (pre dec/increment, unary signs)
+//              (  2)  ** (power)
+//              (  1)  ~ ! $ (type) (negate, not, typecast)
+//                     ?. * *. *: (safe dereference, spread, spread-dot, spread-map)
+//                     . .& .@ (member access, method closure, field/attribute access)
+//                     [] ++ -- (list/map/array index, post inc/decrement)
+//                     () {} [] (method call, closableBlock, list/map literal)
+//                     new () (object creation, explicit parenthesis)
 //
 // the last two are not usually on a precedence chart; I put them in
 // to point out that new has a higher precedence than '.', so you
@@ -2630,10 +2656,10 @@ commandArgument
 // in contexts where we know we have an expression.  It allows general Java-type expressions.
 expression[int lc_stmt]
     :
-        (LPAREN typeSpec[true] RPAREN expression[lc_stmt])=>
-            lp:LPAREN^ {#lp.setType(TYPECAST);} typeSpec[true] RPAREN!
-            expression[lc_stmt]
-    |
+//        (LPAREN typeSpec[true] RPAREN expression[lc_stmt])=>
+//            lp:LPAREN^ {#lp.setType(TYPECAST);} typeSpec[true] RPAREN!
+//            expression[lc_stmt]
+//    |
        (LPAREN nls IDENT (COMMA nls IDENT)* RPAREN ASSIGN) =>
         m:multipleAssignment[lc_stmt] {#expression=#m;}
     |   assignmentExpression[lc_stmt]
@@ -2698,7 +2724,6 @@ pathExpression[int lc_stmt]
     :
         pre:primaryExpression!
         { prefix = #pre; }
-
         (
             options {
                 // \n{foo} could match here or could begin a new statement
@@ -2723,16 +2748,17 @@ pathExpression[int lc_stmt]
             nlsWarn!
             apb:appendedBlock[prefix]!
             { prefix = #apb; }
-       	|
-       		// RECOVERY:
-       		// Ignore error of dot followed by no match: 'a.' and 'a.b.' and '].' and '}.' and ').' etc.
-       		// Report it, but continue compiling. The dot is thrown away.
-       		// NOTE: emp - if anyone knows a better/proper way to do this, please tell me. In the other error recovery
-       		// in rule pathElement, the .* is ignored. Here we want to keep the prefix and ignore the '.'.
-       		(DOT! | SPREAD_DOT! | OPTIONAL_DOT)
-      		{ reportError("Expecting an identifier, found a trailing '.' instead."); }
+        // GRECLIPSE add
+        |
+            // RECOVERY:
+            // Ignore error of dot followed by no match: 'a.' and 'a.b.' and '].' and '}.' and ').' etc.
+            // Report it, but continue compiling. The dot is thrown away.
+            // NOTE: emp - if anyone knows a better/proper way to do this, please tell me. In the other error recovery
+            // in rule pathElement, the .* is ignored. Here we want to keep the prefix and ignore the '.'.
+            (DOT! | SPREAD_DOT! | OPTIONAL_DOT)
+            { reportError("Expecting an identifier, found a trailing '.' instead."); }
+        // GRECLIPSE end
         )*
-
         {
             #pathExpression = prefix;
             lastPathExpression = #pathExpression;
@@ -2756,14 +2782,16 @@ pathElement[AST prefix] {Token operator = LT(1);}
         (ta:typeArguments!)?
         np:namePart!
         { #pathElement = #(create(operator.getType(),operator.getText(),prefix,LT(1)),prefix,ta,np); }
+        // GRECLIPSE add
         // RECOVERY: a.{
         exception
         catch [RecognitionException e] {
-        	if (pathElement_AST==null) {
-				throw e;
-			}
-        	reportError(e);
+            if (pathElement_AST==null) {
+                throw e;
+            }
+            reportError(e);
         }
+        // GRECLIPSE end
     |
         mca:methodCallArgs[prefix]!
         {   #pathElement = #mca;  }
@@ -2777,24 +2805,6 @@ pathElement[AST prefix] {Token operator = LT(1);}
         // since the bracket operator is transformed into a method call.
         ipa:indexPropertyArgs[prefix]!
         {   #pathElement = #ipa;  }
-/*    |
-        (DOT nls "this") => DOT! nls! thisPart:"this"!
-        { #pathElement = #(create(operator.getType(),operator.getText(),prefix,LT(1)),prefix,thisPart); }
-/*NYI*
-    |   DOT^ nls! "this"
-
-    |   DOT^ nls! "super"
-        (   // (new Outer()).super()  (create enclosing instance)
-            lp3:LPAREN^ argList RPAREN!
-            {#lp3.setType(SUPER_CTOR_CALL);}
-        |   DOT^ IDENT
-            (   lps:LPAREN^ {#lps.setType(METHOD_CALL);}
-                argList
-                RPAREN!
-            )?
-        )
-    |   DOT^ nls! newExpression
-*NYI*/
     ;
 
 pathElementStart!
@@ -2802,9 +2812,9 @@ pathElementStart!
                 |   SPREAD_DOT
                 |   OPTIONAL_DOT
                 |   MEMBER_POINTER ) )
-    |   LBRACK
-    |   LPAREN
-    |   LCURLY
+        |   LBRACK
+        |   LPAREN
+        |   LCURLY
     ;
 
 /** This is the grammar for what can follow a dot:  x.a, x.@a, x.&a, x.'a', etc.
@@ -2834,7 +2844,7 @@ namePart  {Token first = LT(1);}
 
 /*
  * Allowed keywords after dot (as a member name) and before colon (as a label).
- * Includes all Java keywords plus "in" and "as".
+ * Includes all Java keywords plus "as", "def", "in", and "trait".
  */
 keywordPropertyNames
     :   (
@@ -2876,7 +2886,7 @@ keywordPropertyNames
         | "try"
         | "while"
         | modifier
-        |   builtInType
+        | builtInType
         )
         { #keywordPropertyNames.setType(IDENT); }
     ;
@@ -2931,22 +2941,24 @@ methodCallArgs[AST callee]
               #methodCallArgs = #(create(METHOD_CALL, "(",callee, LT(1)), callee, al);
           }
         }
-exception
-catch [RecognitionException e] {
-if (#al!=null) {
-	reportError(e);
-	// copy of the block above - lets build it (assuming that all that was missing was the RPAREN)
-	if (callee != null && callee.getFirstChild() != null) {
-		//method call like obj.method()
-		#methodCallArgs = #(create(METHOD_CALL, "(",callee.getFirstChild(),LT(1)), callee, al);
-	} else {
-		//method call like method() or new Expr(), in the latter case "callee" is null
-		#methodCallArgs = #(create(METHOD_CALL, "(",callee, LT(1)), callee, al);
-	}
-} else {
-	throw e;
-}
-}        
+        // GRECLIPSE add
+        exception
+        catch [RecognitionException e] {
+            if (#al!=null) {
+                reportError(e);
+                // copy of the block above - lets build it (assuming that all that was missing was the RPAREN)
+                if (callee != null && callee.getFirstChild() != null) {
+                    //method call like obj.method()
+                    #methodCallArgs = #(create(METHOD_CALL,"(",callee.getFirstChild(),LT(1)),callee,al);
+                } else {
+                    //method call like method() or new Expr(), in the latter case "callee" is null
+                    #methodCallArgs = #(create(METHOD_CALL,"(",callee,LT(1)),callee,al);
+                }
+            } else {
+                throw e;
+            }
+        }
+        // GRECLIPSE end
     ;
 
 /** An appended block follows any expression.
@@ -3123,20 +3135,7 @@ multiplicativeExpression[int lc_stmt]
     |    (  powerExpressionNotPlusMinus[lc_stmt] ((STAR^ | DIV^ | MOD^ )  nls!  powerExpression[0])* )
     ;
 
-// math power operator (**) (level 3)
-powerExpression[int lc_stmt]
-    :   unaryExpression[lc_stmt] (STAR_STAR^ nls! unaryExpression[0])*
-    ;
-
-// math power operator (**) (level 3)
-// (without ++(prefix)/--(prefix)/+(unary)/-(unary))
-// The different rules are needed to avoid ambiguous selection
-// of alternatives.
-powerExpressionNotPlusMinus[int lc_stmt]
-    :   unaryExpressionNotPlusMinus[lc_stmt] (STAR_STAR^ nls! unaryExpression[0])*
-    ;
-
-// ++(prefix)/--(prefix)/+(unary)/-(unary) (level 2)
+// ++(prefix)/--(prefix)/+(unary)/-(unary) (level 3)
 unaryExpression[int lc_stmt]
     :   INC^ nls! unaryExpression[0]
     |   DEC^ nls! unaryExpression[0]
@@ -3145,11 +3144,22 @@ unaryExpression[int lc_stmt]
     |   unaryExpressionNotPlusMinus[lc_stmt]
     ;
 
+// math power operator (**) (level 2)
+powerExpression[int lc_stmt]
+    :   unaryExpression[lc_stmt] (STAR_STAR^ nls! unaryExpression[0])*
+    ;
+
+// math power operator (**) (level 2)
+// (without ++(prefix)/--(prefix)/+(unary)/-(unary))
+// The different rules are needed to avoid ambiguous selection
+// of alternatives.
+powerExpressionNotPlusMinus[int lc_stmt]
+    :   unaryExpressionNotPlusMinus[lc_stmt] (STAR_STAR^ nls! unaryExpression[0])*
+    ;
+
 // ~(BNOT)/!(LNOT)/(type casting) (level 1)
 unaryExpressionNotPlusMinus[int lc_stmt]
-    :   //BAND^    {#BAND.setType(MEMBER_POINTER_DEFAULT);}   nls!  namePart
-    //|
-        BNOT^ nls! unaryExpression[0]
+    :   BNOT^ nls! unaryExpression[0]
     |   LNOT^ nls! unaryExpression[0]
     |   (   // subrule allows option to shut off warnings
             options {
@@ -3177,7 +3187,7 @@ unaryExpressionNotPlusMinus[int lc_stmt]
         )
     ;
 
-// qualified names, array expressions, method invocation, post inc/dec
+// qualified names, array expressions, method invocation, post inc/dec (level 1)
 postfixExpression[int lc_stmt]
     :
         pathExpression[lc_stmt]
@@ -3195,9 +3205,6 @@ postfixExpression[int lc_stmt]
 // the basic element of an expression
 primaryExpression {Token first = LT(1);}
     :   IDENT
-        /*OBS*  //keywords can follow dot in Groovy; no need for this special case
-        ( options {greedy=true;} : DOT^ "class" )?
-        *OBS*/
     |   constant
     |   newExpression
     |   "this"
@@ -3207,14 +3214,7 @@ primaryExpression {Token first = LT(1);}
     |   closableBlockConstructorExpression
     |   listOrMapConstructorExpression
     |   stringConstructorExpression         // "foo $bar baz"; presented as multiple tokens
-//deprecated    |   scopeEscapeExpression               // $x
     |   builtInType
-    /*OBS*  //class names work fine as expressions
-            // look for int.class and int[].class
-    |   bt:builtInType!
-        declaratorBrackets[bt]
-        DOT^ nls! "class"
-    *OBS*/
     ;
 
 // Note:  This is guaranteed to be an EXPR AST.
@@ -3250,13 +3250,14 @@ parenthesizedExpression
                 #parenthesizedExpression = #(create(CLOSURE_LIST,"CLOSURE_LIST",first,LT(1)),#parenthesizedExpression);
             }
         }
-        
-exception
-catch [RecognitionException e] {
-	// GRECLIPSE1213 - missing closing paren
-	reportError(e); 
-	#parenthesizedExpression = (AST)currentAST.root;
-}
+        // GRECLIPSE add
+        exception
+        catch [RecognitionException e] {
+            // GRECLIPSE-1213 - missing closing paren
+            reportError(e);
+            #parenthesizedExpression = (AST) currentAST.root;
+        }
+        // GRECLIPSE end
     ;
 
 /** Things that can show up as expressions, but only in strict
@@ -3409,8 +3410,8 @@ identPrimary
  *  new
  *   |
  *   T --  ELIST
- *                 |
- *                arg1 -- arg2 -- .. -- argn
+ *           |
+ *          arg1 -- arg2 -- .. -- argn
  *
  *  new int[]
  *
@@ -3423,34 +3424,37 @@ identPrimary
  *  new
  *   |
  *  int -- ARRAY_DECLARATOR -- ARRAY_INIT
- *                                                                |
- *                                                              EXPR -- EXPR
- *                                                                |   |
- *                                                                1       2
+ *                                  |
+ *                                EXPR -- EXPR
+ *                                  |       |
+ *                                  1       2
  *
  *  new int[3]
  *  new
  *   |
  *  int -- ARRAY_DECLARATOR
- *                              |
- *                        EXPR
- *                              |
- *                              3
+ *               |
+ *             EXPR
+ *               |
+ *               3
  *
  *  new int[1][2]
  *
  *  new
  *   |
  *  int -- ARRAY_DECLARATOR
- *                         |
- *               ARRAY_DECLARATOR -- EXPR
- *                         |                  |
- *                       EXPR                    1
- *                         |
- *                         2
+ *               |
+ *         ARRAY_DECLARATOR -- EXPR
+ *               |               |
+ *             EXPR              1
+ *               |
+ *               2
  *
  */
-newExpression {Token first = LT(1); int jumpBack = mark();}
+ // GRECLIPSE edit
+//newExpression {Token first = LT(1);}
+//    :   "new"! nls! (ta:typeArguments!)? t:type!
+newExpression {Token first = LT(1); int jumpBack=mark();}
     :   "new"! nls! (ta:typeArguments!)? (t:type!)?
         (   nls!
             mca:methodCallArgs[null]!
@@ -3474,42 +3478,44 @@ newExpression {Token first = LT(1); int jumpBack = mark();}
             // Groovy does not support Java syntax for initialized new arrays.
             // Use sequence constructors instead.
             {#newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t,#ad);}
-		)
+
+        )
+        // GRECLIPSE add
         // RECOVERY: missing '(' or '['
         exception
         catch [RecognitionException e] {
             if (#t==null) {
-			    reportError("missing type for constructor call",first);
-				#newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,null); 
+                reportError("missing type for constructor call",first);
+                #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,null);
                 // currentAST.root = newExpression_AST;
-				// currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
-				// newExpression_AST.getFirstChild() : newExpression_AST;
-				// currentAST.advanceChildToEnd();
-				// probably others to include - or make this the default?
-				if (e instanceof MismatchedTokenException || e instanceof NoViableAltException) {
-					// int i = ((MismatchedTokenException)e).token.getType();
-					rewind(jumpBack);
-					consumeUntil(NLS);
-				}      
+                // currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
+                // newExpression_AST.getFirstChild() : newExpression_AST;
+                // currentAST.advanceChildToEnd();
+                // probably others to include - or make this the default?
+                if (e instanceof MismatchedTokenException || e instanceof NoViableAltException) {
+                    // int i = ((MismatchedTokenException)e).token.getType();
+                    rewind(jumpBack);
+                    consumeUntil(NLS);
+                }
             } else if (#mca==null && #ad==null) {
                 reportError("expecting '(' or '[' after type name to continue new expression",t_AST);
-                #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t);               
-				//currentAST.root = newExpression_AST;
-				//currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
-				//newExpression_AST.getFirstChild() : newExpression_AST;
-				//currentAST.advanceChildToEnd();
-				if (e instanceof MismatchedTokenException) {
-					Token t =  ((MismatchedTokenException)e).token;
-					int i = ((MismatchedTokenException)e).token.getType();
-					rewind(jumpBack);
-					consume();
-					consumeUntil(NLS);
-				}   
+                #newExpression = #(create(LITERAL_new,"new",first,LT(1)),#ta,#t);
+                //currentAST.root = newExpression_AST;
+                //currentAST.child = newExpression_AST!=null &&newExpression_AST.getFirstChild()!=null ?
+                //newExpression_AST.getFirstChild() : newExpression_AST;
+                //currentAST.advanceChildToEnd();
+                if (e instanceof MismatchedTokenException) {
+                    Token t =  ((MismatchedTokenException)e).token;
+                    int i = ((MismatchedTokenException)e).token.getType();
+                    rewind(jumpBack);
+                    consume();
+                    consumeUntil(NLS);
+                }
             } else {
               throw e;
             }
         }
-        
+        // GRECLIPSE end
     ;
 
 argList
@@ -3709,7 +3715,7 @@ nlsWarn!
         )?
         nls!
     ;
-    
+
 
 //----------------------------------------------------------------------------
 // The Groovy scanner
@@ -3892,17 +3898,20 @@ options {
     }
 
     protected boolean atValidDollarEscape() throws CharStreamException {
-        // '$' (('*')? ('{' | LETTER)) =>
+        // '$' (('{' | LETTER) =>
         int k = 1;
         char lc = LA(k++);
         if (lc != '$')  return false;
         lc = LA(k++);
-        if (lc == '*')  lc = LA(k++);
         return (lc == '{' || (lc != '$' && Character.isJavaIdentifierStart(lc)));
     }
 
     protected boolean atDollarDollarEscape() throws CharStreamException {
         return LA(1) == '$' && LA(2) == '$';
+    }
+
+    protected boolean atMultiCommentStart() throws CharStreamException {
+        return LA(1) == '/' && LA(2) == '*';
     }
 
     protected boolean atDollarSlashEscape() throws CharStreamException {
@@ -4107,8 +4116,9 @@ options {
             newlineCheck(check);
         }
     ;
-    
-    protected
+
+// GRECLIPSE add
+protected
 ONE_NL_KEEP[boolean check]
 options {
     paraphrase="a newline";
@@ -4124,6 +4134,7 @@ options {
             newlineCheck(check);
         }
     ;
+// GRECLIPSE end
 
 // Group any number of newlines (with comments and whitespace) into a single token.
 // This reduces the amount of parser lookahead required to parse around newlines.
@@ -4156,19 +4167,19 @@ options {
     paraphrase="a single line comment";
 }
     :   "//"
-      { if (parser!=null) {
-           parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
-        }
+        // GRECLIPSE add
+        { if (parser!=null) parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
+        // GRECLIPSE end
         (
             options {  greedy = true;  }:
             // '\uffff' means the EOF character.
             // This will fix the issue GROOVY-766 (infinite loop).
             ~('\n'|'\r'|'\uffff')
         )*
-        { if (parser!=null) {
-              parser.endComment(0,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
-          }
-          if (!whitespaceIncluded)  $setType(Token.SKIP); 
+        // GRECLIPSE add
+        { if (parser!=null) parser.endComment(0,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(),_begin,text.length()-_begin));
+        // GRECLIPSE end
+          if (!whitespaceIncluded)  $setType(Token.SKIP);
         }
         //This might be significant, so don't swallow it inside the comment:
         //ONE_NL
@@ -4193,10 +4204,12 @@ options {
 // multiple-line comments
 ML_COMMENT
 options {
-    paraphrase="a comment";
+    paraphrase="a multi-line comment";
 }
-    :   "/*"
-      { if (parser!=null) { parser.startComment(inputState.getLine(),inputState.getColumn()-2); } }
+    :   { atMultiCommentStart() }? "/*"
+        // GRECLIPSE add
+        { if (parser!=null) parser.startComment(inputState.getLine(),inputState.getColumn()-2); }
+        // GRECLIPSE end
         (   /*  '\r' '\n' can be matched in one alternative or by matching
                 '\r' in one iteration and '\n' in another. I am trying to
                 handle any flavor of newline that comes in, but the language
@@ -4209,15 +4222,16 @@ options {
             }
         :
             ( '*' ~'/' ) => '*'
+        // GRECLIPSE edit
+        //|   ONE_NL[true]
         |   ONE_NL_KEEP[true]
+        // GRECLIPSE end
         |   ~('*'|'\n'|'\r'|'\uffff')
         )*
         "*/"
-        { 
-          if (parser!=null) {
-               parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(), _begin, text.length()-_begin));
-          }
-          if (!whitespaceIncluded)  $setType(Token.SKIP); 
+        // GRECLIPSE add
+        { if (parser!=null) parser.endComment(1,inputState.getLine(),inputState.getColumn(),new String(text.getBuffer(),_begin,text.length()-_begin));
+          if (!whitespaceIncluded)  $setType(Token.SKIP);
         }
     ;
 
@@ -4298,28 +4312,30 @@ options {
     paraphrase="a multiline regular expression literal";
 }
         {int tt=0;}
-    :   {allowRegexpLiteral()}?
-        '/'!
-        {++suppressNewline;}
-        //Do this, but require it to be non-trivial:  REGEXP_CTOR_END[true]
-        // There must be at least one symbol or $ escape, lest the regexp collapse to '//'.
-        // (This should be simpler, but I don't know how to do it w/o ANTLR warnings vs. '//' comments.)
-        (
-            REGEXP_SYMBOL
-            tt=REGEXP_CTOR_END[true]
-        |   {!atValidDollarEscape()}? '$'
-            tt=REGEXP_CTOR_END[true]
-        |   '$'!
-            {
-                // Yes, it's a regexp constructor, and we've got a value part.
-                tt = STRING_CTOR_START;
-                stringCtorState = SCS_VAL + SCS_RE_TYPE;
-            }
-        )
-        {$setType(tt);}
+    :   { !atMultiCommentStart() }?
+        (   {allowRegexpLiteral()}?
+            '/'!
+            {++suppressNewline;}
+            //Do this, but require it to be non-trivial:  REGEXP_CTOR_END[true]
+            // There must be at least one symbol or $ escape, lest the regexp collapse to '//'.
+            // (This should be simpler, but I don't know how to do it w/o ANTLR warnings vs. '//' comments.)
+            (
+                REGEXP_SYMBOL
+                tt=REGEXP_CTOR_END[true]
+            |   {!atValidDollarEscape()}? '$'
+                tt=REGEXP_CTOR_END[true]
+            |   '$'!
+                {
+                    // Yes, it's a regexp constructor, and we've got a value part.
+                    tt = STRING_CTOR_START;
+                    stringCtorState = SCS_VAL + SCS_RE_TYPE;
+                }
+            )
+            {$setType(tt);}
 
-    |   DIV                 {$setType(DIV);}
-    |   DIV_ASSIGN          {$setType(DIV_ASSIGN);}
+        |   ( '/' ~'=' ) => DIV {$setType(DIV);}
+        |   DIV_ASSIGN {$setType(DIV_ASSIGN);}
+        )
     ;
 
 DOLLAR_REGEXP_LITERAL
@@ -4424,14 +4440,11 @@ options {
     paraphrase="a multiline regular expression character";
 }
     :
-        (
-            ~('*'|'/'|'$'|'\\'|'\n'|'\r'|'\uffff')
-        |   { LA(2)!='/' && LA(2)!='\n' && LA(2)!='\r' }? '\\' // backslash only escapes '/' and EOL
-        |   '\\' '/'                   { $setText('/'); }
-        |   STRING_NL[true]
-        |!  '\\' ONE_NL[false]
-        )
-        ('*')*      // stars handled specially to avoid ambig. on /**/
+        ~('/'|'$'|'\\'|'\n'|'\r'|'\uffff')
+    |   { LA(2)!='/' && LA(2)!='\n' && LA(2)!='\r' }? '\\' // backslash only escapes '/' and EOL
+    |   '\\' '/'                   { $setText('/'); }
+    |   STRING_NL[true]
+    |!  '\\' ONE_NL[false]
     ;
 
 protected
@@ -4440,13 +4453,11 @@ options {
     paraphrase="a multiline dollar escaping regular expression character";
 }
     :
-        (
-            ~('$' | '\\' | '/' | '\n' | '\r' | '\uffff')
-        |   { LA(2)!='\n' && LA(2)!='\r' }? '\\'               // backslash only escapes EOL
-        |   ('/' ~'$') => '/'                                  // allow a slash if not followed by a $
-        |   STRING_NL[true]
-        |!  '\\' ONE_NL[false]
-        )
+        ~('$' | '\\' | '/' | '\n' | '\r' | '\uffff')
+    |   { LA(2)!='\n' && LA(2)!='\r' }? '\\'               // backslash only escapes EOL
+    |   ('/' ~'$') => '/'                                  // allow a slash if not followed by a $
+    |   STRING_NL[true]
+    |!  '\\' ONE_NL[false]
     ;
 
 // escape sequence -- note that this is protected; it can only be called

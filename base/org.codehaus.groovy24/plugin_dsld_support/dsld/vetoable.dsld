@@ -13,33 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package dsld
+
+import java.beans.VetoableChangeListener
+import groovy.beans.Vetoable
+
 /**
  * Hackergarten contribution
  *
  * @author Tom Bujok (reficio.org)
  * @author Andres Almiray
  */
-package dsld
-
-import java.beans.VetoableChangeListener
-import groovy.beans.Vetoable
-
 contribute(currentType(annotatedBy(Vetoable) |
-	       fields(annotatedBy(Vetoable)))) {
-	provider = "Vetoable AST Transform"
-    
-    method name: "addVetoableChangeListener", 
-           type: "void", 
+           fields(annotatedBy(Vetoable)))) {
+    provider = "Vetoable AST Transform"
+
+    method name: "addVetoableChangeListener",
+           type: "void",
            params: [propertyName: String,
            listener: VetoableChangeListener],
            doc: """
            Add a VetoableChangeListener for a specific property. The listener will be invoked only when a call on
            fireVetoableChange names that specific property. The same listener object may be added more than once.
            For each property, the listener will be invoked the number of times it was added for that property. If
-           propertyName or listener is null, no exception is thrown and no action is taken. 
+           propertyName or listener is null, no exception is thrown and no action is taken.
            @param propertyName The name of the property to listen on.
            @param listener The VetoableChangeListener to be added"""
-           
+
     method name: "addVetoableChangeListener",
            type: "void",
            params: [listener: VetoableChangeListener],
@@ -48,7 +48,7 @@ contribute(currentType(annotatedBy(Vetoable) |
            object may beadded more than once, and will be called as many times as it is added. If listener is null, no
            exception is thrown and no action is taken.
            @param listener The VetoableChangeListener to be added"""
-           
+
     method name: "removeVetoableChangeListener",
            type: "void",
            params: [propertyName: String,
@@ -60,7 +60,7 @@ contribute(currentType(annotatedBy(Vetoable) |
            no exception is thrown and no action is taken.
            @param propertyName The name of the property that was listened on.
            @param listener The VetoableChangeListener to be removed"""
-           
+
     method name: "removeVetoableChangeListener",
            type: "void",
            params: [listener: VetoableChangeListener],
@@ -87,13 +87,13 @@ contribute(currentType(annotatedBy(Vetoable) |
            Returns the list of VetoableChangeListeners. If named vetoable change listeners were added, then VetoableChangeListenerProxy
            wrappers will returned.
            @return List of VetoableChangeListeners and VetoableChangeListenerProxys if named property change listeners were added."""
-           
+
     method name: "getVetoableChangeListeners",
-           type: "java.beans.VetoableChangeListener[]", 
+           type: "java.beans.VetoableChangeListener[]",
            params: [propertyName: String],
            doc: """
            Returns an array of all the listeners which have been associated with the named property.
-           @param propertyName The name of the property being listened to 
+           @param propertyName The name of the property being listened to
            @return all the VetoableChangeListeners associated with the named property. If no such listeners have been added, or if
            propertyName is null, an empty array is returned."""
 }

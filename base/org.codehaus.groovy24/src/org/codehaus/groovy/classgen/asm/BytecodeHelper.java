@@ -1,20 +1,22 @@
 /*
- * Copyright 2003-2007 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.classgen.asm;
-
 
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.reflection.ReflectionCache;
@@ -31,10 +33,9 @@ import java.lang.reflect.Modifier;
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author <a href="mailto:b55r@sina.com">Bing Ran</a>
  * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
- * @version $Revision$
  */
 public class BytecodeHelper implements Opcodes {
-
+    
     private static String DTT_CLASSNAME = BytecodeHelper.getClassInternalName(DefaultTypeTransformation.class.getName());
 
     public static String getClassInternalName(ClassNode t) {
@@ -42,26 +43,22 @@ public class BytecodeHelper implements Opcodes {
             if (t.isArray()) return "[L"+getClassInternalName(t.getComponentType())+";";
             return getClassInternalName(t.getName());
         }
-        // GRECLIPSE: start
-        /*old{
-        return getClassInternalName(t.getTypeClass());
-        }*/
-		// newcode
-		// don't call getTypeClass() unless necessary
+        // GRECLIPSE edit
+        //return getClassInternalName(t.getTypeClass());
+        // don't call getTypeClass() unless necessary
         // GRECLIPSE decide if this can ever get into trouble?  the second part of the if was added because of FindInSource.groovy which
         // refered to GroovyModel but that could not be found so we were left with an unresolved import and node in the code - crashed
         // whilst doing the code gen
         String name = t.getClassInternalName();
-        if (name==null) {
+        if (name == null) {
             if (t.hasClass()) {
-            	name = getClassInternalName(t.getTypeClass());
+                name = getClassInternalName(t.getTypeClass());
             } else {
-            	name = getClassInternalName(t.getName());
+                name = getClassInternalName(t.getName());
             }
         }
         return name;
-		// end
-		
+        // GRECLIPSE end
     }
 
     public static String getClassInternalName(Class t) {
@@ -250,7 +247,7 @@ public class BytecodeHelper implements Opcodes {
                 }
         }
     }
-
+    
     /**
      * negate a boolean on stack. true->false, false->true
      */
@@ -284,6 +281,10 @@ public class BytecodeHelper implements Opcodes {
      * @param name
      */
     public static String formatNameForClassLoading(String name) {
+        if (name == null) {
+            return "java.lang.Object;";
+        }
+
         if (name.equals("int")
                 || name.equals("long")
                 || name.equals("short")
@@ -295,10 +296,6 @@ public class BytecodeHelper implements Opcodes {
                 || name.equals("void")
                 ) {
             return name;
-        }
-
-        if (name == null) {
-            return "java.lang.Object;";
         }
 
         if (name.startsWith("[")) {
@@ -471,8 +468,8 @@ public class BytecodeHelper implements Opcodes {
         else {
             ret.append(getTypeDescription(printType, false));
             addSubTypes(ret, printType.getGenericsTypes(), "<", ">");
-        	if (!ClassHelper.isPrimitiveType(printType)) ret.append(";");
-    	  }
+            if (!ClassHelper.isPrimitiveType(printType)) ret.append(";");
+        }
     }
 
     private static void writeGenericsBounds(StringBuilder ret, GenericsType type, boolean writeInterfaceMarker) {
@@ -497,25 +494,25 @@ public class BytecodeHelper implements Opcodes {
                 addSubTypes(ret, new GenericsType[]{new GenericsType(types[i].getType().getComponentType())}, "", "");
             }
             else {
-            if (types[i].isPlaceholder()) {
-                ret.append('T');
+                if (types[i].isPlaceholder()) {
+                    ret.append('T');
                     String name = types[i].getName();
-                ret.append(name);
-                ret.append(';');
-            } else if (types[i].isWildcard()) {
-                if (types[i].getUpperBounds() != null) {
-                    ret.append('+');
-                    writeGenericsBounds(ret, types[i], false);
-                } else if (types[i].getLowerBound() != null) {
-                    ret.append('-');
-                    writeGenericsBounds(ret, types[i], false);
+                    ret.append(name);
+                    ret.append(';');
+                } else if (types[i].isWildcard()) {
+                    if (types[i].getUpperBounds() != null) {
+                        ret.append('+');
+                        writeGenericsBounds(ret, types[i], false);
+                    } else if (types[i].getLowerBound() != null) {
+                        ret.append('-');
+                        writeGenericsBounds(ret, types[i], false);
+                    } else {
+                        ret.append('*');
+                    }
                 } else {
-                    ret.append('*');
+                    writeGenericsBounds(ret, types[i], false);
                 }
-            } else {
-                writeGenericsBounds(ret, types[i], false);
             }
-        }
         }
         ret.append(end);
     }
@@ -552,7 +549,7 @@ public class BytecodeHelper implements Opcodes {
                             BytecodeHelper.getClassInternalName(type.getName()));
         }
     }
-    
+
     /**
      * Given a wrapped number type (Byte, Integer, Short, ...), generates bytecode
      * to convert it to a primitive number (int, long, double) using calls to
@@ -602,9 +599,6 @@ public class BytecodeHelper implements Opcodes {
 
     public static void unbox(MethodVisitor mv, ClassNode type) {
         if (type.isPrimaryClassNode()) return;
-        // GRECLIPSE: start
-        if (type.isPrimitive())
-        // end
         unbox(mv, type.getTypeClass());
     }
 
@@ -614,9 +608,9 @@ public class BytecodeHelper implements Opcodes {
     @Deprecated
     public static boolean box(MethodVisitor mv, ClassNode type) {
         if (type.isPrimaryClassNode()) return false;
-        // GRECLIPSE: start
+        // GRECLIPSE add
         if (!type.isPrimitive()) return false;
-        // end
+        // GRECLIPSE end
         return box(mv, type.getTypeClass());
     }
 

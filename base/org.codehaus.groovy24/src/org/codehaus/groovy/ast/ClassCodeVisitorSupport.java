@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2012 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.ast;
 
@@ -41,7 +44,6 @@ import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
-import org.codehaus.groovy.syntax.SyntaxException;
 
 public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport implements GroovyClassVisitor {
 
@@ -52,7 +54,7 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         node.visitContents(this);
         visitObjectInitializerStatements(node);
     }
-
+    
     protected void visitObjectInitializerStatements(ClassNode node) {
         for (Statement element : node.getObjectInitializerStatements()) {
             element.visit(this);
@@ -144,52 +146,48 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
     }
 
     protected void addError(String msg, ASTNode expr) {
+        // GRECLIPSE add
         int line = expr.getLineNumber();
         int col = expr.getColumnNumber();
-        // GRECLIPSE
         int start = expr.getStart();
         int end = expr.getEnd()-1;
         if (expr instanceof ClassNode) {
-        	// assume we have a class declaration
-        	ClassNode cn = (ClassNode) expr;
-        	if (cn.getNameEnd() > 0) {
-        		start = cn.getNameStart();
-        		end = cn.getNameEnd();
-        	} else if (cn.getComponentType() != null) {
-        		// avoid extra whitespace after closing ]
-        		end --;
-        	}
-        	
+            // assume we have a class declaration
+            ClassNode cn = (ClassNode) expr;
+            if (cn.getNameEnd() > 0) {
+                start = cn.getNameStart();
+                end = cn.getNameEnd();
+            } else if (cn.getComponentType() != null) {
+                // avoid extra whitespace after closing ]
+                end--;
+            }
+            
         } else if (expr instanceof DeclarationExpression) {
-        	// assume that we just want to underline the variable declaration
-        	DeclarationExpression decl = (DeclarationExpression) expr;
-        	Expression lhs = decl.getLeftExpression();
-			start = lhs.getStart();
-        	// avoid extra space before = if a variable
-        	end = lhs instanceof VariableExpression ? start + lhs.getText().length() -1: lhs.getEnd() -1;
+            // assume that we just want to underline the variable declaration
+            DeclarationExpression decl = (DeclarationExpression) expr;
+            Expression lhs = decl.getLeftExpression();
+            start = lhs.getStart();
+            // avoid extra space before = if a variable
+            end = lhs instanceof VariableExpression ? start + lhs.getText().length() -1: lhs.getEnd() -1;
         }
-        // end
-        
-        SourceUnit source = getSourceUnit();
-		source.getErrorCollector().addErrorAndContinue(
-                // GRECLIPSE: start
-                new SyntaxErrorMessage(new PreciseSyntaxException(msg + '\n', line, col, start, end), source)
-                // end
-        );
-    }
-    
-    // GRECLIPSE start
-    protected void addTypeError(String msg, ClassNode expr ) {
-        int line = expr.getLineNumber();
-        int col = expr.getColumnNumber();
+        // GRECLIPSE end
         SourceUnit source = getSourceUnit();
         source.getErrorCollector().addErrorAndContinue(
-        		// GRECLIPSE: start
-                new SyntaxErrorMessage(new PreciseSyntaxException(msg + '\n', line, col, expr.getNameStart(), expr.getNameEnd()), source)
-                // end
+                // GRECLIPSE edit
+                //new SyntaxErrorMessage(new SyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber(), expr.getLastLineNumber(), expr.getLastColumnNumber()), source)
+                new SyntaxErrorMessage(new PreciseSyntaxException(msg + '\n', line, col, start, end), source)
+                // GRECLIPSE end
         );
     }
-    // end
+
+    // GRECLIPSE add
+    protected void addTypeError(String msg, ClassNode expr) {
+        SourceUnit source = getSourceUnit();
+        source.getErrorCollector().addErrorAndContinue(
+                new SyntaxErrorMessage(new PreciseSyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber(), expr.getNameStart(), expr.getNameEnd()), source)
+        );
+    }
+    // GRECLIPSE end
 
     protected abstract SourceUnit getSourceUnit();
 

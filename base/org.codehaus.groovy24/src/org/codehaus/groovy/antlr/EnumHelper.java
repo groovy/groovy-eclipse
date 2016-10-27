@@ -1,20 +1,22 @@
 /*
- * Copyright 2003-2013 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.antlr;
-
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -50,25 +52,25 @@ public class EnumHelper {
         
         return enumClass;
     }
-    
+
+    // GRECLIPSE edit
     public static void addEnumConstant(ClassNode enumClass, String name, Expression init) {
         addEnumConstant(enumClass, enumClass, name, init, -1, -1);
     }
 
-    // GRECLIPSE: start
     // modified to return the FieldNode it creates, so that we can fix up the position
-    // GRECLIPSE: end
     public static FieldNode addEnumConstant(ClassNode enumClassType, ClassNode enumClassOwner, String name, Expression init, int lineNumber, int colNumber) {
         int modifiers = PUBLIC_FS | Opcodes.ACC_ENUM;
-        if  (init!=null && !(init instanceof ListExpression)) {
+        if (init != null && !(init instanceof ListExpression)) {
             ListExpression list = new ListExpression();
             list.addExpression(init);
             init = list;
-        }      
-        FieldNode fn = new FieldNode(name, modifiers, enumClassType.getPlainNodeReference(), enumClassOwner,init);
+        }
+        FieldNode fn = new FieldNode(name, modifiers, enumClassType.getPlainNodeReference(), enumClassOwner, init);
         fn.setLineNumber(lineNumber);
         fn.setColumnNumber(colNumber);
         enumClassOwner.addField(fn);
         return fn;
     }
+    // GRECLIPSE end
 }

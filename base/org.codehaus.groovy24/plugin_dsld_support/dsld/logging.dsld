@@ -13,40 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package dsld
+
 /**
  * Hackergarten contribution
- *  
- * @author Lukasz Pielak 
+ *
+ * @author Lukasz Pielak
  * @author Max Rydahl Andersen
  * @author Tom Bujok (reficio.org)
  * @author Andres Almiray
  */
-package dsld
 
 [
-	[
+    [
         annotation: 'groovy.util.logging.Log',
-	    logger: 	'java.util.logging.Logger'
-	],
-	[
+        logger:     'java.util.logging.Logger'
+    ],
+    [
         annotation: 'groovy.util.logging.Slf4j',
-	    logger: 	'org.slf4j.Logger'
-	],
-	[
+        logger:     'org.slf4j.Logger'
+    ],
+    [
         annotation: 'groovy.util.logging.Commons',
-	    logger: 	'org.apache.commons.logging.Log'
-	],
-	[
+        logger:     'org.apache.commons.logging.Log'
+    ],
+    [
         annotation: 'groovy.util.logging.Log4j',
-	    logger: 	'org.apache.log4j.Logger'
-	]
+        logger:     'org.apache.log4j.Logger'
+    ]
 ].each { data ->
     contribute(currentType(annotations: annotatedBy(data.annotation))) {
-	    for(annotationNode in annotations) {        
+        for(annotationNode in annotations) {
             provider = 'Logging AST Transformations'
             def name = annotationNode.getMember('value') ?: 'log'
             property name: name,
                      type: data.logger
-	    }
+        }
     }
 }

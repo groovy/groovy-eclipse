@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,8 @@ package org.codehaus.groovy.eclipse;
 import junit.framework.TestCase;
 
 /**
- * Simple test to make sure that logs are added and removed properly
+ * Simple test to make sure that logs are added and removed properly.
+ *
  * @author Andrew Eisenberg
  * @created Nov 24, 2010
  */
@@ -30,7 +31,7 @@ public class LoggerTest extends TestCase {
         DefaultGroovyLogger l3 = new DefaultGroovyLogger();
         DefaultGroovyLogger l4 = new DefaultGroovyLogger();
         DefaultGroovyLogger l5 = new DefaultGroovyLogger();
-        
+
         assertTrue(GroovyLogManager.manager.addLogger(l1));
         assertFalse(GroovyLogManager.manager.addLogger(l1));
         assertTrue(GroovyLogManager.manager.addLogger(l2));
@@ -41,7 +42,7 @@ public class LoggerTest extends TestCase {
         assertFalse(GroovyLogManager.manager.addLogger(l4));
         assertTrue(GroovyLogManager.manager.addLogger(l5));
         assertFalse(GroovyLogManager.manager.addLogger(l5));
-        
+
         assertTrue(GroovyLogManager.manager.removeLogger(l1));
         assertFalse(GroovyLogManager.manager.removeLogger(l1));
         assertTrue(GroovyLogManager.manager.removeLogger(l2));
@@ -52,7 +53,7 @@ public class LoggerTest extends TestCase {
         assertFalse(GroovyLogManager.manager.removeLogger(l4));
         assertTrue(GroovyLogManager.manager.removeLogger(l5));
         assertFalse(GroovyLogManager.manager.removeLogger(l5));
-        
+
         // now reverse order of removal
         assertTrue(GroovyLogManager.manager.addLogger(l1));
         assertFalse(GroovyLogManager.manager.addLogger(l1));
@@ -64,7 +65,7 @@ public class LoggerTest extends TestCase {
         assertFalse(GroovyLogManager.manager.addLogger(l4));
         assertTrue(GroovyLogManager.manager.addLogger(l5));
         assertFalse(GroovyLogManager.manager.addLogger(l5));
-        
+
         assertTrue(GroovyLogManager.manager.removeLogger(l5));
         assertFalse(GroovyLogManager.manager.removeLogger(l5));
         assertTrue(GroovyLogManager.manager.removeLogger(l4));
@@ -75,7 +76,7 @@ public class LoggerTest extends TestCase {
         assertFalse(GroovyLogManager.manager.removeLogger(l2));
         assertTrue(GroovyLogManager.manager.removeLogger(l1));
         assertFalse(GroovyLogManager.manager.removeLogger(l1));
-        
+
         // now removal from middle
         assertTrue(GroovyLogManager.manager.addLogger(l1));
         assertFalse(GroovyLogManager.manager.addLogger(l1));
@@ -87,7 +88,7 @@ public class LoggerTest extends TestCase {
         assertFalse(GroovyLogManager.manager.addLogger(l4));
         assertTrue(GroovyLogManager.manager.addLogger(l5));
         assertFalse(GroovyLogManager.manager.addLogger(l5));
-        
+
         assertTrue(GroovyLogManager.manager.removeLogger(l3));
         assertFalse(GroovyLogManager.manager.removeLogger(l3));
         assertTrue(GroovyLogManager.manager.removeLogger(l2));
@@ -98,10 +99,5 @@ public class LoggerTest extends TestCase {
         assertFalse(GroovyLogManager.manager.removeLogger(l5));
         assertTrue(GroovyLogManager.manager.removeLogger(l1));
         assertFalse(GroovyLogManager.manager.removeLogger(l1));
-        
-
-        
-
     }
-
 }

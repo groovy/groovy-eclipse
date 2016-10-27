@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,13 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
- * This class provides a standard interface to access import nodes 
+ * This class provides a standard interface to access import nodes
  * on a module node.
- * 
+ *
  * Since the API has changed between groovy versions 1.6 and 1.7,
  * we need to ensure there is a common API that Groovy-Eclipse can
  * access independent on the version.
- * 
+ *
  * @author Andrew Eisenberg
  * @created Apr 29, 2010
  */
@@ -46,17 +46,17 @@ public class ImportNodeCompatibilityWrapper {
             return start1 - start2;
         }
     }
-    
+
     private SortedSet<ImportNode> sortedImports;
     private ModuleNode module;
-    
+
     public ImportNodeCompatibilityWrapper(ModuleNode module) {
         if (module == null) {
             throw new IllegalArgumentException("Module node should not be null");
         }
         this.module = module;
     }
-    
+
     public SortedSet<ImportNode> getAllImportNodes() {
         if (sortedImports == null) {
             initialize();
@@ -76,14 +76,17 @@ public class ImportNodeCompatibilityWrapper {
     public static String getFieldName(ImportNode node) {
         return node.getFieldName();
     }
+
     // not available in 1.6 stream
     public static Map<String, ImportNode> getStaticImports(ModuleNode node) {
         return node.getStaticImports();
     }
+
     // not available in 1.6 stream
     public static Map<String, ImportNode> getStaticStarImports(ModuleNode node) {
         return node.getStaticStarImports();
     }
+
     // not available in 1.6 stream
     public static List<ImportNode> getStarImports(ModuleNode node) {
         return node.getStarImports();
