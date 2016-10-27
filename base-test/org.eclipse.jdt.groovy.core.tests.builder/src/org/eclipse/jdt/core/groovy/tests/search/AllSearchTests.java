@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import junit.framework.Test;
@@ -22,28 +21,27 @@ import junit.framework.TestSuite;
 /**
  * @author Andrew Eisenberg
  * @created Oct 22, 2009
- *
  */
 public class AllSearchTests {
     public static Test suite() throws Exception {
-        TestSuite suite = new TestSuite("Search Tests"); //$NON-NLS-1$
-        suite.addTestSuite(TypeReferenceSearchTests.class);
-        suite.addTestSuite(FieldReferenceSearchTests.class);
-        suite.addTestSuite(MethodReferenceSearchTests.class);
+        TestSuite suite = new TestSuite(AllSearchTests.class.getName());
+        suite.addTestSuite(BinarySearchTests.class);
         suite.addTestSuite(CategorySearchTests.class);
-        suite.addTestSuite(InferencingTests.class);
-        suite.addTestSuite(StaticInferencingTests.class);
-        suite.addTestSuite(GenericInferencingTests.class);
-        suite.addTestSuite(DGMInferencingTests.class);
-        suite.addTestSuite(LocalVariableReferenceSearchTests.class);
-        suite.addTestSuite(JDTPropertyNodeInferencingTests.class);
         suite.addTestSuite(DeclarationInferencingTests.class);
-        suite.addTestSuite(OperatorOverloadingInferencingTests.class);
-        suite.addTestSuite(SyntheticAccessorInferencingTests.class);
+        suite.addTestSuite(DGMInferencingTests.class);
+        suite.addTestSuite(FieldReferenceSearchTests.class);
+        suite.addTestSuite(GenericInferencingTests.class);
+        suite.addTestSuite(GenericsMappingTest.class);
         suite.addTestSuite(Groovy20InferencingTests.class);
         suite.addTestSuite(Groovy21InferencingTests.class);
-        suite.addTestSuite(GenericsMappingTest.class);
-        suite.addTestSuite(BinarySearchTests.class);
+        suite.addTestSuite(InferencingTests.class);
+        suite.addTestSuite(JDTPropertyNodeInferencingTests.class);
+        suite.addTestSuite(LocalVariableReferenceSearchTests.class);
+        suite.addTestSuite(MethodReferenceSearchTests.class);
+        suite.addTestSuite(OperatorOverloadingInferencingTests.class);
+        suite.addTestSuite(StaticInferencingTests.class);
+        suite.addTestSuite(SyntheticAccessorInferencingTests.class);
+        suite.addTestSuite(TypeReferenceSearchTests.class);
         return suite;
     }
 }

@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2009 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,12 +20,10 @@ import junit.framework.TestSuite;
 
 public class AllTests {
     public static Test suite() {
-        final TestSuite suite = new TestSuite("Test for "
-                + AllTests.class.getPackage().getName());
-        // $JUnit-BEGIN$
-        suite.addTestSuite(ErrorRecoveryTests.class);
+        TestSuite suite = new TestSuite(AllTests.class.getName());
         suite.addTestSuite(AstPositionTests.class);
-        // $JUnit-END$
+        suite.addTestSuite(ErrorRecoveryTests.class);
+        suite.addTestSuite(UnrecoverableErrorTests.class);
         return suite;
     }
 }

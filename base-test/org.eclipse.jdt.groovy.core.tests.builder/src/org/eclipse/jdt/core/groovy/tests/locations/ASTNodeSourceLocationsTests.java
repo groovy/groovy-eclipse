@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,14 @@
  */
 package org.eclipse.jdt.core.groovy.tests.locations;
 
-import groovy.lang.GroovyClassLoader;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.SortedSet;
 
 import junit.framework.Test;
+
+import groovy.lang.GroovyClassLoader;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
@@ -185,19 +184,20 @@ public class ASTNodeSourceLocationsTests  extends GroovierBuilderTests {
 		checkBinaryExprSLocs("def x = foo as Set ", 
 				new CastExpressionSLocTester(), "foo as Set");
 	}
-	
-	public void testImportStatement1() throws Exception {
+
+    public void testImportStatement1() throws Exception {
         checkBinaryExprSLocs(
-                "import javax.swing.*\n" +
-                "import javax.swing.JFrame\n" +
-                "import javax.applet.*;\n" +
-                "import javax.applet.Applet;\n", 
-                new ImportStatementSLocTester(), 
-                "import javax.swing.*",
-                "import javax.swing.JFrame",
-                "import javax.applet.*",
-                "import javax.applet.Applet");
+            "import javax.swing.*\n" +
+            "import javax.swing.JFrame\n" +
+            "import javax.applet.*;\n" +
+            "import javax.applet.Applet;\n",
+            new ImportStatementSLocTester(),
+            "import javax.swing.*",
+            "import javax.swing.JFrame",
+            "import javax.applet.*",
+            "import javax.applet.Applet");
     }
+
 	// GRECLIPSE-1270
 	public void testAssertStatement1() throws Exception {
 	    checkBinaryExprSLocs("def meth() {\n  then:\n  assert x == 9\n}", 
@@ -268,16 +268,13 @@ public class ASTNodeSourceLocationsTests  extends GroovierBuilderTests {
 	}
 	
 	class ImportStatementSLocTester extends AbstractSLocTester {
-//        @Override
-        public void visitImports(ModuleNode module) {
-            ImportNodeCompatibilityWrapper wrapper = new ImportNodeCompatibilityWrapper(module);
-            SortedSet<ImportNode> nodes = wrapper.getAllImportNodes();
-            for (ImportNode node : nodes) {
-                allCollectedNodes.add(node);
-            }
-        }
-    }
-    
+		@Override
+		public void visitImports(ModuleNode module) {
+			for (ImportNode node : new ImportNodeCompatibilityWrapper(module).getAllImportNodes()) {
+				allCollectedNodes.add(node);
+			}
+		}
+	}
 	
 	class BinaryExpressionSLocTester extends AbstractSLocTester {
 		@Override

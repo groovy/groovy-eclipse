@@ -1,73 +1,76 @@
-/*******************************************************************************
- * Copyright (c) 2009-2014 SpringSource and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.alltests;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.eclipse.jdt.core.groovy.tests.builder.BasicGroovyBuildTests;
-import org.eclipse.jdt.core.groovy.tests.builder.FullProjectTests;
-import org.eclipse.jdt.core.groovy.tests.compiler.ScriptFolderTests;
-import org.eclipse.jdt.core.groovy.tests.locations.ASTConverterTests;
-import org.eclipse.jdt.core.groovy.tests.locations.ASTNodeSourceLocationsTests;
-import org.eclipse.jdt.core.groovy.tests.locations.LocationSupportTests;
-import org.eclipse.jdt.core.groovy.tests.locations.SourceLocationsTests;
-import org.eclipse.jdt.core.groovy.tests.model.AnnotationsTests;
-import org.eclipse.jdt.core.groovy.tests.model.GroovyClassFileTests;
-import org.eclipse.jdt.core.groovy.tests.model.GroovyCompilationUnitTests;
-import org.eclipse.jdt.core.groovy.tests.model.GroovyContentTypeTests;
-import org.eclipse.jdt.core.groovy.tests.model.GroovyPartialModelTests;
-import org.eclipse.jdt.core.groovy.tests.model.MoveRenameCopyTests;
-import org.eclipse.jdt.core.groovy.tests.search.AllSearchTests;
-import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTest;
-import org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTests_Compliance_1_8;
+// From org.eclipse.jdt.groovy.core.tests.builder plug-in:
+import org.eclipse.jdt.core.groovy.tests.builder.*;
+import org.eclipse.jdt.core.groovy.tests.compiler.*;
+import org.eclipse.jdt.core.groovy.tests.locations.*;
+import org.eclipse.jdt.core.groovy.tests.model.*;
+import org.eclipse.jdt.core.groovy.tests.search.*;
+// From org.eclipse.jdt.groovy.core.tests.compiler plug-in:
+import org.eclipse.jdt.groovy.core.tests.basic.*;
 
 /**
+ * All Groovy-JDT integration tests.
+ *
  * @author Andrew Eisenberg
  * @created Jul 8, 2009
- *
- * All Groovy-JDT integration tests.
  */
 public class GroovyJDTTests {
+
     public static Test suite() throws Exception {
         // ensure that the compiler chooser starts up
-    	GroovyTestSuiteSupport.initializeCompilerChooser();
-        
-        TestSuite suite = new TestSuite(GroovyJDTTests.class.getName());
-        
-        suite.addTestSuite(SanityTest.class);
+        GroovyTestSuiteSupport.initializeCompilerChooser();
 
-        // Model tests
-        suite.addTest(AnnotationsTests.suite());
-        suite.addTest(GroovyCompilationUnitTests.suite());
-        suite.addTest(GroovyClassFileTests.suite());
-        suite.addTest(GroovyContentTypeTests.suite());
-        suite.addTest(MoveRenameCopyTests.suite());
-        suite.addTest(GroovyPartialModelTests.suite());
+        TestSuite suite = new TestSuite(GroovyJDTTests.class.getName());
+
+        suite.addTestSuite(SanityTest.class);
 
         // Builder tests
         suite.addTest(BasicGroovyBuildTests.suite());
         suite.addTest(FullProjectTests.suite());
 
-		// Location tests
-        suite.addTestSuite(LocationSupportTests.class);
-		suite.addTestSuite(SourceLocationsTests.class);
-		suite.addTestSuite(ASTNodeSourceLocationsTests.class);
-		suite.addTestSuite(ASTConverterTests.class);
-
         // Compiler tests
+        suite.addTest(ErrorRecoveryTests.suite());
+        suite.addTest(GenericsTests.suite());
         suite.addTest(GroovySimpleTest.suite());
         suite.addTest(GroovySimpleTests_Compliance_1_8.suite());
         suite.addTest(ScriptFolderTests.suite());
+        suite.addTest(STCScriptsTests.suite());
+        if (org.eclipse.jdt.core.tests.util.GroovyUtils.isAtLeastGroovy(23))
+            suite.addTest(TraitsTests.suite());
+        suite.addTest(TransformationsTests.suite());
+
+        // Location tests
+        suite.addTest(ASTConverterTests.suite());
+        suite.addTest(ASTNodeSourceLocationsTests.suite());
+        suite.addTestSuite(LocationSupportTests.class);
+        suite.addTest(SourceLocationsTests.suite());
+
+        // Model tests
+        suite.addTest(AnnotationsTests.suite());
+        suite.addTest(GroovyClassFileTests.suite());
+        suite.addTest(GroovyCompilationUnitTests.suite());
+        suite.addTest(GroovyContentTypeTests.suite());
+        suite.addTest(GroovyPartialModelTests.suite());
+        suite.addTest(MoveRenameCopyTests.suite());
 
         // Search tests
         suite.addTest(AllSearchTests.suite());
