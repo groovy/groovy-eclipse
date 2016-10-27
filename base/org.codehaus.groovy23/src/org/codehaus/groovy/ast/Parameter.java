@@ -41,12 +41,12 @@ public class Parameter extends AnnotatedNode implements Variable {
     private ClassNode originType=ClassHelper.DYNAMIC_TYPE;
 
     public Parameter(ClassNode type, String name) {
-    	// GRECLIPSE: start
-    	if (type == null) {
-    		// Recovery related: something else went wrong that prevented type being determined (STS-3822)
-    		type = ClassHelper.OBJECT_TYPE;
-    	}
-    	// GRECLIPSE: end
+        // GRECLIPSE add
+        if (type == null) {
+            // Recovery related: something else went wrong that prevented type being determined (STS-3822)
+            type = ClassHelper.OBJECT_TYPE;
+        }
+        // GRECLIPSE end
         this.name = name;
         this.setType(type);
         this.originType = type;

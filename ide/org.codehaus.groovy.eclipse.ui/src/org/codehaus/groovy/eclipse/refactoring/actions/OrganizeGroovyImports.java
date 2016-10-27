@@ -1,5 +1,5 @@
 /*
- * Copyright 2010, 2014 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import greclipse.org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import greclipse.org.eclipse.jdt.ui.CodeStyleConfiguration;
-import groovy.transform.AnnotationCollector;
 import groovy.transform.Field;
 
 import java.util.ArrayList;
@@ -308,16 +307,6 @@ public class OrganizeGroovyImports {
                     innerIndex = name.lastIndexOf('$', innerIndex-1);
                 }
                 doNotRemoveImport(partialName);
-            }
-
-            // GRECLIPSE 1794
-            // see org.codehaus.groovy.transform.ASTTransformationCollectorCodeVisitor.addCollectedAnnotations(...)
-            if (isAnnotation) {
-                Object key = AnnotationCollector.class + node.getName();
-                Object nodeMetaData = node.getNodeMetaData(key);
-                if (nodeMetaData != null) {
-                    doNotRemoveImport((String) nodeMetaData);
-                }
             }
 
             if (node.isUsingGenerics() && node.getGenericsTypes() != null) {

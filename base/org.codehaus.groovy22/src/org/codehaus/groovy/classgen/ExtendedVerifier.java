@@ -139,8 +139,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport implements GroovyC
                         visited);
             }
             visitDeprecation(node, visited);
-            // TODO GROOVY-5011
-//            visitOverride(node, visited);
+            visitOverride(node, visited);
         }
     }
 
@@ -159,8 +158,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport implements GroovyC
         }
     }
 
-    /*
-    // TODO GROOVY-5011 handle case of @Override on a property
+   // TODO GROOVY-5011 handle case of @Override on a property
     private void visitOverride(AnnotatedNode node, AnnotationNode visited) {
         ClassNode annotationClassNode = visited.getClassNode();
         if (annotationClassNode.isResolved() && annotationClassNode.getName().equals("java.lang.Override")) {
@@ -187,7 +185,6 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport implements GroovyC
             }
         }
     }
-    */
 
     /**
      * Resolve metadata and details of the annotation.

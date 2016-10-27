@@ -238,7 +238,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     // lazy option set in Singleton
     void testBuiltInTransforms_Singleton2() {
         //This test breaks on Groovy < 2.2.1 because the 'strict' flag was introduced in that version.
-        if (!GroovyUtils.isAtLeastGroovy(22)) return
+        if (GroovyUtils.GROOVY_LEVEL < 22) return
 
         String[] sources = [
             "Goo.groovy",
@@ -270,7 +270,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
 
     void testBuiltInTransforms_Singleton3() {
         //This test breaks on Groovy < 2.2.1 because the 'strict' flag was introduced in that version.
-        if (!GroovyUtils.isAtLeastGroovy(22)) return
+        if (GroovyUtils.GROOVY_LEVEL < 22) return
 
         String[] sources = [
             "Goo.groovy",
@@ -474,9 +474,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testTypeChecked2() {
-        if (GroovyUtils.GROOVY_LEVEL<20) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
 
         String[] sources = [
             "Foo.groovy",
@@ -505,9 +503,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
      * That method does a lot of equality by == testing against classnode constants, which doesn't work so well for us...
      */
     void testCompileStatic2() {
-        if (GroovyUtils.GROOVY_LEVEL<20) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
 
         String[] sources = [
             "Foo.groovy",
@@ -542,9 +538,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testCompileStatic() {
-        if (GroovyUtils.GROOVY_LEVEL<20) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
 
         String[] sources = [
             "Foo.groovy",
@@ -569,9 +563,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testCompileStatic3() {
-        if (GroovyUtils.GROOVY_LEVEL<20) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
 
         String[] sources = [
             "Foo.groovy",
@@ -587,9 +579,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testCompileStatic_1511() {
-        if (GroovyUtils.GROOVY_LEVEL<20) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
 
         String[] sources = [
             "Foo.groovy",
@@ -607,9 +597,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testCompileStatic_1505() {
-        if (GroovyUtils.GROOVY_LEVEL<20) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
 
         String[] sources = [
             "DynamicQuery.groovy",
@@ -631,9 +619,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void _testCompileStatic_1506() {
-        if (GroovyUtils.GROOVY_LEVEL<20) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
 
         String[] sources = [
             "LoggerTest.groovy",
@@ -654,9 +640,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testCompileStatic4() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
 
         // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
         String[] sources = [
@@ -682,6 +666,8 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testCompileDynamic() {
+        if (GroovyUtils.GROOVY_LEVEL < 21) return
+
         String[] sources = [
             'A.groovy', '''
             @groovy.transform.CompileStatic
@@ -845,9 +831,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testJDTClassNode_1731() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 21) return
 
         // Testcode based on article: http://www.infoq.com/articles/groovy-1.5-new
         // The groups of tests are loosely based on the article contents - but what is really exercised here is the accessibility of
@@ -905,7 +889,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "}\n"
         ]
 
-        this.runConformTest(sources, "@a.SampleAnnotation()")
+        runConformTest(sources, "@a.SampleAnnotation()")
     }
 
     void testImmutable_1723() {
@@ -935,7 +919,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "}\n"
         ]
 
-        this.runConformTest(sources)
+        runConformTest(sources)
 
         GroovyCompilationUnitDeclaration unit = getCUDeclFor("SomeValueObject.groovy")
         ClassNode classNode = unit.getCompilationUnit().getClassNode("b.SomeValueObject")

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.refactoring.actions;
-
-import groovy.transform.AnnotationCollector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,19 +40,11 @@ import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector;
  * @author Nieraj Singh
  */
 public class TypeSearch {
-    private static final String ANNOTATION_COLLECTOR = AnnotationCollector.class.getSimpleName();
-
-    public TypeSearch() {
-        //
-    }
-
     /**
      * Use a SearchEngine to look for the types
      * This will not find inner types, however
      *
      * @see OrganizeImportsOperation.TypeReferenceProcessor#process(org.eclipse.core.runtime.IProgressMonitor)
-     * @param missingType
-     * @throws JavaModelException
      */
     public void searchForTypes(GroovyCompilationUnit unit, Map<String, OrganizeGroovyImports.UnresolvedTypeData> missingTypes)
             throws JavaModelException {
@@ -85,16 +75,12 @@ public class TypeSearch {
     /**
      * If looking for an annotation, then filter out non-annoations,
      * otherwise everything is acceptable.
-     *
-     * @param match
-     * @param isAnnotation
-     * @return
      */
     protected boolean isOfKind(TypeNameMatch match, boolean isAnnotation) {
         boolean isRegularAnnotation = isAnnotation ? Flags.isAnnotation(match.getModifiers()) : true;
 
         //Annotations that are annotated with {@link AnnotationCollector} are not treated as annotations, so additional check is required
-        boolean isCollectedByAnnotationCollector = match.getType().getAnnotation(ANNOTATION_COLLECTOR) != null;
+        boolean isCollectedByAnnotationCollector = (match.getType().getAnnotation("AnnotationCollector") != null);
 
         return isRegularAnnotation || isCollectedByAnnotationCollector;
     }
