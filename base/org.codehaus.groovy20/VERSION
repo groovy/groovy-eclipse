@@ -1,21 +1,3 @@
-04-Aug-09: groovy 1.7beta1 tag17153
-13-Oct-09: groovy 1.7beta2 tag17962
-28-Nov-09: groovy 1.7rc1 tag18436
-23-Dec-09: groovy 1.7.0
-07-Apr-10: groovy 1.7.2 tag19775
-14-Jun-10: groovy 1.7.3 tag20280
-22-Sep-10: groovy 1.7.5 tag20761
-06-Feb-11: groovy 1.7.7 tag21482
-16-Feb-11: groovy 1.7.8 tag21550
-16-Mar-11: groovy 1.8.0-rc-2 tag21780
-04-May-11: groovy 1.8.0 tag22084
-29-Jul-11: groovy 1.8.1 tag22643
-06-Sep-11: groovy 1.8.2 git tag
-13-Oct-11: groovy 1.8.3 
-14-Nov-11: groovy 1.8.4  
-26-Jan-12: groovy 1.8.5
-13-Feb-12: groovy 1.8.6
-
 10-Apr-12: took groovy 2.0.0 beta3 snapshot dated 10April and moved to it - as first go at 2.0 support
 28-Jun-12: groovy 2.0.0
 21-Sep-12: groovy 2.0.4

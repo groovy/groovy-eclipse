@@ -140,33 +140,33 @@ public class CompilationUnit extends ProcessingUnit {
 		// GRECLIPSE extra param
         this(configuration, security, loader, null, true, null);
     }
-    
+
     // GRECLIPSE start
     /**
-     * Note: globalASTransformExclude param is ignored it is only implemented for Groovy 23 and up. 
+     * Note: globalASTransformExclude param is ignored it is only implemented for Groovy 23 and up.
      * This is just a stub to maintain binary compatibility on the calling side.
      */
-    public CompilationUnit(CompilerConfiguration configuration, CodeSource security, 
+    public CompilationUnit(CompilerConfiguration configuration, CodeSource security,
             GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean allowTransforms, String localTransformsToRunOnReconcile, String globalASTransformExclude) {
     	this(configuration, security, loader, transformLoader, allowTransforms, localTransformsToRunOnReconcile);
     }
     // GRECLIPSE end
-   
+
     // GRECLIPSE extraparam
     /**
      * Initializes the CompilationUnit with a CodeSource for controlling
      * security stuff, a class loader for loading classes, and a class
-     * loader for loading AST transformations. 
+     * loader for loading AST transformations.
      * <b>Note</b> The transform loader must be
      * able to load compiler classes. That means CompilationUnit.class.classLoader
      * must be at last a parent to transformLoader. The other loader has no such constraint.
-     * 
+     *
      * @param transformLoader - the loader for transforms
      * @param loader - loader used to resolve classes against during compilation
      * @param security - security setting for the compilation
      * @param configuration - compilation configuration
      */
-    public CompilationUnit(CompilerConfiguration configuration, CodeSource security, 
+    public CompilationUnit(CompilerConfiguration configuration, CodeSource security,
                            GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean allowTransforms, String localTransformsToRunOnReconcile) {
         super(configuration, loader, null);
         this.allowTransforms = allowTransforms;
@@ -188,7 +188,7 @@ public class CompilationUnit extends ProcessingUnit {
         // end
         this.optimizer = new OptimizerVisitor(this);
         // GRECLIPSE start
-        if (localTransformsToRunOnReconcile==null) {    
+        if (localTransformsToRunOnReconcile==null) {
     		this.localTransformsToRunOnReconcile = Collections.emptyList();
     	} else {
     		this.localTransformsToRunOnReconcile=new ArrayList<String>();
@@ -237,7 +237,7 @@ public class CompilationUnit extends ProcessingUnit {
         addPhaseOperation(classgen, Phases.CLASS_GENERATION);
         // GRECLIPSE: start: skip output phase
 	  // addPhaseOperation(output);
-        
+
         ASTTransformationVisitor.addPhaseOperations(this);
 		addPhaseOperation(new PrimaryClassNodeOperation() {
             @Override
@@ -272,7 +272,7 @@ public class CompilationUnit extends ProcessingUnit {
         }
         this.classgenCallback = null;
     }
-    
+
     // GRECLIPSE: new method: force the phase on
     public void ensureASTTransformVisitorAdded() {
     	ASTTransformationVisitor.addPhaseOperations(this);
@@ -285,8 +285,8 @@ public class CompilationUnit extends ProcessingUnit {
     public GroovyClassLoader getTransformLoader() {
         return transformLoader == null ? getClassLoader() : transformLoader;
     }
-    
-    
+
+
     public void addPhaseOperation(SourceUnitOperation op, int phase) {
         if (phase < 0 || phase > Phases.ALL) throw new IllegalArgumentException("phase " + phase + " is unknown");
         phaseOperations[phase].add(op);
@@ -300,7 +300,7 @@ public class CompilationUnit extends ProcessingUnit {
     public void addPhaseOperation(GroovyClassOperation op) {
         phaseOperations[Phases.OUTPUT].addFirst(op);
     }
-    
+
     public void addNewPhaseOperation(SourceUnitOperation op, int phase) {
         if (phase < 0 || phase > Phases.ALL) throw new IllegalArgumentException("phase " + phase + " is unknown");
         newPhaseOperations[phase].add(op);
@@ -518,7 +518,7 @@ public class CompilationUnit extends ProcessingUnit {
     public abstract static class ClassgenCallback {
         public abstract void call(ClassVisitor writer, ClassNode node) throws CompilationFailedException;
     }
-    
+
     /**
      * Sets a ClassgenCallback.  You can have only one, and setting
      * it to null removes any existing setting.
@@ -537,17 +537,17 @@ public class CompilationUnit extends ProcessingUnit {
 
         public abstract void call(ProcessingUnit context, int phase) throws CompilationFailedException;
     }
-    
+
     // GRECLIPSE: start
     public interface ProgressListener {
 		void parseComplete(int phase, String sourceUnitName);
-		void generateComplete(int phase, ClassNode classNode);    
+		void generateComplete(int phase, ClassNode classNode);
     }
-    
+
     private ProgressListener getProgressListener() {
     	return this.listener;
     }
-    
+
     public void setProgressListener(ProgressListener listener) {
     	this.listener = listener;
     }
@@ -610,14 +610,14 @@ public class CompilationUnit extends ProcessingUnit {
 
         errorCollector.failIfErrors();
     }
-    
+
     private void processPhaseOperations(int ph) {
         LinkedList ops = phaseOperations[ph];
         for (Object next : ops) {
             doPhaseOperation(next);
         }
     }
-    
+
     private void processNewPhaseOperations(int currPhase) {
         recordPhaseOpsInAllOtherPhases(currPhase);
         LinkedList currentPhaseNewOps = newPhaseOperations[currPhase];
@@ -631,9 +631,9 @@ public class CompilationUnit extends ProcessingUnit {
             recordPhaseOpsInAllOtherPhases(currPhase);
             currentPhaseNewOps = newPhaseOperations[currPhase];
         }
-        
+
     }
-    
+
     private void doPhaseOperation(Object operation) {
         if (operation instanceof PrimaryClassNodeOperation) {
             applyToPrimaryClassNodes((PrimaryClassNodeOperation) operation);
@@ -821,7 +821,7 @@ public class CompilationUnit extends ProcessingUnit {
         public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
 
             optimizer.visitClass(classNode, source); // GROOVY-4272: repositioned it here from staticImport
-            
+
             if(!classNode.isSynthetic()) {
                 GenericsVisitor genericsVisitor = new GenericsVisitor(source);
                 genericsVisitor.visitClass(classNode);
@@ -867,13 +867,13 @@ public class CompilationUnit extends ProcessingUnit {
             //
             // Run the generation and create the class (if required)
             //
-            // GRECLIPSE: if there are errors, don't generate code. 
+            // GRECLIPSE: if there are errors, don't generate code.
             // code gen can fail unexpectedly if there was an earlier error.
             if (!source.getErrorCollector().hasErrors()) {
             // end
 	            generator.visitClass(classNode);
-	
-	
+
+
 	            byte[] bytes = ((ClassWriter) visitor).toByteArray();
 	            /// GRECLIPSE: start: added classNode, sourceUnit
 	            /*old{
@@ -882,14 +882,14 @@ public class CompilationUnit extends ProcessingUnit {
 	            // newcode
 	            generatedClasses.add(new GroovyClass(classNode.getName(), bytes, classNode, source));
 			// end
-			
+
 	            //
 	            // Handle any callback that's been set
 	            //
 	            if (CompilationUnit.this.classgenCallback != null) {
 	                classgenCallback.call(visitor, classNode);
 	            }
-	
+
 	            //
 	            // Recurse for inner classes
 	            //
@@ -951,7 +951,7 @@ public class CompilationUnit extends ProcessingUnit {
 
     // GRECLIPSE: new field
     private boolean iterating = false;
-    
+
     /**
      * A loop driver for applying operations to all SourceUnits.
      * Automatically skips units that have already been processed
@@ -1008,7 +1008,7 @@ public class CompilationUnit extends ProcessingUnit {
             return false;
         }
     }
-   
+
     public abstract static class GroovyClassOperation {
         public abstract void call(GroovyClass gclass) throws CompilationFailedException;
     }
@@ -1021,7 +1021,7 @@ public class CompilationUnit extends ProcessingUnit {
         }
         return count;
     }
-    
+
     private int getSuperInterfaceCount(ClassNode element) {
         int count = 1;
         ClassNode[] interfaces = element.getInterfaces();
@@ -1030,13 +1030,13 @@ public class CompilationUnit extends ProcessingUnit {
         }
         return count;
     }
-    
+
     private List getPrimaryClassNodes(boolean sort) {
     	if (sort==true) {
     		List<ModuleNode> sortedModules = this.ast.getSortedModules();
     		if (sortedModules!=null) {
     			return sortedModules;
-    		} 
+    		}
     	}
     	// FIXASC (groovychange) rewritten
     	/*old{
@@ -1058,7 +1058,7 @@ public class CompilationUnit extends ProcessingUnit {
             unsorted.addAll(module.getClasses());
         }
         // FIXASC (groovychange) end
-        
+
         if (!sort) return unsorted;
 
 // GRECLIPSE: start: rewritten sort algorithm
@@ -1081,8 +1081,8 @@ public class CompilationUnit extends ProcessingUnit {
 
         List<ClassNode> sorted = getSorted(indexInterface, unsorted);
         sorted.addAll(getSorted(indexClass, unsorted));
-*/ 
-// newcode: 
+*/
+// newcode:
         // Sort them by how many types are in their hierarchy, but all interfaces first.
         // Algorithm:
         // Create a list of integers.  Each integer captures the index into the unsorted
@@ -1116,7 +1116,8 @@ public class CompilationUnit extends ProcessingUnit {
 // end
         return sorted;
     }
-    
+
+    @SuppressWarnings("unused")
     private List<ClassNode> getSorted(int[] index, List<ClassNode> unsorted) {
         List<ClassNode> sorted = new ArrayList<ClassNode>(unsorted.size());
         for (int i = 0; i < unsorted.size(); i++) {
@@ -1156,7 +1157,7 @@ public class CompilationUnit extends ProcessingUnit {
                 ClassNode classNode = (ClassNode) classNodes.next();
                 context = classNode.getModule().getContext();
                 // GRECLIPSE get to the bottom of this - why are operations running multiple times that should only run once?
-                if (context == null || context.phase < phase || (context.phase==phase && !context.phaseComplete)) {                
+                if (context == null || context.phase < phase || (context.phase==phase && !context.phaseComplete)) {
 
                     int offset = 1;
                     Iterator<InnerClassNode> iterator = classNode.getInnerClasses();
@@ -1164,8 +1165,8 @@ public class CompilationUnit extends ProcessingUnit {
                         iterator.next();
                         offset++;
                     }
-                    body.call(context, new GeneratorContext(this.ast, offset), classNode); 
-/****                1.8.6 seemed to adjust this code, who is impacted? can I remove our change below?      
+                    body.call(context, new GeneratorContext(this.ast, offset), classNode);
+/****                1.8.6 seemed to adjust this code, who is impacted? can I remove our change below?
                   body.call(context, new GeneratorContext(this.ast), classNode);
                     // GRECLIPSE: start
                     if (phase==Phases.CLASS_GENERATION && getProgressListener()!=null && body==phaseOperations[phase].getLast()) {
@@ -1213,7 +1214,7 @@ public class CompilationUnit extends ProcessingUnit {
             //
             try {
                 body.call(gclass);
-               
+
             } catch (CompilationFailedException e) {
                 // fall through, getErrorReporter().failIfErrors() will trigger
             } catch (NullPointerException npe) {
@@ -1234,13 +1235,13 @@ public class CompilationUnit extends ProcessingUnit {
     }
     // GRECLIPSE: start
     public void setResolveVisitor(ResolveVisitor resolveVisitor2) {
-		this.resolveVisitor = resolveVisitor2; 
+		this.resolveVisitor = resolveVisitor2;
 	}
 
 	public ResolveVisitor getResolveVisitor() {
 		return this.resolveVisitor;
 	}
-	
+
 	public String toString() {
 		if (sources==null || sources.isEmpty()) return super.toString();
 		Set s = sources.keySet();
@@ -1253,11 +1254,11 @@ public class CompilationUnit extends ProcessingUnit {
 	public boolean allowTransforms = true;
 	public boolean isReconcile = false;
 	public List<String> localTransformsToRunOnReconcile = null;
-	
+
 	/**
 	 * Slightly modifies the behaviour of the phases based on what the caller really needs.  Some invocations of the compilation
 	 * infrastructure don't need the bytecode, so we can skip creating it, they would rather have a more 'source like' AST.
-	 * 
+	 *
 	 * @param isReconcile is this a reconciling compile?
 	 */
 	public void tweak(boolean isReconcile) {
@@ -1274,5 +1275,5 @@ public class CompilationUnit extends ProcessingUnit {
 		this.isReconcile = isReconcile;
 	}
 	// end
-    
+
 }

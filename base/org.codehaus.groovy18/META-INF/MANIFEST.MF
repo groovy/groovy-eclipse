@@ -2,13 +2,13 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Groovy Runtime Plug-in
 Bundle-SymbolicName: org.codehaus.groovy
+Bundle-Vendor: Codehaus.org
 Bundle-Version: 1.8.6.qualifier
-Bundle-ClassPath: groovy-eclipse.jar,
- lib/ivy-2.2.0.jar,
+Bundle-ClassPath: eclipse-trace.jar,
+ groovy-eclipse.jar,
  lib/bsf-2.4.0.jar,
- lib/groovy-all-1.8.6.jar,
- eclipse-trace.jar
-Groovy-Runtime-Jars: groovy.jar
+ lib/ivy-2.2.0.jar,
+ lib/groovy-all-1.8.6.jar
 Export-Package: groovy.beans,
  groovy.grape,
  groovy.inspect,
@@ -80,6 +80,7 @@ Export-Package: groovy.beans,
  org.codehaus.groovy.ast.builder,
  org.codehaus.groovy.ast.expr,
  org.codehaus.groovy.ast.stmt,
+ org.codehaus.groovy.ast.tools,
  org.codehaus.groovy.binding,
  org.codehaus.groovy.bsf,
  org.codehaus.groovy.classgen,
@@ -107,6 +108,9 @@ Export-Package: groovy.beans,
  org.codehaus.groovy.tools.ast,
  org.codehaus.groovy.tools.groovydoc,
  org.codehaus.groovy.tools.groovydoc.gstringTemplates,
+ org.codehaus.groovy.tools.groovydoc.gstringTemplates.classLevel,
+ org.codehaus.groovy.tools.groovydoc.gstringTemplates.packageLevel,
+ org.codehaus.groovy.tools.groovydoc.gstringTemplates.topLevel,
  org.codehaus.groovy.tools.gse,
  org.codehaus.groovy.tools.javac,
  org.codehaus.groovy.tools.shell,
@@ -118,15 +122,14 @@ Export-Package: groovy.beans,
  org.codehaus.groovy.vmplugin,
  org.codehaus.groovy.vmplugin.v4,
  org.codehaus.groovy.vmplugin.v5,
- org.codehaus.groovy.vmplugin.v6
-Require-Bundle: org.apache.ant,
- org.junit,
- org.eclipse.core.runtime,
- org.apache.commons.logging;resolution:=optional,
- org.mozilla.javascript;resolution:=optional
-Bundle-Vendor: Codehaus.org
+ org.codehaus.groovy.vmplugin.v6,
+ org.codehaus.groovy.vmplugin.v7
+Require-Bundle: org.eclipse.core.runtime,
+ org.apache.ant;resolution:=optional,
+ org.junit;resolution:=optional
 Bundle-ActivationPolicy: lazy
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-Activator: org.codehaus.groovy.activator.GroovyActivator
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Groovy-Runtime-Jars: groovy.jar
 Eclipse-BuddyPolicy: registered
 Eclipse-BundleShape: dir

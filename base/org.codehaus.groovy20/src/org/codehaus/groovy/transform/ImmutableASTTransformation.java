@@ -429,7 +429,7 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
         // test below but have to be careful about using reflection directly.
         // new
         String s= fieldType.getName();
-        return fieldType.isPrimitive() || fieldType.isEnum() || 
+        return fieldType.isPrimitive() || fieldType.isEnum() ||
         		inImmutableList(fieldType.getName()) || knownImmutableClasses.contains(fieldType.getName());
         // end
     }
@@ -527,7 +527,6 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
     /**
      * This method exists to be binary compatible with 1.7 - 1.8.6 compiled code.
      */
-    @SuppressWarnings("Unchecked")
     public static Object checkImmutable(String className, String fieldName, Object field) {
         if (field == null || field instanceof Enum || inImmutableList(field.getClass().getName())) return field;
         if (field instanceof Collection) return DefaultGroovyMethods.asImmutable((Collection) field);
@@ -536,7 +535,6 @@ public class ImmutableASTTransformation extends AbstractASTTransformation {
         throw new RuntimeException(createErrorMessage(className, fieldName, typeName, "constructing"));
     }
 
-    @SuppressWarnings("Unchecked")
     public static Object checkImmutable(Class<?> clazz, String fieldName, Object field) {
     // TODO GRECLIPSE not sure this is going to work as it is calling reflection directly...
         Immutable immutable = (Immutable) clazz.getAnnotation(MY_CLASS);
