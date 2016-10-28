@@ -541,6 +541,11 @@ public class GroovyClassScope extends ClassScope {
 			return;
 		}
 		Map<String, TypeBinding> bindings = new HashMap<String, TypeBinding>();
+		if (!method.isStatic()) {
+			for (TypeVariableBinding v : method.declaringClass.typeVariables()) {
+				bindings.put(new String(v.sourceName), v);
+			}
+		}
 		for (TypeVariableBinding v : method.typeVariables) {
 			bindings.put(new String(v.sourceName), v);
 		}
@@ -556,7 +561,7 @@ public class GroovyClassScope extends ClassScope {
 				if (arguments[i] instanceof TypeVariableBinding) {
 					String name = new String(arguments[i].sourceName());
 					TypeBinding argument = bindings.get(name);
-					if (arguments[i].id != argument.id) {
+					if (arguments[i] != null && argument != null && arguments[i].id != argument.id) {
 						arguments[i] = argument;
 					}
 				}
