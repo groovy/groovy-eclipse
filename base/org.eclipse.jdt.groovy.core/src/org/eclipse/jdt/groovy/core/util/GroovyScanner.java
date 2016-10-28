@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import org.eclipse.jface.text.IDocument;
 
 /**
  * A wrapper around an Antlr Groovy Scanner, providing a convenient interface to tokenize a snippet of groovy code.
- * 
+ *
  * @author kdvolder
  */
 public class GroovyScanner {
@@ -68,7 +68,7 @@ public class GroovyScanner {
 	/**
 	 * Attempt to recover after a scanning error. We will recreate the Antlr lexer one character past the place where we got an
 	 * error and try to continue scanning from there.
-	 * 
+	 *
 	 * @throws BadLocationException
 	 */
 	public void recover(IDocument document) throws BadLocationException {
@@ -87,12 +87,10 @@ public class GroovyScanner {
 
 	/**
 	 * Convert antlr line / col position into a IDocument offset.
-	 * 
+	 *
 	 * @param document The reference document
 	 * @param line antlr style line number (starts at 1)
 	 * @param col antlr style col number (starts at 1)
-	 * @return
-	 * @throws BadLocationException
 	 */
 	public static int getOffset(IDocument document, int line, int col) throws BadLocationException {
 		return document.getLineOffset(line - 1) + col - 1;

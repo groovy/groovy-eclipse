@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+/*
+ * Copyright 2009-2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.eclipse.jdt.groovy.core.util;
 
 import java.lang.reflect.Constructor;
@@ -28,12 +32,12 @@ import org.eclipse.jdt.internal.core.LocalVariable;
 /**
  * @author Andrew Eisenberg
  * @created May 8, 2009
- * 
+ *
  *          common functionality for accessing private fields and methods
  */
 public class ReflectionUtils {
 
-	private static final Class[] NO_TYPES = new Class[0];
+	private static final Class<?>[] NO_TYPES = new Class[0];
 	private static final Object[] NO_ARGS = new Object[0];
 	private static Map<String, Field> fieldMap = new HashMap<String, Field>();
 
@@ -49,8 +53,8 @@ public class ReflectionUtils {
 			return field.get(target);
 		} catch (Exception e) {
 			Activator.getDefault().getLog()
-					.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error getting private field '" + fieldName //$NON-NLS-1$
-							+ "' on class " + clazz, e)); //$NON-NLS-1$
+					.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error getting private field '" + fieldName
+							+ "' on class " + clazz, e));
 		}
 		return null;
 	}
@@ -67,8 +71,8 @@ public class ReflectionUtils {
 			field.set(target, newValue);
 		} catch (Exception e) {
 			Activator.getDefault().getLog()
-					.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error setting private field '" + fieldName //$NON-NLS-1$
-							+ "' on class " + clazz, e)); //$NON-NLS-1$
+					.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error setting private field '" + fieldName
+							+ "' on class " + clazz, e));
 		}
 	}
 
@@ -84,8 +88,8 @@ public class ReflectionUtils {
 			return method.invoke(target, args);
 		} catch (Exception e) {
 			Activator.getDefault().getLog()
-					.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error executing private method '" + methodName //$NON-NLS-1$
-							+ "' on class " + clazz, e)); //$NON-NLS-1$
+					.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error executing private method '" + methodName
+							+ "' on class " + clazz, e));
 			return null;
 		}
 	}
@@ -145,8 +149,8 @@ public class ReflectionUtils {
 				return localVariable;
 			} catch (Exception e1) {
 				Activator.getDefault().getLog()
-						.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error creating local variable'" + varName //$NON-NLS-1$
-								+ "' in element " + parent.getHandleIdentifier(), e)); //$NON-NLS-1$
+						.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error creating local variable'" + varName
+								+ "' in element " + parent.getHandleIdentifier(), e));
 				return null;
 			}
 		}
@@ -165,8 +169,8 @@ public class ReflectionUtils {
 					.getDefault()
 					.getLog()
 					.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-							"Error executing private constructor for '" + clazz.getName() //$NON-NLS-1$
-									+ "' on class " + clazz, e)); //$NON-NLS-1$
+							"Error executing private constructor for '" + clazz.getName()
+									+ "' on class " + clazz, e));
 			return null;
 		}
 	}
