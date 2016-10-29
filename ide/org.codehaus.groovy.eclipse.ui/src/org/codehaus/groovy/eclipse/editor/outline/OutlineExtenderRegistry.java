@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
-import org.codehaus.groovy.eclipse.editor.GroovyTextTools;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;

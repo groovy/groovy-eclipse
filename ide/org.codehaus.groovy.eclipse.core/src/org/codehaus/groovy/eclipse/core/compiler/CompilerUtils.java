@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.core.compiler;
 
 import static org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion.UNSPECIFIED;
 import static org.eclipse.core.runtime.FileLocator.resolve;
+
 import groovy.lang.GroovySystem;
 
 import java.io.File;
@@ -42,7 +43,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
 import org.osgi.framework.Version;
 
 /**

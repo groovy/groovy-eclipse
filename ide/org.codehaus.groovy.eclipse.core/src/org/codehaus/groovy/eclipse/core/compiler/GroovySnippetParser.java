@@ -128,8 +128,6 @@ public class GroovySnippetParser {
         return problems;
     }
 
-
-    @SuppressWarnings("unchecked")
     public GroovySourceAST parseForCST(String source) {
         Hashtable<String, String> table = JavaCore.getOptions();
         table.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);

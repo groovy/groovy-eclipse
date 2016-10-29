@@ -17,8 +17,6 @@ package org.codehaus.groovy.eclipse.codeassist.requestor;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 

@@ -578,8 +578,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor,
 
     private void initializeImportCaches() {
         importCachesInitialized = true;
-        List<ImportNode> importPackages = (List<ImportNode>) module
-                .getStarImports();
+        List<ImportNode> importPackages = module.getStarImports();
         onDemandimports = new char[importPackages.size()+DEFAULT_GROOVY_ON_DEMAND_IMPORTS.length][];
         int i = 0;
         for (ImportNode importPackage : importPackages) {

@@ -159,7 +159,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
          VariableScope scope = getVariableScope(getContext().containingCodeBlock);
          while (scope != null) {
              for (Iterator<Variable> varIter = scope.getDeclaredVariablesIterator(); varIter.hasNext();) {
-                 Variable var = (Variable) varIter.next();
+                 Variable var = varIter.next();
                  boolean inBounds;
                  if (var instanceof Parameter) {
                      inBounds = ((Parameter) var).getEnd() < offset;
@@ -188,7 +188,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
             // use scope of the run method
             ClassNode clazz = (ClassNode) astNode;
             MethodNode method = clazz.getMethod("run", new Parameter[0]);
-            if (method != null && (BlockStatement) method.getCode() instanceof BlockStatement) {
+            if (method != null && method.getCode() instanceof BlockStatement) {
                 return ((BlockStatement) method.getCode()).getVariableScope();
             }
         }

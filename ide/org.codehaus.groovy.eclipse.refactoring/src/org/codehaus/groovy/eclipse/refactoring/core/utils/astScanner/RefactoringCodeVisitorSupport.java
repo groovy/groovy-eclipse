@@ -262,7 +262,7 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 
         Iterator<AnnotationNode> it = annotionMap.iterator();
         while (it.hasNext()) {
-            AnnotationNode an = (AnnotationNode) it.next();
+            AnnotationNode an = it.next();
             //skip builtin properties
             if (an.isBuiltIn()) continue;
             for (Entry<String, Expression> element : (Iterable<Entry<String, Expression>>) an.getMembers().entrySet()) {

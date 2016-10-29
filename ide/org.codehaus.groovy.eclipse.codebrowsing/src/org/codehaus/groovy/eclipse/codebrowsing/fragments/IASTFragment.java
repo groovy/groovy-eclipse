@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.codebrowsing.fragments;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.core.ICompilationUnit;
 
 /**
  * Represents a fragment of an AST. A fragment consists of a number of ASTNodes.
@@ -73,7 +72,7 @@ public interface IASTFragment {
      * @return lexical end of this fragment with any trailing whitespace removed
      */
     public int getTrimmedEnd(GroovyCompilationUnit unit);
-    
+
     /**
      * Convenience method for getEnd() - getStart()
      *
@@ -87,7 +86,7 @@ public interface IASTFragment {
      * @return
      */
     public int getTrimmedLength(GroovyCompilationUnit unit);
-    
+
     /**
      * The associated node is the parent node that contains all fragments. The
      * source location

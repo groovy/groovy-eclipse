@@ -62,39 +62,39 @@ import org.eclipse.jdt.internal.core.util.Util;
  *
  */
 public class CodeSelectRequestor implements ITypeRequestor {
-    
+
     private final ASTNode nodeToLookFor;
-    
+
     private IJavaElement requestedElement;
-    
+
     private ASTNode requestedNode;
-    
+
     private final GroovyProjectFacade project;
-    
+
     private final GroovyCompilationUnit unit;
-    
+
     public CodeSelectRequestor(ASTNode nodeToLookFor, GroovyCompilationUnit unit) {
         this.nodeToLookFor = nodeToLookFor;
         this.unit = unit;
         this.project = new GroovyProjectFacade(unit);
     }
-    
+
 
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
             IJavaElement enclosingElement) {
-        
+
         // check to see if the enclosing element does not enclose the nodeToLookFor
         if (! interestingElement(enclosingElement)) {
             return VisitStatus.CANCEL_MEMBER;
         }
-        
+
         if (node instanceof ImportNode) {
             node = ((ImportNode) node).getType();
             if (node == null) {
                 return VisitStatus.CONTINUE;
             }
         }
-        
+
         if (doTest(node)) {
             requestedNode = result.declaration;
             if (requestedNode instanceof ClassNode) {
@@ -104,7 +104,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 if (result.declaration instanceof VariableExpression) {
                     // look in the local scope
                     VariableExpression var = (VariableExpression) result.declaration;
-                    requestedElement = 
+                    requestedElement =
                         createLocalVariable(result, enclosingElement, var);
                 } else if (result.declaration instanceof Parameter) {
                     // look in the local scope
@@ -115,8 +115,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                         position = nodeToLookFor.getStart()-1;
                     }
                     try {
-                        requestedElement = 
-                            createLocalVariable(result, (JavaElement) unit.getElementAt(position), var);
+                        requestedElement = createLocalVariable(result, unit.getElementAt(position), var);
                     } catch (JavaModelException e) {
                         Util.log(e, "Problem getting element at " + position + " for file " + unit.getElementName());
                     }
@@ -137,7 +136,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                                 type = null;
                             }
                         }
-                        
+
                         if (type != null) {
                             try {
                                 // find the requested java element
@@ -159,14 +158,14 @@ public class CodeSelectRequestor implements ITypeRequestor {
 
     /**
      * @param enclosingElement
-     * @return true iff enclosingElement's source location contains the source location of {@link #nodeToLookFor} 
+     * @return true iff enclosingElement's source location contains the source location of {@link #nodeToLookFor}
      */
     private boolean interestingElement(IJavaElement enclosingElement) {
         // the clinit is always interesting since the clinit contains static initializers
         if (enclosingElement.getElementName().equals("<clinit>")) {
             return true;
         }
-        
+
         if (enclosingElement instanceof ISourceReference) {
             try {
                 ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();
@@ -217,12 +216,12 @@ public class CodeSelectRequestor implements ITypeRequestor {
         } else if (type.getTypeRoot() != null) {
             if (declaration.getEnd() > 0) {
                 // GRECLIPSE-1233 can't use getEltAt because of default parameters.
-                // instead, just iterate through children.  Method variants 
+                // instead, just iterate through children.  Method variants
                 // are always after the original method
                 IJavaElement[] children = type.getChildren();
                 int start = declaration.getStart();
                 int end = declaration.getEnd();
-                String name; 
+                String name;
                 if (declaration instanceof MethodNode) {
                     name = ((MethodNode) declaration).getName();
                     if (name.equals("<init>")) {
@@ -266,7 +265,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     maybeRequested = type;
                 }
             }
-            
+
         }
         return maybeRequested;
     }
@@ -280,17 +279,17 @@ public class CodeSelectRequestor implements ITypeRequestor {
         if (declaration instanceof PropertyNode && maybeRequested instanceof IMethod) {
             // the field associated with this property does not exist, use the method instead
             String getterName = maybeRequested.getElementName();
-            MethodNode maybeDeclaration = (MethodNode) declaration.getDeclaringClass().getMethods(getterName).get(0);
+            MethodNode maybeDeclaration = declaration.getDeclaringClass().getMethods(getterName).get(0);
             declaration = maybeDeclaration == null ? declaration : maybeDeclaration;
         }
         if (declaration instanceof ConstructorNode && maybeRequested.getElementType() == IJavaElement.TYPE) {
             // implicit default constructor. use type instead
             declaration = declaration.getDeclaringClass();
         }
-        
+
         String uniqueKey = createUniqueKey(declaration, result.type, result.declaringType, maybeRequested);
         IJavaElement candidate;
-        
+
         // Create the Groovy Resolved Element, which is like a resolved element, but contains extraDoc, as
         // well as the inferred declaration (which may not be the same as the actual declaration)
         switch (maybeRequested.getElementType()) {
@@ -327,14 +326,14 @@ public class CodeSelectRequestor implements ITypeRequestor {
             IJavaElement enclosingElement, Variable var) {
         ASTNode node = (ASTNode) var;
         ClassNode type = result.type != null ? result.type : var.getType();
-        
+
         int start;
         if (node instanceof Parameter) {
             start = ((Parameter) node).getNameStart();
         } else {
             start = node.getStart();
         }
-        
+
         // be compatible between 3.6 and 3.7+
         return ReflectionUtils.createLocalVariable(enclosingElement, var.getName(), start, Signature.createTypeSignature(createGenericsAwareName(type, true), false));
     }
@@ -360,7 +359,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         } else {
             sbArr = null;
         }
-            
+
         if (useSimple) {
             sb.append(node.getNameWithoutPackage());
         } else {
@@ -390,11 +389,11 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return sb.toString();
     }
 
-    
+
     /**
      * Creates the unique key for classes, fields and methods
      * @param node
-     * @param maybeRequested 
+     * @param maybeRequested
      * @return
      */
     private String createUniqueKey(AnnotatedNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType, IJavaElement maybeRequested) {
@@ -440,7 +439,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         sb.append(createUniqueKeyForResolvedClass(resolvedType));
         return sb;
     }
-    
+
     private StringBuilder createUniqueKeyForField(FieldNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType) {
         StringBuilder sb = new StringBuilder();
         sb.append(createUniqueKeyForClass(node.getDeclaringClass(), resolvedDeclaringType));
@@ -448,7 +447,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         sb.append(createUniqueKeyForResolvedClass(resolvedType));
         return sb;
     }
-    
+
     private StringBuilder createUniqueKeyForGeneratedAccessor(MethodNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType, IField actualField) {
         StringBuilder sb = new StringBuilder();
         sb.append(createUniqueKeyForClass(node.getDeclaringClass(), resolvedDeclaringType));
@@ -457,7 +456,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         sb.append(createUniqueKeyForResolvedClass(typeOfField));
         return sb;
     }
-    
+
     private StringBuilder createUniqueKeyForResolvedClass(ClassNode resolvedType) {
         if (resolvedType.getName().equals("java.lang.Void")) {
             resolvedType = VariableScope.VOID_CLASS_NODE;
@@ -465,7 +464,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return new StringBuilder(Signature.createTypeSignature(createGenericsAwareName(resolvedType, false/*fully qualified*/), true/*must resolve*/).replace('.', '/'));
     }
     /**
-     * tries to resolve any type parameters in unresolvedType based on those in resolvedDeclaringType 
+     * tries to resolve any type parameters in unresolvedType based on those in resolvedDeclaringType
      * @param unresolvedType unresolved type whose type parameters need to be resolved
      * @param resolvedDeclaringType the resolved type that is the context in which to resolve it.
      * @return
@@ -475,7 +474,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
     	ClassNode resolvedType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(unresolvedType));
     	return createUniqueKeyForResolvedClass(resolvedType);
     }
-    	
+
     private boolean doTest(ASTNode node) {
         return node.getClass() == nodeToLookFor.getClass() && nodeToLookFor.getStart() == node.getStart() && nodeToLookFor.getEnd() == node.getEnd();
     }
@@ -495,7 +494,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
      * @param text
      * @param parameters
      * @return
-     * @throws JavaModelException 
+     * @throws JavaModelException
      */
     private IJavaElement findElement(IType type, String text, Parameter[] parameters) throws JavaModelException {
         if (text.equals(type.getElementName())) {
@@ -504,13 +503,13 @@ public class CodeSelectRequestor implements ITypeRequestor {
         if (text.equals("<init>")) {
             text = type.getElementName();
         }
-        
+
         // check for methods first, then fields, and then getter/setter variants of the name
         // these values might be null
         String setMethod = AccessorSupport.SETTER.createAccessorName(text);
         String getMethod = AccessorSupport.GETTER.createAccessorName(text);
         String isMethod = AccessorSupport.ISSER.createAccessorName(text);
-        
+
         IMethod closestMatch = null;
         methodsIteration : for (IMethod method : type.getMethods()) {
             if (method.getElementName().equals(text)) {
@@ -532,7 +531,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         if (closestMatch != null) {
             return closestMatch;
         }
-        
+
         IField field = type.getField(text);
         String prefix;
         if (!field.exists() && (prefix = extractPrefix(text)) != null) {
@@ -543,7 +542,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         if (field.exists()) {
             return field;
         }
-        
+
         for (IMethod method : type.getMethods()) {
             if (method.getElementName().equals(setMethod) ||
                     method.getElementName().equals(getMethod) ||
@@ -553,7 +552,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
         return null;
     }
-    
+
     private String removeGenerics(String maybeMethodParameterName) {
         int genericStart = maybeMethodParameterName.indexOf("<");
         if (genericStart > 0) {
@@ -563,7 +562,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
         return maybeMethodParameterName;
     }
-    
+
     private String extractPrefix(String text) {
         if (text.startsWith("is")) {
             if (text.length() > 2) {
@@ -585,7 +584,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
     public ASTNode getRequestedNode() {
         return requestedNode;
     }
-    
+
     public IJavaElement getRequestedElement() {
         return requestedElement;
     }

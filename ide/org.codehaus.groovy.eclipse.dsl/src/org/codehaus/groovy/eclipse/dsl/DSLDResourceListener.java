@@ -25,19 +25,18 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.JavaCore;
 
 /**
  * Handles updates and changes of DSLD files
  * Things that need to get handled:
- * 
+ *
  * Project deletion or close: flush the context
  * Project creation, or groovy nature added: refresh DSLDs for project
  * DSLD script added: update that script from context
  * DSLD script deleted: remove that script from context
  * DSLD script changed: first remove and then re-add to context
- * 
+ *
  * @author andrew
  * @created Nov 25, 2010
  */

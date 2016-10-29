@@ -14,7 +14,6 @@ import java.util.List;
 
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
-import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 
 /**
  * Interface representing a contribution to a set of DSLD {@link IPointcut}s.

@@ -17,7 +17,6 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
@@ -38,7 +37,7 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
  * Uses the current set of DSLs for this project to look up types
- * 
+ *
  * @author andrew
  * @created Nov 17, 2010
  */
@@ -53,18 +52,18 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
     private Set<String> disabledScriptsAsSet;
     private ModuleNode module;
     private JDTResolver resolver;
-    
+
     public void setResolverInformation(ModuleNode module, JDTResolver resolver) {
         this.module = module;
         this.resolver = resolver;
     }
 
     public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
-        
+
         // run referesh dependencies synchronously if DSLD store doesn't exist yet
         final IProject project = unit.getJavaProject().getProject();
         contextStoreManager.ensureInitialized(project, true);
-        
+
         disabledScriptsAsSet = DSLPreferences.getDisabledScriptsAsSet();
         try {
             pattern = new GroovyDSLDContext(unit, module, resolver);
@@ -92,7 +91,7 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
         }
         return null;
     }
-    
+
     /**
      * setDelegateType must be called even for empty block statements
      */
@@ -107,14 +106,14 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
         }
         // no need to return anything.  setDelegateType is called and evaluated implicitly
     }
-    
-    
+
+
     @Override
     protected TypeConfidence confidence() {
         return TypeConfidence.INFERRED;
     }
 
-    
+
     /*
      * Checks explicitly if the confidence decision should be made later
      */

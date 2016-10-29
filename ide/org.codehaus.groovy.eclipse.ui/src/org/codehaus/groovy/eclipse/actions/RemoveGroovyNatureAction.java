@@ -32,7 +32,6 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
@@ -99,7 +98,7 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
             for (Iterator<?> iter = newSelection.iterator(); iter.hasNext();) {
                 Object object = iter.next();
                 if (object instanceof IAdaptable) {
-                    IProject project = (IProject) ((IAdaptable)object).getAdapter(IProject.class);
+                    IProject project = ((IAdaptable)object).getAdapter(IProject.class);
                     if(project != null) {
                         newSelected.add(project);
                     } else {

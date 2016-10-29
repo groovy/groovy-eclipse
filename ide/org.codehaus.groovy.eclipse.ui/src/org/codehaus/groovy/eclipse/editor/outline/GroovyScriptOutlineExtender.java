@@ -113,7 +113,7 @@ class GroovyScriptOCompilationUnit extends OCompilationUnit {
                 if (elt.getElementName().equals(scriptName)) {
                     candidate = (IType) elt;
                 } else if (elt instanceof IJavaElement) {
-                    fakeChildren.add((IJavaElement) elt);
+                    fakeChildren.add(elt);
                 }
             }
             scriptType = candidate;
@@ -128,7 +128,7 @@ class GroovyScriptOCompilationUnit extends OCompilationUnit {
                         if (isRunMethod(scriptElt) || isMainMethod(scriptElt) || isConstructor(scriptElt)) {
                             continue;
                         }
-                        fakeChildren.add((IMember) scriptElt);
+                        fakeChildren.add(scriptElt);
                     }
                 }
 
@@ -228,7 +228,7 @@ class GroovyScriptOCompilationUnit extends OCompilationUnit {
 class GroovyScriptVariable extends OField {
 
     /**
-     * 
+     *
      */
     private static final String NO_NAME = "no name";
     private static final String DEF_SIGNATURE = "Qdef;";

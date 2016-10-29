@@ -12,10 +12,8 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
@@ -50,7 +48,7 @@ public class EnclosingCallNamePointcut extends AbstractPointcut {
             return matchOnPointcutArgument((IPointcut) firstArgument, pattern, asCallList(enclosing));
         }
     }
-    
+
     private List<String> asCallList(List<CallAndType> enclosing) {
         List<String> types = new ArrayList<String>(enclosing.size());
         for (CallAndType callAndType : enclosing) {

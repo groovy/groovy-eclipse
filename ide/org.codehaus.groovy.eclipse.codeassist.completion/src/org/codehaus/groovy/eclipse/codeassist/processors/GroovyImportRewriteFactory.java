@@ -81,7 +81,7 @@ public class GroovyImportRewriteFactory {
 
     public static int getAstLevel() {
         if (astlevel == -1) {
-            astlevel = AST.JLS3;
+            astlevel = /*AST.JLS3*/3;
             try {
                 AST.class.getDeclaredField("JLS8");
                 astlevel = 8;

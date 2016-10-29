@@ -131,7 +131,7 @@ public class StatementFinder extends CodeVisitorSupport {
 		List<String> methods = new ArrayList<String>();
         if (actualSelectedDeclaration != null) {
             ClassNode declaringClass = actualSelectedDeclaration.getDeclaringClass();
-            for (MethodNode method : (List<MethodNode>) declaringClass.getMethods()) {
+            for (MethodNode method : declaringClass.getMethods()) {
 				methods.add(method.getName());
 			}
 		}
@@ -164,14 +164,14 @@ public class StatementFinder extends CodeVisitorSupport {
 		postSelection = new ArrayList<Statement>();
 
 		if (rootNode != null) {
-			for (ClassNode cl : (List<ClassNode>) rootNode.getClasses()) {
-				for (ConstructorNode method : (List<ConstructorNode>) cl.getDeclaredConstructors()) {
+			for (ClassNode cl : rootNode.getClasses()) {
+				for (ConstructorNode method : cl.getDeclaredConstructors()) {
 					scanMethod(cl, method);
 				}
-				for (MethodNode method : (List<MethodNode>) cl.getMethods()) {
+				for (MethodNode method : cl.getMethods()) {
 					scanMethod(cl, method);
 				}
-				for (FieldNode field : (List<FieldNode>) cl.getFields()) {
+				for (FieldNode field : cl.getFields()) {
 				    scanField(cl, field);
 				}
 
@@ -203,7 +203,7 @@ public class StatementFinder extends CodeVisitorSupport {
 
 	@Override
     public void visitBlockStatement(BlockStatement block) {
-		for (Statement statement : (List<Statement>) block.getStatements()) {
+		for (Statement statement : block.getStatements()) {
             if (testSelection(selection, statement, SelectionTestKind.SELECTION_COVERS)) {
 				inSelection.add(statement);
 				if (internalInLoopOrClosure) {

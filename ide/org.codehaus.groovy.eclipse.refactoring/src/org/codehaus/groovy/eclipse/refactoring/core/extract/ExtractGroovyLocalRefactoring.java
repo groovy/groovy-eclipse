@@ -393,6 +393,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         // insert at position before statement
 
         // find the longest matching parent prefix
+        @SuppressWarnings("unchecked")
         List<IASTFragment>[] parentsStack = new List[matchingExpressions.size()];
         int i = 0;
         IASTFragment firstExpression = null;
@@ -440,7 +441,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
             insertLoc = -1;
             List<IASTFragment> firstParentStack = getParentStack(firstExpression);
             for (int j = 1; j < firstParentStack.size(); j++) {
-				if (firstParentStack.get(j).getAssociatedNode() == firstCommonStatement) {
+                if (firstParentStack.get(j).getAssociatedNode() == firstCommonStatement) {
                     insertLoc = firstParentStack.get(j - 1).getStart();
                     break;
                 }
@@ -509,7 +510,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     private boolean allStacksEqual(List<IASTFragment>[] parentsStack, int i) {
         IASTFragment candidate = parentsStack[0].get(parentsStack[0].size() - 1 - i);
         for (List<IASTFragment> stack : parentsStack) {
-			if (stack.get(stack.size() - 1 - i).getAssociatedNode() != candidate.getAssociatedNode()) {
+            if (stack.get(stack.size() - 1 - i).getAssociatedNode() != candidate.getAssociatedNode()) {
                 return false;
             }
         }
@@ -530,21 +531,20 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         return parentStack;
     }
 
-    private boolean isLiteralNodeSelected() throws JavaModelException {
-        ASTNode expr = getSelectedFragment().getAssociatedExpression();
-        if (expr == null) {
-            return false;
-        }
-        if (expr instanceof ConstantExpression) {
-            ConstantExpression constExpr = (ConstantExpression) expr;
-            return constExpr.isEmptyStringExpression() || constExpr.isFalseExpression() || constExpr.isNullExpression()
-                    || constExpr.isTrueExpression() || constExpr.getValue() instanceof Number
-                    || unit.getContents()[constExpr.getStart()] == '"';
-        } else {
-            return false;
-        }
-    }
-
+//    private boolean isLiteralNodeSelected() throws JavaModelException {
+//        ASTNode expr = getSelectedFragment().getAssociatedExpression();
+//        if (expr == null) {
+//            return false;
+//        }
+//        if (expr instanceof ConstantExpression) {
+//            ConstantExpression constExpr = (ConstantExpression) expr;
+//            return constExpr.isEmptyStringExpression() || constExpr.isFalseExpression() || constExpr.isNullExpression()
+//                    || constExpr.isTrueExpression() || constExpr.getValue() instanceof Number
+//                    || unit.getContents()[constExpr.getStart()] == '"';
+//        } else {
+//            return false;
+//        }
+//    }
 
     private String createExpressionText(String prefix, RefactoringStatus status) {
         StringBuilder sb = new StringBuilder();
@@ -670,115 +670,115 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
                 unit.getJavaProject(), 0, excludedNames, true);
     }
 
-	class GuessBaseNameVisitor extends FragmentVisitor {
+    class GuessBaseNameVisitor extends FragmentVisitor {
 
-		StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
 
-		String getGuessedName() {
-			String name = sb.toString();
+        String getGuessedName() {
+            String name = sb.toString();
 
-			if (name.length() == 0) {
-				name = "local";
-			} else {
-				for (int i = 0; i < KNOWN_METHOD_NAME_PREFIXES.length; i++) {
-					String curr = KNOWN_METHOD_NAME_PREFIXES[i];
-					if (name.startsWith(curr)) {
-						if (name.equals(curr)) {
-							return "local"; // don't suggest 'get' as variable
-											// name
-						} else if (Character.isUpperCase(name.charAt(curr.length()))) {
-							return name.substring(curr.length());
-						}
-					}
-				}
+            if (name.length() == 0) {
+                name = "local";
+            } else {
+                for (int i = 0; i < KNOWN_METHOD_NAME_PREFIXES.length; i++) {
+                    String curr = KNOWN_METHOD_NAME_PREFIXES[i];
+                    if (name.startsWith(curr)) {
+                        if (name.equals(curr)) {
+                            return "local"; // don't suggest 'get' as variable
+                                            // name
+                        } else if (Character.isUpperCase(name.charAt(curr.length()))) {
+                            return name.substring(curr.length());
+                        }
+                    }
+                }
 
-				try {
-					Integer.parseInt(name);
-					name = "_" + name;
-				} catch (NumberFormatException e) {
-					// ignore
-				}
+                try {
+                    Integer.parseInt(name);
+                    name = "_" + name;
+                } catch (NumberFormatException e) {
+                    // ignore
+                }
 
             }
             // make first char lower case
             if (name.length() > 0) {
                 name = "" + Character.toLowerCase(name.charAt(0)) + name.substring(1);
             }
-			return name;
-		}
+            return name;
+        }
 
-		@Override
-		public boolean visit(BinaryExpressionFragment fragment) {
-			String nextPart = nameFromExpression(fragment.getAssociatedExpression());
-			if (nextPart != null) {
-				sb.append(nextPart);
-			}
-			return true;
-		}
+        @Override
+        public boolean visit(BinaryExpressionFragment fragment) {
+            String nextPart = nameFromExpression(fragment.getAssociatedExpression());
+            if (nextPart != null) {
+                sb.append(nextPart);
+            }
+            return true;
+        }
 
-		@Override
-		public boolean visit(MethodCallFragment fragment) {
-			String nextPart = nameFromExpression(fragment.getAssociatedExpression());
-			if (nextPart != null) {
-				sb.append(nextPart);
-			}
-			return true;
-		}
+        @Override
+        public boolean visit(MethodCallFragment fragment) {
+            String nextPart = nameFromExpression(fragment.getAssociatedExpression());
+            if (nextPart != null) {
+                sb.append(nextPart);
+            }
+            return true;
+        }
 
-		@Override
-		public boolean visit(PropertyExpressionFragment fragment) {
-			String nextPart = nameFromExpression(fragment.getAssociatedExpression());
-			if (nextPart != null) {
-				sb.append(nextPart);
-			}
-			return true;
-		}
+        @Override
+        public boolean visit(PropertyExpressionFragment fragment) {
+            String nextPart = nameFromExpression(fragment.getAssociatedExpression());
+            if (nextPart != null) {
+                sb.append(nextPart);
+            }
+            return true;
+        }
 
-		@Override
-		public boolean visit(SimpleExpressionASTFragment fragment) {
-			String nextPart = nameFromExpression(fragment.getAssociatedExpression());
-			if (nextPart != null) {
-				sb.append(nextPart);
-			}
-			return true;
-		}
+        @Override
+        public boolean visit(SimpleExpressionASTFragment fragment) {
+            String nextPart = nameFromExpression(fragment.getAssociatedExpression());
+            if (nextPart != null) {
+                sb.append(nextPart);
+            }
+            return true;
+        }
 
-		private String nameFromExpression(Expression expr) {
-			String name = null;
-			if (expr instanceof org.codehaus.groovy.ast.expr.CastExpression) {
-				expr = ((CastExpression) expr).getExpression();
-			}
+        private String nameFromExpression(Expression expr) {
+            String name = null;
+            if (expr instanceof org.codehaus.groovy.ast.expr.CastExpression) {
+                expr = ((CastExpression) expr).getExpression();
+            }
 
-			if (expr instanceof ConstantExpression) {
-				name = ((ConstantExpression) expr).getText();
-			} else if (expr instanceof MethodCallExpression) {
-				name = ((MethodCallExpression) expr).getMethodAsString();
-			} else if (expr instanceof StaticMethodCallExpression) {
-				name = ((StaticMethodCallExpression) expr).getMethod();
-			} else if (expr instanceof BinaryExpression) {
+            if (expr instanceof ConstantExpression) {
+                name = ((ConstantExpression) expr).getText();
+            } else if (expr instanceof MethodCallExpression) {
+                name = ((MethodCallExpression) expr).getMethodAsString();
+            } else if (expr instanceof StaticMethodCallExpression) {
+                name = ((StaticMethodCallExpression) expr).getMethod();
+            } else if (expr instanceof BinaryExpression) {
                 name = nameFromExpression(((BinaryExpression) expr).getLeftExpression())
-						+ nameFromExpression(((BinaryExpression) expr).getRightExpression());
-			} else if (expr instanceof Variable) {
-				name = ((Variable) expr).getName();
-			}
+                        + nameFromExpression(((BinaryExpression) expr).getRightExpression());
+            } else if (expr instanceof Variable) {
+                name = ((Variable) expr).getName();
+            }
 
             // always capitalize
             // the first character will be made lower case later
             if (name != null && name.length() > 0) {
                 name = "" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
             }
-			return name;
-		}
+            return name;
+        }
 
-	}
+    }
 
-	private String getBaseNameFromExpression(IASTFragment assignedFragment) {
-		if (assignedFragment == null) {
-			return "local";
-		}
-		GuessBaseNameVisitor visitor = new GuessBaseNameVisitor();
-		assignedFragment.accept(visitor);
-		return visitor.getGuessedName();
+    private String getBaseNameFromExpression(IASTFragment assignedFragment) {
+        if (assignedFragment == null) {
+            return "local";
+        }
+        GuessBaseNameVisitor visitor = new GuessBaseNameVisitor();
+        assignedFragment.accept(visitor);
+        return visitor.getGuessedName();
     }
 
 

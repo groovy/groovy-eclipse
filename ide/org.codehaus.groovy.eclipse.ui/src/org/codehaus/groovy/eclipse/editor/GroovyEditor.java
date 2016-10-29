@@ -732,7 +732,7 @@ public class GroovyEditor extends CompilationUnitEditor {
             if (reference instanceof IImportDeclaration && moveCursor) {
                 int offset;
                 int length;
-                ISourceRange range = ((ISourceReference) reference).getSourceRange();
+                ISourceRange range = reference.getSourceRange();
                 String content= reference.getSource();
                 if (content != null) {
                     int start = Math.max(content.indexOf("import") + 6, 7); //$NON-NLS-1$

@@ -49,5 +49,4 @@ public class ExtractMethodPage extends UserInputWizardPage {
         control.setLayout(baseLayout);
         setControl(control);
     }
-
 }

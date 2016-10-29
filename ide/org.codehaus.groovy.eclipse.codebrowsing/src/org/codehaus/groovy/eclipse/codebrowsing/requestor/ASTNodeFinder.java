@@ -29,6 +29,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
+import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
@@ -55,7 +56,6 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
 import org.codehaus.groovy.runtime.GeneratedClosure;
-import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 
 public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
@@ -287,15 +287,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
         }
 
         // visit inner classes
-        // getInnerClasses() does not exist in the 1.6 stream, so must access reflectively
-        Iterator<ClassNode> innerClasses;
-        try {
-            innerClasses = (Iterator<ClassNode>)
-                    ReflectionUtils.throwableExecutePrivateMethod(ClassNode.class, "getInnerClasses", new Class<?>[0], node, new Object[0]);
-        } catch (Exception e) {
-            // can ignore.
-            innerClasses = null;
-        }
+        Iterator<InnerClassNode> innerClasses = node.getInnerClasses();
         if (innerClasses != null) {
             while (innerClasses.hasNext()) {
                 ClassNode inner = innerClasses.next();
@@ -335,7 +327,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             throw candidate;
         }
     }
-    
+
     /**
      * Visits a class node with potential type parameters
      * @param node
@@ -414,7 +406,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             }
         }
     }
-    
+
     @Override
     public void visitBinaryExpression(BinaryExpression expression) {
         super.visitBinaryExpression(expression);
@@ -438,7 +430,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
 
     /**
      * Check if the body of the node covers the selection
-     * 
+     *
      * This variant of the method allowsyou to check for one node
      * but target another one
      *
@@ -453,7 +445,7 @@ public class ASTNodeFinder extends ClassCodeVisitorSupport {
             checkGenerics((ClassNode) checkNode);
         }
     }
-    
+
     /**
      * Check if the name of the node covers the selection
      *

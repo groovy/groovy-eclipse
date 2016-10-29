@@ -71,7 +71,7 @@ public class InferParameterAndReturnTypesRequestor implements ITypeRequestor {
             } else if (node instanceof VariableExpression) {
                 Variable accessedVar = ((VariableExpression) node).getAccessedVariable();
                 if (inferredTypes.containsKey(accessedVar)) {
-                    inferredTypes.put((Variable) accessedVar, extractType(result));
+                    inferredTypes.put(accessedVar, extractType(result));
                 }
             }
         }

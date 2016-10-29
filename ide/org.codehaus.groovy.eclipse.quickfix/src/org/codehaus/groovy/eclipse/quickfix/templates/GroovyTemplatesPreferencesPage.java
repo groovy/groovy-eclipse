@@ -1,6 +1,6 @@
 /*
  * Copyright 2011 SpringSource, a division of VMware, Inc
- * 
+ *
  * andrew - Initial API and implementation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -56,7 +56,7 @@ public class GroovyTemplatesPreferencesPage extends TemplatePreferencePage {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.eclipse.jface.preference.IPreferencePage#performOk()
      */
     public boolean performOk() {
@@ -67,7 +67,7 @@ public class GroovyTemplatesPreferencesPage extends TemplatePreferencePage {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.eclipse.ui.texteditor.templates.TemplatePreferencePage#isShowFormatterSetting()
      */
     protected boolean isShowFormatterSetting() {
@@ -112,6 +112,4 @@ public class GroovyTemplatesPreferencesPage extends TemplatePreferencePage {
 
         return viewer;
     }
-
-
 }

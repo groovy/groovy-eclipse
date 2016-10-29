@@ -30,9 +30,9 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * Property tester for testing to see if a groovy file has a main 
+ * Property tester for testing to see if a groovy file has a main
  * or is a test case.
- * 
+ *
  * @author David Kerber
  */
 public class GroovyResourcePropertyTester extends PropertyTester {
@@ -42,8 +42,8 @@ public class GroovyResourcePropertyTester extends PropertyTester {
 	 */
 	public static final String hasMain = "hasMain";
 	public static final String isScript = "isScript";
-	
-	
+
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.expressions.IPropertyTester#test(Object receiver, String property, Object[] args, Object expectedValue)
 	 */
@@ -53,9 +53,9 @@ public class GroovyResourcePropertyTester extends PropertyTester {
 		if (hasMain.equals(property) || isScript.equals(property)) {
 			if(receiver instanceof IAdaptable) {
 				try {
-				    ICompilationUnit unit = (ICompilationUnit) ((IAdaptable) receiver).getAdapter(ICompilationUnit.class);
+				    ICompilationUnit unit = ((IAdaptable) receiver).getAdapter(ICompilationUnit.class);
 				    if (unit == null) {
-	                    IFile file = (IFile) ((IAdaptable) receiver).getAdapter(IFile.class);
+	                    IFile file = ((IAdaptable) receiver).getAdapter(IFile.class);
 				        if (file != null && Util.isJavaLikeFileName(file.getName())) {
 				            unit = JavaCore.createCompilationUnitFrom(file);
 				        }
@@ -71,12 +71,12 @@ public class GroovyResourcePropertyTester extends PropertyTester {
 					// passed in non-JavaLike file name
                 } catch (JavaModelException e) {
                     // can ignore situations when trying to find types that are not on the classpath
-                    if (e.getStatus() != null && 
+                    if (e.getStatus() != null &&
                             e.getStatus().getCode() != IJavaModelStatusConstants.ELEMENT_NOT_ON_CLASSPATH) {
                         GroovyCore.logException("Exception when testing for main methods " + receiver, e);
                     }
                 }
-				
+
 			}
 		}
 		return returnValue;

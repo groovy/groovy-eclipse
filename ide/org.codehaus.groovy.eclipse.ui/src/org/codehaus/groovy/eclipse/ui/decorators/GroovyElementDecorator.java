@@ -28,13 +28,13 @@ public class GroovyElementDecorator implements ILightweightLabelDecorator {
 	 */
 	public void decorate(Object element, IDecoration decoration) {
 	    if (element instanceof IAdaptable) {
-	        IMember member = (IMember) ((IAdaptable) element).getAdapter(IMember.class);
+	        IMember member = ((IAdaptable) element).getAdapter(IMember.class);
 	        if (member != null) {
 	            try {
 	                ICompilationUnit unit = member.getCompilationUnit();
 	                if (unit != null) {
 	                    IResource resource = unit.getResource();
-                        if (resource != null && 
+                        if (resource != null &&
 	                            ContentTypeUtils.isGroovyLikeFileName(resource.getName())) {
                             decoration.addOverlay(
                                     GroovyPluginImages.DESC_GROOVY_OVERLAY,

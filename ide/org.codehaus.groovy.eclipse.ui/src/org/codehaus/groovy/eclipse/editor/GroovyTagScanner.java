@@ -24,7 +24,6 @@ import org.eclipse.jdt.internal.ui.text.CombinedWordRule;
 import org.eclipse.jdt.internal.ui.text.CombinedWordRule.WordMatcher;
 import org.eclipse.jdt.internal.ui.text.JavaWhitespaceDetector;
 import org.eclipse.jdt.internal.ui.text.JavaWordDetector;
-import org.eclipse.jdt.internal.ui.text.java.JavaCodeScanner;
 import org.eclipse.jdt.ui.text.IColorManager;
 import org.eclipse.jface.text.rules.ICharacterScanner;
 import org.eclipse.jface.text.rules.IRule;
