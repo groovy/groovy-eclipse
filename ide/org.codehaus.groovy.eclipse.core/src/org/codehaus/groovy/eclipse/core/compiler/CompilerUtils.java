@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2014 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,13 +48,11 @@ import org.osgi.framework.Version;
 /**
  * @author Andrew Eisenberg
  * @created Sep 22, 2009
- *
  */
 public class CompilerUtils {
     /**
      * Note: Used by Grails tooling
      */
-
     public static String getGroovyVersion() {
         return GroovySystem.getVersion();
     }
@@ -271,15 +269,14 @@ public class CompilerUtils {
                 // base directory of the plugins
                 enu = groovyBundle.findEntries("", "*.jar", false);
             }
-            List<URL> urls = new ArrayList<URL>(9);
+            List<URL> urls = new ArrayList<URL>(5);
             while (enu.hasMoreElements()) {
                 URL jar = enu.nextElement();
-                if (!jar.getFile().contains("groovy")) {
-                    if (includeServlet || jar.getFile().indexOf("servlet") == -1) {
-                        // remove the "reference:/" protocol
-                        jar = resolve(jar);
-                        urls.add(jar);
-                    }
+                if (!jar.getFile().contains("groovy") && (!jar.getFile().contains("servlet") || includeServlet)
+                        && !jar.getFile().endsWith("-sources.jar") && !jar.getFile().endsWith("-javadoc.jar")) {
+                    // remove the "reference:/" protocol
+                    jar = resolve(jar);
+                    urls.add(jar);
                 }
             }
             return urls.toArray(new URL[urls.size()]);
