@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -22,6 +21,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener;
 import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.SaveParticipantDescriptor;
@@ -38,13 +38,12 @@ import org.eclipse.jface.text.IRegion;
  * This class ensures that when groovy compilation units are encountered, Post save actions are
  * properly executed
  */
-public class DelegatingCleanUpPostSaveListener implements IPostSaveListener {
+public class DelegatingCleanUpPostSaveListener extends CleanUpPostSaveListener {
 
     private final IPostSaveListener jdtCleanUp;
     private final IPostSaveListener groovyCleanUp;
 
-    public DelegatingCleanUpPostSaveListener(org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener jdtCleanUp,
-            GroovyCleanupPostSaveListener groovyCleanUp) {
+    public DelegatingCleanUpPostSaveListener(CleanUpPostSaveListener jdtCleanUp, GroovyCleanupPostSaveListener groovyCleanUp) {
         this.jdtCleanUp = jdtCleanUp;
         this.groovyCleanUp = groovyCleanUp;
     }
@@ -113,9 +112,7 @@ public class DelegatingCleanUpPostSaveListener implements IPostSaveListener {
         }
     }
 
-    public void saved(ICompilationUnit compilationUnit,
-            IRegion[] changedRegions, IProgressMonitor monitor)
-                    throws CoreException {
+    public void saved(ICompilationUnit compilationUnit, IRegion[] changedRegions, IProgressMonitor monitor) throws CoreException {
         if (ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getElementName())) {
             groovyCleanUp.saved(compilationUnit, changedRegions, monitor);
         } else {
