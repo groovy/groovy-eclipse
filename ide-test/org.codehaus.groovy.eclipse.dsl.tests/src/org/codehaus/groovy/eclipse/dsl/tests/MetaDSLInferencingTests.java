@@ -1,13 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *      Andrew Eisenberg - Initial implemenation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.dsl.tests;
 
 import java.io.IOException;
@@ -19,11 +24,12 @@ import org.eclipse.jdt.core.tests.util.GroovyUtils;
 
 /**
  * Tests type inferencing that involve dsls
- * 
+ *
  * @author Andrew Eisenberg
  * @created Feb 18, 2011
  */
 public class MetaDSLInferencingTests extends AbstractDSLInferencingTest {
+
     public MetaDSLInferencingTests(String name) {
         super(name);
     }
@@ -31,13 +37,13 @@ public class MetaDSLInferencingTests extends AbstractDSLInferencingTest {
     public static Test suite() {
         return new TestSuite(MetaDSLInferencingTests.class);
     }
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         createMetaDSL();
     }
-    
+
     public void testSimpleDSL() throws Exception {
         assertType("foo", "java.lang.Object", true);
         createDsls("currentType().accept { property ( name: \"foo\", type: Date ) }");
@@ -45,7 +51,7 @@ public class MetaDSLInferencingTests extends AbstractDSLInferencingTest {
         deleteDslFile(0);
         assertType("foo", "java.lang.Object", true);
     }
-    
+
     public void testMetaDSL1() throws Exception {
         assertType("currentType", "p.IPointcut", true);
     }
@@ -58,7 +64,7 @@ public class MetaDSLInferencingTests extends AbstractDSLInferencingTest {
 
 
     public void testMetaDSL4() throws Exception {
-        String contents = 
+        String contents =
             "currentType().accept {\n" +
             " method\n" +
             // ignore since conflicts with Script.getProperty
@@ -77,7 +83,7 @@ public class MetaDSLInferencingTests extends AbstractDSLInferencingTest {
     }
 
     public void testMetaDSL5() throws Exception {
-        String contents = 
+        String contents =
             " method\n" +
             // ignore since conflicts with Script.getProperty
 //            " property\n" +
@@ -95,7 +101,7 @@ public class MetaDSLInferencingTests extends AbstractDSLInferencingTest {
 
     public void testMetaDSL6() throws Exception {
         defaultFileExtension = "groovy";
-        String contents = 
+        String contents =
             "currentType().accept {\n" +
             " method\n" +
             // ignore since conflicts with Script.getProperty
@@ -112,25 +118,25 @@ public class MetaDSLInferencingTests extends AbstractDSLInferencingTest {
         assertUnknownDSLType(contents, "delegatesTo");
         assertUnknownDSLType(contents, "delegatesToUseNamedArgs");
     }
-    
+
     public void testMetaDSL7() throws Exception {
         defaultFileExtension = "groovy";
-        String contents = 
+        String contents =
             "currentType().accept {\n" +
             "}";
         assertUnknownDSLType(contents, "currentType");
         assertUnknownDSLType(contents, "accept");
     }
-    
+
     public void testBindings() throws Exception {
-        String contents = 
+        String contents =
             "bind( b : currentType()).accept {\n" +
             "b\n" +
             "}";
         String name = "b";
         assertDeclaringType(contents, contents.lastIndexOf(name), contents.lastIndexOf(name) + name.length(), "p.IPointcut", true);
     }
-    
+
     /**
      * @throws IOException
      */

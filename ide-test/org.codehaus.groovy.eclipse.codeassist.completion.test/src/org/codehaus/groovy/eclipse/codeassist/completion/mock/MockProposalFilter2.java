@@ -10,14 +10,14 @@ import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 public class MockProposalFilter2 implements IProposalFilter {
 
     private static boolean filterCalled = false;
-    
+
     public List<IGroovyProposal> filterProposals(
             List<IGroovyProposal> proposals, ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext) {
         filterCalled = true;
         return proposals;
     }
-    
+
     public static boolean wasFilterCalled() {
         return filterCalled;
     }

@@ -43,7 +43,7 @@ public class ErrorLogTest extends TestCase {
         super.setUp();
     }
 
-    private static final String[] KNOWN_MSGS = new String[] { 
+    private static final String[] KNOWN_MSGS = new String[] {
         "Could not locate the running profile instance.",
         "The following is a complete list",
         "One or more bundles",
@@ -55,7 +55,7 @@ public class ErrorLogTest extends TestCase {
         "Unable to run embedded server",
         "Test.groovy"
     };
-    
+
     private boolean canIgnoreMessage(String msg) {
         for (String ignore : KNOWN_MSGS) {
             if (msg.contains(ignore)) {
@@ -72,7 +72,7 @@ public class ErrorLogTest extends TestCase {
     	}
         IViewPart view = Workbench.getInstance().getActiveWorkbenchWindow()
                 .getActivePage().getActivePart().getSite().getPage().showView(
-                        "org.eclipse.pde.runtime.LogView"); //$NON-NLS-1$
+                        "org.eclipse.pde.runtime.LogView");
         if (view instanceof LogView) {
             LogView logView = (LogView) view;
             AbstractEntry[] logs = logView.getElements();
@@ -96,14 +96,14 @@ public class ErrorLogTest extends TestCase {
                     LogEntry log = (LogEntry) element;
                 	errors.append("=================== Log entry "+(count++)+" ===================\n");
                     errors.append(log.getMessage());
-                    errors.append(" (" + log.getPluginId() + ")\n"); //$NON-NLS-1$ //$NON-NLS-2$
+                    errors.append(" (" + log.getPluginId() + ")\n");
                     if (element.hasChildren()) {
                         Object[] sub = element.getChildren(null);
                         for (int i = 0; i < sub.length; i++) {
                             if (sub[i] instanceof LogEntry) {
                                 LogEntry s = (LogEntry) sub[i];
                                 String msg = s.getMessage();
-                                errors.append("    " + msg); //$NON-NLS-1$
+                                errors.append("    " + msg);
                                 errors.append(" (" + s.getPluginId() + ")\n");
                                 errors.append("Stack trace: " + s.getStack() + "\n\n\n");
                                 ignore = false;
@@ -114,11 +114,11 @@ public class ErrorLogTest extends TestCase {
                 }
                 if (!ignore) {
                     fail("There should be no unexpected entries in the error log. Found:\n"
-                            + errors.toString()); //$NON-NLS-1$
+                            + errors.toString());
                 }
             }
         } else {
-            fail("Could not find the Error log."); //$NON-NLS-1$
+            fail("Could not find the Error log.");
         }
     }
 

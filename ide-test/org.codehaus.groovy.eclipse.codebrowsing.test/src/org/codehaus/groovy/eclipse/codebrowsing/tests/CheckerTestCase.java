@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,20 +26,18 @@ import org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentFactory;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler;
 import org.codehaus.groovy.eclipse.test.TestProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 
 /**
- *
- * @author andrew
+ * @author Andrew Eisenberg
  * @created May 13, 2010
  */
-public class AbstractCheckerTests extends TestCase {
+public abstract class CheckerTestCase extends TestCase {
 
     private TestProject testProject;
     private GroovySnippetCompiler compiler;
 
-    public AbstractCheckerTests(String name) {
+    public CheckerTestCase(String name) {
         super(name);
     }
 
@@ -85,9 +83,7 @@ public class AbstractCheckerTests extends TestCase {
         return null;
     }
 
-
-    protected ModuleNode createModuleFromText(String text) throws CoreException {
+    protected ModuleNode createModuleFromText(String text) {
         return compiler.compile(text);
     }
-
 }

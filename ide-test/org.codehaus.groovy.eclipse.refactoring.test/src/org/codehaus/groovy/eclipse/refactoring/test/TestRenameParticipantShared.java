@@ -15,13 +15,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Assert;
-
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-
-import org.eclipse.core.resources.IResource;
-
+import org.eclipse.jdt.core.IField;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.refactoring.IJavaElementMapper;
+import org.eclipse.jdt.core.refactoring.RenameTypeArguments;
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.participants.CheckConditionsContext;
@@ -29,13 +31,7 @@ import org.eclipse.ltk.core.refactoring.participants.ISharableParticipant;
 import org.eclipse.ltk.core.refactoring.participants.RefactoringArguments;
 import org.eclipse.ltk.core.refactoring.participants.RenameArguments;
 import org.eclipse.ltk.core.refactoring.participants.RenameParticipant;
-
-import org.eclipse.jdt.core.IField;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.refactoring.IJavaElementMapper;
-import org.eclipse.jdt.core.refactoring.RenameTypeArguments;
+import org.junit.Assert;
 
 public class TestRenameParticipantShared extends RenameParticipant implements ISharableParticipant {
 
@@ -55,7 +51,7 @@ public class TestRenameParticipantShared extends RenameParticipant implements IS
 		else
 			fHandles.add(((IResource)element).getFullPath().toString());
 
-		IJavaElementMapper updating= (IJavaElementMapper)getProcessor().getAdapter(IJavaElementMapper.class);
+		IJavaElementMapper updating= getProcessor().getAdapter(IJavaElementMapper.class);
 		if ((updating != null) && getArguments() instanceof RenameTypeArguments) {
 			RenameTypeArguments arguments= (RenameTypeArguments)getArguments();
 			if (arguments.getUpdateSimilarDeclarations()) {
@@ -109,7 +105,7 @@ public class TestRenameParticipantShared extends RenameParticipant implements IS
 			Assert.assertTrue(fgInstance == null);
 		} else {
 			Assert.assertEquals(expected, fgInstance.fElements.size());
-			Assert.assertEquals(expected, fgInstance.fArguments.size()); 
+			Assert.assertEquals(expected, fgInstance.fArguments.size());
 		}
 	}
 
@@ -136,9 +132,9 @@ public class TestRenameParticipantShared extends RenameParticipant implements IS
 
 	public static void testSimilarElements(List<String> similarList, List<String> similarNewNameList, List<String> similarNewHandleList) {
 		for (int i=0; i< similarList.size(); i++) {
-			String handle= (String) similarList.get(i);
-			String newHandle= (String)similarNewHandleList.get(i);
-			String newName= (String)similarNewNameList.get(i);
+			String handle= similarList.get(i);
+			String newHandle= similarNewHandleList.get(i);
+			String newName= similarNewNameList.get(i);
 			String actualNewHandle= (String)fgInstance.fSimilarToHandle.get(handle);
 			String actualNewName= (String)fgInstance.fSimilarToNewName.get(handle);
 			Assert.assertEquals("New element handle not as expected", newHandle, actualNewHandle);

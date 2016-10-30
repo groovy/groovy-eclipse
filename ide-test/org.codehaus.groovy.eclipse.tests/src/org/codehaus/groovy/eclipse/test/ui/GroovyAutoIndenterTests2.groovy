@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,145 +13,127 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.test.ui;
+package org.codehaus.groovy.eclipse.test.ui
 
-import org.eclipse.core.resources.ProjectScope 
-import org.eclipse.jdt.core.JavaCore 
-import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants 
-
-
-
+import org.eclipse.core.resources.ProjectScope
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
 
 /**
  * Some additional tests for the GroovyAutoIndenter. There is no particular
  * reason to put these tests here rather than in the GroovyAutoIndenter class.
  * <p>
- * The only real reason is that this class (GroovyAutoIndenter2) is a .groovy 
+ * The only real reason is that this class (GroovyAutoIndenter2) is a .groovy
  * class, and therefore we can write tests in Groovy syntax (and use """ quoted
  * strings for specifying test input.
- * 
- * @author kdvolder
- * @created 2010-05-20
  */
-public class GroovyAutoIndenterTests2 extends GroovyEditorTest {
-    
-    private Hashtable savedOptions;
-    
+final class GroovyAutoIndenterTests2 extends GroovyEditorTest {
+
     @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        savedOptions = JavaCore.getOptions();
-        
-        //Our tests are sensitive to tab/space settings so ensure they are
-        //set to predictable default values.
-        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE);
-        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, "4");
-        
-        //Also ensure that project specific settings on the test project are turned off
+    protected void setUp() {
+        super.setUp()
+
+        // tests are sensitive to tab/space settings so ensure they are set to predictable default values
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE)
+        setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '4')
+
+        // ensure that project specific settings on the test project are turned off
         // (or they will override our test settings on the plugin instance scope level)
-        ProjectScope projectPrefScope = new ProjectScope(testProject.getProject());
-        projectPrefScope.getNode(JavaCore.PLUGIN_ID).clear();
-    }
-    
-    @Override
-    protected void tearDown() throws Exception {
-        JavaCore.setOptions(savedOptions);
-        super.tearDown();
-    }
-    
-    protected void setJavaPreference(String name, String value) {
-        Hashtable options = JavaCore.getOptions();
-        options.put(name, value);
-        JavaCore.setOptions(options);
+        ProjectScope projectPrefScope = new ProjectScope(testProject.project)
+        projectPrefScope.getNode(JavaCore.PLUGIN_ID).clear()
     }
 
-	void testGre786_GSP_Autoindenting() {
-		String initText = '''
-<html>
-  <head>
-	  <title>Grails Runtime Exception</title>
-	  <style type="text/css">
-			  .message {
-				  border: 1px solid black;
-				  padding: 5px;
-				  background-color:#E9E9E9;
-			  .stack {
-				  border: 1px solid black;
-				  padding: 5px;
-				  overflow:auto;
-				  height: 300px;
-			  }
-			  .snippet {
-				  padding: 5px;
-				  background-color:white;
-				  border:1px solid black;
-				  margin:3px;
-				  font-family:courier;
-			  }
-	  </style>
-  </head>
-  <%
-    if (a < b>) {<***>
-  %>
-  
-  <body>
-	<h1>Grails Runtime Exception</h1>
-	<h2>Error Details</h2>
+    // GRECLIPSE-786
+    void testGSPAutoIndenting() {
+        String initText = '''\
+            <html>
+              <head>
+                <title>Grails Runtime Exception</title>
+                <style type="text/css">
+                  .message {
+                    border: 1px solid black;
+                    padding: 5px;
+                    background-color:#E9E9E9;
+                  .stack {
+                    border: 1px solid black;
+                    padding: 5px;
+                    overflow:auto;
+                    height: 300px;
+                  }
+                  .snippet {
+                    padding: 5px;
+                    background-color:white;
+                    border:1px solid black;
+                    margin:3px;
+                    font-family:courier;
+                  }
+                </style>
+              </head>
+              <%
+                if (a < b>) {<***>
+              %>
+              <body>
+                <h1>Grails Runtime Exception</h1>
+                <h2>Error Details</h2>
+                  <div class="message">
+                    <strong>Error ${request.'javax.servlet.error.status_code'}:</strong> ${request.'javax.servlet.error.message'.encodeAsHTML()}<br/>
+                    <strong>Servlet:</strong> ${request.'javax.servlet.error.servlet_name'}<br/>
+                    <strong>URI:</strong> ${request.'javax.servlet.error.request_uri'}<br/>
+                    <g:if test="${exception}">
+                      <strong>Exception Message:</strong> ${exception.message?.encodeAsHTML()} <br />
+                      <strong>Caused by:</strong> ${exception.cause?.message?.encodeAsHTML()} <br />
+                      <strong>Class:</strong> ${exception.className} <br />
+                      <strong>At Line:</strong> [${exception.lineNumber}] <br />
+                      <strong>Code Snippet:</strong><br />
+                      <div class="snippet">
+                        <g:each var="cs" in="${exception.codeSnippet}">
+                          ${cs?.encodeAsHTML()}<br />
+                        </g:each>
+                      </div>
+                    </g:if>
+                  </div>
+                <g:if test="${exception}">
+                  <h2>Stack Trace</h2>
+                  <div class="stack">
+                    <pre><g:each in="${exception.stackTraceLines}">${it.encodeAsHTML()}<br/></g:each></pre>
+                  </div>
+                </g:if>
+              </body>
+            </html>
+            '''.stripIndent()
 
-	  <div class="message">
-		<strong>Error ${request.'javax.servlet.error.status_code'}:</strong> ${request.'javax.servlet.error.message'.encodeAsHTML()}<br/>
-		<strong>Servlet:</strong> ${request.'javax.servlet.error.servlet_name'}<br/>
-		<strong>URI:</strong> ${request.'javax.servlet.error.request_uri'}<br/>
-		<g:if test="${exception}">
-			  <strong>Exception Message:</strong> ${exception.message?.encodeAsHTML()} <br />
-			  <strong>Caused by:</strong> ${exception.cause?.message?.encodeAsHTML()} <br />
-			  <strong>Class:</strong> ${exception.className} <br />
-			  <strong>At Line:</strong> [${exception.lineNumber}] <br />
-			  <strong>Code Snippet:</strong><br />
-			  <div class="snippet">
-				  <g:each var="cs" in="${exception.codeSnippet}">
-					  ${cs?.encodeAsHTML()}<br />
-				  </g:each>
-			  </div>
-		</g:if>
-	  </div>
-	<g:if test="${exception}">
-		<h2>Stack Trace</h2>
-		<div class="stack">
-		  <pre><g:each in="${exception.stackTraceLines}">${it.encodeAsHTML()}<br/></g:each></pre>
-		</div>
-	</g:if>
-  </body>
-</html>
-'''
-		makeEditor(initText)
-		send('\n')
-		String resultText = initText.replace(
-"""<%
-    if (a < b>) {<***>
-  %>""",
-"""<%
-    if (a < b>) {
-        <***>
-    }
-  %>""")
- 
-		assertEditorContents resultText
-	}
+        makeEditor(initText)
+        send('\n')
 
-    void testGRE_771_indentAfterMultilineString() {
-        makeEditor """
-    static foo = '''
-Some perfectly
-formatted text'''<***>"""
-        send("\n")
-        assertEditorContents """
-    static foo = '''
-Some perfectly
-formatted text'''
-    <***>"""
+        String resultText = initText.replace('''\
+            <%
+              if (a < b>) {<***>
+            %>'''.stripIndent(10), '''\
+            <%
+              if (a < b>) {
+                  <***>
+              }
+            %>'''.stripIndent(10))
+
+        assertEditorContents(resultText)
     }
-    
+
+    // GRECLIPSE-771
+    void testIndentAfterMultilineString() {
+        makeEditor("""\
+                static foo = '''
+            Some perfectly
+            formatted text'''<***>""".stripIndent())
+
+        send('\n')
+
+        assertEditorContents("""\
+                static foo = '''
+            Some perfectly
+            formatted text'''
+                <***>""".stripIndent())
+    }
+
     /**
      * When MLS contain escaped code, they actually result in multiple tokens.
      * This case is handled differently (much like the beg and end token
@@ -159,82 +141,86 @@ formatted text'''
      * case separately.
      */
     void testIndentAfterMultilineStringWithTokens() {
-        makeEditor '''
-    static letter = """
-Dear ${name},
-How are you?"""<***>'''
+        makeEditor('''\
+                static letter = """
+            Dear ${name},
+            How are you?"""<***>'''.stripIndent())
+
+        send('\n')
+
+        assertEditorContents('''\
+                static letter = """
+            Dear ${name},
+            How are you?"""
+                <***>'''.stripIndent())
+    }
+
+    // GRECLIPSE-744
+    void testGRE744_1() {
+        makeEditor("""\
+            class Foo {
+                def show() {
+                    swing.actions() {
+                        echoAction= swing.action(name: 'Echo back',
+                                                 enabled: bind(source: model, sourceProperty: 'loggedin'),
+                                                 closure: { controller.setEchoBack(it.source.selected) })<***>
+            """.stripIndent())
+
         send("\n")
-        assertEditorContents '''
-    static letter = """
-Dear ${name},
-How are you?"""
-    <***>'''
-    }
-    
-    void testGRE744_1() throws Exception {
-        //First example from http://jira.codehaus.org/browse/GRECLIPSE-744
-        makeEditor("""
-class Foo {
-    def show() {
-        swing.actions() {
-            echoAction= swing.action(name: 'Echo back',
-                                     enabled: bind(source: model, sourceProperty: 'loggedin'),
-                                     closure: { controller.setEchoBack(it.source.selected) })<***>
-""");
-        send("\n");
-        assertEditorContents("""
-class Foo {
-    def show() {
-        swing.actions() {
-            echoAction= swing.action(name: 'Echo back',
-                                     enabled: bind(source: model, sourceProperty: 'loggedin'),
-                                     closure: { controller.setEchoBack(it.source.selected) })
-            <***>
-""")
-    }
-    
-    void testGRE744_2() throws Exception {
-        //First example from http://jira.codehaus.org/browse/GRECLIPSE-744
-        makeEditor("""
-class Foo {
-    def model = ["view": g.render("template": "/editor/main", "model": ["currentLocale": currentLocale]),
-        "initialStyle": new File(design.obtainCSSFilePath()).getText(),
-        "generalStyle": new File("\${org.codehaus.groovy.grails.commons.ConfigurationHolder.config.commonCssPath}customization.css").getText(),
-        "fonts": FontFamily.obtainFontsMap(), "notLogged": ! (session.MemberId as Boolean),
-        "noLogout": ! member.loginRequired, "sessionId": session.id, "basicMode": design.basicMode ]<***>
-""");
-        send("\n");
-        assertEditorContents("""
-class Foo {
-    def model = ["view": g.render("template": "/editor/main", "model": ["currentLocale": currentLocale]),
-        "initialStyle": new File(design.obtainCSSFilePath()).getText(),
-        "generalStyle": new File("\${org.codehaus.groovy.grails.commons.ConfigurationHolder.config.commonCssPath}customization.css").getText(),
-        "fonts": FontFamily.obtainFontsMap(), "notLogged": ! (session.MemberId as Boolean),
-        "noLogout": ! member.loginRequired, "sessionId": session.id, "basicMode": design.basicMode ]
-    <***>
-""");
-    }
-    
-    void testGRE744_3() throws Exception {
-        //First example from http://jira.codehaus.org/browse/GRECLIPSE-744
-        makeEditor("""
-class Bagaga {
 
-    static final String RESULTS = "results"<***>
-}
-""");
-        send("\n\n\n");
-        assertEditorContents("""
-class Bagaga {
+        assertEditorContents("""\
+            class Foo {
+                def show() {
+                    swing.actions() {
+                        echoAction= swing.action(name: 'Echo back',
+                                                 enabled: bind(source: model, sourceProperty: 'loggedin'),
+                                                 closure: { controller.setEchoBack(it.source.selected) })
+                        <***>
+            """.stripIndent())
+    }
 
+    // GRECLIPSE-744
+    void testGRE744_2() {
+        makeEditor("""\
+            class Foo {
+                def model = ["view": g.render("template": "/editor/main", "model": ["currentLocale": currentLocale]),
+                    "initialStyle": new File(design.obtainCSSFilePath()).getText(),
+                    "generalStyle": new File("\${org.codehaus.groovy.grails.commons.ConfigurationHolder.config.commonCssPath}customization.css").getText(),
+                    "fonts": FontFamily.obtainFontsMap(), "notLogged": ! (session.MemberId as Boolean),
+                    "noLogout": ! member.loginRequired, "sessionId": session.id, "basicMode": design.basicMode ]<***>
+            """.stripIndent())
+
+        send("\n")
+
+        assertEditorContents("""\
+            class Foo {
+                def model = ["view": g.render("template": "/editor/main", "model": ["currentLocale": currentLocale]),
+                    "initialStyle": new File(design.obtainCSSFilePath()).getText(),
+                    "generalStyle": new File("\${org.codehaus.groovy.grails.commons.ConfigurationHolder.config.commonCssPath}customization.css").getText(),
+                    "fonts": FontFamily.obtainFontsMap(), "notLogged": ! (session.MemberId as Boolean),
+                    "noLogout": ! member.loginRequired, "sessionId": session.id, "basicMode": design.basicMode ]
+                <***>
+            """.stripIndent())
+    }
+
+    // GRECLIPSE-744
+    void testGRE744_3() {
+        makeEditor("""\
+            class Bagaga {
+                static final String RESULTS = "results"<***>
+            }
+            """.stripIndent())
+        send("\n\n\n")
+        assertEditorContents("""\
+class Bagaga {
     static final String RESULTS = "results"
     
     
     <***>
 }
-""");
+""")
     }
-    
+
     void testGRE757() {
         makeEditor("""
 class Bagaga {
@@ -242,9 +228,9 @@ class Bagaga {
     def foo(def a, def b) {<***>
     }
 }
-""");
+""")
         send("\nif (a < b)\n")
-        send("\t");
+        send("\t")
         assertEditorContents("""
 class Bagaga {
 
@@ -287,9 +273,9 @@ class Bagaga {
         <***>
     }
 }
-""" );
+""" )
     }
-    
+
     void testGRE620() {
         makeEditor("""
 class Bagaga {
@@ -299,7 +285,7 @@ class Bagaga {
         sendPaste('\tstatic final String RESULTS = "results"\n')
         sendPaste('\tstatic final String RESULTS = "results"\n')
         sendPaste('\tstatic final String RESULTS = "results"\n')
-        
+
         assertEditorContents("""
 class Bagaga {
     static final String RESULTS = "results"
@@ -309,7 +295,7 @@ class Bagaga {
 }
 """)
     }
-    
+
     void testGRE295() {
         makeEditor("""
 class BracketBug {
@@ -320,7 +306,7 @@ class BracketBug {
 }
 """)
         send("\n")
-        
+
         assertEditorContents("""
 class BracketBug {
     String name
@@ -331,7 +317,7 @@ class BracketBug {
 }
 """)
     }
-    
+
     void testGRE761() {
         makeEditor("""
 def dodo()
@@ -340,7 +326,7 @@ def dodo()
     x.each<***>{
 """)
         send("\n")
-        
+
         assertEditorContents("""
 def dodo()
 {
@@ -349,7 +335,7 @@ def dodo()
     <***>{
 """)
     }
-    
+
     void testEnterPressedAtEndOfFile() {
         makeEditor("""
 def dodo()
@@ -357,7 +343,7 @@ def dodo()
     def x "abx"
     x.each<***>""")
         send("\n")
-        
+
         assertEditorContents("""
 def dodo()
 {
@@ -365,55 +351,57 @@ def dodo()
     x.each
     <***>""")
     }
-    
+
     void testEnterPressedInEmptyFile() {
         makeEditor("""""")
         send("\n")
-        
+
         assertEditorContents("""
 <***>""")
     }
-    
+
     void testEnterPressedAtBeginningOfFile() {
         makeEditor("""<***>
 def foo() {
 }""")
         send("\n")
-        
+
         assertEditorContents("""
 <***>
 def foo() {
 }""")
     }
-    
+
     void testEnterPressedAfterLongCommentAtBeginningOfFile() {
         makeEditor("""/*
  * A longer comment
  * spanning several
  * lines */<***>""")
         send("\n")
-        
+
         assertEditorContents("""/*
  * A longer comment
  * spanning several
  * lines */
 <***>""")
     }
-    
+
     void testEnterAfterHalfAComment() {
-        makeEditor("""/*
+        makeEditor('''\
+/*
  * A longer comment
  * got started <***>
-""")
-        send("\n")
-        
-        assertEditorContents("""/*
+''')
+        send('\n')
+
+        assertEditorContents('''\
+/*
  * A longer comment
  * got started 
  * <***>
-""")
+''')
     }
-    
+
     void testEnterInWhiteSpaceFile() {
         makeEditor """
 
@@ -421,7 +409,7 @@ def foo() {
 
 <***>"""
         send("\n")
-        
+
         assertEditorContents("""
 
 
@@ -429,23 +417,23 @@ def foo() {
 
 <***>""")
     }
-    
+
     void testEnterPressedInsideToken() {
         makeEditor("""
 def dodo() {
-    def x = ab<***>cde 
+    def x = ab<***>cde
 }
 """)
         send("\n")
-        
+
         assertEditorContents("""
 def dodo() {
     def x = ab
-    <***>cde 
+    <***>cde
 }
 """)
     }
-    
+
     void testGRE763SmartPaste() {
         makeEditor("""
 def doit() {
@@ -461,7 +449,7 @@ def doit() {
 }
 """
     }
-    
+
     void testSmartPaste() {
         makeEditor("""
 def doit() {
@@ -489,7 +477,7 @@ def doit() {
 }
 """
     }
-    
+
     void testSmartPasteWrongFirstLine() {
         makeEditor("""
 def doit() {
@@ -515,8 +503,8 @@ def doit() {
 }
 """
     }
-    
-    void test_GRE_767_smarttab() {
+
+    void testGRE767SmartTab() {
         makeEditor("""package com.kameleoon.pixel
 
 public class InlineTest extends BaseTest
@@ -543,7 +531,7 @@ public class InlineTest extends BaseTest
 }
 """
     }
-    
+
     void testSmartTabMiddleOfWhiteSpace() {
         makeEditor("""
 public class Blah {
@@ -559,7 +547,7 @@ public class Blah {
         <***>blah()
 """
     }
-    
+
     void testSmartTabEndOfWhiteSpace() {
         makeEditor("""
 public class Blah {
@@ -575,8 +563,8 @@ public class Blah {
               <***>blah()
 """
     }
-    
-    void test_smartTabOnCloseBrace() {
+
+    void testSmartTabOnCloseBrace() {
         makeEditor("""
 public class Blah {
 
@@ -591,7 +579,8 @@ public class Blah {
     <***>}
 """
     }
-	void testAutoCloseBracesInString() {
+
+    void testAutoCloseBracesInString() {
         makeEditor("""
 public class Blah {
 
@@ -610,13 +599,13 @@ public class Blah {
 }
 '''
     }
-	
-	void testAutoCloseBracesInMultiString() {
+
+    void testAutoCloseBracesInMultiString() {
         makeEditor('''
 public class Blah {
 
     void echo(msg) {
-        println """Echoing: 
+        println """Echoing:
         <***>
         """
     }
@@ -627,17 +616,16 @@ public class Blah {
 public class Blah {
 
     void echo(msg) {
-        println """Echoing: 
+        println """Echoing:
         ${<***>}
         """
     }
 }
 '''
     }
-    
-    
-	void testAutoCloseBracesInString2() {
-		makeEditor("""
+
+    void testAutoCloseBracesInString2() {
+        makeEditor("""
 public class Blah {
 
 	void echo(msg) {
@@ -645,8 +633,8 @@ public class Blah {
 	}
 }
 """)
-		send('${')
-		assertEditorContents '''
+        send('${')
+        assertEditorContents '''
 public class Blah {
 
 	void echo(msg) {
@@ -654,10 +642,10 @@ public class Blah {
 	}
 }
 '''
-	}
+    }
 
-	void testAutoCloseBracesInString3() {
-		makeEditor("""
+    void testAutoCloseBracesInString3() {
+        makeEditor("""
 public class Blah {
 
 	void echo(msg) {
@@ -665,8 +653,8 @@ public class Blah {
 	}
 }
 """)
-		send('${')
-		assertEditorContents '''
+        send('${')
+        assertEditorContents '''
 public class Blah {
 
 	void echo(msg) {
@@ -674,9 +662,10 @@ public class Blah {
 	}
 }
 '''
-	}
-	void testAutoCloseBracesInString4() {
-		makeEditor("""
+    }
+
+    void testAutoCloseBracesInString4() {
+        makeEditor("""
 public class Blah {
 
 	void echo(msg) {
@@ -694,8 +683,7 @@ public class Blah {
 }
 '''
 }
-    
-    
+
     // GRECLIPSE-1262
     void testAutoCloseAfterClosureArgs1() {
         def initText =
@@ -710,26 +698,26 @@ def x = { yyy ->
 }
 """
     }
-	
-	// GRECLIPSE-1262
-	void testAutoCloseAfterClosureArgs2() {
-		def initText =
+
+    // GRECLIPSE-1262
+    void testAutoCloseAfterClosureArgs2() {
+        def initText =
 """
 def xxx() {
     def x = { yyy -><***>
 }
 """
        makeEditor(initText)
-	   send('\n')
-	   assertEditorContents """
+       send('\n')
+       assertEditorContents """
 def xxx() {
     def x = { yyy ->
         <***>
     }
 }
 """
-	}
-    
+    }
+
     // GRECLIPSE-1475
     void testAutoIndentCurly1() {
         def initText =
@@ -805,153 +793,153 @@ def xxx() {
 """
     }
 
-	void testMuliLineCommentPaste1() {
-		makeEditor("""
+    void testMuliLineCommentPaste1() {
+        makeEditor("""
 <***>
 """)
-		System.out.println(getText());
-		sendPaste("""
+        sendPaste("""
 /*
  * A longer comment
  * spanning several
  * lines */""")
-		System.out.println(getText());
-		assertEditorContents("""
+        assertEditorContents("""
 
 /*
  * A longer comment
  * spanning several
  * lines */<***>
 """)
-	}
+    }
 
-	void testMuliLineCommentPaste2() {
-		makeEditor("""if (0){
+    void testMuliLineCommentPaste2() {
+        makeEditor("""if (0){
     <***>
 }""")
-		System.out.println(getText());
-		sendPaste("""/*
+        sendPaste("""/*
  * comment
  */""")
-		System.out.println(getText());
-		assertEditorContents("""if (0){
+        assertEditorContents("""if (0){
     /*
      * comment
      */<***>
 }""")
 
-	}
+    }
 
-	void testMuliLineCommentPaste3() {
-		makeEditor("""if (0){
+    void testMuliLineCommentPaste3() {
+        makeEditor("""if (0){
     <***>
 }""")
-		sendPaste("""/*
+        sendPaste("""/*
  * comment
  */""")
 
-		assertEditorContents("""if (0){
+        assertEditorContents("""if (0){
     /*
      * comment
      */<***>
 }""")
-	}
+    }
 
-	void testMuliLineCommentPaste4() {
-		makeEditor("""""")
-		sendPaste("""/*
+    void testMuliLineCommentPaste4() {
+        makeEditor("""""")
+        sendPaste("""/*
  * comment
  */""")
 
-		assertEditorContents("""/*
+        assertEditorContents("""/*
  * comment
  */<***>""")
-	}
+    }
 
-	void testMuliLineCommentPaste5() {
-		makeEditor("""
+    void testMuliLineCommentPaste5() {
+        makeEditor("""
 <***>""")
-		System.out.println(getText());
-		sendPaste("""
+        sendPaste("""
 /*
  * A longer comment
  * spanning several
  * lines
  */""")
-		System.out.println(getText());
-		assertEditorContents("""
+        assertEditorContents("""
 
 /*
  * A longer comment
  * spanning several
  * lines
  */<***>""")
-	}
+    }
 
-
-	void testMuliLineStringPaste1() {
-		makeEditor("""if (0){
+    void testMuliLineStringPaste1() {
+        makeEditor("""if (0){
     <***>
 }""")
-		sendPaste(
-				'''"""This is a line.
+        sendPaste(
+                '''"""This is a line.
 Here is another one.
 And one more line."""'''
-				)
+                )
 
-		assertEditorContents('''if (0){
+        assertEditorContents('''if (0){
     """This is a line.
 Here is another one.
 And one more line."""<***>
 }''')
-	}
+    }
 
-	void testMuliLineStringPaste2() {
-		makeEditor("""if (0){
+    void testMuliLineStringPaste2() {
+        makeEditor("""\
+if (0){
     a = <***>
 }""")
-		sendPaste('''"""This is a line.
+        sendPaste('''\
+"""This is a line.
 Here is another one.
 And one more line."""''')
 
-		assertEditorContents('''if (0){
+        assertEditorContents('''\
+if (0){
     a = """This is a line.
 Here is another one.
 And one more line."""<***>
 }''')
-	}
+    }
 
-	void testMuliLineStringPaste3() {
-		makeEditor("""if (0){
+    void testMuliLineStringPaste3() {
+        makeEditor("""if (0){
     a = <***>
 }""")
-		sendPaste('''"""This is a line.
+        sendPaste('''\
+"""This is a line.
         Here is another one.
         And one more line."""''')
 
-		assertEditorContents('''if (0){
+        assertEditorContents('''\
+if (0){
     a = """This is a line.
         Here is another one.
         And one more line."""<***>
 }''')
-	}
+    }
 
-	void testMuliLineStringPaste4() {
-		makeEditor('''if (i ==0){
+    void testMuliLineStringPaste4() {
+        makeEditor('''if (i ==0){
     <***>
 }''')
-		sendPaste('''if (i == 0){
+        sendPaste('''\
+if (i == 0){
     a = """This is a line.
 Here is another one.
 And one more line."""
 }''')
 
-		assertEditorContents('''if (i ==0){
+        assertEditorContents '''\
+if (i ==0){
     if (i == 0){
         a = """This is a line.
 Here is another one.
 And one more line."""
     }<***>
-}''')
-	}
+}'''
+    }
 }

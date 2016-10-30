@@ -18,15 +18,13 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.extractMethod;
 
-import groovyjarjarasm.asm.Opcodes;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
+import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyMethodRefactoring;
 import org.codehaus.groovy.eclipse.refactoring.test.TestPrefInitializer;
 import org.codehaus.groovy.eclipse.test.TestProject;
@@ -60,10 +58,8 @@ public class ExtractMethodTestCase extends RefactoringTestCase {
     public void preAction() throws FileNotFoundException, IOException {
         try {
             testProject = new TestProject();
-            GroovyRuntime.addGroovyRuntime(testProject.getProject());
-            unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(testProject
-                    .createGroovyTypeAndPackage("", "File.groovy",
-                            getOrigin().get()));
+            unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(
+                    testProject.createGroovyTypeAndPackage("", "File.groovy", getOrigin().get()));
             unit.becomeWorkingCopy(null);
             RefactoringStatus status = new RefactoringStatus();
             refactoring = new ExtractGroovyMethodRefactoring(unit, getUserSelection().getOffset(), getUserSelection().getLength(),

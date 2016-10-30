@@ -30,16 +30,16 @@ public final class DebugUtils {
 	}
 
 	public static void dumpCharCharArray(String msg, char[][] o){
-		dump("DUMPING char[][]:" + msg); //$NON-NLS-1$
+		dump("DUMPING char[][]:" + msg);
 		for (int i= 0; i < o.length; i++){
 			dump(new String(o[i]));
 		}
 	}
 
 	public static void dumpArray(String msg, Object[] refs){
-		System.out.println("DUMPING array: "+  msg); //$NON-NLS-1$
+		System.out.println("DUMPING array: "+  msg);
 		if (refs == null){
-			System.out.println("null"); //$NON-NLS-1$
+			System.out.println("null");
 			return;
 		}
 		for (int i= 0; i < refs.length; i++)
@@ -48,14 +48,14 @@ public final class DebugUtils {
 
 	public static void dumpCollectionCollection(String msg, Collection c){
 		for (Iterator iter= c.iterator(); iter.hasNext(); ){
-			dumpCollection("", (List)iter.next()); //$NON-NLS-1$
+			dumpCollection("", (List)iter.next());
 		}
 	}
 
 	public static void dumpCollection(String msg, Collection c){
-		System.out.println("DUMPING collection: "+  msg); //$NON-NLS-1$
+		System.out.println("DUMPING collection: "+  msg);
 		if (c == null){
-			System.out.println("null"); //$NON-NLS-1$
+			System.out.println("null");
 			return;
 		}
 		for (Iterator iter= c.iterator(); iter.hasNext(); ){
@@ -66,22 +66,22 @@ public final class DebugUtils {
 	public static void dumpIMethod(IMethod method){
 		try{
 			if (method == null){
-				System.out.println("DUMPING method: null"); //$NON-NLS-1$
+				System.out.println("DUMPING method: null");
 				return;
 			}
-			System.out.println("DUMPING method:" +  method.getElementName() + "\n " + method.getSignature() + "\n declared in " + method.getDeclaringType().getFullyQualifiedName('.') //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-1$
-			+ "\nreturnType:" + method.getReturnType() ); //$NON-NLS-1$
-			dumpArray("paramTypes:", method.getParameterTypes()); //$NON-NLS-1$
-			dumpArray("exceptions:", method.getExceptionTypes()); //$NON-NLS-1$
+			System.out.println("DUMPING method:" +  method.getElementName() + "\n " + method.getSignature() + "\n declared in " + method.getDeclaringType().getFullyQualifiedName('.')
+			+ "\nreturnType:" + method.getReturnType() );
+			dumpArray("paramTypes:", method.getParameterTypes());
+			dumpArray("exceptions:", method.getExceptionTypes());
 		}catch (JavaModelException e){
-			System.out.println("JavaModelException: "+ e.getMessage()); //$NON-NLS-1$
+			System.out.println("JavaModelException: "+ e.getMessage());
 		}
 	}
 
 	public static void dumpIMethodList(String msg, List l){
-		System.out.println("DUMPING IMethodList: "+  msg); //$NON-NLS-1$
+		System.out.println("DUMPING IMethodList: "+  msg);
 		if (l == null){
-			System.out.println("null"); //$NON-NLS-1$
+			System.out.println("null");
 			return;
 		}
 		Iterator iter= l.iterator();
@@ -91,44 +91,44 @@ public final class DebugUtils {
 	}
 
 	public static void dumpIType(String msg, IType type){
-		System.out.println("DUMPING IType:"+ msg); //$NON-NLS-1$
-		System.out.println("exists:" + type.exists()); //$NON-NLS-1$
+		System.out.println("DUMPING IType:"+ msg);
+		System.out.println("exists:" + type.exists());
 		try{
-			System.out.println("correspondingResource:" + type.getCorrespondingResource()); //$NON-NLS-1$
-			System.out.println("underResource:" + type.getUnderlyingResource()); //$NON-NLS-1$
-			System.out.println("source:\n" + type.getSource()); //$NON-NLS-1$
+			System.out.println("correspondingResource:" + type.getCorrespondingResource());
+			System.out.println("underResource:" + type.getUnderlyingResource());
+			System.out.println("source:\n" + type.getSource());
 
 			//System.out.println("cu.orig.under" + type.getCompilationUnit().getOriginalElement().getUnderlyingResource());
-			System.out.println("cu:" + type.getCompilationUnit().getSource());		 //$NON-NLS-1$
+			System.out.println("cu:" + type.getCompilationUnit().getSource());
 		}catch (JavaModelException e){
-			System.out.println("JavaModelException: "+ e.getMessage()); //$NON-NLS-1$
+			System.out.println("JavaModelException: "+ e.getMessage());
 		}
 
 	}
 
 	public static void dumpIResource(String msg, IResource res){
-		System.out.println("DUMPING IResource:"+ msg); //$NON-NLS-1$
-		System.out.println("name:" + res.getFullPath().toString()); //$NON-NLS-1$
-		System.out.println("exists" + res.exists()); //$NON-NLS-1$
+		System.out.println("DUMPING IResource:"+ msg);
+		System.out.println("name:" + res.getFullPath().toString());
+		System.out.println("exists" + res.exists());
 	}
 
 	public static void dump(Object o){
 		if (o == null)
-			dump("null");		 //$NON-NLS-1$
+			dump("null");
 		else
 			dump(o.toString());
 	}
 	public static void dump(String msg){
-		System.out.println("DUMP:" + msg); //$NON-NLS-1$
+		System.out.println("DUMP:" + msg);
 	}
 
 	public static void dumpImports(ICompilationUnit cu) throws JavaModelException{
 		IImportDeclaration[] imports= cu.getImports();
 		if (imports == null)
 			return;
-		DebugUtils.dump("Compilation Unit: " + cu.getElementName());	 //$NON-NLS-1$
+		DebugUtils.dump("Compilation Unit: " + cu.getElementName());
 		for (int k= 0; k < imports.length; k ++){
-			DebugUtils.dump("import " + imports[k].getElementName() + " on demand: " + imports[k].isOnDemand()); //$NON-NLS-2$ //$NON-NLS-1$
+			DebugUtils.dump("import " + imports[k].getElementName() + " on demand: " + imports[k].isOnDemand());
 		}
 	}
 

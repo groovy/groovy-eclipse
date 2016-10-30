@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,14 +21,13 @@ import java.net.URL;
 import junit.framework.AssertionFailedError;
 
 import org.apache.commons.io.IOUtils;
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.debug.ui.ToggleBreakpointAdapter;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
-import org.codehaus.groovy.eclipse.test.Activator;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.IBreakpointManager;
 import org.eclipse.debug.core.model.IBreakpoint;
@@ -44,7 +43,6 @@ import org.eclipse.jface.text.TextSelection;
 /**
  * @author Andrew Eisenberg
  * @created Jul 24, 2009
- *
  */
 public class DebugBreakpointsTests extends EclipseTestCase {
     private static final String BREAKPOINT_SCRIPT_NAME = "BreakpointTesting.groovy";
@@ -60,11 +58,10 @@ public class DebugBreakpointsTests extends EclipseTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-         GroovyRuntime.addGroovyRuntime(testProject.getProject());
 
          InputStream input = null;
-         final URL url = Activator.bundle().getEntry(
-                 "/testData/groovyfiles/" + BREAKPOINT_SCRIPT_NAME);
+         URL url = Platform.getBundle("org.codehaus.groovy.eclipse.tests")
+                 .getEntry("/testData/groovyfiles/" + BREAKPOINT_SCRIPT_NAME);
          try {
              input = url.openStream();
              IFile file = testProject.createGroovyTypeAndPackage("",

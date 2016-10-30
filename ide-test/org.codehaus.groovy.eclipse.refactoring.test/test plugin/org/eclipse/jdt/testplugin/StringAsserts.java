@@ -67,7 +67,7 @@ public class StringAsserts {
 			String diffStr= actual.substring(diffAhead, diffPos) + '^' + actual.substring(diffPos, diffAfter);
 
 			// use detailed message
-			String message= "Content not as expected: is\n" + actual + "\nDiffers at pos " + diffPos + ": " + diffStr + "\nexpected:\n" + expected;  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			String message= "Content not as expected: is\n" + actual + "\nDiffers at pos " + diffPos + ": " + diffStr + "\nexpected:\n" + expected;
 
 			Assert.assertEquals(message, expected, actual);
 		}
@@ -121,12 +121,12 @@ public class StringAsserts {
 
 		if (n1 + n2 > 0) {
 			if (n1 == 1 && n2 == 1) {
-				assertEqualString((String) list1.get(0), (String) list2.get(0));
+				assertEqualString(list1.get(0), list2.get(0));
 			}
 
 			StringBuffer buf= new StringBuffer();
 			for (int i= 0; i < n1; i++) {
-				String s1= (String) list1.get(i);
+				String s1= list1.get(i);
 				if (s1 != null) {
 					buf.append(s1);
 					buf.append("\n");
@@ -136,7 +136,7 @@ public class StringAsserts {
 
 			buf= new StringBuffer();
 			for (int i= 0; i < n2; i++) {
-				String s2= (String) list2.get(i);
+				String s2= list2.get(i);
 				if (s2 != null) {
 					buf.append(s2);
 					buf.append("\n");
@@ -164,12 +164,12 @@ public class StringAsserts {
 
 		if (n2 > 0) {
 			if (n1 == 1 && n2 == 1) {
-				assertEqualString((String) list1.get(0), (String) list2.get(0));
+				assertEqualString(list1.get(0), list2.get(0));
 			}
 
 			StringBuffer buf= new StringBuffer();
 			for (int i= 0; i < n1; i++) {
-				String s1= (String) list1.get(i);
+				String s1= list1.get(i);
 				if (s1 != null) {
 					buf.append(s1);
 					buf.append("\n");
@@ -179,7 +179,7 @@ public class StringAsserts {
 
 			buf= new StringBuffer();
 			for (int i= 0; i < n2; i++) {
-				String s2= (String) list2.get(i);
+				String s2= list2.get(i);
 				if (s2 != null) {
 					buf.append(s2);
 					buf.append("\n");

@@ -35,7 +35,7 @@ import org.eclipse.core.runtime.CoreException;
  * @author andrew
  * @created May 12, 2010
  */
-public class FindAllOccurrencesVisitorTests extends AbstractCheckerTests {
+public class FindAllOccurrencesVisitorTests extends CheckerTestCase {
 
     public FindAllOccurrencesVisitorTests() {
         super(FindAllOccurrencesVisitorTests.class.getName());

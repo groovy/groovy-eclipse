@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,97 +34,96 @@ import org.eclipse.ui.PlatformUI;
 // Adapted from org.eclipse.jdt.ui.tests.performance.JdtPerformanceTestCase
 public class SynchronizationUtils {
 
-		
-	public static void joinBackgroudActivities()  {
-		// Join Building
-		boolean interrupted= true;
-		while (interrupted) {
-			try {
-				Job.getJobManager().join(ResourcesPlugin.FAMILY_AUTO_BUILD, null);
-				interrupted= false;
-			} catch (InterruptedException e) {
-				interrupted= true;
-			}
-		}
-		boolean wasInterrupted = false;
-		do {
-			try {
-				Job.getJobManager().join(ResourcesPlugin.FAMILY_MANUAL_BUILD, null);
-				wasInterrupted = false;
-			} catch (OperationCanceledException e) {
-			} catch (InterruptedException e) {
-				wasInterrupted = true;
-			}
-		} while (wasInterrupted);	
-		// Join jobs
-		joinJobs(100, 500, 500);
-	}
+    public static void joinBackgroudActivities()  {
+        // Join Building
+        boolean interrupted= true;
+        while (interrupted) {
+            try {
+                Job.getJobManager().join(ResourcesPlugin.FAMILY_AUTO_BUILD, null);
+                interrupted= false;
+            } catch (InterruptedException e) {
+                interrupted= true;
+            }
+        }
+        boolean wasInterrupted = false;
+        do {
+            try {
+                Job.getJobManager().join(ResourcesPlugin.FAMILY_MANUAL_BUILD, null);
+                wasInterrupted = false;
+            } catch (OperationCanceledException e) {
+            } catch (InterruptedException e) {
+                wasInterrupted = true;
+            }
+        } while (wasInterrupted);
+        // Join jobs
+        joinJobs(100, 500, 500);
+    }
 
 
-	private static boolean joinJobs(long minTime, long maxTime, long intervalTime) {
-		long startTime= System.currentTimeMillis() + minTime;
-		runEventQueue();
-		while (System.currentTimeMillis() < startTime)
-			runEventQueue(intervalTime);
-		
-		long endTime= maxTime > 0  && maxTime < Long.MAX_VALUE ? System.currentTimeMillis() + maxTime : Long.MAX_VALUE;
-		boolean calm= allJobsQuiet();
-		while (!calm && System.currentTimeMillis() < endTime) {
-			runEventQueue(intervalTime);
-//			printJobs();
-			calm= allJobsQuiet();
-		}
-		return calm;
-	}
-	
-	private static void sleep(int intervalTime) {
-		try {
-			Thread.sleep(intervalTime);
-		} catch (InterruptedException e) {
-		}
-	}
-	
-	private static boolean allJobsQuiet() {
-		IJobManager jobManager= Job.getJobManager();
-		Job[] jobs= jobManager.find(null);
-		for (int i= 0; i < jobs.length; i++) {
-			Job job= jobs[i];
-			int state= job.getState();
-			//ignore jobs we don't care about
-			if (!job.getName().equals("Flush Cache Job") &&  //$NON-NLS-1$
-			        !job.getName().equals("Usage Data Event consumer") &&  //$NON-NLS-1$
-					(state == Job.RUNNING || state == Job.WAITING)) {
-				return false;
-			}
-		}
-		return true;
-	}
-	
-	private static void runEventQueue() {
-		IWorkbenchWindow window= PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-		if (window != null)
-			runEventQueue(window.getShell());
-	}
-	
-	private static void runEventQueue(Shell shell) {
-		try {
-			while (shell.getDisplay().readAndDispatch()) {
-				// do nothing
-			}
-		} catch (SWTException e) {
-			System.err.println(e);
-		}
-	}
-	
-	private static void runEventQueue(long minTime) {
-		long nextCheck= System.currentTimeMillis() + minTime;
-		while (System.currentTimeMillis() < nextCheck) {
-			runEventQueue();
-			sleep(1);
-		}
-	}
-	
-	public static void printJobs() {
+    private static boolean joinJobs(long minTime, long maxTime, long intervalTime) {
+        long startTime= System.currentTimeMillis() + minTime;
+        runEventQueue();
+        while (System.currentTimeMillis() < startTime)
+            runEventQueue(intervalTime);
+
+        long endTime= maxTime > 0  && maxTime < Long.MAX_VALUE ? System.currentTimeMillis() + maxTime : Long.MAX_VALUE;
+        boolean calm= allJobsQuiet();
+        while (!calm && System.currentTimeMillis() < endTime) {
+            runEventQueue(intervalTime);
+            //printJobs();
+            calm = allJobsQuiet();
+        }
+        return calm;
+    }
+
+    public static void sleep(int intervalTime) {
+        try {
+            Thread.sleep(intervalTime);
+        } catch (InterruptedException e) {
+        }
+    }
+
+    private static boolean allJobsQuiet() {
+        IJobManager jobManager= Job.getJobManager();
+        Job[] jobs= jobManager.find(null);
+        for (int i= 0; i < jobs.length; i++) {
+            Job job= jobs[i];
+            int state= job.getState();
+            //ignore jobs we don't care about
+            if (!job.getName().equals("Flush Cache Job") &&
+                    !job.getName().equals("Usage Data Event consumer") &&
+                    (state == Job.RUNNING || state == Job.WAITING)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static void runEventQueue() {
+        IWorkbenchWindow window= PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        if (window != null)
+            runEventQueue(window.getShell());
+    }
+
+    private static void runEventQueue(Shell shell) {
+        try {
+            while (shell.getDisplay().readAndDispatch()) {
+                // do nothing
+            }
+        } catch (SWTException e) {
+            System.err.println(e);
+        }
+    }
+
+    private static void runEventQueue(long minTime) {
+        long nextCheck= System.currentTimeMillis() + minTime;
+        while (System.currentTimeMillis() < nextCheck) {
+            runEventQueue();
+            sleep(1);
+        }
+    }
+
+    public static void printJobs() {
        IJobManager jobManager = Job.getJobManager();
         Job[] jobs = jobManager.find(null);
         System.out.println("=====Printing Jobs========");
@@ -132,22 +131,22 @@ public class SynchronizationUtils {
             Job job = jobs[i];
             int state = job.getState();
             // ignore jobs we don't care about
-            if (!job.getName().equals("Flush Cache Job") && //$NON-NLS-1$
-                    !job.getName().equals("Usage Data Event consumer") && //$NON-NLS-1$
+            if (!job.getName().equals("Flush Cache Job") &&
+                    !job.getName().equals("Usage Data Event consumer") &&
                     (state == Job.RUNNING || state == Job.WAITING)) {
                 System.out.println(job.getName());
             }
         }
         System.out.println("==========================");
     }
-	
-	public static void waitForIndexingToComplete() {
-	    try {
+
+    public static void waitForIndexingToComplete() {
+        try {
             performDummySearch(JavaModelManager.getJavaModelManager().getJavaModel());
         } catch (CoreException e1) {
             e1.printStackTrace();
         }
-	    SynchronizationUtils.joinBackgroudActivities();
+        SynchronizationUtils.joinBackgroudActivities();
         Job[] jobs = Job.getJobManager().find(null);
         for (int i = 0; i < jobs.length; i++) {
             if (jobs[i].getName().startsWith("Java indexing")) {
@@ -162,8 +161,8 @@ public class SynchronizationUtils {
                 }
             }
         }
-	}
-	
+    }
+
     protected static class Requestor extends TypeNameRequestor { }
 
     private static void performDummySearch(IJavaElement element) throws CoreException {
@@ -179,24 +178,23 @@ public class SynchronizationUtils {
             null);
     }
 
-
-	public static void waitForRefactoringToComplete() {
-	    SynchronizationUtils.joinBackgroudActivities();
-	    Job[] jobs = Job.getJobManager().find(null);
-	    for (int i = 0; i < jobs.length; i++) {
-	        if (jobs[i].getName().startsWith("Java indexing")) {
-	            boolean wasInterrupted = true;
-	            while (wasInterrupted) {
-	                try {
-	                    wasInterrupted = false;
-	                    jobs[i].join();
-	                } catch (InterruptedException e) {
-	                    wasInterrupted = true;
-	                }
-	            }
-	        }
-	    }
-	}
+    public static void waitForRefactoringToComplete() {
+        SynchronizationUtils.joinBackgroudActivities();
+        Job[] jobs = Job.getJobManager().find(null);
+        for (int i = 0; i < jobs.length; i++) {
+            if (jobs[i].getName().startsWith("Java indexing")) {
+                boolean wasInterrupted = true;
+                while (wasInterrupted) {
+                    try {
+                        wasInterrupted = false;
+                        jobs[i].join();
+                    } catch (InterruptedException e) {
+                        wasInterrupted = true;
+                    }
+                }
+            }
+        }
+    }
 
     public static void waitForDSLDProcessingToComplete() {
         SynchronizationUtils.joinBackgroudActivities();
@@ -215,5 +213,4 @@ public class SynchronizationUtils {
             }
         }
     }
-
 }
