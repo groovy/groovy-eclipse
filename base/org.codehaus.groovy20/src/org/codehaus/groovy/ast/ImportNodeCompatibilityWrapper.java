@@ -15,11 +15,11 @@
  */
 package org.codehaus.groovy.ast;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 /**
  * This class provides a standard interface to access import nodes 
@@ -46,30 +46,30 @@ public class ImportNodeCompatibilityWrapper {
             return start1 - start2;
         }
     }
-    
-    private SortedSet<ImportNode> sortedImports;
+
     private ModuleNode module;
-    
+    private List<ImportNode> sortedImports;
+
     public ImportNodeCompatibilityWrapper(ModuleNode module) {
         if (module == null) {
             throw new IllegalArgumentException("Module node should not be null");
         }
         this.module = module;
     }
-    
-    public SortedSet<ImportNode> getAllImportNodes() {
+
+    public List<ImportNode> getAllImportNodes() {
         if (sortedImports == null) {
-            initialize();
+            sortedImports = new ArrayList<ImportNode>();
+
+            sortedImports.addAll(module.getImports());
+            sortedImports.addAll(module.getStarImports());
+            sortedImports.addAll(module.getStaticImports().values());
+            sortedImports.addAll(module.getStaticStarImports().values());
+
+            Collections.sort(sortedImports, new ImportNodeComparator());
+            sortedImports = Collections.unmodifiableList(sortedImports);
         }
         return sortedImports;
-    }
-
-    private void initialize() {
-        sortedImports = new TreeSet<ImportNode>(new ImportNodeComparator());
-        sortedImports.addAll(module.getImports());
-        sortedImports.addAll(module.getStarImports());
-        sortedImports.addAll(module.getStaticStarImports().values());
-        sortedImports.addAll(module.getStaticImports().values());
     }
 
     // not available in 1.6 stream

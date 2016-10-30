@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,41 +24,41 @@ package org.codehaus.groovy.eclipse.core;
  * <p>
  * Specific implementations are used in the following ways: In editors, it wraps an editor document. In tests, it wraps
  * a String. In an expression evaluator, it wraps a text fields buffer. And so on.
- * 
+ *
  * @author empovazan
  */
 public interface ISourceBuffer extends CharSequence {
-	/**
-	 * @see CharSequence#charAt(int)
-	 */
-	public char charAt(int offset);
+    /**
+     * @see CharSequence#charAt(int)
+     */
+    public char charAt(int offset);
 
-	/**
-	 * @see CharSequence#length()
-	 */
-	public int length();
+    /**
+     * @see CharSequence#length()
+     */
+    public int length();
 
-	/**
-	 * @see CharSequence#subSequence(int, int)
-	 */
-	public CharSequence subSequence(int start, int end);
+    /**
+     * @see CharSequence#subSequence(int, int)
+     */
+    public CharSequence subSequence(int start, int end);
 
-	/**
-	 * Convert from offset coordinates to line/column coordinates.
-	 * 
-	 * @param offset
-	 * @throws IndexOutOfBoundsException
-	 * @return An integer array with values [line, column].
-	 */
-	public int[] toLineColumn(int offset);
+    /**
+     * Convert from offset coordinates to line/column coordinates.
+     *
+     * @param offset
+     * @throws IndexOutOfBoundsException
+     * @return An integer array with values [line, column].
+     */
+    public int[] toLineColumn(int offset);
 
-	/**
-	 * Convert from line/column coordinates to offset coordinates.
-	 * 
-	 * @param line
-	 * @param column
-	 * @throws IndexOutOfBoundsException
-	 * @return The offset represented by the line/column.
-	 */
-	public int toOffset(int line, int column);
+    /**
+     * Convert from line/column coordinates to offset coordinates.
+     *
+     * @param line
+     * @param column
+     * @throws IndexOutOfBoundsException
+     * @return The offset represented by the line/column.
+     */
+    public int toOffset(int line, int column);
 }

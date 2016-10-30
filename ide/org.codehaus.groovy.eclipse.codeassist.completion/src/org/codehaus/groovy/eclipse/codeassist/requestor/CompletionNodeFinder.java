@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.codehaus.groovy.eclipse.codeassist.requestor;
 
 import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation.CLASS_BODY;
@@ -28,7 +27,6 @@ import static org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLoca
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -69,7 +67,6 @@ import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
 import org.codehaus.groovy.runtime.GeneratedClosure;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -107,9 +104,13 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
      */
     private Stack<TupleExpression> argsStack;
 
-    public CompletionNodeFinder(int completionOffset, int completionEnd,
-            int supportingNodeEnd,
-            String completionExpression, String fullCompletionExpression) {
+    public CompletionNodeFinder(
+        int completionOffset,
+        int completionEnd,
+        int supportingNodeEnd,
+        String completionExpression,
+        String fullCompletionExpression) {
+
         this.completionOffset = completionOffset;
         this.completionEnd = completionEnd;
         this.supportingNodeEnd = supportingNodeEnd;
@@ -122,27 +123,25 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     public ContentAssistContext findContentAssistContext(GroovyCompilationUnit unit) {
         try {
             this.unit = unit;
-            internalVisitModuleNode(unit.getModuleNode());
-        } catch (VisitCompleteException e) { }
-        return context;
-    }
+            ModuleNode node = unit.getModuleNode();
 
-
-    private void internalVisitModuleNode(ModuleNode module) {
-        visitImports(module);
-        // visit script last because sometimes its
-        // source locations wrap around the other classes
-        ClassNode script = null;
-        for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
-            if (clazz.isScript()) {
-                script = clazz;
-            } else {
-                visitClass(clazz);
+            visitImports(node);
+            // visit script last because sometimes its
+            // source locations wrap around the other classes
+            ClassNode script = null;
+            for (ClassNode clazz : (Iterable<ClassNode>) node.getClasses()) {
+                if (clazz.isScript()) {
+                    script = clazz;
+                } else {
+                    visitClass(clazz);
+                }
             }
+            if (script != null) {
+                visitClass(script);
+            }
+        } catch (VisitCompleteException e) {
         }
-        if (script != null) {
-            visitClass(script);
-        }
+        return context;
     }
 
 
@@ -221,8 +220,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             blockStack.pop();
         }
 
-        // visit default constructors that have been added by the verifier.  This is
-        // where initializers lie
+        // visit default constructors that have been added by the verifier; this is where initializers lie
         ConstructorNode init = findDefaultConstructor(node);
         if (init != null) {
             Statement statement = init.getCode();
@@ -246,7 +244,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
 
         // do the run method last since it can wrap around other methods
         if (node.isScript()) {
-            MethodNode run = node.getMethod("run", new Parameter[0]);
+            MethodNode run = node.getMethod("run", Parameter.EMPTY_ARRAY);
             if (run != null && run.getDeclaringClass().equals(node)) {
                 internalVisitConstructorOrMethod(run);
             }
@@ -265,6 +263,7 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         }
     }
 
+    /*
     @Override
     public void visitAnnotations(AnnotatedNode node) {
         List<AnnotationNode> annotations = node.getAnnotations();
@@ -282,6 +281,15 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             if (doTest(an.getClassNode())) {
                 createContext(node, currentDeclaration, ContentAssistLocation.ANNOTATION);
             }
+        }
+    }
+    */
+
+    @Override
+    protected void visitAnnotation(AnnotationNode node) {
+        super.visitAnnotation(node);
+        if (doTest(node.getClassNode())) {
+            createContext(node, currentDeclaration, ContentAssistLocation.ANNOTATION);
         }
     }
 
@@ -343,25 +351,15 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         }
     }
 
-    /**
-     * @param node
-     * @return
-     */
     private ContentAssistLocation expressionScriptOrStatement(MethodNode node) {
         return isRunMethod(node) ?
                 expressionOrScript() : expressionOrStatement();
     }
 
-    /**
-     * @return
-     */
     private ContentAssistLocation expressionOrScript() {
         return supportingNodeEnd == -1 ? SCRIPT : EXPRESSION;
     }
 
-    /**
-     * @return
-     */
     private ContentAssistLocation expressionOrStatement() {
         return supportingNodeEnd == -1 ? STATEMENT : EXPRESSION;
     }
@@ -447,7 +445,6 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         if (!doTest(node)) {
             return;
         }
-
 
         currentDeclaration = node;
         ClassNode type = node.getType();
@@ -540,7 +537,6 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         super.visitArrayExpression(expression);
     }
 
-
     @Override
     public void visitStaticMethodCallExpression(
             StaticMethodCallExpression call) {
@@ -563,7 +559,6 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
             createContext(call, blockStack.peek(), expressionOrStatement());
         }
     }
-
 
     @Override
     public void visitClosureExpression(ClosureExpression expression) {
@@ -897,7 +892,6 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
         }
     }
 
-
     private void internalVisitParameters(Parameter[] ps, ASTNode declaringNode) {
         if (ps != null) {
             for (Parameter p : ps) {
@@ -958,13 +952,10 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
     }
 
     private void createContext(ASTNode completionNode, ASTNode declaringNode, ContentAssistLocation location) {
-        context = new ContentAssistContext(completionOffset,
-                completionExpression, fullCompletionExpression, completionNode,
-                declaringNode, lhsNode, location, unit, currentDeclaration,
-                completionEnd);
+        context = new ContentAssistContext(completionOffset, completionExpression, fullCompletionExpression,
+            completionNode, declaringNode, lhsNode, location, unit, currentDeclaration, completionEnd);
         throw new VisitCompleteException();
     }
-
 
     protected boolean doTest(ASTNode node) {
         return node.getEnd() > 0
@@ -974,16 +965,8 @@ public class CompletionNodeFinder extends ClassCodeVisitorSupport {
 
     /**
      * will be null if no completions are available at the location
-     * @return
      */
     public ContentAssistContext getContext() {
         return context;
     }
-
-
-    @Override
-    protected SourceUnit getSourceUnit() {
-        return null;
-    }
-
 }

@@ -15,8 +15,6 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
-import groovy.lang.GroovyClassLoader;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,6 +24,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.WeakHashMap;
+
+import groovy.lang.GroovyClassLoader;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;

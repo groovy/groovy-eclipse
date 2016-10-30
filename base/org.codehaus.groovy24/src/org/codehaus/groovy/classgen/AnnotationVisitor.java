@@ -130,7 +130,6 @@ public class AnnotationVisitor {
 
                 try {
                     // GRECLIPSE add
-                    type.getFields(); // <-- Is this needed?
                     if (type.hasClass()) {
                     // GRECLIPSE end
                     Field field = type.getTypeClass().getField(pe.getPropertyAsString());
@@ -156,6 +155,9 @@ public class AnnotationVisitor {
             for (Expression e : le.getExpressions()) {
                 result.addExpression(transformInlineConstants(e));
             }
+            // GRECLIPSE edd
+            result.setSourcePosition(exp);
+            // GRECLIPSE end
             return result;
         }
         return exp;
@@ -209,6 +211,9 @@ public class AnnotationVisitor {
                 // treat like a singleton list as per Java
                 ListExpression listExp = new ListExpression();
                 listExp.addExpression(attrExp);
+                // GRECLIPSE add
+                listExp.setSourcePosition(ClassCodeVisitorSupport.getNonInlinedExpression(attrExp));
+                // GRECLIPSE end
                 if (annotation != null) {
                     annotation.setMember(attrName, listExp);
                 }

@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
 /**
@@ -82,17 +83,20 @@ public class CategoryTypeLookup implements ITypeLookup {
                     }
                 }
             }
+
+            ClassNode normalizedType = GroovyUtils.getWrapperTypeIfPrimitive(currentType);
             for (MethodNode methodNode : possibleMethods) {
                 Parameter[] params = methodNode.getParameters();
-                if (params != null && params.length > 0
-                        && isAssignableFrom(VariableScope.maybeConvertFromPrimitive(currentType), params[0].getType())) {
+                if (params != null && params.length > 0 && isAssignableFrom(normalizedType, params[0].getType())) {
                     ClassNode declaringClass = methodNode.getDeclaringClass();
                     ClassNode returnType = SimpleTypeLookup.typeFromDeclaration(methodNode, currentType);
                     TypeConfidence confidence = getConfidence(declaringClass);
                     if (confidence == TypeConfidence.LOOSELY_INFERRED) {
                         confidence = checkParameters(params, scope.getMethodCallArgumentTypes());
                     }
-                    return new TypeLookupResult(returnType, declaringClass, methodNode, confidence, scope);
+                    TypeLookupResult result = new TypeLookupResult(returnType, declaringClass, methodNode, confidence, scope);
+                    result.isGroovy = true;
+                    return result;
                 }
             }
         }
@@ -103,8 +107,8 @@ public class CategoryTypeLookup implements ITypeLookup {
      * DGM and DGSM classes are loosely inferred so that other lookups can provide better solutions
      */
     private TypeConfidence getConfidence(ClassNode declaringClass) {
-        return VariableScope.ALL_DEFAULT_CATEGORIES.contains(declaringClass) ? TypeConfidence.LOOSELY_INFERRED
-                : TypeConfidence.INFERRED;
+        boolean contains = VariableScope.ALL_DEFAULT_CATEGORIES.contains(declaringClass);
+        return contains ? TypeConfidence.LOOSELY_INFERRED : TypeConfidence.INFERRED;
     }
 
     /**
@@ -130,8 +134,9 @@ public class CategoryTypeLookup implements ITypeLookup {
     }
 
     private void findAllSupers(ClassNode clazz, Set<String> allSupers) {
-        if (!allSupers.contains(clazz.getName())) {
-            allSupers.add(clazz.getName());
+        String name = clazz.getName();
+        if (!allSupers.contains(name)) {
+            allSupers.add(name);
             if (clazz.getSuperClass() != null) {
                 findAllSupers(clazz.getSuperClass(), allSupers);
             }
@@ -146,15 +151,18 @@ public class CategoryTypeLookup implements ITypeLookup {
     /**
      * Can {@code source} be assigned to {@code target}?
      */
-    private boolean isAssignableFrom(ClassNode from, ClassNode to) {
-        if (from == null || to == null) {
+    private boolean isAssignableFrom(ClassNode source, ClassNode target) {
+        if (source == null || target == null) {
             return false;
         }
+        String sourceName = source.getName(), targetName = target.getName();
         Set<String> allSupers = new HashSet<String>();
         allSupers.add("java.lang.Object");
-        findAllSupers(from, allSupers);
-        for (String supr : allSupers) {
-            if (to.getName().equals(supr)) {
+        if (sourceName.startsWith("["))
+            allSupers.add("[Ljava.lang.Object;");
+        findAllSupers(source, allSupers);
+        for (String superName : allSupers) {
+            if (targetName.equals(superName)) {
                 return true;
             }
         }

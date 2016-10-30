@@ -21,7 +21,6 @@ import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.control.SourceUnit;
 
 /**
  * Tests to see if {@link #nodeToLookFor} exists as a sub node in the {@link ASTNode} that is passed in to {@link #doVisit(ASTNode)}
@@ -41,11 +40,6 @@ public class EqualityVisitor extends ClassCodeVisitorSupport {
     public boolean doVisit(ASTNode toVisit) {
         toVisit.visit(this);
         return nodeFound;
-    }
-
-    @Override
-    protected SourceUnit getSourceUnit() {
-        return null;
     }
 
     @Override

@@ -18,8 +18,6 @@ package org.codehaus.groovy.eclipse.core.compiler;
 import static org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion.UNSPECIFIED;
 import static org.eclipse.core.runtime.FileLocator.resolve;
 
-import groovy.lang.GroovySystem;
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -29,6 +27,8 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import groovy.lang.GroovySystem;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
@@ -182,7 +182,7 @@ public class CompilerUtils {
 
     public static void addMultipleCompilersOnClasspathError(IProject project, SpecifiedVersion compiler1, SpecifiedVersion compiler2) {
         try {
-            SpecifiedVersion workspaceLevel = CompilerUtils.getWorkspaceCompilerLevel();
+            //SpecifiedVersion workspaceLevel = CompilerUtils.getWorkspaceCompilerLevel();
             IMarker marker = project.getProject().createMarker(CompilerCheckerParticipant.COMPILER_MISMATCH_PROBLEM);
             marker.setAttribute(IMarker.MESSAGE,
                     "Multiple Groovy compilers found on classpath. Continuing with compilation will produce unpredictible results. "

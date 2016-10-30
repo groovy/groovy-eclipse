@@ -15,8 +15,6 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
-import groovy.lang.GroovyClassLoader;
-
 import java.io.File;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
@@ -30,16 +28,18 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.jar.JarFile;
 
+import groovy.lang.GroovyClassLoader;
+
 import org.apache.xbean.classloader.NonLockingJarFileClassLoader;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilationUnit.PrimaryClassNodeOperation;
 import org.codehaus.groovy.control.CompilationUnit.ProgressListener;
-import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.jdt.groovy.control.EclipseSourceUnit;

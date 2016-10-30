@@ -17,7 +17,9 @@ package org.codehaus.groovy.ast;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -41,7 +43,6 @@ import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
-import org.codehaus.groovy.syntax.SyntaxException;
 
 public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport implements GroovyClassVisitor {
 
@@ -89,15 +90,56 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
 
     public void visitAnnotations(AnnotatedNode node) {
         List<AnnotationNode> annotations = node.getAnnotations();
-        if (annotations.isEmpty()) return;
-        for (AnnotationNode an : annotations) {
+        // GRECLIPSE edit
+        if (!annotations.isEmpty())
+            visitAnnotations(annotations);
+        // GRECLIPSE end
+    }
+
+    // GRECLIPSE add
+    protected void visitAnnotations(Iterable<AnnotationNode> nodes) {
+        for (AnnotationNode node : nodes) {
             // skip built-in properties
-            if (an.isBuiltIn()) continue;
-            for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
-                member.getValue().visit(this);
+            if (node.isBuiltIn()) continue;
+
+            Set<AnnotationNode> originals =
+                node.getNodeMetaData("AnnotationCollector");
+            if (originals != null && !originals.isEmpty()) {
+                visitAnnotations(originals);
             }
+            visitAnnotation(node);
         }
     }
+
+    protected void visitAnnotation(AnnotationNode node) {
+        for (Expression expr : node.getMembers().values()) {
+            expr.visit(this);
+        }
+    }
+
+    @Override
+    public void visitConstantExpression(ConstantExpression expression) {
+        // check for inlined constant (see ResolveVisitor.transformInlineConstants)
+        Expression original = expression.getNodeMetaData(ORIGINAL_EXPRESSION);
+        if (original != null) {
+            original.visit(this);
+        }
+    }
+
+    /**
+     * Returns the original source expression (in case of constant inlining) or
+     * the input expression.
+     *
+     * @see org.codehaus.groovy.control.ResolveVisitor#transformInlineConstants
+     * @see org.codehaus.groovy.control.ResolveVisitor#cloneConstantExpression
+     */
+    public static final Expression getNonInlinedExpression(Expression expression) {
+        Expression original = expression.getNodeMetaData(ORIGINAL_EXPRESSION);
+        return original != null ? original : expression;
+    }
+
+    public static final String ORIGINAL_EXPRESSION = "OriginalExpression";
+    // GRECLIPSE end
 
     protected void visitClassCodeContainer(Statement code) {
         if (code != null) code.visit(this);
@@ -144,54 +186,54 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
     }
 
     protected void addError(String msg, ASTNode expr) {
+        // GRECLIPSE add
         int line = expr.getLineNumber();
         int col = expr.getColumnNumber();
-        // GRECLIPSE
         int start = expr.getStart();
-        int end = expr.getEnd()-1;
+        int end = expr.getEnd() - 1;
         if (expr instanceof ClassNode) {
-        	// assume we have a class declaration
-        	ClassNode cn = (ClassNode) expr;
-        	if (cn.getNameEnd() > 0) {
-        		start = cn.getNameStart();
-        		end = cn.getNameEnd();
-        	} else if (cn.getComponentType() != null) {
-        		// avoid extra whitespace after closing ]
-        		end --;
-        	}
-        	
+            // assume we have a class declaration
+            ClassNode cn = (ClassNode) expr;
+            if (cn.getNameEnd() > 0) {
+                start = cn.getNameStart();
+                end = cn.getNameEnd();
+            } else if (cn.getComponentType() != null) {
+                // avoid extra whitespace after closing ]
+                end -= 1;
+            }
         } else if (expr instanceof DeclarationExpression) {
-        	// assume that we just want to underline the variable declaration
-        	DeclarationExpression decl = (DeclarationExpression) expr;
-        	Expression lhs = decl.getLeftExpression();
-			start = lhs.getStart();
-        	// avoid extra space before = if a variable
-        	end = lhs instanceof VariableExpression ? start + lhs.getText().length() -1: lhs.getEnd() -1;
+            // assume that we just want to underline the variable declaration
+            DeclarationExpression decl = (DeclarationExpression) expr;
+            Expression lhs = decl.getLeftExpression();
+            start = lhs.getStart();
+            // avoid extra space before = if a variable
+            end = lhs instanceof VariableExpression ? start + lhs.getText().length() -1: lhs.getEnd() -1;
         }
-        // end
-        
-        SourceUnit source = getSourceUnit();
-		source.getErrorCollector().addErrorAndContinue(
-                // GRECLIPSE: start
-                new SyntaxErrorMessage(new PreciseSyntaxException(msg + '\n', line, col, start, end), source)
-                // end
-        );
-    }
-    
-    // GRECLIPSE start
-    protected void addTypeError(String msg, ClassNode expr ) {
-        int line = expr.getLineNumber();
-        int col = expr.getColumnNumber();
+        // GRECLIPSE end
         SourceUnit source = getSourceUnit();
         source.getErrorCollector().addErrorAndContinue(
-        		// GRECLIPSE: start
-                new SyntaxErrorMessage(new PreciseSyntaxException(msg + '\n', line, col, expr.getNameStart(), expr.getNameEnd()), source)
-                // end
+                // GRECLIPSE edit
+                //new SyntaxErrorMessage(new SyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber(), expr.getLastLineNumber(), expr.getLastColumnNumber()), source)
+                new SyntaxErrorMessage(new PreciseSyntaxException(msg + '\n', line, col, start, end), source)
+                // GRECLIPSE end
         );
     }
-    // end
 
-    protected abstract SourceUnit getSourceUnit();
+    // GRECLIPSE add
+    protected void addTypeError(String msg, ClassNode expr) {
+        SourceUnit source = getSourceUnit();
+        source.getErrorCollector().addErrorAndContinue(
+                new SyntaxErrorMessage(new PreciseSyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber(), expr.getNameStart(), expr.getNameEnd()), source)
+        );
+    }
+    // GRECLIPSE end
+
+    // GRECLIPSE edit
+    //protected abstract SourceUnit getSourceUnit();
+    protected SourceUnit getSourceUnit() {
+        return null;
+    }
+    // GRECLIPSE end
 
     protected void visitStatement(Statement statement) {
     }

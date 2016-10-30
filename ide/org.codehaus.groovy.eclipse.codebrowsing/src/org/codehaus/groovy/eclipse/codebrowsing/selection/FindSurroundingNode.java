@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.ImportNodeCompatibilityWrapper;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
@@ -125,6 +124,7 @@ public class FindSurroundingNode extends ASTNodeFinder {
     public IASTFragment doVisitSurroundingNode(ModuleNode module) {
         nodeStack.push(factory.createFragment(module));
 
+        Region sloc = this.sloc;
         ASTNode node = super.doVisit(module);
         if (node == null && runMethod != null) {
             // GRECLIPSE-781 visit run method if it exists
@@ -142,7 +142,7 @@ public class FindSurroundingNode extends ASTNodeFinder {
             // that have no source position
             while (!nodeStack.isEmpty()) {
                 maybeNode = nodeStack.peek();
-                if (maybeNode.getEnd() == 0 || (visitKind == VisitKind.EXTRA_EXPAND && super.getRegion().isSame(maybeNode))) {
+                if (maybeNode.getEnd() == 0 || (visitKind == VisitKind.EXTRA_EXPAND && sloc.isSame(maybeNode))) {
                     nodeStack.pop();
                 } else {
                     break;
@@ -152,11 +152,11 @@ public class FindSurroundingNode extends ASTNodeFinder {
         return nodeStack.isEmpty() ? maybeNode : nodeStack.peek();
     }
 
-	@Override
-	public ASTNode doVisit(ModuleNode module) {
-		Assert.isLegal(false, "Use doVisitSurroundingNode() instead");
-		return super.doVisit(module);
-	}
+    @Override
+    public ASTNode doVisit(ModuleNode module) {
+        Assert.isLegal(false, "Use doVisitSurroundingNode() instead");
+        return super.doVisit(module);
+    }
 
     public Stack<IASTFragment> getParentStack() {
         return nodeStack;
@@ -174,7 +174,6 @@ public class FindSurroundingNode extends ASTNodeFinder {
         nodeStack.pop();
     }
 
-
     @Override
     public void visitAssertStatement(AssertStatement node) {
         nodeStack.push(factory.createFragment(node));
@@ -187,7 +186,7 @@ public class FindSurroundingNode extends ASTNodeFinder {
     public void visitBlockStatement(BlockStatement node) {
         nodeStack.push(factory.createFragment(node));
         super.visitBlockStatement(node);
-        // check(node);
+        check(node);
         nodeStack.pop();
     }
 
@@ -240,21 +239,30 @@ public class FindSurroundingNode extends ASTNodeFinder {
 
     @Override
     public void visitPackage(PackageNode node) {
-        nodeStack.push(factory.createFragment(node));
-        super.visitPackage(node);
-        check(node);
-        nodeStack.pop();
+        if (node != null) {
+            nodeStack.push(factory.createFragment(node));
+            super.visitPackage(node);
+//            check(node);
+            nodeStack.pop();
+        }
     }
 
+//    @Override
+//    public void visitImports(ModuleNode module) {
+//        for (ImportNode importNode : new ImportNodeCompatibilityWrapper(module).getAllImportNodes()) {
+//            if (importNode.getType() != null) {
+//                nodeStack.push(factory.createFragment(importNode));
+//                check(importNode.getType());
+//                nodeStack.pop();
+//            }
+//        }
+//    }
+
     @Override
-    public void visitImports(ModuleNode module) {
-        for (ImportNode importNode : new ImportNodeCompatibilityWrapper(module).getAllImportNodes()) {
-            if (importNode.getType() != null) {
-                nodeStack.push(factory.createFragment(importNode));
-                check(importNode.getType());
-                nodeStack.pop();
-            }
-        }
+    protected void visitImport(ImportNode node) {
+        nodeStack.push(factory.createFragment(node));
+        super.visitImport(node);
+        nodeStack.pop();
     }
 
     @Override
@@ -316,10 +324,9 @@ public class FindSurroundingNode extends ASTNodeFinder {
     @Override
     public void visitBinaryExpression(BinaryExpression node) {
         nodeStack.push(factory.createFragment(node));
-        if (getRegion().regionIsCoveredByNode(node)) {
-            // create an extra stack frame to precisely describe the region
-            // being covered
-            nodeStack.push(factory.createFragment(node, getRegion().getOffset(), getRegion().getEnd()));
+        if (sloc.regionIsCoveredByNode(node)) {
+            // create an extra stack frame to precisely describe the region being covered
+            nodeStack.push(factory.createFragment(node, sloc.getOffset(), sloc.getEnd()));
         }
         super.visitBinaryExpression(node);
         check(node);
@@ -327,8 +334,7 @@ public class FindSurroundingNode extends ASTNodeFinder {
     }
 
     @Override
-    public void visitBitwiseNegationExpression(
-            BitwiseNegationExpression node) {
+    public void visitBitwiseNegationExpression(BitwiseNegationExpression node) {
         nodeStack.push(factory.createFragment(node));
         super.visitBitwiseNegationExpression(node);
         check(node);
@@ -338,7 +344,6 @@ public class FindSurroundingNode extends ASTNodeFinder {
     @Override
     public void visitBooleanExpression(BooleanExpression node) {
         nodeStack.push(factory.createFragment(node));
-
         // we want to check the inner node
         // if the source locations are the same
         if (!isColocated(node.getExpression(), node)) {
@@ -350,10 +355,6 @@ public class FindSurroundingNode extends ASTNodeFinder {
 
     /**
      * Checks to see if the two nodes have the same source location
-     *
-     * @param node1
-     * @param node2
-     * @return
      */
     private boolean isColocated(ASTNode node1, ASTNode node2) {
         return node1.getStart() == node2.getStart() && node1.getEnd() == node2.getEnd();
@@ -367,8 +368,7 @@ public class FindSurroundingNode extends ASTNodeFinder {
         nodeStack.pop();
     }
 
-    // Method doesn't exist in 1.6 stream
-    // @Override
+    @Override
     protected void visitEmptyStatement(EmptyStatement node) {
         nodeStack.push(factory.createFragment(node));
         check(node);
@@ -402,10 +402,9 @@ public class FindSurroundingNode extends ASTNodeFinder {
     @Override
     public void visitMethodCallExpression(MethodCallExpression node) {
         nodeStack.push(factory.createFragment(node));
-        if (getRegion().regionIsCoveredByNode(node)) {
-            // create an extra stack frame to precisely describe the region
-            // being covered
-            nodeStack.push(factory.createFragment(node, getRegion().getOffset(), getRegion().getEnd()));
+        if (sloc.regionIsCoveredByNode(node)) {
+            // create an extra stack frame to precisely describe the region being covered
+            nodeStack.push(factory.createFragment(node, sloc.getOffset(), sloc.getEnd()));
         }
         super.visitMethodCallExpression(node);
         check(node);
@@ -415,10 +414,9 @@ public class FindSurroundingNode extends ASTNodeFinder {
     @Override
     public void visitMethodPointerExpression(MethodPointerExpression node) {
         nodeStack.push(factory.createFragment(node));
-        if (getRegion().regionIsCoveredByNode(node)) {
-            // create an extra stack frame to precisely describe the region
-            // being covered
-            nodeStack.push(factory.createFragment(node, getRegion().getOffset(), getRegion().getEnd()));
+        if (sloc.regionIsCoveredByNode(node)) {
+            // create an extra stack frame to precisely describe the region being covered
+            nodeStack.push(factory.createFragment(node, sloc.getOffset(), sloc.getEnd()));
         }
         super.visitMethodPointerExpression(node);
         check(node);
@@ -579,7 +577,6 @@ public class FindSurroundingNode extends ASTNodeFinder {
     public void visitConstantExpression(ConstantExpression node) {
         nodeStack.push(factory.createFragment(node));
         super.visitConstantExpression(node);
-        check(node);
         nodeStack.pop();
     }
 
@@ -592,22 +589,15 @@ public class FindSurroundingNode extends ASTNodeFinder {
     }
 
     @Override
-    protected void visitConstructorOrMethod(MethodNode node,
-            boolean isConstructor) {
-
+    protected void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
         // GRECLIPSE-781 must visit run method last.
         if (isRunMethod(node)) {
             runMethod = node;
             return;
         }
-
         internalVisitConstructorOrMethod(node, isConstructor);
     }
 
-    /**
-     * @param node
-     * @param isConstructor
-     */
     private void internalVisitConstructorOrMethod(MethodNode node, boolean isConstructor) {
         nodeStack.push(factory.createFragment(node));
         super.visitConstructorOrMethod(node, isConstructor);
@@ -617,10 +607,6 @@ public class FindSurroundingNode extends ASTNodeFinder {
         nodeStack.pop();
     }
 
-    /**
-     * @param node
-     * @return
-     */
     private boolean isRunMethod(MethodNode node) {
         return node.getDeclaringClass().isScript() && node.getName().equals("run")
                 && (node.getParameters() == null || node.getParameters().length == 0);
@@ -629,10 +615,10 @@ public class FindSurroundingNode extends ASTNodeFinder {
     @Override
     public void visitDeclarationExpression(DeclarationExpression node) {
         nodeStack.push(factory.createFragment(node));
-        if (getRegion().regionIsCoveredByNode(node)) {
+        if (sloc.regionIsCoveredByNode(node)) {
             // create an extra stack frame to precisely describe the region
             // being covered
-            nodeStack.push(factory.createFragment(node, getRegion().getOffset(), getRegion().getEnd()));
+            nodeStack.push(factory.createFragment(node, sloc.getOffset(), sloc.getEnd()));
         }
         super.visitDeclarationExpression(node);
         check(node);
@@ -653,7 +639,7 @@ public class FindSurroundingNode extends ASTNodeFinder {
 
     @Override
     public void visitProperty(PropertyNode node) {
-    // don't visit properties
+        // don't visit properties
     }
 
     @Override

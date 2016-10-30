@@ -23,8 +23,8 @@ import groovy.lang.GroovyClassLoader;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.CompilationFailedException;
-import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.CompilationUnit.PrimaryClassNodeOperation;
+import org.codehaus.groovy.control.SourceUnit;
 
 // Andys version of GrailsAwareInjectionOperation
 // FIXASC ensure we have a grails nature and a way to determine grails level

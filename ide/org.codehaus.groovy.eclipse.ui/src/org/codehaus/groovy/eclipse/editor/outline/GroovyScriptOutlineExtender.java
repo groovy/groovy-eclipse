@@ -32,7 +32,6 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -135,11 +134,6 @@ class GroovyScriptOCompilationUnit extends OCompilationUnit {
                 // next add all of the variable declarations
                 BlockStatement block = node.getStatementBlock();
                 ClassCodeVisitorSupport visitor = new ClassCodeVisitorSupport() {
-                    @Override
-                    protected SourceUnit getSourceUnit() {
-                        return null;
-                    }
-
                     @Override
                     public void visitClosureExpression(ClosureExpression expression) {
                     }

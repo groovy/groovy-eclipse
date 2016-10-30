@@ -20,7 +20,9 @@ package org.codehaus.groovy.ast;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -54,7 +56,7 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         node.visitContents(this);
         visitObjectInitializerStatements(node);
     }
-    
+
     protected void visitObjectInitializerStatements(ClassNode node) {
         for (Statement element : node.getObjectInitializerStatements()) {
             element.visit(this);
@@ -91,15 +93,56 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
 
     public void visitAnnotations(AnnotatedNode node) {
         List<AnnotationNode> annotations = node.getAnnotations();
-        if (annotations.isEmpty()) return;
-        for (AnnotationNode an : annotations) {
+        // GRECLIPSE edit
+        if (!annotations.isEmpty())
+            visitAnnotations(annotations);
+        // GRECLIPSE end
+    }
+
+    // GRECLIPSE add
+    protected void visitAnnotations(Iterable<AnnotationNode> nodes) {
+        for (AnnotationNode node : nodes) {
             // skip built-in properties
-            if (an.isBuiltIn()) continue;
-            for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
-                member.getValue().visit(this);
+            if (node.isBuiltIn()) continue;
+
+            Set<AnnotationNode> originals =
+                node.getNodeMetaData("AnnotationCollector");
+            if (originals != null && !originals.isEmpty()) {
+                visitAnnotations(originals);
             }
+            visitAnnotation(node);
         }
     }
+
+    protected void visitAnnotation(AnnotationNode node) {
+        for (Expression expr : node.getMembers().values()) {
+            expr.visit(this);
+        }
+    }
+
+    @Override
+    public void visitConstantExpression(ConstantExpression expression) {
+        // check for inlined constant (see ResolveVisitor.transformInlineConstants)
+        Expression original = expression.getNodeMetaData(ORIGINAL_EXPRESSION);
+        if (original != null) {
+            original.visit(this);
+        }
+    }
+
+    /**
+     * Returns the original source expression (in case of constant inlining) or
+     * the input expression.
+     *
+     * @see org.codehaus.groovy.control.ResolveVisitor#transformInlineConstants
+     * @see org.codehaus.groovy.control.ResolveVisitor#cloneConstantExpression
+     */
+    public static final Expression getNonInlinedExpression(Expression expression) {
+        Expression original = expression.getNodeMetaData(ORIGINAL_EXPRESSION);
+        return original != null ? original : expression;
+    }
+
+    public static final String ORIGINAL_EXPRESSION = "OriginalExpression";
+    // GRECLIPSE end
 
     protected void visitClassCodeContainer(Statement code) {
         if (code != null) code.visit(this);
@@ -150,7 +193,7 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         int line = expr.getLineNumber();
         int col = expr.getColumnNumber();
         int start = expr.getStart();
-        int end = expr.getEnd()-1;
+        int end = expr.getEnd() - 1;
         if (expr instanceof ClassNode) {
             // assume we have a class declaration
             ClassNode cn = (ClassNode) expr;
@@ -159,9 +202,8 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
                 end = cn.getNameEnd();
             } else if (cn.getComponentType() != null) {
                 // avoid extra whitespace after closing ]
-                end--;
+                end -= 1;
             }
-            
         } else if (expr instanceof DeclarationExpression) {
             // assume that we just want to underline the variable declaration
             DeclarationExpression decl = (DeclarationExpression) expr;
@@ -189,7 +231,12 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
     }
     // GRECLIPSE end
 
-    protected abstract SourceUnit getSourceUnit();
+    // GRECLIPSE edit
+    //protected abstract SourceUnit getSourceUnit();
+    protected SourceUnit getSourceUnit() {
+        return null;
+    }
+    // GRECLIPSE end
 
     protected void visitStatement(Statement statement) {
     }

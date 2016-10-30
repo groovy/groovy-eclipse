@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import java.util.List;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.FindAllOccurrencesVisitor;
-import org.eclipse.core.runtime.CoreException;
 
 /**
  * Tests that the {@link FindAllOccurrencesVisitor} finder is working properly.
@@ -32,10 +31,10 @@ import org.eclipse.core.runtime.CoreException;
  * Not entirely happy with the test coverage here. We really should be testing
  * more
  *
- * @author andrew
+ * @author Andrew Eisenberg
  * @created May 12, 2010
  */
-public class FindAllOccurrencesVisitorTests extends CheckerTestCase {
+public final class FindAllOccurrencesVisitorTests extends CheckerTestCase {
 
     public FindAllOccurrencesVisitorTests() {
         super(FindAllOccurrencesVisitorTests.class.getName());
@@ -146,13 +145,13 @@ public class FindAllOccurrencesVisitorTests extends CheckerTestCase {
         assertOccurrences(exprText, moduleText, first);
     }
 
-	public void testFindAllOccurrences17() throws Exception {
-		String moduleText = "def BAR\nBAR(FOO.BAZ, FOO.BAZ)";
-		String exprText = "FOO.BAZ";
-		int first = moduleText.indexOf(exprText);
-		int second = moduleText.lastIndexOf(exprText);
-		assertOccurrences(exprText, moduleText, first, second);
-	}
+    public void testFindAllOccurrences17() throws Exception {
+        String moduleText = "def BAR\nBAR(FOO.BAZ, FOO.BAZ)";
+        String exprText = "FOO.BAZ";
+        int first = moduleText.indexOf(exprText);
+        int second = moduleText.lastIndexOf(exprText);
+        assertOccurrences(exprText, moduleText, first, second);
+    }
 
     public void testFindAllOccurrences18() throws Exception {
         String moduleText = "FOO.BAR";
@@ -239,7 +238,7 @@ public class FindAllOccurrencesVisitorTests extends CheckerTestCase {
         assertOccurrences(exprText, moduleText, first);
     }
 
-    private void assertOccurrences(String exprToFindText, String moduleText, int... startLocations) throws CoreException {
+    private void assertOccurrences(String exprToFindText, String moduleText, int... startLocations) {
         IASTFragment exprToFind = getLastFragment(createModuleFromText(exprToFindText));
         ModuleNode module = createModuleFromText(moduleText);
         FindAllOccurrencesVisitor visitor = new FindAllOccurrencesVisitor(module);

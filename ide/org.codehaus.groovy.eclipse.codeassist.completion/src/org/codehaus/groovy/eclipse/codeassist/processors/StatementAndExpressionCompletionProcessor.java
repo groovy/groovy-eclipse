@@ -221,7 +221,7 @@ public class StatementAndExpressionCompletionProcessor extends
         }
 
         private void maybeRememberLHSType(TypeLookupResult result) {
-            if (isAssignmentOfLhs(result.getEnclosingAssignment())) {
+            if (isAssignmentOfLhs(result.enclosingAssignment)) {
                 // check to see if this is the rhs of an assignment.
                 // if so, then attempt to use the type of the lhs for
                 // ordering of the proposals

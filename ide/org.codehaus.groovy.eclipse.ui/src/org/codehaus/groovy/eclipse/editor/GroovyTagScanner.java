@@ -1,16 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     IBM Corporation - initial API and implementation
- *     Philippe Ombredanne <pombredanne@nexb.com> - https://bugs.eclipse.org/bugs/show_bug.cgi?id=150989
- *     Anton Leherbauer (Wind River Systems) - [misc] Allow custom token for WhitespaceRule - https://bugs.eclipse.org/bugs/show_bug.cgi?id=251224
- *     Andrew Eisenberg - adapted for use in Groovy Eclipse
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.editor;
 
 import java.util.ArrayList;
@@ -30,7 +32,6 @@ import org.eclipse.jface.text.rules.IRule;
 import org.eclipse.jface.text.rules.IToken;
 import org.eclipse.jface.text.rules.IWhitespaceDetector;
 import org.eclipse.jface.text.rules.IWordDetector;
-import org.eclipse.jface.text.rules.NumberRule;
 import org.eclipse.jface.text.rules.SingleLineRule;
 import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.text.rules.WhitespaceRule;
@@ -40,7 +41,7 @@ import org.eclipse.jface.text.rules.WhitespaceRule;
  *
  * Much of this class has been adapted from {@link JavaCodeScanner}
  *
- * @author andrew
+ * @author Andrew Eisenberg
  * @created Dec 31, 2010
  */
 public class GroovyTagScanner extends AbstractJavaScanner {
@@ -53,8 +54,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
     protected class OperatorRule implements IRule {
 
         /** Java operators */
-        private final char[] JAVA_OPERATORS = { ';', '(', ')', '{', '}', '.', '=', '/', '\\', '+', '-', '*', '[', ']', '<', '>',
-                ':', '?', '!', ',', '|', '&', '^', '%', '~' };
+        private final char[] JAVA_OPERATORS = { ';', '(', ')', '{', '}', '.', '=', '/', '\\', '+', '-', '*', '[', ']', '<', '>', ':', '?', '!', ',', '|', '&', '^', '%', '~' };
 
         /** Token to return for this rule */
         private final IToken fToken;
@@ -347,8 +347,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         }
     }
 
-    private static String[] types =
-        {
+    private static final String[] types = {
         "boolean",
         "byte",
         "char",
@@ -360,21 +359,21 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         "long",
         "short",
         "void"
-        };
-    private static String[] keywords =
-        {
+    };
+    private static final String[] keywords = {
         "abstract",
+        "assert",
         "break",
         "case",
         "catch",
         "const",
         "continue",
-        "def",
         "default",
         "do",
         "else",
         "enum",
         "extends",
+        "false",
         "final",
         "finally",
         "for",
@@ -386,12 +385,12 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         "interface",
         "native",
         "new",
+        "null",
         "package",
         "private",
         "protected",
         "public",
-        // "return", use the special return keyword now so returns can be
-        // highlighted differently
+        //"return", use the special return keyword now so returns can be highlighted differently
         "static",
         "super",
         "switch",
@@ -399,118 +398,37 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         "this",
         "throw",
         "throws",
-        "trait",
         "transient",
+        "true",
         "try",
+        "void",
         "volatile",
         "while",
-        "true",
-        "false",
-        "null",
-        "void"
-        };
-    private static String[] groovyKeywords = {
+    };
+    private static final String[] groovyKeywords = {
         "as",
-        "def",
-        "assert",
         "in",
+        "def",
         "trait",
     };
+    private static final String   returnKeyword = "return";
 
-    private static String[] gjdkWords = {
-        "abs",
-        "any",
-        "append",
-        "asList",
-        "asWritable",
-        "call",
-        "collect",
-        "compareTo",
-        "count",
-        "div",
-        "dump",
-        "each",
-        "eachByte",
-        "eachFile",
-        "eachLine",
-        "every",
-        "find",
-        "findAll",
-        "flatten",
-        "getAt",
-        "getErr",
-        "getIn",
-        "getOut",
-        "getText",
-        "grep",
-        "immutable",
-        "inject",
-        "inspect",
-        "intersect",
-        "invokeMethods",
-        "isCase",
-        "it",
-        "join",
-        "leftShift",
-        "minus",
-        "multiply",
-        "newInputStream",
-        "newOutputStream",
-        "newPrintWriter",
-        "newReader",
-        "newWriter",
-        "next",
-        "plus",
-        "pop",
-        "power",
-        "previous",
-        "print",
-        "println",
-        "push",
-        "putAt",
-        "read",
-        "readBytes",
-        "readLines",
-        "reverse",
-        "reverseEach",
-        "round",
-        "size",
-        "sort",
-        "splitEachLine",
-        "step",
-        "subMap",
-        "times",
-        "toInteger",
-        "toList",
-        "tokenize",
-        "upto",
-        "use",
-        "waitForOrKill",
-        "withPrintWriter",
-        "withReader",
-        "withStream",
-        "withWriter",
-        "withWriterAppend",
-        "write",
-        "writeLine",
-    };
-
-    private static final String RETURN = "return"; //$NON-NLS-1$
-
-
-    private static String[] fgTokenProperties = { PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR,
+    private static final String[] fgTokenProperties = {
+        PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR,
         PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR,
         PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR,
         PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR,
-        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR,
         PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR,
-        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR,
-        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR };
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR,
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR,
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR,
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR,
+    };
 
     private final List<IRule> initialAdditionalRules;
     private final List<IRule> additionalRules;
     private final List<String> additionalGroovyKeywords;
-
     private final List<String> additionalGJDKWords;
 
     /**
@@ -520,7 +438,6 @@ public class GroovyTagScanner extends AbstractJavaScanner {
     public GroovyTagScanner(IColorManager manager) {
         this(manager, null, null, null);
     }
-
 
     /**
      * @param manager the color manager
@@ -533,6 +450,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
     public GroovyTagScanner(IColorManager manager, List<IRule> initialAdditionalRules, List<IRule> additionalRules, List<String> additionalGroovyKeywords) {
         this(manager, initialAdditionalRules, additionalRules, additionalGroovyKeywords, null);
     }
+
     /**
      * @param manager the color manager
      * @param additionalRules Additional scanner rules for sub-types to add new kinds of partitioning
@@ -548,15 +466,11 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         initialize();
     }
 
-
     @Override
     protected String[] getTokenProperties() {
         return fgTokenProperties;
     }
 
-    /*
-     * @see AbstractJavaScanner#createRules()
-     */
     @Override
     protected List<IRule> createRules() {
 
@@ -575,12 +489,10 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         rules.add(new WhitespaceRule(new JavaWhitespaceDetector()));
 
         // Add JLS3 rule for /@\s*interface/
-        AnnotationRule atInterfaceRule = new AnnotationRule(getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR),
+        AnnotationRule atInterfaceRule = new AnnotationRule(
+                getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR),
                 getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR));
         rules.add(atInterfaceRule);
-
-        // Numbers rule
-        rules.add(new NumberRule(getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR)));
 
         // combined rule for all keywords
         JavaWordDetector wordDetector = new JavaWordDetector();
@@ -616,13 +528,9 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         }
         combinedWordRule.addWordMatcher(groovyKeywordsMatcher);
 
-        // gjdk words, including additional keywords
+        // GJDK words, including additional keywords
         WordMatcher gjdkWordsMatcher = new WordMatcher();
         token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR);
-        for (int i = 0; i < gjdkWords.length; i++) {
-            gjdkWordsMatcher.addWord(gjdkWords[i], token);
-        }
-
         if (additionalGJDKWords != null) {
             for (String additional : additionalGJDKWords) {
                 gjdkWordsMatcher.addWord(additional, token);
@@ -642,7 +550,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         // Add word rule for keyword 'return'.
         CombinedWordRule.WordMatcher returnWordRule = new CombinedWordRule.WordMatcher();
         token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR);
-        returnWordRule.addWord(RETURN, token);
+        returnWordRule.addWord(returnKeyword, token);
         combinedWordRule.addWordMatcher(returnWordRule);
 
         rules.add(combinedWordRule);
@@ -653,6 +561,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         }
 
         setDefaultReturnToken(getToken(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR));
+
         return rules;
     }
 }

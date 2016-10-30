@@ -22,6 +22,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.IProblemFactory;
+import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 import org.eclipse.jdt.internal.compiler.SourceElementNotifier;
 import org.eclipse.jdt.internal.compiler.SourceElementParser;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
@@ -34,7 +35,6 @@ import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
-import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 
 /**
  * The multiplexing parser can delegate file parsing to multiple parsers. In this scenario it subtypes 'Parser' (which is the Java

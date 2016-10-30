@@ -15,9 +15,6 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import groovy.lang.GroovyObjectSupport;
-import groovy.lang.Tuple;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
@@ -41,6 +38,9 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Matcher;
+
+import groovy.lang.GroovyObjectSupport;
+import groovy.lang.Tuple;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -66,7 +66,7 @@ import org.codehaus.groovy.runtime.ProcessGroovyMethods;
 import org.codehaus.groovy.runtime.SwingGroovyMethods;
 import org.codehaus.groovy.runtime.XmlGroovyMethods;
 import org.eclipse.core.runtime.Assert;
-import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
 /**
  * Maps variable names to types in a hierarchy.
@@ -186,6 +186,7 @@ public class VariableScope {
     public static final ClassNode CHARACTER_CLASS_NODE = ClassHelper.Character_TYPE;
 
     public static class VariableInfo {
+        public ASTNode scopeNode;
         public final ClassNode type;
         public final ClassNode declaringType;
 
@@ -194,13 +195,13 @@ public class VariableScope {
             this.declaringType = declaringType;
         }
 
+        private VariableInfo(VariableInfo info, ASTNode node) {
+            this(info.type, info.declaringType);
+            this.scopeNode = node;
+        }
+
         public String getTypeSignature() {
-            String typeName = type.getName();
-            if (typeName.startsWith("[")) {
-                return typeName;
-            } else {
-                return Signature.createTypeSignature(typeName, true);
-            }
+            return GroovyUtils.getTypeSignature(type, true); // fully-qualified
         }
     }
 
@@ -429,6 +430,17 @@ public class VariableScope {
         return var;
     }
 
+    /**
+     * Finds the name in the current scope. Does not recur up to parent scopes.
+     */
+    public VariableInfo lookupNameInCurrentScope(String name) {
+        VariableInfo info = nameVariableMap.get(name);
+        if (info != null) {
+            info = new VariableInfo(info, scopeNode);
+        }
+        return info;
+    }
+
     public ClassNode getThis() {
         VariableInfo thiz = lookupName("this");
         return thiz != null ? thiz.type : null;
@@ -457,13 +469,6 @@ public class VariableScope {
     public ClassNode getDelegateOrThis() {
         VariableInfo info = getDelegateOrThisInfo();
         return info != null ? info.type : null;
-    }
-
-    /**
-     * Looks up the name in the current scope. Does not recur up to parent scopes
-     */
-    public VariableInfo lookupNameInCurrentScope(String name) {
-        return nameVariableMap.get(name);
     }
 
     public boolean isThisOrSuper(Variable var) {
@@ -516,13 +521,6 @@ public class VariableScope {
         } else {
             return null;
         }
-    }
-
-    public static ClassNode maybeConvertFromPrimitive(ClassNode type) {
-        if (ClassHelper.isPrimitiveType(type)) {
-            return ClassHelper.getWrapper(type);
-        }
-        return type;
     }
 
     private static PropertyNode createPropertyNodeForMethodNode(MethodNode methodNode) {

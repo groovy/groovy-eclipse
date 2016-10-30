@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
@@ -218,6 +219,7 @@ public class TypeCompletionTests extends CompletionTestCase {
     }
 
     public void testAnnotation2() throws Exception {
+        if (GroovyUtils.GROOVY_LEVEL < 21) return;
         String contents = "@Compile class Foo { }";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "Compile"));
 

@@ -38,7 +38,6 @@ import org.codehaus.groovy.syntax.*;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.security.AccessController;
@@ -467,6 +466,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             String name = identifier(node);
             // import is like  "import Foo"
             ClassNode type = ClassHelper.make(name);
+            assert !(type instanceof ImmutableClassNode);
             configureAST(type, importNode);
             addImport(type, name, alias, annotations);
             return;
@@ -488,6 +488,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 configureAST(type, packageNode);
                 addStaticStarImport(type, packageName, annotations);
                 ASTNode imp = (ASTNode) output.getStaticStarImports().get(packageName);
+                if (type instanceof ImmutableClassNode) {
+                    ClassExpression typeNode = new ClassExpression(type);
+                    imp.setNodeMetaData(ClassExpression.class, typeNode);
+                    configureAST(typeNode, packageNode);
+                }
                 configureAST(imp, importNode);
                 // end
             } else {
@@ -520,6 +525,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 configureAST(type, packageNode);
                 addStaticImport(type, name, alias, annotations);
                 imp = output.getStaticImports().get(alias == null ? name : alias);
+                if (type instanceof ImmutableClassNode) {
+                    ClassExpression typeNode = new ClassExpression(type);
+                    imp.setNodeMetaData(ClassExpression.class, typeNode);
+                    configureAST(typeNode, packageNode);
+                }
                 configureAST(imp, importNode);
                 ConstantExpression nameExpr = new ConstantExpression(name);
                 configureAST(nameExpr, nameNode);
@@ -538,6 +548,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 addImport(type, name, alias, annotations);
                 // GRECLIPSE: start: be more precise about the sloc for the import node
                 imp = output.getImport(alias == null ? name : alias);
+                if (type instanceof ImmutableClassNode) {
+                    ClassExpression typeNode = new ClassExpression(type);
+                    imp.setNodeMetaData(ClassExpression.class, typeNode);
+                    configureAST(typeNode, nameNode);
+                }
                 configureAST(imp, importNode);
                 // end
             }
@@ -2008,6 +2023,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 Parameter catchParameter = new Parameter(ClassHelper.DYNAMIC_TYPE, variable);
                 // GRECLIPSE start: sloc for parameter
                 configureAST(catchParameter, multicatches);
+                catchParameter.setNameEnd(catchParameter.getEnd());
+                catchParameter.setNameStart(catchParameter.getEnd() - catchParameter.getName().length());
                 // GRECLIPSE: end
                 CatchStatement answer = new CatchStatement(catchParameter, code);
                 configureAST(answer, catchNode);
@@ -2020,9 +2037,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 while (exceptionNodes != null) {
                     ClassNode exceptionType = buildName(exceptionNodes);
                     Parameter catchParameter = new Parameter(exceptionType, variable);
-                    // GRECLIPSE start: sloc for parameter
-                    // a little tricky since there can be multi-catches
-                    // and the multicatches node does not include sloc for the parameter name
+                    // GRECLIPSE add
+                    // a little tricky since there can be multi-catches and the
+                    // multicatches node doesn't include sloc for parameter name
                     configureAST(catchParameter, multicatches);
                     GroovySourceAST paramAST = (GroovySourceAST) multicatches.getNextSibling();
                     int lastLine = paramAST.getLineLast();
@@ -2030,6 +2047,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     int lastCol = paramAST.getColumnLast();
                     catchParameter.setLastColumnNumber(lastCol);
                     catchParameter.setEnd( locations.findOffset(lastLine, lastCol));
+                    catchParameter.setNameEnd(catchParameter.getEnd());
+                    catchParameter.setNameStart(catchParameter.getEnd() - catchParameter.getName().length());
                     // GRECLIPSE: end
                     CatchStatement answer = new CatchStatement(catchParameter, code);
                     configureAST(answer, catchNode);
@@ -2883,7 +2902,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         Expression arguments = arguments(node);
         
         ConstructorCallExpression expression = new ConstructorCallExpression(special, arguments);
+        // GRECLIPSE add
+        int keywordLength = (special == ClassNode.SUPER ? 5 : 4);
+        GroovySourceAST ctorCallNode = (GroovySourceAST) methodCallNode;
+        // locate the keyword relative to the method call expression; assume no spaces
+        ctorCallNode.setColumn(Math.max(1, ctorCallNode.getColumn() - keywordLength));
+        // GRECLIPSE end
         configureAST(expression, methodCallNode);
+        // GRECLIPSE add
+        expression.setNameStart(expression.getStart());
+        expression.setNameEnd(expression.getStart() + keywordLength - 1);
+        // GRECLIPSE end
         return expression;
     }
 
@@ -3042,6 +3071,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
 
         configureAST(ret, constructorCallNode);
+        // GRECLIPSE add
+        ret.setNameStart(type.getStart());
+        ret.setNameEnd(type.getEnd() - 1);
+        // GRECLIPSE end
         return ret;
     }
     
@@ -3628,27 +3661,35 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             GroovySourceAST groovySourceAST = (GroovySourceAST) ast;
             lastcol = groovySourceAST.getColumnLast();
             lastline = groovySourceAST.getLineLast();
+            if ((ast.getType() == UNARY_MINUS || ast.getType() == UNARY_PLUS) &&
+                    node instanceof ConstantExpression) { // extend for literal
+                lastline = ((GroovySourceAST) ast.getFirstChild()).getLineLast();
+                lastcol = ((GroovySourceAST) ast.getFirstChild()).getColumnLast();
+            }
             endoffset = locations.findOffset(lastline, lastcol);
-            // GRECLIPSE-768 only re-set the sloc for these kinds of expressions if the new sloc is larger than the old
-            // When these kinds of expressions are nested inside of a BinaryExpression, their slocs would be wrong
-            // instead, they are set according to their childrens' slocs.
+
+            // GRECLIPSE-768: Only re-set the sloc for these kinds of expressions
+            // if the new sloc is larger than the old.  When nested inside of a
+            // BinaryExpression, their slocs would be wrong instead, they are set
+            // according to their childrens' slocs.
             if ((node instanceof BinaryExpression ||
             		node instanceof MapEntryExpression ||
             		node instanceof MapExpression ||
             		node instanceof CastExpression ||
-            		node instanceof MethodCallExpression) && 
-            		(node.getStart() <= startoffset && node.getEnd() >= endoffset)) {
+            		node instanceof MethodCallExpression) &&
+            		node.getStart() <= startoffset && node.getEnd() >= endoffset) {
             	// sloc has already been set and it is larger than this one
             	// ignore.
             	return;
             }
 
-            // GRECLIPSE-829 VariableExpressions inside of GStrings contain the
-            // openning '{', but shouldn't.  If the new sloc is larger than the 
-            // one being set, then ignore it and don't reset
+            // GRECLIPSE-829: VariableExpression inside of GStrings contain the
+            // openning '{', but shouldn't.  If the new sloc is larger than the
+            // one being set, then ignore it and don't reset.  Also numbers can
+            // result in an expression node that includes trailing whitespaces.
             if ((node instanceof VariableExpression ||
-                    node instanceof ConstantExpression) && node.getEnd() > 0 &&
-                    (startoffset <= node.getStart()  && endoffset >= node.getEnd())) {
+                  (node instanceof ConstantExpression && ast.getType() == EXPR)) &&
+                    node.getEnd() > 0 && startoffset <= node.getStart() && endoffset >= node.getEnd()) {
                 return;
             }
             

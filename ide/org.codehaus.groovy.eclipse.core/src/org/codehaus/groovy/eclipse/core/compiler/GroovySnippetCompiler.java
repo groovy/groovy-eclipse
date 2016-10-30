@@ -1,21 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.core.compiler;
-
-import groovyjarjarasm.asm.Opcodes;
 
 import java.util.Iterator;
 import java.util.Map;
 
+import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -101,7 +104,6 @@ public class GroovySnippetCompiler {
         return unit.compilationResult();
     }
 
-    @SuppressWarnings({ "unchecked" })
     private GroovyCompilationUnitDeclaration internalCompile(String source,
             String sourcePath) {
         if (sourcePath == null) {
@@ -110,7 +112,7 @@ public class GroovySnippetCompiler {
             sourcePath = sourcePath.concat(".groovy");
         }
 
-        Map options = JavaCore.getOptions();
+        Map<String, String> options = JavaCore.getOptions();
         options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
         Compiler compiler = new CompilationUnitResolver(nameEnvironment, DefaultErrorHandlingPolicies.proceedWithAllProblems(),
                 new CompilerOptions(options), new Requestor(), new DefaultProblemFactory(), null, true);

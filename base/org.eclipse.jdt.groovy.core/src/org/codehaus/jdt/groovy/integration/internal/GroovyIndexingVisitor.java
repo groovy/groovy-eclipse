@@ -15,7 +15,6 @@
  */
 package org.codehaus.jdt.groovy.integration.internal;
 
-import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
@@ -36,7 +35,6 @@ import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.control.SourceUnit;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.groovy.core.Activator;
@@ -59,12 +57,6 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 
     public GroovyIndexingVisitor(ISourceElementRequestor requestor) {
         this.requestor = requestor;
-    }
-
-    // not used
-    @Override
-    protected SourceUnit getSourceUnit() {
-        return null;
     }
 
     void doVisit(ModuleNode node, ImportReference pkg) {
@@ -218,11 +210,9 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
     }
 
     @Override
-    public void visitAnnotations(AnnotatedNode node) {
-        for (AnnotationNode an : (Iterable<AnnotationNode>) node.getAnnotations()) {
-            handleType(an.getClassNode(), true, true);
-        }
-        super.visitAnnotations(node);
+    protected void visitAnnotation(AnnotationNode node) {
+        handleType(node.getClassNode(), true, true);
+        super.visitAnnotation(node);
     }
 
     // may not be resolved

@@ -24,19 +24,19 @@ import java.util.Properties;
  */
 public class SystemPropertyCleaner {
 
-	public static void clean() {
-		Properties props = System.getProperties();
-		Iterator<Entry<Object, Object>> iter = props.entrySet().iterator();
-		while (iter.hasNext()) {
-			Entry<Object, Object> e = iter.next();
-			Object k = e.getKey();
-			Object v = e.getValue();
-			if (k instanceof String && v instanceof String) {
-				//ok
-			} else {
-				//System.out.println("deleting "+k+" = ("+className(v)+") "+v);
-				iter.remove();
-			}
-		}
-	}
+    public static void clean() {
+        Properties props = System.getProperties();
+        Iterator<Entry<Object, Object>> iter = props.entrySet().iterator();
+        while (iter.hasNext()) {
+            Entry<Object, Object> e = iter.next();
+            Object k = e.getKey();
+            Object v = e.getValue();
+            if (k instanceof String && v instanceof String) {
+                //ok
+            } else {
+                //System.out.println("deleting "+k+" = ("+className(v)+") "+v);
+                iter.remove();
+            }
+        }
+    }
 }

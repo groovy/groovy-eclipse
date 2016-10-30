@@ -34,7 +34,6 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
-import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
@@ -141,11 +140,6 @@ public class AssignStatementToNewLocalRefactoring {
                     processExpression(statement.getExpression());
                 }
                 super.visitReturnStatement(statement);
-            }
-
-            @Override
-            protected SourceUnit getSourceUnit() {
-                return null;
             }
         };
         ModuleNode moduleNode = unit.getModuleNode();

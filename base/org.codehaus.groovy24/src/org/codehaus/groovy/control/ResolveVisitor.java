@@ -460,7 +460,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             resolutionFailedCache.add(name);
             // GRECLIPSE end
             // also check interfaces in case we have interfaces with nested classes
-            for (ClassNode next : testNode.getAllInterfaces()) { // NOTE: This was changed to getInterfaces() in GRECLIPSE
+            for (ClassNode next : testNode.getAllInterfaces()) {
                 if (type.getName().contains(next.getName())) continue;
                 // GRECLIPSE add
                 name = next.getName() + "$" + type.getName();
@@ -479,6 +479,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // GRECLIPSE add
         }
         // GRECLIPSE end
+
         return false;
     }
 
@@ -1310,16 +1311,32 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 FieldNode fn = type.getField(pe.getPropertyAsString());
                 if (fn != null && !fn.isEnum() && fn.isStatic() && fn.isFinal()) {
                     if (fn.getInitialValueExpression() instanceof ConstantExpression) {
-                        return fn.getInitialValueExpression();
+                        // GRECLIPSE edit
+                        return cloneConstantExpression(fn.getInitialValueExpression(), exp);
+                        // GRECLIPS end
                     }
                 }
             }
+        // GRECLIPSE add
+        } else if (exp instanceof VariableExpression) {
+            VariableExpression ve = (VariableExpression) exp;
+            if (ve.getAccessedVariable() instanceof FieldNode) {
+                FieldNode fn = (FieldNode) ve.getAccessedVariable();
+                if (!fn.isEnum() && fn.isStatic() && fn.isFinal() &&
+                        fn.getInitialValueExpression() instanceof ConstantExpression) {
+                    return cloneConstantExpression(fn.getInitialValueExpression(), exp);
+                }
+            }
+        // GRECLIPSE end
         } else if (exp instanceof ListExpression) {
             ListExpression le = (ListExpression) exp;
             ListExpression result = new ListExpression();
             for (Expression e : le.getExpressions()) {
                 result.addExpression(transformInlineConstants(e));
             }
+            // GRECLIPSE add
+            result.setSourcePosition(exp);
+            // GRECLIPSE end
             return result;
         } else if (exp instanceof AnnotationConstantExpression) {
             ConstantExpression ce = (ConstantExpression) exp;
@@ -1330,11 +1347,20 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
                     member.setValue(transformInlineConstants(member.getValue()));
                 }
-
             }
         }
         return exp;
     }
+
+    // GRECLIPSE add
+    protected ConstantExpression cloneConstantExpression(Expression val, Expression src) {
+        ConstantExpression ret = new ConstantExpression(((ConstantExpression) val).getValue());
+        ret.setNodeMetaData(ClassCodeVisitorSupport.ORIGINAL_EXPRESSION, src);
+        // TODO: Copy any other fields or metadata?
+        // Source position is dropped by design.
+        return ret;
+    }
+    // GRECLIPSE end
 
     private void checkAnnotationMemberValue(Expression newValue) {
         if (newValue instanceof PropertyExpression) {
