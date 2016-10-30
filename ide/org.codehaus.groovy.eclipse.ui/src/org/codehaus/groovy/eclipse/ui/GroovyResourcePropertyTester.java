@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,38 +37,37 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class GroovyResourcePropertyTester extends PropertyTester {
 
-	/**
-	 * Property name to determine if a class has a main method
-	 */
-	public static final String hasMain = "hasMain";
-	public static final String isScript = "isScript";
+    /**
+     * Property name to determine if a class has a main method
+     */
+    public static final String hasMain = "hasMain";
+    public static final String isScript = "isScript";
 
+    /* (non-Javadoc)
+     * @see org.eclipse.core.expressions.IPropertyTester#test(Object receiver, String property, Object[] args, Object expectedValue)
+     */
+    public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
+        boolean returnValue = false;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.expressions.IPropertyTester#test(Object receiver, String property, Object[] args, Object expectedValue)
-	 */
-	public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
-		boolean returnValue = false;
-
-		if (hasMain.equals(property) || isScript.equals(property)) {
-			if(receiver instanceof IAdaptable) {
-				try {
-				    ICompilationUnit unit = ((IAdaptable) receiver).getAdapter(ICompilationUnit.class);
-				    if (unit == null) {
-	                    IFile file = ((IAdaptable) receiver).getAdapter(IFile.class);
-				        if (file != null && Util.isJavaLikeFileName(file.getName())) {
-				            unit = JavaCore.createCompilationUnitFrom(file);
-				        }
-				    }
-				    if (unit != null) {
-				        if (hasMain.equals(property) || isScript.equals(property)) {
-    				        List<IType> results = GroovyProjectFacade.findAllRunnableTypes(unit);
-    				        returnValue = results.size() > 0;
-				        }
-				    }
-				} catch (IllegalArgumentException e) {
-					// can ignore
-					// passed in non-JavaLike file name
+        if (hasMain.equals(property) || isScript.equals(property)) {
+            if(receiver instanceof IAdaptable) {
+                try {
+                    ICompilationUnit unit = ((IAdaptable) receiver).getAdapter(ICompilationUnit.class);
+                    if (unit == null) {
+                        IFile file = ((IAdaptable) receiver).getAdapter(IFile.class);
+                        if (file != null && Util.isJavaLikeFileName(file.getName())) {
+                            unit = JavaCore.createCompilationUnitFrom(file);
+                        }
+                    }
+                    if (unit != null) {
+                        if (hasMain.equals(property) || isScript.equals(property)) {
+                            List<IType> results = GroovyProjectFacade.findAllRunnableTypes(unit);
+                            returnValue = results.size() > 0;
+                        }
+                    }
+                } catch (IllegalArgumentException e) {
+                    // can ignore
+                    // passed in non-JavaLike file name
                 } catch (JavaModelException e) {
                     // can ignore situations when trying to find types that are not on the classpath
                     if (e.getStatus() != null &&
@@ -76,10 +75,8 @@ public class GroovyResourcePropertyTester extends PropertyTester {
                         GroovyCore.logException("Exception when testing for main methods " + receiver, e);
                     }
                 }
-
-			}
-		}
-		return returnValue;
-	}
-
+            }
+        }
+        return returnValue;
+    }
 }

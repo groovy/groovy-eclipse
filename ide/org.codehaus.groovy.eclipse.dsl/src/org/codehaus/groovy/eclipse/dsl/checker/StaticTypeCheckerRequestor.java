@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.eclipse.editor.highlighting.SemanticReferenceRequestor;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
@@ -34,22 +33,22 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
  * <pre>
  * expr // TYPE:java.lang.String
  * </pre>
- * 
+ *
  * Where:
  * <ul>
  * <li>expr is the expression whose type should be asserted
- * <li>java.lang.String is the expected type of the expression 
+ * <li>java.lang.String is the expected type of the expression
  * </ul>
- * 
+ *
  * Note that the <code>|| true</code> segment is required in order to ensure that the assertions do not fail at runtime.
- * 
+ *
  * @author andrew
  * @created Aug 28, 2011
  */
-public class StaticTypeCheckerRequestor extends SemanticReferenceRequestor implements ITypeRequestor {
+public class StaticTypeCheckerRequestor extends SemanticReferenceRequestor {
 
     private final IStaticCheckerHandler handler;
-    
+
     private final Map<Integer, String> commentsMap;
 
     private final boolean onlyAssertions;
@@ -67,7 +66,7 @@ public class StaticTypeCheckerRequestor extends SemanticReferenceRequestor imple
                 return VisitStatus.CANCEL_BRANCH;
             }
         }
-        
+
         // ignore statements and declarations
         if (!(node instanceof AnnotatedNode)) {
             return VisitStatus.CONTINUE;
@@ -77,20 +76,20 @@ public class StaticTypeCheckerRequestor extends SemanticReferenceRequestor imple
         if (node.getEnd() <= 0 || (node.getStart() == 0 && node.getEnd() == 1)) {
             return VisitStatus.CONTINUE;
         }
-        
+
         if (!onlyAssertions && result.confidence == TypeConfidence.UNKNOWN && node.getEnd() > 0) {
             handler.handleUnknownReference(node, getPosition(node), node.getLineNumber());
             return VisitStatus.CONTINUE;
         }
-        
+
         String expectedType = commentsMap.remove(node.getLineNumber());
         if (expectedType != null && !typeMatches(result.type, expectedType)) {
             handler.handleTypeAssertionFailed(node, expectedType, printTypeName(result.type), getPosition(node), node.getLineNumber());
         }
-        
+
         return VisitStatus.CONTINUE;
     }
-    
+
     /**
      * @param type
      * @param expectedType
