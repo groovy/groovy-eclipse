@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,51 +31,46 @@ import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.ui.CodeStyleConfiguration;
 
 /**
- *
  * @author Andrew Eisenberg
  * @author Nieraj Singh
  * @created Oct 27, 2009
  */
 public class GroovyImportRewriteFactory {
 
-	private static final Pattern IMPORTS_PATTERN = Pattern
-			.compile("(\\A|[\\n\\r])import\\s");
+    private static final Pattern IMPORTS_PATTERN = Pattern.compile("(\\A|[\\n\\r])import\\s");
+    private static final Pattern PACKAGE_PATTERN = Pattern.compile("(\\A|[\\n\\r])package\\s");
+    private static final Pattern EOL_PATTERN = Pattern.compile("($|[\\n\\r])");
 
-	private static final Pattern PACKAGE_PATTERN = Pattern
-			.compile("(\\A|[\\n\\r])package\\s");
+    private ImportRewrite rewrite;
+    // set to true if there is a problem creating the rewrite
+    private boolean cantCreateRewrite = false;
 
-	private static final Pattern EOL_PATTERN = Pattern.compile("($|[\\n\\r])");
+    /**
+     * This should never be null
+     */
+    private GroovyCompilationUnit unit;
 
-	private ImportRewrite rewrite;
-	// set to true if there is a problem creating the rewrite
-	private boolean cantCreateRewrite = false;
+    /**
+     * This may be null
+     */
+    private ModuleNode module;
 
-	/**
-	 * This should never be null
-	 */
-	private GroovyCompilationUnit unit;
+    /**
+     * If this constructor is used, the a check may be performed on the module
+     * for unrecoverable errors before generating an import rewrite. Compilation
+     * unit should never be null, although the module can be null
+     */
+    public GroovyImportRewriteFactory(GroovyCompilationUnit unit, ModuleNode module) {
+        this.unit = unit;
+        this.module = module;
+    }
 
-	/**
-	 * This may be null
-	 */
-	private ModuleNode module;
-
-	/**
-	 * If this constructor is used, the a check may be performed on the module
-	 * for unrecoverable errors before generating an import rewrite. Compilation
-	 * unit should never be null, although the module can be null
-	 */
-	public GroovyImportRewriteFactory(GroovyCompilationUnit unit, ModuleNode module) {
-		this.unit = unit;
-		this.module = module;
-	}
-
-	/**
-	 * Module is null in this case. Only a compilation unit is passed.
-	 */
-	public GroovyImportRewriteFactory(GroovyCompilationUnit unit) {
-		this.unit = unit;
-	}
+    /**
+     * Module is null in this case. Only a compilation unit is passed.
+     */
+    public GroovyImportRewriteFactory(GroovyCompilationUnit unit) {
+        this.unit = unit;
+    }
 
     public static int astlevel = -1;
 
@@ -92,19 +87,19 @@ public class GroovyImportRewriteFactory {
         return astlevel;
     }
 
-	/**
-	 * Returns an import rewrite for the module node only if
-	 * ModuleNode.encounteredUnrecoverableError()
-	 *
-	 * Tries to find the start and end locations of the import statements. Makes
-	 * a best guess using regular expression. This method ensures that even if
-	 * the ComplationUnit is unparseable, the imports are still placed in the
-	 * correct location.
-	 *
-	 * @return an {@link ImportRewrite} for the ModuleNode if it encountered an
-	 *         unrecoverable error, or null if no problems.
-	 */
-	public ImportRewrite getImportRewrite(IProgressMonitor monitor) {
+    /**
+     * Returns an import rewrite for the module node only if
+     * ModuleNode.encounteredUnrecoverableError()
+     *
+     * Tries to find the start and end locations of the import statements. Makes
+     * a best guess using regular expression. This method ensures that even if
+     * the ComplationUnit is unparseable, the imports are still placed in the
+     * correct location.
+     *
+     * @return an {@link ImportRewrite} for the ModuleNode if it encountered an
+     *         unrecoverable error, or null if no problems.
+     */
+    public ImportRewrite getImportRewrite(IProgressMonitor monitor) {
 
         // For the case of organize imports, if no unrecoverable error has been
         // found,
@@ -112,91 +107,84 @@ public class GroovyImportRewriteFactory {
         // used.
         // For the case of add import, this special rewrite will always be used
         // (and the module field will be null)
-		if (module != null && !module.encounteredUnrecoverableError()) {
-			return null;
-		}
+        if (module != null && !module.encounteredUnrecoverableError()) {
+            return null;
+        }
 
-		if (rewrite == null && !cantCreateRewrite) {
+        if (rewrite == null && !cantCreateRewrite) {
 
-			// find a reasonable substring that contains
-			// what looks to be the import dependencies
-			CharArraySequence contents = new CharArraySequence(
-					unit.getContents());
-			CharArraySequence imports = findImportsRegion(contents);
+            // find a reasonable substring that contains
+            // what looks to be the import dependencies
+            CharArraySequence contents = new CharArraySequence(
+                    unit.getContents());
+            CharArraySequence imports = findImportsRegion(contents);
 
-			// Now send this to a parser
-			// need to be very careful here that if we can't parse, then
-			// don't send to rewriter
+            // Now send this to a parser
+            // need to be very careful here that if we can't parse, then don't send to rewriter
 
             ASTParser parser = ASTParser.newParser(getAstLevel());
-			parser.setSource(unit.cloneCachingContents(CharOperation.concat(
-                    imports.getChars(), "\nclass X { }".toCharArray())));
-			parser.setKind(ASTParser.K_COMPILATION_UNIT);
-			ASTNode result = null;
-			try {
-				result = parser.createAST(monitor);
-			} catch (IllegalStateException e) {
-				GroovyCore.logException("Can't create ImportRewrite for:\n"
-						+ imports, e);
-			}
-			if (result instanceof CompilationUnit) {
-				rewrite = CodeStyleConfiguration.createImportRewrite(
-						(CompilationUnit) result, true);
+            parser.setSource(unit.cloneCachingContents(CharOperation.concat(imports.getChars(), "class X { }".toCharArray())));
+            parser.setKind(ASTParser.K_COMPILATION_UNIT);
+            ASTNode result = null;
+            try {
+                result = parser.createAST(monitor);
+            } catch (IllegalStateException e) {
+                GroovyCore.logException("Can't create ImportRewrite for:\n" + imports, e);
+            }
+            if (result instanceof CompilationUnit) {
+                rewrite = CodeStyleConfiguration.createImportRewrite((CompilationUnit) result, true);
+            } else {
+                // something wierd happened.
+                // ensure we don't try again
+                cantCreateRewrite = true;
+            }
+        }
 
-			} else {
-				// something wierd happened.
-				// ensure we don't try again
-				cantCreateRewrite = true;
-			}
-		}
+        return rewrite;
+    }
 
-		return rewrite;
-	}
+    /**
+     * Convenience methpd for
+     * {@link GroovyProposalTypeSearchRequestor#findImportsRegion(CharArraySequence)}
+     */
+    public static CharArraySequence findImportsRegion(String contents) {
+        return findImportsRegion(new CharArraySequence(contents));
+    }
 
-	/**
-	 * Convenience methpd for
-	 * {@link GroovyProposalTypeSearchRequestor#findImportsRegion(CharArraySequence)}
-	 */
-	public static CharArraySequence findImportsRegion(String contents) {
-		return findImportsRegion(new CharArraySequence(contents));
-	}
+    /**
+     * Finds a region of text that kind of looks like where the imports should
+     * be placed. Uses regular expressions.
+     *
+     * @param contents
+     *            the contents of a compilation unit
+     * @return a presumed region
+     */
+    public static CharArraySequence findImportsRegion(CharArraySequence contents) {
+        // heuristics:
+        // look for last index of ^import
+        // if that returns -1, then look for ^package
+        Matcher matcher = IMPORTS_PATTERN.matcher(contents);
+        int importsEnd = 0;
+        while (matcher.find(importsEnd)) {
+            importsEnd = matcher.end();
+        }
 
-	/**
-	 * Finds a region of text that kind of looks like where the imports should
-	 * be placed. Uses regular expressions.
-	 *
-	 * @param contents
-	 *            the contents of a compilation unit
-	 * @return a presumed region
-	 */
-	public static CharArraySequence findImportsRegion(CharArraySequence contents) {
-		// heuristics:
-		// look for last index of ^import
-		// if that returns -1, then look for ^package
-		Matcher matcher = IMPORTS_PATTERN.matcher(contents);
-		int importsEnd = 0;
-		while (matcher.find(importsEnd)) {
-			importsEnd = matcher.end();
-		}
+        if (importsEnd == 0) {
+            // no imports found, look for package declaration
+            matcher = PACKAGE_PATTERN.matcher(contents);
+            if (matcher.find()) {
+                importsEnd = matcher.end();
+            }
+        }
 
-		if (importsEnd == 0) {
-			// no imports found, look for package declaration
-			matcher = PACKAGE_PATTERN.matcher(contents);
-			if (matcher.find()) {
-				importsEnd = matcher.end();
-			}
+        if (importsEnd > 0) {
+            // look for end of line
+            matcher = EOL_PATTERN.matcher(contents);
+            if (matcher.find(importsEnd)) {
+                importsEnd = matcher.end();
+            }
+        }
 
-		}
-
-		if (importsEnd > 0) {
-			// look for end of line
-			matcher = EOL_PATTERN.matcher(contents);
-			if (matcher.find(importsEnd)) {
-				importsEnd = matcher.end();
-			}
-		}
-
-		return contents.subSequence(0, importsEnd);
-	}
-
+        return contents.subSequence(0, importsEnd);
+    }
 }
