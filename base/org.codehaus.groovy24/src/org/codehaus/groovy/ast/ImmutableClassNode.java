@@ -77,7 +77,7 @@ class ImmutableClassNode extends ClassNode {
     }
 
     private boolean genericsInitialized = false;
-    private boolean writeProtected = false;
+    private volatile boolean writeProtected = false;
 
     public ImmutableClassNode(Class c) {
         super(c);
@@ -120,11 +120,13 @@ class ImmutableClassNode extends ClassNode {
     }
 
     private synchronized void enableWriteProtection() {
-        for (Object key : methods.map.keySet()) {
-            List<MethodNode> l = methods.get(key);
-            methods.map.put(key, Collections.unmodifiableList(l));
+        if (!writeProtected) {
+            for (Object key : methods.map.keySet()) {
+                List<MethodNode> l = methods.get(key);
+                methods.map.put(key, Collections.unmodifiableList(l));
+            }
+            methods.map = Collections.unmodifiableMap(methods.map);
+            writeProtected = true;
         }
-        methods.map = Collections.unmodifiableMap(methods.map);
-        writeProtected = true;
     }
 }
