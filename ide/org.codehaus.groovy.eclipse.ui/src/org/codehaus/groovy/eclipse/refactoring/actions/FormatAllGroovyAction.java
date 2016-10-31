@@ -130,9 +130,8 @@ public class FormatAllGroovyAction extends FormatAllAction {
             setToolTipText("Indent Groovy file");
             setDescription("Indent Groovy file");
         } else if (kind == FormatKind.FORMAT) {
-            setText("Format");
-            setToolTipText("Format Groovy file");
-            setDescription("Format Groovy file");
+            setToolTipText(getToolTipText().replace("Java", "Groovy"));
+            setDescription(getDescription().replace("Java", "Groovy"));
         }
     }
 

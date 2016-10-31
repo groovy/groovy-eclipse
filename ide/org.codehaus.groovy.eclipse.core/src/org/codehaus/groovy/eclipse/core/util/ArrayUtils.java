@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,29 +25,15 @@ import org.eclipse.core.runtime.Assert;
  * Use this class so we don't have a dependency on apache commons-lang.
  * No code was copied from that jar
  *
- * @author andrew
+ * @author Andrew Eisenberg
  * @created Sep 20, 2012
  */
 public class ArrayUtils {
 
-    public static Object[] remove(Object[] arr, int i) {
-        Assert.isNotNull(arr);
-        Assert.isTrue(arr.length > i);
-
-
-        List<Object> l = new ArrayList<Object>();
-        for (int j = 0; j < arr.length; j++) {
-            if (j != i) {
-                l.add(arr[j]);
-            }
-        }
-        Object[] newArr = (Object[]) Array.newInstance(arr.getClass().getComponentType(), arr.length - 1);
-        return l.toArray(newArr);
-    }
-
     public static Object[] add(Object[] arr, Object val) {
         return add(arr, arr.length, val);
     }
+
     public static Object[] add(Object[] arr, int index, Object val) {
         Assert.isNotNull(arr);
         Assert.isTrue(index >= 0 && index <= arr.length);
@@ -59,6 +45,20 @@ public class ArrayUtils {
             System.arraycopy(arr, index, newArr, index + 1, arr.length - index);
         }
         return newArr;
+    }
+
+    public static Object[] remove(Object[] arr, int i) {
+        Assert.isNotNull(arr);
+        Assert.isTrue(arr.length > i);
+
+        List<Object> l = new ArrayList<Object>();
+        for (int j = 0; j < arr.length; j++) {
+            if (j != i) {
+                l.add(arr[j]);
+            }
+        }
+        Object[] newArr = (Object[]) Array.newInstance(arr.getClass().getComponentType(), arr.length - 1);
+        return l.toArray(newArr);
     }
 
     public static Object[] removeElement(Object[] arr, Object toRemove) {
@@ -84,4 +84,10 @@ public class ArrayUtils {
         }
     }
 
+    public static <T> T lastElement(T[] arr) {
+        if (arr == null || arr.length == 0) {
+            return null;
+        }
+        return arr[arr.length - 1];
+    }
 }

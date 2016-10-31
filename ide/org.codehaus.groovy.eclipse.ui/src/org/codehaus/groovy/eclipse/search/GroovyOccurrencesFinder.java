@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,6 @@ import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder;
 
 /**
- *
  * @author Andrew Eisenberg
  * @created Dec 31, 2009
  */
@@ -170,18 +169,19 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
     }
 
     private Map<org.codehaus.groovy.ast.ASTNode, Integer> internalFindOccurences() {
-        if (nodeToLookFor != null && !(nodeToLookFor instanceof ConstantExpression)
-                && !(nodeToLookFor instanceof ClosureExpression) && !(nodeToLookFor instanceof DeclarationExpression)
-                && !(nodeToLookFor instanceof BinaryExpression)
-                && !(nodeToLookFor instanceof MethodCallExpression)) {
+        if (nodeToLookFor != null &&
+                !(nodeToLookFor instanceof ConstantExpression) &&
+                !(nodeToLookFor instanceof ClosureExpression) &&
+                !(nodeToLookFor instanceof DeclarationExpression) &&
+                !(nodeToLookFor instanceof BinaryExpression) &&
+                !(nodeToLookFor instanceof MethodCallExpression)) {
             FindAllReferencesRequestor requestor = new FindAllReferencesRequestor(nodeToLookFor);
             TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(gunit);
             visitor.visitCompilationUnit(requestor);
             Map<org.codehaus.groovy.ast.ASTNode, Integer> occurences = requestor.getReferences();
             return occurences;
-        } else {
-            return Collections.emptyMap();
         }
+        return Collections.emptyMap();
     }
 
     public int getSearchKind() {

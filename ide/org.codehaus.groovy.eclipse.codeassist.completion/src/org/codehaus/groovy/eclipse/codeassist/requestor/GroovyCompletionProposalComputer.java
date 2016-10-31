@@ -44,8 +44,7 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 
-public class GroovyCompletionProposalComputer implements
-        IJavaCompletionProposalComputer {
+public class GroovyCompletionProposalComputer implements IJavaCompletionProposalComputer {
 
     private static Map<ContentAssistLocation, List<IGroovyCompletionProcessorFactory>> locationFactoryMap;
     static {
@@ -162,9 +161,8 @@ public class GroovyCompletionProposalComputer implements
 
                 try {
                     for (IGroovyCompletionProcessorFactory factory : factories) {
-                        IGroovyCompletionProcessor processor = factory
-                                .createProcessor(assistContext, javaContext,
-                                        nameEnvironment);
+                        IGroovyCompletionProcessor processor =
+                            factory.createProcessor(assistContext, javaContext, nameEnvironment);
                         if (processor != null) {
                             if (processor instanceof ITypeResolver) {
                                 ((ITypeResolver) processor).setResolverInformation(moduleInfo.module, moduleInfo.resolver);
@@ -185,13 +183,11 @@ public class GroovyCompletionProposalComputer implements
                 for (IProposalFilter filter : filters) {
                     try {
                         if (filter instanceof IProposalFilterExtension) {
-                            List<ICompletionProposal> newProposals = ((IProposalFilterExtension) filter).filterExtendedProposals(
-                                    proposals, assistContext, javaContext);
+                            List<ICompletionProposal> newProposals = ((IProposalFilterExtension) filter).filterExtendedProposals(proposals, assistContext, javaContext);
                             proposals = newProposals == null ? proposals : newProposals;
                         }
                     } catch (Exception e) {
-                        GroovyCore.logException("Exception when using third party proposal filter: "
-                                + filter.getClass().getCanonicalName(), e);
+                        GroovyCore.logException("Exception when using third party proposal filter: " + filter.getClass().getCanonicalName(), e);
                     }
                 }
             } catch (CoreException e) {
@@ -200,9 +196,9 @@ public class GroovyCompletionProposalComputer implements
         }
 
         if (event != null) {
-            GroovyLogManager.manager
-                    .logEnd(event, TraceCategory.CONTENT_ASSIST);
+            GroovyLogManager.manager.logEnd(event, TraceCategory.CONTENT_ASSIST);
         }
+
         return proposals;
     }
 
@@ -300,11 +296,8 @@ public class GroovyCompletionProposalComputer implements
     }
 
     public void sessionEnded() {
-
     }
 
     public void sessionStarted() {
-
     }
-
 }

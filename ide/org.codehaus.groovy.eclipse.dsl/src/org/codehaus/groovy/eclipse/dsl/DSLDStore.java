@@ -1,19 +1,23 @@
-/*******************************************************************************
- * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *      Andrew Eisenberg - Initial implemenation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.dsl;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -43,7 +47,7 @@ public class DSLDStore {
             Collections.synchronizedMap(new LinkedHashMap<IPointcut, List<IContributionGroup>>());
     /** Maps keys (such as script names) to the pointcuts they produce. */
     private final Map<IStorage, Set<IPointcut>> keyContextMap =
-            new HashMap<IStorage, Set<IPointcut>>();
+            Collections.synchronizedMap(new LinkedHashMap<IStorage, Set<IPointcut>>());
 
     public void addContributionGroup(IPointcut pointcut, IContributionGroup contribution) {
         List<IContributionGroup> contributions = pointcutContributionMap.get(pointcut);
@@ -52,7 +56,7 @@ public class DSLDStore {
             pointcutContributionMap.put(pointcut, contributions);
         }
         contributions.add(contribution);
-        
+
         IStorage identifier = pointcut.getContainerIdentifier();
         Set<IPointcut> pointcuts = keyContextMap.get(identifier);
         if (pointcuts == null) {
@@ -61,8 +65,8 @@ public class DSLDStore {
         }
         pointcuts.add(pointcut);
     }
-    
-    
+
+
     public void purgeIdentifier(IStorage identifier) {
         if (GroovyLogManager.manager.hasLoggers()) {
             GroovyLogManager.manager.log(TraceCategory.DSL, "Purging pointcut for DSL file " + identifier);
@@ -74,7 +78,7 @@ public class DSLDStore {
             }
         }
     }
-    
+
     public void purgeAll() {
         keyContextMap.clear();
         pointcutContributionMap.clear();
@@ -83,9 +87,9 @@ public class DSLDStore {
     /**
      * Creates a new {@link DSLDStore} based on the pattern passed in
      * only includes {@link IPointcut}s that match the pattern.
-     * Sub-stores are meant to be short-lived and are not purged when a 
+     * Sub-stores are meant to be short-lived and are not purged when a
      * script changes.
-     * 
+     *
      * @param patern the pattern to match against
      * @return a new {@link DSLDStore} containing only matches against the pattern
      */
@@ -112,8 +116,7 @@ public class DSLDStore {
             addContributionGroup(pointcut, contribution);
         }
     }
-    
-   
+
     /**
      * Find all contributions for this pattern and this declaring type
      * @param pattern The pattern to match against
@@ -136,11 +139,11 @@ public class DSLDStore {
         }
         return elts;
     }
-    
+
     public IStorage[] getAllContextKeys() {
         return keyContextMap.keySet().toArray(new IStorage[0]);
     }
-    
+
     public static String toUniqueString(IStorage storage) {
         if (storage instanceof IFile) {
             return storage.getFullPath().toPortableString();
@@ -150,4 +153,4 @@ public class DSLDStore {
             return storage.getName();
         }
     }
-} 
+}

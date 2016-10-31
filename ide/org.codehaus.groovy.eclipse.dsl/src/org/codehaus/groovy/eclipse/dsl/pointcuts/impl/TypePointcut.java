@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.eclipse.core.resources.IStorage;
 
 /**
- * Matches based on arguments to method calls
+ * Matches based on arguments to method calls.
+ *
  * @author andrew
  * @created Jul 22, 2011
  */
@@ -37,7 +38,6 @@ public class TypePointcut extends FilteringPointcut<ClassNode>  {
     public TypePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName, ClassNode.class);
     }
-
 
     /**
      * Grabs the explicit type of the {@link AnnotatedNode}.  This will not return
@@ -68,9 +68,6 @@ public class TypePointcut extends FilteringPointcut<ClassNode>  {
         }
     }
 
-    /**
-     * determine if the
-     */
     @Override
     protected ClassNode filterObject(ClassNode result, GroovyDSLDContext context, String firstArgAsString) {
         return firstArgAsString == null ? result : (result.getName().equals(firstArgAsString) ? result : null);

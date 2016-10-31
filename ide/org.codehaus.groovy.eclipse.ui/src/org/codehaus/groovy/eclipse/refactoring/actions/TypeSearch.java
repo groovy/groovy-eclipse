@@ -55,14 +55,12 @@ public class TypeSearch {
         final List<TypeNameMatch> typesFound = new ArrayList<TypeNameMatch>();
         TypeNameMatchCollector collector = new TypeNameMatchCollector(typesFound);
         IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] { unit.getJavaProject() });
-        new SearchEngine().searchAllTypeNames(null, allTypes, scope, collector, IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
-                null);
+        new SearchEngine().searchAllTypeNames(null, allTypes, scope, collector, IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, null);
 
         for (TypeNameMatch match : typesFound) {
             UnresolvedTypeData data = missingTypes.get(match.getSimpleTypeName());
             if (data == null) {
-                GroovyCore.logException("GRECLIPSE-735: Match not found in missing types: " + match.getFullyQualifiedName(),
-                        new Exception());
+                GroovyCore.logException("GRECLIPSE-735: Match not found in missing types: " + match.getFullyQualifiedName(), new Exception());
                 continue;
             }
             if (isOfKind(match, data.isAnnotation)) {
