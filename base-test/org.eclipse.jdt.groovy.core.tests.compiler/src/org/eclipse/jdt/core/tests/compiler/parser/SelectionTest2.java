@@ -44,30 +44,30 @@ private class SpecialSelectionParser extends SelectionParser {
 	}
 }
 
- SpecialSelectionParser createParser(){
+SpecialSelectionParser createParser(){
 	CompilerOptions options = new CompilerOptions(getCompilerOptions());
-	SpecialSelectionParser parser = 
+	SpecialSelectionParser parser =
 		new SpecialSelectionParser(
 			new ProblemReporter(
-				DefaultErrorHandlingPolicies.proceedWithAllProblems(), 
-				options, 
+				DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+				options,
 				new DefaultProblemFactory(Locale.getDefault())));
 	return parser;
 }
 void checkMethodParse(
 		SelectionParser parser,
-		char[] source, 
+		char[] source,
 		int selectionStart,
-		int selectionEnd, 
-		String expectedSelection, 
-		String expectedUnitToString, 
-		String expectedSelectionIdentifier, 
+		int selectionEnd,
+		String expectedSelection,
+		String expectedUnitToString,
+		String expectedSelectionIdentifier,
 		String expectedSelectedSource,
 
 		String testName) {
 
 	ICompilationUnit sourceUnit = new CompilationUnit(source, testName, null);
-	CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);	
+	CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);
 
 	CompilationUnitDeclaration unit = parser.dietParse(sourceUnit, compilationResult, selectionStart, selectionEnd);
 
@@ -101,9 +101,9 @@ void checkMethodParse(
 	String computedUnitToString = unit.toString();
 	//System.out.println(computedUnitToString);
 	//System.out.println(Util.displayString(computedUnitToString));
-	//System.out.println(expectedUnitToString);	
-	
-	String computedCompletion = parser.assistNode == null 
+	//System.out.println(expectedUnitToString);
+
+	String computedCompletion = parser.assistNode == null
 								? NONE
 								: parser.assistNode.toString();
 	assertEquals(
@@ -128,16 +128,16 @@ void checkMethodParse(
 		char[] chars = null;
 		if (parser.assistNode != null){
 			chars = CharOperation.subarray(
-				parser.scanner.source, 
-				parser.assistNode.sourceStart, 
+				parser.scanner.source,
+				parser.assistNode.sourceStart,
 				parser.assistNode.sourceEnd + 1);
 		} else {
 			if (parser.assistIdentifier() != null){
-				if (((SelectionScanner)parser.scanner).selectionEnd 
+				if (((SelectionScanner)parser.scanner).selectionEnd
 					>= ((SelectionScanner)parser.scanner).selectionStart){
 					chars = CharOperation.subarray(
-						parser.scanner.source, 
-						((SelectionScanner)parser.scanner).selectionStart, 
+						parser.scanner.source,
+						((SelectionScanner)parser.scanner).selectionStart,
 						((SelectionScanner)parser.scanner).selectionEnd + 1);
 				}
 			}
@@ -170,11 +170,11 @@ public void testBug30946() {
 					"		}\n" +
 					"	}\n" +
 					"}n";
-					
+
 				String selection = "here";
-				
+
 				String expectedCompletionNodeToString = "<SelectOnName:here>";
-				
+
 				String completionIdentifier = "here";
 				String expectedUnitDisplayString =
 					"public class A {\n" +
@@ -191,14 +191,14 @@ public void testBug30946() {
 					"}\n";
 				String expectedReplacedSource = "here";
 				String testName = "<inifinite loop test>";
-			
+
 				int selectionStart = str.lastIndexOf(selection);
 				int selectionEnd = str.lastIndexOf(selection) + selection.length() - 1;
 
 				try {
 					SelectionTest2.this.checkMethodParse(
 						parser,
-						str.toCharArray(), 
+						str.toCharArray(),
 						selectionStart,
 						selectionEnd,
 						expectedCompletionNodeToString,
@@ -211,7 +211,7 @@ public void testBug30946() {
 				}
 		}
 	});
-	
+
 	query.start();
 	try {
 		Thread.sleep(500);
@@ -224,6 +224,6 @@ public void testBug30946() {
 	} catch (InterruptedException e) {
 	}
 	assertTrue("there is an infinite loop", !thereWasAnNPE);
-	
+
 }
 }

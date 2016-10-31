@@ -70,20 +70,20 @@ public class DebugEvaluationSetup extends EvaluationSetup {
 			for (int i = 0; i < 10; i++) {
 				try {
 					VirtualMachineManager manager = org.eclipse.jdi.Bootstrap.virtualMachineManager();
-					List connectors = manager.attachingConnectors();
+					List<AttachingConnector> connectors = manager.attachingConnectors();
 					if (connectors.size() == 0)
 						break;
-					AttachingConnector connector = (AttachingConnector)connectors.get(0);
-					Map args = connector.defaultArguments();
-					Connector.Argument argument = (Connector.Argument)args.get("port");
+					AttachingConnector connector = connectors.get(0);
+					Map<String, Connector.Argument> args = connector.defaultArguments();
+					Connector.Argument argument = args.get("port");
 					if (argument != null) {
 						argument.setValue(String.valueOf(debugPort));
 					}
-					argument = (Connector.Argument)args.get("hostname");
+					argument = args.get("hostname");
 					if (argument != null) {
 						argument.setValue(launcher.getTargetAddress());
 					}
-					argument = (Connector.Argument)args.get("timeout");
+					argument = args.get("timeout");
 					if (argument != null) {
 						argument.setValue("10000");
 					}

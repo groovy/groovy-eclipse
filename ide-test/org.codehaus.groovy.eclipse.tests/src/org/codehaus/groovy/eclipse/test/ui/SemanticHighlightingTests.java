@@ -17,13 +17,13 @@ package org.codehaus.groovy.eclipse.test.ui;
 
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.DEPRECATED;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.FIELD;
-import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.REGEX;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.MAP_KEY;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.METHOD;
-import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.STATIC_METHOD;
-import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.STATIC_FIELD;
-import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.UNKNOWN;
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.NUMBER;
+import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.REGEX;
+import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.STATIC_FIELD;
+import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.STATIC_METHOD;
+import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.UNKNOWN;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -45,9 +45,9 @@ import org.eclipse.ui.PartInitException;
  * @created Oct 22, 2010
  */
 public class SemanticHighlightingTests extends EclipseTestCase {
-    
+
     boolean semanticHightlightOriginalValue;
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -57,50 +57,50 @@ public class SemanticHighlightingTests extends EclipseTestCase {
 
         testProject.createJavaTypeAndPackage("other", "Java.java", "public @Deprecated class Java { \n @Deprecated public static final String CONST = \"\"; }");
     }
-    
+
     @Override
     protected void tearDown() throws Exception {
       GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING, semanticHightlightOriginalValue);
       super.tearDown();
     }
-    
+
     public void testStaticFieldRanges() throws Exception {
         String contents = "class X { static FOO\n def x() { \n FOO } }";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf("FOO"), "FOO".length(), STATIC_FIELD),
                 new HighlightedTypedPosition(contents.indexOf("x"), "x".length(), METHOD),
                 new HighlightedTypedPosition(contents.lastIndexOf("FOO"), "FOO".length(), STATIC_FIELD));
     }
-    
+
     public void testStaticMethodRanges() throws Exception {
         String contents = "class X { static FOO() { FOO() } }";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf("FOO"), "FOO".length(), STATIC_METHOD),
                 new HighlightedTypedPosition(contents.lastIndexOf("FOO"), "FOO".length(), STATIC_METHOD));
     }
-    
+
     public void testRegex() throws Exception {
         String contents = "/fdsfasdfas/";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf("/fdsfasdfas/"), "/fdsfasdfas/".length(), REGEX));
     }
 
     public void testSlashyString1() throws Exception {
         String contents = "/ends with dollar$/";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf("/ends with dollar$/"), "/ends with dollar$/".length(), REGEX));
     }
 
     public void testSlashyString2() throws Exception {
         String contents = "/$/";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf("/$/"), "/$/".length(), REGEX));
     }
 
     public void testSlashyString3() throws Exception {
         String contents = "def a = /a/\ndef b = /${a}/";
         int indexOfExpression = contents.indexOf("/$");
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf("/a/"), "/a/".length(), REGEX),
                 new HighlightedTypedPosition(indexOfExpression, "/$".length(), REGEX),
                 new HighlightedTypedPosition(contents.indexOf("/", indexOfExpression + 1), "/".length(), REGEX));
@@ -129,25 +129,25 @@ public class SemanticHighlightingTests extends EclipseTestCase {
 
     public void testMultiLineSlashyString1() throws Exception {
         String contents = "$/\nSlashy String\n/$";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf("$/\nSlashy String\n/$"), "$/\nSlashy String\n/$".length(), REGEX));
     }
 
     public void testMultiLineSlashyString2() throws Exception {
         String contents = "$/\nSlashy$ String\n/$";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf("$/\nSlashy$ String\n/$"), "$/\nSlashy$ String\n/$".length(), REGEX));
     }
 
     public void testMultiLineSlashyString3() throws Exception {
         String contents = "$/\nSlashy String$\n/$";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf("$/\nSlashy String$\n/$"), "$/\nSlashy String$\n/$".length(), REGEX));
     }
 
     public void testMultiLineSlashyString4() throws Exception {
         String contents = "def a = /a/\ndef b = $/\n${a}$\n/$";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf("/a/"), "/a/".length(), REGEX),
                 new HighlightedTypedPosition(contents.indexOf("$/\n$"), "$/\n$".length(), REGEX),
                 new HighlightedTypedPosition(contents.indexOf("$\n/$"), "$\n/$".length(), REGEX));
@@ -155,7 +155,7 @@ public class SemanticHighlightingTests extends EclipseTestCase {
 
     public void testMultiLineSlashyString5() throws Exception {
         String contents = "def a = /a/\ndef b = $/\n$a$\n/$";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf("/a/"), "/a/".length(), REGEX),
                 new HighlightedTypedPosition(contents.indexOf("$/\n$"), "$/\n$".length(), REGEX),
                 new HighlightedTypedPosition(contents.indexOf("$\n/$"), "$\n/$".length(), REGEX));
@@ -163,116 +163,116 @@ public class SemanticHighlightingTests extends EclipseTestCase {
 
     public void testUnknown() throws Exception {
         String contents = "unknown";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf("unknown"), "unknown".length(), UNKNOWN));
     }
-    
+
     public void testDeprecated() throws Exception {
         String contents = "import other.Java\nJava.CONST";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf("Java"), "Java".length(), DEPRECATED),
                 new HighlightedTypedPosition(contents.lastIndexOf("Java"), "Java".length(), DEPRECATED),
                 new HighlightedTypedPosition(contents.indexOf("CONST"), "CONST".length(), DEPRECATED));
     }
-    
+
     public void testDeprecated2() throws Exception {
         String contents = "@Deprecated\nclass FOO {\n FOO x }";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf("FOO"), "FOO".length(), DEPRECATED),
                 new HighlightedTypedPosition(contents.lastIndexOf("FOO"), "FOO".length(), DEPRECATED),
                 new HighlightedTypedPosition(contents.lastIndexOf("x"), "x".length(), FIELD));
     }
-    
+
     public void testDeprecated3() throws Exception {
         String contents = "class FOO {\n @Deprecated FOO x\n def y() { x } }";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(contents.indexOf("x"), "x".length(), DEPRECATED),
                 new HighlightedTypedPosition(contents.lastIndexOf("y"), "y".length(), METHOD),
                 new HighlightedTypedPosition(contents.lastIndexOf("x"), "x".length(), DEPRECATED));
     }
-    
+
     public void testNumberWithSuffix() throws Exception {
         String contents = "11";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
         contents = "1I";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
         contents = "1i";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
         contents = "1L";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
         contents = "1l";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
         contents = "1G";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
         contents = "1g";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
         contents = "1D";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
         contents = "1d";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
         contents = "1F";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
         contents = "1f";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
-        
+
         // source locations for '-' and '+' are incorrect
         // this appears to be a groovy problem
 //        contents = "-1";
-//        assertHighlighting(contents, 
+//        assertHighlighting(contents,
 //                new HighlightedTypedPosition(0, contents.length(), NUMBER));
 //        contents = "+1";
-//        assertHighlighting(contents, 
+//        assertHighlighting(contents,
 //                new HighlightedTypedPosition(0, contents.length(), NUMBER));
     }
-    
+
     public void testOctal() throws Exception {
         String contents = "01";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
     }
-    
+
     public void testHex() throws Exception {
         String contents = "0x1fff";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
     }
-    
+
     public void testExponent() throws Exception {
         String contents = "1.23e-23";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
     }
-    
+
     public void testDecimal() throws Exception {
         String contents = "8881.23";
-        assertHighlighting(contents, 
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(0, contents.length(), NUMBER));
     }
-    
+
     // GRECLIPSE-1138
     public void testMultipleStaticMethods() throws Exception {
-        String contents = "f(1,2)\n" + 
-        		"\n" + 
-        		"static f(List a, List b) {\n" + 
-        		"}\n" + 
-        		"static f(int a, int b) {\n" + 
+        String contents = "f(1,2)\n" +
+        		"\n" +
+        		"static f(List a, List b) {\n" +
+        		"}\n" +
+        		"static f(int a, int b) {\n" +
         		"}";
         int first = contents.indexOf("f");
         int second = contents.indexOf("f", first+1);
         int third = contents.indexOf("f", second+1);
-        
-        assertHighlighting(contents, 
+
+        assertHighlighting(contents,
                 new HighlightedTypedPosition(first, "f".length(), STATIC_METHOD),
                 new HighlightedTypedPosition(contents.indexOf("1"), "1".length(), NUMBER),
                 new HighlightedTypedPosition(contents.indexOf("2"), "2".length(), NUMBER),
@@ -298,26 +298,15 @@ public class SemanticHighlightingTests extends EclipseTestCase {
         checkStyles(unit, expectedPositions);
     }
 
-
-
-    /**
-     * @param contents
-     * @return
-     * @throws CoreException
-     * @throws PartInitException
-     */
     private GroovyCompilationUnit openFile(String contents) throws CoreException,
             PartInitException {
         IFile file = testProject.createGroovyTypeAndPackage("", "Highlighting.groovy", contents);
         return (GroovyCompilationUnit) JavaCore.create(file);
     }
 
-    /**
-     * @param text
-     */
     private void checkStyles(GroovyCompilationUnit unit, HighlightedTypedPosition[] expectedPositions) {
         GatherSemanticReferences references = new GatherSemanticReferences(unit);
-        HighlightedTypedPosition[] actualPositions = (HighlightedTypedPosition[]) references.findSemanticHighlightingReferences().toArray(new HighlightedTypedPosition[0]);
+        HighlightedTypedPosition[] actualPositions = references.findSemanticHighlightingReferences().toArray(new HighlightedTypedPosition[0]);
         Arrays.sort(actualPositions, new Comparator<HighlightedTypedPosition>() {
             public int compare(HighlightedTypedPosition h1, HighlightedTypedPosition h2) {
                 if (h1.offset == h2.offset) {

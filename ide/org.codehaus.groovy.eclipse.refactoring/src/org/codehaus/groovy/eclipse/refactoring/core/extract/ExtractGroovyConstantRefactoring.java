@@ -24,7 +24,6 @@ import java.util.Map;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
@@ -269,7 +268,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
                 int statementStart = node.getModule().getStatementBlock().getStart();
                 int methodStart;
                 if (node.getModule().getMethods().size() > 0) {
-                    methodStart = ((MethodNode) node.getModule().getMethods().get(0)).getStart();
+                    methodStart = node.getModule().getMethods().get(0).getStart();
                 } else {
                     methodStart = Integer.MAX_VALUE;
                 }
@@ -422,7 +421,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         Iterator<FieldNode> decls= getContainingClassNode().getFields().iterator();
 
         while (decls.hasNext()) {
-            FieldNode decl= (FieldNode) decls.next();
+            FieldNode decl= decls.next();
             if (decl.isStatic() && decl.getEnd() > 0) {
                 lastStaticDependency= decl;
             }

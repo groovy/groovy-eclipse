@@ -36,8 +36,8 @@ import org.eclipse.jdt.internal.core.util.Util;
 /**
  * @see IMethod
  */
-
-/* package */ class BinaryMethod extends BinaryMember implements IMethod {
+//GROOVY package->public
+public class BinaryMethod extends BinaryMember implements IMethod {
 	/**
 	 * The parameter type signatures of the method - stored locally
 	 * to perform equality test. <code>CharOperation.NO_STRINGS</code> indicates no
@@ -45,7 +45,7 @@ import org.eclipse.jdt.internal.core.util.Util;
 	 */
 	protected String[] parameterTypes;
 	protected String [] erasedParamaterTypes; // lazily initialized via call to getErasedParameterTypes
-	
+
 	/**
 	 * The parameter names for the method.
 	 */
@@ -298,7 +298,7 @@ public String[] getParameterNames() throws JavaModelException {
 				projectInfo.javadocCache.put(declaringType, BinaryType.EMPTY_JAVADOC);
 			}
 		}
-		
+
 		String methodDoc = null;
 		if (javadocContents == null) {
 			long timeOut = 50; // default value

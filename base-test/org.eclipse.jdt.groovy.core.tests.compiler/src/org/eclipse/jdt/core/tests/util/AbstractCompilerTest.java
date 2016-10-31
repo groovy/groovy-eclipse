@@ -13,7 +13,7 @@ package org.eclipse.jdt.core.tests.util;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,19 +46,19 @@ public abstract class AbstractCompilerTest extends TestCase {
 
 	/**
 	 * Build a test suite made of test suites for all possible running VM compliances .
-	 * 
+	 *
 	 * @see #buildUniqueComplianceTestSuite(Class, long) for test suite children content.
-	 * 
+	 *
 	 * @param evaluationTestClass The main test suite to build.
 	 * @return built test suite (see {@link TestSuite}
 	 */
-	public static Test buildAllCompliancesTestSuite(Class evaluationTestClass) {
+	public static Test buildAllCompliancesTestSuite(Class<? extends Test> evaluationTestClass) {
 		TestSuite suite = new TestSuite(evaluationTestClass.getName());
 		buildAllCompliancesTestSuite(suite, evaluationTestClass);
 		return suite;
 	}
 
-	public static void buildAllCompliancesTestSuite(TestSuite suite, Class evaluationTestClass) {
+	public static void buildAllCompliancesTestSuite(TestSuite suite, Class<? extends Test> evaluationTestClass) {
 		int complianceLevels = AbstractCompilerTest.getPossibleComplianceLevels();
 		if ((complianceLevels & AbstractCompilerTest.F_1_3) != 0) {
 			suite.addTest(buildUniqueComplianceTestSuite(evaluationTestClass, ClassFileConstants.JDK1_3));
@@ -82,15 +82,15 @@ public abstract class AbstractCompilerTest extends TestCase {
 
 	/**
 	 * Build a test suite made of test suites for all possible running VM compliances .
-	 * 
+	 *
 	 * @see #buildComplianceTestSuite(List, Class, long) for test suite children content.
-	 * 
+	 *
 	 * @param testSuiteClass The main test suite to build.
 	 * @param setupClass The compiler setup to class to use to bundle given tets suites tests.
 	 * @param testClasses The list of test suites to include in main test suite.
 	 * @return built test suite (see {@link TestSuite}
 	 */
-	public static Test buildAllCompliancesTestSuite(Class testSuiteClass, Class setupClass, List testClasses) {
+	public static Test buildAllCompliancesTestSuite(Class<? extends Test> testSuiteClass, Class<? extends TestSuite> setupClass, List<Class<? extends Test>> testClasses) {
 		TestSuite suite = new TestSuite(testSuiteClass.getName());
 		int complianceLevels = AbstractCompilerTest.getPossibleComplianceLevels();
 		if ((complianceLevels & AbstractCompilerTest.F_1_3) != 0) {
@@ -118,14 +118,14 @@ public abstract class AbstractCompilerTest extends TestCase {
 	 * Build a test suite for a compliance and a list of test suites.
 	 * Returned test suite has only one child: {@link RegressionTestSetup} test suite.
 	 * Name of returned suite is the given compliance level.
-	 * 
+	 *
 	 * @see #buildComplianceTestSuite(List, Class, long) for child test suite content.
-	 * 
+	 *
 	 * @param complianceLevel The compliance level used for this test suite.
 	 * @param testClasses The list of test suites to include in main test suite.
 	 * @return built test suite (see {@link TestSuite}
 	 */
-	public static Test buildComplianceTestSuite(long complianceLevel, List testClasses) {
+	public static Test buildComplianceTestSuite(long complianceLevel, List<Class<? extends Test>> testClasses) {
 		return buildComplianceTestSuite(testClasses, RegressionTestSetup.class, complianceLevel);
 	}
 
@@ -133,17 +133,17 @@ public abstract class AbstractCompilerTest extends TestCase {
 	 * Build a test suite for a compliance and a list of test suites.
 	 * Children of returned test suite are setup test suites (see {@link CompilerTestSetup}).
 	 * Name of returned suite is the given compliance level.
-	 * 
+	 *
 	 * @param complianceLevel The compliance level used for this test suite.
 	 * @param testClasses The list of test suites to include in main test suite.
 	 * @return built test suite (see {@link TestSuite}
 	 */
-	private static Test buildComplianceTestSuite(List testClasses, Class setupClass, long complianceLevel) {
+	private static Test buildComplianceTestSuite(List<Class<? extends Test>> testClasses, Class<? extends TestSuite> setupClass, long complianceLevel) {
 		// call the setup constructor with the compliance level
 		TestSuite complianceSuite = null;
 		try {
-			Constructor constructor = setupClass.getConstructor(new Class[]{long.class});
-			complianceSuite = (TestSuite)constructor.newInstance(new Object[]{new Long(complianceLevel)});
+			Constructor<? extends TestSuite> constructor = setupClass.getConstructor(new Class[]{long.class});
+			complianceSuite = constructor.newInstance(new Object[]{new Long(complianceLevel)});
 		} catch (IllegalAccessException e) {
 			e.printStackTrace();
 		} catch (InstantiationException e) {
@@ -158,11 +158,11 @@ public abstract class AbstractCompilerTest extends TestCase {
 
 		// add tests
 		for (int i=0, m=testClasses.size(); i<m ; i++) {
-			Class testClass = (Class)testClasses.get(i);
+			Class<? extends Test> testClass = testClasses.get(i);
 			TestSuite suite = new TestSuite(testClass.getName());
-			List tests = buildTestsList(testClass);
+			List<Test> tests = buildTestsList(testClass);
 			for (int index=0, size=tests.size(); index<size; index++) {
-				suite.addTest((Test)tests.get(index));
+				suite.addTest(tests.get(index));
 			}
 			complianceSuite.addTest(suite);
 		}
@@ -174,12 +174,12 @@ public abstract class AbstractCompilerTest extends TestCase {
 	 * Returned test suite has only one child: {@link RegressionTestSetup} test suite.
 	 * Name of returned suite is the name of given test suite class.
 	 * The test suite will be run iff the compliance is at least the specified one.
-	 * 
+	 *
 	 * @param minimalCompliance The unqie compliance level used for this test suite.
 	 * @param evaluationTestClass The test suite to run.
 	 * @return built test suite (see {@link TestSuite}
 	 */
-	public static Test buildMinimalComplianceTestSuite(Class evaluationTestClass, int minimalCompliance) {
+	public static Test buildMinimalComplianceTestSuite(Class<? extends Test> evaluationTestClass, int minimalCompliance) {
 		TestSuite suite = new TestSuite(evaluationTestClass.getName());
 		int complianceLevels = AbstractCompilerTest.getPossibleComplianceLevels();
 		int level13 = complianceLevels & AbstractCompilerTest.F_1_3;
@@ -237,21 +237,21 @@ public abstract class AbstractCompilerTest extends TestCase {
 	 * Build a regression test setup suite for a compliance and a test suite to run.
 	 * Returned test suite has only one child: {@link RegressionTestSetup} test suite.
 	 * Name of returned suite is the name of given test suite class.
-	 * 
+	 *
 	 * @param uniqueCompliance The unique compliance level used for this test suite.
 	 * @param evaluationTestClass The test suite to run.
 	 * @return built test suite (see {@link TestSuite}
 	 */
-	public static Test buildUniqueComplianceTestSuite(Class evaluationTestClass, long uniqueCompliance) {
+	public static Test buildUniqueComplianceTestSuite(Class<? extends Test> evaluationTestClass, long uniqueCompliance) {
 		long highestLevel = highestComplianceLevels();
 		if (highestLevel < uniqueCompliance) {
 			System.err.println("Cannot run "+evaluationTestClass.getName()+" at compliance "+highestLevel+"!");
 			return new TestSuite();
 		}
 		TestSuite complianceSuite = new RegressionTestSetup(uniqueCompliance);
-		List tests = buildTestsList(evaluationTestClass);
+		List<Test> tests = buildTestsList(evaluationTestClass);
 		for (int index=0, size=tests.size(); index<size; index++) {
-			complianceSuite.addTest((Test)tests.get(index));
+			complianceSuite.addTest(tests.get(index));
 		}
 		return complianceSuite;
 	}
@@ -372,7 +372,7 @@ public abstract class AbstractCompilerTest extends TestCase {
 	 * Returns a test suite including the tests defined by the given classes for all possible complianceLevels
 	 * and using the given setup class (CompilerTestSetup or a subclass)
 	 */
-	public static Test suite(String suiteName, Class setupClass, ArrayList testClasses) {
+	public static Test suite(String suiteName, Class<? extends TestSuite> setupClass, List<Class<? extends junit.framework.TestCase>> testClasses) {
 		TestSuite all = new TestSuite(suiteName);
 		int complianceLevels = AbstractCompilerTest.getPossibleComplianceLevels();
 		if ((complianceLevels & AbstractCompilerTest.F_1_3) != 0) {
@@ -388,14 +388,14 @@ public abstract class AbstractCompilerTest extends TestCase {
 	}
 
 	/*
-	 * Returns a test suite including the tests defined by the given classes for the given complianceLevel 
+	 * Returns a test suite including the tests defined by the given classes for the given complianceLevel
 	 * (see AbstractCompilerTest for valid values) and using the given setup class (CompilerTestSetup or a subclass)
 	 */
-	public static Test suiteForComplianceLevel(long complianceLevel, Class setupClass, ArrayList testClasses) {
+	public static Test suiteForComplianceLevel(long complianceLevel, Class<?> setupClass, List<Class<? extends junit.framework.TestCase>> testClasses) {
 		// call the setup constructor with the compliance level
 		TestSuite suite = null;
 		try {
-			Constructor constructor = setupClass.getConstructor(new Class[]{String.class});
+			Constructor<?> constructor = setupClass.getConstructor(new Class[]{String.class});
 			suite = (TestSuite)constructor.newInstance(new Object[]{CompilerOptions.versionFromJdkLevel(complianceLevel)});
 		} catch (IllegalAccessException e) {
 			e.printStackTrace();
@@ -408,16 +408,16 @@ public abstract class AbstractCompilerTest extends TestCase {
 		}
 		if (suite == null)
 			return null;
-		
+
 		// add tests
-		Class testClass;
+		Class<? extends junit.framework.TestCase> testClass;
 		if (testClasses.size() == 1) {
-			suite = new TestSuite(testClass = (Class)testClasses.get(0), CompilerOptions.versionFromJdkLevel(complianceLevel));
+			suite = new TestSuite(testClass = testClasses.get(0), CompilerOptions.versionFromJdkLevel(complianceLevel));
 			TESTS_COUNTERS.put(testClass.getName(), new Integer(suite.countTestCases()));
 		} else {
 			suite = new TestSuite(CompilerOptions.versionFromJdkLevel(complianceLevel));
 			for (int i = 0, length = testClasses.size(); i < length; i++) {
-				TestSuite innerSuite = new TestSuite(testClass = (Class)testClasses.get(i));
+				TestSuite innerSuite = new TestSuite(testClass = testClasses.get(i));
 				TESTS_COUNTERS.put(testClass.getName(), new Integer(innerSuite.countTestCases()));
 				suite.addTest(innerSuite);
 			}
@@ -425,45 +425,44 @@ public abstract class AbstractCompilerTest extends TestCase {
 		return suite;
 	}
 
-	public static Test setupSuite(Class clazz) {
-		ArrayList testClasses = new ArrayList();
-		testClasses.add(clazz);
-		return suite(clazz.getName(), RegressionTestSetup.class, testClasses);
+	@SuppressWarnings("unchecked")
+	public static Test setupSuite(Class<? extends junit.framework.TestCase> clazz) {
+		return suite(clazz.getName(), RegressionTestSetup.class, Arrays.<Class<? extends junit.framework.TestCase>>asList(clazz));
 	}
 
-	public static Test buildTestSuite(Class evaluationTestClass) {
+	public static Test buildTestSuite(Class<? extends junit.framework.TestCase> evaluationTestClass) {
 		if (TESTS_PREFIX != null || TESTS_NAMES != null || TESTS_NUMBERS!=null || TESTS_RANGE !=null) {
 			return buildTestSuite(evaluationTestClass, highestComplianceLevels());
 		}
 		return setupSuite(evaluationTestClass);
 	}
 
-	public static Test buildTestSuite(Class evaluationTestClass, long complianceLevel) {
+	public static Test buildTestSuite(Class<? extends Test> evaluationTestClass, long complianceLevel) {
 		TestSuite suite = new RegressionTestSetup(complianceLevel);
-		List tests = buildTestsList(evaluationTestClass);
+		List<Test> tests = buildTestsList(evaluationTestClass);
 		for (int index=0, size=tests.size(); index<size; index++) {
-			suite.addTest((Test)tests.get(index));
+			suite.addTest(tests.get(index));
 		}
 		String className = evaluationTestClass.getName();
 		Integer testsNb;
 		int newTestsNb = suite.countTestCases();
-		if ((testsNb = (Integer) TESTS_COUNTERS.get(className)) != null)
+		if ((testsNb = TESTS_COUNTERS.get(className)) != null)
 			newTestsNb += testsNb.intValue();
 		TESTS_COUNTERS.put(className, new Integer(newTestsNb));
 		return suite;
 	}
 
-	
+
 	public static boolean isJRELevel(int compliance) {
 		return (AbstractCompilerTest.getPossibleComplianceLevels() & compliance) != 0;
 	}
-	
+
 	public AbstractCompilerTest(String name) {
 		super(name);
 	}
 
-	protected Map getCompilerOptions() {
-		Map options = new CompilerOptions().getMap();
+	protected Map<String, String> getCompilerOptions() {
+		Map<String, String> options = new CompilerOptions().getMap();
 		options.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.IGNORE);
 		if (this.complianceLevel == ClassFileConstants.JDK1_3) {
 			options.put(CompilerOptions.OPTION_Compliance, CompilerOptions.VERSION_1_3);
@@ -508,15 +507,15 @@ public abstract class AbstractCompilerTest extends TestCase {
 	protected String testName() {
 		return super.getName();
 	}
-	
+
 	// Output files management
 	protected IPath outputRootDirectoryPath = new Path(Util.getOutputDirectory());
 	protected File outputTestDirectory;
 
 	/**
-	 * Create a test specific output directory as a subdirectory of 
-	 * outputRootDirectory, given a subdirectory path. The whole 
-	 * subtree is created as needed. outputTestDirectoryPath is 
+	 * Create a test specific output directory as a subdirectory of
+	 * outputRootDirectory, given a subdirectory path. The whole
+	 * subtree is created as needed. outputTestDirectoryPath is
 	 * modified according to the latest call to this method.
 	 * @param suffixPath a valid relative path for the subdirectory
 	 */
@@ -547,8 +546,8 @@ public abstract class AbstractCompilerTest extends TestCase {
 			Util.writeToFile(contents, file.getPath());
 		}
 	}
-	
-	// Summary display		
+
+	// Summary display
 	// Used by AbstractRegressionTest for javac comparison tests
-	protected static Map TESTS_COUNTERS = new HashMap();
+	protected static Map<String, Integer> TESTS_COUNTERS = new HashMap<String, Integer>();
 }

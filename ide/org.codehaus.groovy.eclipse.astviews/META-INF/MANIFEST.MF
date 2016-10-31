@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Groovy AST Views
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.astviews;singleton:=true
+Bundle-Name: Groovy AST Views
+Bundle-Vendor: Codehaus.org
 Bundle-Version: 2.9.2.qualifier
-Bundle-Activator: org.codehaus.groovy.eclipse.astviews.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.core.resources,
@@ -16,5 +16,5 @@ Require-Bundle: org.eclipse.ui,
  org.codehaus.groovy;bundle-version="1.8.6",
  org.eclipse.jdt.groovy.core;bundle-version="2.9.2"
 Bundle-ActivationPolicy: lazy
-Bundle-Vendor: The Codehaus
+Bundle-Activator: org.codehaus.groovy.eclipse.astviews.Activator
 Bundle-RequiredExecutionEnvironment: J2SE-1.5

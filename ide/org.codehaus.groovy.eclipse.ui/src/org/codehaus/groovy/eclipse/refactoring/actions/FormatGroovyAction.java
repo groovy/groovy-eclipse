@@ -65,7 +65,7 @@ public class FormatGroovyAction extends SelectionDispatchAction {
             return;
         }
 
-        GroovyCompilationUnit unit = (GroovyCompilationUnit) part.getAdapter(GroovyCompilationUnit.class);
+        GroovyCompilationUnit unit = part.getAdapter(GroovyCompilationUnit.class);
         GroovyEditor groovyEditor = (GroovyEditor) part;
         IDocument doc = groovyEditor.getDocumentProvider().getDocument(groovyEditor.getEditorInput());
 

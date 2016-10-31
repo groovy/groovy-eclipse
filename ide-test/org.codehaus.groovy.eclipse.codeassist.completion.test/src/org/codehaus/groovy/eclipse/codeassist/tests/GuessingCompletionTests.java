@@ -1,39 +1,41 @@
-/*******************************************************************************
- * Copyright (c) 2011 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+/*
+ * Copyright 2009-2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
 
 /**
  * @author Andrew Eisenberg
  * @created Sep 9, 2011
- *
  */
 public class GuessingCompletionTests extends CompletionTestCase {
 
-    
     public GuessingCompletionTests() {
         super("Parameter guessing test cases");
     }
-    
+
     public void testParamGuessing1() throws Exception {
         String contents = "String yyy\n" +
-        		"def xxx(String x) { }\n" +
-        		"xxx";
+                "def xxx(String x) { }\n" +
+                "xxx";
         String[][] expectedChoices = new String[][] { new String[] { "yyy", "\"\"" } };
         checkProposalChoices(contents, "xxx", "xxx(yyy)", expectedChoices);
     }
 
     public void testParamGuessing2() throws Exception {
-        String contents = 
+        String contents =
                 "String yyy\n" +
                 "int zzz\n" +
                 "def xxx(String x, int z) { }\n" +
@@ -41,9 +43,9 @@ public class GuessingCompletionTests extends CompletionTestCase {
         String[][] expectedChoices = new String[][] { new String[] { "yyy", "\"\"" }, new String[] { "zzz", "0" } };
         checkProposalChoices(contents, "xxx", "xxx(yyy, zzz)", expectedChoices);
     }
-    
+
     public void testParamGuessing3() throws Exception {
-        String contents = 
+        String contents =
                 "String yyy\n" +
                 "Integer zzz\n" +
                 "boolean aaa\n" +
@@ -54,17 +56,17 @@ public class GuessingCompletionTests extends CompletionTestCase {
     }
 
     // GRECLIPSE-1268  This test may fail in some environments since the ordering of
-    // guessed parameters is not based on actual source location.  Need a way to map 
+    // guessed parameters is not based on actual source location.  Need a way to map
     // from variable name to local variable declaration in GroovyExtendedCompletionContext.computeVisibleElements(String)
     public void testParamGuessing4() throws Exception {
-        String contents = 
+        String contents =
                 "Closure yyy\n" +
                 "def zzz = { }\n" +
                 "def xxx(Closure c) { }\n" +
                 "xxx";
         String[][] expectedChoices = new String[][] { new String[] { "zzz", "yyy", "{  }" } };
-        
-        
+
+
         try {
             checkProposalChoices(contents, "xxx", "xxx {", expectedChoices);
         } catch (AssertionError e) {

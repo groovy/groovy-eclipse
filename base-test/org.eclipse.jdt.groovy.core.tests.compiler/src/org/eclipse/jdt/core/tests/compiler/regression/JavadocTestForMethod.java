@@ -20,11 +20,8 @@ public class JavadocTestForMethod extends JavadocTest {
 	public JavadocTestForMethod(String name) {
 		super(name);
 	}
-	public static Class javadocTestClass() {
-		return JavadocTestForMethod.class;
-	}
 	public static Test suite() {
-		return buildAllCompliancesTestSuite(javadocTestClass());
+		return buildAllCompliancesTestSuite(JavadocTestForMethod.class);
 	}
 
 	// Use this static initializer to specify subset for tests
@@ -40,8 +37,8 @@ public class JavadocTestForMethod extends JavadocTest {
 //		TESTS_RANGE = new int[] { 10, -1 }; // run all tests with a number greater or equals to 10
 	}
 
-	protected Map getCompilerOptions() {
-		Map options = super.getCompilerOptions();
+	protected Map<String, String> getCompilerOptions() {
+		Map<String, String> options = super.getCompilerOptions();
 		options.put(CompilerOptions.OPTION_ReportInvalidJavadoc, CompilerOptions.ERROR);
 		options.put(CompilerOptions.OPTION_ReportInvalidJavadocTagsVisibility, CompilerOptions.PRIVATE);
 		options.put(CompilerOptions.OPTION_ReportMissingJavadocTags, CompilerOptions.ERROR);
@@ -118,26 +115,26 @@ public class JavadocTestForMethod extends JavadocTest {
 				"	void foo() {\n" +
 				"	}\n" +
 				"}\n" },
-		"----------\n" + 
-		"1. ERROR in Z.java (at line 4)\n" + 
-		"	* @see X#x\n" + 
-		"	         ^\n" + 
-		"Javadoc: The field X.x is deprecated\n" + 
-		"----------\n" + 
-		"2. ERROR in Z.java (at line 5)\n" + 
-		"	* @see Y\n" + 
-		"	       ^\n" + 
-		"Javadoc: The type Y is deprecated\n" + 
-		"----------\n" + 
-		"3. ERROR in Z.java (at line 6)\n" + 
-		"	* @see Y#y\n" + 
-		"	       ^\n" + 
-		"Javadoc: The type Y is deprecated\n" + 
-		"----------\n" + 
-		"4. ERROR in Z.java (at line 6)\n" + 
-		"	* @see Y#y\n" + 
-		"	         ^\n" + 
-		"Javadoc: The field Y.y is deprecated\n" + 
+		"----------\n" +
+		"1. ERROR in Z.java (at line 4)\n" +
+		"	* @see X#x\n" +
+		"	         ^\n" +
+		"Javadoc: The field X.x is deprecated\n" +
+		"----------\n" +
+		"2. ERROR in Z.java (at line 5)\n" +
+		"	* @see Y\n" +
+		"	       ^\n" +
+		"Javadoc: The type Y is deprecated\n" +
+		"----------\n" +
+		"3. ERROR in Z.java (at line 6)\n" +
+		"	* @see Y#y\n" +
+		"	       ^\n" +
+		"Javadoc: The type Y is deprecated\n" +
+		"----------\n" +
+		"4. ERROR in Z.java (at line 6)\n" +
+		"	* @see Y#y\n" +
+		"	         ^\n" +
+		"Javadoc: The field Y.y is deprecated\n" +
 		"----------\n",
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
 			);
@@ -170,11 +167,11 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "	}\n"
 					+ "}\n",
 				},
-		"----------\n" + 
-		"1. WARNING in X.java (at line 4)\n" + 
-		"	new Z().foo(2);\n" + 
-		"	^^^^^^^^^^^^^^\n" + 
-		"The method foo(int) from the type Z is deprecated\n" + 
+		"----------\n" +
+		"1. WARNING in X.java (at line 4)\n" +
+		"	new Z().foo(2);\n" +
+		"	^^^^^^^^^^^^^^\n" +
+		"The method foo(int) from the type Z is deprecated\n" +
 		"----------\n"
 				);
 	}
@@ -207,42 +204,42 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "	}\n"
 					+ "}\n",
 				},
-		"----------\n" + 
-		"1. WARNING in X.java (at line 4)\n" + 
-		"	new Z().foo(2);\n" + 
-		"	^^^^^^^^^^^^^^\n" + 
-		"The method foo(int) from the type Z is deprecated\n" + 
-		"----------\n" + 
-		"----------\n" + 
-		"1. ERROR in Z.java (at line 5)\n" + 
-		"	* @param\n" + 
-		"	   ^^^^^\n" + 
-		"Javadoc: Missing parameter name\n" + 
-		"----------\n" + 
-		"2. ERROR in Z.java (at line 7)\n" + 
-		"	* @throws Unknown\n" + 
-		"	          ^^^^^^^\n" + 
-		"Javadoc: Unknown cannot be resolved to a type\n" + 
-		"----------\n" + 
-		"3. ERROR in Z.java (at line 8)\n" + 
-		"	* @see \"Invalid\n" + 
-		"	       ^^^^^^^^\n" + 
-		"Javadoc: Invalid reference\n" + 
-		"----------\n" + 
-		"4. ERROR in Z.java (at line 9)\n" + 
-		"	* @see Unknown\n" + 
-		"	       ^^^^^^^\n" + 
-		"Javadoc: Unknown cannot be resolved to a type\n" + 
-		"----------\n" + 
-		"5. ERROR in Z.java (at line 10)\n" + 
-		"	* @param x\n" + 
-		"	   ^^^^^\n" + 
-		"Javadoc: Unexpected tag\n" + 
-		"----------\n" + 
-		"6. ERROR in Z.java (at line 13)\n" + 
-		"	public String foo(int x) { \n" + 
-		"	                      ^\n" + 
-		"Javadoc: Missing tag for parameter x\n" + 
+		"----------\n" +
+		"1. WARNING in X.java (at line 4)\n" +
+		"	new Z().foo(2);\n" +
+		"	^^^^^^^^^^^^^^\n" +
+		"The method foo(int) from the type Z is deprecated\n" +
+		"----------\n" +
+		"----------\n" +
+		"1. ERROR in Z.java (at line 5)\n" +
+		"	* @param\n" +
+		"	   ^^^^^\n" +
+		"Javadoc: Missing parameter name\n" +
+		"----------\n" +
+		"2. ERROR in Z.java (at line 7)\n" +
+		"	* @throws Unknown\n" +
+		"	          ^^^^^^^\n" +
+		"Javadoc: Unknown cannot be resolved to a type\n" +
+		"----------\n" +
+		"3. ERROR in Z.java (at line 8)\n" +
+		"	* @see \"Invalid\n" +
+		"	       ^^^^^^^^\n" +
+		"Javadoc: Invalid reference\n" +
+		"----------\n" +
+		"4. ERROR in Z.java (at line 9)\n" +
+		"	* @see Unknown\n" +
+		"	       ^^^^^^^\n" +
+		"Javadoc: Unknown cannot be resolved to a type\n" +
+		"----------\n" +
+		"5. ERROR in Z.java (at line 10)\n" +
+		"	* @param x\n" +
+		"	   ^^^^^\n" +
+		"Javadoc: Unexpected tag\n" +
+		"----------\n" +
+		"6. ERROR in Z.java (at line 13)\n" +
+		"	public String foo(int x) { \n" +
+		"	                      ^\n" +
+		"Javadoc: Missing tag for parameter x\n" +
 		"----------\n",
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
 				);
@@ -275,11 +272,11 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "	}\n"
 					+ "}\n",
 				},
-		"----------\n" + 
-		"1. WARNING in X.java (at line 4)\n" + 
-		"	new Z().foo(2);\n" + 
-		"	^^^^^^^^^^^^^^\n" + 
-		"The method foo(int) from the type Z is deprecated\n" + 
+		"----------\n" +
+		"1. WARNING in X.java (at line 4)\n" +
+		"	new Z().foo(2);\n" +
+		"	^^^^^^^^^^^^^^\n" +
+		"The method foo(int) from the type Z is deprecated\n" +
 		"----------\n"
 				);
 	}
@@ -313,42 +310,42 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "	}\n"
 					+ "}\n",
 				},
-		"----------\n" + 
-		"1. WARNING in X.java (at line 4)\n" + 
-		"	new Z().foo(2);\n" + 
-		"	^^^^^^^^^^^^^^\n" + 
-		"The method foo(int) from the type Z is deprecated\n" + 
-		"----------\n" + 
-		"----------\n" + 
-		"1. ERROR in Z.java (at line 6)\n" + 
-		"	* @param\n" + 
-		"	   ^^^^^\n" + 
-		"Javadoc: Missing parameter name\n" + 
-		"----------\n" + 
-		"2. ERROR in Z.java (at line 8)\n" + 
-		"	* @throws Unknown\n" + 
-		"	          ^^^^^^^\n" + 
-		"Javadoc: Unknown cannot be resolved to a type\n" + 
-		"----------\n" + 
-		"3. ERROR in Z.java (at line 10)\n" + 
-		"	* @see \"Invalid\n" + 
-		"	       ^^^^^^^^\n" + 
-		"Javadoc: Invalid reference\n" + 
-		"----------\n" + 
-		"4. ERROR in Z.java (at line 11)\n" + 
-		"	* @see Unknown\n" + 
-		"	       ^^^^^^^\n" + 
-		"Javadoc: Unknown cannot be resolved to a type\n" + 
-		"----------\n" + 
-		"5. ERROR in Z.java (at line 12)\n" + 
-		"	* @param x\n" + 
-		"	   ^^^^^\n" + 
-		"Javadoc: Unexpected tag\n" + 
-		"----------\n" + 
-		"6. ERROR in Z.java (at line 14)\n" + 
-		"	public String foo(int x) { \n" + 
-		"	                      ^\n" + 
-		"Javadoc: Missing tag for parameter x\n" + 
+		"----------\n" +
+		"1. WARNING in X.java (at line 4)\n" +
+		"	new Z().foo(2);\n" +
+		"	^^^^^^^^^^^^^^\n" +
+		"The method foo(int) from the type Z is deprecated\n" +
+		"----------\n" +
+		"----------\n" +
+		"1. ERROR in Z.java (at line 6)\n" +
+		"	* @param\n" +
+		"	   ^^^^^\n" +
+		"Javadoc: Missing parameter name\n" +
+		"----------\n" +
+		"2. ERROR in Z.java (at line 8)\n" +
+		"	* @throws Unknown\n" +
+		"	          ^^^^^^^\n" +
+		"Javadoc: Unknown cannot be resolved to a type\n" +
+		"----------\n" +
+		"3. ERROR in Z.java (at line 10)\n" +
+		"	* @see \"Invalid\n" +
+		"	       ^^^^^^^^\n" +
+		"Javadoc: Invalid reference\n" +
+		"----------\n" +
+		"4. ERROR in Z.java (at line 11)\n" +
+		"	* @see Unknown\n" +
+		"	       ^^^^^^^\n" +
+		"Javadoc: Unknown cannot be resolved to a type\n" +
+		"----------\n" +
+		"5. ERROR in Z.java (at line 12)\n" +
+		"	* @param x\n" +
+		"	   ^^^^^\n" +
+		"Javadoc: Unexpected tag\n" +
+		"----------\n" +
+		"6. ERROR in Z.java (at line 14)\n" +
+		"	public String foo(int x) { \n" +
+		"	                      ^\n" +
+		"Javadoc: Missing tag for parameter x\n" +
 		"----------\n",
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
 				);
@@ -381,11 +378,11 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "	}\n"
 					+ "}\n",
 				},
-		"----------\n" + 
-		"1. WARNING in X.java (at line 4)\n" + 
-		"	new Z().foo(2);\n" + 
-		"	^^^^^^^^^^^^^^\n" + 
-		"The method foo(int) from the type Z is deprecated\n" + 
+		"----------\n" +
+		"1. WARNING in X.java (at line 4)\n" +
+		"	new Z().foo(2);\n" +
+		"	^^^^^^^^^^^^^^\n" +
+		"The method foo(int) from the type Z is deprecated\n" +
 		"----------\n"
 				);
 	}
@@ -418,37 +415,37 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "	}\n"
 					+ "}\n",
 				},
-		"----------\n" + 
-		"1. WARNING in X.java (at line 4)\n" + 
-		"	new Z().foo(2);\n" + 
-		"	^^^^^^^^^^^^^^\n" + 
-		"The method foo(int) from the type Z is deprecated\n" + 
-		"----------\n" + 
-		"----------\n" + 
-		"1. ERROR in Z.java (at line 5)\n" + 
-		"	* @param\n" + 
-		"	   ^^^^^\n" + 
-		"Javadoc: Missing parameter name\n" + 
-		"----------\n" + 
-		"2. ERROR in Z.java (at line 7)\n" + 
-		"	* @throws Unknown\n" + 
-		"	          ^^^^^^^\n" + 
-		"Javadoc: Unknown cannot be resolved to a type\n" + 
-		"----------\n" + 
-		"3. ERROR in Z.java (at line 9)\n" + 
-		"	* @see \"Invalid\n" + 
-		"	       ^^^^^^^^\n" + 
-		"Javadoc: Invalid reference\n" + 
-		"----------\n" + 
-		"4. ERROR in Z.java (at line 11)\n" + 
-		"	* @see Unknown\n" + 
-		"	       ^^^^^^^\n" + 
-		"Javadoc: Unknown cannot be resolved to a type\n" + 
-		"----------\n" + 
-		"5. ERROR in Z.java (at line 13)\n" + 
-		"	public String foo(int x) { \n" + 
-		"	                      ^\n" + 
-		"Javadoc: Missing tag for parameter x\n" + 
+		"----------\n" +
+		"1. WARNING in X.java (at line 4)\n" +
+		"	new Z().foo(2);\n" +
+		"	^^^^^^^^^^^^^^\n" +
+		"The method foo(int) from the type Z is deprecated\n" +
+		"----------\n" +
+		"----------\n" +
+		"1. ERROR in Z.java (at line 5)\n" +
+		"	* @param\n" +
+		"	   ^^^^^\n" +
+		"Javadoc: Missing parameter name\n" +
+		"----------\n" +
+		"2. ERROR in Z.java (at line 7)\n" +
+		"	* @throws Unknown\n" +
+		"	          ^^^^^^^\n" +
+		"Javadoc: Unknown cannot be resolved to a type\n" +
+		"----------\n" +
+		"3. ERROR in Z.java (at line 9)\n" +
+		"	* @see \"Invalid\n" +
+		"	       ^^^^^^^^\n" +
+		"Javadoc: Invalid reference\n" +
+		"----------\n" +
+		"4. ERROR in Z.java (at line 11)\n" +
+		"	* @see Unknown\n" +
+		"	       ^^^^^^^\n" +
+		"Javadoc: Unknown cannot be resolved to a type\n" +
+		"----------\n" +
+		"5. ERROR in Z.java (at line 13)\n" +
+		"	public String foo(int x) { \n" +
+		"	                      ^\n" +
+		"Javadoc: Missing tag for parameter x\n" +
 		"----------\n",
 		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
 				);
@@ -911,21 +908,21 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "	}\n"
 					+ "}\n"
 				},
-			"----------\n" + 
-				"1. ERROR in X.java (at line 4)\n" + 
-				"	* @param *\n" + 
-				"	         ^\n" + 
-				"Javadoc: Invalid param tag name\n" + 
-				"----------\n" + 
-				"2. ERROR in X.java (at line 5)\n" + 
-				"	* @param ?\n" + 
-				"	         ^\n" + 
-				"Javadoc: Invalid param tag name\n" + 
-				"----------\n" + 
-				"3. ERROR in X.java (at line 7)\n" + 
-				"	public void p_foo(int x) {\n" + 
-				"	                      ^\n" + 
-				"Javadoc: Missing tag for parameter x\n" + 
+			"----------\n" +
+				"1. ERROR in X.java (at line 4)\n" +
+				"	* @param *\n" +
+				"	         ^\n" +
+				"Javadoc: Invalid param tag name\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 5)\n" +
+				"	* @param ?\n" +
+				"	         ^\n" +
+				"Javadoc: Invalid param tag name\n" +
+				"----------\n" +
+				"3. ERROR in X.java (at line 7)\n" +
+				"	public void p_foo(int x) {\n" +
+				"	                      ^\n" +
+				"Javadoc: Missing tag for parameter x\n" +
 				"----------\n",
 				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
 		);
@@ -967,31 +964,31 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "	public void p_foo(inr a, inx b, inq c) {\n"
 					+ "	}\n"
 					+ "}\n" },
-				"----------\n" + 
-				"1. ERROR in X.java (at line 5)\n" + 
-				"	* @param b Valid param\n" + 
-				"	         ^\n" + 
-				"Javadoc: Duplicate tag for parameter\n" + 
-				"----------\n" + 
-				"2. ERROR in X.java (at line 8)\n" + 
-				"	public void p_foo(inr a, inx b, inq c) {\n" + 
-				"	                  ^^^\n" + 
-				"inr cannot be resolved to a type\n" + 
-				"----------\n" + 
-				"3. ERROR in X.java (at line 8)\n" + 
-				"	public void p_foo(inr a, inx b, inq c) {\n" + 
-				"	                      ^\n" + 
-				"Javadoc: Missing tag for parameter a\n" + 
-				"----------\n" + 
-				"4. ERROR in X.java (at line 8)\n" + 
-				"	public void p_foo(inr a, inx b, inq c) {\n" + 
-				"	                         ^^^\n" + 
-				"inx cannot be resolved to a type\n" + 
-				"----------\n" + 
-				"5. ERROR in X.java (at line 8)\n" + 
-				"	public void p_foo(inr a, inx b, inq c) {\n" + 
-				"	                                ^^^\n" + 
-				"inq cannot be resolved to a type\n" + 
+				"----------\n" +
+				"1. ERROR in X.java (at line 5)\n" +
+				"	* @param b Valid param\n" +
+				"	         ^\n" +
+				"Javadoc: Duplicate tag for parameter\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 8)\n" +
+				"	public void p_foo(inr a, inx b, inq c) {\n" +
+				"	                  ^^^\n" +
+				"inr cannot be resolved to a type\n" +
+				"----------\n" +
+				"3. ERROR in X.java (at line 8)\n" +
+				"	public void p_foo(inr a, inx b, inq c) {\n" +
+				"	                      ^\n" +
+				"Javadoc: Missing tag for parameter a\n" +
+				"----------\n" +
+				"4. ERROR in X.java (at line 8)\n" +
+				"	public void p_foo(inr a, inx b, inq c) {\n" +
+				"	                         ^^^\n" +
+				"inx cannot be resolved to a type\n" +
+				"----------\n" +
+				"5. ERROR in X.java (at line 8)\n" +
+				"	public void p_foo(inr a, inx b, inq c) {\n" +
+				"	                                ^^^\n" +
+				"inq cannot be resolved to a type\n" +
 				"----------\n");
 	}
 
@@ -1008,16 +1005,16 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "	}\n"
 					+ "}\n"
 			},
-			"----------\n" + 
-				"1. ERROR in X.java (at line 4)\n" + 
-				"	* @param java.lang.Hashtable\n" + 
-				"	         ^^^^^^^^^^^^^^^^^^^\n" + 
-				"Javadoc: Invalid param tag name\n" + 
-				"----------\n" + 
-				"2. ERROR in X.java (at line 6)\n" + 
-				"	public void p_foo(int x) {\n" + 
-				"	                      ^\n" + 
-				"Javadoc: Missing tag for parameter x\n" + 
+			"----------\n" +
+				"1. ERROR in X.java (at line 4)\n" +
+				"	* @param java.lang.Hashtable\n" +
+				"	         ^^^^^^^^^^^^^^^^^^^\n" +
+				"Javadoc: Invalid param tag name\n" +
+				"----------\n" +
+				"2. ERROR in X.java (at line 6)\n" +
+				"	public void p_foo(int x) {\n" +
+				"	                      ^\n" +
+				"Javadoc: Missing tag for parameter x\n" +
 				"----------\n",
 				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError
 		);
@@ -1036,16 +1033,16 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "	public void p_foo(int x) {\n"
 					+ "	}\n"
 					+ "}\n" },
-			"----------\n" + 
-			"1. ERROR in X.java (at line 5)\n" + 
-			"	* @param Hashtable\n" + 
-			"	         ^^^^^^^^^\n" + 
-			"Javadoc: Parameter Hashtable is not declared\n" + 
-			"----------\n" + 
-			"2. ERROR in X.java (at line 7)\n" + 
-			"	public void p_foo(int x) {\n" + 
-			"	                      ^\n" + 
-			"Javadoc: Missing tag for parameter x\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 5)\n" +
+			"	* @param Hashtable\n" +
+			"	         ^^^^^^^^^\n" +
+			"Javadoc: Parameter Hashtable is not declared\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 7)\n" +
+			"	public void p_foo(int x) {\n" +
+			"	                      ^\n" +
+			"Javadoc: Missing tag for parameter x\n" +
 			"----------\n",
 			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 	}
@@ -1407,16 +1404,16 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "		IllegalArgumentException\n"
 					+ "	{}\n"
 					+ "}\n" },
-					"----------\n" + 
-					"1. ERROR in X.java (at line 12)\n" + 
-					"	InvalidException, \n" + 
-					"	^^^^^^^^^^^^^^^^\n" + 
-					"InvalidException cannot be resolved to a type\n" + 
-					"----------\n" + 
-					"2. ERROR in X.java (at line 13)\n" + 
-					"	String, \n" + 
-					"	^^^^^^\n" + 
-					"No exception of type String can be thrown; an exception type must be a subclass of Throwable\n" + 
+					"----------\n" +
+					"1. ERROR in X.java (at line 12)\n" +
+					"	InvalidException, \n" +
+					"	^^^^^^^^^^^^^^^^\n" +
+					"InvalidException cannot be resolved to a type\n" +
+					"----------\n" +
+					"2. ERROR in X.java (at line 13)\n" +
+					"	String, \n" +
+					"	^^^^^^\n" +
+					"No exception of type String can be thrown; an exception type must be a subclass of Throwable\n" +
 					"----------\n");
 	}
 
@@ -1437,41 +1434,41 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "		IllegalArgumentException\n"
 					+ "	{}\n"
 					+ "}\n" },
-					"----------\n" + 
-					"1. ERROR in X.java (at line 3)\n" + 
-					"	* @throws %IllegalArgumenException Invalid exception: invalid class name\n" + 
-					"	   ^^^^^^\n" + 
-					"Javadoc: Missing class name\n" + 
-					"----------\n" + 
-					"2. ERROR in X.java (at line 4)\n" + 
-					"	* @exception (IllegalArgumen Invalid exception: invalid class name\n" + 
-					"	   ^^^^^^^^^\n" + 
-					"Javadoc: Missing class name\n" + 
-					"----------\n" + 
-					"3. ERROR in X.java (at line 5)\n" + 
-					"	* @exception \"IllegalArgumen Invalid exception: invalid class name\n" + 
-					"	   ^^^^^^^^^\n" + 
-					"Javadoc: Missing class name\n" + 
-					"----------\n" + 
-					"4. ERROR in X.java (at line 8)\n" + 
-					"	IllegalAccessException, \n" + 
-					"	^^^^^^^^^^^^^^^^^^^^^^\n" + 
-					"Javadoc: Missing tag for declared exception IllegalAccessException\n" + 
-					"----------\n" + 
-					"5. ERROR in X.java (at line 9)\n" + 
-					"	InvalidException, \n" + 
-					"	^^^^^^^^^^^^^^^^\n" + 
-					"InvalidException cannot be resolved to a type\n" + 
-					"----------\n" + 
-					"6. ERROR in X.java (at line 10)\n" + 
-					"	String, \n" + 
-					"	^^^^^^\n" + 
-					"No exception of type String can be thrown; an exception type must be a subclass of Throwable\n" + 
-					"----------\n" + 
-					"7. ERROR in X.java (at line 11)\n" + 
-					"	IllegalArgumentException\n" + 
-					"	^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-					"Javadoc: Missing tag for declared exception IllegalArgumentException\n" + 
+					"----------\n" +
+					"1. ERROR in X.java (at line 3)\n" +
+					"	* @throws %IllegalArgumenException Invalid exception: invalid class name\n" +
+					"	   ^^^^^^\n" +
+					"Javadoc: Missing class name\n" +
+					"----------\n" +
+					"2. ERROR in X.java (at line 4)\n" +
+					"	* @exception (IllegalArgumen Invalid exception: invalid class name\n" +
+					"	   ^^^^^^^^^\n" +
+					"Javadoc: Missing class name\n" +
+					"----------\n" +
+					"3. ERROR in X.java (at line 5)\n" +
+					"	* @exception \"IllegalArgumen Invalid exception: invalid class name\n" +
+					"	   ^^^^^^^^^\n" +
+					"Javadoc: Missing class name\n" +
+					"----------\n" +
+					"4. ERROR in X.java (at line 8)\n" +
+					"	IllegalAccessException, \n" +
+					"	^^^^^^^^^^^^^^^^^^^^^^\n" +
+					"Javadoc: Missing tag for declared exception IllegalAccessException\n" +
+					"----------\n" +
+					"5. ERROR in X.java (at line 9)\n" +
+					"	InvalidException, \n" +
+					"	^^^^^^^^^^^^^^^^\n" +
+					"InvalidException cannot be resolved to a type\n" +
+					"----------\n" +
+					"6. ERROR in X.java (at line 10)\n" +
+					"	String, \n" +
+					"	^^^^^^\n" +
+					"No exception of type String can be thrown; an exception type must be a subclass of Throwable\n" +
+					"----------\n" +
+					"7. ERROR in X.java (at line 11)\n" +
+					"	IllegalArgumentException\n" +
+					"	^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+					"Javadoc: Missing tag for declared exception IllegalArgumentException\n" +
 					"----------\n");
 	}
 
@@ -1491,36 +1488,36 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "		IllegalArgumentException\n"
 					+ "	{}\n"
 					+ "}\n" },
-					"----------\n" + 
-					"1. ERROR in X.java (at line 3)\n" + 
-					"	* @throws java.awt.AWTexception Invalid exception: unknown type\n" + 
-					"	          ^^^^^^^^^^^^^^^^^^^^^\n" + 
-					"Javadoc: java.awt.AWTexception cannot be resolved to a type\n" + 
-					"----------\n" + 
-					"2. ERROR in X.java (at line 4)\n" + 
-					"	* @throws IOException Invalid exception: unknown type\n" + 
-					"	          ^^^^^^^^^^^\n" + 
-					"Javadoc: IOException cannot be resolved to a type\n" + 
-					"----------\n" + 
-					"3. ERROR in X.java (at line 7)\n" + 
-					"	IllegalAccessException, \n" + 
-					"	^^^^^^^^^^^^^^^^^^^^^^\n" + 
-					"Javadoc: Missing tag for declared exception IllegalAccessException\n" + 
-					"----------\n" + 
-					"4. ERROR in X.java (at line 8)\n" + 
-					"	InvalidException, \n" + 
-					"	^^^^^^^^^^^^^^^^\n" + 
-					"InvalidException cannot be resolved to a type\n" + 
-					"----------\n" + 
-					"5. ERROR in X.java (at line 9)\n" + 
-					"	String, \n" + 
-					"	^^^^^^\n" + 
-					"No exception of type String can be thrown; an exception type must be a subclass of Throwable\n" + 
-					"----------\n" + 
-					"6. ERROR in X.java (at line 10)\n" + 
-					"	IllegalArgumentException\n" + 
-					"	^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-					"Javadoc: Missing tag for declared exception IllegalArgumentException\n" + 
+					"----------\n" +
+					"1. ERROR in X.java (at line 3)\n" +
+					"	* @throws java.awt.AWTexception Invalid exception: unknown type\n" +
+					"	          ^^^^^^^^^^^^^^^^^^^^^\n" +
+					"Javadoc: java.awt.AWTexception cannot be resolved to a type\n" +
+					"----------\n" +
+					"2. ERROR in X.java (at line 4)\n" +
+					"	* @throws IOException Invalid exception: unknown type\n" +
+					"	          ^^^^^^^^^^^\n" +
+					"Javadoc: IOException cannot be resolved to a type\n" +
+					"----------\n" +
+					"3. ERROR in X.java (at line 7)\n" +
+					"	IllegalAccessException, \n" +
+					"	^^^^^^^^^^^^^^^^^^^^^^\n" +
+					"Javadoc: Missing tag for declared exception IllegalAccessException\n" +
+					"----------\n" +
+					"4. ERROR in X.java (at line 8)\n" +
+					"	InvalidException, \n" +
+					"	^^^^^^^^^^^^^^^^\n" +
+					"InvalidException cannot be resolved to a type\n" +
+					"----------\n" +
+					"5. ERROR in X.java (at line 9)\n" +
+					"	String, \n" +
+					"	^^^^^^\n" +
+					"No exception of type String can be thrown; an exception type must be a subclass of Throwable\n" +
+					"----------\n" +
+					"6. ERROR in X.java (at line 10)\n" +
+					"	IllegalArgumentException\n" +
+					"	^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+					"Javadoc: Missing tag for declared exception IllegalArgumentException\n" +
 					"----------\n");
 	}
 
@@ -1541,36 +1538,36 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "		IllegalArgumentException\n"
 					+ "	{}\n"
 					+ "}\n" },
-					"----------\n" + 
-					"1. ERROR in X.java (at line 4)\n" + 
-					"	* @throws java.io.EOFException Invalid exception: known exception but neither thrown nor unchecked\n" + 
-					"	          ^^^^^^^^^^^^^^^^^^^^\n" + 
-					"Javadoc: Exception EOFException is not declared\n" + 
-					"----------\n" + 
-					"2. ERROR in X.java (at line 5)\n" + 
-					"	* @throws FileNotFoundException Invalid exception: known exception but neither thrown nor unchecked\n" + 
-					"	          ^^^^^^^^^^^^^^^^^^^^^\n" + 
-					"Javadoc: Exception FileNotFoundException is not declared\n" + 
-					"----------\n" + 
-					"3. ERROR in X.java (at line 8)\n" + 
-					"	IllegalAccessException, \n" + 
-					"	^^^^^^^^^^^^^^^^^^^^^^\n" + 
-					"Javadoc: Missing tag for declared exception IllegalAccessException\n" + 
-					"----------\n" + 
-					"4. ERROR in X.java (at line 9)\n" + 
-					"	InvalidException, \n" + 
-					"	^^^^^^^^^^^^^^^^\n" + 
-					"InvalidException cannot be resolved to a type\n" + 
-					"----------\n" + 
-					"5. ERROR in X.java (at line 10)\n" + 
-					"	String, \n" + 
-					"	^^^^^^\n" + 
-					"No exception of type String can be thrown; an exception type must be a subclass of Throwable\n" + 
-					"----------\n" + 
-					"6. ERROR in X.java (at line 11)\n" + 
-					"	IllegalArgumentException\n" + 
-					"	^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-					"Javadoc: Missing tag for declared exception IllegalArgumentException\n" + 
+					"----------\n" +
+					"1. ERROR in X.java (at line 4)\n" +
+					"	* @throws java.io.EOFException Invalid exception: known exception but neither thrown nor unchecked\n" +
+					"	          ^^^^^^^^^^^^^^^^^^^^\n" +
+					"Javadoc: Exception EOFException is not declared\n" +
+					"----------\n" +
+					"2. ERROR in X.java (at line 5)\n" +
+					"	* @throws FileNotFoundException Invalid exception: known exception but neither thrown nor unchecked\n" +
+					"	          ^^^^^^^^^^^^^^^^^^^^^\n" +
+					"Javadoc: Exception FileNotFoundException is not declared\n" +
+					"----------\n" +
+					"3. ERROR in X.java (at line 8)\n" +
+					"	IllegalAccessException, \n" +
+					"	^^^^^^^^^^^^^^^^^^^^^^\n" +
+					"Javadoc: Missing tag for declared exception IllegalAccessException\n" +
+					"----------\n" +
+					"4. ERROR in X.java (at line 9)\n" +
+					"	InvalidException, \n" +
+					"	^^^^^^^^^^^^^^^^\n" +
+					"InvalidException cannot be resolved to a type\n" +
+					"----------\n" +
+					"5. ERROR in X.java (at line 10)\n" +
+					"	String, \n" +
+					"	^^^^^^\n" +
+					"No exception of type String can be thrown; an exception type must be a subclass of Throwable\n" +
+					"----------\n" +
+					"6. ERROR in X.java (at line 11)\n" +
+					"	IllegalArgumentException\n" +
+					"	^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+					"Javadoc: Missing tag for declared exception IllegalArgumentException\n" +
 					"----------\n");
 	}
 
@@ -1592,41 +1589,41 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "		IllegalArgumentException\n"
 					+ "	{}\n"
 					+ "}\n" },
-					"----------\n" + 
-					"1. ERROR in X.java (at line 6)\n" + 
-					"	IllegalAccessException, \n" + 
-					"	^^^^^^^^^^^^^^^^^^^^^^\n" + 
-					"Javadoc: Missing tag for declared exception IllegalAccessException\n" + 
-					"----------\n" + 
-					"2. ERROR in X.java (at line 7)\n" + 
-					"	InvalidException, \n" + 
-					"	^^^^^^^^^^^^^^^^\n" + 
-					"InvalidException cannot be resolved to a type\n" + 
-					"----------\n" + 
-					"3. ERROR in X.java (at line 8)\n" + 
-					"	String, \n" + 
-					"	^^^^^^\n" + 
-					"No exception of type String can be thrown; an exception type must be a subclass of Throwable\n" + 
-					"----------\n" + 
-					"4. ERROR in X.java (at line 9)\n" + 
-					"	java.io.EOFException, \n" + 
-					"	^^^^^^^^^^^^^^^^^^^^\n" + 
-					"Javadoc: Missing tag for declared exception EOFException\n" + 
-					"----------\n" + 
-					"5. ERROR in X.java (at line 10)\n" + 
-					"	FileNotFoundException, \n" + 
-					"	^^^^^^^^^^^^^^^^^^^^^\n" + 
-					"Javadoc: Missing tag for declared exception FileNotFoundException\n" + 
-					"----------\n" + 
-					"6. ERROR in X.java (at line 11)\n" + 
-					"	IOException, \n" + 
-					"	^^^^^^^^^^^\n" + 
-					"IOException cannot be resolved to a type\n" + 
-					"----------\n" + 
-					"7. ERROR in X.java (at line 12)\n" + 
-					"	IllegalArgumentException\n" + 
-					"	^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-					"Javadoc: Missing tag for declared exception IllegalArgumentException\n" + 
+					"----------\n" +
+					"1. ERROR in X.java (at line 6)\n" +
+					"	IllegalAccessException, \n" +
+					"	^^^^^^^^^^^^^^^^^^^^^^\n" +
+					"Javadoc: Missing tag for declared exception IllegalAccessException\n" +
+					"----------\n" +
+					"2. ERROR in X.java (at line 7)\n" +
+					"	InvalidException, \n" +
+					"	^^^^^^^^^^^^^^^^\n" +
+					"InvalidException cannot be resolved to a type\n" +
+					"----------\n" +
+					"3. ERROR in X.java (at line 8)\n" +
+					"	String, \n" +
+					"	^^^^^^\n" +
+					"No exception of type String can be thrown; an exception type must be a subclass of Throwable\n" +
+					"----------\n" +
+					"4. ERROR in X.java (at line 9)\n" +
+					"	java.io.EOFException, \n" +
+					"	^^^^^^^^^^^^^^^^^^^^\n" +
+					"Javadoc: Missing tag for declared exception EOFException\n" +
+					"----------\n" +
+					"5. ERROR in X.java (at line 10)\n" +
+					"	FileNotFoundException, \n" +
+					"	^^^^^^^^^^^^^^^^^^^^^\n" +
+					"Javadoc: Missing tag for declared exception FileNotFoundException\n" +
+					"----------\n" +
+					"6. ERROR in X.java (at line 11)\n" +
+					"	IOException, \n" +
+					"	^^^^^^^^^^^\n" +
+					"IOException cannot be resolved to a type\n" +
+					"----------\n" +
+					"7. ERROR in X.java (at line 12)\n" +
+					"	IllegalArgumentException\n" +
+					"	^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+					"Javadoc: Missing tag for declared exception IllegalArgumentException\n" +
 					"----------\n");
 	}
 
@@ -2340,51 +2337,51 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "	public void s_foo() {\n"
 					+ "	}\n"
 					+ "}\n" },
-			"----------\n" + 
-			"1. ERROR in test\\X.java (at line 7)\n" + 
-			"	* @see VisibilityPackage#unknown Invalid ref: non visible class (non existent field)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"2. ERROR in test\\X.java (at line 8)\n" + 
-			"	* @see VisibilityPackage#vf_private Invalid ref: non visible class (non existent field)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"3. ERROR in test\\X.java (at line 9)\n" + 
-			"	* @see VisibilityPackage#vf_public Invalid ref: non visible class (visible field)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"4. ERROR in test\\X.java (at line 10)\n" + 
-			"	* @see VisibilityPackage.VpPrivate#unknown Invalid ref: non visible class and non visible inner class (non existent field)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"5. ERROR in test\\X.java (at line 11)\n" + 
-			"	* @see VisibilityPackage.VpPrivate#vf_private Invalid ref: non visible class and non visible inner class (non visible field)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"6. ERROR in test\\X.java (at line 12)\n" + 
-			"	* @see VisibilityPackage.VpPrivate#vf_public Invalid ref: non visible class and non visible inner class (visible field)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"7. ERROR in test\\X.java (at line 13)\n" + 
-			"	* @see VisibilityPackage.VpPublic#unknown Invalid ref: non visible class and visible inner class (non existent field)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"8. ERROR in test\\X.java (at line 14)\n" + 
-			"	* @see VisibilityPackage.VpPublic#vf_private Invalid ref: non visible class and visible inner class (non visible field)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"9. ERROR in test\\X.java (at line 15)\n" + 
-			"	* @see VisibilityPackage.VpPublic#vf_public Invalid ref: non visible class and visible inner class (visible field)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
+			"----------\n" +
+			"1. ERROR in test\\X.java (at line 7)\n" +
+			"	* @see VisibilityPackage#unknown Invalid ref: non visible class (non existent field)\n" +
+			"	       ^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"2. ERROR in test\\X.java (at line 8)\n" +
+			"	* @see VisibilityPackage#vf_private Invalid ref: non visible class (non existent field)\n" +
+			"	       ^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"3. ERROR in test\\X.java (at line 9)\n" +
+			"	* @see VisibilityPackage#vf_public Invalid ref: non visible class (visible field)\n" +
+			"	       ^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"4. ERROR in test\\X.java (at line 10)\n" +
+			"	* @see VisibilityPackage.VpPrivate#unknown Invalid ref: non visible class and non visible inner class (non existent field)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"5. ERROR in test\\X.java (at line 11)\n" +
+			"	* @see VisibilityPackage.VpPrivate#vf_private Invalid ref: non visible class and non visible inner class (non visible field)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"6. ERROR in test\\X.java (at line 12)\n" +
+			"	* @see VisibilityPackage.VpPrivate#vf_public Invalid ref: non visible class and non visible inner class (visible field)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"7. ERROR in test\\X.java (at line 13)\n" +
+			"	* @see VisibilityPackage.VpPublic#unknown Invalid ref: non visible class and visible inner class (non existent field)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"8. ERROR in test\\X.java (at line 14)\n" +
+			"	* @see VisibilityPackage.VpPublic#vf_private Invalid ref: non visible class and visible inner class (non visible field)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"9. ERROR in test\\X.java (at line 15)\n" +
+			"	* @see VisibilityPackage.VpPublic#vf_public Invalid ref: non visible class and visible inner class (visible field)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
 			"----------\n");
 	}
 
@@ -3781,26 +3778,26 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "	public void smr_foo(java.util.Hashtable h, java.util.Vector v, boolean b) {\n"
 					+ "	}\n"
 					+ "}\n" },
-			"----------\n" + 
-			"1. ERROR in test\\deep\\qualified\\name\\p\\X.java (at line 7)\n" + 
-			"	* @see test.deep.qualified.name.p.X#smr_foo(boolean,int i,byte,short s,char,long l,float,double d) Invalid reference: mixed argument declaration\n" + 
-			"	                                           ^^^^^^^^^^^^^^\n" + 
-			"Javadoc: Invalid parameters declaration\n" + 
-			"----------\n" + 
-			"2. ERROR in test\\deep\\qualified\\name\\p\\X.java (at line 8)\n" + 
-			"	* @see test.deep.qualified.name.p.X#smr_foo(String,String y,int) Invalid reference: mixed argument declaration\n" + 
-			"	                                           ^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: Invalid parameters declaration\n" + 
-			"----------\n" + 
-			"3. ERROR in test\\deep\\qualified\\name\\p\\X.java (at line 9)\n" + 
-			"	* @see test.deep.qualified.name.p.X#smr_foo(Hashtable,Vector,boolean b) Invalid reference: mixed argument declaration\n" + 
-			"	                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: Invalid parameters declaration\n" + 
-			"----------\n" + 
-			"4. ERROR in test\\deep\\qualified\\name\\p\\X.java (at line 10)\n" + 
-			"	* @see test.deep.qualified.name.p.X#smr_foo(Hashtable,Vector,boolean b) Invalid reference: mixed argument declaration\n" + 
-			"	                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: Invalid parameters declaration\n" + 
+			"----------\n" +
+			"1. ERROR in test\\deep\\qualified\\name\\p\\X.java (at line 7)\n" +
+			"	* @see test.deep.qualified.name.p.X#smr_foo(boolean,int i,byte,short s,char,long l,float,double d) Invalid reference: mixed argument declaration\n" +
+			"	                                           ^^^^^^^^^^^^^^\n" +
+			"Javadoc: Invalid parameters declaration\n" +
+			"----------\n" +
+			"2. ERROR in test\\deep\\qualified\\name\\p\\X.java (at line 8)\n" +
+			"	* @see test.deep.qualified.name.p.X#smr_foo(String,String y,int) Invalid reference: mixed argument declaration\n" +
+			"	                                           ^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: Invalid parameters declaration\n" +
+			"----------\n" +
+			"3. ERROR in test\\deep\\qualified\\name\\p\\X.java (at line 9)\n" +
+			"	* @see test.deep.qualified.name.p.X#smr_foo(Hashtable,Vector,boolean b) Invalid reference: mixed argument declaration\n" +
+			"	                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: Invalid parameters declaration\n" +
+			"----------\n" +
+			"4. ERROR in test\\deep\\qualified\\name\\p\\X.java (at line 10)\n" +
+			"	* @see test.deep.qualified.name.p.X#smr_foo(Hashtable,Vector,boolean b) Invalid reference: mixed argument declaration\n" +
+			"	                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: Invalid parameters declaration\n" +
 			"----------\n",
 			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 	}
@@ -4212,81 +4209,81 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "	public void s_foo() {\n"
 					+ "	}\n"
 					+ "}\n" },
-			"----------\n" + 
-			"1. ERROR in test\\X.java (at line 7)\n" + 
-			"	* @see VisibilityPackage#unknown() Invalid ref: non visible class (non existent method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"2. ERROR in test\\X.java (at line 8)\n" + 
-			"	* @see VisibilityPackage#vm_private() Invalid ref: non visible class (non visible method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"3. ERROR in test\\X.java (at line 9)\n" + 
-			"	* @see VisibilityPackage#vm_private(boolean) Invalid ref: non visible class (non existent method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"4. ERROR in test\\X.java (at line 10)\n" + 
-			"	* @see VisibilityPackage#vm_public() Invalid ref: non visible class (visible method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"5. ERROR in test\\X.java (at line 11)\n" + 
-			"	* @see VisibilityPackage#vm_public(long,long,long,int) Invalid ref: non visible class (visible method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"6. ERROR in test\\X.java (at line 12)\n" + 
-			"	* @see VisibilityPackage.VpPrivate#unknown() Invalid ref: non visible class and non visible inner class (non existent method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"7. ERROR in test\\X.java (at line 13)\n" + 
-			"	* @see VisibilityPackage.VpPrivate#vm_private() Invalid ref: non visible class and non visible inner class (non visible method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"8. ERROR in test\\X.java (at line 14)\n" + 
-			"	* @see VisibilityPackage.VpPrivate#vm_private(boolean, String) Invalid ref: non visible class and non visible inner class (non applicable method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"9. ERROR in test\\X.java (at line 15)\n" + 
-			"	* @see VisibilityPackage.VpPrivate#vm_public() Invalid ref: non visible class and non visible inner class (visible method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"10. ERROR in test\\X.java (at line 16)\n" + 
-			"	* @see VisibilityPackage.VpPrivate#vm_public(Object, float) Invalid ref: non visible class and non visible inner class (non applicable visible method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"11. ERROR in test\\X.java (at line 17)\n" + 
-			"	* @see VisibilityPackage.VpPublic#unknown() Invalid ref: non visible class and visible inner class (non existent method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"12. ERROR in test\\X.java (at line 18)\n" + 
-			"	* @see VisibilityPackage.VpPublic#vm_private() Invalid ref: non visible class and visible inner class (non visible method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"13. ERROR in test\\X.java (at line 19)\n" + 
-			"	* @see VisibilityPackage.VpPublic#vm_private(boolean, String) Invalid ref: non visible class and visible inner class (non applicable method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"14. ERROR in test\\X.java (at line 20)\n" + 
-			"	* @see VisibilityPackage.VpPublic#vm_public() Invalid ref: non visible class and visible inner class (visible method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"15. ERROR in test\\X.java (at line 21)\n" + 
-			"	* @see VisibilityPackage.VpPublic#vm_public(Object, float) Invalid ref: non visible class and visible inner class (non applicable visible method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
+			"----------\n" +
+			"1. ERROR in test\\X.java (at line 7)\n" +
+			"	* @see VisibilityPackage#unknown() Invalid ref: non visible class (non existent method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"2. ERROR in test\\X.java (at line 8)\n" +
+			"	* @see VisibilityPackage#vm_private() Invalid ref: non visible class (non visible method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"3. ERROR in test\\X.java (at line 9)\n" +
+			"	* @see VisibilityPackage#vm_private(boolean) Invalid ref: non visible class (non existent method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"4. ERROR in test\\X.java (at line 10)\n" +
+			"	* @see VisibilityPackage#vm_public() Invalid ref: non visible class (visible method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"5. ERROR in test\\X.java (at line 11)\n" +
+			"	* @see VisibilityPackage#vm_public(long,long,long,int) Invalid ref: non visible class (visible method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"6. ERROR in test\\X.java (at line 12)\n" +
+			"	* @see VisibilityPackage.VpPrivate#unknown() Invalid ref: non visible class and non visible inner class (non existent method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"7. ERROR in test\\X.java (at line 13)\n" +
+			"	* @see VisibilityPackage.VpPrivate#vm_private() Invalid ref: non visible class and non visible inner class (non visible method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"8. ERROR in test\\X.java (at line 14)\n" +
+			"	* @see VisibilityPackage.VpPrivate#vm_private(boolean, String) Invalid ref: non visible class and non visible inner class (non applicable method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"9. ERROR in test\\X.java (at line 15)\n" +
+			"	* @see VisibilityPackage.VpPrivate#vm_public() Invalid ref: non visible class and non visible inner class (visible method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"10. ERROR in test\\X.java (at line 16)\n" +
+			"	* @see VisibilityPackage.VpPrivate#vm_public(Object, float) Invalid ref: non visible class and non visible inner class (non applicable visible method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"11. ERROR in test\\X.java (at line 17)\n" +
+			"	* @see VisibilityPackage.VpPublic#unknown() Invalid ref: non visible class and visible inner class (non existent method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"12. ERROR in test\\X.java (at line 18)\n" +
+			"	* @see VisibilityPackage.VpPublic#vm_private() Invalid ref: non visible class and visible inner class (non visible method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"13. ERROR in test\\X.java (at line 19)\n" +
+			"	* @see VisibilityPackage.VpPublic#vm_private(boolean, String) Invalid ref: non visible class and visible inner class (non applicable method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"14. ERROR in test\\X.java (at line 20)\n" +
+			"	* @see VisibilityPackage.VpPublic#vm_public() Invalid ref: non visible class and visible inner class (visible method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"15. ERROR in test\\X.java (at line 21)\n" +
+			"	* @see VisibilityPackage.VpPublic#vm_public(Object, float) Invalid ref: non visible class and visible inner class (non applicable visible method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
 			"----------\n");
 	}
 
@@ -4677,36 +4674,36 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "	public void s_foo() {\n"
 					+ "	}\n"
 					+ "}\n" },
-			"----------\n" + 
-			"1. ERROR in test\\X.java (at line 7)\n" + 
-			"	* @see VisibilityPublic#vm_private(\"boolean\") Invalid ref: invalid argument declaration\n" + 
-			"	                                  ^^^^^^^^^^\n" + 
-			"Javadoc: Invalid parameters declaration\n" + 
-			"----------\n" + 
-			"2. ERROR in test\\X.java (at line 8)\n" + 
-			"	* @see VisibilityPublic#vm_public(long, \"int) Invalid ref: invalid argument definition\n" + 
-			"	                                 ^^^^^^^^\n" + 
-			"Javadoc: Invalid parameters declaration\n" + 
-			"----------\n" + 
-			"3. ERROR in test\\X.java (at line 9)\n" + 
-			"	* @see VisibilityPublic.VpPrivate#vm_private(double d()) Invalid ref: invalid argument declaration\n" + 
-			"	                                            ^^^^^^^^^^\n" + 
-			"Javadoc: Invalid parameters declaration\n" + 
-			"----------\n" + 
-			"4. ERROR in test\\X.java (at line 10)\n" + 
-			"	* @see VisibilityPublic.VpPrivate#vm_public(\") Invalid ref: invalid argument declaration\n" + 
-			"	                                           ^^\n" + 
-			"Javadoc: Invalid parameters declaration\n" + 
-			"----------\n" + 
-			"5. ERROR in test\\X.java (at line 11)\n" + 
-			"	* @see VisibilityPublic.VpPublic#vm_private(d()) Invalid ref: invalid argument declaration\n" + 
-			"	                                           ^^^\n" + 
-			"Javadoc: Invalid parameters declaration\n" + 
-			"----------\n" + 
-			"6. ERROR in test\\X.java (at line 12)\n" + 
-			"	* @see VisibilityPublic.VpPublic#vm_public(205) Invalid ref: invalid argument declaration\n" + 
-			"	                                          ^^^^\n" + 
-			"Javadoc: Invalid parameters declaration\n" + 
+			"----------\n" +
+			"1. ERROR in test\\X.java (at line 7)\n" +
+			"	* @see VisibilityPublic#vm_private(\"boolean\") Invalid ref: invalid argument declaration\n" +
+			"	                                  ^^^^^^^^^^\n" +
+			"Javadoc: Invalid parameters declaration\n" +
+			"----------\n" +
+			"2. ERROR in test\\X.java (at line 8)\n" +
+			"	* @see VisibilityPublic#vm_public(long, \"int) Invalid ref: invalid argument definition\n" +
+			"	                                 ^^^^^^^^\n" +
+			"Javadoc: Invalid parameters declaration\n" +
+			"----------\n" +
+			"3. ERROR in test\\X.java (at line 9)\n" +
+			"	* @see VisibilityPublic.VpPrivate#vm_private(double d()) Invalid ref: invalid argument declaration\n" +
+			"	                                            ^^^^^^^^^^\n" +
+			"Javadoc: Invalid parameters declaration\n" +
+			"----------\n" +
+			"4. ERROR in test\\X.java (at line 10)\n" +
+			"	* @see VisibilityPublic.VpPrivate#vm_public(\") Invalid ref: invalid argument declaration\n" +
+			"	                                           ^^\n" +
+			"Javadoc: Invalid parameters declaration\n" +
+			"----------\n" +
+			"5. ERROR in test\\X.java (at line 11)\n" +
+			"	* @see VisibilityPublic.VpPublic#vm_private(d()) Invalid ref: invalid argument declaration\n" +
+			"	                                           ^^^\n" +
+			"Javadoc: Invalid parameters declaration\n" +
+			"----------\n" +
+			"6. ERROR in test\\X.java (at line 12)\n" +
+			"	* @see VisibilityPublic.VpPublic#vm_public(205) Invalid ref: invalid argument declaration\n" +
+			"	                                          ^^^^\n" +
+			"Javadoc: Invalid parameters declaration\n" +
 			"----------\n");
 	}
 
@@ -4874,36 +4871,36 @@ public class JavadocTestForMethod extends JavadocTest {
 					+ "	public void s_foo() {\n"
 					+ "	}\n"
 					+ "}\n" },
-			"----------\n" + 
-			"1. ERROR in test\\X.java (at line 7)\n" + 
-			"	* @see test.copy.VisibilityPublic#vm_private(\"\") Invalid ref: invalid argument declaration\n" + 
-			"	                                            ^^^\n" + 
-			"Javadoc: Invalid parameters declaration\n" + 
-			"----------\n" + 
-			"2. ERROR in test\\X.java (at line 8)\n" + 
-			"	* @see test.copy.VisibilityPublic#vm_public(\"\"\") Invalid ref: invalid argument definition\n" + 
-			"	                                           ^^^\n" + 
-			"Javadoc: Invalid parameters declaration\n" + 
-			"----------\n" + 
-			"3. ERROR in test\\X.java (at line 9)\n" + 
-			"	* @see test.copy.VisibilityPublic.VpPrivate#vm_private(String d()) Invalid ref: invalid argument declaration\n" + 
-			"	                                                      ^^^^^^^^^^\n" + 
-			"Javadoc: Invalid parameters declaration\n" + 
-			"----------\n" + 
-			"4. ERROR in test\\X.java (at line 10)\n" + 
-			"	* @see test.copy.VisibilityPublic.VpPrivate#vm_public([) Invalid ref: invalid argument declaration\n" + 
-			"	                                                     ^^\n" + 
-			"Javadoc: Invalid parameters declaration\n" + 
-			"----------\n" + 
-			"5. ERROR in test\\X.java (at line 11)\n" + 
-			"	* @see test.copy.VisibilityPublic.VpPublic#vm_private([]) Invalid ref: invalid argument declaration\n" + 
-			"	                                                     ^^\n" + 
-			"Javadoc: Invalid parameters declaration\n" + 
-			"----------\n" + 
-			"6. ERROR in test\\X.java (at line 12)\n" + 
-			"	* @see test.copy.VisibilityPublic.VpPublic#vm_public(char[], int[],]) Invalid ref: invalid argument declaration\n" + 
-			"	                                                    ^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: Invalid parameters declaration\n" + 
+			"----------\n" +
+			"1. ERROR in test\\X.java (at line 7)\n" +
+			"	* @see test.copy.VisibilityPublic#vm_private(\"\") Invalid ref: invalid argument declaration\n" +
+			"	                                            ^^^\n" +
+			"Javadoc: Invalid parameters declaration\n" +
+			"----------\n" +
+			"2. ERROR in test\\X.java (at line 8)\n" +
+			"	* @see test.copy.VisibilityPublic#vm_public(\"\"\") Invalid ref: invalid argument definition\n" +
+			"	                                           ^^^\n" +
+			"Javadoc: Invalid parameters declaration\n" +
+			"----------\n" +
+			"3. ERROR in test\\X.java (at line 9)\n" +
+			"	* @see test.copy.VisibilityPublic.VpPrivate#vm_private(String d()) Invalid ref: invalid argument declaration\n" +
+			"	                                                      ^^^^^^^^^^\n" +
+			"Javadoc: Invalid parameters declaration\n" +
+			"----------\n" +
+			"4. ERROR in test\\X.java (at line 10)\n" +
+			"	* @see test.copy.VisibilityPublic.VpPrivate#vm_public([) Invalid ref: invalid argument declaration\n" +
+			"	                                                     ^^\n" +
+			"Javadoc: Invalid parameters declaration\n" +
+			"----------\n" +
+			"5. ERROR in test\\X.java (at line 11)\n" +
+			"	* @see test.copy.VisibilityPublic.VpPublic#vm_private([]) Invalid ref: invalid argument declaration\n" +
+			"	                                                     ^^\n" +
+			"Javadoc: Invalid parameters declaration\n" +
+			"----------\n" +
+			"6. ERROR in test\\X.java (at line 12)\n" +
+			"	* @see test.copy.VisibilityPublic.VpPublic#vm_public(char[], int[],]) Invalid ref: invalid argument declaration\n" +
+			"	                                                    ^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: Invalid parameters declaration\n" +
 			"----------\n");
 	}
 }

@@ -19,20 +19,19 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.codehaus.jdt.groovy.model.GroovyNature;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IStorage;
 import org.eclipse.jdt.core.JavaCore;
 
 /**
  * Tests that the {@link IProject} that contains the current pattern has a nature of the specified type.
- * This pointcut should be optimized so that it runs before any others in an 'and' or 'or' clause.  Also, its result should be cached in the 
+ * This pointcut should be optimized so that it runs before any others in an 'and' or 'or' clause.  Also, its result should be cached in the
  * pattern providing a fail/succeed fast strategy.
- * 
+ *
  * @author andrew
  * @created Feb 10, 2011
  */
 public class ProjectNaturePointcut extends AbstractPointcut {
-    
+
 
     public ProjectNaturePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
@@ -53,7 +52,7 @@ public class ProjectNaturePointcut extends AbstractPointcut {
     public boolean fastMatch(GroovyDSLDContext pattern) {
         return matches(pattern, null) != null;
     }
-    
+
     @Override
     public void verify() throws PointcutVerificationException {
         String maybeStatus = allArgsAreStrings();
@@ -66,9 +65,9 @@ public class ProjectNaturePointcut extends AbstractPointcut {
         }
         super.verify();
     }
-    
+
     /**
-     * In order to remove Eclipse-specific identifiers in scripts, 
+     * In order to remove Eclipse-specific identifiers in scripts,
      * common project natures can use a shortcut instead of the full nature string
      * @param shortcut
      * @return

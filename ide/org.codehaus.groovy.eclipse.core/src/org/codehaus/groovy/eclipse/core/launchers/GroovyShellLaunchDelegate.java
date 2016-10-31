@@ -28,6 +28,7 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.util.ListUtil;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunchConfiguration;
@@ -65,10 +66,9 @@ public class GroovyShellLaunchDelegate extends JavaLaunchDelegate {
             URL jar = resolve(enu.nextElement());
             return jar.getFile();
         } else {
-            throw new CoreException(new Status(Status.ERROR, GroovyCoreActivator.PLUGIN_ID, "Could not find " + jarName + " on the class path.  Please add it manually"));
+            throw new CoreException(new Status(IStatus.ERROR, GroovyCoreActivator.PLUGIN_ID, "Could not find " + jarName + " on the class path.  Please add it manually"));
         }
     }
-
 
     public static List<String> getExtraClasspathElements() throws CoreException, IOException {
         return Collections.singletonList(GroovyShellLaunchDelegate.getPathTo(GroovyShellLaunchDelegate.JLINE_JAR));

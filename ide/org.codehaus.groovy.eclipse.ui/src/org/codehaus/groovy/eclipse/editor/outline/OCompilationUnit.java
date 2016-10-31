@@ -117,7 +117,6 @@ public abstract class OCompilationUnit extends GroovyCompilationUnit implements 
      * This method will probably never get called, but if it ever is by
      * accident, it could cause some big problems with the mode.
      */
-    @SuppressWarnings("rawtypes")
     @Override
     protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, Map newElements, IResource underlyingResource)
             throws JavaModelException {

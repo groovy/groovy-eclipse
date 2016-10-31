@@ -1,21 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2009, 2014 SpringSource and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
@@ -173,7 +176,7 @@ public class MethodCompletionTests extends CompletionTestCase {
         }
         fail("expecting to find 2 'm' methods, but instead found " + methods.size() + ":\n" + methods);
     }
-    
+
     // GRECLIPSE-1374
     public void testParensExprs1() throws Exception {
         String contents = "(1).\ndef u";
@@ -303,13 +306,13 @@ public class MethodCompletionTests extends CompletionTestCase {
         }
     }
     private ClassNode extract(GroovyCompilationUnit unit) {
-        Statement state = (Statement) unit.getModuleNode().getStatementBlock().getStatements().get(0);
+        Statement state = unit.getModuleNode().getStatementBlock().getStatements().get(0);
         if (state instanceof ReturnStatement) {
             ReturnStatement ret = (ReturnStatement) state;
-            return ((Expression) ret.getExpression()).getType();
+            return ret.getExpression().getType();
         } else if (state instanceof ExpressionStatement) {
             ExpressionStatement expr = (ExpressionStatement) state;
-            return ((Expression) expr.getExpression()).getType();
+            return expr.getExpression().getType();
         } else {
             fail ("Invalid statement kind for " + state + "\nExpecting return statement or expression statement");
             return null;

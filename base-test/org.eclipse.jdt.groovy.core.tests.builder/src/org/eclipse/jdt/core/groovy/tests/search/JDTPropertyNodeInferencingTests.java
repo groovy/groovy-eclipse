@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import junit.framework.Test;
@@ -37,7 +36,7 @@ public class JDTPropertyNodeInferencingTests extends AbstractInferencingTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        createJavaUnit("JavaUnit", 
+        createJavaUnit("JavaUnit",
                 "class JavaUnit {\n" +
                 "  int getFoo() { " +
                 "    return 0; " +
@@ -53,12 +52,12 @@ public class JDTPropertyNodeInferencingTests extends AbstractInferencingTest {
         String contents = "def x = new JavaUnit()\nx";
         assertType(contents, contents.lastIndexOf('x'), contents.lastIndexOf('x')+1, "JavaUnit");
     }
-    
+
     public void testPropertyNodeFromJava1() throws Exception {
-    	String contents = "new JavaUnit().foo";
+        String contents = "new JavaUnit().foo";
         assertType(contents,contents.lastIndexOf("foo"),contents.length(), "java.lang.Integer");
     }
-    
+
     public void testPropertyNodeFromJava2() throws Exception {
         String contents = "def x = new JavaUnit().foo\nx";
         assertType(contents, contents.lastIndexOf('x'), contents.lastIndexOf('x')+1, "java.lang.Integer");
@@ -71,7 +70,7 @@ public class JDTPropertyNodeInferencingTests extends AbstractInferencingTest {
         String contents = "def x = new JavaUnit()\nx.javaUnit.foo";
         assertType(contents, contents.lastIndexOf("foo"), contents.lastIndexOf("foo")+"foo".length(), "java.lang.Integer");
     }
-    
+
     // now test something slightly different.  Ensure that a reference to a property coming
     // from a binary groovy file can have its generated getter and setter seen.
     public void testPropertyNodeReferenceInBinary1() throws Exception {

@@ -44,7 +44,6 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.JavaModelManager;
-import org.eclipse.jdt.internal.core.SetClasspathOperation;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.preference.IPreferenceStore;
 
@@ -55,9 +54,9 @@ import org.eclipse.jface.preference.IPreferenceStore;
  * @created May 27, 2011
  */
 public class AutoAddContainerSupport implements IResourceChangeListener {
-    
+
     /**
-     * 
+     *
      * @author andrew
      * @created May 27, 2011
      */
@@ -88,9 +87,9 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
 
 
     private final IPreferenceStore store = GroovyDSLCoreActivator.getDefault().getPreferenceStore();
-    
+
     private final Set<String> alreadyAddedProjects;
-   
+
     public AutoAddContainerSupport() {
         alreadyAddedProjects = new HashSet<String>();
         String toIgnore = store.getString(DSLPreferencesInitializer.PROJECTS_TO_IGNORE);
@@ -103,13 +102,13 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
                 }
             }
         }
-        
+
     }
-    
+
     private boolean shouldAddSupport() {
         return store.getBoolean(DSLPreferences.AUTO_ADD_DSL_SUPPORT) || store.getBoolean(DSLPreferences.DISABLED_SCRIPTS);
     }
-    
+
     // will add container if it doesn't already exist
     private void addContainer(final IJavaProject project) {
         final String projectName = project.getElementName();
@@ -130,7 +129,7 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
         return new MultiRule(new ISchedulingRule[] {
                 // use project modification rule as this is needed to create the .classpath file if it doesn't exist yet, or to update project references
                 ruleFactory.modifyRule(project.getProject()),
-                
+
                 // and external project modification rule in case the external folders are modified
                 ruleFactory.modifyRule(JavaModelManager.getExternalManager().getExternalFoldersProject()),
             });
@@ -140,7 +139,7 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
         if (!shouldAddSupport()) {
             return;
         }
-        
+
         IProject[] allProjects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
         for (IProject project : allProjects) {
             if (!alreadyAddedProjects.contains(project.getName()) && GroovyNature.hasGroovyNature(project)) {
@@ -148,13 +147,13 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
             }
         }
     }
-    
+
 
     public void resourceChanged(IResourceChangeEvent event) {
         if (!shouldAddSupport()) {
             return;
         }
-        
+
         // look for projects that are becoming groovy projects, or projects that are being created
         // we can approximate this by looking for changes in .project files
         IResourceDelta delta = event.getDelta();
@@ -177,7 +176,7 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
                     }
                 }
             }
-            
+
             for (IProject project : projects) {
                 if (!alreadyAddedProjects.contains(project.getName()) && GroovyNature.hasGroovyNature(project)) {
                     addContainer(JavaCore.create(project));
@@ -185,8 +184,8 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
             }
         }
     }
-    
-    
+
+
     public void dispose() {
         StringBuilder sb = new StringBuilder();
         for (String projName : alreadyAddedProjects) {
@@ -205,7 +204,7 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
             }
         }
     }
-    
+
     public void ignoreProject(IProject project) {
         alreadyAddedProjects.add(project.getName());
     }

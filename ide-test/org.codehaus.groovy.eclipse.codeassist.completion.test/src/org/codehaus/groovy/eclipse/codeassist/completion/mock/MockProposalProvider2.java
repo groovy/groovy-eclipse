@@ -12,7 +12,7 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 public class MockProposalProvider2 implements IProposalProvider {
 
     private static boolean providerCalled = false;
-    
+
     public static boolean wasProviderCalled() {
         return providerCalled;
     }

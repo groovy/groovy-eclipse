@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import org.eclipse.jdt.internal.ui.search.IOccurrencesFinder.OccurrenceLocation;
 /**
  * Tests for {@link GroovyOccurrencesFinder}
  *
- * @author andrew
+ * @author Andrew Eisenberg
  * @created Jan 2, 2011
  */
 public class FindOccurrencesTests extends AbstractGroovySearchTest {
@@ -51,71 +51,68 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         String contents = "def x(x) {\nx}";
         doTest(contents, contents.lastIndexOf('x'), 1, contents.indexOf("(x")+1, 1, contents.lastIndexOf('x'), 1);
     }
-    
+
     public void testFindLocalOccurrences3() throws Exception {
         String contents = "nuthin\ndef x(int x) {\nx}";
         int afterParen = contents.indexOf('(');
         doTest(contents, contents.lastIndexOf('x'), 1, contents.indexOf("x", afterParen), 1, contents.lastIndexOf('x'), 1);
     }
-    
-    // looking for the method declaration, not the parameter
+
     public void testFindLocalOccurrences4() throws Exception {
+        // looking for the method declaration, not the parameter
         String contents = "nuthin\ndef x(int x) {\nx}";
         doTest(contents, contents.indexOf('x'), 1, contents.indexOf('x'), 1);
     }
-    
+
     public void testFindForLoopOccurrences() throws Exception {
         String contents = "for (x in []) {\n" +
-        		"x }";
+                "x }";
         doTest(contents, contents.indexOf('x'), 1, contents.indexOf('x'), 1, contents.lastIndexOf('x'), 1);
     }
-    
-    /**
-     * Not working now.  See GROOVY-4620 and GRECLIPSE-951
-     */
+
+    // Not working now; see GROOVY-4620 and GRECLIPSE-951
     public void _testFindPrimitive() throws Exception {
         String contents = "int x(int y) {\nint z}\n int a";
-        int length = "int".length(); 
+        int length = "int".length();
         int first = contents.indexOf("int");
         int second = contents.indexOf("int", first+1);
         int third = contents.indexOf("int", second+1);
         int fourth = contents.indexOf("int", third+1);
-        
+
         doTest(contents, second, length, first, length, second, length, third, length, fourth, length);
     }
-    
-    
+
     public void testFindProperty() throws Exception {
-        String contents = "class X {\n" + 
-        		"def foo\n" + 
-        		"}\n" + 
-        		"new X().foo\n" +
-        		"new X().foo()\n";  // require a new line here or else Occurrence finding will crash.  See Bug 339614
-        
-        int length = "foo".length(); 
-        int first = contents.indexOf("foo");
-        int second = contents.indexOf("foo", first+1);
-        int third = contents.indexOf("foo", second+1);
-        doTest(contents, second, length, first, length, second, length, third, length);
-    }
-    
-    public void testFindField() throws Exception {
-        String contents = "class X {\n" + 
-                "public def foo\n" + 
-                "}\n" + 
+        String contents = "class X {\n" +
+                "def foo\n" +
+                "}\n" +
                 "new X().foo\n" +
                 "new X().foo()\n";  // require a new line here or else Occurrence finding will crash.  See Bug 339614
 
-        int length = "foo".length(); 
+        int length = "foo".length();
         int first = contents.indexOf("foo");
         int second = contents.indexOf("foo", first+1);
         int third = contents.indexOf("foo", second+1);
         doTest(contents, second, length, first, length, second, length, third, length);
     }
-    
+
+    public void testFindField() throws Exception {
+        String contents = "class X {\n" +
+                "public def foo\n" +
+                "}\n" +
+                "new X().foo\n" +
+                "new X().foo()\n";  // require a new line here or else Occurrence finding will crash.  See Bug 339614
+
+        int length = "foo".length();
+        int first = contents.indexOf("foo");
+        int second = contents.indexOf("foo", first+1);
+        int third = contents.indexOf("foo", second+1);
+        doTest(contents, second, length, first, length, second, length, third, length);
+    }
+
     public void testFindGStringOccurrences1() throws Exception {
         String contents = "def xxx\nxxx \"$xxx\"\n\"$xxx\"\n\"${xxx}\"\n" + // first three are matches
-        		"\"xxx\"\n'xxx'\n'$xxx'\n'${xxx}'";  // these aren't matches
+                "\"xxx\"\n'xxx'\n'$xxx'\n'${xxx}'";  // these aren't matches
         int length = "xxx".length();
         int def = contents.indexOf("xxx");
         int first = contents.indexOf("xxx", def+1);
@@ -124,7 +121,7 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int fourth = contents.indexOf("xxx", third+1);
         doTest(contents, def, 1, def, length, first, length, second, length, third, length, fourth, length);
     }
-    
+
     public void testFindGStringOccurrences2() throws Exception {
         String contents = "def i\ni \"$i\"\n\"$i\"\n\"${i}\"\n" + // first three are matches
                 "\"i\"\n'i'\n'$i'\n'${i}'";  // these aren't matches
@@ -136,26 +133,26 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int fourth = contents.indexOf("i", third+1);
         doTest(contents, def, 1, def, length, first, length, second, length, third, length, fourth, length);
     }
-    
+
     // GRECLIPSE-1031
     public void testFindStaticMethods() throws Exception {
-        String contents = 
+        String contents =
             "class Static {\n" +
-        	"  static staticMethod()  { staticMethod }\n" +
-        	"  static { staticMethod }\n" +
-        	"  { staticMethod }\n" +
-        	"  def t = staticMethod()\n" +
-        	"  def x() { " +
-        	"    def a = staticMethod() \n" +
-        	"    def b = staticMethod \n" +
-        	"    Static.staticMethod 3, 4, 5\n" +
-        	"    Static.staticMethod(3, 4, 5) \n" +
-        	"  }\n" +
-        	"}";
-        
+            "  static staticMethod()  { staticMethod }\n" +
+            "  static { staticMethod }\n" +
+            "  { staticMethod }\n" +
+            "  def t = staticMethod()\n" +
+            "  def x() { " +
+            "    def a = staticMethod() \n" +
+            "    def b = staticMethod \n" +
+            "    Static.staticMethod 3, 4, 5\n" +
+            "    Static.staticMethod(3, 4, 5) \n" +
+            "  }\n" +
+            "}";
+
         String methName = "staticMethod";
         int len = methName.length();
-        
+
         int start = contents.indexOf(methName);
         int start1 = contents.indexOf(methName);
         int start2 = contents.indexOf(methName, start1 + 1);
@@ -169,12 +166,11 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len, start6, len, start7, len, start8, len, start9, len);
     }
 
-    
     // GRECLIPSE-1031
     // Groovy 1.8 specific test
     public void testFindStaticMethods18() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL > 17) {
-            String contents = 
+            String contents =
                 "class Static {\n" +
                 "  static staticMethod(nuthin)  { }\n" +
                 "  def x() {\n" +
@@ -187,10 +183,10 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
                 "    // def z = staticMethod 3\n" +
                 "  }\n" +
                 "}";
-            
+
             String methName = "staticMethod";
             int len = methName.length();
-            
+
             int start = contents.indexOf(methName);
             int start1 = contents.indexOf(methName);
             int start2 = contents.indexOf(methName, start1 + 1);
@@ -206,13 +202,13 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
 
     // GRECLIPSE-1023
     public void testInnerClass() throws Exception {
-        String contents = 
-            "class Other2 {\n" + 
-            "        class Inner { }\n" + 
-            "        Other2.Inner f\n" + 
-            "        Inner g\n" + 
+        String contents =
+            "class Other2 {\n" +
+            "        class Inner { }\n" +
+            "        Other2.Inner f\n" +
+            "        Inner g\n" +
             "}";
-        
+
         String className = "Inner";
         int len = className.length();
         int start = contents.indexOf(className);
@@ -225,13 +221,13 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
     // GRECLIPSE-1023
     // try different starting point
     public void testInnerClass2() throws Exception {
-        String contents = 
-            "class Other2 {\n" + 
-            "        class Inner { }\n" + 
-            "        Other2.Inner f\n" + 
-            "        Inner g\n" + 
+        String contents =
+            "class Other2 {\n" +
+            "        class Inner { }\n" +
+            "        Other2.Inner f\n" +
+            "        Inner g\n" +
             "}";
-        
+
         String className = "Inner";
         int len = className.length();
         int start1 = contents.indexOf(className);
@@ -244,13 +240,13 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
     // GRECLIPSE-1023
     // try different starting point
     public void testInnerClass3() throws Exception {
-        String contents = 
-            "class Other2 {\n" + 
-            "        class Inner { }\n" + 
-            "        Other2.Inner f\n" + 
-            "        Inner g\n" + 
+        String contents =
+            "class Other2 {\n" +
+            "        class Inner { }\n" +
+            "        Other2.Inner f\n" +
+            "        Inner g\n" +
             "}";
-        
+
         String className = "Inner";
         int len = className.length();
         int start1 = contents.indexOf(className);
@@ -259,19 +255,19 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int start = start3;
         doTest(contents, start, len, start1, len, start2, len, start3, len);
     }
-    
+
     // GRECLIPSE-1023
     // inner class in other file
     public void testInnerClass4() throws Exception {
-        createUnit("Other",  
-                "class Other {\n" + 
-                "  class Inner { }\n" + 
+        createUnit("Other",
+                "class Other {\n" +
+                "  class Inner { }\n" +
                 "}");
-        String contents = 
+        String contents =
             "import Other.Inner\n" +
-            "Other.Inner f\n" + 
+            "Other.Inner f\n" +
             "Inner g";
-        
+
         String className = "Inner";
         int len = className.length();
         int start1 = contents.indexOf(className);
@@ -280,16 +276,15 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int start = start1;
         doTest(contents, start, len, start1, len, start2, len, start3, len);
     }
- 
-    
+
     public void testGenerics1() throws Exception {
-        String contents = "import javax.swing.text.html.HTML\n" + 
-        		"Map<HTML, ? extends HTML> h\n" + 
-        		"HTML i";
-        
+        String contents = "import javax.swing.text.html.HTML\n" +
+                "Map<HTML, ? extends HTML> h\n" +
+                "HTML i";
+
         String name = "HTML";
         int len = name.length();
-        
+
         int start1 = contents.indexOf(name);
         int start2 = contents.indexOf(name, start1 + 1);
         int start3 = contents.indexOf(name, start2 + 1);
@@ -297,16 +292,16 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int start = start1;
         doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len);
     }
-    
+
     // As before but use a different starting point
     public void testGenerics2() throws Exception {
-        String contents = "import javax.swing.text.html.HTML\n" + 
-        "Map<HTML, ? extends HTML> h\n" + 
+        String contents = "import javax.swing.text.html.HTML\n" +
+        "Map<HTML, ? extends HTML> h\n" +
         "HTML i";
-        
+
         String name = "HTML";
         int len = name.length();
-        
+
         int start1 = contents.indexOf(name);
         int start2 = contents.indexOf(name, start1 + 1);
         int start3 = contents.indexOf(name, start2 + 1);
@@ -314,16 +309,16 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int start = start2;
         doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len);
     }
-    
+
     // As before but use a different starting point
     public void testGenerics3() throws Exception {
-        String contents = "import javax.swing.text.html.HTML\n" + 
-        "Map<HTML, ? extends HTML> h\n" + 
+        String contents = "import javax.swing.text.html.HTML\n" +
+        "Map<HTML, ? extends HTML> h\n" +
         "HTML i";
-        
+
         String name = "HTML";
         int len = name.length();
-        
+
         int start1 = contents.indexOf(name);
         int start2 = contents.indexOf(name, start1 + 1);
         int start3 = contents.indexOf(name, start2 + 1);
@@ -331,96 +326,97 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int start = start4;
         doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len);
     }
-    
+
     // GRECLIPSE-1219
     public void testAnnotationOnImport() throws Exception {
         String contents = "@Deprecated\n" +
-        		"import javax.swing.text.html.HTML\n" +
-        		"Deprecated";
+                "import javax.swing.text.html.HTML\n" +
+                "Deprecated";
+
         String name = "Deprecated";
         int len = name.length();
-        
+
         int start1 = contents.indexOf(name);
         int start2 = contents.indexOf(name, start1 + 1);
         int start = start2;
         doTest(contents, start, len, start1, len, start2, len);
     }
-    
+
     // shuold not find occurrences in string literals
     public void testLiterals1() throws Exception {
         String contents = "'fff'";
-        
+
         String name = "'fff'";
         int len = name.length();
-        
+
         int start = contents.indexOf(name);
         doTest(contents, start, len);
     }
-    
+
     // shuold not find occurrences in multi-line string literals
     public void testLiterals2() throws Exception {
         String contents = "'''fff'''";
-        
+
         String name = "'''fff'''";
         int len = name.length();
-        
+
         int start = contents.indexOf(name);
         doTest(contents, start, len);
     }
-    
+
     // shuold not find occurrences in number literals
     public void testLiterals3() throws Exception {
         String contents = "'''fff'''";
-        
+
         String name = "'''fff'''";
         int len = name.length();
-        
+
         int start = contents.indexOf(name);
         doTest(contents, start, len);
     }
-    
+
     public void testOverloaded1() throws Exception {
-        String contents = 
-                "class LotsOfMethods { \n" + 
-        		"    def meth() { }\n" + 
-        		"    def meth(int a) { }\n" + 
-        		"    def meth(String a, LotsOfMethods b) { }\n" + 
-        		"}\n" + 
-        		"new LotsOfMethods().meth(1)\n" + 
-        		"new LotsOfMethods().meth(\"\", null)\n" +
-        		"new LotsOfMethods().meth()";
+        String contents =
+                "class LotsOfMethods { \n" +
+                "    def meth() { }\n" +
+                "    def meth(int a) { }\n" +
+                "    def meth(String a, LotsOfMethods b) { }\n" +
+                "}\n" +
+                "new LotsOfMethods().meth(1)\n" +
+                "new LotsOfMethods().meth(\"\", null)\n" +
+                "new LotsOfMethods().meth()";
         int start = contents.indexOf("meth");
         int len = "meth".length();
         int start1 = start;
         int start2 = contents.lastIndexOf("meth");
         doTest(contents, start, len, start1, len, start2, len);
     }
-    
+
     public void testOverloaded2() throws Exception {
-        String contents = 
-                "class LotsOfMethods { \n" + 
-                        "    def meth() { }\n" + 
-                        "    def meth(int a) { }\n" + 
-                        "    def meth(String a, LotsOfMethods b) { }\n" + 
-                        "}\n" + 
+        String contents =
+                "class LotsOfMethods { \n" +
+                        "    def meth() { }\n" +
+                        "    def meth(int a) { }\n" +
+                        "    def meth(String a, LotsOfMethods b) { }\n" +
+                        "}\n" +
                         "new LotsOfMethods().meth()\n" +
                         "new LotsOfMethods().meth(\"\", null)\n" +
-                        "new LotsOfMethods().meth(1)\n"; 
+                        "new LotsOfMethods().meth(1)\n";
         int start = contents.indexOf("meth", contents.indexOf("meth")+1);
         int len = "meth".length();
         int start1 = start;
         int start2 = contents.lastIndexOf("meth");
         doTest(contents, start, len, start1, len, start2, len);
     }
-    
+
     public void testOverloaded3() throws Exception {
-        String contents = 
-                "class LotsOfMethods { \n" + 
-                        "    def meth() { }\n" + 
-                        "    def meth(int a) { }\n" + 
-                        "    def meth(String a, LotsOfMethods b) { }\n" + 
-                        "}\n" + 
-                        "new LotsOfMethods().meth(1)\n" + 
+        String contents =
+                "class LotsOfMethods { \n" +
+                        "    def meth() { }\n" +
+                        "    def meth(int a) { }\n" +
+                        "    def meth(String a, LotsOfMethods b) { }\n" +
+                        "}\n" +
+                        "new LotsOfMethods().meth(1)\n" +
                         "new LotsOfMethods().meth()\n" +
                         "new LotsOfMethods().meth(\"\", null)\n";
         int start = contents.indexOf("meth", contents.indexOf("meth", contents.indexOf("meth")+1)+1);
@@ -429,16 +425,16 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int start2 = contents.lastIndexOf("meth");
         doTest(contents, start, len, start1, len, start2, len);
     }
-    
-  //GRECLIPSE-1573
+
+    //GRECLIPSE-1573
     public void testOverloaded4() throws Exception {
-        String contents = 
-                "class LotsOfMethods { \n" + 
-                        "    def meth() { }\n" + 
-                        "    def meth(int a) { }\n" + 
-                        "    def meth(String a) { }\n" + 
-                        "}\n" + 
-                        "new LotsOfMethods().meth(1)\n" + 
+        String contents =
+                "class LotsOfMethods { \n" +
+                        "    def meth() { }\n" +
+                        "    def meth(int a) { }\n" +
+                        "    def meth(String a) { }\n" +
+                        "}\n" +
+                        "new LotsOfMethods().meth(1)\n" +
                         "new LotsOfMethods().meth()\n" +
                         "new LotsOfMethods().meth(\"\")\n";
         int start = contents.lastIndexOf("meth");
@@ -447,15 +443,15 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int start2 = start;
         doTest(contents, start2, len, start1, len, start2, len);
     }
-    
+
     public void testOverloaded5() throws Exception {
-        String contents = 
-                "class LotsOfMethods { \n" + 
-                        "    def meth() { }\n" + 
-                        "    def meth(int a) { }\n" + 
-                        "    def meth(String a) { }\n" + 
-                        "}\n" + 
-                        "new LotsOfMethods().meth(1)\n" + 
+        String contents =
+                "class LotsOfMethods { \n" +
+                        "    def meth() { }\n" +
+                        "    def meth(int a) { }\n" +
+                        "    def meth(String a) { }\n" +
+                        "}\n" +
+                        "new LotsOfMethods().meth(1)\n" +
                         "new LotsOfMethods().meth()\n" +
                         "new LotsOfMethods().meth(null)\n";
         int start = contents.lastIndexOf("meth");
@@ -464,22 +460,22 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int start2 = start;
         doTest(contents, start2, len, start1, len, start2, len);
     }
-    
+
     public void testDefaultParameters1() throws Exception {
         String contents = "class Default {\n" +
-        		"  def meth(int a, b = 1, c = 2) { }\n" +
+                "  def meth(int a, b = 1, c = 2) { }\n" +
 //        		"  def meth(String a) { }\n" +
-        		"}\n" +
-        		"new Default().meth(1)\n" +
-        		"new Default().meth(1, 2)\n" +
-        		"new Default().meth(1, 2, 3)\n" +
-        		"new Default().meth(1, 2, 3, 4)\n" +
+                "}\n" +
+                "new Default().meth(1)\n" +
+                "new Default().meth(1, 2)\n" +
+                "new Default().meth(1, 2, 3)\n" +
+                "new Default().meth(1, 2, 3, 4)\n" +
                 "new Default().meth";
         // test the first method declaration
         // should match on all
         int start = contents.indexOf("meth");
         int len = "meth".length();
-        
+
 //        int dontCare = contents.indexOf("meth", start + 1);
         int dontCare = contents.indexOf("meth", start);
         int start1 = dontCare;
@@ -490,55 +486,10 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int start6 = contents.indexOf("meth", start5 + 1);
         doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len, start6, len);
     }
-    
-    public void testStaticImports1() throws Exception {
-        createUnit("p", "Other", "package p\nclass Other {\n  static int FOO\n static boolean BAR() { } }");
-        String contents = 
-                "import static p.Other.FOO\n" +
-                "FOO\n" +
-                "p.Other.FOO";
-        int start = contents.indexOf("FOO");
-        int len = "FOO".length();
-        int start1 = start;
-        int start2 = contents.indexOf("FOO", start1 + 1);
-        int start3 = contents.indexOf("FOO", start2 + 1);
-        doTest(contents, start, len, start1, len, start2, len, start3, len);        
-    }
-    
-    public void testStaticImports2() throws Exception {
-        createUnit("p", "Other", "package p\nclass Other {\n  static int FOO\n static boolean BAR() { } }");
-        String contents = 
-                "import static p.Other.BAR\n" +
-                        "BAR\n" +
-                        "p.Other.BAR";
-        int start = contents.indexOf("BAR");
-        int len = "BAR".length();
-        int start1 = start;
-        int start2 = contents.indexOf("BAR", start1 + 1);
-        int start3 = contents.indexOf("BAR", start2 + 1);
-        doTest(contents, start, len, start1, len, start2, len, start3, len);        
-    }
-    
-    public void testStaticImports3() throws Exception {
-        createUnit("p", "Other", "package p\nclass Other {\n  static int FOO\n static boolean BAR() { } }");
-        String contents = 
-                "import static p.Other.BAR\n" +
-                "import p.Other\n" +
-                "Other\n" +
-                "p.Other.BAR";
-        int start = contents.indexOf("p.Other");
-        int len1 = "p.Other".length();
-        int len = "Other".length();
-        int start1 = start;
-        int start2 = contents.indexOf("Other", start1 + len1);
-        int start3 = contents.indexOf("Other", start2 + 1);
-        int start4 = contents.indexOf("p.Other", start3 + 1);
-        doTest(contents, start, len1, start1, len1, start2, len, start3, len, start4, len1);
-    }
-    
+
     // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments
     public void _testDefaultParameters1a() throws Exception {
-        String contents = 
+        String contents =
                 "class Default {\n" +
                 "  def meth(int a, b = 1, c = 2) { }\n" +
                 "  def meth(String a) { }\n" +
@@ -552,7 +503,7 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         // should match on all
         int start = contents.indexOf("meth");
         int len = "meth".length();
-        
+
         int dontCare = contents.indexOf("meth", start + 1);
         int start1 = dontCare;
         int start2 = contents.indexOf("meth", start1 + 1);
@@ -562,7 +513,7 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int start6 = contents.indexOf("meth", start5 + 1);
         doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len, start6, len);
     }
-    
+
     // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments
     public void _testDefaultParameters2() throws Exception {
         String contents = "class Default {\n" +
@@ -575,11 +526,11 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
                 "new Default().meth(1, 2, 3, 4)\n" +
                 "new Default().meth";
         // test the second method declaration
-        // should match on 
+        // should match on
         int start = contents.indexOf("meth");
         start = contents.indexOf("meth", start + 1);
         int len = "meth".length();
-        
+
         int start1 = start;
         int start2 = contents.indexOf("meth", start1 + 1);
         int start3 = contents.indexOf("meth", start2 + 1);
@@ -588,7 +539,52 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         int start6 = contents.indexOf("meth", start5 + 1);
         doTest(contents, start, len, start1, len, start2, len, start5, len, start6, len);
     }
-    
+
+    public void testStaticImports1() throws Exception {
+        createUnit("p", "Other", "package p\nclass Other {\n  static int FOO\n static boolean BAR() { } }");
+        String contents =
+                "import static p.Other.FOO\n" +
+                "FOO\n" +
+                "p.Other.FOO";
+        int start = contents.indexOf("FOO");
+        int len = "FOO".length();
+        int start1 = start;
+        int start2 = contents.indexOf("FOO", start1 + 1);
+        int start3 = contents.indexOf("FOO", start2 + 1);
+        doTest(contents, start, len, start1, len, start2, len, start3, len);
+    }
+
+    public void testStaticImports2() throws Exception {
+        createUnit("p", "Other", "package p\nclass Other {\n  static int FOO\n static boolean BAR() { } }");
+        String contents =
+                "import static p.Other.BAR\n" +
+                "BAR\n" +
+                "p.Other.BAR";
+        int start = contents.indexOf("BAR");
+        int len = "BAR".length();
+        int start1 = start;
+        int start2 = contents.indexOf("BAR", start1 + 1);
+        int start3 = contents.indexOf("BAR", start2 + 1);
+        doTest(contents, start, len, start1, len, start2, len, start3, len);
+    }
+
+    public void testStaticImports3() throws Exception {
+        createUnit("p", "Other", "package p\nclass Other {\n  static int FOO\n static boolean BAR() { } }");
+        String contents =
+                "import static p.Other.BAR\n" +
+                "import p.Other\n" +
+                "Other\n" +
+                "p.Other.BAR";
+        int start = contents.indexOf("p.Other");
+        int len1 = "p.Other".length();
+        int len = "Other".length();
+        int start1 = start;
+        int start2 = contents.indexOf("Other", start1 + len1);
+        int start3 = contents.indexOf("Other", start2 + 1);
+        int start4 = contents.indexOf("p.Other", start3 + 1);
+        doTest(contents, start, len1, start1, len1, start2, len, start3, len, start4, len1);
+    }
+
     private void doTest(String contents, int start, int length, int ... expected) throws JavaModelException {
         GroovyCompilationUnit unit = createUnit("Occurrences", contents);
         try {
@@ -599,17 +595,17 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
             unit.discardWorkingCopy();
         }
     }
-    
+
     private void assertOccurrences(int[] expected, OccurrenceLocation[] actual) {
-        assertEquals("Wrong number of occurrences found. expecting:\n" + 
-        		Arrays.toString(expected) + "\nbut found:\n" + 
-        		printOccurrences(actual), expected.length/2, actual.length);
+        assertEquals("Wrong number of occurrences found. expecting:\n" +
+                Arrays.toString(expected) + "\nbut found:\n" +
+                printOccurrences(actual), expected.length/2, actual.length);
         for (int i = 0; i < actual.length; i++) {
-            assertEquals("Problem in Occurrence " + i + " expecting:\n" + 
-                    Arrays.toString(expected) + "\nbut found:\n" + 
+            assertEquals("Problem in Occurrence " + i + " expecting:\n" +
+                    Arrays.toString(expected) + "\nbut found:\n" +
                     printOccurrences(actual), expected[i*2], actual[i].getOffset());
-            assertEquals("Problem in Occurrence " + i + " expecting:\n" + 
-                    Arrays.toString(expected) + "\nbut found:\n" + 
+            assertEquals("Problem in Occurrence " + i + " expecting:\n" +
+                    Arrays.toString(expected) + "\nbut found:\n" +
                     printOccurrences(actual), expected[i*2+1], actual[i].getLength());
         }
     }
@@ -621,12 +617,11 @@ public class FindOccurrencesTests extends AbstractGroovySearchTest {
         }
         return sb.toString();
     }
-    
+
     private OccurrenceLocation[] find(GroovyCompilationUnit unit, int start, int length) {
         GroovyOccurrencesFinder finder = new GroovyOccurrencesFinder();
         finder.setGroovyCompilationUnit(unit);
         finder.initialize(null, start, length);
         return finder.getOccurrences();
     }
-
 }

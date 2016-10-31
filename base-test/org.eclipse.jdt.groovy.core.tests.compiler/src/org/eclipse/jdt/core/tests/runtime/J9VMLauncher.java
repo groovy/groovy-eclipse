@@ -43,7 +43,7 @@ public J9VMLauncher() {
 protected String buildBootClassPath() {
 	StringBuffer bootPathString = new StringBuffer();
 	char pathSeparator = File.pathSeparatorChar;
-	
+
 	if (this.bootPath != null) {
 		// Add boot class path given by client
 		int length = this.bootPath.length;
@@ -62,7 +62,7 @@ protected String buildBootClassPath() {
 		bootPathString.append("classes.zip");
 		bootPathString.append(pathSeparator);
 	}
-	
+
 	// Add boot class path directory if needed
 	if (this.evalTargetPath != null && TARGET_HAS_FILE_SYSTEM) {
 		bootPathString.append(this.evalTargetPath);
@@ -86,15 +86,15 @@ protected Process execCommandLine() throws TargetException {
 /**
  * @see LocalVMLauncher#getCommandLine
  */
-public String[] getCommandLine() {	
-	Vector commandLine = new Vector();
-	
+public String[] getCommandLine() {
+	Vector<String> commandLine = new Vector<String>();
+
 	// VM binary
 	commandLine.addElement(
-		this.vmPath + 
-		(this.vmPath.endsWith(File.separator) ? "" : File.separator) + 
-		"bin" + 
-		File.separator + 
+		this.vmPath +
+		(this.vmPath.endsWith(File.separator) ? "" : File.separator) +
+		"bin" +
+		File.separator +
 		"j9");
 
 	// VM arguments
@@ -115,12 +115,12 @@ public String[] getCommandLine() {
 	// regular class path
 	commandLine.addElement("-classpath");
 	commandLine.addElement(buildClassPath());
-	
+
 	// code snippet runner class
 	if (this.evalPort != -1) {
 		commandLine.addElement(CODE_SNIPPET_RUNNER_CLASS_NAME);
 	}
-	
+
 	// code snippet runner arguments
 	if (this.evalPort != -1) {
 		commandLine.addElement(EVALPORT_ARG);
@@ -132,12 +132,12 @@ public String[] getCommandLine() {
 			commandLine.addElement(this.evalTargetPath + File.separator + BOOT_CLASSPATH_DIRECTORY);
 		}
 	}
-	
+
 	// program class
 	if (this.programClass != null) {
 		commandLine.addElement(this.programClass);
 	}
-	
+
 	// program arguments
 	if (this.programArguments != null) {
 		for (int i=0;i<this.programArguments.length;i++) {
@@ -159,26 +159,26 @@ public String[] getCommandLine() {
 	return result;
 }
 /**
- * Returns the debug port the J9 Proxy uses to connect to the J9 VM. 
+ * Returns the debug port the J9 Proxy uses to connect to the J9 VM.
  * The value is unspecified if debug mode is disabled.
- * Note that the regular debug port is the port used to connect the J9 Proxy and 
+ * Note that the regular debug port is the port used to connect the J9 Proxy and
  * the IDE in the case of the J9 VM Launcher.
  */
 public int getInternalDebugPort() {
 	return this.internalDebugPort;
 }
 /**
- * Returns the command line which will be used to launch the Proxy. 
+ * Returns the command line which will be used to launch the Proxy.
  */
-public String[] getProxyCommandLine() {	
-	Vector commandLine = new Vector();
-	
+public String[] getProxyCommandLine() {
+	Vector<String> commandLine = new Vector<String>();
+
 	// Proxy binary
 	commandLine.addElement(
-		this.vmPath + 
-		(this.vmPath.endsWith(File.separator) ? "" : File.separator) + 
-		"bin" + 
-		File.separator + 
+		this.vmPath +
+		(this.vmPath.endsWith(File.separator) ? "" : File.separator) +
+		"bin" +
+		File.separator +
 		"j9proxy");
 
 	// Arguments
@@ -187,7 +187,7 @@ public String[] getProxyCommandLine() {
 	if (this.symbolPath != null && this.symbolPath != "") {
 		commandLine.addElement(this.symbolPath);
 	}
-	
+
 	String[] result= new String[commandLine.size()];
 	commandLine.copyInto(result);
 	return result;
@@ -221,7 +221,7 @@ public LocalVirtualMachine launch() throws TargetException {
 			// Use Runtime.exec(String[]) with tokens because Runtime.exec(String) with commandLineString
 			// does not properly handle spaces in arguments on Unix/Linux platforms.
 			String[] commandLine = getProxyCommandLine();
-			
+
 			// DEBUG
 			/*
 			for (int i = 0; i < commandLine.length; i++) {
@@ -249,7 +249,7 @@ public LocalVirtualMachine launch() throws TargetException {
  */
 public void setDebugPort(int debugPort) {
 	super.setDebugPort(debugPort);
-	
+
 	// specify default internal debug port as well
 	this.setInternalDebugPort(Util.getFreePort());
 }
@@ -258,7 +258,7 @@ public void setDebugPort(int debugPort) {
  * Sets the debug port the J9 Proxy uses to connect to the J9 VM.
  * This is mandatory if debug mode is enabled.
  * This is ignored if debug mode is disabled.
- * Note that the regular debug port is the port used to connect the J9 Proxy and 
+ * Note that the regular debug port is the port used to connect the J9 Proxy and
  * the IDE in the case of the J9 VM Launcher.
  */
 public void setInternalDebugPort(int internalDebugPort) {

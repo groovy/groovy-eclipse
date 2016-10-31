@@ -7,6 +7,7 @@
         <replaceregexp byline="true" flags="g" match="\bimport antlr." replace="import groovyjarjarantlr.">
             <fileset dir="parser" includes="*.java" />
         </replaceregexp>
+        <fixcrlf srcdir="parser" eol="lf" />
     </target>
 
     <target name="clean">

@@ -13,9 +13,8 @@ package org.eclipse.jdt.testplugin.util;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import junit.framework.Assert;
-
 import org.eclipse.swt.widgets.Display;
+import org.junit.Assert;
 
 /**
  * Runs the event loop of the given display until {@link #condition()} becomes
@@ -115,7 +114,7 @@ public abstract class DisplayHelper {
 	/**
 	 * The condition which has to be met in order for {@link #waitForCondition(Display, long)} to
 	 * return before the timeout elapses.
-	 * 
+	 *
 	 * @return <code>true</code> if the condition is met, <code>false</code> if the event loop
 	 *         should be driven some more
 	 */

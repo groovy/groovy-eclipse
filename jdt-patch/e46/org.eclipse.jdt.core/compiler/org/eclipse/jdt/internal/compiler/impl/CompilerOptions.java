@@ -1910,7 +1910,7 @@ public class CompilerOptions {
 				this.buildGroovyFiles = 2;
 				this.storeAnnotations = true; // force it on
 				// will need proper bit manipulation when second flag comes up
-				String s = (String)optionsMap.get(OPTIONG_GroovyFlags);
+				String s = optionsMap.get(OPTIONG_GroovyFlags);
 				if (s!=null && s.equals("1")) { //$NON-NLS-1$
 					this.groovyFlags = 0x01;
 				} else {
@@ -1922,35 +1922,35 @@ public class CompilerOptions {
 			}
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyClassLoaderPath)) != null) {
-			this.groovyClassLoaderPath = (String)optionValue;
+			this.groovyClassLoaderPath = optionValue;
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyExtraImports)) != null) {
-			this.groovyExtraImports = (String)optionValue;
+			this.groovyExtraImports = optionValue;
 		} else {
 			if (sysPropConfiguredExtraImports!=null && this.groovyExtraImports == null) {
 				this.groovyExtraImports = sysPropConfiguredExtraImports;
 			}
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyCustomizerClassesList)) != null) {
-			this.groovyCustomizerClassesList = (String)optionValue;
+			this.groovyCustomizerClassesList = optionValue;
 		} else {
 			if (sysPropConfiguredCustomizerClassesList!=null && this.groovyCustomizerClassesList == null) {
 				this.groovyCustomizerClassesList = sysPropConfiguredCustomizerClassesList;
 			}
 		}
 		optionValue = optionsMap.get(OPTIONG_GroovyTransformsToRunOnReconcile);
-		if (optionValue!=null && ((String)optionValue).length()!=0) {
-			this.groovyTransformsToRunOnReconcile = (String)optionValue;
+		if (optionValue!=null && !optionValue.isEmpty()) {
+			this.groovyTransformsToRunOnReconcile = optionValue;
 		} else {
 			if (sysPropConfiguredGroovyTransforms!=null) {
 				this.groovyTransformsToRunOnReconcile = sysPropConfiguredGroovyTransforms;
 			}
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyProjectName)) != null) {
-			this.groovyProjectName = (String)optionValue;
+			this.groovyProjectName = optionValue;
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyExcludeGlobalASTScan)) != null) {
-			this.groovyExcludeGlobalASTScan = (String)optionValue;
+			this.groovyExcludeGlobalASTScan = optionValue;
 		}
 		// GROOVY end
 	}

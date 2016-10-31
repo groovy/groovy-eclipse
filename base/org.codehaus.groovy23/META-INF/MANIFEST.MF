@@ -148,6 +148,5 @@ Require-Bundle: org.eclipse.core.runtime,
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.activator.GroovyActivator
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Groovy-Runtime-Jars: groovy.jar
 Eclipse-BuddyPolicy: registered
 Eclipse-BundleShape: dir

@@ -12,6 +12,7 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -23,20 +24,20 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public abstract class JavadocTest extends AbstractRegressionTest {
-		
+
 	boolean useLibrary = false;
 	static String ZIP_FILE = "/TestJavadocVisibility.zip";
 	static final String LINE_SEPARATOR = System.getProperty("line.separator");
-	public static ArrayList ALL_CLASSES = null;
 	static final String DOC_COMMENT_SUPPORT = System.getProperty("doc.support");
 
 	// Javadoc execution
-	protected static final String JAVADOC_NAME = 
+	protected static final String JAVADOC_NAME =
 		File.pathSeparatorChar == ':' ? "javadoc" : "javadoc.exe";
-  protected static String javadocCommandLineHeader;
-	
+	protected static String javadocCommandLineHeader;
+
+	public static List<Class<? extends Test>> ALL_CLASSES = null;
 	static {
-		ALL_CLASSES = new ArrayList();
+		ALL_CLASSES = new ArrayList<Class<? extends Test>>();
 		ALL_CLASSES.add(JavadocBugsTest.class);
 		ALL_CLASSES.add(JavadocTestForMethod.class);
 		ALL_CLASSES.add(JavadocTestMixed.class);
@@ -46,25 +47,25 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 		ALL_CLASSES.add(JavadocTestForInterface.class);
 		ALL_CLASSES.add(JavadocTestOptions.class);
 	}
-	
-	
-	public static void addTest(TestSuite suite, Class testClass) {
+
+
+	public static void addTest(TestSuite suite, Class<?> testClass) {
 		TestSuite innerSuite = new TestSuite(testClass);
 		suite.addTest(innerSuite);
 	}
 
 	public static Test suite() {
 		TestSuite testSuite = new TestSuite(JavadocTest.class.getName());
-	
+
 		// Reset forgotten subsets of tests
 		TestCase.TESTS_PREFIX = null;
 		TestCase.TESTS_NAMES = null;
 		TestCase.TESTS_NUMBERS = null;
 		TestCase.TESTS_RANGE = null;
 		TestCase.RUN_ONLY_ID = null;
-	
+
 		for (int i = 0, size=ALL_CLASSES.size(); i < size; i++) {
-			Class testClass = (Class) ALL_CLASSES.get(i);
+			Class<? extends Test> testClass = ALL_CLASSES.get(i);
 			Test suite = buildAllCompliancesTestSuite(testClass);
 			testSuite.addTest(suite);
 		}
@@ -80,18 +81,19 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 		}
 		return testSuite;
 	}
-	
-	public static Test suiteForComplianceLevel(long level, Class testClass) {
+
+	public static Test suiteForComplianceLevel(long level, Class<? extends Test> testClass) {
 		TestSuite suite = new RegressionTestSetup(level);
 		buildAllCompliancesTestSuite(suite, testClass);
 		return suite;
 	}
-	
+
 	public JavadocTest(String name) {
 		super(name);
 	}
-	protected Map getCompilerOptions() {
-		Map options = super.getCompilerOptions();
+
+	protected Map<String, String> getCompilerOptions() {
+		Map<String, String> options = super.getCompilerOptions();
 		options.put(CompilerOptions.OPTION_ReportFieldHiding, CompilerOptions.IGNORE);
 		options.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
 		options.put(CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);
@@ -104,7 +106,7 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 		options.put(CompilerOptions.OPTION_ReportMissingSerialVersion, CompilerOptions.IGNORE);
 		return options;
 	}
-	
+
 	protected String[] getDefaultClassPaths() {
 		if (useLibrary) {
 			String[] classLibs = super.getDefaultClassPaths();
@@ -116,7 +118,7 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 		}
 		return super.getDefaultClassPaths();
 	}
-	
+
 	static String[] referencedClasses = null;
 	static {
 		referencedClasses =
@@ -277,7 +279,7 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 	protected void setUp() throws Exception {
 		super.setUp();
 		if (RUN_JAVAC) {
-			javadocCommandLineHeader = 
+			javadocCommandLineHeader =
 				jdkRootDirPath.append("bin").append(JAVADOC_NAME).toString(); // PREMATURE replace JAVA_NAME and JAVAC_NAME with locals? depends on potential reuse
 		}
 //		SHIFT = true;
@@ -313,9 +315,9 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 			System.arraycopy(referencedClasses, 0, completedFiles, 0, referencedClasses.length);
 			System.arraycopy(testFiles, 0, completedFiles, referencedClasses.length, testFiles.length);
 		}
-		runNegativeTest(completedFiles, expected, javacTestOptions);		
+		runNegativeTest(completedFiles, expected, javacTestOptions);
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest#runConformTest(java.lang.String[], java.lang.String, java.lang.String[], boolean, java.lang.String[], java.util.Map, org.eclipse.jdt.internal.compiler.ICompilerRequestor)
 	 *
@@ -365,12 +367,12 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 			testName = testName.substring(idx+3);
 		}
 
-    // File dir = new File("d:/usr/OTI/tests/javadoc/");
+	// File dir = new File("d:/usr/OTI/tests/javadoc/");
 		// non portable
 		createOutputTestDirectory(classDirName);
-		createOutputTestDirectory(Character.toUpperCase(testName.charAt(0)) + 
+		createOutputTestDirectory(Character.toUpperCase(testName.charAt(0)) +
 				testName.substring(1));
-		System.out.println("Write test file to " + 
+		System.out.println("Write test file to " +
 				this.outputTestDirectory.getPath() + "...");
 		for (int i=0, length=testFiles.length; i<length; i++) {
 			String contents = testFiles[i+1];
@@ -393,7 +395,7 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 					fileName = fileName.substring(index+1);
 				}
 			}
-			Util.writeToFile(contents, dirFileName+"/"+fileName); 
+			Util.writeToFile(contents, dirFileName+"/"+fileName);
 			// REVIEW don't know why this is created at the default package level
 		}
 	}
@@ -403,13 +405,12 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 	 * See implementation in parent for details.
 	 */
 	protected void runJavac(
-			String[] testFiles, 
-			final String expectedProblemLog, 
-			final String expectedSuccessOutputString, 
+			String[] testFiles,
+			final String expectedProblemLog,
+			final String expectedSuccessOutputString,
 			boolean shouldFlushOutputDirectory) {
 		String testName = null;
 		Process compileProcess = null;
-		Process execProcess = null;
 		try {
 			// Init test name
 			testName = testName();
@@ -419,7 +420,7 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 			if (shouldFlushOutputDirectory) {
 				Util.delete(javacOutputDirectory);
 			}
-			
+
 			// Write files in dir
 			writeFiles(testFiles);
 
@@ -431,13 +432,13 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 			int length = classpath.length;
 			for (int i = 0; i < length; i++) {
 				if (i > 0)
-				  cp.append(File.pathSeparatorChar);
+				cp.append(File.pathSeparatorChar);
 				if (classpath[i].indexOf(" ") != -1) {
 					cp.append("\"" + classpath[i] + "\"");
 				} else {
 					cp.append(classpath[i]);
 				}
-			} 
+			}
 			cmdLine.append(cp);
 			// add source files
 			for (int i = 0; i < testFiles.length; i += 2) {
@@ -451,16 +452,16 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 				cmdLine.toString(), null, this.outputTestDirectory);
 
 			// Log errors
-      Logger errorLogger = new Logger(compileProcess.getErrorStream(), "ERROR");            
+			Logger errorLogger = new Logger(compileProcess.getErrorStream(), "ERROR");
 
-      // Log output
-      Logger outputLogger = new Logger(compileProcess.getInputStream(), "OUTPUT");
+			// Log output
+			Logger outputLogger = new Logger(compileProcess.getInputStream(), "OUTPUT");
 
-      // start the threads to run outputs (standard/error)
-      errorLogger.start();
-      outputLogger.start();
+			// start the threads to run outputs (standard/error)
+			errorLogger.start();
+			outputLogger.start();
 
-      // Wait for end of process
+			// Wait for end of process
 			int exitValue = compileProcess.waitFor();
 			errorLogger.join(); // make sure we get the whole output
 			outputLogger.join();
@@ -495,7 +496,7 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 					System.out.println(errorLogger.buffer.toString());
 					printFiles(testFiles);
 					DIFF_COUNTERS[0]++;
-				} 
+				}
 				else {
 					// Javac found no error - may have found warnings
 					if (errorLogger.buffer.length() > 0) {
@@ -505,9 +506,9 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 						System.out.println(errorLogger.buffer.toString());
 						printFiles(testFiles);
 						DIFF_COUNTERS[0]++;
-					} 
+					}
 				}
-			} 
+			}
 			else {
 				// Eclipse found errors or warnings
 				if (errorLogger.buffer.length() == 0) {
@@ -537,10 +538,9 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 //						System.out.println(expectedProblemLog);
 				}
 			}
-		} 
+		}
 		catch (InterruptedException e1) {
 			if (compileProcess != null) compileProcess.destroy();
-			if (execProcess != null) execProcess.destroy();
 			System.out.println(testName+": Sun javadoc compilation was aborted!");
 			javacFullLog.println("JAVAC_WARNING: Sun javadoc compilation was aborted!");
 			e1.printStackTrace(javacFullLog);
@@ -552,15 +552,15 @@ public abstract class JavadocTest extends AbstractRegressionTest {
 			e.printStackTrace(javacFullLog);
 			// PREMATURE failing the javac pass or comparison could also fail
 			//           the test itself
-		} 
+		}
 		finally {
 			Util.delete(outputTestDirectory);
 		}
 	}
-	
+
 	protected void	printJavacResultsSummary() {
 		if (RUN_JAVAC) {
-			Integer count = (Integer)TESTS_COUNTERS.get(CURRENT_CLASS_NAME);
+			Integer count = TESTS_COUNTERS.get(CURRENT_CLASS_NAME);
 			if (count != null) {
 				int newCount = count.intValue()-1;
 				TESTS_COUNTERS.put(CURRENT_CLASS_NAME, new Integer(newCount));

@@ -10,13 +10,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.testplugin;
 
-import junit.framework.Assert;
-
 import org.eclipse.core.resources.IResource;
-
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
-
+import org.junit.Assert;
 
 /**
  * Tests a resource or Java element and all its children
@@ -171,7 +168,7 @@ public class MixedLineDelimiterDetector  {
 
 	/**
 	 * Finds files with mixed line delimiters.
-	 * 
+	 *
 	 * @param resource the resource to search
 	 * @return the resources with mixed line delimiters
 	 */
@@ -179,7 +176,7 @@ public class MixedLineDelimiterDetector  {
 //		final List result= new ArrayList(5);
 //		ResultCollector collector= new ResultCollector(result);
 //		TextSearchEngine engine= new TextSearchEngine();
-//		SearchScope scope= SearchScope.newSearchScope("", new IResource[] { resource }); //$NON-NLS-1$
+//		SearchScope scope= SearchScope.newSearchScope("", new IResource[] { resource });
 //		engine.search(scope, false, collector, new LineDelimiterLocator(MIXED_LD));
 //		return (IResource[])result.toArray(new IResource[result.size()]);
 

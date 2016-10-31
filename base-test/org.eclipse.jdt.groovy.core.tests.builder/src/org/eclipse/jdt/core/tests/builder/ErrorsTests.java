@@ -43,10 +43,8 @@ import org.eclipse.jdt.internal.core.builder.JavaBuilder;
  * Basic errors tests of the image builder.
  */
 public class ErrorsTests extends BuilderTests {
-	private static final Comparator COMPARATOR = new Comparator() {
-		public int compare(Object o1, Object o2) {
-			IResource resource1 = (IResource) o1;
-			IResource resource2 = (IResource) o2;
+	private static final Comparator<IResource> COMPARATOR = new Comparator<IResource>() {
+		public int compare(IResource resource1, IResource resource2) {
 			String path1 = resource1.getFullPath().toString();
 			String path2 = resource2.getFullPath().toString();
 			int length1 = path1.length();
@@ -62,76 +60,76 @@ public class ErrorsTests extends BuilderTests {
 	public ErrorsTests(String name) {
 		super(name);
 	}
-	
+
 	public static Test suite() {
 		return buildTestSuite(ErrorsTests.class);
 	}
-	
+
 	public void testErrors() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
-		
+
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath,""); //$NON-NLS-1$
-		
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-		
-		env.addClass(root, "p1", "Indicted", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public abstract class Indicted {\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath,"");
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		env.addClass(root, "p1", "Indicted",
+			"package p1;\n"+
+			"public abstract class Indicted {\n"+
+			"}\n"
 			);
-			
-		IPath collaboratorPath =  env.addClass(root, "p2", "Collaborator", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p2;\n"+ //$NON-NLS-1$
-			"import p1.*;\n"+ //$NON-NLS-1$
-			"public class Collaborator extends Indicted{\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+
+		IPath collaboratorPath =  env.addClass(root, "p2", "Collaborator",
+			"package p2;\n"+
+			"import p1.*;\n"+
+			"public class Collaborator extends Indicted{\n"+
+			"}\n"
 			);
-		
+
 		fullBuild(projectPath);
 		expectingNoProblems();
-		
-		env.addClass(root, "p1", "Indicted", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public abstract class Indicted {\n"+ //$NON-NLS-1$
-			"   public abstract void foo();\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+
+		env.addClass(root, "p1", "Indicted",
+			"package p1;\n"+
+			"public abstract class Indicted {\n"+
+			"   public abstract void foo();\n"+
+			"}\n"
 			);
-			
+
 		incrementalBuild(projectPath);
 
 		expectingOnlyProblemsFor(collaboratorPath);
-		expectingOnlySpecificProblemFor(collaboratorPath, new Problem("Collaborator", "The type Collaborator must implement the inherited abstract method Indicted.foo()", collaboratorPath, 38, 50, CategorizedProblem.CAT_MEMBER, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingOnlySpecificProblemFor(collaboratorPath, new Problem("Collaborator", "The type Collaborator must implement the inherited abstract method Indicted.foo()", collaboratorPath, 38, 50, CategorizedProblem.CAT_MEMBER, IMarker.SEVERITY_ERROR));
 	}
-	
+
 	/*
 	 * Regression test for bug 2857 Renaming .java class with errors to .txt leaves errors in Task list (1GK06R3)
 	 */
 	public void testRenameToNonJava() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-		
+
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath,""); //$NON-NLS-1$
-		
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
-		
-		IPath cuPath = env.addClass(root, "p1", "X", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public class X extends Y {\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath,"");
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		IPath cuPath = env.addClass(root, "p1", "X",
+			"package p1;\n"+
+			"public class X extends Y {\n"+
+			"}\n"
 			);
-			
+
 		fullBuild(projectPath);
 		expectingOnlyProblemsFor(cuPath);
-		expectingOnlySpecificProblemFor(cuPath, new Problem("X", "Y cannot be resolved to a type", cuPath, 35, 36, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		
-		env.renameCU(root.append("p1"), "X.java", "X.txt"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		expectingOnlySpecificProblemFor(cuPath, new Problem("X", "Y cannot be resolved to a type", cuPath, 35, 36, CategorizedProblem.CAT_TYPE, IMarker.SEVERITY_ERROR));
+
+
+		env.renameCU(root.append("p1"), "X.java", "X.txt");
 		incrementalBuild(projectPath);
 		expectingNoProblems();
 	}
@@ -140,7 +138,7 @@ public class ErrorsTests extends BuilderTests {
 // Checking the GENERATED_BY attribute
 public void test0100() throws JavaModelException {
 	IPath projectPath = env.addProject("Project");
-	env.addExternalJars(projectPath, Util.getJavaClassLibs());	
+	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	env.removePackageFragmentRoot(projectPath, "");
 	IPath root = env.addPackageFragmentRoot(projectPath, "src");
 	IPath classTest1 = env.addClass(root, "p1", "Test1",
@@ -157,7 +155,7 @@ public void test0100() throws JavaModelException {
 // Checking the GENERATED_BY attribute
 public void test0101() throws JavaModelException {
 	IPath projectPath = env.addProject("Project");
-	env.addExternalJars(projectPath, Util.getJavaClassLibs());	
+	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	env.removePackageFragmentRoot(projectPath, "");
 	IPath root = env.addPackageFragmentRoot(projectPath, "src");
 	IPath classTest1 = env.addClass(root, "p1", "Test1",
@@ -174,7 +172,7 @@ public void test0101() throws JavaModelException {
 // Checking the GENERATED_BY attribute
 public void test0102() throws JavaModelException {
 	IPath projectPath = env.addProject("Project");
-	env.addExternalJars(projectPath, Util.getJavaClassLibs());	
+	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	env.removePackageFragmentRoot(projectPath, "");
 	IPath root = env.addPackageFragmentRoot(projectPath, "src");
 	IPath classTest1 = env.addClass(root, "p1", "Test1",
@@ -197,7 +195,7 @@ public void test0102() throws JavaModelException {
 // Checking the GENERATED_BY attribute
 public void test0103() throws JavaModelException {
 	IPath projectPath = env.addProject("Project");
-	env.addExternalJars(projectPath, Util.getJavaClassLibs());	
+	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	env.removePackageFragmentRoot(projectPath, "");
 	IPath root = env.addPackageFragmentRoot(projectPath, "src");
 	IPath classTest1 = env.addClass(root, "p1", "Test1",
@@ -224,7 +222,7 @@ public void test0104() throws JavaModelException {
 	);
 	fullBuild();
 	Problem[] prob1 = env.getProblemsFor(classTest1);
-	expectingSpecificProblemFor(classTest1, 
+	expectingSpecificProblemFor(classTest1,
 		new Problem("p1", "The type java.lang.Object cannot be resolved. It is indirectly referenced from required .class files", classTest1, 0, 0, CategorizedProblem.CAT_BUILDPATH, IMarker.SEVERITY_ERROR));
 	assertEquals(JavaBuilder.SOURCE_ID, prob1[0].getSourceId());
 }
@@ -240,7 +238,7 @@ public void test0105() throws JavaModelException, CoreException, IOException {
 		IPath root = env.getPackageFragmentRootPath(projectPath, "");
 		IPath outputFolderPath = env.getOutputLocation(projectPath);
 		File outputFolder = env.getWorkspaceRootPath().append(outputFolderPath).toFile();
-		env.addClass(root, "p1", 
+		env.addClass(root, "p1",
 				"X",
 				"package p1;\n" +
 				"public class X {\n" +
@@ -256,10 +254,10 @@ public void test0105() throws JavaModelException, CoreException, IOException {
 			System.err.println("ErrorsTests#test0105 will emit an expected exception below");
 			cleanBuild();
 			System.err.println("=== END OF EXPECTED EXCEPTION ==================================================\n\n");
-			expectingOnlySpecificProblemFor(env.getWorkspaceRootPath(), 
-					new Problem("", 
-						"The project was not built due to \"Could not delete \'" + 
-						env.getWorkspaceRootPath() + "/P/bin/.classpath\'.\". " + 
+			expectingOnlySpecificProblemFor(env.getWorkspaceRootPath(),
+					new Problem("",
+						"The project was not built due to \"Could not delete \'" +
+						env.getWorkspaceRootPath() + "/P/bin/.classpath\'.\". " +
 						"Fix the problem, then try refreshing this project and building " +
 						"it since it may be inconsistent", projectPath, -1, -1, CategorizedProblem.CAT_BUILDPATH, IMarker.SEVERITY_ERROR));
 		} finally {
@@ -298,28 +296,28 @@ public void test0105() throws JavaModelException, CoreException, IOException {
 
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=224715
 public void test0106() throws JavaModelException {
-	IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+	IPath projectPath = env.addProject("Project");
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	fullBuild(projectPath);
 
 	// remove old package fragment root so that names don't collide
-	env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+	env.removePackageFragmentRoot(projectPath, "");
 
-	IPath root = env.addPackageFragmentRoot(projectPath, "src", null, null); //$NON-NLS-1$
-	env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+	IPath root = env.addPackageFragmentRoot(projectPath, "src", null, null);
+	env.setOutputFolder(projectPath, "bin");
 
-	IPath classTest1 = env.addClass(root, "p1", "X", //$NON-NLS-1$ //$NON-NLS-2$
-		"package p1;\n"+ //$NON-NLS-1$
+	IPath classTest1 = env.addClass(root, "p1", "X",
+		"package p1;\n"+
 		"public class X implements I {\n" +
-		"}\n" //$NON-NLS-1$
+		"}\n"
 	);
 
-	env.addClass(root, "p1", "I", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
+	env.addClass(root, "p1", "I",
+			"package p1;\n"+
 			"public interface I {\n" +
-			"   public void foo() {\n"+ //$NON-NLS-1$
-			"   }\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+			"   public void foo() {\n"+
+			"   }\n"+
+			"}\n"
 		);
 
 	incrementalBuild(projectPath);
@@ -330,17 +328,17 @@ public void test0106() throws JavaModelException {
 	IRegion region = JavaCore.newRegion();
 	region.add(project);
 	IResource[] resources = JavaCore.getGeneratedResources(region, false);
-	assertEquals("Wrong size", 2, resources.length);//$NON-NLS-1$
+	assertEquals("Wrong size", 2, resources.length);
 	Arrays.sort(resources, COMPARATOR);
 	String actualOutput = getResourceOuput(resources);
 	String expectedOutput =
 		"/Project/bin/p1/I.class\n" +
 		"/Project/bin/p1/X.class\n";
 	assertEquals("Wrong names", Util.convertToIndependantLineDelimiter(expectedOutput), actualOutput);
-	
+
 	assertEquals("Wrong type", IResource.FILE, resources[1].getType());
 	IFile classFile = (IFile) resources[1];
-	IClassFileReader classFileReader = null; 
+	IClassFileReader classFileReader = null;
 	InputStream stream = null;
 	try {
 		stream = classFile.getContents();
@@ -372,27 +370,27 @@ public void test0106() throws JavaModelException {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=225563
 public void test0107() throws JavaModelException {
-	IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+	IPath projectPath = env.addProject("Project");
 	env.addExternalJars(projectPath, Util.getJavaClassLibs());
 	fullBuild(projectPath);
 
 	// remove old package fragment root so that names don't collide
-	env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+	env.removePackageFragmentRoot(projectPath, "");
 
-	IPath root = env.addPackageFragmentRoot(projectPath, "src", null, null); //$NON-NLS-1$
-	env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+	IPath root = env.addPackageFragmentRoot(projectPath, "src", null, null);
+	env.setOutputFolder(projectPath, "bin");
 
-	IPath classTest1 = env.addClass(root, "", "C", //$NON-NLS-1$ //$NON-NLS-2$
-		"public class C implements None {\n" + 
-		"        public String toString(Arg a) {\n" + 
-		"                return null;\n" + 
-		"        }\n" + 
-		"        public String toString(Arg[] a) {\n" + 
-		"                return null;\n" + 
-		"        }\n" + 
-		"}" //$NON-NLS-1$
+	IPath classTest1 = env.addClass(root, "", "C",
+		"public class C implements None {\n" +
+		"        public String toString(Arg a) {\n" +
+		"                return null;\n" +
+		"        }\n" +
+		"        public String toString(Arg[] a) {\n" +
+		"                return null;\n" +
+		"        }\n" +
+		"}"
 	);
-	
+
 	incrementalBuild(projectPath);
 
 	expectingOnlySpecificProblemsFor(classTest1, new Problem[] {
@@ -405,13 +403,13 @@ public void test0107() throws JavaModelException {
 	IRegion region = JavaCore.newRegion();
 	region.add(project);
 	IResource[] resources = JavaCore.getGeneratedResources(region, false);
-	assertEquals("Wrong size", 1, resources.length);//$NON-NLS-1$
+	assertEquals("Wrong size", 1, resources.length);
 	Arrays.sort(resources, COMPARATOR);
 	String actualOutput = getResourceOuput(resources);
 	String expectedOutput =
 		"/Project/bin/C.class\n";
 	assertEquals("Wrong names", Util.convertToIndependantLineDelimiter(expectedOutput), actualOutput);
-	
+
 	assertEquals("Wrong type", IResource.FILE, resources[0].getType());
 	IFile classFile = (IFile) resources[0];
 	InputStream stream = null;

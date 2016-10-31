@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ import org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalFilter
 import org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalFilter2;
 import org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalProvider1;
 import org.codehaus.groovy.eclipse.codeassist.completion.mock.MockProposalProvider2;
-import org.codehaus.groovy.eclipse.codeassist.processors.IProposalFilter;
-import org.codehaus.groovy.eclipse.codeassist.processors.IProposalProvider;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.codehaus.groovy.eclipse.test.ui.Extender1;
 import org.codehaus.groovy.eclipse.test.ui.Extender2;
@@ -35,7 +33,7 @@ public class ProposalProviderAndFilterTests extends CompletionTestCase {
     public ProposalProviderAndFilterTests(String name) {
         super(name);
     }
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -51,14 +49,14 @@ public class ProposalProviderAndFilterTests extends CompletionTestCase {
         MockProposalProvider1.reset();
         MockProposalProvider2.reset();
     }
-    
+
     public void testProvidersAndFilters1() throws Exception {
         String contents = "println th";
         ICompilationUnit unit = create(contents);
         fullBuild();
         // perform a dummy content assist
         performContentAssist(unit, getIndexOf(contents, " th"), GroovyCompletionProposalComputer.class);
-        
+
         // now see which proposals and filters have been accessed
         assertFalse("MockProposalProvider1 should not have been called", MockProposalProvider1.wasProviderCalled());
         assertFalse("MockProposalFilter1 should not have been called", MockProposalFilter1.wasFilterCalled());
@@ -73,7 +71,7 @@ public class ProposalProviderAndFilterTests extends CompletionTestCase {
         fullBuild();
         // perform a dummy content assist
         performContentAssist(unit, getIndexOf(contents, " th"), GroovyCompletionProposalComputer.class);
-        
+
         // now see which proposals and filters have been accessed
         assertTrue("MockProposalProvider1 should have been called", MockProposalProvider1.wasProviderCalled());
         assertTrue("MockProposalFilter1 should have been called", MockProposalFilter1.wasFilterCalled());

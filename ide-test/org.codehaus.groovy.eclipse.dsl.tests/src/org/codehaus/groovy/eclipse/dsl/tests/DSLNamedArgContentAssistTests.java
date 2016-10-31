@@ -1,7 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
- * 
- * andrew - Initial API and implementation
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +24,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
- * 
+ *
  * @author Andrew Eisenberg
  * @created Jul 27, 2011
  */
@@ -35,7 +33,7 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
     public DSLNamedArgContentAssistTests(String name) {
         super(name);
     }
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -46,12 +44,12 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         new RefreshDSLDJob(project).run(null);
         GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project);
     }
-    
-    
+
+
     public void testNamedArgs1() throws Exception {
         createDSL("currentType().accept {\n" +
-        		"method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
-        		"}");
+                "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
+                "}");
         String contents = "flar()";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "("));
         proposalExists(proposals, "aaa : __", 1);
@@ -71,7 +69,7 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 0);
         proposalExists(proposals, "flar", 1);
     }
-    
+
     public void testNamedArgs2() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
@@ -95,7 +93,7 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 1);
         proposalExists(proposals, "flar", 1);
     }
-    
+
     public void testNamedArgs4() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
@@ -107,7 +105,7 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 1);
         proposalExists(proposals, "flar", 1);
     }
-    
+
     public void testNamedArgs5() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
@@ -119,7 +117,7 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 0);
         proposalExists(proposals, "flar", 1);
     }
-    
+
     public void testNoNamedArgs6() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:false\n" +
@@ -131,8 +129,8 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 0);
         proposalExists(proposals, "flar", 1);
     }
-    
-    
+
+
     public void testOptionalArgs1() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", optionalParams:[aaa:Integer, bbb:Boolean, ccc:String]\n" +
@@ -144,7 +142,7 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 1);
         proposalExists(proposals, "flar", 1);
     }
-    
+
     public void testOptionalArgs2() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", namedParams:[aaa:Integer, bbb:Boolean, ccc:String]\n" +
@@ -156,7 +154,7 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 1);
         proposalExists(proposals, "flar", 1);
     }
-    
+
     public void testOptionalArgs3() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", namedParams:[aaa:Integer], optionalParams: [bbb:Boolean, ccc:String]\n" +
@@ -168,13 +166,13 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 1);
         proposalExists(proposals, "flar", 1);
     }
-    
+
     public void testNamedArgs7() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
                 "}");
         String contents = "flar aaa:__, \n" +
-        		"need_this_here_so_parser_wont_break";
+                "need_this_here_so_parser_wont_break";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "r "));
         proposalExists(proposals, "aaa : __", 0);
         proposalExists(proposals, "bbb : __", 1);
@@ -194,13 +192,13 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "ccc : __", 1);
         proposalExists(proposals, "flar", 1);
     }
-    
+
 
     public void testParamGuessing1() throws Exception {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
                 "}");
-        String contents = 
+        String contents =
                 "String xxx\n" +
                         "int yyy\n" +
                         "boolean zzz\n" +
@@ -213,7 +211,7 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         createDSL("currentType().accept {\n" +
                 "method name:\"flar\", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true\n" +
                 "}");
-        String contents = 
+        String contents =
                 "String xxx\n" +
                         "boolean zzz\n" +
                         "def uuu(int iii)\n {" +
@@ -223,22 +221,22 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         String[] expectedChoices = new String[] { "iii", "yyy", "0" };
         checkProposalChoices(contents, "flar(", "aaa", "aaa: __, ", expectedChoices);
     }
-    
-    
+
+
     // tests application of closures with and without named parameters
     private static final String closuredsld =
-    		"contribute (currentType('Clos')) {\n" + 
-    		"    method name: 'test1', params : [op:Closure]\n" + 
-    		"    method name: 'test2', params : [first: String, op:Closure]\n" + 
-    		"    method name: 'test3', namedParams : [op:Closure]\n" + 
-    		"    method name: 'test4', namedParams : [first: String, op:Closure]\n" + 
-    		"    method name: 'test5', params : [first: String], namedParams: [op:Closure]\n" + 
-    		"    method name: 'test6', namedParams : [first: String], params: [op:Closure]\n" + 
-    		"    method name: 'test7', namedParams : [first: String, other:String], params: [op:Closure]\n" + 
-    		"    method name: 'test8', namedParams : [first: String], params: [other:String, op:Closure]\n" + 
-    		"    method name: 'test9', namedParams : [first: String], params: [other:String, op:Closure, other2:String]\n" + 
-    		"    method name: 'test0', namedParams : [first: String], params: [other:String, op:Closure, other2:String, op2:Closure]\n" + 
-    		"}";
+            "contribute (currentType('Clos')) {\n" +
+            "    method name: 'test1', params : [op:Closure]\n" +
+            "    method name: 'test2', params : [first: String, op:Closure]\n" +
+            "    method name: 'test3', namedParams : [op:Closure]\n" +
+            "    method name: 'test4', namedParams : [first: String, op:Closure]\n" +
+            "    method name: 'test5', params : [first: String], namedParams: [op:Closure]\n" +
+            "    method name: 'test6', namedParams : [first: String], params: [op:Closure]\n" +
+            "    method name: 'test7', namedParams : [first: String, other:String], params: [op:Closure]\n" +
+            "    method name: 'test8', namedParams : [first: String], params: [other:String, op:Closure]\n" +
+            "    method name: 'test9', namedParams : [first: String], params: [other:String, op:Closure, other2:String]\n" +
+            "    method name: 'test0', namedParams : [first: String], params: [other:String, op:Closure, other2:String, op2:Closure]\n" +
+            "}";
     private static final String closureContents = "class Clos { }\nnew Clos().test";
     public void testClostureOp1() throws Exception {
         createDSL(closuredsld);
@@ -280,7 +278,7 @@ public class DSLNamedArgContentAssistTests extends CompletionTestCase {
         createDSL(closuredsld);
         checkProposalApplicationNonType(closureContents, closureContents + "0(\"\", {  }, \"\", first:\"\") {", closureContents.length(), "test0");
     }
-    
+
     private void createDSL(String dsldContents) throws Exception {
         defaultFileExtension = "dsld";
         create("MyDsld", dsldContents);

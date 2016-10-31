@@ -1,5 +1,5 @@
 /*
- * Copyright 2010, 2014 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
-import greclipse.org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
-import greclipse.org.eclipse.jdt.ui.CodeStyleConfiguration;
-import groovy.transform.AnnotationCollector;
 import groovy.transform.Field;
 
 import java.util.ArrayList;
@@ -30,6 +27,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 
+import greclipse.org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
+import greclipse.org.eclipse.jdt.ui.CodeStyleConfiguration;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
@@ -66,7 +65,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.internal.core.search.JavaSearchTypeNameMatch;
-import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation;
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.MultiTextEdit;
@@ -97,7 +95,7 @@ public class OrganizeGroovyImports {
         }
         public void addInfo(TypeNameMatch info) {
             for (int i= this.foundInfos.size() - 1; i >= 0; i--) {
-                TypeNameMatch curr= (TypeNameMatch) this.foundInfos.get(i);
+                TypeNameMatch curr= this.foundInfos.get(i);
                 if (curr.getTypeContainerName().equals(info.getTypeContainerName())) {
                     return; // not added. already contains type with same name
                 }
@@ -220,7 +218,7 @@ public class OrganizeGroovyImports {
 
         @Override
         public void visitAnnotations(AnnotatedNode node) {
-            List<AnnotationNode> annotations = (List<AnnotationNode>) node.getAnnotations();
+            List<AnnotationNode> annotations = node.getAnnotations();
             if (annotations != null && !annotations.isEmpty()) {
                 for (AnnotationNode an : annotations) {
                     if (an.isBuiltIn()) {
@@ -308,16 +306,6 @@ public class OrganizeGroovyImports {
                     innerIndex = name.lastIndexOf('$', innerIndex-1);
                 }
                 doNotRemoveImport(partialName);
-            }
-
-            // GRECLIPSE 1794
-            // see org.codehaus.groovy.transform.ASTTransformationCollectorCodeVisitor.addCollectedAnnotations(...)
-            if (isAnnotation) {
-                Object key = AnnotationCollector.class + node.getName();
-                Object nodeMetaData = node.getNodeMetaData(key);
-                if (nodeMetaData != null) {
-                    doNotRemoveImport((String) nodeMetaData);
-                }
             }
 
             if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
@@ -581,7 +569,7 @@ public class OrganizeGroovyImports {
         if (node == null || node.getClasses() == null || (node.getClasses().size() == 0 && node.getImports().size() == 0)) {
             return true;
         }
-        if (node.getClasses().size() == 1 && node.getImports().size() == 0 && ((ClassNode) node.getClasses().get(0)).isScript()) {
+        if (node.getClasses().size() == 1 && node.getImports().size() == 0 && node.getClasses().get(0).isScript()) {
             if ((node.getStatementBlock() == null || node.getStatementBlock().isEmpty() || isNullReturn(node.getStatementBlock())) &&
                     (node.getMethods() == null || node.getMethods().size() == 0)) {
                 return true;

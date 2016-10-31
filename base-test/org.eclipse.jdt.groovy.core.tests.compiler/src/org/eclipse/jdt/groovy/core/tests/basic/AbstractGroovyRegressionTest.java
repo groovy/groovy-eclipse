@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
@@ -24,8 +25,10 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclar
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest;
 import org.eclipse.jdt.core.tests.util.Util;
+import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
@@ -86,8 +89,9 @@ public abstract class AbstractGroovyRegressionTest extends AbstractRegressionTes
     }
 
     protected static GroovyCompilationUnitDeclaration getCUDeclFor(String filename) {
-        Map declarations = ((DebugRequestor) GroovyParser.debugRequestor).declarations;
-        return (GroovyCompilationUnitDeclaration) declarations.get(filename);
+        Map<String, GroovyCompilationUnitDeclaration> declarations =
+                ((DebugRequestor) GroovyParser.debugRequestor).declarations;
+        return declarations.get(filename);
     }
 
     protected static ModuleNode getModuleNode(String filename) {
@@ -99,8 +103,33 @@ public abstract class AbstractGroovyRegressionTest extends AbstractRegressionTes
         }
     }
 
+    protected void checkDisassemblyFor(String filename, String expectedOutput) {
+        checkDisassemblyFor(filename, expectedOutput, ClassFileBytesDisassembler.DETAILED);
+    }
+
+    /**
+     * Check the disassembly of a .class file for a particular piece of text
+     */
+    protected void checkDisassemblyFor(String filename, String expectedOutput, int detail) {
+        try {
+            File f = new File(OUTPUT_DIR + File.separator + filename);
+            byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(f);
+            ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
+            String result = disassembler.disassemble(classFileBytes, "\n", detail);
+            int index = result.indexOf(expectedOutput);
+            if (index == -1 || expectedOutput.length() == 0) {
+                System.out.println(Util.displayString(result, 3));
+            }
+            if (index == -1) {
+                assertEquals("Wrong contents", expectedOutput, result);
+            }
+        } catch (Exception e) {
+            fail(e.toString());
+        }
+    }
+
     protected static void checkGCUDeclaration(String filename, String expectedOutput) {
-        GroovyCompilationUnitDeclaration decl = (GroovyCompilationUnitDeclaration)((DebugRequestor)GroovyParser.debugRequestor).declarations.get(filename);
+        GroovyCompilationUnitDeclaration decl = ((DebugRequestor)GroovyParser.debugRequestor).declarations.get(filename);
         String declarationContents = decl.print();
         if (expectedOutput==null || expectedOutput.length()==0) {
             System.out.println(Util.displayString(declarationContents,2));
@@ -156,7 +185,6 @@ public abstract class AbstractGroovyRegressionTest extends AbstractRegressionTes
                     sb.append(">");
                 }
             }
-
         } else if (type.getClass()==ArrayTypeReference.class) {
             ArrayTypeReference atr = (ArrayTypeReference)type;
             // for a reference 'String[]' sourceStart='S' sourceEnd=']' originalSourceEnd='g'

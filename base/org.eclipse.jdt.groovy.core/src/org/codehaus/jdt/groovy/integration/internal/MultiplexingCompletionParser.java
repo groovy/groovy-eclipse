@@ -1,13 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2014 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     Alex Boyko        - Initial API and implementation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.jdt.groovy.integration.internal;
 
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
@@ -28,64 +33,63 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 
 public class MultiplexingCompletionParser extends CompletionParser {
 
-	private GroovyParser groovyParser;
+    private GroovyParser groovyParser;
 
-	public MultiplexingCompletionParser(CompilerOptions compilerOptions, ProblemReporter problemReporter,
-			boolean storeExtraSourceEnds, IProgressMonitor monitor) {
-		super(problemReporter, storeExtraSourceEnds);
-		// The superclass that is extended is in charge of parsing .java files
-		groovyParser = new GroovyParser(compilerOptions, problemReporter, true, false);
-	}
+    public MultiplexingCompletionParser(CompilerOptions compilerOptions, ProblemReporter problemReporter,
+            boolean storeExtraSourceEnds, IProgressMonitor monitor) {
+        super(problemReporter, storeExtraSourceEnds);
+        // The superclass that is extended is in charge of parsing .java files
+        groovyParser = new GroovyParser(compilerOptions, problemReporter, true, false);
+    }
 
-	@Override
-	public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
-		if (ContentTypeUtils.isGroovyLikeFileName(sourceUnit.getFileName())) {
-			return groovyParser.dietParse(sourceUnit, compilationResult);
-		} else {
-			return super.dietParse(sourceUnit, compilationResult);
-		}
-	}
+    @Override
+    public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
+        if (ContentTypeUtils.isGroovyLikeFileName(sourceUnit.getFileName())) {
+            return groovyParser.dietParse(sourceUnit, compilationResult);
+        } else {
+            return super.dietParse(sourceUnit, compilationResult);
+        }
+    }
 
-	@Override
-	public void parseBlockStatements(ConstructorDeclaration cd, CompilationUnitDeclaration unit) {
-		if (!(unit instanceof GroovyCompilationUnitDeclaration)) {
-			super.parseBlockStatements(cd, unit);
-		}
-	}
+    @Override
+    public void parseBlockStatements(ConstructorDeclaration cd, CompilationUnitDeclaration unit) {
+        if (!(unit instanceof GroovyCompilationUnitDeclaration)) {
+            super.parseBlockStatements(cd, unit);
+        }
+    }
 
-	@Override
-	public MethodDeclaration parseSomeStatements(int start, int end, int fakeBlocksCount, CompilationUnitDeclaration unit) {
-		if (!(unit instanceof GroovyCompilationUnitDeclaration)) {
-			return super.parseSomeStatements(start, end, fakeBlocksCount, unit);
-		}
-		return null;
-	}
+    @Override
+    public MethodDeclaration parseSomeStatements(int start, int end, int fakeBlocksCount, CompilationUnitDeclaration unit) {
+        if (!(unit instanceof GroovyCompilationUnitDeclaration)) {
+            return super.parseSomeStatements(start, end, fakeBlocksCount, unit);
+        }
+        return null;
+    }
 
-	@Override
-	public void parseBlockStatements(AbstractMethodDeclaration md, CompilationUnitDeclaration unit) {
-		if (!(unit instanceof GroovyCompilationUnitDeclaration)) {
-			super.parseBlockStatements(md, unit);
-		}
-	}
+    @Override
+    public void parseBlockStatements(AbstractMethodDeclaration md, CompilationUnitDeclaration unit) {
+        if (!(unit instanceof GroovyCompilationUnitDeclaration)) {
+            super.parseBlockStatements(md, unit);
+        }
+    }
 
-	@Override
-	public void parseBlockStatements(Initializer initializer, TypeDeclaration type, CompilationUnitDeclaration unit) {
-		if (!(unit instanceof GroovyCompilationUnitDeclaration)) {
-			super.parseBlockStatements(initializer, type, unit);
-		}
-	}
+    @Override
+    public void parseBlockStatements(Initializer initializer, TypeDeclaration type, CompilationUnitDeclaration unit) {
+        if (!(unit instanceof GroovyCompilationUnitDeclaration)) {
+            super.parseBlockStatements(initializer, type, unit);
+        }
+    }
 
-	@Override
-	public void parseBlockStatements(MethodDeclaration md, CompilationUnitDeclaration unit) {
-		if (!(unit instanceof GroovyCompilationUnitDeclaration)) {
-			super.parseBlockStatements(md, unit);
-		}
-	}
+    @Override
+    public void parseBlockStatements(MethodDeclaration md, CompilationUnitDeclaration unit) {
+        if (!(unit instanceof GroovyCompilationUnitDeclaration)) {
+            super.parseBlockStatements(md, unit);
+        }
+    }
 
-	@Override
-	public void reset() {
-		super.reset();
-		groovyParser.reset();
-	}
-
+    @Override
+    public void reset() {
+        super.reset();
+        groovyParser.reset();
+    }
 }

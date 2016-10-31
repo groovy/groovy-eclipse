@@ -23,12 +23,12 @@ public class CodeSnippetClassLoader extends ClassLoader {
 	 */
 	static boolean DEVELOPMENT_MODE = false;
 
-	Hashtable loadedClasses = new Hashtable();
+	Hashtable<String, Object> loadedClasses = new Hashtable<String, Object>();
 /**
  * Asks the class loader that loaded this class to load the given class.
  * @throws ClassNotFoundException if it could not be loaded.
  */
-private Class delegateLoadClass(String name) throws ClassNotFoundException {
+private Class<?> delegateLoadClass(String name) throws ClassNotFoundException {
 	ClassLoader myLoader = getClass().getClassLoader();
 	if (myLoader == null) {
 		return Class.forName(name);
@@ -40,19 +40,19 @@ private Class delegateLoadClass(String name) throws ClassNotFoundException {
  * If only  the class definition is known to this runner, makes it a class and returns it.
  * Otherwise delegates to the real class loader.
  */
-protected synchronized Class loadClass(String name, boolean resolve) throws ClassNotFoundException {
+protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
 	if (DEVELOPMENT_MODE) {
 		try {
 			return delegateLoadClass(name);
 		} catch (ClassNotFoundException e) {
-			Class clazz = makeClass(name, resolve);
+			Class<?> clazz = makeClass(name, resolve);
 			if (clazz == null) {
 				throw e;
 			}
 			return clazz;
 		}
 	}
-	Class clazz = makeClass(name, resolve);
+	Class<?> clazz = makeClass(name, resolve);
 	if (clazz == null) {
 		return delegateLoadClass(name);
 	}
@@ -63,8 +63,8 @@ protected synchronized Class loadClass(String name, boolean resolve) throws Clas
  * Returns the existing class if it has already been loaded.
  * Returns null if no class definition can be found.
  */
-Class loadIfNeeded(String className) {
-	Class clazz = null;
+Class<?> loadIfNeeded(String className) {
+	Class<?> clazz = null;
 	if (!supportsHotCodeReplacement()) {
 		clazz = findLoadedClass(className);
 	}
@@ -84,16 +84,16 @@ Class loadIfNeeded(String className) {
  * returns it.
  * Returns null if there is no class definition.
  */
-private Class makeClass(String name, boolean resolve) {
+private Class<?> makeClass(String name, boolean resolve) {
 	Object o = this.loadedClasses.get(name);
 	if (o == null) {
 		return null;
 	}
 	if (o instanceof Class) {
-		return (Class) o;
+		return (Class<?>) o;
 	}
 	byte[] classDefinition = (byte[]) o;
-	Class clazz = defineClass(null, classDefinition, 0, classDefinition.length);
+	Class<?> clazz = defineClass(null, classDefinition, 0, classDefinition.length);
 	if (resolve) {
 		resolveClass(clazz);
 	}

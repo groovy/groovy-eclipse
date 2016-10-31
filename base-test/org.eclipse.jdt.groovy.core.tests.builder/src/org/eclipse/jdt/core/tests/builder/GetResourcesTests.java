@@ -33,10 +33,8 @@ import org.eclipse.jdt.core.tests.util.Util;
  */
 public class GetResourcesTests extends BuilderTests {
 
-	private static final Comparator COMPARATOR = new Comparator() {
-		public int compare(Object o1, Object o2) {
-			IResource resource1 = (IResource) o1;
-			IResource resource2 = (IResource) o2;
+	private static final Comparator<IResource> COMPARATOR = new Comparator<IResource>() {
+		public int compare(IResource resource1, IResource resource2) {
 			String path1 = resource1.getFullPath().toString();
 			String path2 = resource2.getFullPath().toString();
 			int length1 = path1.length();
@@ -63,35 +61,35 @@ public class GetResourcesTests extends BuilderTests {
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=6584
 	public void test001() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p1", "Hello", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public class Hello {\n"+ //$NON-NLS-1$
-			"   public static void main(String args[]) {\n"+ //$NON-NLS-1$
-			"      System.out.println(\"Hello world\");\n"+ //$NON-NLS-1$
-			"   }\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		env.addClass(root, "p1", "Hello",
+			"package p1;\n"+
+			"public class Hello {\n"+
+			"   public static void main(String args[]) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
 		);
 
 		incrementalBuild(projectPath);
 
 		IJavaProject project = env.getJavaProject(projectPath);
 		IPackageFragmentRoot root2 = project.getPackageFragmentRoot(project.getProject().getWorkspace().getRoot().findMember(root.makeAbsolute()));
-		IPackageFragment packageFragment = root2.getPackageFragment("p1");//$NON-NLS-1$
-		ICompilationUnit compilationUnit = packageFragment.getCompilationUnit("Hello.java");//$NON-NLS-1$
+		IPackageFragment packageFragment = root2.getPackageFragment("p1");
+		ICompilationUnit compilationUnit = packageFragment.getCompilationUnit("Hello.java");
 		IRegion region = JavaCore.newRegion();
 		region.add(compilationUnit);
 		IResource[] resources = JavaCore.getGeneratedResources(region, false);
-		assertEquals("Wrong size", 1, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 1, resources.length);
 		String actualOutput = getResourceOuput(resources);
 		String expectedOutput = "/Project/bin/p1/Hello.class\n";
 		assertEquals("Wrong names", Util.convertToIndependantLineDelimiter(expectedOutput), actualOutput);
@@ -100,39 +98,39 @@ public class GetResourcesTests extends BuilderTests {
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=6584
 	public void test002() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p1", "Hello", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public class Hello {\n"+ //$NON-NLS-1$
-			"	Object foo() {\n" + //$NON-NLS-1$
-			"		return new Object() {};\n" + //$NON-NLS-1$
-			"	}\n" + //$NON-NLS-1$
-			"   public static void main(String args[]) {\n"+ //$NON-NLS-1$
-			"      System.out.println(\"Hello world\");\n"+ //$NON-NLS-1$
-			"   }\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		env.addClass(root, "p1", "Hello",
+			"package p1;\n"+
+			"public class Hello {\n"+
+			"	Object foo() {\n" +
+			"		return new Object() {};\n" +
+			"	}\n" +
+			"   public static void main(String args[]) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
 			);
 
 		incrementalBuild(projectPath);
 
 		IJavaProject project = env.getJavaProject(projectPath);
 		IPackageFragmentRoot root2 = project.getPackageFragmentRoot(project.getProject().getWorkspace().getRoot().findMember(root.makeAbsolute()));
-		IPackageFragment packageFragment = root2.getPackageFragment("p1");//$NON-NLS-1$
-		ICompilationUnit compilationUnit = packageFragment.getCompilationUnit("Hello.java");//$NON-NLS-1$
+		IPackageFragment packageFragment = root2.getPackageFragment("p1");
+		ICompilationUnit compilationUnit = packageFragment.getCompilationUnit("Hello.java");
 
 		IRegion region = JavaCore.newRegion();
 		region.add(compilationUnit);
 		IResource[] resources = JavaCore.getGeneratedResources(region, false);
-		assertEquals("Wrong size", 2, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 2, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		String actualOutput = getResourceOuput(resources);
 		String expectedOutput =
@@ -144,41 +142,41 @@ public class GetResourcesTests extends BuilderTests {
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=6584
 	public void test003() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p1", "Hello", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public class Hello {\n"+ //$NON-NLS-1$
+		env.addClass(root, "p1", "Hello",
+			"package p1;\n"+
+			"public class Hello {\n"+
 			"	Object foo() {\n" +
-			"		if(false) {\n" + //$NON-NLS-1$
+			"		if(false) {\n" +
 			"			return new Object() {};\n" +
 			"		}\n" +
-			"		return null;\n" + //$NON-NLS-1$
-			"	}\n" + //$NON-NLS-1$
-			"   public static void main(String args[]) {\n"+ //$NON-NLS-1$
-			"      System.out.println(\"Hello world\");\n"+ //$NON-NLS-1$
-			"   }\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+			"		return null;\n" +
+			"	}\n" +
+			"   public static void main(String args[]) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
 			);
 
 		incrementalBuild(projectPath);
 
 		IJavaProject project = env.getJavaProject(projectPath);
 		IPackageFragmentRoot root2 = project.getPackageFragmentRoot(project.getProject().getWorkspace().getRoot().findMember(root.makeAbsolute()));
-		IPackageFragment packageFragment = root2.getPackageFragment("p1");//$NON-NLS-1$
-		ICompilationUnit compilationUnit = packageFragment.getCompilationUnit("Hello.java");//$NON-NLS-1$
+		IPackageFragment packageFragment = root2.getPackageFragment("p1");
+		ICompilationUnit compilationUnit = packageFragment.getCompilationUnit("Hello.java");
 		IRegion region = JavaCore.newRegion();
 		region.add(compilationUnit);
 		IResource[] resources = JavaCore.getGeneratedResources(region, false);
-		assertEquals("Wrong size", 1, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 1, resources.length);
 		String actualOutput = getResourceOuput(resources);
 		String expectedOutput = "/Project/bin/p1/Hello.class\n";
 		assertEquals("Wrong names", Util.convertToIndependantLineDelimiter(expectedOutput), actualOutput);
@@ -187,41 +185,41 @@ public class GetResourcesTests extends BuilderTests {
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=6584
 	public void test004() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p1", "Hello", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public class Hello {\n"+ //$NON-NLS-1$
+		env.addClass(root, "p1", "Hello",
+			"package p1;\n"+
+			"public class Hello {\n"+
 			"	Object foo() {\n" +
 			"		return new Object() {};\n" +
-			"	}\n" + //$NON-NLS-1$
+			"	}\n" +
 			"	Object foo2() {\n" +
 			"		return new Object() {};\n" +
-			"	}\n" + //$NON-NLS-1$
-			"   public static void main(String args[]) {\n"+ //$NON-NLS-1$
-			"      System.out.println(\"Hello world\");\n"+ //$NON-NLS-1$
-			"   }\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+			"	}\n" +
+			"   public static void main(String args[]) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
 			);
 
 		incrementalBuild(projectPath);
 
 		IJavaProject project = env.getJavaProject(projectPath);
 		IPackageFragmentRoot root2 = project.getPackageFragmentRoot(project.getProject().getWorkspace().getRoot().findMember(root.makeAbsolute()));
-		IPackageFragment packageFragment = root2.getPackageFragment("p1");//$NON-NLS-1$
-		ICompilationUnit compilationUnit = packageFragment.getCompilationUnit("Hello.java");//$NON-NLS-1$
+		IPackageFragment packageFragment = root2.getPackageFragment("p1");
+		ICompilationUnit compilationUnit = packageFragment.getCompilationUnit("Hello.java");
 		IRegion region = JavaCore.newRegion();
 		region.add(compilationUnit);
 		IResource[] resources = JavaCore.getGeneratedResources(region, false);
-		assertEquals("Wrong size", 3, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 3, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		String actualOutput = getResourceOuput(resources);
 		String expectedOutput =
@@ -234,17 +232,17 @@ public class GetResourcesTests extends BuilderTests {
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=6584
 	public void test005() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "a", "Anon", //$NON-NLS-1$ //$NON-NLS-2$
+		env.addClass(root, "a", "Anon",
 			"package a;\n" +
 			"\n" +
 			"public class Anon {\n" +
@@ -363,12 +361,12 @@ public class GetResourcesTests extends BuilderTests {
 
 		IJavaProject project = env.getJavaProject(projectPath);
 		IPackageFragmentRoot root2 = project.getPackageFragmentRoot(project.getProject().getWorkspace().getRoot().findMember(root.makeAbsolute()));
-		IPackageFragment packageFragment = root2.getPackageFragment("a");//$NON-NLS-1$
-		ICompilationUnit compilationUnit = packageFragment.getCompilationUnit("Anon.java");//$NON-NLS-1$
+		IPackageFragment packageFragment = root2.getPackageFragment("a");
+		ICompilationUnit compilationUnit = packageFragment.getCompilationUnit("Anon.java");
 		IRegion region = JavaCore.newRegion();
 		region.add(compilationUnit);
 		IResource[] resources = JavaCore.getGeneratedResources(region, false);
-		assertEquals("Wrong size", 18, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 18, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		String actualOutput = getResourceOuput(resources);
 		String expectedOutput =
@@ -398,7 +396,7 @@ public class GetResourcesTests extends BuilderTests {
 	public void test006() throws JavaModelException {
 		IPath projectPath = null;
 		try {
-			projectPath = env.addProject("Project", "1.5"); //$NON-NLS-1$
+			projectPath = env.addProject("Project", "1.5");
 		} catch (RuntimeException e) {
 			// no 1.5 VM or above is available
 			return;
@@ -407,12 +405,12 @@ public class GetResourcesTests extends BuilderTests {
 		fullBuild(projectPath);
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "a", "Anon", //$NON-NLS-1$ //$NON-NLS-2$
+		env.addClass(root, "a", "Anon",
 			"package a;\n" +
 			"\n" +
 			"public class Anon {\n" +
@@ -531,12 +529,12 @@ public class GetResourcesTests extends BuilderTests {
 
 		IJavaProject project = env.getJavaProject(projectPath);
 		IPackageFragmentRoot root2 = project.getPackageFragmentRoot(project.getProject().getWorkspace().getRoot().findMember(root.makeAbsolute()));
-		IPackageFragment packageFragment = root2.getPackageFragment("a");//$NON-NLS-1$
-		ICompilationUnit compilationUnit = packageFragment.getCompilationUnit("Anon.java");//$NON-NLS-1$
+		IPackageFragment packageFragment = root2.getPackageFragment("a");
+		ICompilationUnit compilationUnit = packageFragment.getCompilationUnit("Anon.java");
 		IRegion region = JavaCore.newRegion();
 		region.add(compilationUnit);
 		IResource[] resources = JavaCore.getGeneratedResources(region, false);
-		assertEquals("Wrong size", 18, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 18, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		String actualOutput = getResourceOuput(resources);
 		String expectedOutput =
@@ -575,71 +573,71 @@ public class GetResourcesTests extends BuilderTests {
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=6584
 	public void test007() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p1", "Hello", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public class Hello {\n"+ //$NON-NLS-1$
-			"   public static void main(String args[]) {\n"+ //$NON-NLS-1$
-			"      System.out.println(\"Hello world\");\n"+ //$NON-NLS-1$
-			"   }\n"+ //$NON-NLS-1$
-			"}\n" + //$NON-NLS-1$
-			"class Foo {\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		env.addClass(root, "p1", "Hello",
+			"package p1;\n"+
+			"public class Hello {\n"+
+			"   public static void main(String args[]) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n" +
+			"class Foo {\n"+
+			"}\n"
 			);
 
 		incrementalBuild(projectPath);
 
 		IJavaProject project = env.getJavaProject(projectPath);
 		IPackageFragmentRoot root2 = project.getPackageFragmentRoot(project.getProject().getWorkspace().getRoot().findMember(root.makeAbsolute()));
-		IPackageFragment packageFragment = root2.getPackageFragment("p1");//$NON-NLS-1$
-		ICompilationUnit compilationUnit = packageFragment.getCompilationUnit("Hello.java");//$NON-NLS-1$
+		IPackageFragment packageFragment = root2.getPackageFragment("p1");
+		ICompilationUnit compilationUnit = packageFragment.getCompilationUnit("Hello.java");
 		IRegion region = JavaCore.newRegion();
 		region.add(compilationUnit);
 		IResource[] resources = JavaCore.getGeneratedResources(region, false);
-		assertEquals("Wrong size", 2, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 2, resources.length);
 		env.removeProject(projectPath);
 	}
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=6584
 	public void test008() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p1", "Hello", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
+		env.addClass(root, "p1", "Hello",
+			"package p1;\n"+
 			"public class Hello {\n" +
-			"   public class Z {}\n"+ //$NON-NLS-1$
-			"   public static void main(String args[]) {\n"+ //$NON-NLS-1$
-			"      System.out.println(\"Hello world\");\n"+ //$NON-NLS-1$
-			"   }\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+			"   public class Z {}\n"+
+			"   public static void main(String args[]) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
 		);
 
 		incrementalBuild(projectPath);
 
 		IJavaProject project = env.getJavaProject(projectPath);
 		IPackageFragmentRoot root2 = project.getPackageFragmentRoot(project.getProject().getWorkspace().getRoot().findMember(root.makeAbsolute()));
-		IPackageFragment packageFragment = root2.getPackageFragment("p1");//$NON-NLS-1$
+		IPackageFragment packageFragment = root2.getPackageFragment("p1");
 		IRegion region = JavaCore.newRegion();
 		region.add(packageFragment);
 		IResource[] resources = JavaCore.getGeneratedResources(region, false);
-		assertEquals("Wrong size", 2, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 2, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		String actualOutput = getResourceOuput(resources);
 		String expectedOutput =
@@ -651,31 +649,31 @@ public class GetResourcesTests extends BuilderTests {
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=6584
 	public void test009() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
 
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(projectPath, "p1", "Hello", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
-			"public class Hello {\n"+ //$NON-NLS-1$
-			"   public static void main(String args[]) {\n"+ //$NON-NLS-1$
-			"      System.out.println(\"Hello world\");\n"+ //$NON-NLS-1$
-			"   }\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+		env.addClass(projectPath, "p1", "Hello",
+			"package p1;\n"+
+			"public class Hello {\n"+
+			"   public static void main(String args[]) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
 		);
 
 		incrementalBuild(projectPath);
 
 		IJavaProject project = env.getJavaProject(projectPath);
 		IPackageFragmentRoot root2 = project.getPackageFragmentRoot(project.getUnderlyingResource());
-		IPackageFragment packageFragment = root2.getPackageFragment("p1");//$NON-NLS-1$
-		ICompilationUnit compilationUnit = packageFragment.getCompilationUnit("Hello.java");//$NON-NLS-1$
+		IPackageFragment packageFragment = root2.getPackageFragment("p1");
+		ICompilationUnit compilationUnit = packageFragment.getCompilationUnit("Hello.java");
 		IRegion region = JavaCore.newRegion();
 		region.add(compilationUnit);
 		IResource[] resources = JavaCore.getGeneratedResources(region, false);
-		assertEquals("Wrong size", 1, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 1, resources.length);
 		String actualOutput = getResourceOuput(resources);
 		String expectedOutput =
 			"/Project/bin/p1/Hello.class\n";
@@ -685,24 +683,24 @@ public class GetResourcesTests extends BuilderTests {
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=6584
 	public void test010() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p1", "Hello", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
+		env.addClass(root, "p1", "Hello",
+			"package p1;\n"+
 			"public class Hello {\n" +
-			"   public class Z {}\n"+ //$NON-NLS-1$
-			"   public static void main(String args[]) {\n"+ //$NON-NLS-1$
-			"      System.out.println(\"Hello world\");\n"+ //$NON-NLS-1$
-			"   }\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+			"   public class Z {}\n"+
+			"   public static void main(String args[]) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
 		);
 
 		env.addFile(root, "p1/Test.txt", "This is a non-java resource");
@@ -710,11 +708,11 @@ public class GetResourcesTests extends BuilderTests {
 
 		IJavaProject project = env.getJavaProject(projectPath);
 		IPackageFragmentRoot root2 = project.getPackageFragmentRoot(project.getProject().getWorkspace().getRoot().findMember(root.makeAbsolute()));
-		IPackageFragment packageFragment = root2.getPackageFragment("p1");//$NON-NLS-1$
+		IPackageFragment packageFragment = root2.getPackageFragment("p1");
 		IRegion region = JavaCore.newRegion();
 		region.add(packageFragment);
 		IResource[] resources = JavaCore.getGeneratedResources(region, false);
-		assertEquals("Wrong size", 2, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 2, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		String actualOutput = getResourceOuput(resources);
 		String expectedOutput =
@@ -723,7 +721,7 @@ public class GetResourcesTests extends BuilderTests {
 		assertEquals("Wrong names", Util.convertToIndependantLineDelimiter(expectedOutput), actualOutput);
 
 		resources = JavaCore.getGeneratedResources(region, true);
-		assertEquals("Wrong size", 3, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 3, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		actualOutput = getResourceOuput(resources);
 		expectedOutput =
@@ -737,35 +735,35 @@ public class GetResourcesTests extends BuilderTests {
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=6584
 	public void test011() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p1", "Hello", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
+		env.addClass(root, "p1", "Hello",
+			"package p1;\n"+
 			"public class Hello {\n" +
-			"   public class Z {}\n"+ //$NON-NLS-1$
-			"   public static void main(String args[]) {\n"+ //$NON-NLS-1$
-			"      System.out.println(\"Hello world\");\n"+ //$NON-NLS-1$
-			"   }\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+			"   public class Z {}\n"+
+			"   public static void main(String args[]) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
 		);
 
 		incrementalBuild(projectPath);
 
 		IJavaProject project = env.getJavaProject(projectPath);
 		IPackageFragmentRoot root2 = project.getPackageFragmentRoot(project.getProject().getWorkspace().getRoot().findMember(root.makeAbsolute()));
-		IPackageFragment packageFragment = root2.getPackageFragment("p1");//$NON-NLS-1$
+		IPackageFragment packageFragment = root2.getPackageFragment("p1");
 		IRegion region = JavaCore.newRegion();
 		region.add(packageFragment);
 		IResource[] resources = JavaCore.getGeneratedResources(region, true);
-		assertEquals("Wrong size", 2, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 2, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		String actualOutput = getResourceOuput(resources);
 		String expectedOutput =
@@ -777,7 +775,7 @@ public class GetResourcesTests extends BuilderTests {
 		incrementalBuild(projectPath);
 
 		resources = JavaCore.getGeneratedResources(region, true);
-		assertEquals("Wrong size", 3, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 3, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		actualOutput = getResourceOuput(resources);
 		expectedOutput =
@@ -791,35 +789,35 @@ public class GetResourcesTests extends BuilderTests {
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=6584
 	public void test012() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p1", "Hello", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
+		env.addClass(root, "p1", "Hello",
+			"package p1;\n"+
 			"public class Hello {\n" +
-			"   public class Z {}\n"+ //$NON-NLS-1$
-			"   public static void main(String args[]) {\n"+ //$NON-NLS-1$
-			"      System.out.println(\"Hello world\");\n"+ //$NON-NLS-1$
-			"   }\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+			"   public class Z {}\n"+
+			"   public static void main(String args[]) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
 		);
 
 		incrementalBuild(projectPath);
 
 		IJavaProject project = env.getJavaProject(projectPath);
 		IPackageFragmentRoot root2 = project.getPackageFragmentRoot(project.getProject().getWorkspace().getRoot().findMember(root.makeAbsolute()));
-		IPackageFragment packageFragment = root2.getPackageFragment("p1");//$NON-NLS-1$
+		IPackageFragment packageFragment = root2.getPackageFragment("p1");
 		IRegion region = JavaCore.newRegion();
 		region.add(packageFragment);
 		IResource[] resources = JavaCore.getGeneratedResources(region, true);
-		assertEquals("Wrong size", 2, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 2, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		String actualOutput = getResourceOuput(resources);
 		String expectedOutput =
@@ -830,7 +828,7 @@ public class GetResourcesTests extends BuilderTests {
 		env.addFile(root, "p1/Test.txt", "This is a non-java resource");
 
 		resources = JavaCore.getGeneratedResources(region, true);
-		assertEquals("Wrong size", 2, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 2, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		actualOutput = getResourceOuput(resources);
 		expectedOutput =
@@ -843,35 +841,35 @@ public class GetResourcesTests extends BuilderTests {
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=6584
 	public void test013() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src", new Path[] {new Path("**/*.txt")}, null); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src", new Path[] {new Path("**/*.txt")}, null);
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p1", "Hello", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
+		env.addClass(root, "p1", "Hello",
+			"package p1;\n"+
 			"public class Hello {\n" +
-			"   public class Z {}\n"+ //$NON-NLS-1$
-			"   public static void main(String args[]) {\n"+ //$NON-NLS-1$
-			"      System.out.println(\"Hello world\");\n"+ //$NON-NLS-1$
-			"   }\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+			"   public class Z {}\n"+
+			"   public static void main(String args[]) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
 		);
 
 		incrementalBuild(projectPath);
 
 		IJavaProject project = env.getJavaProject(projectPath);
 		IPackageFragmentRoot root2 = project.getPackageFragmentRoot(project.getProject().getWorkspace().getRoot().findMember(root.makeAbsolute()));
-		IPackageFragment packageFragment = root2.getPackageFragment("p1");//$NON-NLS-1$
+		IPackageFragment packageFragment = root2.getPackageFragment("p1");
 		IRegion region = JavaCore.newRegion();
 		region.add(packageFragment);
 		IResource[] resources = JavaCore.getGeneratedResources(region, true);
-		assertEquals("Wrong size", 2, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 2, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		String actualOutput = getResourceOuput(resources);
 		String expectedOutput =
@@ -883,7 +881,7 @@ public class GetResourcesTests extends BuilderTests {
 		incrementalBuild(projectPath);
 
 		resources = JavaCore.getGeneratedResources(region, true);
-		assertEquals("Wrong size", 2, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 2, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		actualOutput = getResourceOuput(resources);
 		expectedOutput =
@@ -896,35 +894,35 @@ public class GetResourcesTests extends BuilderTests {
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=6584
 	public void test014() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src", new Path[] {new Path("**/*.txt")}, null); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src", new Path[] {new Path("**/*.txt")}, null);
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p1", "Hello", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
+		env.addClass(root, "p1", "Hello",
+			"package p1;\n"+
 			"public class Hello {\n" +
-			"   public class Z {}\n"+ //$NON-NLS-1$
-			"   public static void main(String args[]) {\n"+ //$NON-NLS-1$
-			"      System.out.println(\"Hello world\");\n"+ //$NON-NLS-1$
-			"   }\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+			"   public class Z {}\n"+
+			"   public static void main(String args[]) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
 		);
 
 		incrementalBuild(projectPath);
 
 		IJavaProject project = env.getJavaProject(projectPath);
 		IPackageFragmentRoot root2 = project.getPackageFragmentRoot(project.getProject().getWorkspace().getRoot().findMember(root.makeAbsolute()));
-		IPackageFragment packageFragment = root2.getPackageFragment("p1");//$NON-NLS-1$
+		IPackageFragment packageFragment = root2.getPackageFragment("p1");
 		IRegion region = JavaCore.newRegion();
 		region.add(packageFragment);
 		IResource[] resources = JavaCore.getGeneratedResources(region, true);
-		assertEquals("Wrong size", 2, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 2, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		String actualOutput = getResourceOuput(resources);
 		String expectedOutput =
@@ -937,7 +935,7 @@ public class GetResourcesTests extends BuilderTests {
 		incrementalBuild(projectPath);
 
 		resources = JavaCore.getGeneratedResources(region, true);
-		assertEquals("Wrong size", 3, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 3, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		actualOutput = getResourceOuput(resources);
 		expectedOutput =
@@ -951,24 +949,24 @@ public class GetResourcesTests extends BuilderTests {
 
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=6584
 	public void test015() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 		fullBuild(projectPath);
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src", new Path[] {new Path("**/*.txt")}, null); //$NON-NLS-1$
-		env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src", new Path[] {new Path("**/*.txt")}, null);
+		env.setOutputFolder(projectPath, "bin");
 
-		env.addClass(root, "p1", "Hello", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p1;\n"+ //$NON-NLS-1$
+		env.addClass(root, "p1", "Hello",
+			"package p1;\n"+
 			"public class Hello {\n" +
-			"   public class Z {}\n"+ //$NON-NLS-1$
-			"   public static void main(String args[]) {\n"+ //$NON-NLS-1$
-			"      System.out.println(\"Hello world\");\n"+ //$NON-NLS-1$
-			"   }\n"+ //$NON-NLS-1$
-			"}\n" //$NON-NLS-1$
+			"   public class Z {}\n"+
+			"   public static void main(String args[]) {\n"+
+			"      System.out.println(\"Hello world\");\n"+
+			"   }\n"+
+			"}\n"
 		);
 
 		incrementalBuild(projectPath);
@@ -977,7 +975,7 @@ public class GetResourcesTests extends BuilderTests {
 		IRegion region = JavaCore.newRegion();
 		region.add(project);
 		IResource[] resources = JavaCore.getGeneratedResources(region, true);
-		assertEquals("Wrong size", 2, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 2, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		String actualOutput = getResourceOuput(resources);
 		String expectedOutput =
@@ -990,7 +988,7 @@ public class GetResourcesTests extends BuilderTests {
 		incrementalBuild(projectPath);
 
 		resources = JavaCore.getGeneratedResources(region, true);
-		assertEquals("Wrong size", 3, resources.length);//$NON-NLS-1$
+		assertEquals("Wrong size", 3, resources.length);
 		Arrays.sort(resources, COMPARATOR);
 		actualOutput = getResourceOuput(resources);
 		expectedOutput =

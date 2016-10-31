@@ -1,29 +1,33 @@
-/*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import org.eclipse.jdt.core.tests.util.GroovyUtils;
+import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.ui.PreferenceConstants;
+import org.eclipse.jface.preference.IPreferenceStore;
 
 /**
- * Tests that type completions are working properly.  Ensures that the
- * resulting document has the correct text in it.
+ * Ensures type completion is working and that the resulting document remains well-formed.
  *
  * @author Andrew Eisenberg
  * @created Jun 5, 2009
  */
-public class TypeCompletionTests2 extends CompletionTestCase {
+public final class TypeCompletionTests2 extends CompletionTestCase {
 
-    private static final String HTML = "HTML";
-    private static final String HTMLT = "HTMLT";
     private static final String HTML_PROPOSAL = "HTML - javax.swing.text.html";
     private static final String HTMLTableCaptionElement_PROPOSAL = "HTMLTableCaptionElement - org.w3c.dom.html";
 
@@ -31,86 +35,190 @@ public class TypeCompletionTests2 extends CompletionTestCase {
         super(name);
     }
 
-    protected void tryInLoop(String contents, String expected, String target, String proposal) throws Exception {
-        int MAX_TRIES = 5;
-        Exception last = null;
-        int i;
-        for (i = 0; i < MAX_TRIES; i++) {
-            try {
-                checkProposalApplicationType(contents, expected, getIndexOf(contents, target), proposal);
-                break; // If succeeded, let's get on with things
-            } catch (Exception e) {
-                last = e;
-            }
-        }
-        if (last != null && i >= MAX_TRIES) {
-            throw last;
+    private void checkProposal(String source, String target, String proposalSite, String proposalName) {
+        try {
+            checkProposalApplicationType(source, target, getIndexOf(source, proposalSite), proposalName);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
     //
 
-    public void testSimpleCompletionTypesInScript1() throws Exception {
-        String contents = HTML;
+    public void testTypeCompletionInScript1() {
+        String contents = "HTML";
         String expected = "import javax.swing.text.html.HTML;\n\nHTML";
-        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML), HTML_PROPOSAL);
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
-    public void testSimpleCompletionTypesInScript2() throws Exception {
+    public void testTypeCompletionInScript2() {
         String contents = "import javax.swing.plaf.ButtonUI;\n\nHTML\nButtonUI";
         String expected = "import javax.swing.plaf.ButtonUI;\nimport javax.swing.text.html.HTML;\n\nHTML\nButtonUI";
-        checkProposalApplicationType(contents, expected, getIndexOf(contents, HTML), HTML_PROPOSAL);
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
-    public void testBrokenScript1() throws Exception {
+    public void testTypeCompletionInScript2_() {
+        String contents = "/*header*/\nimport javax.swing.plaf.ButtonUI; //note\n\nHTML\nButtonUI";
+        String expected = "/*header*/\nimport javax.swing.plaf.ButtonUI; //note\nimport javax.swing.text.html.HTML;\n\nHTML\nButtonUI";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
+    public void testTypeCompletionInScript2a() {
+        String contents = "import javax.swing.plaf.ButtonUI\n\nHTML\nButtonUI";
+        String expected = "import javax.swing.plaf.ButtonUI\nimport javax.swing.text.html.HTML;\n\nHTML\nButtonUI";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
+    public void testTypeCompletionInScript2b() {
+        String contents = "import javax.swing.plaf.ButtonUI as Button;\n\nHTML\nButton";
+        String expected = "import javax.swing.plaf.ButtonUI as Button;\nimport javax.swing.text.html.HTML;\n\nHTML\nButton";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
+    public void testTypeCompletionInScript2c() {
+        String contents = "import javax.swing.plaf.ButtonUI as Button\n\nHTML\nButton";
+        String expected = "import javax.swing.plaf.ButtonUI as Button\nimport javax.swing.text.html.HTML;\n\nHTML\nButton";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
+    public void testTypeCompletionInScript3() {
+        String contents = "import javax.swing.plaf.*;\n\nHTML\nButtonUI";
+        String expected = "import javax.swing.plaf.*;\nimport javax.swing.text.html.HTML;\n\nHTML\nButtonUI";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
+    public void testTypeCompletionInScript3a() {
+        String contents = "import javax.swing.plaf.*\n\nHTML\nButtonUI";
+        String expected = "import javax.swing.plaf.*\nimport javax.swing.text.html.HTML;\n\nHTML\nButtonUI";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
+    public void testTypeCompletionInScript4() {
+        String contents = "import static java.util.Collections.emptyList;\n\nHTML\ndef list = emptyList()";
+        String expected = "import static java.util.Collections.emptyList;\n\nimport javax.swing.text.html.HTML;\n\nHTML\ndef list = emptyList()";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
+    public void testTypeCompletionInScript4a() {
+        String contents = "import static java.util.Collections.emptyList\n\nHTML\ndef list = emptyList()";
+        String expected = "import static java.util.Collections.emptyList\n\nimport javax.swing.text.html.HTML;\n\nHTML\ndef list = emptyList()";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
+    public void testTypeCompletionInScript4b() {
+        String contents = "import static java.util.Collections.EMPTY_LIST as EMPTY;\n\nHTML\ndef list = EMPTY";
+        String expected = "import static java.util.Collections.EMPTY_LIST as EMPTY;\n\nimport javax.swing.text.html.HTML;\n\nHTML\ndef list = EMPTY";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
+    public void testTypeCompletionInScript4c() {
+        String contents = "import static java.util.Collections.EMPTY_LIST as EMPTY;\n\nHTML\ndef list = EMPTY";
+        String expected = "import static java.util.Collections.EMPTY_LIST as EMPTY;\n\nimport javax.swing.text.html.HTML;\n\nHTML\ndef list = EMPTY";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
+    public void testTypeCompletionInScript5() {
+        String contents = "import static java.util.Collections.*;\n\nHTML\ndef list = emptyList()";
+        String expected = "import static java.util.Collections.*;\n\nimport javax.swing.text.html.HTML;\n\nHTML\ndef list = emptyList()";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
+    public void testTypeCompletionInScript5b() {
+        String contents = "import static java.util.Collections.*\n\nHTML\ndef list = emptyList()";
+        String expected = "import static java.util.Collections.*\n\nimport javax.swing.text.html.HTML;\n\nHTML\ndef list = emptyList()";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
+    public void _testTypeCompletionInScript6() {
+        String contents = "/* header comment */\n" +
+                "import javax.swing.plaf.ButtonUI; /*tag*/ //note\n" +
+                "  // some single-line comment\n" +
+                "\n" +
+                "HTML\n" +
+                "ButtonUI";
+        String expected = "/* header comment */\n" +
+                "import javax.swing.plaf.ButtonUI; /*tag*/ //note\n" +
+                "  // some single-line comment\n" +
+                "import javax.swing.text.html.HTML;\n" +
+                "\n" +
+                "HTML\n" +
+                "ButtonUI";
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
+    // TODO: Add cases for default package and variations with a package def.
+
+    public void testTypeCompletionInBrokenScript1() {
         String contents = "def x(HTML";
         String expected = "import javax.swing.text.html.HTML;\n\ndef x(HTML";
-        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
-    public void testBrokenScript2() throws Exception {
+    public void testTypeCompletionInBrokenScript2() {
         // disabled on 17 and earlier since parser recovery not implemented
         if (GroovyUtils.GROOVY_LEVEL < 18) {
             return;
         }
         String contents = "package f\n\ndef x(HTML";
         String expected = "package f\n\nimport javax.swing.text.html.HTML;\n\n\ndef x(HTML";
-        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
-    public void testBrokenScript3() throws Exception {
+    public void testTypeCompletionInBrokenScript3() {
         // disabled on 17 and earlier since parser recovery not implemented
         if (GroovyUtils.GROOVY_LEVEL < 18) {
             return;
         }
         String contents = "/**some stuff*/\npackage f\n\ndef x(HTML";
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML;\n\n\ndef x(HTML";
-        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     // Bug !!! See GRECLIPSE-1231  import statements placed on same line because ';' is not recognized as part of the import statement
-    public void testBrokenScript4() throws Exception {
+    public void testTypeCompletionInBrokenScript4() {
         // disabled on 17 and earlier since parser recovery not implemented
         if (GroovyUtils.GROOVY_LEVEL < 18) {
             return;
         }
         String contents = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI;\n\ndef x(HTML";
         String expected = "/**some stuff*/\n\nimport javax.swing.plaf.ButtonUI;\nimport javax.swing.text.html.HTML;\n\ndef x(HTML";
-        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     // Bug !!! See GRECLIPSE-1231  import statements placed on same line because ';' is not recognized as part of the import statement
-    public void testBrokenScript5() throws Exception {
+    public void testTypeCompletionInBrokenScript5() {
         // disabled on 17 and earlier since parser recovery not implemented
         if (GroovyUtils.GROOVY_LEVEL < 18) {
             return;
         }
         String contents = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI;\n\ndef x(HTML";
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.plaf.ButtonUI;\nimport javax.swing.text.html.HTML;\n\ndef x(HTML";
-        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
-    public void testBrokenScript6() throws Exception {
+    public void testTypeCompletionInBrokenScript6() {
         String contents =
                 "/**some stuff*/\n" +
                 "package f\n" +
@@ -122,10 +230,11 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "import javax.swing.text.html.HTML;\n" +
                 "\n" +
                 "HTML";
-        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
-    public void testBrokenScript7() throws Exception {
+    public void testTypeCompletionInBrokenScript7() {
         // disabled on 17 and earlier since parser recovery not implemented
         if (GroovyUtils.GROOVY_LEVEL < 18) {
             return;
@@ -147,10 +256,11 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "\n" +
                 "def x(HTML\n" +
                 "";
-        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
-    public void testBrokenScript8() throws Exception {
+    public void testTypeCompletionInBrokenScript8() {
         String contents =
                 "/**some stuff*/\n" +
                 "package f\n" +
@@ -166,10 +276,11 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "import javax.swing.text.html.HTML;\n" +
                 "\n" +
                 "def x(HTML";
-        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
-    public void testBrokenScript9() throws Exception {
+    public void testTypeCompletionInBrokenScript9() {
         String contents =
                 "/**some stuff*/\n" +
                 "package f\n" +
@@ -188,10 +299,11 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "import java.awt.dnd.DropTarget as Foo\n" +
                 "\n" +
                 "def x(HTML";
-        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
-    public void testBrokenScript10() throws Exception {
+    public void testTypeCompletionInBrokenScript10() {
         String contents =
                 "/**some stuff*/\n" +
                 "\n" +
@@ -208,11 +320,12 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "import java.awt.dnd.DropTarget as Foo\n" +
                 "\n" +
                 "def x(HTML";
-        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
     // GRECLIPSE-926
-    public void testBrokenScript11() throws Exception {
+    public void testTypeCompletionInBrokenScript11() {
         // disabled on 17 and earlier since parser recovery not implemented
         if (GroovyUtils.GROOVY_LEVEL < 18) {
             return;
@@ -241,18 +354,58 @@ public class TypeCompletionTests2 extends CompletionTestCase {
                 "            HTML\n" +
                 "         }\n" +
                 "    }";
-        tryInLoop(contents, expected, HTMLT, HTMLTableCaptionElement_PROPOSAL);
+
+        checkProposal(contents, expected, "HTMLT", HTMLTableCaptionElement_PROPOSAL);
     }
 
-    public void testBrokenClass1() throws Exception {
+    public void testTypeCompletionInBrokenClass1() {
         String contents = "/**some stuff*/\npackage f\n\nclass Y {\ndef x(HTML";
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML;\n\nclass Y {\ndef x(HTML";
-        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
     }
 
-    public void testBrokenClass2() throws Exception {
+    public void testTypeCompletionInBrokenClass2() {
         String contents = "/**some stuff*/\npackage f\n\nclass Y extends HTML {\ndef x(H";
         String expected = "/**some stuff*/\npackage f\n\nimport javax.swing.text.html.HTML;\n\nclass Y extends HTML {\ndef x(H";
-        tryInLoop(contents, expected, HTML, HTML_PROPOSAL);
+
+        checkProposal(contents, expected, "HTML", HTML_PROPOSAL);
+    }
+
+    // https://github.com/groovy/groovy-eclipse/issues/177
+    public void testTypeCompletionForClassAnnotation() {
+        IPreferenceStore prefs = JavaPlugin.getDefault().getPreferenceStore();
+        String originalOrder = prefs.getString(PreferenceConstants.ORGIMPORTS_IMPORTORDER);
+        prefs.setValue(PreferenceConstants.ORGIMPORTS_IMPORTORDER, "\\#;java;javax;groovy;groovyx;;");
+        try {
+        String contents = "import static org.mockito.Mockito.mock\n\n" +
+                "import org.junit.Test\n\n" +
+                "@TypeCh\n" +
+                "final class WeakReferenceSetTests {\n" +
+                "    @Test\n" +
+                "    void testAddAndEmpty() {\n" +
+                "        WeakReferenceSet set = new WeakReferenceSet()\n" +
+                "        assert set.empty\n" +
+                "        set << mock(ConcreteType)\n" +
+                "        assert !set.empty\n" +
+                "    }\n" +
+                "}";
+        String expected = "import static org.mockito.Mockito.mock\n\n" +
+                "import groovy.transform.TypeChecked;\n\n" +
+                "import org.junit.Test\n\n" +
+                "@TypeChecked\n" +
+                "final class WeakReferenceSetTests {\n" +
+                "    @Test\n" +
+                "    void testAddAndEmpty() {\n" +
+                "        WeakReferenceSet set = new WeakReferenceSet()\n" +
+                "        assert set.empty\n" +
+                "        set << mock(ConcreteType)\n" +
+                "        assert !set.empty\n" +
+                "    }\n" +
+                "}";
+        checkProposal(contents, expected, "@TypeCh", "TypeChecked - groovy.transform");
+        } finally {
+            prefs.setValue(PreferenceConstants.ORGIMPORTS_IMPORTORDER, originalOrder);
+        }
     }
 }

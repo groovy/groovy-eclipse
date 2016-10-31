@@ -1,13 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
+/*
+ * Copyright 2009-2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import java.util.Arrays;
@@ -25,7 +30,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 /**
  * @author Andrew Eisenberg
  * @created Sept 29, 2009
- * 
+ *
  * Tests specific bug reports
  */
 public class OtherCompletionTests extends CompletionTestCase {
@@ -33,7 +38,7 @@ public class OtherCompletionTests extends CompletionTestCase {
     public OtherCompletionTests(String name) {
         super(name);
     }
-    
+
     boolean orig;
     @Override
     protected void setUp() throws Exception {
@@ -44,7 +49,7 @@ public class OtherCompletionTests extends CompletionTestCase {
     }
     @Override
     protected void tearDown() throws Exception {
-        try {   
+        try {
             super.tearDown();
         } finally {
             GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, orig);
@@ -53,7 +58,7 @@ public class OtherCompletionTests extends CompletionTestCase {
     }
 
     public void testGreclipse414() throws Exception {
-        String contents = 
+        String contents =
 "public class Test {\n" +
     "int i\n" +
     "Test() {\n" +
@@ -69,17 +74,17 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "this."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "i", 1);
     }
-    
+
     // type signatures were popping up in various places in the display string
     // ensure this doesn't happen
     public void testGreclipse422() throws Exception {
-        String javaClass = 
+        String javaClass =
          "public class StringExtension {\n" +
          "public static String bar(String self) {\n" +
                      "return self;\n" +
                  "}\n" +
              "}\n";
-            
+
         String groovyClass =
              "public class MyClass {\n" +
                  "public void foo() {\n" +
@@ -90,14 +95,14 @@ public class OtherCompletionTests extends CompletionTestCase {
                      "this.collect\n" +
                  "}\n" +
              "}";
-            
+
         ICompilationUnit groovyUnit = create(groovyClass);
         env.addClass(groovyUnit.getParent().getResource().getFullPath(), "StringExtension", javaClass);
         fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "foo.ba"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "bar", 1);
         assertEquals ("bar() : String - StringExtension (Category: StringExtension)", proposals[0].getDisplayString());
-            
+
         proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "this.collect"), GroovyCompletionProposalComputer.class);
         Arrays.sort(proposals, new Comparator<ICompletionProposal>() {
             public int compare(ICompletionProposal o1, ICompletionProposal o2) {
@@ -116,9 +121,9 @@ public class OtherCompletionTests extends CompletionTestCase {
             assertEquals(printProposals(proposals), "collect(Closure closure) : List - DefaultGroovyMethods (Category: DefaultGroovyMethods)", proposals[1].getDisplayString().toString());
         }
     }
-    
+
     public void testVisibility() throws Exception {
-        String groovyClass = 
+        String groovyClass =
 "class B { }\n" +
 "class C {\n" +
     "B theB\n" +
@@ -127,24 +132,24 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompilationUnit groovyUnit = create(groovyClass);
         fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "().th"), GroovyCompletionProposalComputer.class);
-        
+
         proposalExists(proposals, "theB", 1);
         assertEquals("theB : B - C (Groovy)", proposals[0].getDisplayString());
-            
+
     }
-    
+
     public void testGString1() throws Exception {
-        String groovyClass = 
+        String groovyClass =
             "\"${new String().c}\"";
         ICompilationUnit groovyUnit = create(groovyClass);
         fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, ".c"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "center", 2);
     }
-    
+
     // GRECLIPSE-706
     public void testContentAssistInInitializers1() throws Exception {
-        String groovyClass = 
+        String groovyClass =
             "class A { { aa }\n def aaaa }";
         ICompilationUnit groovyUnit = create(groovyClass);
         fullBuild();
@@ -153,7 +158,7 @@ public class OtherCompletionTests extends CompletionTestCase {
     }
     // GRECLIPSE-706
     public void testContentAssistInInitializers2() throws Exception {
-        String groovyClass = 
+        String groovyClass =
             "class A { {  }\n def aaaa }";
         ICompilationUnit groovyUnit = create(groovyClass);
         fullBuild();
@@ -162,7 +167,7 @@ public class OtherCompletionTests extends CompletionTestCase {
     }
     // GRECLIPSE-706
     public void testContentAssistInStaticInitializers1() throws Exception {
-        String groovyClass = 
+        String groovyClass =
             "class A { static { aa }\n static aaaa }";
         ICompilationUnit groovyUnit = create(groovyClass);
         fullBuild();
@@ -171,17 +176,17 @@ public class OtherCompletionTests extends CompletionTestCase {
     }
     // GRECLIPSE-706
     public void testContentAssistInStaticInitializers2() throws Exception {
-        String groovyClass = 
+        String groovyClass =
             "class A { static {  }\n static aaaa }";
         ICompilationUnit groovyUnit = create(groovyClass);
         fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "static { "), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "aaaa", 1);
     }
-    
+
     // GRECLIPSE-692
     public void testMethodWithSpaces() throws Exception {
-        String groovyClass = 
+        String groovyClass =
             "class A { def \"ff f\"()  { ff } }";
         ICompilationUnit groovyUnit = create(groovyClass);
         fullBuild();
@@ -190,24 +195,24 @@ public class OtherCompletionTests extends CompletionTestCase {
     }
     // GRECLIPSE-692
     public void testMethodWithSpaces2() throws Exception {
-        String groovyClass = 
+        String groovyClass =
             "class A { def \"fff\"()  { fff } }";
         ICompilationUnit groovyUnit = create(groovyClass);
         fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "{ fff"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "fff()", 1);
     }
-    
+
     // STS-1165 content assist after a static method call was broken
     public void testAfterStaticCall() throws Exception {
-        String groovyClass = 
+        String groovyClass =
             "class A { static xxx(x) { }\n def something() {\nxxx oth }\ndef other}";
         ICompilationUnit groovyUnit = create(groovyClass);
         fullBuild();
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(groovyClass, "oth"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "other", 1);
     }
-    
+
     public void testArrayCompletion1() throws Exception {
         String groovyClass = "class XX { \nXX[] xx\nXX yy }\nnew XX().xx[0].x";
         ICompilationUnit groovyUnit = create(groovyClass);
@@ -223,7 +228,7 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "getX"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "getXx()", 1);
     }
-    
+
     public void testArrayCompletion3() throws Exception {
         String groovyClass = "class XX { \nXX[] xx\nXX yy }\nnew XX().xx[0].setX";
         ICompilationUnit groovyUnit = create(groovyClass);
@@ -231,7 +236,7 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "setX"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "setXx(value)", 1);
     }
-    
+
     public void testArrayCompletion4() throws Exception {
         String groovyClass = "class XX { \nXX[] xx\nXX yy }\nnew XX().getXx()[0].x";
         ICompilationUnit groovyUnit = create(groovyClass);
@@ -239,7 +244,7 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "x"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "xx", 1);
     }
-    
+
     public void testListCompletion1() throws Exception {
         String groovyClass = "[].";
         ICompilationUnit groovyUnit = create(groovyClass);
@@ -247,7 +252,7 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, "."), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, new String[]{"removeAll(arg0)","removeAll(c)"}, 1);
     }
-    
+
     public void testListCompletion2() throws Exception {
         String groovyClass = "[].re";
         ICompilationUnit groovyUnit = create(groovyClass);
@@ -255,7 +260,7 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".re"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, new String[]{"removeAll(arg0)","removeAll(c)"}, 1);
     }
-    
+
     // GRECLIPSE-1165
     public void testSpreadCompletion1() throws Exception {
         String groovyClass = "[1,2,3]*.intValue()[0].value";
@@ -352,7 +357,7 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getLastIndexOf(groovyClass, ".val"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "value", 1);
     }
-    
+
     // GRECLIPSE-1388
     public void testBeforeScript() throws Exception {
         String script = "\n\ndef x = 9";
@@ -361,10 +366,10 @@ public class OtherCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(groovyUnit, getIndexOf(script, "\n"), GroovyCompletionProposalComputer.class);
         assertProposalOrdering(proposals, "binding");
     }
-    
+
     // not working in multiline strings yet
 //    public void testGString2() throws Exception {
-//        String groovyClass = 
+//        String groovyClass =
 //            "\"\"\"${new String().c}\"\"\"";
 //        ICompilationUnit groovyUnit = create(groovyClass);
 //        fullBuild();

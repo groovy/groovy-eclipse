@@ -55,19 +55,19 @@ public JDIStackFrame(VirtualMachine jdiVM, DebugEvaluationTest test, String user
 	this(jdiVM, test, userCode, "_JDIStackFrame_", "foo", Integer.MAX_VALUE);
 }
 public JDIStackFrame(
-	VirtualMachine jdiVM, 
-	DebugEvaluationTest test, 
+	VirtualMachine jdiVM,
+	DebugEvaluationTest test,
 	String userCode,
 	String breakpointClassName,
 	String breakpointMethodName,
 	int breakpointLine) {
-		
+
 	this.jdiVM = jdiVM;
 	this.userCode = userCode;
 	this.breakpointClassName = breakpointClassName;
 	this.breakpointMethodName = breakpointMethodName;
 	this.breakpointLine = breakpointLine;
-	
+
 	test.jdiStackFrame = null;
 	this.jdiThread = this.getDebuggedThread(test);
 	test.jdiStackFrame = this;
@@ -85,7 +85,7 @@ protected ThreadReference getDebuggedThread(DebugEvaluationTest test) {
 		this.jdiVM.eventRequestManager().deleteAllBreakpoints();
 
 		// install a breakpoint at the breakpointLine
-		List classes = this.jdiVM.classesByName(this.breakpointClassName);
+		List<ReferenceType> classes = this.jdiVM.classesByName(this.breakpointClassName);
 		if (classes.size() == 0) {
 			if (this.breakpointClassName.equals("_JDIStackFrame_")) {
 				// install special class
@@ -97,8 +97,8 @@ protected ThreadReference getDebuggedThread(DebugEvaluationTest test) {
 					"}";
 				test.compileAndDeploy(source, "_JDIStackFrame_");
 			}
-			
-			// force load of class 
+
+			// force load of class
 			test.evaluateWithExpectedDisplayString(
 				("return Class.forName(\"" + this.breakpointClassName + "\");").toCharArray(),
 				("class " + this.breakpointClassName).toCharArray()
@@ -106,11 +106,11 @@ protected ThreadReference getDebuggedThread(DebugEvaluationTest test) {
 			classes = this.jdiVM.classesByName(this.breakpointClassName);
 			if (classes.size() == 0) {
 				// workaround bug in Standard VM
-				Iterator iterator = this.jdiVM.allClasses().iterator();
+				Iterator<ReferenceType> iterator = this.jdiVM.allClasses().iterator();
 				while (iterator.hasNext()) {
-					ReferenceType type = (ReferenceType)iterator.next();
+					ReferenceType type = iterator.next();
 					if (type.name().equals(this.breakpointClassName)) {
-						classes = new ArrayList(1);
+						classes = new ArrayList<ReferenceType>(1);
 						classes.add(type);
 						break;
 					}
@@ -121,12 +121,12 @@ protected ThreadReference getDebuggedThread(DebugEvaluationTest test) {
 			}
 		}
 		ClassType clazz = (ClassType)classes.get(0);
-		Method method = (Method)clazz.methodsByName(this.breakpointMethodName).get(0);
+		Method method = clazz.methodsByName(this.breakpointMethodName).get(0);
 		Location location;
 		if (this.breakpointLine < 0 || this.breakpointLine == Integer.MAX_VALUE) {
 			location = method.location();
 		} else {
-			location = (Location)method.locationsOfLine(this.breakpointLine).get(0);
+			location = method.locationsOfLine(this.breakpointLine).get(0);
 		}
 		BreakpointRequest request = this.jdiVM.eventRequestManager().createBreakpointRequest(location);
 		request.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
@@ -139,16 +139,16 @@ protected ThreadReference getDebuggedThread(DebugEvaluationTest test) {
 			test.context.evaluate(
 				("(new Thread() {\n" +
 				"  public void run() {\n" +
-				     userCode + "\n" +
+				userCode + "\n" +
 				(this.breakpointClassName.equals("_JDIStackFrame_") ? "    new _JDIStackFrame_().foo();\n" : "") +
 				"  }\n" +
 				"  public String toString() {\n" +
 				"    return \"my thread\";\n" +
 				"  }\n" +
 				"}).start();\n").toCharArray(),
-				test.getEnv(), 
-				test.getCompilerOptions(), 
-				requestor, 
+				test.getEnv(),
+				test.getCompilerOptions(),
+				requestor,
 				test.getProblemFactory());
 		} catch (InstallException e) {
 			Assert.assertTrue("Target exception " + e.getMessage(), false);
@@ -164,9 +164,9 @@ protected ThreadReference getDebuggedThread(DebugEvaluationTest test) {
 		Event event = null;
 		do {
 			EventSet set = this.jdiVM.eventQueue().remove();
-			Iterator iterator = set.eventIterator();
+			Iterator<Event> iterator = set.eventIterator();
 			while (iterator.hasNext()) {
-				event = (Event)iterator.next();
+				event = iterator.next();
 				if (event instanceof BreakpointEvent)
 					break;
 			}
@@ -209,7 +209,7 @@ public boolean isStatic() {
 public int[] localVariableModifiers() {
 	try {
 		StackFrame frame = getStackFrame();
-		List variables = frame.visibleVariables();
+		List<LocalVariable> variables = frame.visibleVariables();
 		int[] modifiers = new int[variables.size()];
 /*		Iterator iterator = variables.iterator();
 		int i = 0;
@@ -225,10 +225,10 @@ public int[] localVariableModifiers() {
 public char[][] localVariableNames() {
 	try {
 		StackFrame frame = getStackFrame();
-		Iterator variables = frame.visibleVariables().iterator();
-		Vector names = new Vector();
+		Iterator<LocalVariable> variables = frame.visibleVariables().iterator();
+		Vector<char[]> names = new Vector<char[]>();
 		while (variables.hasNext()) {
-			LocalVariable var = (LocalVariable)variables.next();
+			LocalVariable var = variables.next();
 			names.addElement(var.name().toCharArray());
 		}
 		char[][] result = new char[names.size()][];
@@ -241,10 +241,10 @@ public char[][] localVariableNames() {
 public char[][] localVariableTypeNames() {
 	try {
 		StackFrame frame = getStackFrame();
-		Iterator variables = frame.visibleVariables().iterator();
-		Vector names = new Vector();
+		Iterator<LocalVariable> variables = frame.visibleVariables().iterator();
+		Vector<char[]> names = new Vector<char[]>();
 		while (variables.hasNext()) {
-			LocalVariable var = (LocalVariable)variables.next();
+			LocalVariable var = variables.next();
 			names.addElement(var.typeName().toCharArray());
 		}
 		char[][] result = new char[names.size()][];
@@ -258,11 +258,11 @@ public boolean run(String codeSnippetClassName) {
 		ClassType codeSnippetClass;
 		ObjectReference codeSnippet;
 		Method method;
-		List arguments;
+		List<ObjectReference> arguments;
 		ObjectReference codeSnippetRunner;
 		try {
 			// Get the code snippet class
-			List classes = jdiVM.classesByName(codeSnippetClassName);
+			List<ReferenceType> classes = jdiVM.classesByName(codeSnippetClassName);
 			while (classes.size() == 0) {
 				try {
 					Thread.sleep(100);
@@ -271,11 +271,11 @@ public boolean run(String codeSnippetClassName) {
 				classes = jdiVM.classesByName(codeSnippetClassName);
 				if (classes.size() == 0) {
 					// workaround bug in Standard VM
-					Iterator iterator = this.jdiVM.allClasses().iterator();
+					Iterator<ReferenceType> iterator = this.jdiVM.allClasses().iterator();
 					while (iterator.hasNext()) {
-						ReferenceType type = (ReferenceType)iterator.next();
+						ReferenceType type = iterator.next();
 						if (type.name().equals(codeSnippetClassName)) {
-							classes = new ArrayList(1);
+							classes = new ArrayList<ReferenceType>(1);
 							classes.add(type);
 							break;
 						}
@@ -285,15 +285,15 @@ public boolean run(String codeSnippetClassName) {
 			codeSnippetClass = (ClassType)classes.get(0);
 
 			// Create a new code snippet
-			Method constructor = (Method)codeSnippetClass.methodsByName("<init>").get(0);
-			codeSnippet = codeSnippetClass.newInstance(jdiThread, constructor, new ArrayList(), ClassType.INVOKE_SINGLE_THREADED);
+			Method constructor = codeSnippetClass.methodsByName("<init>").get(0);
+			codeSnippet = codeSnippetClass.newInstance(jdiThread, constructor, new ArrayList<Value>(), ClassType.INVOKE_SINGLE_THREADED);
 
 			// Install local variables and "this" into generated fields
 			StackFrame stackFrame = getStackFrame();
 			try {
-				Iterator variables = stackFrame.visibleVariables().iterator();
+				Iterator<LocalVariable> variables = stackFrame.visibleVariables().iterator();
 				while (variables.hasNext()) {
-					LocalVariable jdiVariable = (LocalVariable)variables.next();
+					LocalVariable jdiVariable = variables.next();
 					Value value = stackFrame.getValue(jdiVariable);
 					Field field = codeSnippetClass.fieldByName(new String(LOCAL_VAR_PREFIX) + jdiVariable.name());
 					codeSnippet.setValue(field, value);
@@ -312,9 +312,9 @@ public boolean run(String codeSnippetClassName) {
 			Field theRunner = codeSnippetRunnerClass.fieldByName(THE_RUNNER_FIELD);
 			codeSnippetRunner = (ObjectReference)codeSnippetRunnerClass.getValue(theRunner);
 
-			// Get the method 'runCodeSnippet' and its arguments		
-			method = (Method)codeSnippetRunnerClass.methodsByName(RUN_CODE_SNIPPET_METHOD).get(0);
-			arguments = new ArrayList();
+			// Get the method 'runCodeSnippet' and its arguments
+			method = codeSnippetRunnerClass.methodsByName(RUN_CODE_SNIPPET_METHOD).get(0);
+			arguments = new ArrayList<ObjectReference>();
 			arguments.add(codeSnippet);
 		} catch (ClassNotLoadedException e) {
 			e.printStackTrace();
@@ -337,9 +337,9 @@ public boolean run(String codeSnippetClassName) {
 			// Retrieve values of local variables and put them back in the stack frame
 			StackFrame stackFrame = getStackFrame();
 			try {
-				Iterator variables = stackFrame.visibleVariables().iterator();
+				Iterator<LocalVariable> variables = stackFrame.visibleVariables().iterator();
 				while (variables.hasNext()) {
-					LocalVariable jdiVariable = (LocalVariable)variables.next();
+					LocalVariable jdiVariable = variables.next();
 					Field field = codeSnippetClass.fieldByName(new String(LOCAL_VAR_PREFIX) + jdiVariable.name());
 					Value value = codeSnippet.getValue(field);
 					stackFrame.setValue(jdiVariable, value);

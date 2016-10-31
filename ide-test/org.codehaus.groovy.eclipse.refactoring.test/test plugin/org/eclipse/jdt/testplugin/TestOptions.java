@@ -46,9 +46,9 @@ public class TestOptions {
 		IPreferenceStore store= JavaPlugin.getDefault().getPreferenceStore();
 		store.setValue(PreferenceConstants.CODEGEN_KEYWORD_THIS, false);
 		store.setValue(PreferenceConstants.CODEGEN_IS_FOR_GETTERS, true);
-		store.setValue(PreferenceConstants.CODEGEN_EXCEPTION_VAR_NAME, "e"); //$NON-NLS-1$
+		store.setValue(PreferenceConstants.CODEGEN_EXCEPTION_VAR_NAME, "e");
 		store.setValue(PreferenceConstants.CODEGEN_ADD_COMMENTS, true);
-		store.setValue(PreferenceConstants.ORGIMPORTS_IMPORTORDER, "java;javax;org;com"); //$NON-NLS-1$
+		store.setValue(PreferenceConstants.ORGIMPORTS_IMPORTORDER, "java;javax;org;com");
 		store.setValue(PreferenceConstants.ORGIMPORTS_ONDEMANDTHRESHOLD, 99);
 		store.setValue(PreferenceConstants.ORGIMPORTS_IGNORELOWERCASE, true);
 	}
@@ -448,7 +448,7 @@ class TestFormatterOptions {
 		options.put(DefaultCodeFormatterConstants.FORMATTER_NEVER_INDENT_LINE_COMMENTS_ON_FIRST_COLUMN, this.never_indent_line_comments_on_first_column ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		return options;
 	}
-	
+
 	int getAlignmentOption(String name) {
 		try {
 			try {
@@ -464,9 +464,9 @@ class TestFormatterOptions {
 			}
 		} catch (Exception e) {
 			return -1;
-		}		
+		}
 	}
-	
+
 
 	private void setDefaultSettings() {
 		this.alignment_for_arguments_in_allocation_expression = getAlignmentOption("M_COMPACT_SPLIT");

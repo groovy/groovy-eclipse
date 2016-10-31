@@ -1,6 +1,6 @@
 /*
  * Copyright 2011 SpringSource, a division of VMware, Inc
- * 
+ *
  * andrew - Initial API and implementation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,14 +19,12 @@ package org.codehaus.groovy.eclipse.quickfix.templates;
 
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.groovy.eclipse.editor.ISurroundWithFactory;
-import org.eclipse.core.runtime.IAdaptable;
-import org.eclipse.ui.IStartup;
 import org.eclipse.ui.actions.ActionGroup;
 
 /**
  * TODO convert this to using an adapter or a plugin
  * TODO don't use early startup
- * 
+ *
  * @author Andrew Eisenberg
  * @created 2013-04-01
  */

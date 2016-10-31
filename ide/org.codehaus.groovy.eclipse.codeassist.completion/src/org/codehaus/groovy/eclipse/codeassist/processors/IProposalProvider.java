@@ -23,7 +23,6 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
-import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 
 /**
  * Use this class along with the completionProposalProvider extension point

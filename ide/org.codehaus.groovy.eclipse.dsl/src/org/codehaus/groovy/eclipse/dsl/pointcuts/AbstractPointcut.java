@@ -32,57 +32,57 @@ import org.eclipse.core.resources.IStorage;
 
 
 /**
- * Abstract implementation of the Pointcut.  Most concrete instances will only 
- * accept one argument.  
+ * Abstract implementation of the Pointcut.  Most concrete instances will only
+ * accept one argument.
  * @author andrew
  * @created Nov 17, 2010
  */
 public abstract class AbstractPointcut implements IPointcut {
 
     private IStorage containerIdentifier;
-    
+
     private StringObjectVector elements = new StringObjectVector(1);
-    
+
     private IProject project;
 
     private String pointcutName;
-    
+
     public AbstractPointcut(IStorage containerIdentifier, String pointcutName) {
         this.containerIdentifier = containerIdentifier;
         this.pointcutName = pointcutName;
     }
-    
+
     public String getPointcutName() {
         return pointcutName;
     }
-    
+
     public void setPointcutName(String pointcutName) {
         this.pointcutName = pointcutName;
     }
-    
+
     public String getPointcutDebugName() {
         return pointcutName + " (" + getClass().getSimpleName() + ")";
     }
-    
+
     public IStorage getContainerIdentifier() {
         return containerIdentifier;
     }
-    
+
     public void setContainerIdentifier(IStorage containerIdentifier) {
         this.containerIdentifier = containerIdentifier;
     }
-    
+
     public void verify() throws PointcutVerificationException {
         // most pointcuts can't have more than one argument
         if (elements.size > 1) {
             throw new PointcutVerificationException("Can't have more than one argument to this pointcut", this);
         }
     }
-    
+
     public final void addArgument(Object argument) {
         elements.add(null, argument);
     }
-    
+
     /**
      * Attempt a match on the given object to match and return all the matches found
      * @param pattern pattern to match
@@ -90,7 +90,7 @@ public abstract class AbstractPointcut implements IPointcut {
      * @return collection of objects matched, or null if no matches found
      */
     public abstract Collection<?> matches(GroovyDSLDContext pattern, Object toMatch);
-    
+
     public final void addArgument(String name, Object argument) {
         if (name == null) {
             addArgument(argument);
@@ -98,12 +98,12 @@ public abstract class AbstractPointcut implements IPointcut {
         }
         elements.add(name, argument);
     }
-    
+
     /**
      * matches on the pointct passed in and also
-     * binds the argument to the argument name if 
+     * binds the argument to the argument name if
      * a name exists.
-     * 
+     *
      * Must call if the argument to this pointcut is another pointcut
      * @param argument
      * @param pattern
@@ -129,7 +129,7 @@ public abstract class AbstractPointcut implements IPointcut {
         return outerResults.size() > 0 ? outerResults : null;
     }
 
-    
+
     /**
      * Variant of matchOnPointcutArgument here.  pass through the
      * bound results to the containing pointcut
@@ -152,7 +152,7 @@ public abstract class AbstractPointcut implements IPointcut {
     }
 
     /**
-     * flattens a map of collections into a single collection 
+     * flattens a map of collections into a single collection
      * @param pointcutResult
      * @return
      */
@@ -171,15 +171,15 @@ public abstract class AbstractPointcut implements IPointcut {
             return null;
         }
     }
-    
+
     public final String[] getArgumentNames() {
         return elements.getNames();
     }
-    
+
     public final Object[] getArgumentValues() {
         return elements.getElements();
     }
-    
+
     /**
      * returns the associated name for the given argument.
      * null if this is not an argument and null if there
@@ -195,7 +195,7 @@ public abstract class AbstractPointcut implements IPointcut {
         }
         return null;
     }
-    
+
     public final String getFirstArgumentName() {
         if (elements.size > 0) {
             return elements.nameAt(0);
@@ -203,11 +203,11 @@ public abstract class AbstractPointcut implements IPointcut {
             return null;
         }
     }
-    
+
     public final String getNameForArgument(Object arg) {
         return elements.nameOf(arg);
     }
-    
+
     public IPointcut normalize() {
         for (int i = 0; i < elements.size; i++) {
             Object elt = elements.elementAt(i);
@@ -217,7 +217,7 @@ public abstract class AbstractPointcut implements IPointcut {
         }
         return this;
     }
-    
+
     public boolean fastMatch(GroovyDSLDContext pattern) {
         for (Object elt : elements.getElements()) {
             if (elt instanceof IPointcut && ! ((IPointcut) elt).fastMatch(pattern)) {
@@ -226,22 +226,22 @@ public abstract class AbstractPointcut implements IPointcut {
         }
         return true;
     }
-    
+
     public void setProject(IProject project) {
         this.project = project;
     }
-    
-    public void accept(@SuppressWarnings("rawtypes") Closure contributionGroupClosure) {
+
+    public void accept(Closure contributionGroupClosure) {
         IContributionGroup group = new DSLContributionGroup(contributionGroupClosure);
         if (project != null) {
             try {
-                
+
                 // verify correctness of this pointcut
                 this.verify();
-                
+
                 // project is set to null inside of normalize, so cache it here
                 IProject p = project;
-                
+
                 // now perform some optimizations on it
                 // potentially creates a copy of the original pointcut
                 IPointcut normalized = this.normalize();
@@ -253,8 +253,8 @@ public abstract class AbstractPointcut implements IPointcut {
                 // register this pointcut and group for the given project
                 GroovyDSLCoreActivator.getDefault().getContextStoreManager()
                     .getDSLDStore(p).addContributionGroup(normalized, group);
-                
-                
+
+
             } catch (PointcutVerificationException e) {
                 if (GroovyLogManager.manager.hasLoggers()) {
                     GroovyLogManager.manager.log(TraceCategory.DSL, "Ignoring invalid pointcut");
@@ -264,11 +264,11 @@ public abstract class AbstractPointcut implements IPointcut {
             }
         }
     }
-    
+
     /**
      * A standard verification that checks to see that all args are pointcuts.
      * @return null if all args are pointcuts, error status otherwise
-     * @throws PointcutVerificationException 
+     * @throws PointcutVerificationException
      */
     protected final String allArgsArePointcuts() throws PointcutVerificationException {
         for (Object arg : elements.getElements()) {
@@ -283,10 +283,10 @@ public abstract class AbstractPointcut implements IPointcut {
         }
         return null;
     }
-    
+
     /**
      * A standard verification that checks to see the number of args
-     * @arg num 
+     * @arg num
      * @return null if number of args matches num, error message otherwise
      */
     protected final String matchesArgNumber(int num) {
@@ -297,10 +297,10 @@ public abstract class AbstractPointcut implements IPointcut {
             return "Expecting " + num + " arguments, but found " + elements2.length;
         }
     }
-    
+
     /**
      * A standard verification that checks to see the number of args
-     * @arg num 
+     * @arg num
      * @return a string if number of args is not 1 else null
      */
     protected final String hasOneArg() {
@@ -310,10 +310,10 @@ public abstract class AbstractPointcut implements IPointcut {
             return "Expecting 1 argument, but found " + elements.getElements().length + ".  Consider using '&' or '|' to connect arguments.";
         }
     }
-    
+
     /**
      * A standard verification that checks to see the number of args
-     * @arg num 
+     * @arg num
      * @return a string if number of args is not 1 or 0 else null
      */
     protected final String hasOneOrNoArgs() {
@@ -323,7 +323,7 @@ public abstract class AbstractPointcut implements IPointcut {
             return "Expecting 1 or no arguments, but found " + elements.getElements().length + ".  Consider using '&' or '|' to connect arguments.";
         }
     }
-    
+
     protected final String hasNoArgs() {
         if (elements.getElements().length == 0) {
             return null;
@@ -331,7 +331,7 @@ public abstract class AbstractPointcut implements IPointcut {
             return "Expecting no arguments, but found " + elements.getElements().length + ".  Consider using '&' or '|' to connect arguments.";
         }
     }
-    
+
     protected final String allArgsAreStrings() {
         for (Object arg : elements.getElements()) {
             if (arg == null) {
@@ -343,10 +343,10 @@ public abstract class AbstractPointcut implements IPointcut {
         }
         return null;
     }
-    
+
     protected final String oneStringOrOnePointcutArg() throws PointcutVerificationException {
         String maybeStatus = allArgsAreStrings();
-        String maybeStatus2 = allArgsArePointcuts(); 
+        String maybeStatus2 = allArgsArePointcuts();
         if (maybeStatus != null && maybeStatus2 != null) {
             return "This pointcut supports exactly one argument of type Pointcut or String.  Consider using '&' or '|' to connect arguments.";
         }
@@ -356,11 +356,11 @@ public abstract class AbstractPointcut implements IPointcut {
         }
         return null;
     }
-    
+
     protected final String oneStringOrOnePointcutOrOneClassArg() throws PointcutVerificationException {
         String maybeStatus = allArgsAreStrings();
-        String maybeStatus2 = allArgsArePointcuts(); 
-        String maybeStatus3 = allArgsAreClasses(); 
+        String maybeStatus2 = allArgsArePointcuts();
+        String maybeStatus3 = allArgsAreClasses();
         if (maybeStatus != null && maybeStatus2 != null && maybeStatus3 != null) {
             return "This pointcut supports exactly one argument of type Pointcut or String or Class.  Consider using '&' or '|' to connect arguments.";
         }
@@ -370,7 +370,7 @@ public abstract class AbstractPointcut implements IPointcut {
         }
         return null;
     }
-    
+
     protected final String allArgsAreClasses() {
         for (Object arg : elements.getElements()) {
             if (arg == null) {
@@ -383,7 +383,7 @@ public abstract class AbstractPointcut implements IPointcut {
         return null;
     }
 
-    
+
     protected IPointcut and(IPointcut other) {
         AbstractPointcut andPointcut = new AndPointcut(containerIdentifier, "and");
         andPointcut.setProject(project);
@@ -406,7 +406,7 @@ public abstract class AbstractPointcut implements IPointcut {
         return notPointcut;
     }
 
-    
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -414,13 +414,13 @@ public abstract class AbstractPointcut implements IPointcut {
         formatedString(sb, 2);
         return sb.toString();
     }
-    
+
     protected void formatedString(StringBuilder sb, int indent) {
         sb.append(getPointcutDebugName());
         elements.formattedString(sb, indent+2);
         sb.append("\n");
     }
-    
+
     static String spaces(int indent) {
         StringBuilder sb = new StringBuilder(indent+2);
         for (int i = 0; i < indent; i++) {
@@ -428,11 +428,11 @@ public abstract class AbstractPointcut implements IPointcut {
         }
         return sb.toString();
     }
-    
+
     protected Map<String, Object> namedArgumentsAsMap() {
         return elements.asMap();
     }
-    
+
     protected Collection<?> ensureCollection(Object toMatch) {
         if (toMatch == null) {
             return null;

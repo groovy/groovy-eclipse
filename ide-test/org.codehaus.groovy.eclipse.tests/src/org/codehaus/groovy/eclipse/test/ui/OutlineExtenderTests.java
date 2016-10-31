@@ -14,7 +14,6 @@
 package org.codehaus.groovy.eclipse.test.ui;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.groovy.eclipse.editor.outline.GroovyOutlinePage;
 import org.codehaus.groovy.eclipse.editor.outline.OCompilationUnit;
@@ -49,9 +48,7 @@ public class OutlineExtenderTests extends EclipseTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        GroovyRuntime.addGroovyNature(testProject.getProject());
-        registry = GroovyPlugin.getDefault().getOutlineTools()
-                .getOutlineExtenderRegistry();
+        registry = GroovyPlugin.getDefault().getOutlineTools().getOutlineExtenderRegistry();
         registry.initialize();
     }
 

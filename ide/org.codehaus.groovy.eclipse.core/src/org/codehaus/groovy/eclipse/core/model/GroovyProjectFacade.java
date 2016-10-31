@@ -96,13 +96,9 @@ public class GroovyProjectFacade {
              IJavaElement elt = unit.getElementAt(start);
 
              if (node instanceof DeclarationExpression) {
-                 int end = node.getEnd();
-
-                // Local variable signature has changed between 3.6 and 3.7, use
-                // reflection to create.
+                // Local variable signature has changed between 3.6 and 3.7, use reflection to create.
                 return ReflectionUtils.createLocalVariable(elt, ((DeclarationExpression) node).getVariableExpression().getName(),
-                        start, Signature.createTypeSignature(((DeclarationExpression) node).getVariableExpression().getType()
-                                .getName(), false));
+                        start, Signature.createTypeSignature(((DeclarationExpression) node).getVariableExpression().getType().getName(), false));
              } else {
                  return elt;
              }

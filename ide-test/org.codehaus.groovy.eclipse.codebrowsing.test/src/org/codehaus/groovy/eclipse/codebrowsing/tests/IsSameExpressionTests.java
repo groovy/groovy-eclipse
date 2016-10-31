@@ -29,7 +29,7 @@ import org.eclipse.core.runtime.CoreException;
  * @author andrew
  * @created May 12, 2010
  */
-public class IsSameExpressionTests extends AbstractCheckerTests {
+public class IsSameExpressionTests extends CheckerTestCase {
 
     public IsSameExpressionTests() {
         super(IsSameExpressionTests.class.getName());

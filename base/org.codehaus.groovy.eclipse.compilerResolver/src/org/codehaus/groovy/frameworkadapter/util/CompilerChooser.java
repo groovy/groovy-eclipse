@@ -1,6 +1,6 @@
 /*
  * Copyright 2011-2014 Pivotal Software Inc
- * 
+ *
  * andrew - Initial API and implementation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,8 +38,9 @@ import org.osgi.service.prefs.BackingStoreException;
  * @author Andrew Eisenberg
  * @created 2013-04-12
  */
+@SuppressWarnings("deprecation")
 public class CompilerChooser {
-    
+
     private static CompilerChooser INSTANCE;
 
     private static final String GROOVY_COMPILER_LEVEL = "groovy.compiler.level";
@@ -51,28 +52,28 @@ public class CompilerChooser {
     private int activeIndex = -1;
 
     private boolean initialized;
-    
-    CompilerChooser() { 
+
+    CompilerChooser() {
         INSTANCE = this;
     }
-    
+
     public static CompilerChooser getInstance() {
         return INSTANCE;
     }
-    
+
     void initialize(final BundleContext context) throws BundleException {
         if (!initialized) {
             initialized = true;
             doInitialize(context);
         }
     }
-    
+
     public boolean isInitiailzed() {
         return initialized;
     }
-    
+
     private void doInitialize(BundleContext context) throws BundleException {
-        
+
         SpecifiedVersion specifiedVersion = findSysPropVersion();
         if (specifiedVersion == SpecifiedVersion.UNSPECIFIED) {
             // system property was unspecified, now try looking at configuration
@@ -80,9 +81,9 @@ public class CompilerChooser {
         }
 
         System.out.println("Starting Groovy-Eclipse compiler resolver.  Specified compiler level: " + specifiedVersion.toReadableVersionString());
-                
+
         Bundle[] bundles = Platform.getBundles(GROOVY_PLUGIN_ID, null);
-        
+
         //Print debug infos about the bundles, to debug screwy behavior
         dump(bundles);
 
@@ -107,7 +108,7 @@ public class CompilerChooser {
                     found = true;
                 }
             }
-            
+
             // if activeIndex == 0, then there's nothing to do since specified bundle is already first
             // WRONG on e4.4 it looks like osgi remember which bundle was activated last time and will
             // use that one again, rather than automatically use latest available version.
@@ -143,7 +144,7 @@ public class CompilerChooser {
                 Bundle bundle = bundles[i];
                 allVersions[i] = bundle.getVersion();
                 allSpecifiedVersions[i] = SpecifiedVersion.findVersion(bundle.getVersion());
-            }            
+            }
         }
         //Print debug infos about the bundles, to debug screwy behavior
         //dump(bundles);
@@ -155,7 +156,7 @@ public class CompilerChooser {
 			System.out.println(b.getBundleId() + " "+b.getVersion()+" = "+stateString(b.getState()));
 		}
 	}
-    
+
 	private static String stateString(int state) {
 		switch (state) {
 		case Bundle.ACTIVE:
@@ -174,8 +175,8 @@ public class CompilerChooser {
 			return "UNKOWN("+state+")";
 		}
 	}
-    
-    
+
+
     /**
      * Finds the compiler version that is specified in the system properties
      */
@@ -197,7 +198,7 @@ public class CompilerChooser {
         if (property == null) {
             return UNSPECIFIED;
         }
-        
+
         String[] split = property.split("\\\n");
         String versionText = null;
         for (int i = 0; i < split.length; i++) {
@@ -216,7 +217,7 @@ public class CompilerChooser {
         IEclipsePreferences prefNode = InstanceScope.INSTANCE.getNode(ResolverActivator.PLUGIN_ID);
         return SpecifiedVersion.findVersionFromString(prefNode.get(GROOVY_COMPILER_LEVEL, null));
     }
-     
+
     /**
      * Stores the {@link SpecifiedVersion} in Eclipse preferences
      * @param version the version to switch to
@@ -227,7 +228,7 @@ public class CompilerChooser {
         prefNode.put(GROOVY_COMPILER_LEVEL, version.versionName);
         prefNode.flush();
     }
-    
+
     /**
      * @return the active groovy (specified) version
      */
@@ -239,7 +240,7 @@ public class CompilerChooser {
 		}
     }
 
-        
+
     public Version getActiveVersion() {
         if (activeIndex == -1) {
 			Bundle bundle = getActiveBundle();
@@ -248,7 +249,7 @@ public class CompilerChooser {
 			return allVersions[activeIndex];
         }
     }
-    
+
     public Bundle getActiveBundle() {
         if (activeIndex == -1) {
         	// Check if any of the org.codehaus.groovy bundles are active
@@ -258,7 +259,7 @@ public class CompilerChooser {
         		}
         	}
         	// If none active just return the latest version bundle
-            return Platform.getBundle(GROOVY_PLUGIN_ID); 
+            return Platform.getBundle(GROOVY_PLUGIN_ID);
         } else {
             Bundle[] bundles = Platform.getBundles(GROOVY_PLUGIN_ID, allVersions[activeIndex].toString());
             if (bundles != null && bundles.length > 0) {
@@ -268,11 +269,11 @@ public class CompilerChooser {
         }
         return null;
     }
-    
+
     public SpecifiedVersion[] getAllSpecifiedVersions() {
         return allSpecifiedVersions;
     }
-    
+
 	public Version getAssociatedVersion(SpecifiedVersion specifiedVersion) {
 		for (int i = 0; i < allSpecifiedVersions.length; i++) {
 			if (allSpecifiedVersions[i] == specifiedVersion) {

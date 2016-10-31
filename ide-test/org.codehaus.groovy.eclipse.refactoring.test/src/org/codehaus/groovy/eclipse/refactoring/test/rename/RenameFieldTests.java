@@ -54,10 +54,10 @@ public class RenameFieldTests extends RefactoringTest {
     protected void tearDown() throws Exception {
         super.tearDown();
     }
-    
+
     private void helper2_0(String typeName, String fieldName,
             String newFieldName, boolean updateReferences,
-            boolean createDelegates, boolean renameGetter, boolean renameSetter, 
+            boolean createDelegates, boolean renameGetter, boolean renameSetter,
             boolean performOnError, boolean updateTextual)
             throws Exception {
         ICompilationUnit cu = createCUfromTestFile(getPackageP(), "A");
@@ -108,9 +108,7 @@ public class RenameFieldTests extends RefactoringTest {
             assertEqualLines("invalid renaming",
                     getFileContents(getOutputTestFileName("A")), cu.getSource());
 
-            ParticipantTesting.testRename(renameHandles,
-                    (RenameArguments[]) args.toArray(new RenameArguments[args
-                            .size()]));
+            ParticipantTesting.testRename(renameHandles, args.toArray(new RenameArguments[args.size()]));
 
             assertTrue("anythingToUndo", RefactoringCore.getUndoManager()
                     .anythingToUndo());
@@ -194,7 +192,7 @@ public class RenameFieldTests extends RefactoringTest {
         helper2();
     }
     public void test11() throws Exception {
-        createCU(((IPackageFragmentRoot) getPackageP().getParent()).createPackageFragment("o", true, null), "Other.java", 
+        createCU(((IPackageFragmentRoot) getPackageP().getParent()).createPackageFragment("o", true, null), "Other.java",
                 "package o;\npublic class Other { public static int FOO;\n }");
         helper2_0("o.Other", "FOO", "BAR", true, false, false, false, false, false);
     }

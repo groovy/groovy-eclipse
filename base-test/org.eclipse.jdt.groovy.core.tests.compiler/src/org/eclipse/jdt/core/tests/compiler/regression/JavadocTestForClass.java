@@ -19,17 +19,14 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 public class JavadocTestForClass extends JavadocTest {
 
 	public static Test suite() {
-		return buildAllCompliancesTestSuite(javadocTestClass());
+		return buildAllCompliancesTestSuite(JavadocTestForClass.class);
 	}
 	public JavadocTestForClass(String name) {
 		super(name);
 	}
-	public static Class javadocTestClass() {
-		return JavadocTestForClass.class;
-	}
 
-	protected Map getCompilerOptions() {
-		Map options = super.getCompilerOptions();
+	protected Map<String, String> getCompilerOptions() {
+		Map<String, String> options = super.getCompilerOptions();
 		options.put(CompilerOptions.OPTION_ReportInvalidJavadoc, CompilerOptions.ERROR);
 		options.put(CompilerOptions.OPTION_ReportInvalidJavadocTagsVisibility, CompilerOptions.PRIVATE);
 		options.put(CompilerOptions.OPTION_ReportMissingJavadocTags, CompilerOptions.ERROR);
@@ -948,16 +945,16 @@ public class JavadocTestForClass extends JavadocTest {
 					+ "	public void s_foo() {\n"
 					+ "	}\n"
 					+ "}\n" },
-			"----------\n" + 
-			"1. ERROR in test\\X.java (at line 6)\n" + 
-			"	* @see VisibilityPackage#unknown() Invalid ref: non visible class (non existent method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"2. ERROR in test\\X.java (at line 7)\n" + 
-			"	* @see test.copy.VisibilityPackage#unknown() Invalid ref: non visible class (non existent method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type test.copy.VisibilityPackage is not visible\n" + 
+			"----------\n" +
+			"1. ERROR in test\\X.java (at line 6)\n" +
+			"	* @see VisibilityPackage#unknown() Invalid ref: non visible class (non existent method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"2. ERROR in test\\X.java (at line 7)\n" +
+			"	* @see test.copy.VisibilityPackage#unknown() Invalid ref: non visible class (non existent method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type test.copy.VisibilityPackage is not visible\n" +
 			"----------\n");
 	}
 

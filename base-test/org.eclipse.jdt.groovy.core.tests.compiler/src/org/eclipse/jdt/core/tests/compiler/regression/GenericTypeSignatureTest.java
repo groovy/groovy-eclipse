@@ -73,15 +73,11 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 //		TESTS_RANGE = new int[] { 21, 50 };
 //	}
 	public static Test suite() {
-		return buildMinimalComplianceTestSuite(testClass(), F_1_5);
+		return buildMinimalComplianceTestSuite(GenericTypeSignatureTest.class, F_1_5);
 	}
 
-	public static Class testClass() {
-		return GenericTypeSignatureTest.class;
-	}
-	
 	IPath dirPath = new Path(OUTPUT_DIR); // WORK check whether needed or not
-	
+
 	public GenericTypeSignatureTest(String name) {
 		super(name);
 	}
@@ -113,7 +109,7 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 		try {
 			// Write files in dir
 			writeFiles(testFiles);
-			
+
 			final String[] fileNames = getFileNames(testFiles);
 			Process process = null;
 			try {
@@ -156,17 +152,17 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 				}
 				// Launch process
 				process = Runtime.getRuntime().exec(cmdLineAsString, null, GenericTypeSignatureTest.this.dirPath.toFile());
-	            // Log errors
-	            Logger errorLogger = new Logger(process.getErrorStream(), "ERROR");            
-	            
-	            // Log output
-	            Logger outputLogger = new Logger(process.getInputStream(), "OUTPUT");
-	                
-	            // start the threads to run outputs (standard/error)
-	            errorLogger.start();
-	            outputLogger.start();
+				// Log errors
+				Logger errorLogger = new Logger(process.getErrorStream(), "ERROR");
 
-	            // Wait for end of process
+				// Log output
+				Logger outputLogger = new Logger(process.getInputStream(), "OUTPUT");
+
+				// start the threads to run outputs (standard/error)
+				errorLogger.start();
+				outputLogger.start();
+
+				// Wait for end of process
 				if (process.waitFor() != 0) {
 					System.out.println(testName+": javac has found error(s)!");
 				}
@@ -185,24 +181,24 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 	public void test001() {
 		final String[] testsSource = new String[] {
 				"X.java",
-				"public class X <T> extends p.A<T> {\n" + 
-				"    protected T t;\n" + 
-				"    X(T t) {\n" + 
-				"        super(t);\n" + 
-				"        this.t = t;\n" + 
-				"    }\n" + 
-				"    public static void main(String[] args) {\n" + 
-				"    	X<X<String>> xs = new X<X<String>>(new X<String>(\"SUCCESS\"));\n" + 
-				"        System.out.print(xs.t.t);\n" + 
-				"    }\n" + 
+				"public class X <T> extends p.A<T> {\n" +
+				"    protected T t;\n" +
+				"    X(T t) {\n" +
+				"        super(t);\n" +
+				"        this.t = t;\n" +
+				"    }\n" +
+				"    public static void main(String[] args) {\n" +
+				"    	X<X<String>> xs = new X<X<String>>(new X<String>(\"SUCCESS\"));\n" +
+				"        System.out.print(xs.t.t);\n" +
+				"    }\n" +
 				"}",
 				"p/A.java",
-				"package p;\n" + 
-				"public class A<P> {\n" + 
-				"    protected P p;\n" + 
-				"    protected A(P p) {\n" + 
-				"        this.p = p;\n" + 
-				"    }\n" + 
+				"package p;\n" +
+				"public class A<P> {\n" +
+				"    protected P p;\n" +
+				"    protected A(P p) {\n" +
+				"        this.p = p;\n" +
+				"    }\n" +
 				"}"
 			};
 		this.runConformTest(
@@ -217,7 +213,7 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 		} catch (IOException e) {
 			assertTrue(false);
 		}
-		
+
 		IClassFileReader classFileReader = ToolFactory.createDefaultClassFileReader(OUTPUT_DIR + File.separator + "X.class", IClassFileReader.ALL);
 		assertNotNull(classFileReader);
 		IClassFileAttribute classFileAttribute = org.eclipse.jdt.internal.core.util.Util.getAttribute(classFileReader, IAttributeNamesConstants.SIGNATURE);
@@ -309,13 +305,13 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 		signature = tEntry.getSignature();
 		assertNotNull("no signature", signature);
 		assertEquals("Wrong signature", "TT;", new String(signature));
-		
+
 		if (!RunJavac) return;
-		
+
 		// Compare with javac
 		cleanUp();
 		runJavac("test001", testsSource);
-		
+
 		classFileReader = ToolFactory.createDefaultClassFileReader(OUTPUT_DIR + File.separator + "X.class", IClassFileReader.ALL);
 		assertNotNull(classFileReader);
 		classFileAttribute = org.eclipse.jdt.internal.core.util.Util.getAttribute(classFileReader, IAttributeNamesConstants.SIGNATURE);
@@ -408,24 +404,24 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 		assertNotNull("no signature", signature);
 		assertEquals("Wrong signature", "TT;", new String(signature));
 	}
-	
+
 	public void test002() {
 		final String[] testsSource = new String[] {
 				"X.java",
-				"class X extends p.A<String> {\n" + 
-				"    X() {\n" + 
-				"        super(null);\n" + 
-				"    }\n" + 
+				"class X extends p.A<String> {\n" +
+				"    X() {\n" +
+				"        super(null);\n" +
+				"    }\n" +
 				"}",
 				"p/A.java",
-				"package p;\n" + 
-				"public class A<P> {\n" + 
-				"    protected A(P p) {\n" + 
-				"    }\n" + 
+				"package p;\n" +
+				"public class A<P> {\n" +
+				"    protected A(P p) {\n" +
+				"    }\n" +
 				"}"
 			};
 		this.runConformTest(testsSource);
-		
+
 		IClassFileReader classFileReader = ToolFactory.createDefaultClassFileReader(OUTPUT_DIR + File.separator + "X.class", IClassFileReader.ALL);
 		assertNotNull(classFileReader);
 		IClassFileAttribute classFileAttribute = org.eclipse.jdt.internal.core.util.Util.getAttribute(classFileReader, IAttributeNamesConstants.SIGNATURE);
@@ -485,7 +481,7 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 		// Compare with javac
 		cleanUp();
 		runJavac("test002", testsSource);
-		
+
 		classFileReader = ToolFactory.createDefaultClassFileReader(OUTPUT_DIR + File.separator + "X.class", IClassFileReader.ALL);
 		assertNotNull(classFileReader);
 		classFileAttribute = org.eclipse.jdt.internal.core.util.Util.getAttribute(classFileReader, IAttributeNamesConstants.SIGNATURE);
@@ -542,32 +538,32 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 		assertNotNull("No signature", signature);
 		assertEquals("Wrong signature", "TP;", new String(signature));
 	}
-	
+
 	public void test003() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"public class X <T extends Object & p.B<? super T>> extends p.A<T> {\n" + 
-			"    protected T t;\n" + 
-			"    X(T t) {\n" + 
-			"        super(t);\n" + 
-			"        this.t = t;\n" + 
-			"    }\n" + 
+			"public class X <T extends Object & p.B<? super T>> extends p.A<T> {\n" +
+			"    protected T t;\n" +
+			"    X(T t) {\n" +
+			"        super(t);\n" +
+			"        this.t = t;\n" +
+			"    }\n" +
 			"}",
 			"p/A.java",
-			"package p;\n" + 
-			"public class A<P> {\n" + 
-			"    protected P p;\n" + 
-			"    protected A(P p) {\n" + 
-			"        this.p = p;\n" + 
-			"    }\n" + 
+			"package p;\n" +
+			"public class A<P> {\n" +
+			"    protected P p;\n" +
+			"    protected A(P p) {\n" +
+			"        this.p = p;\n" +
+			"    }\n" +
 			"}",
 			"p/B.java",
-			"package p;\n" + 
-			"public interface B<T> {\n" + 
+			"package p;\n" +
+			"public interface B<T> {\n" +
 			"}"
 		};
 		this.runConformTest(testsSource);
-		
+
 		IClassFileReader classFileReader = ToolFactory.createDefaultClassFileReader(OUTPUT_DIR + File.separator + "X.class", IClassFileReader.ALL);
 		assertNotNull(classFileReader);
 		IClassFileAttribute classFileAttribute = org.eclipse.jdt.internal.core.util.Util.getAttribute(classFileReader, IAttributeNamesConstants.SIGNATURE);
@@ -580,40 +576,40 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 		// Compare with javac
 		cleanUp();
 		runJavac("test003", testsSource);
-		
+
 		classFileReader = ToolFactory.createDefaultClassFileReader(OUTPUT_DIR + File.separator + "X.class", IClassFileReader.ALL);
 		assertNotNull(classFileReader);
 		classFileAttribute = org.eclipse.jdt.internal.core.util.Util.getAttribute(classFileReader, IAttributeNamesConstants.SIGNATURE);
 		assertNotNull(classFileAttribute);
 		signatureAttribute = (ISignatureAttribute) classFileAttribute;
 		assertEquals("Wrong signature", "<T:Ljava/lang/Object;:Lp/B<-TT;>;>Lp/A<TT;>;", new String(signatureAttribute.getSignature()));
-	}	
+	}
 
 	public void test004() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"public class X <T extends Object & p.B> extends p.A<T> {\n" + 
-			"    protected T t;\n" + 
-			"    X(T t) {\n" + 
-			"        super(t);\n" + 
-			"        this.t = t;\n" + 
-			"    }\n" + 
+			"public class X <T extends Object & p.B> extends p.A<T> {\n" +
+			"    protected T t;\n" +
+			"    X(T t) {\n" +
+			"        super(t);\n" +
+			"        this.t = t;\n" +
+			"    }\n" +
 			"}",
 			"p/A.java",
-			"package p;\n" + 
-			"public class A<P> {\n" + 
-			"    protected P p;\n" + 
-			"    protected A(P p) {\n" + 
-			"        this.p = p;\n" + 
-			"    }\n" + 
+			"package p;\n" +
+			"public class A<P> {\n" +
+			"    protected P p;\n" +
+			"    protected A(P p) {\n" +
+			"        this.p = p;\n" +
+			"    }\n" +
 			"}",
 			"p/B.java",
-			"package p;\n" + 
-			"public interface B<T> {\n" + 
+			"package p;\n" +
+			"public interface B<T> {\n" +
 			"}"
 		};
 		this.runConformTest(testsSource);
-		
+
 		IClassFileReader classFileReader = ToolFactory.createDefaultClassFileReader(OUTPUT_DIR + File.separator + "X.class", IClassFileReader.ALL);
 		assertNotNull(classFileReader);
 		IClassFileAttribute classFileAttribute = org.eclipse.jdt.internal.core.util.Util.getAttribute(classFileReader, IAttributeNamesConstants.SIGNATURE);
@@ -626,44 +622,44 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 		// Compare with javac
 		cleanUp();
 		runJavac("test004", testsSource);
-		
+
 		classFileReader = ToolFactory.createDefaultClassFileReader(OUTPUT_DIR + File.separator + "X.class", IClassFileReader.ALL);
 		assertNotNull(classFileReader);
 		classFileAttribute = org.eclipse.jdt.internal.core.util.Util.getAttribute(classFileReader, IAttributeNamesConstants.SIGNATURE);
 		assertNotNull(classFileAttribute);
 		signatureAttribute = (ISignatureAttribute) classFileAttribute;
 		assertEquals("Wrong signature", "<T:Ljava/lang/Object;:Lp/B;>Lp/A<TT;>;", new String(signatureAttribute.getSignature()));
-	}	
+	}
 
 	public void test005() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"public class X <T extends Object & p.B & p.C> extends p.A<T> {\n" + 
-			"    protected T t;\n" + 
-			"    X(T t) {\n" + 
-			"        super(t);\n" + 
-			"        this.t = t;\n" + 
-			"    }\n" + 
+			"public class X <T extends Object & p.B & p.C> extends p.A<T> {\n" +
+			"    protected T t;\n" +
+			"    X(T t) {\n" +
+			"        super(t);\n" +
+			"        this.t = t;\n" +
+			"    }\n" +
 			"}",
 			"p/A.java",
-			"package p;\n" + 
-			"public class A<P> {\n" + 
-			"    protected P p;\n" + 
-			"    protected A(P p) {\n" + 
-			"        this.p = p;\n" + 
-			"    }\n" + 
+			"package p;\n" +
+			"public class A<P> {\n" +
+			"    protected P p;\n" +
+			"    protected A(P p) {\n" +
+			"        this.p = p;\n" +
+			"    }\n" +
 			"}",
 			"p/B.java",
-			"package p;\n" + 
-			"public interface B<T> {\n" + 
+			"package p;\n" +
+			"public interface B<T> {\n" +
 			"}",
 			"p/C.java",
-			"package p;\n" + 
-			"public interface C<T> {\n" + 
-			"}"			
+			"package p;\n" +
+			"public interface C<T> {\n" +
+			"}"
 		};
 		this.runConformTest(testsSource);
-		
+
 		IClassFileReader classFileReader = ToolFactory.createDefaultClassFileReader(OUTPUT_DIR + File.separator + "X.class", IClassFileReader.ALL);
 		assertNotNull(classFileReader);
 		IClassFileAttribute classFileAttribute = org.eclipse.jdt.internal.core.util.Util.getAttribute(classFileReader, IAttributeNamesConstants.SIGNATURE);
@@ -678,7 +674,7 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 		// Compare with javac
 		cleanUp();
 		runJavac("test005", testsSource);
-		
+
 		classFileReader = ToolFactory.createDefaultClassFileReader(OUTPUT_DIR + File.separator + "X.class", IClassFileReader.ALL);
 		assertNotNull(classFileReader);
 		classFileAttribute = org.eclipse.jdt.internal.core.util.Util.getAttribute(classFileReader, IAttributeNamesConstants.SIGNATURE);
@@ -688,22 +684,22 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 		assertNotNull("No signature", signature);
 		assertEquals("Wrong signature", "<T:Ljava/lang/Object;:Lp/B;:Lp/C;>Lp/A<TT;>;", new String(signature));
 	}
-	
+
 	public void test006() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"public class X <T> {\n" + 
-			"    protected T t;\n" + 
+			"public class X <T> {\n" +
+			"    protected T t;\n" +
 			"    X(T t) {\n" +
-			"        this.t = t;\n" + 
-			"    }\n" + 
-			"	T foo(T t1) {\n" + 
-			"		return t1;\n" + 
-			"    }\n" + 
+			"        this.t = t;\n" +
+			"    }\n" +
+			"	T foo(T t1) {\n" +
+			"		return t1;\n" +
+			"    }\n" +
 			"	T field;\n" +
-			"    public static void main(String[] args) {\n" + 
-			"        System.out.print(\"SUCCESS\");\n" + 
-			"    }\n" + 
+			"    public static void main(String[] args) {\n" +
+			"        System.out.print(\"SUCCESS\");\n" +
+			"    }\n" +
 			"}",
 		};
 		this.runConformTest(
@@ -713,7 +709,7 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 		try {
 			ClassFileReader classFileReader = ClassFileReader.read(OUTPUT_DIR + File.separator + "X.class");
 			assertEquals("Wrong signature", "<T:Ljava/lang/Object;>Ljava/lang/Object;", new String(classFileReader.getGenericSignature()));
-			
+
 			IBinaryField[] fields = classFileReader.getFields();
 			assertNotNull("No fields", fields);
 			assertEquals("Wrong size", 2, fields.length);
@@ -739,18 +735,18 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 	public void test007() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"public class X <T> {\n" + 
-			"    protected T t;\n" + 
+			"public class X <T> {\n" +
+			"    protected T t;\n" +
 			"    X(T t) {\n" +
-			"        this.t = t;\n" + 
-			"    }\n" + 
-			"	T foo(X<T> x1) {\n" + 
-			"		return x1.t;\n" + 
-			"    }\n" + 
+			"        this.t = t;\n" +
+			"    }\n" +
+			"	T foo(X<T> x1) {\n" +
+			"		return x1.t;\n" +
+			"    }\n" +
 			"	X<T> field;\n" +
-			"    public static void main(String[] args) {\n" + 
-			"        System.out.print(\"SUCCESS\");\n" + 
-			"    }\n" + 
+			"    public static void main(String[] args) {\n" +
+			"        System.out.print(\"SUCCESS\");\n" +
+			"    }\n" +
 			"}",
 		};
 		this.runConformTest(
@@ -760,7 +756,7 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 		try {
 			ClassFileReader classFileReader = ClassFileReader.read(OUTPUT_DIR + File.separator + "X.class");
 			assertEquals("Wrong signature", "<T:Ljava/lang/Object;>Ljava/lang/Object;", new String(classFileReader.getGenericSignature()));
-			
+
 			IBinaryField[] fields = classFileReader.getFields();
 			assertNotNull("No fields", fields);
 			assertEquals("Wrong size", 2, fields.length);
@@ -786,13 +782,13 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 	public void test008() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"public class X  <T> {\n" + 
-			"	T newInstance() throws IllegalAccessException {\n" + 
-			"	    return null;\n" + 
-			"	}\n" + 
-			"    public static void main(String[] args) {\n" + 
-			"        System.out.print(\"SUCCESS\");\n" + 
-			"    }\n" + 
+			"public class X  <T> {\n" +
+			"	T newInstance() throws IllegalAccessException {\n" +
+			"	    return null;\n" +
+			"	}\n" +
+			"    public static void main(String[] args) {\n" +
+			"        System.out.print(\"SUCCESS\");\n" +
+			"    }\n" +
 			"}",
 		};
 		this.runConformTest(
@@ -814,20 +810,20 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 			assertTrue(false);
 		}
 	}
-	
+
 	public void test009() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"public class X<T> {\n" + 
-			"class MX<U> {\n" + 
-			"}\n" + 
-			" \n" + 
-			"public static void main(String[] args) {\n" + 
-			"    new X<Thread>().foo(new X<String>().new MX<Thread>());\n" + 
-			"}\n" + 
-			"void foo(X<String>.MX<Thread> mx) {\n" + 
-			"   System.out.println(\"SUCCESS\");\n" + 
-			"}\n" + 
+			"public class X<T> {\n" +
+			"class MX<U> {\n" +
+			"}\n" +
+			" \n" +
+			"public static void main(String[] args) {\n" +
+			"    new X<Thread>().foo(new X<String>().new MX<Thread>());\n" +
+			"}\n" +
+			"void foo(X<String>.MX<Thread> mx) {\n" +
+			"   System.out.println(\"SUCCESS\");\n" +
+			"}\n" +
 			"}",
 		};
 		this.runConformTest(
@@ -849,20 +845,20 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 			assertTrue(false);
 		}
 	}
-	
+
 	public void test010() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"public class X<T> {\n" + 
-			"class MX<U> {\n" + 
-			"}\n" + 
-			" \n" + 
-			"public static void main(String[] args) {\n" + 
-			"    new X<Thread>().foo(new X<String>().new MX<Thread>());\n" + 
-			"}\n" + 
-			"void foo(X.MX mx) {\n" + 
-			"   System.out.println(\"SUCCESS\");\n" + 
-			"}\n" + 
+			"public class X<T> {\n" +
+			"class MX<U> {\n" +
+			"}\n" +
+			" \n" +
+			"public static void main(String[] args) {\n" +
+			"    new X<Thread>().foo(new X<String>().new MX<Thread>());\n" +
+			"}\n" +
+			"void foo(X.MX mx) {\n" +
+			"   System.out.println(\"SUCCESS\");\n" +
+			"}\n" +
 			"}",
 		};
 		this.runConformTest(
@@ -883,20 +879,20 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 			assertTrue(false);
 		}
 	}
-	
+
 	public void test011() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"public class X<T> {\n" + 
-			"  class MX<U> {\n" + 
-			"  }\n" + 
-			"\n" + 
-			"  public static void main(String[] args) {\n" + 
-			"    new X<Thread>().foo(new X<String>().new MX<Thread>());\n" + 
-			"  }\n" + 
-			"  void foo(X<String>.MX<?> mx) {\n" + 
-			"	System.out.println(\"SUCCESS\");\n" + 
-			"  }\n" + 
+			"public class X<T> {\n" +
+			"  class MX<U> {\n" +
+			"  }\n" +
+			"\n" +
+			"  public static void main(String[] args) {\n" +
+			"    new X<Thread>().foo(new X<String>().new MX<Thread>());\n" +
+			"  }\n" +
+			"  void foo(X<String>.MX<?> mx) {\n" +
+			"	System.out.println(\"SUCCESS\");\n" +
+			"  }\n" +
 			"}",
 		};
 		this.runConformTest(
@@ -918,7 +914,7 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 			assertTrue(false);
 		}
 	}
-	
+
 	// WORK check whether needed or not
 	/*
 	 * Write given source test files in current output sub-directory.
@@ -952,22 +948,22 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 	public void test012() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"public class X<T> {\n" + 
-			"  class MX<U> {\n" + 
-			"  }\n" + 
-			"\n" + 
-			"  public static void main(String[] args) {\n" + 
-			"    new X<Thread>().foo(new X<String>().new MX<Thread>());\n" + 
-			"  }\n" + 
-			"  void foo(X.MX mx) {			// no signature\n" + 
-			"	System.out.println(\"SUCCESS\");\n" + 
-			"  }\n" + 
+			"public class X<T> {\n" +
+			"  class MX<U> {\n" +
+			"  }\n" +
+			"\n" +
+			"  public static void main(String[] args) {\n" +
+			"    new X<Thread>().foo(new X<String>().new MX<Thread>());\n" +
+			"  }\n" +
+			"  void foo(X.MX mx) {			// no signature\n" +
+			"	System.out.println(\"SUCCESS\");\n" +
+			"  }\n" +
 			"}",
 		};
 		this.runConformTest(
 			testsSource,
 			"SUCCESS");
-	
+
 		try {
 			ClassFileReader classFileReader = ClassFileReader.read(OUTPUT_DIR + File.separator + "X.class");
 			IBinaryMethod[] methods = classFileReader.getMethods();
@@ -981,22 +977,22 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 			assertTrue(false);
 		}
 	}
-	
+
 	public void test013() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"import java.util.ArrayList;\n" + 
-			"\n" + 
-			"public class X<T> {\n" + 
-			"	\n" + 
-			"	public static void main(String[] args) {\n" + 
-			"		System.out.println(\"SUCCESS\");\n" + 
-			"	}\n" + 
-			"	public <U> void foo(ArrayList<U> arr) {\n" + 
-			"		for (U e : arr) {\n" + 
-			"			System.out.println(e);\n" + 
-			"		}\n" + 
-			"	}\n" + 
+			"import java.util.ArrayList;\n" +
+			"\n" +
+			"public class X<T> {\n" +
+			"	\n" +
+			"	public static void main(String[] args) {\n" +
+			"		System.out.println(\"SUCCESS\");\n" +
+			"	}\n" +
+			"	public <U> void foo(ArrayList<U> arr) {\n" +
+			"		for (U e : arr) {\n" +
+			"			System.out.println(e);\n" +
+			"		}\n" +
+			"	}\n" +
 			"}",
 		};
 		this.runConformTest(
@@ -1022,13 +1018,13 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 	public void test014() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"import java.util.ArrayList;\n" + 
-			"import java.util.List;\n" + 
-			"public class X {\n" + 
-			"	private List<X> games = new ArrayList<X>();\n" + 
-			"	public static void main(String[] args) {\n" + 
-			"		System.out.println(\"SUCCESS\");\n" + 
-			"	}\n" + 
+			"import java.util.ArrayList;\n" +
+			"import java.util.List;\n" +
+			"public class X {\n" +
+			"	private List<X> games = new ArrayList<X>();\n" +
+			"	public static void main(String[] args) {\n" +
+			"		System.out.println(\"SUCCESS\");\n" +
+			"	}\n" +
 			"}",
 		};
 		this.runConformTest(
@@ -1054,7 +1050,7 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 	public void test015() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"public interface X<T> {\n" + 
+			"public interface X<T> {\n" +
 			"}",
 		};
 		this.runConformTest(
@@ -1071,20 +1067,20 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 		} catch (IOException e) {
 			assertTrue(false);
 		}
-	}	
+	}
 	// 70975 - invalid signature for method with array of type variables
 	public void test016() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"import java.util.ArrayList;\n" + 
-			"\n" + 
-			"public class X<T> {\n" + 
-			"	\n" + 
-			"	public static void main(String[] args) {\n" + 
-			"		System.out.println(\"SUCCESS\");\n" + 
-			"	}\n" + 
-			"	public <U> void foo(U[] arr) {\n" + 
-			"	}\n" + 
+			"import java.util.ArrayList;\n" +
+			"\n" +
+			"public class X<T> {\n" +
+			"	\n" +
+			"	public static void main(String[] args) {\n" +
+			"		System.out.println(\"SUCCESS\");\n" +
+			"	}\n" +
+			"	public <U> void foo(U[] arr) {\n" +
+			"	}\n" +
 			"}",
 		};
 		this.runConformTest(
@@ -1105,20 +1101,20 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 		} catch (IOException e) {
 			assertTrue(false);
 		}
-	}	
+	}
 	public void test017() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"public class X<T> {\n" + 
-			"  static class MX<U> {\n" + 
-			"  }\n" + 
-			"\n" + 
-			"  public static void main(String[] args) {\n" + 
-			"    new X<Thread>().foo(new MX<Thread>());\n" + 
-			"  }\n" + 
-			"  void foo(X.MX<?> mx) {\n" + 
-			"	System.out.println(\"SUCCESS\");\n" + 
-			"  }\n" + 
+			"public class X<T> {\n" +
+			"  static class MX<U> {\n" +
+			"  }\n" +
+			"\n" +
+			"  public static void main(String[] args) {\n" +
+			"    new X<Thread>().foo(new MX<Thread>());\n" +
+			"  }\n" +
+			"  void foo(X.MX<?> mx) {\n" +
+			"	System.out.println(\"SUCCESS\");\n" +
+			"  }\n" +
 			"}",
 		};
 		this.runConformTest(
@@ -1139,20 +1135,20 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 		} catch (IOException e) {
 			assertTrue(false);
 		}
-	}	
+	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=98322
 	public void test018() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"public class X<K extends X.Key> {\n" + 
-			"    public abstract static class Key {\n" + 
-			"         public abstract String getName();\n" + 
-			"    }\n" + 
-			"    public class Holder {}\n" + 
-			"    \n" + 
-			"    void baz(X<K>.Holder h) {} // (LX<TK;>.Holder;)V\n" + 
-			"    void bar(X.Holder h) {} // n/a\n" + 
-			"    void foo(X<Key>.Holder h) {} // (LX<LX$Key;>.Holder;)V\n" + 
+			"public class X<K extends X.Key> {\n" +
+			"    public abstract static class Key {\n" +
+			"         public abstract String getName();\n" +
+			"    }\n" +
+			"    public class Holder {}\n" +
+			"    \n" +
+			"    void baz(X<K>.Holder h) {} // (LX<TK;>.Holder;)V\n" +
+			"    void bar(X.Holder h) {} // n/a\n" +
+			"    void foo(X<Key>.Holder h) {} // (LX<LX$Key;>.Holder;)V\n" +
 			"}\n",
 		};
 		this.runConformTest(
@@ -1183,28 +1179,28 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 		} catch (IOException e) {
 			assertTrue(false);
 		}
-	}	
+	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=100293
 	public void test019() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"public class X<K extends X.Key> {\n" + 
-			"    public abstract static class Key {\n" + 
-			"         public abstract String getName();\n" + 
-			"    }\n" + 
-			"    public class Holder {}\n" + 
-			"    \n" + 
-			"    X<K>.Holder foo() { return null; }\n" + 
-			"    \n" + 
-			"    static void bar() {\n" + 
-			"    	Object o = new X<Key>().foo();\n" + 
-			"    	class Local<U> {\n" + 
-			"    		X<Key>.Holder field;\n" + 
-			"    		Local<String> foo1() { return null; }\n" + 
-			"    		Local<U> foo2() { return null; }\n" + 
-			"    		Local foo3() { return null; }\n" + 
-			"    	}\n" + 
-			"    }\n" + 
+			"public class X<K extends X.Key> {\n" +
+			"    public abstract static class Key {\n" +
+			"         public abstract String getName();\n" +
+			"    }\n" +
+			"    public class Holder {}\n" +
+			"    \n" +
+			"    X<K>.Holder foo() { return null; }\n" +
+			"    \n" +
+			"    static void bar() {\n" +
+			"    	Object o = new X<Key>().foo();\n" +
+			"    	class Local<U> {\n" +
+			"    		X<Key>.Holder field;\n" +
+			"    		Local<String> foo1() { return null; }\n" +
+			"    		Local<U> foo2() { return null; }\n" +
+			"    		Local foo3() { return null; }\n" +
+			"    	}\n" +
+			"    }\n" +
 			"}\n",
 		};
 		this.runConformTest(
@@ -1249,12 +1245,12 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 	public void test020() {
 		final String[] testsSource = new String[] {
 			"X.java",
-			"public interface X<E extends Object & X.Entry> {\n" + 
-			"  interface Entry {\n" + 
-			"    interface Internal extends Entry {\n" + 
-			"      Internal createEntry();\n" + 
-			"    }\n" + 
-			"  }\n" + 
+			"public interface X<E extends Object & X.Entry> {\n" +
+			"  interface Entry {\n" +
+			"    interface Internal extends Entry {\n" +
+			"      Internal createEntry();\n" +
+			"    }\n" +
+			"  }\n" +
 			"}\n",
 		};
 		this.runConformTest(
@@ -1279,17 +1275,17 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 	public void test021() {
 		final String[] testsSource = new String[] {
 			"a/Adapter.java", //========================
-			"package a;\n" + 
-			"public interface Adapter<T> {\n" + 
-			"  interface Setter<V> {}\n" + 
-			"  public <V> Setter<V> makeSetter();\n" + 
+			"package a;\n" +
+			"public interface Adapter<T> {\n" +
+			"  interface Setter<V> {}\n" +
+			"  public <V> Setter<V> makeSetter();\n" +
 			"}\n",
 			"a/b/Adapter.java", //========================
-			"package a.b;\n" + 
-			"public class Adapter<T> implements a.Adapter<T> {\n" + 
-			"  public <V> Adapter.Setter<V> makeSetter() {\n" + 
-			"    return new Adapter.Setter<V>() {};\n" + 
-			"  }\n" + 
+			"package a.b;\n" +
+			"public class Adapter<T> implements a.Adapter<T> {\n" +
+			"  public <V> Adapter.Setter<V> makeSetter() {\n" +
+			"    return new Adapter.Setter<V>() {};\n" +
+			"  }\n" +
 			"}\n",
 		};
 		this.runConformTest(
@@ -1300,12 +1296,12 @@ public class GenericTypeSignatureTest extends AbstractRegressionTest {
 			// check generic signature for a/b/Adapter.class
 			ClassFileReader classFileReader = ClassFileReader.read(OUTPUT_DIR + File.separator + "a" + File.separator + "b" + File.separator + "Adapter.class");
 			char[] signature = classFileReader.getGenericSignature();
-			assertEquals("Wrong signature1", "<T:Ljava/lang/Object;>Ljava/lang/Object;La/Adapter<TT;>;", new String(signature));			
+			assertEquals("Wrong signature1", "<T:Ljava/lang/Object;>Ljava/lang/Object;La/Adapter<TT;>;", new String(signature));
 
 			// check generic signature for a/b/Adapter$1.class
 			classFileReader = ClassFileReader.read(OUTPUT_DIR + File.separator + "a" + File.separator + "b" + File.separator + "Adapter$1.class");
 			signature = classFileReader.getGenericSignature();
-			assertEquals("Wrong signature2", "Ljava/lang/Object;La/Adapter$Setter<TV;>;", new String(signature));			
+			assertEquals("Wrong signature2", "Ljava/lang/Object;La/Adapter$Setter<TV;>;", new String(signature));
 		} catch (ClassFormatException e) {
 			assertTrue(false);
 		} catch (IOException e) {

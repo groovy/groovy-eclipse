@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2003-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -180,15 +180,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     // GRECLIPSE: from private to protected
     protected void outputASTInVariousFormsIfNeeded(SourceUnit sourceUnit, SourceBuffer sourceBuffer) {
         // straight xstream output of AST
+        String formatProp = System.getProperty("ANTLR.AST".toLowerCase()); // uppercase to hide from jarjar
+        
         // GRECLIPSE: removed for now...
         /*
-        if ("xml".equals(System.getProperty("antlr.ast"))) {
+        if ("xml".equals(formatProp)) {
             saveAsXML(sourceUnit.getName(), ast);
         }
         *///GRECLIPSE
 
          // 'pretty printer' output of AST
-        if ("groovy".equals(System.getProperty("antlr.ast"))) {
+        if ("groovy".equals(formatProp)) {
             try {
                 PrintStream out = new PrintStream(new FileOutputStream(sourceUnit.getName() + ".pretty.groovy"));
                 Visitor visitor = new SourcePrinter(out, tokenNames);
@@ -201,7 +203,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         
         // output AST in format suitable for opening in http://freemind.sourceforge.net
         // which is a really nice way of seeing the AST, folding nodes etc
-        if ("mindmap".equals(System.getProperty("antlr.ast"))) {
+        if ("mindmap".equals(formatProp)) {
             try {
                 PrintStream out = new PrintStream(new FileOutputStream(sourceUnit.getName() + ".mm"));
                 Visitor visitor = new MindMapPrinter(out,tokenNames);
@@ -213,7 +215,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
 
         // include original line/col info and source code on the mindmap output
-        if ("extendedMindmap".equals(System.getProperty("antlr.ast"))) {
+        if ("extendedMindmap".equals(formatProp)) {
             try {
                 PrintStream out = new PrintStream(new FileOutputStream(sourceUnit.getName() + ".mm"));
                 Visitor visitor = new MindMapPrinter(out,tokenNames,sourceBuffer);
@@ -225,7 +227,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
 
         // html output of AST
-        if ("html".equals(System.getProperty("antlr.ast"))) {
+        if ("html".equals(formatProp)) {
             try {
                 PrintStream out = new PrintStream(new FileOutputStream(sourceUnit.getName() + ".html"));
                 List<VisitorAdapter> v = new ArrayList<VisitorAdapter>();
@@ -441,8 +443,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // end
         if (isType(LITERAL_as, node)) {
             //import is like "import Foo as Bar"
-            /*ECLIPE AST*/ node = node.getFirstChild();
-            aliasNode = node.getNextSibling();
+            node = node.getFirstChild();
+            /*GRECLIPSE: removed AST */ aliasNode = node.getNextSibling();
             alias = identifier(aliasNode);
         }
         
@@ -1650,7 +1652,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         } else if (node != null) {
             configureAST(block, node);
         }
-        // end groovychange
+        // GRECLIPSE END
         
         
         for (; node != null; node = node.getNextSibling()) {

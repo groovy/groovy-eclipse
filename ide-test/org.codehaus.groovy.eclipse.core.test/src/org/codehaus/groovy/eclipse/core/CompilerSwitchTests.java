@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,10 @@ package org.codehaus.groovy.eclipse.core;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 
 /**
- * Tests that the compiler can successfully be switched back and
- * forth between versions
+ * Tests that the compiler can successfully be switched back and forth between versions.
+ *
  * @author Andrew Eisenberg
  * @created Oct 11, 2009
- *
  */
 public class CompilerSwitchTests extends EclipseTestCase {
     public void testname() throws Exception {

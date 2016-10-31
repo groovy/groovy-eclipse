@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.eclipse.jdt.groovy.core.util;
 
 import java.util.ArrayList;
@@ -29,7 +33,6 @@ import org.eclipse.jdt.internal.core.util.Util;
  *
  *          Utility methods for dealing with Groovy content types
  */
-@SuppressWarnings("restriction")
 public class ContentTypeUtils {
 
 	static class ChangeListener implements IContentTypeManager.IContentTypeChangeListener {
@@ -56,7 +59,7 @@ public class ContentTypeUtils {
 
 	private static char[][] JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS;
 
-	public static String GROOVY_SOURCE_CONTENT_TYPE = "org.eclipse.jdt.groovy.core.groovySource"; //$NON-NLS-1$
+	public static String GROOVY_SOURCE_CONTENT_TYPE = "org.eclipse.jdt.groovy.core.groovySource";
 
 	private static boolean noGroovyContentTypesErrorLogged = false; // To avoid spamming error into the log repeatedly.
 
@@ -167,12 +170,12 @@ public class ContentTypeUtils {
 				return new char[][] { "groovy".toCharArray() };
 			} else {
 				char[][] extensions = new char[length][];
-				extensions[0] = "groovy".toCharArray(); // ensure that "groovy" is first //$NON-NLS-1$
+				extensions[0] = "groovy".toCharArray(); // ensure that "groovy" is first
 				int index = 1;
 				Iterator<String> iterator = fileExtensions.iterator();
 				while (iterator.hasNext()) {
 					String fileExtension = iterator.next();
-					if ("groovy".equals(fileExtension)) //$NON-NLS-1$
+					if ("groovy".equals(fileExtension))
 						continue;
 					extensions[index++] = fileExtension.toCharArray();
 				}
@@ -227,7 +230,7 @@ public class ContentTypeUtils {
 
 		// ensure "java" is first
 		int javaIndex = 0;
-		char[] javaArr = "java".toCharArray(); //$NON-NLS-1$
+		char[] javaArr = "java".toCharArray();
 		while (javaIndex < JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS.length) {
 			if (Arrays.equals(javaArr, JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS[javaIndex])) {
 				break;
@@ -238,7 +241,7 @@ public class ContentTypeUtils {
 			JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS[javaIndex] = JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS[0];
 			JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS[0] = javaArr;
 		} else {
-			Util.log(null, "'java' not registered as a java-like extension"); //$NON-NLS-1$
+			Util.log(null, "'java' not registered as a java-like extension");
 		}
 	}
 

@@ -1,7 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
- * 
- * andrew - Initial API and implementation
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +29,6 @@ public class GenericsMappingTest extends AbstractGroovySearchTest {
         super(name);
     }
 
- 
     // GRECLIPSE-1448 unresolved super types should use a redirect.
     // resolved super types should not
     public void testGenericsMapper() throws Exception {
@@ -40,7 +37,7 @@ public class GenericsMappingTest extends AbstractGroovySearchTest {
         System.out.println(unit.getModuleNode().getClasses().get(2).getUnresolvedSuperClass().isRedirectNode());
 
         assertEquals("Got the wrong class nodee", "C", classNode.getName());
-        
+
         assertFalse("resolved super types should not be redirects", classNode.getSuperClass().isRedirectNode());
         assertTrue("unresolved super types should be redirects", classNode.getUnresolvedSuperClass().isRedirectNode());
     }

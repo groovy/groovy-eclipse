@@ -144,7 +144,7 @@ public class FormatAllGroovyAction extends FormatAllAction {
         if (getSite() instanceof IEditorSite) {
             IWorkbenchPart part = ((IEditorSite) getSite()).getPart();
             if (part instanceof GroovyEditor) {
-                GroovyCompilationUnit unit = (GroovyCompilationUnit) part.getAdapter(GroovyCompilationUnit.class);
+                GroovyCompilationUnit unit = part.getAdapter(GroovyCompilationUnit.class);
                 if (unit != null) {
                     super.run(new StructuredSelection(unit));
                 }

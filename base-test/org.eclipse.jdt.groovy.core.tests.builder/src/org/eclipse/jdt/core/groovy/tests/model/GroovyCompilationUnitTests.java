@@ -120,6 +120,7 @@ public class GroovyCompilationUnitTests extends AbstractGroovyTypeRootTests {
         unit1.discardWorkingCopy();
     }
 
+    @SuppressWarnings("rawtypes")
     public void testGetModuleNode_4() throws Exception {
         IFile groovyFile = createSimpleGroovyProject();
         GroovyCompilationUnit unit1 = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(groovyFile);

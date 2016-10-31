@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,143 +13,123 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.codeassist.tests;
+package org.codehaus.groovy.eclipse.codeassist.tests
 
-import org.codehaus.groovy.eclipse.codeassist.processors.GroovyImportRewriteFactory;
-import org.codehaus.groovy.eclipse.codeassist.processors.GroovyProposalTypeSearchRequestor;
-
-import groovy.util.GroovyTestCase;
+import org.codehaus.groovy.eclipse.codeassist.processors.GroovyImportRewriteFactory
 
 /**
- * 
  * @author Andrew Eisenberg
  * @created Jul 29, 2010
  */
-class FindImportsRegionTests extends GroovyTestCase {
-    public void testFindImportsRegion0() throws Exception {
-        checkRegion("""""","""""")
+final class FindImportsRegionTests extends GroovyTestCase {
+
+    void testFindImportsRegion0() {
+        checkRegion('', '')
     }
-    public void testFindImportsRegion1() throws Exception {
-        checkRegion(
-                """
-package p
-import a
-import b
-class I { }            
-            """,
-                """
-package p
-import a
-import b
-"""
-                )
+
+    void testFindImportsRegion1() {
+        checkRegion('''
+            package p
+            import a
+            import b
+            class I { }
+            '''.stripIndent(), '''
+            package p
+            import a
+            import b
+            '''.stripIndent())
     }
-    
-    public void testFindImportsRegion2() throws Exception {
-        checkRegion(
-                """
-import a
-import b
-class I { }            
-                """,
-                """
-import a
-import b
-"""
-                )
+
+    void testFindImportsRegion2() {
+        checkRegion('''
+            import a
+            import b
+            class I { }
+            '''.stripIndent(), '''
+            import a
+            import b
+            '''.stripIndent())
     }
-    
-    // we made the decision only to look at import statements that start at the 
+
+    // we made the decision only to look at import statements that start at the
     // beginning of the line.  An argument can be made otherwise and this can
     // be changed in the future
-    public void testFindImportsRegion3() throws Exception {
-        checkRegion(
-                """
-import a
- import b
-class I { }            
-                """,
-                """
-import a
-"""
-                )
-    }
-    
-    public void testFindImportsRegion4() throws Exception {
-        checkRegion(
-                """
- import a
-import b
-class I { }
-                """,
-                """
- import a
-import b
-"""
-        )
+    void testFindImportsRegion3() {
+        checkRegion('''
+            import a
+             import b
+            class I { }
+            '''.stripIndent(), '''
+            import a
+            '''.stripIndent())
     }
 
-    
-    public void testFindImportsRegion5() throws Exception {
-        checkRegion(
-            """
-package p
-class I { }
-            """,
-            """
-package p
-"""
-                )
+    void testFindImportsRegion4() {
+        checkRegion('''
+             import a
+            import b
+            class I { }
+            '''.stripIndent(), '''
+             import a
+            import b
+            '''.stripIndent())
     }
 
-    public void testFindImportsRegion6() throws Exception {
-        checkRegion(
-            """package p
-class I { }
-            """,
-            """package p
-"""
-                )
+    void testFindImportsRegion5() {
+        checkRegion('''
+            package p
+            class I { }
+            '''.stripIndent(), '''
+            package p
+            '''.stripIndent())
     }
 
-    public void testFindImportsRegion7() throws Exception {
-        checkRegion(
-            """/**
-            *
-            * 
-            */
-package p
-class I { }
-            """,
-            """/**
-            *
-            * 
-            */
-package p
-"""
-                )
+    void testFindImportsRegion6() {
+        checkRegion('''\
+            package p
+            class I { }
+            '''.stripIndent(), '''\
+            package p
+            '''.stripIndent())
     }
 
-        public void testFindImportsRegion8() throws Exception {
-        checkRegion(
-            """/**
-            *
-            * 
-            */
-package p
-import a.b.c // fdsaffdsa
-class I { }
-            """,
-            """/**
-            *
-            * 
-            */
-package p
-import a.b.c // fdsaffdsa
-"""
-                )
+    void testFindImportsRegion7() {
+        checkRegion('''\
+            /**
+             *
+             *
+             */
+            package p
+            class I { }
+            '''.stripIndent(), '''\
+            /**
+             *
+             *
+             */
+            package p
+            '''.stripIndent())
     }
+
+    void testFindImportsRegion8() {
+        checkRegion('''\
+            /**
+             *
+             *
+             */
+            package p
+            import a.b.c // fdsaffdsa
+            class I { }
+            '''.stripIndent(), '''\
+            /**
+             *
+             *
+             */
+            package p
+            import a.b.c // fdsaffdsa
+            '''.stripIndent())
+    }
+
     void checkRegion(String initial, String expected) {
-        assertEquals expected, GroovyImportRewriteFactory.findImportsRegion(initial).toString();
+        assertEquals(expected, GroovyImportRewriteFactory.findImportsRegion(initial).toString())
     }
 }

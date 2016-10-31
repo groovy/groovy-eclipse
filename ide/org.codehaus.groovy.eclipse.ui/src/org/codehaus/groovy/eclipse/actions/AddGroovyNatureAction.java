@@ -32,17 +32,17 @@ import org.eclipse.ui.IWorkbenchPart;
 /**
  * AddGroovyNatureAction is responsible for managing the addition of the Groovy nature to a java
  * project.
- * 
+ *
  * @author Andrew
  */
 public class AddGroovyNatureAction implements IObjectActionDelegate {
     private List<IProject> currSelected = new LinkedList<IProject>();
 
     public void run(final IAction action) {
-        
+
         if (currSelected != null && currSelected.size() > 0) {
             GroovyCore.trace("AddGroovySupportAction.run()");
-            
+
             for (IProject project : currSelected) {
                 GroovyCore.trace("   to " + project.getName());
                 GroovyRuntime.addGroovyRuntime(project);
@@ -62,7 +62,7 @@ public class AddGroovyNatureAction implements IObjectActionDelegate {
             for (Iterator<?> iter = newSelection.iterator(); iter.hasNext();) {
                 Object object = iter.next();
                 if (object instanceof IAdaptable) {
-                    IProject project = (IProject) ((IAdaptable)object).getAdapter(IProject.class);  
+                    IProject project = ((IAdaptable)object).getAdapter(IProject.class);
                     if(project != null) {
                         newSelected.add(project);
                     } else {

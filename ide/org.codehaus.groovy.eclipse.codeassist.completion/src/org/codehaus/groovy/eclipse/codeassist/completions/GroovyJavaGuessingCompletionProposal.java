@@ -28,7 +28,6 @@ import org.eclipse.jdt.internal.ui.javaeditor.EditorHighlightingSynchronizer;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal;
-import org.eclipse.jdt.internal.ui.text.java.ParameterGuessingProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.BadLocationException;

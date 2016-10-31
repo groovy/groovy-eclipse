@@ -85,7 +85,7 @@ public class RenameTypeTests extends RefactoringTest {
         assertTrue("cu " + newcu.getElementName()+ " does not exist", newcu.exists());
         assertEqualLines("invalid renaming", getFileContents(getOutputTestFileName(newCUName)), newcu.getSource());
 
-        INameUpdating nameUpdating= ((INameUpdating)refactoring.getAdapter(INameUpdating.class));
+        INameUpdating nameUpdating= (refactoring.getAdapter(INameUpdating.class));
         IType newElement = (IType) nameUpdating.getNewElement();
         assertTrue("new element does not exist:\n" + newElement.toString(), newElement.exists());
 
@@ -133,7 +133,7 @@ public class RenameTypeTests extends RefactoringTest {
         project.setOption(JavaCore.CODEASSIST_ARGUMENT_PREFIXES, prefixes);
         project.setOption(JavaCore.CODEASSIST_ARGUMENT_SUFFIXES, suffixes);
     }
-    
+
     private void checkMappers(Refactoring refactoring, IType type, String newCUName, IJavaElement[] someClassMembers) {
         RenameTypeProcessor rtp= (RenameTypeProcessor)((RenameRefactoring) refactoring).getProcessor();
 
@@ -165,11 +165,11 @@ public class RenameTypeTests extends RefactoringTest {
             assertFalse(refactoredMember.equals(member));
         }
     }
-    
+
     /********************
      * The tests
      */
-    
+
     // Rename paramter type
     public void test1() throws Exception {
         helper2("A", "B");
@@ -222,7 +222,7 @@ public class RenameTypeTests extends RefactoringTest {
     public void test13() throws Exception {
         helper2("A", "B");
     }
-    
+
     // some funky things with annotations
     public void testAnnotation1() throws Exception {
         helper2("A", "B");
@@ -235,7 +235,7 @@ public class RenameTypeTests extends RefactoringTest {
     public void testAnnotation3() throws Exception {
         helper2("A", "B");
     }
-    
+
     public void testAlias1() throws Exception {
         IPackageFragment p2= getRoot().createPackageFragment("p2", true, null);
         String folder= "p2/";
@@ -281,7 +281,7 @@ public class RenameTypeTests extends RefactoringTest {
     public void testInner1() throws Exception {
         helperWithTextual("Outer", "A", "B", "Outer", true, false);
     }
-    
+
     public void testJavadoc1() throws Exception {
     	helperWithTextual("A", "A", "B", "B", true, true);
     }

@@ -330,7 +330,7 @@ public class ASTWriter extends CodeVisitorSupport implements
 		groovyCode.append(node.getName() + " ");
 		groovyCode.append('{');
 		for(int i = 0; i < node.getFields().size(); i++){
-			FieldNode fn = (FieldNode) node.getFields().get(i);
+			FieldNode fn = node.getFields().get(i);
 			if(i == 0)
 				groovyCode.append(fn.getName());
 			else{
@@ -351,7 +351,7 @@ public class ASTWriter extends CodeVisitorSupport implements
         if (annotionMap.isEmpty()) return;
         Iterator<AnnotationNode> it = annotionMap.iterator();
         while (it.hasNext()) {
-            AnnotationNode an = (AnnotationNode) it.next();
+            AnnotationNode an = it.next();
 
             // annotations with no member-value pairs are having
             // an invalid lastLineNumber.  It is 1 greater than it should be.
@@ -761,7 +761,7 @@ public class ASTWriter extends CodeVisitorSupport implements
      */
     private boolean shouldIgnoreReturn() {
         if (root.getClasses().size() == 1) {
-            ClassNode clazz = (ClassNode) root.getClasses().get(0);
+            ClassNode clazz = root.getClasses().get(0);
             if (clazz.isScript()) {
                 MethodNode runMethod = clazz.getMethod("run", new Parameter[0]);
                 if (runMethod != null) {

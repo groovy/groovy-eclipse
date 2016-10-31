@@ -32,7 +32,6 @@ import org.eclipse.jdt.debug.core.IJavaLineBreakpoint;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jdt.internal.debug.core.JDIDebugPlugin;
 import org.eclipse.jdt.internal.debug.core.breakpoints.JavaLineBreakpoint;
-import org.eclipse.jdt.internal.debug.ui.BreakpointMarkerUpdater;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -43,7 +42,7 @@ import org.eclipse.ui.texteditor.MarkerUtilities;
 
 /**
  * Largely borrowed from {@link BreakpointMarkerUpdater}
- * 
+ *
  * @author Andrew Eisenberg
  * @created Oct 6, 2009
  *
@@ -148,7 +147,7 @@ public class BreakpointUpdater implements IMarkerUpdater {
      * Returns if the specified marker is for an <code>IJavaLineBreakpoint</code>
      * @param marker
      * @return true if the marker is for an <code>IJavalineBreakpoint</code>, false otherwise
-     * 
+     *
      * @since 3.4
      */
     private boolean isLineBreakpoint(IMarker marker) {
@@ -163,7 +162,7 @@ public class BreakpointUpdater implements IMarkerUpdater {
      * @param currentmarker the current marker we are comparing to see if it will be moved onto an existing one
      * @return an existing line breakpoint on the current line of the given resource and type if there is one
      * @throws CoreException
-     * 
+     *
      * @since 3.4
      */
     private IJavaLineBreakpoint lineBreakpointExists(IResource resource, String typeName, int lineNumber, IMarker currentmarker) throws CoreException {

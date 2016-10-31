@@ -1,28 +1,27 @@
-/*******************************************************************************
- * Copyright (c) 2011 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *     Kris De Volder - minor changes to visibility modifiers
- *******************************************************************************/
+/*
+ * Copyright 2009-2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.refactoring.test;
 
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
-import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.ltk.core.refactoring.Change;
@@ -39,35 +38,32 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatusEntry;
 /**
  * Copied from org.eclipse.ajdt.core.tests.refactoring.AbstractAJDTRefactoringTest in
  * AJDT.  Provides a simpler way to test refactorings
- * 
+ *
  * @author Andrew Eisenberg
  * @created Jun 24, 2011
  */
 public abstract class AbstractRefactoringTest extends EclipseTestCase {
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        GroovyRuntime.addGroovyRuntime(testProject.getProject());
-        testProject.addNature(GroovyNature.GROOVY_NATURE);
         testProject.createPackage("p");
     }
-    
-    
+
     protected ICompilationUnit[] createUnits(String[] packages, String[] cuNames, String[] cuContents) throws CoreException {
         return testProject.createUnits(packages, cuNames, cuContents);
     }
-    
+
     protected ICompilationUnit createUnit(String pkg, String cuName, String cuContents) throws CoreException {
         return testProject.createUnit(pkg, cuName, cuContents);
     }
-    
+
     protected void assertContents(ICompilationUnit[] existingUnits, String[] expectedContents) throws JavaModelException {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < existingUnits.length; i++) {
             if (expectedContents[i] != null) {
                 char[] contents = extractContents(existingUnits[i]);
-                
+
                 String actualContents = String.valueOf(contents);
                 if (!actualContents.equals(expectedContents[i])) {
                     sb.append("\n-----EXPECTING-----\n");
@@ -109,7 +105,7 @@ public abstract class AbstractRefactoringTest extends EclipseTestCase {
             fail("Refactoring produced unexpected results:" + sb.toString());
         }
     }
-    
+
     protected RefactoringStatus performRefactoring(Refactoring ref, boolean providesUndo, boolean performOnFail) throws Exception {
         // force updating of indexes
         super.fullProjectBuild();
@@ -134,7 +130,7 @@ public abstract class AbstractRefactoringTest extends EclipseTestCase {
         return status;
     }
 
-    
+
     /**
      * Can ignore all errors that don't have anything to do with us.
      */
@@ -143,7 +139,7 @@ public abstract class AbstractRefactoringTest extends EclipseTestCase {
         if (result.getSeverity() != RefactoringStatus.ERROR) {
             return result;
         }
-        
+
         RefactoringStatusEntry[] entries = result.getEntries();
         for (int i = 0; i < entries.length; i++) {
             // if this entries is known or it isn't an error,
@@ -160,16 +156,16 @@ public abstract class AbstractRefactoringTest extends EclipseTestCase {
     private boolean checkStringForKnownErrors(String resultString) {
         return resultString.indexOf("Found potential matches") >= 0 ||
         resultString.indexOf("Method breakpoint participant") >= 0 ||
-        resultString.indexOf("Watchpoint participant") >= 0 || 
-        resultString.indexOf("Breakpoint participant") >= 0 || 
+        resultString.indexOf("Watchpoint participant") >= 0 ||
+        resultString.indexOf("Breakpoint participant") >= 0 ||
         resultString.indexOf("Launch configuration participant") >= 0;
     }
 
     protected void performDummySearch() throws Exception {
         RefactoringTest.performDummySearch(testProject.getJavaProject().findPackageFragment(new Path("/src/p")));
     }
-    
-    
+
+
     protected final Refactoring createRefactoring(RefactoringDescriptor descriptor) throws CoreException {
         RefactoringStatus status= new RefactoringStatus();
         Refactoring refactoring= descriptor.createRefactoring(status);
@@ -183,7 +179,7 @@ public abstract class AbstractRefactoringTest extends EclipseTestCase {
         undoManager.flush();
         return undoManager;
     }
-    
+
     protected void executePerformOperation(final PerformChangeOperation perform, IWorkspace workspace) throws CoreException {
         workspace.run(perform, new NullProgressMonitor());
     }

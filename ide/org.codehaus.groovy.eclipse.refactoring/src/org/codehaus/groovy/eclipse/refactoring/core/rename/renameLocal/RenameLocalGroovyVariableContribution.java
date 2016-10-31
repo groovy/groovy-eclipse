@@ -17,7 +17,7 @@ import org.eclipse.ltk.core.refactoring.participants.RenameRefactoring;
 public class RenameLocalGroovyVariableContribution extends JavaUIRefactoringContribution {
 
     public static final String ID = "org.codehaus.groovy.eclipse.refactoring.renameLocal";
-    
+
     @Override
     public Refactoring createRefactoring(JavaRefactoringDescriptor descriptor,
             RefactoringStatus status) throws CoreException {
@@ -32,11 +32,8 @@ public class RenameLocalGroovyVariableContribution extends JavaUIRefactoringCont
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public RefactoringDescriptor createDescriptor(String id, String project,
-            String description, String comment, Map arguments, int flags)
-            throws IllegalArgumentException {
+    public RefactoringDescriptor createDescriptor(String id, String project, String description, String comment, Map<String, String> arguments, int flags) throws IllegalArgumentException {
         return new RenameJavaElementDescriptor(id, project, description, comment, arguments, flags);
     }
 }

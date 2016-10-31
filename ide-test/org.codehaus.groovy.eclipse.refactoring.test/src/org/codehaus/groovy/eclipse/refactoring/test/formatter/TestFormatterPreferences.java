@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.formatter;
 
-import java.util.Hashtable;
-
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.preferences.FormatterPreferenceInitializer;
 import org.codehaus.groovy.eclipse.preferences.FormatterPreferencesPage;
 import org.codehaus.groovy.eclipse.refactoring.PreferenceConstants;
@@ -26,13 +23,11 @@ import org.codehaus.groovy.eclipse.refactoring.formatter.IFormatterPreferences;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.ProjectScope;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
-
 
 /**
  * This tets suite is to contain some tests for checking whether
@@ -53,26 +48,21 @@ public class TestFormatterPreferences extends EclipseTestCase {
     private static final String SMART_PASTE = org.eclipse.jdt.ui.PreferenceConstants.EDITOR_SMART_PASTE;
 
     private GroovyCompilationUnit gunit;
-    private Hashtable saveJavaOptions;
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        saveJavaOptions = JavaCore.getOptions();
-        if (!hasGroovyNature())
-            GroovyRuntime.addGroovyRuntime(testProject.getProject());
-        pack = testProject.createPackage("nice.pkg");
-        gunit = (GroovyCompilationUnit) pack.createCompilationUnit("Test.groovy", "public class Test { }", true,
-                new NullProgressMonitor());
-        //Ensure we start tests with default values
+
+        gunit = (GroovyCompilationUnit) testProject.createUnit("nice.pkg", "Test.groovy", "public class Test { }");
+
+        // ensure tests start with default values
         new FormatterPreferenceInitializer().initializeDefaultPreferences();
     }
 
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-        JavaCore.setOptions(saveJavaOptions);
-        //Ensure we reset preferences changed during tests to default values
+        // reset preferences changed during tests to default values
         new FormatterPreferenceInitializer().initializeDefaultPreferences();
     }
 
@@ -224,11 +214,5 @@ public class TestFormatterPreferences extends EclipseTestCase {
         groovyPrefs.setValue(PreferenceConstants.GROOVY_FORMATTER_REMOVE_UNNECESSARY_SEMICOLONS, false);
         formatPrefs = new FormatterPreferences(gunit);
         assertTrue(formatPrefs.isRemoveUnnecessarySemicolons() == false);
-    }
-
-    protected void setJavaPreference(String name, String value) {
-        Hashtable options = JavaCore.getOptions();
-        options.put(name, value);
-        JavaCore.setOptions(options);
     }
 }

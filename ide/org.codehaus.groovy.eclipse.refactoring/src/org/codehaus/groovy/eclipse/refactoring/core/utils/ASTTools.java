@@ -79,9 +79,8 @@ public class ASTTools {
 
 		if (block.getStatements().size() > 0) {
 			// Set relative position of the new statement block
-			Statement firstStmt = (Statement) block.getStatements().get(0);
-			Statement lastStmt = (Statement) block.getStatements().get(
-					block.getStatements().size() - 1);
+			Statement firstStmt = block.getStatements().get(0);
+			Statement lastStmt = block.getStatements().get(block.getStatements().size() - 1);
 
 			// solve false line information in non explicit
 			// return statement

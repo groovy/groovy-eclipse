@@ -39,11 +39,11 @@ public class GroovyActivator extends Plugin {
     public GroovyActivator() {
         DEFAULT = this;
     }
-    
+
     public static GroovyActivator getDefault() {
         return DEFAULT;
     }
-    
+
     @Override
     public void start(BundleContext context) throws Exception {
         if (Boolean.parseBoolean(System.getProperty("greclipse.debug.trace_compiler_start", "false"))) {
@@ -98,7 +98,7 @@ public class GroovyActivator extends Plugin {
         Bundle bundle = GroovyActivator.getDefault().getBundle();
         URL entry = bundle.getEntry(GroovyActivator.GROOVY_ALL_JAR);
         if (entry==null) {
-        	throw new RuntimeException("Couldn't find '"+GroovyActivator.GROOVY_ALL_JAR+"' in bundle "+bundle.getSymbolicName()+" "+bundle.getVersion());
+            throw new RuntimeException("Couldn't find '"+GroovyActivator.GROOVY_ALL_JAR+"' in bundle "+bundle.getSymbolicName()+" "+bundle.getVersion());
         }
         GROOVY_ALL_JAR_URL = FileLocator.resolve(entry);
     }

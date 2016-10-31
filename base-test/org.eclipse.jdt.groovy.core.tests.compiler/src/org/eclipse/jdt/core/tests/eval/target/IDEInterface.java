@@ -133,7 +133,7 @@ boolean isConnected() {
 /**
  * Sends the result of the evaluation to the IDE.
  */
-protected void sendResult(Class resultType, Object resultValue) {
+protected void sendResult(Class<?> resultType, Object resultValue) {
 	if (this.socket == null) {
 		return;
 	}

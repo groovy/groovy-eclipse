@@ -32,7 +32,7 @@ import org.osgi.framework.Version;
  * @author Andrew Eisenberg
  * @created Nov 4, 2009
  */
-public final class InferencingTests extends AbstractInferencingTest {
+public class InferencingTests extends AbstractInferencingTest {
 
     public static Test suite() {
         return buildTestSuite(InferencingTests.class);
@@ -41,19 +41,6 @@ public final class InferencingTests extends AbstractInferencingTest {
     public InferencingTests(String name) {
         super(name);
     }
-
-    private void assertNoUnknowns(String contents) {
-        GroovyCompilationUnit unit = createUnit("Search", contents);
-
-        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
-        visitor.DEBUG = true;
-        UnknownTypeRequestor requestor = new UnknownTypeRequestor();
-        visitor.visitCompilationUnit(requestor);
-        List<ASTNode> unknownNodes = requestor.getUnknownNodes();
-        assertTrue("Should not have found any AST nodes with unknown confidence, but instead found:\n" + unknownNodes, unknownNodes.isEmpty());
-    }
-
-    //
 
     public void testLocalVar1() throws Exception {
         String contents ="def x\nthis.x";
@@ -226,15 +213,33 @@ public final class InferencingTests extends AbstractInferencingTest {
         String contents = "def x = [] << \"\"\nx";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
-        // Should be java.util.List<java.lang.String>
-        assertTypeOneOf(contents, start, end,
-            "java.util.Collection<java.lang.Object>",
-            "java.util.List<java.lang.Object>"
-        );
+        assertTypeOneOf(contents, start, end, // TODO: java.util.List<java.lang.String>
+            "java.util.Collection<java.lang.Object>", "java.util.List<java.lang.Object>");
     }
 
     public void testInferClosure1() throws Exception {
-        assertType("x.&y", "groovy.lang.Closure");
+        String contents = "def fn = { a, b -> a + b }";
+        assertType(contents, 4, 6, "groovy.lang.Closure");
+    }
+
+    public void testInferClosure2() throws Exception {
+        String contents = "def fn = { int a, int b -> a + b }";
+        assertType(contents, 4, 6, "groovy.lang.Closure"); //<java.lang.Integer>
+    }
+
+    public void _testInferClosure3() throws Exception {
+        String contents = "def fn = x.&y";
+        assertType(contents, 4, 6, "groovy.lang.Closure");
+    }
+
+    public void _testInferClosure4() throws Exception {
+        String contents = "def fn = 'abc'.&length";
+        assertType(contents, 4, 6, "groovy.lang.Closure"); //<java.lang.Integer>
+    }
+
+    public void _testInferClosure5() throws Exception {
+        String contents = "def fn = Collections.&emptyList";
+        assertType(contents, 4, 6, "groovy.lang.Closure"); //<java.util.List>
     }
 
     public void testSpread1() throws Exception {
@@ -371,8 +376,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
     }
 
+    // GRECLISPE-1244
     public void testStaticMethodCall5() throws Exception {
-        // GRECLISPE-1244
         String contents =
                 "class Parent {\n" +
                 "    static p() {}\n" +
@@ -386,8 +391,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Parent");
     }
 
+    // GRECLISPE-1244
     public void testStaticMethodCall6() throws Exception {
-        // GRECLISPE-1244
         createUnit("Parent",
                 "class Parent {\n" +
                 "    static p() {}\n" +
@@ -549,8 +554,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    // GRECLIPSE-743
     public void testOverrideCategory1() throws Exception {
-        // GRECLIPSE-743
         String contents = "class A { }\n new A().getAt() ";
         int start = contents.lastIndexOf("getAt");
         int end = start + "getAt".length();
@@ -620,47 +625,49 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testGRECLIPSE1720() throws Exception {
         String contents = "import groovy.transform.CompileStatic\n" +
-                "@CompileStatic\n" +
-                "public class Bug {\n" +
-                "enum Letter { A,B,C }\n" +
-                "boolean bug(Letter l) {\n" +
-                "boolean isEarly = l in [Letter.A,Letter.B]\n" +
-                "isEarly\n" +
-                "}\n" +
-                "}";
+                    "@CompileStatic\n" +
+                    "public class Bug {\n" +
+                    "enum Letter { A,B,C }\n" +
+                    "boolean bug(Letter l) {\n" +
+                    "boolean isEarly = l in [Letter.A,Letter.B]\n" +
+                    "isEarly\n" +
+                    "}\n" +
+                    "}";
         int start = contents.lastIndexOf("isEarly");
         int end = start + "isEarly".length();
         assertType(contents, start, end, "java.lang.Boolean");
     }
 
-    private static final String catchString = "try {     } catch (NullPointerException e) { e }";
-    private static final String catchString2 = "try {     } catch (e) { e }";
-
     public void testCatchBlock1() throws Exception {
+        String catchString = "try {     } catch (NullPointerException e) { e }";
         int start = catchString.lastIndexOf("NullPointerException");
         int end = start + "NullPointerException".length();
         assertType(catchString, start, end, "java.lang.NullPointerException");
     }
 
     public void testCatchBlock2() throws Exception {
+        String catchString = "try {     } catch (NullPointerException e) { e }";
         int start = catchString.lastIndexOf("e");
         int end = start + 1;
         assertType(catchString, start, end, "java.lang.NullPointerException");
     }
 
     public void testCatchBlock3() throws Exception {
-        int start = catchString.indexOf("NullPointerException" + " e");
-        int end = start + ("NullPointerException" + " e").length();
+        String catchString = "try {     } catch (NullPointerException e) { e }";
+        int start = catchString.indexOf("NullPointerException e");
+        int end = start + ("NullPointerException e").length();
         assertType(catchString, start, end, "java.lang.NullPointerException");
     }
 
     public void testCatchBlock4() throws Exception {
+        String catchString2 = "try {     } catch (e) { e }";
         int start = catchString2.indexOf("e");
         int end = start + 1;
         assertType(catchString2, start, end, "java.lang.Exception");
     }
 
     public void testCatchBlock5() throws Exception {
+        String catchString2 = "try {     } catch (e) { e }";
         int start = catchString2.lastIndexOf("e");
         int end = start + 1;
         assertType(catchString2, start, end, "java.lang.Exception");
@@ -743,8 +750,7 @@ public final class InferencingTests extends AbstractInferencingTest {
 
     public void testInClosure2c() throws Exception {
         // closure in a closure and owner is outer closure
-        String contents =
-                "first {\n second {\n owner } }";
+        String contents = "first {\n second {\n owner } }";
         int start = contents.lastIndexOf("owner");
         int end = start + "owner".length();
         if (GroovyUtils.GROOVY_LEVEL > 17) {
@@ -895,9 +901,9 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Object");
     }
 
+    // the declaring type of things inside of a closure should be the declaring
+    // type of the method that calls the closure
     public void testInClosureDeclaringType1() throws Exception {
-        // the declaring type of things inside of a closure should be the declaring
-        // type of the method that calls the closure
         String contents =
                 "class Baz {\n" +
                 "  def method() { }\n" +
@@ -915,8 +921,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "Baz");
     }
 
+    // Unknown references should have the declaring type of the closure
     public void testInClosureDeclaringType2() throws Exception {
-        // Unknown references should have the declaring type of the closure
         String contents =
                 "class Baz {\n" +
                 "  def method() { }\n" +
@@ -931,8 +937,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "Search", false, true);
     }
 
+    // Unknown references should have the delegate type of the closure
     public void testInClosureDeclaringType3() throws Exception {
-        // Unknown references should have the delegate type of the closure
         String contents =
                 "class Baz {\n" +
                 "  def method() { }\n" +
@@ -949,8 +955,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "Bar", false, true);
     }
 
+    // 'this' is always the enclosing type
     public void testInClosureDeclaringType4() throws Exception {
-        // 'this' is always the enclosing type
         String contents =
                 "class Bar {\n" +
                 "  def method() { }\n" +
@@ -963,8 +969,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "Search", false);
     }
 
+    // 'delegate' always has declaring type of closure
     public void testInClosureDeclaringType5() throws Exception {
-        // 'delegate' always has declaring type of closure
         // failing on 1.7
         if (GroovyUtils.GROOVY_LEVEL > 17) {
             String contents =
@@ -980,8 +986,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         }
     }
 
+    // Unknown references should have the declaring type of the enclosing method
     public void testInClassDeclaringType1() throws Exception {
-        // Unknown references should have the declaring type of the enclosing method
         String contents =
                 "class Baz {\n" +
                 "  def method() {\n" +
@@ -993,8 +999,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "Baz", false, true);
     }
 
+    // Unknown references should have the declaring type of the enclosing closure
     public void testInClassDeclaringType2() throws Exception {
-        // Unknown references should have the declaring type of the enclosing closure
         String contents =
             "class Baz {\n" +
             "  def method = {\n" +
@@ -1045,8 +1051,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    // test DGM
     public void testDoubleClosure3() throws Exception {
-        // test DGM
         String contents =
                 "''.foo {\n" +
                 "  1.foo {\n" +
@@ -1111,9 +1117,9 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "Search");
     }
 
+    // GRECLIPSE-1748
+    // Closure type inference with @CompileStatic
     public void testClosureTypeInference1() throws Exception {
-        // GRECLIPSE-1748
-        // Closure type inference with @CompileStatic
         if (GroovyUtils.GROOVY_LEVEL < 21) {
             return;
         }
@@ -1139,8 +1145,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.beans.PropertyChangeEvent");
     }
 
+    // Closure type inference without @CompileStatic
     public void testClosureTypeInference2() throws Exception {
-        // Closure type inference without @CompileStatic
         if (GroovyUtils.GROOVY_LEVEL < 21) {
             return;
         }
@@ -1164,9 +1170,9 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.beans.PropertyChangeEvent");
     }
 
+    // GRECLIPSE-1751
+    // Test 'with' operator. No annotations.
     public void testWithAndClosure1() throws Exception {
-        // GRECLIPSE-1751
-        // Test 'with' operator. No annotations.
         createUnit("p", "D",
                 "package p\n" +
                 "class D {\n" +
@@ -1203,8 +1209,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    // Test 'with' operator. @TypeChecked annotation.
     public void testWithAndClosure2() throws Exception {
-        // Test 'with' operator. @TypeChecked annotation.
         createUnit("p", "D",
                 "package p\n" +
                 "class D {\n" +
@@ -1242,8 +1248,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.String");
     }
 
+    // Test 'with' operator. @CompileStatic annotation.
     public void testWithAndClosure3() throws Exception {
-        // Test 'with' operator. @CompileStatic annotation.
         createUnit("p", "D",
                 "package p\n" +
                 "class D {\n" +
@@ -1286,8 +1292,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         }
     }
 
+    // Another test 'with' operator. @CompileStatic annotation.
     public void testWithAndClosure4() throws Exception {
-        // Another test 'with' operator. @CompileStatic annotation.
         createUnit("p", "D",
                 "package p\n" +
                 "class D {\n" +
@@ -1325,8 +1331,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         }
     }
 
+    // Unknown references should have the declaring type of the enclosing closure
     public void testInScriptDeclaringType() throws Exception {
-        // Unknown references should have the declaring type of the enclosing closure
         String contents =
             "other\n";
         int start = contents.lastIndexOf("other");
@@ -1398,6 +1404,7 @@ public final class InferencingTests extends AbstractInferencingTest {
         "new GetAt()[0].startsWith()\n" +
         "GetAt g\n" +
         "g[0].startsWith()";
+
     private static final String CONTENTS_GETAT2 =
         "class GetAt {\n" +
         "}\n" +
@@ -1432,8 +1439,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(CONTENTS_GETAT2, start, end, "GetAt", false, true);
     }
 
+    // GRECLIPSE-1013
     public void testCategoryMethodAsField() throws Exception {
-        // GRECLIPSE-1013
         String contents = "''.toURL().text";
 
         int textStart = contents.indexOf("text");
@@ -1490,8 +1497,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         String contents = "def (x, y) = []\nx\ny";
         int xStart = contents.lastIndexOf("x");
         int yStart = contents.lastIndexOf("y");
-        assertType(contents, xStart, xStart+1, "java.lang.Object");
-        assertType(contents, yStart, yStart+1, "java.lang.Object");
+        assertType(contents, xStart, xStart + 1, "java.lang.Object");
+        assertType(contents, yStart, yStart + 1, "java.lang.Object");
     }
 
     public void testMultiDecl2() throws Exception {
@@ -1574,22 +1581,21 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, yStart, yStart+1, "java.lang.Double");
     }
 
+    // GRECLIPSE-1174 groovy casting
     public void testAsExpression1() throws Exception {
-        // GRECLIPSE-1174 groovy casting
         String contents = "(1 as int).intValue()";
         int start = contents.lastIndexOf("intValue");
         assertType(contents, start, start+"intValue".length(), "java.lang.Integer");
     }
-
+    // GRECLIPSE-1174 groovy casting
     public void testAsExpression2() throws Exception {
-        // GRECLIPSE-1174 groovy casting
         String contents = "class Flar { int x\n }\n(null as Flar).x";
         int start = contents.lastIndexOf("x");
         assertType(contents, start, start+"x".length(), "java.lang.Integer");
     }
 
+    // GRECLIPSE-1264
     public void testImplicitVar1() throws Exception {
-        // GRECLIPSE-1264
         String contents = "class SettingUndeclaredProperty {\n" +
                 "    public void mymethod() {\n" +
                 "        doesNotExist = \"abc\"\n" +
@@ -1598,9 +1604,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf("doesNotExist");
         assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "SettingUndeclaredProperty", false);
     }
-
+    // GRECLIPSE-1264
     public void testImplicitVar2() throws Exception {
-        // GRECLIPSE-1264
         String contents = "class SettingUndeclaredProperty {\n" +
                 "     def r = {\n" +
                 "        doesNotExist = 0\n" +
@@ -1609,33 +1614,29 @@ public final class InferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf("doesNotExist");
         assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "SettingUndeclaredProperty", false);
     }
-
+    // GRECLIPSE-1264
     public void testImplicitVar3() throws Exception {
-        // GRECLIPSE-1264
         String contents =
                 "doesNotExist";
         int start = contents.lastIndexOf("doesNotExist");
         assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "Search", false);
     }
-
+    // GRECLIPSE-1264
     public void testImplicitVar4() throws Exception {
-        // GRECLIPSE-1264
         String contents = "doesNotExist = 9";
         int start = contents.lastIndexOf("doesNotExist");
         assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
     }
-
+    // GRECLIPSE-1264
     public void testImplicitVar5() throws Exception {
-        // GRECLIPSE-1264
         String contents =
                 "doesNotExist = 9\n" +
                 "def x = {doesNotExist }";
         int start = contents.lastIndexOf("doesNotExist");
         assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
     }
-
+    // GRECLIPSE-1264
     public void testImplicitVar6() throws Exception {
-        // GRECLIPSE-1264
         String contents =
                 "" +
                 "def x = {\n" +
@@ -1644,9 +1645,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         int start = contents.lastIndexOf("doesNotExist");
         assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
     }
-
+    // GRECLIPSE-1264
     public void testImplicitVar7() throws Exception {
-        // GRECLIPSE-1264
         String contents =
                 "def z() {\n" +
                 "    doesNotExist = 9\n" +
@@ -1655,29 +1655,29 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "Search", false);
     }
 
+    // nested expressions of various forms
     public void testNested1() throws Exception {
-        // nested expressions of various forms
         String contents =
                 "(true ? 2 : 7) + 9";
         assertType(contents, "java.lang.Integer");
     }
 
+    // nested expressions of various forms
     public void testNested2() throws Exception {
-        // nested expressions of various forms
         String contents =
                 "(true ? 2 : 7) + (true ? 2 : 7)";
         assertType(contents, "java.lang.Integer");
     }
 
+    // nested expressions of various forms
     public void testNested3() throws Exception {
-        // nested expressions of various forms
         String contents =
                 "(8 ?: 7) + (8 ?: 7)";
         assertType(contents, "java.lang.Integer");
     }
 
+    // nested expressions of various forms
     public void testNested4() throws Exception {
-        // nested expressions of various forms
         createUnit("", "Foo", "class Foo { int prop }");
         String contents =
                 "(new Foo().@prop) + (8 ?: 7)";
@@ -1696,8 +1696,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         }
     }
 
+    // GRECLIPSE-1302
     public void testNothingIsUnknown() throws Exception {
-        // GRECLIPSE-1302
         assertNoUnknowns("1 > 4\n" +
                 "1 < 1\n" +
                 "1 >= 1\n" +
@@ -1730,8 +1730,8 @@ public final class InferencingTests extends AbstractInferencingTest {
                 "new Me().meth()");
     }
 
+    // GRECLIPSE-1304
     public void testNoGString1() throws Exception {
-        // GRECLIPSE-1304
         assertNoUnknowns("'$'\n'${}\n'${a}'\n'$a'");
     }
 
@@ -1750,8 +1750,8 @@ public final class InferencingTests extends AbstractInferencingTest {
                 "}");
     }
 
+    // GRECLIPSE-1341
     public void testDeclarationAtBeginningOfMethod() throws Exception {
-        // GRECLIPSE-1341
         String contents = "class Problem2 {\n" +
                 "    String action() { }\n" +
                 "    def meth() {\n" +
@@ -1824,8 +1824,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertDeclaringType(contents, start, end, "Search$2");
     }
 
+    // GRECLIPSE-1638
     public void testInstanceOf1() throws Exception {
-        // GRECLIPSE-1638
         String contents =
                 "def m(Object obj) {\n" +
                 "    def val = obj\n" +
@@ -1907,8 +1907,8 @@ public final class InferencingTests extends AbstractInferencingTest {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
+    // GRECLIPSE-554
     public void testMapEntries1() throws Exception {
-        // GRECLIPSE-554
         String contents =
                 "def map = [:]\n" +
                 "map.foo = 1\n" +
@@ -1946,5 +1946,16 @@ public final class InferencingTests extends AbstractInferencingTest {
         start = contents.indexOf("this");
         end = start + "this".length();
         assertType(contents, start, end, "A");
+    }
+
+    protected void assertNoUnknowns(String contents) {
+        GroovyCompilationUnit unit = createUnit("Search", contents);
+
+        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
+        visitor.DEBUG = true;
+        UnknownTypeRequestor requestor = new UnknownTypeRequestor();
+        visitor.visitCompilationUnit(requestor);
+        List<ASTNode> unknownNodes = requestor.getUnknownNodes();
+        assertTrue("Should not have found any AST nodes with unknown confidence, but instead found:\n" + unknownNodes, unknownNodes.isEmpty());
     }
 }

@@ -11,7 +11,7 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -33,7 +33,7 @@ public LookupTest(String name) {
 	super(name);
 }
 public static Test suite() {
-	return buildAllCompliancesTestSuite(testClass());
+	return buildAllCompliancesTestSuite(LookupTest.class);
 }
 /**
  * Non-static member class
@@ -62,8 +62,8 @@ public void test001() {
 			"	}												\n"+
 			"}"
 		},
-		"SUCCESS"	
-	);									
+		"SUCCESS"
+	);
 }
 /**
  * Attempt to access non-static field from static inner class (illegal)
@@ -86,17 +86,17 @@ public void test002() {
 			"	}												\n"+
 			"}"
 		},
-		"----------\n" + 
-		"1. WARNING in p1\\A.java (at line 3)\n" + 
-		"	private int value;								\n" + 
-		"	            ^^^^^\n" + 
-		"The field A.value is never read locally\n" + 
-		"----------\n" + 
-		"2. ERROR in p1\\A.java (at line 6)\n" + 
-		"	value = 2;								\n" + 
-		"	^^^^^\n" + 
-		"Cannot make a static reference to the non-static field value\n" + 
-		"----------\n");									
+		"----------\n" +
+		"1. WARNING in p1\\A.java (at line 3)\n" +
+		"	private int value;								\n" +
+		"	            ^^^^^\n" +
+		"The field A.value is never read locally\n" +
+		"----------\n" +
+		"2. ERROR in p1\\A.java (at line 6)\n" +
+		"	value = 2;								\n" +
+		"	^^^^^\n" +
+		"Cannot make a static reference to the non-static field value\n" +
+		"----------\n");
 }
 /**
  * Access static field from static inner class
@@ -121,10 +121,10 @@ public void test003() {
 			"}",
 		},
 		"SUCCESS"
-	);									
+	);
 }
 /**
- * 
+ *
  */
 public void test004() {
 	this.runConformTest(
@@ -164,7 +164,7 @@ public void test004() {
 	);
 }
 /**
- * 
+ *
  */
 public void test005() {
 	this.runConformTest(
@@ -182,7 +182,7 @@ public void test005() {
 			"			p1.A.doSomething(\"SUCC\");				\n"+
 			"			A.doSomething(\"ES\");					\n"+
 			"			doSomething(\"S\");						\n"+
-			"		}											\n"+		
+			"		}											\n"+
 			"	}												\n"+
 			"	public static void main (String argv[]) {		\n"+
 			"		B foo = new A().new B();					\n"+
@@ -215,16 +215,16 @@ public void test006() {
 			"	}												\n"+
 			"}"
 		},
-		"----------\n" + 
-		"1. WARNING in p1\\A.java (at line 3)\n" + 
-		"	private static String success = \"SUCCESS\";	\n" + 
-		"	                      ^^^^^^^\n" + 
-		"The field A.success is never read locally\n" + 
-		"----------\n" + 
-		"2. ERROR in p1\\A.java (at line 7)\n" + 
-		"	public void aTask() {System.out.println(this.success);}\n" + 
-		"	                                             ^^^^^^^\n" + 
-		"The field A.success is not visible\n" + 
+		"----------\n" +
+		"1. WARNING in p1\\A.java (at line 3)\n" +
+		"	private static String success = \"SUCCESS\";	\n" +
+		"	                      ^^^^^^^\n" +
+		"The field A.success is never read locally\n" +
+		"----------\n" +
+		"2. ERROR in p1\\A.java (at line 7)\n" +
+		"	public void aTask() {System.out.println(this.success);}\n" +
+		"	                                             ^^^^^^^\n" +
+		"The field A.success is not visible\n" +
 		"----------\n");
 }
 /**
@@ -239,7 +239,7 @@ public void test007() {
 			"public class A {									\n"+
 			"	private static String success = \"SUCCESS\";	\n"+
 			"	public interface B {							\n"+
-			"		public abstract void aTask();				\n"+	
+			"		public abstract void aTask();				\n"+
 			"		class C extends A implements B {			\n"+
 			"			public void aTask() {System.out.println(A.success);}\n"+
 			"		}											\n"+
@@ -263,7 +263,7 @@ public void test008() {
 			"class A {											\n"+
 			"	private static String success = \"SUCCESS\";	\n"+
 			"	public interface B {							\n"+
-			"		public abstract void aTask();				\n"+	
+			"		public abstract void aTask();				\n"+
 			"		class C extends A implements B {			\n"+
 			"			public void aTask() {System.out.println(A.this.success);}\n"+
 			"		}											\n"+
@@ -272,16 +272,16 @@ public void test008() {
 			"	}												\n"+
 			"}"
 		},
-		"----------\n" + 
-		"1. ERROR in p1\\A.java (at line 7)\n" + 
-		"	public void aTask() {System.out.println(A.this.success);}\n" + 
-		"	                                        ^^^^^^\n" + 
-		"No enclosing instance of the type A is accessible in scope\n" + 
-		"----------\n" + 
-		"2. WARNING in p1\\A.java (at line 7)\n" + 
-		"	public void aTask() {System.out.println(A.this.success);}\n" + 
-		"	                                               ^^^^^^^\n" + 
-		"The static field A.success should be accessed in a static way\n" + 
+		"----------\n" +
+		"1. ERROR in p1\\A.java (at line 7)\n" +
+		"	public void aTask() {System.out.println(A.this.success);}\n" +
+		"	                                        ^^^^^^\n" +
+		"No enclosing instance of the type A is accessible in scope\n" +
+		"----------\n" +
+		"2. WARNING in p1\\A.java (at line 7)\n" +
+		"	public void aTask() {System.out.println(A.this.success);}\n" +
+		"	                                               ^^^^^^^\n" +
+		"The static field A.success should be accessed in a static way\n" +
 		"----------\n"
 	);
 }
@@ -307,16 +307,16 @@ public void test009() {
 			"	}												\n"+
 			"}"
 		},
-		"----------\n" + 
-		"1. WARNING in p1\\A.java (at line 3)\n" + 
-		"	private String success = \"SUCCESS\";			\n" + 
-		"	               ^^^^^^^\n" + 
-		"The field A.success is never read locally\n" + 
-		"----------\n" + 
-		"2. ERROR in p1\\A.java (at line 7)\n" + 
-		"	public void aTask() {System.out.println(this.success);}\n" + 
-		"	                                             ^^^^^^^\n" + 
-		"The field A.success is not visible\n" + 
+		"----------\n" +
+		"1. WARNING in p1\\A.java (at line 3)\n" +
+		"	private String success = \"SUCCESS\";			\n" +
+		"	               ^^^^^^^\n" +
+		"The field A.success is never read locally\n" +
+		"----------\n" +
+		"2. ERROR in p1\\A.java (at line 7)\n" +
+		"	public void aTask() {System.out.println(this.success);}\n" +
+		"	                                             ^^^^^^^\n" +
+		"The field A.success is not visible\n" +
 		"----------\n");
 }
 /**
@@ -332,7 +332,7 @@ public void test010() {
 			"class A {											\n"+
 			"	private String success = \"SUCCESS\";			\n"+
 			"	public interface B {							\n"+
-			"		public abstract void aTask();				\n"+	
+			"		public abstract void aTask();				\n"+
 			"		class C extends A implements B {			\n"+
 			"			public void aTask() {System.out.println(A.success);}\n"+
 			"		}											\n"+
@@ -341,20 +341,20 @@ public void test010() {
 			"	}												\n"+
 			"}"
 		},
-		"----------\n" + 
-		"1. WARNING in p1\\A.java (at line 3)\n" + 
-		"	private String success = \"SUCCESS\";			\n" + 
-		"	               ^^^^^^^\n" + 
-		"The field A.success is never read locally\n" + 
-		"----------\n" + 
-		"2. ERROR in p1\\A.java (at line 7)\n" + 
-		"	public void aTask() {System.out.println(A.success);}\n" + 
-		"	                                        ^^^^^^^^^\n" + 
-		"Cannot make a static reference to the non-static field A.success\n" + 
+		"----------\n" +
+		"1. WARNING in p1\\A.java (at line 3)\n" +
+		"	private String success = \"SUCCESS\";			\n" +
+		"	               ^^^^^^^\n" +
+		"The field A.success is never read locally\n" +
+		"----------\n" +
+		"2. ERROR in p1\\A.java (at line 7)\n" +
+		"	public void aTask() {System.out.println(A.success);}\n" +
+		"	                                        ^^^^^^^^^\n" +
+		"Cannot make a static reference to the non-static field A.success\n" +
 		"----------\n");
 }
 /**
- * 
+ *
  */
 public void test011() {
 	this.runNegativeTest(
@@ -385,16 +385,16 @@ public void test011() {
 			"}",
 
 		},
-		"----------\n" + 
-		"1. ERROR in p2\\Aa.java (at line 3)\n" + 
-		"	class B implements p1.A.C {						\n" + 
-		"	      ^\n" + 
-		"The type Aa.B must implement the inherited abstract method A.C.sMethod()\n" + 
+		"----------\n" +
+		"1. ERROR in p2\\Aa.java (at line 3)\n" +
+		"	class B implements p1.A.C {						\n" +
+		"	      ^\n" +
+		"The type Aa.B must implement the inherited abstract method A.C.sMethod()\n" +
 		"----------\n"
 	);
 }
 /**
- * 
+ *
  */
 public void test012() {
 	this.runConformTest(
@@ -423,7 +423,7 @@ public void test012() {
 	);
 }
 /**
- * 
+ *
  */
 public void test013() {
 	this.runNegativeTest(
@@ -448,21 +448,21 @@ public void test013() {
 			"	}												\n"+
 			"}"
 		},
-		"----------\n" + 
-		"1. ERROR in p1\\A.java (at line 9)\n" + 
-		"	public class aClass implements B, B.C {			\n" + 
-		"	             ^^^^^^\n" + 
-		"The type A.aClass must implement the inherited abstract method A.B.C.anotherMethod(int)\n" + 
-		"----------\n" + 
-		"2. ERROR in p1\\A.java (at line 11)\n" + 
-		"	public void anotherMethod(int A) {};	\n" + 
-		"	                         ^\n" + 
-		"Syntax error on token \"(\", ; expected\n" + 
-		"----------\n" + 
-		"3. ERROR in p1\\A.java (at line 11)\n" + 
-		"	public void anotherMethod(int A) {};	\n" + 
-		"	                               ^\n" + 
-		"Syntax error on token \")\", ; expected\n" + 
+		"----------\n" +
+		"1. ERROR in p1\\A.java (at line 9)\n" +
+		"	public class aClass implements B, B.C {			\n" +
+		"	             ^^^^^^\n" +
+		"The type A.aClass must implement the inherited abstract method A.B.C.anotherMethod(int)\n" +
+		"----------\n" +
+		"2. ERROR in p1\\A.java (at line 11)\n" +
+		"	public void anotherMethod(int A) {};	\n" +
+		"	                         ^\n" +
+		"Syntax error on token \"(\", ; expected\n" +
+		"----------\n" +
+		"3. ERROR in p1\\A.java (at line 11)\n" +
+		"	public void anotherMethod(int A) {};	\n" +
+		"	                               ^\n" +
+		"Syntax error on token \")\", ; expected\n" +
 		"----------\n"
 	);
 }
@@ -477,7 +477,7 @@ public void test014() {
 			"package pack1;										\n"+
 			"public class First {								\n"+
 			"	public static void something() {}				\n"+
-			"		class Inner {}								\n"+	
+			"		class Inner {}								\n"+
 			"	public static void main (String argv[]) {		\n"+
 			"		First.Inner foo = new First().new Inner();	\n"+
 			"		foo.something();							\n"+
@@ -485,11 +485,11 @@ public void test014() {
 			"	}												\n"+
 			"}"
 		},
-		"----------\n" + 
-		"1. ERROR in pack1\\First.java (at line 7)\n" + 
-		"	foo.something();							\n" + 
-		"	    ^^^^^^^^^\n" + 
-		"The method something() is undefined for the type First.Inner\n" + 
+		"----------\n" +
+		"1. ERROR in pack1\\First.java (at line 7)\n" +
+		"	foo.something();							\n" +
+		"	    ^^^^^^^^^\n" +
+		"The method something() is undefined for the type First.Inner\n" +
 		"----------\n"
 	);
 }
@@ -505,7 +505,7 @@ public void test015() {
 			"public class First {								\n"+
 			"		class Inner {								\n"+
 			"			public void something() {}				\n"+
-			"		}											\n"+	
+			"		}											\n"+
 			"	public static void main (String argv[]) {		\n"+
 			"		First.Inner foo = new First().new Inner();	\n"+
 			"		foo.something();							\n"+
@@ -653,11 +653,11 @@ public void test019() {
 			"	}												\n"+
 			"}"
 		},
-		"----------\n" + 
-		"1. ERROR in p1\\A.java (at line 17)\n" + 
-		"	System.out.println(foo.rating + bar.other);	\n" + 
-		"	                                ^^^^^^^^^\n" + 
-		"bar.other cannot be resolved or is not a field\n" + 
+		"----------\n" +
+		"1. ERROR in p1\\A.java (at line 17)\n" +
+		"	System.out.println(foo.rating + bar.other);	\n" +
+		"	                                ^^^^^^^^^\n" +
+		"bar.other cannot be resolved or is not a field\n" +
 		"----------\n"
 	);
 }
@@ -685,16 +685,16 @@ public void test020() {
 			"	}												\n"+
 			"}"
 		},
-		"----------\n" + 
-		"1. WARNING in p1\\A.java (at line 6)\n" + 
-		"	sth.rating = \"m\";						\n" + 
-		"	    ^^^^^^\n" + 
-		"Write access to enclosing field A.rating is emulated by a synthetic accessor method. Increasing its visibility will improve your performance\n" + 
-		"----------\n" + 
-		"2. ERROR in p1\\A.java (at line 13)\n" + 
-		"	System.out.println(foo.rating + bar.other);	\n" + 
-		"	                                ^^^^^^^^^\n" + 
-		"bar.other cannot be resolved or is not a field\n" + 
+		"----------\n" +
+		"1. WARNING in p1\\A.java (at line 6)\n" +
+		"	sth.rating = \"m\";						\n" +
+		"	    ^^^^^^\n" +
+		"Write access to enclosing field A.rating is emulated by a synthetic accessor method. Increasing its visibility will improve your performance\n" +
+		"----------\n" +
+		"2. ERROR in p1\\A.java (at line 13)\n" +
+		"	System.out.println(foo.rating + bar.other);	\n" +
+		"	                                ^^^^^^^^^\n" +
+		"bar.other cannot be resolved or is not a field\n" +
 		"----------\n"
 	);
 }
@@ -896,11 +896,11 @@ public void test026() {
 			"	}										\n"+
 			"}"
 		},
-		"----------\n" + 
-		"1. ERROR in p2\\B.java (at line 6)\n" + 
-		"	bleh.B = 35;						\n" + 
-		"	     ^\n" + 
-		"The field A.B.B is not visible\n" + 
+		"----------\n" +
+		"1. ERROR in p2\\B.java (at line 6)\n" +
+		"	bleh.B = 35;						\n" +
+		"	     ^\n" +
+		"The field A.B.B is not visible\n" +
 		"----------\n");
 }
 /**
@@ -939,11 +939,11 @@ public void test027() {
 			"	}										\n"+
 			"}"
 		},
-		"----------\n" + 
-		"1. ERROR in p2\\B.java (at line 5)\n" + 
-		"	A.B bleh = new A.B();				\n" + 
-		"	           ^^^^^^^^^\n" + 
-		"The constructor A.B() is not visible\n" + 
+		"----------\n" +
+		"1. ERROR in p2\\B.java (at line 5)\n" +
+		"	A.B bleh = new A.B();				\n" +
+		"	           ^^^^^^^^^\n" +
+		"The constructor A.B() is not visible\n" +
 		"----------\n"
 	);
 }
@@ -993,13 +993,13 @@ public void test029() {
 			"	class Member {	\n"+
 			"		void foo(){}	\n"+
 			"	}	\n"	+
-			"}	\n"	
+			"}	\n"
 		},
-		"----------\n" + 
-		"1. ERROR in p1\\X.java (at line 4)\n" + 
-		"	Member field;	\n" + 
-		"	^^^^^^\n" + 
-		"The type Member is not visible\n" + 
+		"----------\n" +
+		"1. ERROR in p1\\X.java (at line 4)\n" +
+		"	Member field;	\n" +
+		"	^^^^^^\n" +
+		"The type Member is not visible\n" +
 		"----------\n");
 }
 /*
@@ -1008,16 +1008,16 @@ public void test029() {
  */
 public void test030() {
 
-	Hashtable target1_2 = new Hashtable();
+	Map<String, String> target1_2 = new HashMap<String, String>();
 	target1_2.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_2);
-	
+
 	this.runConformTest(
 		new String[] {
 			"p1/A.java",
 			"package p1; \n"+
 			"public abstract class A implements I {	\n" +
 			"  public static void main(String[] args) {	\n" +
-			"    System.out.println(\"SUCCESS\");	\n" +			
+			"    System.out.println(\"SUCCESS\");	\n" +
 			"  }	\n" +
 			"} \n" +
 			"interface I {	\n" +
@@ -1040,7 +1040,7 @@ public void test030() {
 			"		a.foo();	\n" +
 			"	}	\n" +
 			"  public static void main(String[] args) {	\n" +
-			"    System.out.println(\"SUCCESS\");	\n" +			
+			"    System.out.println(\"SUCCESS\");	\n" +
 			"  }	\n" +
 			"} \n"
 		},
@@ -1095,39 +1095,39 @@ public void test032() {
 	this.runNegativeTest(
 		new String[] {
 			"X.java", //--------------------------------
-			"public class X {\n" + 
-			"	public static void main(String[] arguments) {\n" + 
-			"		System.out.println(p.Bar.array[0].length);\n" + 
-			"		System.out.println(p.Bar.array.length);\n" + 
-			"		System.out.println(p.Bar.array[0].foo());\n" + 
-			"	}\n" + 
+			"public class X {\n" +
+			"	public static void main(String[] arguments) {\n" +
+			"		System.out.println(p.Bar.array[0].length);\n" +
+			"		System.out.println(p.Bar.array.length);\n" +
+			"		System.out.println(p.Bar.array[0].foo());\n" +
+			"	}\n" +
 			"}\n",
 			"p/Bar.java", //----------------------------
-			"package p;\n" + 
-			"public class Bar {\n" + 
-			"	public static Z[] array;\n" + 
-			"}\n" + 
-			"class Z {\n" + 
-			"	public String foo(){ \n" + 
-			"		return \"\";\n" + 
-			"	}\n" + 
-			"}\n" 
+			"package p;\n" +
+			"public class Bar {\n" +
+			"	public static Z[] array;\n" +
+			"}\n" +
+			"class Z {\n" +
+			"	public String foo(){ \n" +
+			"		return \"\";\n" +
+			"	}\n" +
+			"}\n"
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	System.out.println(p.Bar.array[0].length);\n" + 
-		"	                   ^^^^^^^^^^^^^^\n" + 
-		"The type Z is not visible\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 4)\n" + 
-		"	System.out.println(p.Bar.array.length);\n" + 
-		"	                   ^^^^^^^^^^^\n" + 
-		"The type Z is not visible\n" + 
-		"----------\n" + 
-		"3. ERROR in X.java (at line 5)\n" + 
-		"	System.out.println(p.Bar.array[0].foo());\n" + 
-		"	                   ^^^^^^^^^^^^^^\n" + 
-		"The type Z is not visible\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 3)\n" +
+		"	System.out.println(p.Bar.array[0].length);\n" +
+		"	                   ^^^^^^^^^^^^^^\n" +
+		"The type Z is not visible\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 4)\n" +
+		"	System.out.println(p.Bar.array.length);\n" +
+		"	                   ^^^^^^^^^^^\n" +
+		"The type Z is not visible\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 5)\n" +
+		"	System.out.println(p.Bar.array[0].foo());\n" +
+		"	                   ^^^^^^^^^^^^^^\n" +
+		"The type Z is not visible\n" +
 		"----------\n");
 }
 
@@ -1146,16 +1146,16 @@ public void test033() {
 			"	void foo(){}	\n" +
 			"}	\n",
 		},
-		"----------\n" + 
-		"1. ERROR in q\\Y.java (at line 2)\n" + 
-		"	public class Y extends p.X {	\n" + 
-		"	             ^\n" + 
-		"This class must implement the inherited abstract method X.foo(), but cannot override it since it is not visible from Y. Either make the type abstract or make the inherited method visible\n" + 
-		"----------\n" + 
-		"2. WARNING in q\\Y.java (at line 3)\n" + 
-		"	void foo(){}	\n" + 
-		"	     ^^^^^\n" + 
-		"The method Y.foo() does not override the inherited method from X since it is private to a different package\n" + 
+		"----------\n" +
+		"1. ERROR in q\\Y.java (at line 2)\n" +
+		"	public class Y extends p.X {	\n" +
+		"	             ^\n" +
+		"This class must implement the inherited abstract method X.foo(), but cannot override it since it is not visible from Y. Either make the type abstract or make the inherited method visible\n" +
+		"----------\n" +
+		"2. WARNING in q\\Y.java (at line 3)\n" +
+		"	void foo(){}	\n" +
+		"	     ^^^^^\n" +
+		"The method Y.foo() does not override the inherited method from X since it is private to a different package\n" +
 		"----------\n");
 }
 
@@ -1176,16 +1176,16 @@ public void test034() {
 			"class Z extends Y {	\n" +
 			"}	\n",
 		},
-		"----------\n" + 
-		"1. WARNING in q\\Y.java (at line 3)\n" + 
-		"	void foo(){}	\n" + 
-		"	     ^^^^^\n" + 
-		"The method Y.foo() does not override the inherited method from X since it is private to a different package\n" + 
-		"----------\n" + 
-		"2. ERROR in q\\Y.java (at line 5)\n" + 
-		"	class Z extends Y {	\n" + 
-		"	      ^\n" + 
-		"This class must implement the inherited abstract method X.foo(), but cannot override it since it is not visible from Z. Either make the type abstract or make the inherited method visible\n" + 
+		"----------\n" +
+		"1. WARNING in q\\Y.java (at line 3)\n" +
+		"	void foo(){}	\n" +
+		"	     ^^^^^\n" +
+		"The method Y.foo() does not override the inherited method from X since it is private to a different package\n" +
+		"----------\n" +
+		"2. ERROR in q\\Y.java (at line 5)\n" +
+		"	class Z extends Y {	\n" +
+		"	      ^\n" +
+		"This class must implement the inherited abstract method X.foo(), but cannot override it since it is not visible from Z. Either make the type abstract or make the inherited method visible\n" +
 		"----------\n"
 );
 }
@@ -1210,11 +1210,11 @@ public void test035() {
 			"class Z extends p.Y {	\n" +
 			"}	\n",
 		},
-		"----------\n" + 
-		"1. ERROR in q\\Z.java (at line 2)\n" + 
-		"	class Z extends p.Y {	\n" + 
-		"	      ^\n" + 
-		"This class must implement the inherited abstract method X.bar(), but cannot override it since it is not visible from Z. Either make the type abstract or make the inherited method visible\n" + 
+		"----------\n" +
+		"1. ERROR in q\\Z.java (at line 2)\n" +
+		"	class Z extends p.Y {	\n" +
+		"	      ^\n" +
+		"This class must implement the inherited abstract method X.bar(), but cannot override it since it is not visible from Z. Either make the type abstract or make the inherited method visible\n" +
 		"----------\n");
 }
 // 30805 Abstract non-visible method diagnosis fooled by intermediate declarations
@@ -1237,21 +1237,21 @@ public void test036() {
 			"class Z extends Y implements p.X.I {	\n" +
 			"}	\n",
 		},
-		"----------\n" + 
-		"1. WARNING in q\\Y.java (at line 3)\n" + 
-		"	void foo(){}	\n" + 
-		"	     ^^^^^\n" + 
-		"The method Y.foo() does not override the inherited method from X since it is private to a different package\n" + 
-		"----------\n" + 
-		"2. ERROR in q\\Y.java (at line 5)\n" + 
-		"	class Z extends Y implements p.X.I {	\n" + 
-		"	      ^\n" + 
-		"This class must implement the inherited abstract method X.foo(), but cannot override it since it is not visible from Z. Either make the type abstract or make the inherited method visible\n" + 
+		"----------\n" +
+		"1. WARNING in q\\Y.java (at line 3)\n" +
+		"	void foo(){}	\n" +
+		"	     ^^^^^\n" +
+		"The method Y.foo() does not override the inherited method from X since it is private to a different package\n" +
+		"----------\n" +
+		"2. ERROR in q\\Y.java (at line 5)\n" +
+		"	class Z extends Y implements p.X.I {	\n" +
+		"	      ^\n" +
+		"This class must implement the inherited abstract method X.foo(), but cannot override it since it is not visible from Z. Either make the type abstract or make the inherited method visible\n" +
 		"----------\n" + // TODO (philippe) should not have following error due to default abstract?
-		"3. ERROR in q\\Y.java (at line 5)\n" + 
-		"	class Z extends Y implements p.X.I {	\n" + 
-		"	      ^\n" + 
-		"The inherited method Y.foo() cannot hide the public abstract method in X.I\n" + 
+		"3. ERROR in q\\Y.java (at line 5)\n" +
+		"	class Z extends Y implements p.X.I {	\n" +
+		"	      ^\n" +
+		"The inherited method Y.foo() cannot hide the public abstract method in X.I\n" +
 		"----------\n");
 }
 // 30805 Abstract non-visible method diagnosis fooled by intermediate declarations
@@ -1274,21 +1274,21 @@ public void test037() {
 			"	void bar(){}	//nowarn \n" +
 			"}	\n",
 		},
-		"----------\n" + 
-		"1. WARNING in q\\Y.java (at line 3)\n" + 
-		"	void foo(){}	//warn \n" + 
-		"	     ^^^^^\n" + 
-		"The method Y.foo() does not override the inherited method from X since it is private to a different package\n" + 
-		"----------\n" + 
-		"2. WARNING in q\\Y.java (at line 4)\n" + 
-		"	void bar(){}	//warn \n" + 
-		"	     ^^^^^\n" + 
-		"The method Y.bar() does not override the inherited method from X since it is private to a different package\n" + 
-		"----------\n" + 
-		"3. ERROR in q\\Y.java (at line 6)\n" + 
-		"	class Z extends Y {	\n" + 
-		"	      ^\n" + 
-		"This class must implement the inherited abstract method X.foo(), but cannot override it since it is not visible from Z. Either make the type abstract or make the inherited method visible\n" + 
+		"----------\n" +
+		"1. WARNING in q\\Y.java (at line 3)\n" +
+		"	void foo(){}	//warn \n" +
+		"	     ^^^^^\n" +
+		"The method Y.foo() does not override the inherited method from X since it is private to a different package\n" +
+		"----------\n" +
+		"2. WARNING in q\\Y.java (at line 4)\n" +
+		"	void bar(){}	//warn \n" +
+		"	     ^^^^^\n" +
+		"The method Y.bar() does not override the inherited method from X since it is private to a different package\n" +
+		"----------\n" +
+		"3. ERROR in q\\Y.java (at line 6)\n" +
+		"	class Z extends Y {	\n" +
+		"	      ^\n" +
+		"This class must implement the inherited abstract method X.foo(), but cannot override it since it is not visible from Z. Either make the type abstract or make the inherited method visible\n" +
 		"----------\n");
 }
 // 30805 Abstract non-visible method diagnosis fooled by intermediate declarations
@@ -1309,16 +1309,16 @@ public void test038() {
 			"	void foo(){}	//error \n" +
 			"}	\n",
 		},
-		"----------\n" + 
-		"1. WARNING in q\\Y.java (at line 3)\n" + 
-		"	void foo(){}	//warn \n" + 
-		"	     ^^^^^\n" + 
-		"The method Y.foo() does not override the inherited method from X since it is private to a different package\n" + 
-		"----------\n" + 
-		"2. ERROR in q\\Y.java (at line 5)\n" + 
-		"	class Z extends Y {	\n" + 
-		"	      ^\n" + 
-		"This class must implement the inherited abstract method X.foo(), but cannot override it since it is not visible from Z. Either make the type abstract or make the inherited method visible\n" + 
+		"----------\n" +
+		"1. WARNING in q\\Y.java (at line 3)\n" +
+		"	void foo(){}	//warn \n" +
+		"	     ^^^^^\n" +
+		"The method Y.foo() does not override the inherited method from X since it is private to a different package\n" +
+		"----------\n" +
+		"2. ERROR in q\\Y.java (at line 5)\n" +
+		"	class Z extends Y {	\n" +
+		"	      ^\n" +
+		"This class must implement the inherited abstract method X.foo(), but cannot override it since it is not visible from Z. Either make the type abstract or make the inherited method visible\n" +
 		"----------\n");
 }
 
@@ -1342,11 +1342,11 @@ public void test039() {
 			"class Z extends p.Y {	\n" +
 			"}	\n",
 		},
-		"----------\n" + 
-		"1. ERROR in q\\Z.java (at line 2)\n" + 
-		"	class Z extends p.Y {	\n" + 
-		"	      ^\n" + 
-		"This class must implement the inherited abstract method X.bar(), but cannot override it since it is not visible from Z. Either make the type abstract or make the inherited method visible\n" + 
+		"----------\n" +
+		"1. ERROR in q\\Z.java (at line 2)\n" +
+		"	class Z extends p.Y {	\n" +
+		"	      ^\n" +
+		"This class must implement the inherited abstract method X.bar(), but cannot override it since it is not visible from Z. Either make the type abstract or make the inherited method visible\n" +
 		"----------\n");
 }
 
@@ -1368,26 +1368,26 @@ public void test040() {
 			"	abstract void bar();	\n" +
 			"	abstract void baz();	\n" +
 			"	public static abstract class Member extends Y {	\n" +
-			"		public void foo() {}	\n" + 
+			"		public void foo() {}	\n" +
 			"		void bar(){}	\n" +
 			"	}	\n" +
 			"}	\n",
 		},
-		"----------\n" + 
-		"1. ERROR in p\\X.java (at line 2)\n" + 
-		"	public class X extends q.Y.Member {	\n" + 
-		"	             ^\n" + 
-		"This class must implement the inherited abstract method Y.baz(), but cannot override it since it is not visible from X. Either make the type abstract or make the inherited method visible\n" + 
-		"----------\n" + 
-		"2. WARNING in p\\X.java (at line 3)\n" + 
-		"	void baz(){}	\n" + 
-		"	     ^^^^^\n" + 
-		"The method X.baz() does not override the inherited method from Y since it is private to a different package\n" + 
+		"----------\n" +
+		"1. ERROR in p\\X.java (at line 2)\n" +
+		"	public class X extends q.Y.Member {	\n" +
+		"	             ^\n" +
+		"This class must implement the inherited abstract method Y.baz(), but cannot override it since it is not visible from X. Either make the type abstract or make the inherited method visible\n" +
+		"----------\n" +
+		"2. WARNING in p\\X.java (at line 3)\n" +
+		"	void baz(){}	\n" +
+		"	     ^^^^^\n" +
+		"The method X.baz() does not override the inherited method from Y since it is private to a different package\n" +
 		"----------\n");
 }
 
 /*
- * 31450 - non-visible abstract method fooling method verification - should not complain about foo() 
+ * 31450 - non-visible abstract method fooling method verification - should not complain about foo()
  */
 public void test041() {
 	this.runNegativeTest(
@@ -1408,21 +1408,21 @@ public void test041() {
 			"	}	\n" +
 			"}	\n",
 		},
-		"----------\n" + 
-		"1. ERROR in p\\X.java (at line 2)\n" + 
-		"	public class X extends q.Y.Member {	\n" + 
-		"	             ^\n" + 
-		"This class must implement the inherited abstract method Y.bar(), but cannot override it since it is not visible from X. Either make the type abstract or make the inherited method visible\n" + 
-		"----------\n" + 
-		"2. ERROR in p\\X.java (at line 4)\n" + 
-		"	public static class M extends X {}	\n" + 
-		"	                    ^\n" + 
-		"This class must implement the inherited abstract method Y.bar(), but cannot override it since it is not visible from M. Either make the type abstract or make the inherited method visible\n" + 
+		"----------\n" +
+		"1. ERROR in p\\X.java (at line 2)\n" +
+		"	public class X extends q.Y.Member {	\n" +
+		"	             ^\n" +
+		"This class must implement the inherited abstract method Y.bar(), but cannot override it since it is not visible from X. Either make the type abstract or make the inherited method visible\n" +
+		"----------\n" +
+		"2. ERROR in p\\X.java (at line 4)\n" +
+		"	public static class M extends X {}	\n" +
+		"	                    ^\n" +
+		"This class must implement the inherited abstract method Y.bar(), but cannot override it since it is not visible from M. Either make the type abstract or make the inherited method visible\n" +
 		"----------\n");
 }
 
 /*
- * 31450 - non-visible abstract method fooling method verification - should not complain about foo() 
+ * 31450 - non-visible abstract method fooling method verification - should not complain about foo()
  */
 public void test042() {
 	this.runNegativeTest(
@@ -1439,25 +1439,25 @@ public void test042() {
 			"	abstract void foo();	\n" +
 			"	abstract void bar();	\n" +
 			"	public static abstract class Member extends Y {	\n" +
-			"		void foo(){}	\n" + 
+			"		void foo(){}	\n" +
 			"	}	\n" +
 			"}	\n",
 		},
-		"----------\n" + 
-		"1. ERROR in p\\X.java (at line 2)\n" + 
-		"	public class X extends q.Y.Member {	\n" + 
-		"	             ^\n" + 
-		"This class must implement the inherited abstract method Y.bar(), but cannot override it since it is not visible from X. Either make the type abstract or make the inherited method visible\n" + 
-		"----------\n" + 
-		"2. WARNING in p\\X.java (at line 3)\n" + 
-		"	public void foo() {}	\n" + 
-		"	            ^^^^^\n" + 
-		"The method X.foo() does not override the inherited method from Y.Member since it is private to a different package\n" + 
-		"----------\n" + 
-		"3. ERROR in p\\X.java (at line 4)\n" + 
-		"	public static class M extends X {}	\n" + 
-		"	                    ^\n" + 
-		"This class must implement the inherited abstract method Y.bar(), but cannot override it since it is not visible from M. Either make the type abstract or make the inherited method visible\n" + 
+		"----------\n" +
+		"1. ERROR in p\\X.java (at line 2)\n" +
+		"	public class X extends q.Y.Member {	\n" +
+		"	             ^\n" +
+		"This class must implement the inherited abstract method Y.bar(), but cannot override it since it is not visible from X. Either make the type abstract or make the inherited method visible\n" +
+		"----------\n" +
+		"2. WARNING in p\\X.java (at line 3)\n" +
+		"	public void foo() {}	\n" +
+		"	            ^^^^^\n" +
+		"The method X.foo() does not override the inherited method from Y.Member since it is private to a different package\n" +
+		"----------\n" +
+		"3. ERROR in p\\X.java (at line 4)\n" +
+		"	public static class M extends X {}	\n" +
+		"	                    ^\n" +
+		"This class must implement the inherited abstract method Y.bar(), but cannot override it since it is not visible from M. Either make the type abstract or make the inherited method visible\n" +
 		"----------\n");
 }
 
@@ -1465,36 +1465,36 @@ public void test043() {
 	this.runConformTest(
 		new String[] {
 			"X.java", //================================
-			"public class X {\n" + 
-			"	public interface Copyable extends Cloneable {\n" + 
-			"		public Object clone() throws CloneNotSupportedException;\n" + 
-			"	}\n" + 
-			"\n" + 
-			"	public interface TestIf extends Copyable {\n" + 
-			"	}\n" + 
-			"\n" + 
-			"	public static class ClassA implements Copyable {\n" + 
-			"		public Object clone() throws CloneNotSupportedException {\n" + 
-			"			return super.clone();\n" + 
-			"		}\n" + 
-			"	}\n" + 
-			"\n" + 
-			"	public static class ClassB implements TestIf {\n" + 
-			"		public Object clone() throws CloneNotSupportedException {\n" + 
-			"			return super.clone();\n" + 
-			"		}\n" + 
-			"	}\n" + 
-			"\n" + 
-			"	public static void main(String[] args) throws Exception {\n" + 
-			"		Copyable o1 = new ClassA();\n" + 
-			"		ClassB o2 = new ClassB();\n" + 
-			"		TestIf o3 = o2;\n" + 
-			"		Object clonedObject;\n" + 
-			"		clonedObject = o1.clone();\n" + 
-			"		clonedObject = o2.clone();\n" + 
-			"		clonedObject = o3.clone();\n" + 
-			"		System.out.println(\"SUCCESS\");\n" + 
-			"	}\n" + 
+			"public class X {\n" +
+			"	public interface Copyable extends Cloneable {\n" +
+			"		public Object clone() throws CloneNotSupportedException;\n" +
+			"	}\n" +
+			"\n" +
+			"	public interface TestIf extends Copyable {\n" +
+			"	}\n" +
+			"\n" +
+			"	public static class ClassA implements Copyable {\n" +
+			"		public Object clone() throws CloneNotSupportedException {\n" +
+			"			return super.clone();\n" +
+			"		}\n" +
+			"	}\n" +
+			"\n" +
+			"	public static class ClassB implements TestIf {\n" +
+			"		public Object clone() throws CloneNotSupportedException {\n" +
+			"			return super.clone();\n" +
+			"		}\n" +
+			"	}\n" +
+			"\n" +
+			"	public static void main(String[] args) throws Exception {\n" +
+			"		Copyable o1 = new ClassA();\n" +
+			"		ClassB o2 = new ClassB();\n" +
+			"		TestIf o3 = o2;\n" +
+			"		Object clonedObject;\n" +
+			"		clonedObject = o1.clone();\n" +
+			"		clonedObject = o2.clone();\n" +
+			"		clonedObject = o3.clone();\n" +
+			"		System.out.println(\"SUCCESS\");\n" +
+			"	}\n" +
 			"}"
 		},
 		"SUCCESS");
@@ -1509,15 +1509,15 @@ public void test044() {
 			"package p;\n" +
 			"public class Dumbo {\n" +
 			"  public class Clyde { }\n" +
-			"	public static void main(String[] args) {\n" + 
-			"		  System.out.println(\"SUCCESS\");\n" + 
-			"	}\n" + 
+			"	public static void main(String[] args) {\n" +
+			"		  System.out.println(\"SUCCESS\");\n" +
+			"	}\n" +
 			"}\n",
 		},
 		"SUCCESS");
 	// delete binary file Dumbo$Clyde (i.e. simulate removing it from classpath for subsequent compile)
 	Util.delete(new File(OUTPUT_DIR, "p" + File.separator + "Dumbo$Clyde.class"));
-	
+
 	this.runConformTest(
 		new String[] {
 			"q/Main.java",
@@ -1525,7 +1525,7 @@ public void test044() {
 			"public class Main extends p.Dumbo {\n" +
 			"	public static void main(String[] args) {\n" +
 			"		  p.Dumbo d;\n" +
-			"		  System.out.println(\"SUCCESS\");\n" + 
+			"		  System.out.println(\"SUCCESS\");\n" +
 			"	}\n" +
 			"}\n",
 		},
@@ -1545,15 +1545,15 @@ public void test045() {
 			"public class Dumbo {\n" +
 			"  public class Clyde {\n" +
 			"  	  public class Fred {\n" +
-			"	  }\n" + 
-			"	}\n" + 
-			"	public static void main(String[] args) {\n" + 
-			"		  System.out.println(\"SUCCESS\");\n" + 
-			"	}\n" + 
+			"	  }\n" +
+			"	}\n" +
+			"	public static void main(String[] args) {\n" +
+			"		  System.out.println(\"SUCCESS\");\n" +
+			"	}\n" +
 			"}\n",
 		},
 		"SUCCESS");
-	
+
 	this.runConformTest(
 		new String[] {
 			"q/Main.java",
@@ -1561,7 +1561,7 @@ public void test045() {
 			"public class Main extends p.Dumbo {\n" +
 			"	public static void main(String[] args) {\n" +
 			"		  p.Dumbo.Clyde.Fred f;\n" +
-			"		  System.out.println(\"SUCCESS\");\n" + 
+			"		  System.out.println(\"SUCCESS\");\n" +
 			"	}\n" +
 			"}\n",
 		},
@@ -1574,60 +1574,60 @@ public void test046() {
 	this.runNegativeTest(
 		new String[] {
 			"X.java", //================================
-			"public class X {\n" + 
-			"     private XY foo(XY t) {\n" + 
-			"        System.out.println(t);\n" + 
-			"        return t;\n" + 
-			"    }\n" + 
-			"    public static void main(String[] args) {\n" + 
-			"        new X() {\n" + 
-			"            void run() {\n" + 
-			"                foo(new XY());\n" + 
-			"            }\n" + 
-			"        }.run();\n" + 
-			"    }\n" + 
-			"}\n" + 
-			"class XY {\n" + 
-			"    public String toString() {\n" + 
-			"        return \"SUCCESS\";\n" + 
-			"    }\n" + 
+			"public class X {\n" +
+			"     private XY foo(XY t) {\n" +
+			"        System.out.println(t);\n" +
+			"        return t;\n" +
+			"    }\n" +
+			"    public static void main(String[] args) {\n" +
+			"        new X() {\n" +
+			"            void run() {\n" +
+			"                foo(new XY());\n" +
+			"            }\n" +
+			"        }.run();\n" +
+			"    }\n" +
+			"}\n" +
+			"class XY {\n" +
+			"    public String toString() {\n" +
+			"        return \"SUCCESS\";\n" +
+			"    }\n" +
 			"}\n"
-		}, 
-			"----------\n" + 
-			"1. ERROR in X.java (at line 9)\n" + 
-			"	foo(new XY());\n" + 
-			"	^^^\n" + 
-			"Cannot make a static reference to the non-static method foo(XY) from the type X\n" + 
+		},
+			"----------\n" +
+			"1. ERROR in X.java (at line 9)\n" +
+			"	foo(new XY());\n" +
+			"	^^^\n" +
+			"Cannot make a static reference to the non-static method foo(XY) from the type X\n" +
 			"----------\n");
 }
 public void test047() {
 	this.runConformTest(
 		new String[] {
 			"X.java", //================================
-			"public class X extends SuperTest\n" + 
-			"{\n" + 
-			"    public X()\n" + 
-			"    {\n" + 
-			"        super();\n" + 
-			"    }\n" + 
-			"  \n" + 
-			"    static void print(Object obj)\n" + 
-			"    {\n" + 
-			"        System.out.println(\"Object:\" + obj.toString());\n" + 
-			"    }\n" + 
-			"    \n" + 
-			"    public static void main(String[] args)\n" + 
-			"    {\n" + 
-			"        print(\"Hello world\");\n" + 
-			"    }\n" + 
-			"}\n" + 
-			"class SuperTest\n" + 
-			"{\n" + 
-			"    SuperTest(){};\n" + 
-			"    static void print(String s)\n" + 
-			"    {\n" + 
-			"        System.out.println(\"String: \" + s);\n" + 
-			"    }\n" + 
+			"public class X extends SuperTest\n" +
+			"{\n" +
+			"    public X()\n" +
+			"    {\n" +
+			"        super();\n" +
+			"    }\n" +
+			"  \n" +
+			"    static void print(Object obj)\n" +
+			"    {\n" +
+			"        System.out.println(\"Object:\" + obj.toString());\n" +
+			"    }\n" +
+			"    \n" +
+			"    public static void main(String[] args)\n" +
+			"    {\n" +
+			"        print(\"Hello world\");\n" +
+			"    }\n" +
+			"}\n" +
+			"class SuperTest\n" +
+			"{\n" +
+			"    SuperTest(){};\n" +
+			"    static void print(String s)\n" +
+			"    {\n" +
+			"        System.out.println(\"String: \" + s);\n" +
+			"    }\n" +
 			"}\n"	},
 		"String: Hello world");
 }
@@ -1636,7 +1636,7 @@ public void test048() {
 	this.runConformTest(
 		new String[] {
 			"X.java", //---------------------------
-			"public class X {\n" + 
+			"public class X {\n" +
 			"   public static void main(String[] args) {\n"+
 			"		System.out.println(\"SUCCESS\");\n"+
 			"   }\n"+
@@ -1657,43 +1657,43 @@ public void test048() {
 						assertTrue("should not contain reference to Serializable", false);
 				}
 			}
-		});		
+		});
 }
 // 76682 - ClassCastException in qualified name computeConversion
 public void test049() {
 	this.runNegativeTest(
 		new String[] {
 			"X.java", //---------------------------
-			"public class X\n" + 
-			"{\n" + 
-			"    private String foo() {\n" + 
-			"        return \"Started \" + java.text.DateFormat.format(new java.util.Date());\n" + 
-			"    }\n" + 
+			"public class X\n" +
+			"{\n" +
+			"    private String foo() {\n" +
+			"        return \"Started \" + java.text.DateFormat.format(new java.util.Date());\n" +
+			"    }\n" +
 			"}\n" ,
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 4)\r\n" + 
-		"	return \"Started \" + java.text.DateFormat.format(new java.util.Date());\r\n" + 
-		"	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Cannot make a static reference to the non-static method format(Date) from the type DateFormat\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 4)\r\n" +
+		"	return \"Started \" + java.text.DateFormat.format(new java.util.Date());\r\n" +
+		"	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+		"Cannot make a static reference to the non-static method format(Date) from the type DateFormat\n" +
 		"----------\n");
 }
 public void test050() {
 	this.runConformTest(
 		new String[] {
 			"X.java", //---------------------------
-			"public class X {\n" + 
-			"\n" + 
-			"    public static void main(String argv[]) {\n" + 
-			"    	X.Y.Z.foo();\n" + 
-			"    }\n" + 
-			"    static class Y {\n" + 
-			"    	static class Z {\n" + 
-			"    		static void foo() {\n" + 
-			"    			System.out.println(\"SUCCESS\");\n" + 
-			"    		}\n" + 
-			"    	}\n" + 
-			"    }\n" + 
+			"public class X {\n" +
+			"\n" +
+			"    public static void main(String argv[]) {\n" +
+			"    	X.Y.Z.foo();\n" +
+			"    }\n" +
+			"    static class Y {\n" +
+			"    	static class Z {\n" +
+			"    		static void foo() {\n" +
+			"    			System.out.println(\"SUCCESS\");\n" +
+			"    		}\n" +
+			"    	}\n" +
+			"    }\n" +
 			"}\n",
 		},
 		"SUCCESS");
@@ -1703,18 +1703,18 @@ public void test051() {
 	this.runNegativeTest(
 		new String[] {
 			"X.java", //---------------------------
-			"public class X {\n" + 
-			"\n" + 
-			"    public static void main(String[] args) {\n" + 
-			"        args.finalize();\n" + 
-			"    }\n" + 
+			"public class X {\n" +
+			"\n" +
+			"    public static void main(String[] args) {\n" +
+			"        args.finalize();\n" +
+			"    }\n" +
 			"}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 4)\n" + 
-		"	args.finalize();\n" + 
-		"	     ^^^^^^^^\n" + 
-		"The method finalize() from the type Object is not visible\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 4)\n" +
+		"	args.finalize();\n" +
+		"	     ^^^^^^^^\n" +
+		"The method finalize() from the type Object is not visible\n" +
 		"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=87463
@@ -1722,23 +1722,23 @@ public void test052() {
 	this.runConformTest(
 		new String[] {
 			"X.java", //---------------------------
-			"public class X {\n" + 
-			"	public void test() {\n" + 
-			"		class C {\n" + 
-			"			public C() {\n" + 
-			"			}\n" + 
-			"			public void foo() {\n" + 
-			"				System.out.println(\"hello\");\n" + 
-			"			}\n" + 
-			"		}\n" + 
-			"		int n = 0;\n" + 
-			"		switch (n) {\n" + 
-			"			case 0 :\n" + 
-			"				if (true) {\n" + 
-			"					C c2 = new C();\n" + 
-			"				}\n" + 
-			"		}\n" + 
-			"	}\n" + 
+			"public class X {\n" +
+			"	public void test() {\n" +
+			"		class C {\n" +
+			"			public C() {\n" +
+			"			}\n" +
+			"			public void foo() {\n" +
+			"				System.out.println(\"hello\");\n" +
+			"			}\n" +
+			"		}\n" +
+			"		int n = 0;\n" +
+			"		switch (n) {\n" +
+			"			case 0 :\n" +
+			"				if (true) {\n" +
+			"					C c2 = new C();\n" +
+			"				}\n" +
+			"		}\n" +
+			"	}\n" +
 			"}\n",
 		},
 		"");
@@ -1748,267 +1748,267 @@ public void test053() {
 	this.runConformTest(
 		new String[] {
 			"X.java", //---------------------------
-			"public class X {\n" + 
-			"	public void test() {\n" + 
-			"		int l = 1;\n" + 
-			"		switch(l) {\n" + 
-			"			case 1: \n" + 
-			"				class C {\n" + 
-			"					public C() {\n" + 
-			"					}\n" + 
-			"					public void foo() {\n" + 
-			"						System.out.println(\"hello\");\n" + 
-			"					}\n" + 
-			"				}\n" + 
-			"				int n = 0;\n" + 
-			"				switch (n) {\n" + 
-			"					case 0 :\n" + 
-			"						if (true) {\n" + 
-			"							C c2 = new C();\n" + 
-			"						}\n" + 
-			"				}\n" + 
-			"		}\n" + 
-			"	}\n" + 
+			"public class X {\n" +
+			"	public void test() {\n" +
+			"		int l = 1;\n" +
+			"		switch(l) {\n" +
+			"			case 1: \n" +
+			"				class C {\n" +
+			"					public C() {\n" +
+			"					}\n" +
+			"					public void foo() {\n" +
+			"						System.out.println(\"hello\");\n" +
+			"					}\n" +
+			"				}\n" +
+			"				int n = 0;\n" +
+			"				switch (n) {\n" +
+			"					case 0 :\n" +
+			"						if (true) {\n" +
+			"							C c2 = new C();\n" +
+			"						}\n" +
+			"				}\n" +
+			"		}\n" +
+			"	}\n" +
 			"}\n",
 		},
 		"");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=93486
 public void test054() {
-    this.runConformTest(
-        new String[] {
-            "X.java", //---------------------------
-            "import java.util.LinkedHashMap;\n" + 
-            "import java.util.Map.Entry;\n" + 
-            "\n" + 
-            "public class X {\n" + 
-            "    \n" + 
-            "    private LinkedHashMap fCache;\n" + 
-            "    \n" + 
-            "    public X(final int cacheSize) {\n" + 
-            "        // start with 100 elements but be able to grow until cacheSize\n" + 
-            "        fCache= new LinkedHashMap(100, 0.75f, true) {\n" + 
-            "            /** This class is not intended to be serialized. */\n" + 
-            "            private static final long serialVersionUID= 1L;\n" + 
-            "            protected boolean removeEldestEntry(Entry eldest) {\n" + 
-            "                return size() > cacheSize;\n" + 
-            "            }\n" + 
-            "        };\n" + 
-            "    }\n" + 
-            "}\n",
-        },
-        "");
+	this.runConformTest(
+		new String[] {
+			"X.java", //---------------------------
+			"import java.util.LinkedHashMap;\n" +
+			"import java.util.Map.Entry;\n" +
+			"\n" +
+			"public class X {\n" +
+			"    \n" +
+			"    private LinkedHashMap fCache;\n" +
+			"    \n" +
+			"    public X(final int cacheSize) {\n" +
+			"        // start with 100 elements but be able to grow until cacheSize\n" +
+			"        fCache= new LinkedHashMap(100, 0.75f, true) {\n" +
+			"            /** This class is not intended to be serialized. */\n" +
+			"            private static final long serialVersionUID= 1L;\n" +
+			"            protected boolean removeEldestEntry(Entry eldest) {\n" +
+			"                return size() > cacheSize;\n" +
+			"            }\n" +
+			"        };\n" +
+			"    }\n" +
+			"}\n",
+		},
+		"");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=106140
 public void test055() {
-    this.runNegativeTest(
-        new String[] {
-            "A.java",
-            "import p.*;\n" + 
-            "public class A {\n" + 
-            "    public void errors() {\n" + 
-	            "    B b = new B();\n" + 
-            "        String s1 = b.str;\n" + 
-            "        String s2 = B.str;\n" + 
-            "    }\n" + 
-            "}\n",
-            "p/B.java",
-            "package p;\n" + 
-            "class B {\n" + 
-            "    public static String str;\n" + 
-            "}\n",
-        },
-		"----------\n" + 
-		"1. ERROR in A.java (at line 4)\n" + 
-		"	B b = new B();\n" + 
-		"	^\n" + 
-		"The type B is not visible\n" + 
-		"----------\n" + 
-		"2. ERROR in A.java (at line 4)\n" + 
-		"	B b = new B();\n" + 
-		"	          ^\n" + 
-		"The type B is not visible\n" + 
-		"----------\n" + 
-		"3. ERROR in A.java (at line 5)\n" + 
-		"	String s1 = b.str;\n" + 
-		"	            ^\n" + 
-		"The type B is not visible\n" + 
-		"----------\n" + 
-		"4. ERROR in A.java (at line 6)\n" + 
-		"	String s2 = B.str;\n" + 
-		"	            ^\n" + 
-		"The type B is not visible\n" + 
+	this.runNegativeTest(
+		new String[] {
+			"A.java",
+			"import p.*;\n" +
+			"public class A {\n" +
+			"    public void errors() {\n" +
+				"    B b = new B();\n" +
+			"        String s1 = b.str;\n" +
+			"        String s2 = B.str;\n" +
+			"    }\n" +
+			"}\n",
+			"p/B.java",
+			"package p;\n" +
+			"class B {\n" +
+			"    public static String str;\n" +
+			"}\n",
+		},
+		"----------\n" +
+		"1. ERROR in A.java (at line 4)\n" +
+		"	B b = new B();\n" +
+		"	^\n" +
+		"The type B is not visible\n" +
+		"----------\n" +
+		"2. ERROR in A.java (at line 4)\n" +
+		"	B b = new B();\n" +
+		"	          ^\n" +
+		"The type B is not visible\n" +
+		"----------\n" +
+		"3. ERROR in A.java (at line 5)\n" +
+		"	String s1 = b.str;\n" +
+		"	            ^\n" +
+		"The type B is not visible\n" +
+		"----------\n" +
+		"4. ERROR in A.java (at line 6)\n" +
+		"	String s2 = B.str;\n" +
+		"	            ^\n" +
+		"The type B is not visible\n" +
 		"----------\n");
 }
 // final method in static inner class still found in extending classes
 public void test056() {
-    this.runConformTest(
-        new String[] {
-            "X.java",
-			"public class X {\n" + 
-			"  public static void main(String[] args) {\n" + 
-			"    I x = new Z();\n" + 
-			"    x.foo();\n" + 
-			"  }\n" + 
-			"  static interface I {\n" + 
-			"    Y foo();\n" + 
-			"  }\n" + 
-			"  static class Y {\n" + 
-			"    public final Y foo() { \n" + 
-			"        System.out.println(\"SUCCESS\");\n" + 
-			"        return null; \n" + 
-			"    }\n" + 
-			"  }\n" + 
-			"  static class Z extends Y implements I {\n" + 
-			"      // empty\n" + 
-			"  }\n" + 
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"public class X {\n" +
+			"  public static void main(String[] args) {\n" +
+			"    I x = new Z();\n" +
+			"    x.foo();\n" +
+			"  }\n" +
+			"  static interface I {\n" +
+			"    Y foo();\n" +
+			"  }\n" +
+			"  static class Y {\n" +
+			"    public final Y foo() { \n" +
+			"        System.out.println(\"SUCCESS\");\n" +
+			"        return null; \n" +
+			"    }\n" +
+			"  }\n" +
+			"  static class Z extends Y implements I {\n" +
+			"      // empty\n" +
+			"  }\n" +
 			"}",
-        },
-        "SUCCESS");
+		},
+		"SUCCESS");
 }
 // unresolved type does not fool methods signature comparison
 public void test057() {
-    this.runNegativeTest(
-        new String[] {
-            "X.java",
-			"import java.awt.*;\n" + 
-			"public class X {\n" + 
-			"    public void foo(Window w) {\n" + 
-			"        // empty\n" + 
-			"    }\n" + 
-			"    public void foo(Applet a) {\n" + 
-			"        // empty\n" + 
-			"    }\n" + 
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"import java.awt.*;\n" +
+			"public class X {\n" +
+			"    public void foo(Window w) {\n" +
+			"        // empty\n" +
+			"    }\n" +
+			"    public void foo(Applet a) {\n" +
+			"        // empty\n" +
+			"    }\n" +
 			"}"},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 6)\n" + 
-		"	public void foo(Applet a) {\n" + 
-		"	                ^^^^^^\n" + 
-		"Applet cannot be resolved to a type\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 6)\n" +
+		"	public void foo(Applet a) {\n" +
+		"	                ^^^^^^\n" +
+		"Applet cannot be resolved to a type\n" +
 		"----------\n"
 		);
 }
 public void test058() {
-    this.runConformTest(
-        new String[] {
-        		"p/X.java", // =================
-        		"package p;\n" + 
-        		"\n" + 
-        		"import p.q.Z;\n" + 
-        		"public class X { \n" + 
-        		"  public static void main(String argv[]) {\n" + 
-        		"     System.out.println(Z.z);\n" + 
-        		"  }\n" + 
-        		"}", // =================
-        		"p/q/Z.java", // =================
-        		"package p.q;\n" + 
-        		"\n" + 
-        		"public class Z extends Y implements I { \n" + 
-        		"}\n" + 
-        		"class Y {\n" + 
-        		"    protected static int z = 1;\n" + 
-        		"}\n" + 
-        		"interface I {\n" + 
-        		"    int z = 0;\n" + 
-        		"}", // =================
+	this.runConformTest(
+		new String[] {
+				"p/X.java", // =================
+				"package p;\n" +
+				"\n" +
+				"import p.q.Z;\n" +
+				"public class X { \n" +
+				"  public static void main(String argv[]) {\n" +
+				"     System.out.println(Z.z);\n" +
+				"  }\n" +
+				"}", // =================
+				"p/q/Z.java", // =================
+				"package p.q;\n" +
+				"\n" +
+				"public class Z extends Y implements I { \n" +
+				"}\n" +
+				"class Y {\n" +
+				"    protected static int z = 1;\n" +
+				"}\n" +
+				"interface I {\n" +
+				"    int z = 0;\n" +
+				"}", // =================
 		},
 		"0");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=132813
 public void test059() {
-    this.runNegativeTest(
-        new String[] {
-        		"X.java", // =================
-    			"public class X {\n" + 
-    			"	\n" + 
-    			"	void aa(int i) {\n" + 
-    			"	}\n" + 
-    			"	void aa(long l) {\n" + 
-    			"	}\n" + 
-    			"	Zork bb() {\n" + 
-    			"	}\n" + 
-    			"	void cc() {\n" + 
-    			"		this.bb();\n" + 
-    			"	}\n" + 
-    			"	public static void main(String[] args) {\n" + 
-    			"		System.out.println(\"SUCCESS\");\n" + 
-    			"	}\n" + 
-    			"}\n", // =================
+	this.runNegativeTest(
+		new String[] {
+				"X.java", // =================
+				"public class X {\n" +
+				"	\n" +
+				"	void aa(int i) {\n" +
+				"	}\n" +
+				"	void aa(long l) {\n" +
+				"	}\n" +
+				"	Zork bb() {\n" +
+				"	}\n" +
+				"	void cc() {\n" +
+				"		this.bb();\n" +
+				"	}\n" +
+				"	public static void main(String[] args) {\n" +
+				"		System.out.println(\"SUCCESS\");\n" +
+				"	}\n" +
+				"}\n", // =================
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 7)\n" + 
-		"	Zork bb() {\n" + 
-		"	^^^^\n" + 
-		"Zork cannot be resolved to a type\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 10)\n" + 
-		"	this.bb();\n" + 
-		"	     ^^\n" + 
-		"The method bb() from the type X refers to the missing type Zork\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 7)\n" +
+		"	Zork bb() {\n" +
+		"	^^^^\n" +
+		"Zork cannot be resolved to a type\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 10)\n" +
+		"	this.bb();\n" +
+		"	     ^^\n" +
+		"The method bb() from the type X refers to the missing type Zork\n" +
 		"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=132813 - variation
 public void test060() {
-    this.runNegativeTest(
-        new String[] {
-        		"X.java", // =================
-    			"public class X {\n" + 
-    			"	\n" + 
-    			"	void aa(int i) {\n" + 
-    			"	}\n" + 
-    			"	Zork aa(long l) {\n" + 
-    			"	}\n" + 
-    			"	Zork bb() {\n" + 
-    			"	}\n" + 
-    			"	void cc() {\n" +
-    			"		this.bb();\n" + 
-    			"	}\n" + 
-    			"	public static void main(String[] args) {\n" + 
-    			"		System.out.println(\"SUCCESS\");\n" + 
-    			"	}\n" + 
-    			"}\n", // =================
+	this.runNegativeTest(
+		new String[] {
+				"X.java", // =================
+				"public class X {\n" +
+				"	\n" +
+				"	void aa(int i) {\n" +
+				"	}\n" +
+				"	Zork aa(long l) {\n" +
+				"	}\n" +
+				"	Zork bb() {\n" +
+				"	}\n" +
+				"	void cc() {\n" +
+				"		this.bb();\n" +
+				"	}\n" +
+				"	public static void main(String[] args) {\n" +
+				"		System.out.println(\"SUCCESS\");\n" +
+				"	}\n" +
+				"}\n", // =================
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 5)\n" + 
-		"	Zork aa(long l) {\n" + 
-		"	^^^^\n" + 
-		"Zork cannot be resolved to a type\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 7)\n" + 
-		"	Zork bb() {\n" + 
-		"	^^^^\n" + 
-		"Zork cannot be resolved to a type\n" + 
-		"----------\n" + 
-		"3. ERROR in X.java (at line 10)\n" + 
-		"	this.bb();\n" + 
-		"	     ^^\n" + 
-		"The method bb() from the type X refers to the missing type Zork\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	Zork aa(long l) {\n" +
+		"	^^^^\n" +
+		"Zork cannot be resolved to a type\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 7)\n" +
+		"	Zork bb() {\n" +
+		"	^^^^\n" +
+		"Zork cannot be resolved to a type\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 10)\n" +
+		"	this.bb();\n" +
+		"	     ^^\n" +
+		"The method bb() from the type X refers to the missing type Zork\n" +
 		"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=134839
 public void test061() {
-	Map options = this.getCompilerOptions();
+	Map<String, String> options = this.getCompilerOptions();
 	if (CompilerOptions.VERSION_1_3.equals(options.get(CompilerOptions.OPTION_Compliance))) {
 		// ensure target is 1.1 for having default abstract methods involved
 		options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_1);
 	}
-    this.runConformTest(
-        new String[] {
-        		"X.java", // =================
-    			"interface MyInterface {\n" + 
-    			"        public void writeToStream();\n" + 
-    			"        public void readFromStream();\n" + 
-    			"}\n" + 
-    			"\n" + 
-    			"public abstract class X implements MyInterface {\n" + 
-    			"        public void b() {\n" + 
-    			"        }\n" + 
-    			"        public void a() {\n" + 
-    			"                writeTypeToStream();\n" + 
-    			"        }\n" + 
-    			"        private void writeTypeToStream() {\n" + 
-    			"        }\n" + 
-    			"}\n", // =================
+	this.runConformTest(
+		new String[] {
+				"X.java", // =================
+				"interface MyInterface {\n" +
+				"        public void writeToStream();\n" +
+				"        public void readFromStream();\n" +
+				"}\n" +
+				"\n" +
+				"public abstract class X implements MyInterface {\n" +
+				"        public void b() {\n" +
+				"        }\n" +
+				"        public void a() {\n" +
+				"                writeTypeToStream();\n" +
+				"        }\n" +
+				"        private void writeTypeToStream() {\n" +
+				"        }\n" +
+				"}\n", // =================
 		},
 		"",
 		null,
@@ -2019,28 +2019,28 @@ public void test061() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=134839
 public void test062() {
-	Map options = this.getCompilerOptions();
+	Map<String, String> options = this.getCompilerOptions();
 	if (CompilerOptions.VERSION_1_3.equals(options.get(CompilerOptions.OPTION_Compliance))) {
 		// ensure target is 1.1 for having default abstract methods involved
 		options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_1);
 	}
-    this.runConformTest(
-        new String[] {
-        		"X.java", // =================
-    			"interface MyInterface {\n" + 
-    			"        public void writeToStream();\n" + 
-    			"        public void readFromStream();\n" + 
-    			"}\n" + 
-    			"\n" + 
-    			"public abstract class X implements MyInterface {\n" + 
-    			"        public void b() {\n" + 
-    			"        }\n" + 
-    			"        public void a() {\n" + 
-    			"                writeTypeToStream();\n" + 
-    			"        }\n" + 
-    			"        private void writeTypeToStream() {\n" + 
-    			"        }\n" + 
-    			"}\n", // =================
+	this.runConformTest(
+		new String[] {
+				"X.java", // =================
+				"interface MyInterface {\n" +
+				"        public void writeToStream();\n" +
+				"        public void readFromStream();\n" +
+				"}\n" +
+				"\n" +
+				"public abstract class X implements MyInterface {\n" +
+				"        public void b() {\n" +
+				"        }\n" +
+				"        public void a() {\n" +
+				"                writeTypeToStream();\n" +
+				"        }\n" +
+				"        private void writeTypeToStream() {\n" +
+				"        }\n" +
+				"}\n", // =================
 		},
 		"",
 		null,
@@ -2051,58 +2051,58 @@ public void test062() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=135292
 public void test063() {
-    this.runNegativeTest(
-        new String[] {
-    		"X.java", // =================
-			"class 56 {\n" + 
-			"\n" + 
-			"        private static class B {\n" + 
-			"                public static final String F = \"\";\n" + 
-			"        }\n" + 
-			"\n" + 
-			"        private static class C {\n" + 
-			"        }\n" + 
-			"\n" + 
-			"        public void foo() {\n" + 
-			"                System.out.println(B.F);\n" + 
-			"        }\n" + 
+	this.runNegativeTest(
+		new String[] {
+			"X.java", // =================
+			"class 56 {\n" +
+			"\n" +
+			"        private static class B {\n" +
+			"                public static final String F = \"\";\n" +
+			"        }\n" +
+			"\n" +
+			"        private static class C {\n" +
+			"        }\n" +
+			"\n" +
+			"        public void foo() {\n" +
+			"                System.out.println(B.F);\n" +
+			"        }\n" +
 			"}\n", // =================
 	},
-	"----------\n" + 
-	"1. ERROR in X.java (at line 1)\n" + 
-	"	class 56 {\n" + 
-	"	      ^^\n" + 
-	"Syntax error on token \"56\", Identifier expected\n" + 
-	"----------\n" + 
-	"2. ERROR in X.java (at line 3)\n" + 
-	"	private static class B {\n" + 
-	"	                     ^\n" + 
-	"Illegal modifier for the class B; only public, abstract & final are permitted\n" + 
-	"----------\n" + 
-	"3. ERROR in X.java (at line 7)\n" + 
-	"	private static class C {\n" + 
-	"	                     ^\n" + 
-	"Illegal modifier for the class C; only public, abstract & final are permitted\n" + 
-	"----------\n" + 
-	"4. ERROR in X.java (at line 8)\n" + 
-	"	}\n" + 
-	"	^\n" + 
-	"Syntax error on token \"}\", delete this token\n" + 
-	"----------\n" + 
-	"5. ERROR in X.java (at line 11)\n" + 
-	"	System.out.println(B.F);\n" + 
-	"	                   ^^^\n" + 
-	"The type B is not visible\n" + 
-	"----------\n" + 
-	"6. ERROR in X.java (at line 13)\n" + 
-	"	}\n" + 
-	"	^\n" + 
-	"Syntax error, insert \"}\" to complete ClassBody\n" + 
+	"----------\n" +
+	"1. ERROR in X.java (at line 1)\n" +
+	"	class 56 {\n" +
+	"	      ^^\n" +
+	"Syntax error on token \"56\", Identifier expected\n" +
+	"----------\n" +
+	"2. ERROR in X.java (at line 3)\n" +
+	"	private static class B {\n" +
+	"	                     ^\n" +
+	"Illegal modifier for the class B; only public, abstract & final are permitted\n" +
+	"----------\n" +
+	"3. ERROR in X.java (at line 7)\n" +
+	"	private static class C {\n" +
+	"	                     ^\n" +
+	"Illegal modifier for the class C; only public, abstract & final are permitted\n" +
+	"----------\n" +
+	"4. ERROR in X.java (at line 8)\n" +
+	"	}\n" +
+	"	^\n" +
+	"Syntax error on token \"}\", delete this token\n" +
+	"----------\n" +
+	"5. ERROR in X.java (at line 11)\n" +
+	"	System.out.println(B.F);\n" +
+	"	                   ^^^\n" +
+	"The type B is not visible\n" +
+	"----------\n" +
+	"6. ERROR in X.java (at line 13)\n" +
+	"	}\n" +
+	"	^\n" +
+	"Syntax error, insert \"}\" to complete ClassBody\n" +
 	"----------\n");
 }
 //	https://bugs.eclipse.org/bugs/show_bug.cgi?id=137744
 public void test064() {
-	Map options = this.getCompilerOptions();
+	Map<String, String> options = this.getCompilerOptions();
 	if (CompilerOptions.VERSION_1_3.equals(options.get(CompilerOptions.OPTION_Compliance))) {
 		// ensure target is 1.1 for having default abstract methods involved
 		options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_1);
@@ -2110,55 +2110,55 @@ public void test064() {
 	this.runConformTest(
 			new String[] {
 				"X.java",
-				"public class X {\n" + 
-				"	public static void main(String[] args) {\n" + 
-				"		System.out.println(\"SUCCESS\");\n" + 
-				"		B a = new C();\n" + 
-				"		\n" + 
-				"		a.hasKursAt(1);\n" + 
-				"	}\n" + 
-				"\n" + 
+				"public class X {\n" +
+				"	public static void main(String[] args) {\n" +
+				"		System.out.println(\"SUCCESS\");\n" +
+				"		B a = new C();\n" +
+				"		\n" +
+				"		a.hasKursAt(1);\n" +
+				"	}\n" +
+				"\n" +
 				"}",
 				"A.java",
-				"abstract public class A implements IA0 {\n" + 
-				"	int t;\n" + 
-				"	public A() {\n" + 
-				"	}\n" + 
+				"abstract public class A implements IA0 {\n" +
+				"	int t;\n" +
+				"	public A() {\n" +
+				"	}\n" +
 				"}",
 				"B.java",
-				"abstract public class B extends A implements IA3, IA1 {\n" + 
-				"	int a;\n" + 
-				"	public B() {\n" + 
-				"	}\n" + 
-				"	public void test() {	\n" + 
-				"	}\n" + 
+				"abstract public class B extends A implements IA3, IA1 {\n" +
+				"	int a;\n" +
+				"	public B() {\n" +
+				"	}\n" +
+				"	public void test() {	\n" +
+				"	}\n" +
 				"}",
 				"C.java",
-				"public class C extends B implements IA4, IA2{\n" + 
-				"	int c;\n" + 
-				"	public C() {\n" + 
-				"	}\n" + 
-				"	public boolean hasKursAt(int zeitpunkt) {\n" + 
-				"		return false;\n" + 
-				"	}\n" + 
+				"public class C extends B implements IA4, IA2{\n" +
+				"	int c;\n" +
+				"	public C() {\n" +
+				"	}\n" +
+				"	public boolean hasKursAt(int zeitpunkt) {\n" +
+				"		return false;\n" +
+				"	}\n" +
 				"}",
 				"IA0.java",
-				"public interface IA0 {\n" + 
-				"	public void test();\n" + 
+				"public interface IA0 {\n" +
+				"	public void test();\n" +
 				"}",
 				"IA1.java",
-				"public interface IA1 extends IA0 {\n" + 
-				"	public boolean hasKursAt(int zeitpunkt);\n" + 
+				"public interface IA1 extends IA0 {\n" +
+				"	public boolean hasKursAt(int zeitpunkt);\n" +
 				"}",
 				"IA2.java",
-				"public interface IA2 extends IA0 {\n" + 
-				"	public boolean hasKursAt(int zeitpunkt);\n" + 
+				"public interface IA2 extends IA0 {\n" +
+				"	public boolean hasKursAt(int zeitpunkt);\n" +
 				"}",
 				"IA3.java",
-				"public interface IA3 extends IA2 {\n" + 
+				"public interface IA3 extends IA2 {\n" +
 				"}",
 				"IA4.java",
-				"public interface IA4 extends IA3 {\n" + 
+				"public interface IA4 extends IA3 {\n" +
 				"}"
 			},
 			"SUCCESS",
@@ -2173,28 +2173,28 @@ public void test065() {
 	this.runConformTest(
 			new String[] {
 				"com/internap/other/ScopeExample.java",//===================
-				"package com.internap.other;\n" + 
-				"import com.internap.*;\n" + 
-				"public class ScopeExample {\n" + 
-				"	private static final String LOGGER = \"SUCCESS\";\n" + 
-				"	public static void main(String[] args) {\n" + 
-				"		PublicAccessSubclass sub = new PublicAccessSubclass() {\n" + 
-				"			public void implementMe() {\n" + 
-				"				System.out.println(LOGGER);\n" + 
-				"			}\n" + 
-				"		};\n" + 
-				"		sub.implementMe();\n" + 
-				"	}\n" + 
+				"package com.internap.other;\n" +
+				"import com.internap.*;\n" +
+				"public class ScopeExample {\n" +
+				"	private static final String LOGGER = \"SUCCESS\";\n" +
+				"	public static void main(String[] args) {\n" +
+				"		PublicAccessSubclass sub = new PublicAccessSubclass() {\n" +
+				"			public void implementMe() {\n" +
+				"				System.out.println(LOGGER);\n" +
+				"			}\n" +
+				"		};\n" +
+				"		sub.implementMe();\n" +
+				"	}\n" +
 				"}",
 				"com/internap/PublicAccessSubclass.java",//===================
-				"package com.internap;\n" + 
-				"public abstract class PublicAccessSubclass extends DefaultAccessSuperclass {\n" + 
-				"	public abstract void implementMe();				\n" + 
+				"package com.internap;\n" +
+				"public abstract class PublicAccessSubclass extends DefaultAccessSuperclass {\n" +
+				"	public abstract void implementMe();				\n" +
 				"}",
 				"com/internap/DefaultAccessSuperclass.java",//===================
-				"package com.internap;\n" + 
-				"class DefaultAccessSuperclass {\n" + 
-				"	private static final String LOGGER = \"FAILED\";\n" + 
+				"package com.internap;\n" +
+				"class DefaultAccessSuperclass {\n" +
+				"	private static final String LOGGER = \"FAILED\";\n" +
 				"}",
 			},
 			"SUCCESS");
@@ -2204,122 +2204,122 @@ public void test066() {
 	this.runConformTest(
 			new String[] {
 				"com/internap/other/ScopeExample.java",//===================
-				"package com.internap.other;\n" + 
-				"import com.internap.*;\n" + 
-				"public class ScopeExample {\n" + 
-				"	private static final String LOGGER() { return \"SUCCESS\"; }\n" + 
-				"	public static void main(String[] args) {\n" + 
-				"		PublicAccessSubclass sub = new PublicAccessSubclass() {\n" + 
-				"			public void implementMe() {\n" + 
-				"				System.out.println(LOGGER());\n" + 
-				"			}\n" + 
-				"		};\n" + 
-				"		sub.implementMe();\n" + 
-				"	}\n" + 
+				"package com.internap.other;\n" +
+				"import com.internap.*;\n" +
+				"public class ScopeExample {\n" +
+				"	private static final String LOGGER() { return \"SUCCESS\"; }\n" +
+				"	public static void main(String[] args) {\n" +
+				"		PublicAccessSubclass sub = new PublicAccessSubclass() {\n" +
+				"			public void implementMe() {\n" +
+				"				System.out.println(LOGGER());\n" +
+				"			}\n" +
+				"		};\n" +
+				"		sub.implementMe();\n" +
+				"	}\n" +
 				"}",
 				"com/internap/PublicAccessSubclass.java",//===================
-				"package com.internap;\n" + 
-				"public abstract class PublicAccessSubclass extends DefaultAccessSuperclass {\n" + 
-				"	public abstract void implementMe();				\n" + 
+				"package com.internap;\n" +
+				"public abstract class PublicAccessSubclass extends DefaultAccessSuperclass {\n" +
+				"	public abstract void implementMe();				\n" +
 				"}",
 				"com/internap/DefaultAccessSuperclass.java",//===================
-				"package com.internap;\n" + 
-				"class DefaultAccessSuperclass {\n" + 
-				"	private static final String LOGGER() { return \"FAILED\"; }\n" + 
+				"package com.internap;\n" +
+				"class DefaultAccessSuperclass {\n" +
+				"	private static final String LOGGER() { return \"FAILED\"; }\n" +
 				"}",
 			},
 			"SUCCESS");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=135323 - variation
 public void test067() {
-	Map options = this.getCompilerOptions();
+	Map<String, String> options = this.getCompilerOptions();
 	if (CompilerOptions.VERSION_1_3.equals(options.get(CompilerOptions.OPTION_Compliance))) {
 		this.runNegativeTest(
 				new String[] {
 					"com/internap/other/ScopeExample.java",//===================
-					"package com.internap.other;\n" + 
-					"import com.internap.*;\n" + 
-					"public class ScopeExample {\n" + 
-					"	private static final String LOGGER = \"FAILED\";\n" + 
-					"	public static void main(String[] args) {\n" + 
-					"		PublicAccessSubclass sub = new PublicAccessSubclass() {\n" + 
-					"			public void implementMe() {\n" + 
-					"				System.out.println(LOGGER);\n" + 
-					"			}\n" + 
-					"		};\n" + 
-					"		sub.implementMe();\n" + 
-					"	}\n" + 
+					"package com.internap.other;\n" +
+					"import com.internap.*;\n" +
+					"public class ScopeExample {\n" +
+					"	private static final String LOGGER = \"FAILED\";\n" +
+					"	public static void main(String[] args) {\n" +
+					"		PublicAccessSubclass sub = new PublicAccessSubclass() {\n" +
+					"			public void implementMe() {\n" +
+					"				System.out.println(LOGGER);\n" +
+					"			}\n" +
+					"		};\n" +
+					"		sub.implementMe();\n" +
+					"	}\n" +
 					"}",
 					"com/internap/PublicAccessSubclass.java",//===================
-					"package com.internap;\n" + 
-					"public abstract class PublicAccessSubclass extends DefaultAccessSuperclass {\n" + 
-					"	public abstract void implementMe();				\n" + 
+					"package com.internap;\n" +
+					"public abstract class PublicAccessSubclass extends DefaultAccessSuperclass {\n" +
+					"	public abstract void implementMe();				\n" +
 					"}",
 					"com/internap/DefaultAccessSuperclass.java",//===================
-					"package com.internap;\n" + 
-					"class DefaultAccessSuperclass {\n" + 
-					"	public static final String LOGGER = \"SUCCESS\";\n" + 
+					"package com.internap;\n" +
+					"class DefaultAccessSuperclass {\n" +
+					"	public static final String LOGGER = \"SUCCESS\";\n" +
 					"}",
 				},
-				"----------\n" + 
-				"1. WARNING in com\\internap\\other\\ScopeExample.java (at line 4)\r\n" + 
-				"	private static final String LOGGER = \"FAILED\";\r\n" + 
-				"	                            ^^^^^^\n" + 
-				"The field ScopeExample.LOGGER is never read locally\n" + 
-				"----------\n" + 
-				"2. ERROR in com\\internap\\other\\ScopeExample.java (at line 8)\r\n" + 
-				"	System.out.println(LOGGER);\r\n" + 
-				"	                   ^^^^^^\n" + 
-				"The field LOGGER is defined in an inherited type and an enclosing scope \n" + 
+				"----------\n" +
+				"1. WARNING in com\\internap\\other\\ScopeExample.java (at line 4)\r\n" +
+				"	private static final String LOGGER = \"FAILED\";\r\n" +
+				"	                            ^^^^^^\n" +
+				"The field ScopeExample.LOGGER is never read locally\n" +
+				"----------\n" +
+				"2. ERROR in com\\internap\\other\\ScopeExample.java (at line 8)\r\n" +
+				"	System.out.println(LOGGER);\r\n" +
+				"	                   ^^^^^^\n" +
+				"The field LOGGER is defined in an inherited type and an enclosing scope \n" +
 				"----------\n");
 		return;
-	}	
+	}
 	this.runConformTest(
 			new String[] {
 				"com/internap/other/ScopeExample.java",//===================
-				"package com.internap.other;\n" + 
-				"import com.internap.*;\n" + 
-				"public class ScopeExample {\n" + 
-				"	private static final String LOGGER = \"FAILED\";\n" + 
-				"	public static void main(String[] args) {\n" + 
-				"		PublicAccessSubclass sub = new PublicAccessSubclass() {\n" + 
-				"			public void implementMe() {\n" + 
-				"				System.out.println(LOGGER);\n" + 
-				"			}\n" + 
-				"		};\n" + 
-				"		sub.implementMe();\n" + 
-				"	}\n" + 
+				"package com.internap.other;\n" +
+				"import com.internap.*;\n" +
+				"public class ScopeExample {\n" +
+				"	private static final String LOGGER = \"FAILED\";\n" +
+				"	public static void main(String[] args) {\n" +
+				"		PublicAccessSubclass sub = new PublicAccessSubclass() {\n" +
+				"			public void implementMe() {\n" +
+				"				System.out.println(LOGGER);\n" +
+				"			}\n" +
+				"		};\n" +
+				"		sub.implementMe();\n" +
+				"	}\n" +
 				"}",
 				"com/internap/PublicAccessSubclass.java",//===================
-				"package com.internap;\n" + 
-				"public abstract class PublicAccessSubclass extends DefaultAccessSuperclass {\n" + 
-				"	public abstract void implementMe();				\n" + 
+				"package com.internap;\n" +
+				"public abstract class PublicAccessSubclass extends DefaultAccessSuperclass {\n" +
+				"	public abstract void implementMe();				\n" +
 				"}",
 				"com/internap/DefaultAccessSuperclass.java",//===================
-				"package com.internap;\n" + 
-				"class DefaultAccessSuperclass {\n" + 
-				"	public static final String LOGGER = \"SUCCESS\";\n" + 
+				"package com.internap;\n" +
+				"class DefaultAccessSuperclass {\n" +
+				"	public static final String LOGGER = \"SUCCESS\";\n" +
 				"}",
 			},
 			"SUCCESS");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=139099
 public void test068() {
-	Map options = this.getCompilerOptions();
+	Map<String, String> options = this.getCompilerOptions();
 	CompilerOptions compOptions = new CompilerOptions(options);
 	if (compOptions.complianceLevel < ClassFileConstants.JDK1_5) return;
 	options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_4);
 	this.runConformTest(
 			new String[] {
 				"X.java",//===================
-				"public class X {\n" + 
-				"    public X() {\n" + 
-				"    }\n" + 
-				"    public static void main(String[] args) {\n" + 
-				"        X l = new X();\n" + 
-				"        StringBuffer sb = new StringBuffer();\n" + 
-				"        sb.append(l);\n" + 
-				"    }\n" + 
+				"public class X {\n" +
+				"    public X() {\n" +
+				"    }\n" +
+				"    public static void main(String[] args) {\n" +
+				"        X l = new X();\n" +
+				"        StringBuffer sb = new StringBuffer();\n" +
+				"        sb.append(l);\n" +
+				"    }\n" +
 				"}", // =================,
 			},
 			"",
@@ -2331,30 +2331,30 @@ public void test068() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=139099
 public void test068a() {
-	Map options = this.getCompilerOptions();
+	Map<String, String> options = this.getCompilerOptions();
 	CompilerOptions compOptions = new CompilerOptions(options);
 	if (compOptions.complianceLevel < ClassFileConstants.JDK1_5) return;
 
 	this.runConformTest(
 		new String[] {
 			"X1.java",
-			"public class X1 { X1 foo() { return null; } }\n" + 
-			"class X2 extends X1 { X2 foo() { return null; } }\n" + 
-			"class Y { public X2 foo() { return null; } }\n" + 
-			"interface I { X1 foo(); }\n" + 
+			"public class X1 { X1 foo() { return null; } }\n" +
+			"class X2 extends X1 { X2 foo() { return null; } }\n" +
+			"class Y { public X2 foo() { return null; } }\n" +
+			"interface I { X1 foo(); }\n" +
 			"class Z extends Y implements I {}",
 		},
 		"");
 	this.runConformTest(
 		new String[] {
 			"Test.java",//===================
-			"public class Test {\n" + 
-			"    public static void main(String[] args) {\n" + 
-			"        X1 x = new X2().foo();\n" + 
-			"        X2 xx = new X2().foo();\n" + 
-			"        X1 z = new Z().foo();\n" + 
-			"        X2 zz = new Z().foo();\n" + 
-			"    }\n" + 
+			"public class Test {\n" +
+			"    public static void main(String[] args) {\n" +
+			"        X1 x = new X2().foo();\n" +
+			"        X2 xx = new X2().foo();\n" +
+			"        X1 z = new Z().foo();\n" +
+			"        X2 zz = new Z().foo();\n" +
+			"    }\n" +
 			"}", // =================,
 		},
 		"",
@@ -2366,13 +2366,13 @@ public void test068a() {
 	this.runConformTest(
 		new String[] {
 			"Test14.java",//===================
-			"public class Test14 {\n" + 
-			"    public static void main(String[] args) {\n" + 
-			"        X1 x = new X2().foo();\n" + 
-			"        X2 xx = new X2().foo();\n" + 
-			"        X1 z = new Z().foo();\n" + 
-			"        X2 zz = new Z().foo();\n" + 
-			"    }\n" + 
+			"public class Test14 {\n" +
+			"    public static void main(String[] args) {\n" +
+			"        X1 x = new X2().foo();\n" +
+			"        X2 xx = new X2().foo();\n" +
+			"        X1 z = new Z().foo();\n" +
+			"        X2 zz = new Z().foo();\n" +
+			"    }\n" +
 			"}", // =================,
 		},
 		"",
@@ -2387,14 +2387,14 @@ public void test069() {
 	this.runConformTest(
 			new String[] {
 				"X.java",//===================
-				"public class X {\n" + 
-				"    public X() {\n" + 
-				"    }\n" + 
-				"    public static void main(String[] args) {\n" + 
-				"        X l = new X();\n" + 
-				"        StringBuffer sb = new StringBuffer();\n" + 
-				"        sb.append(l);\n" + 
-				"    }\n" + 
+				"public class X {\n" +
+				"    public X() {\n" +
+				"    }\n" +
+				"    public static void main(String[] args) {\n" +
+				"        X l = new X();\n" +
+				"        StringBuffer sb = new StringBuffer();\n" +
+				"        sb.append(l);\n" +
+				"    }\n" +
 				"}", // =================,
 			},
 			"");
@@ -2404,20 +2404,20 @@ public void test070() {
 	this.runConformTest(
 			new String[] {
 				"X.java",//===================
-				"public class X {\n" + 
-				"	interface I {\n" + 
-				"	}\n" + 
-				"\n" + 
-				"	void test() {\n" + 
-				"		new I() {\n" + 
-				"			void foo() {\n" + 
-				"			}\n" + 
-				"		}.foo(); // compiles OK.\n" + 
-				"		new I() {\n" + 
-				"			void $foo() {\n" + 
-				"			}\n" + 
-				"		}.$foo(); // The method $foo() is undefined for the type new T.I(){}\n" + 
-				"	}\n" + 
+				"public class X {\n" +
+				"	interface I {\n" +
+				"	}\n" +
+				"\n" +
+				"	void test() {\n" +
+				"		new I() {\n" +
+				"			void foo() {\n" +
+				"			}\n" +
+				"		}.foo(); // compiles OK.\n" +
+				"		new I() {\n" +
+				"			void $foo() {\n" +
+				"			}\n" +
+				"		}.$foo(); // The method $foo() is undefined for the type new T.I(){}\n" +
+				"	}\n" +
 				"}", // =================
 			},
 			"");
@@ -2428,11 +2428,11 @@ public void test071() {
 		new String[] {
 			"p/X.java",
 			"package p;\n" +
-			"public class X {\n" + 
+			"public class X {\n" +
 			"}",
 			"p/X$X.java",
 			"package p;\n" +
-			"public class X$X {\n" + 
+			"public class X$X {\n" +
 			"}",
 		},
 		"");
@@ -2441,60 +2441,60 @@ public void test071() {
 			"Y.java",
 			"import p.*;\n" +
 			"public class Y {\n" +
-			"  X$X f = new X$X();\n" + 
+			"  X$X f = new X$X();\n" +
 			"}",
 		},
-		"", 
-		null /* no extra class libraries */, 
-		false /* do not flush output directory */, 
+		"",
+		null /* no extra class libraries */,
+		false /* do not flush output directory */,
 		null /* no vm arguments */,
 		null /* no custom options*/,
 		null /* no custom requestor*/,
-	  	false /* do not skip javac for this peculiar test */);
+		false /* do not skip javac for this peculiar test */);
 }
 public void test072() {
 	this.runNegativeTest(
 			new String[] {
 				"X.java",//===================
-				"public class X {\n" + 
-				"	void bar(AX ax) {\n" + 
-				"		ax.foo(null);\n" + 
-				"	}\n" + 
-				"	\n" + 
-				"}\n" + 
-				"interface IX {\n" + 
-				"	void foo(String s);\n" + 
-				"}\n" + 
-				"interface JX {\n" + 
-				"	void foo(Thread t);\n" + 
-				"}\n" + 
-				"abstract class AX implements IX, JX {\n" + 
-				"	public void foo(String s) {}\n" + 
+				"public class X {\n" +
+				"	void bar(AX ax) {\n" +
+				"		ax.foo(null);\n" +
+				"	}\n" +
+				"	\n" +
+				"}\n" +
+				"interface IX {\n" +
+				"	void foo(String s);\n" +
+				"}\n" +
+				"interface JX {\n" +
+				"	void foo(Thread t);\n" +
+				"}\n" +
+				"abstract class AX implements IX, JX {\n" +
+				"	public void foo(String s) {}\n" +
 				"}\n", // =================
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\n" + 
-			"	ax.foo(null);\n" + 
-			"	   ^^^\n" + 
-			"The method foo(String) is ambiguous for the type AX\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\n" +
+			"	ax.foo(null);\n" +
+			"	   ^^^\n" +
+			"The method foo(String) is ambiguous for the type AX\n" +
 			"----------\n");
 }
 public void test073() {
 	this.runNegativeTest(
 		new String[] {
 			"E.java",//===================
-			"public class E {\n" + 
-			"	void run(int i) {}\n" + 
-			"	static class Inner {\n" + 
-			"		void run() { run(1); }\n" + 
-			"	}\n" + 
+			"public class E {\n" +
+			"	void run(int i) {}\n" +
+			"	static class Inner {\n" +
+			"		void run() { run(1); }\n" +
+			"	}\n" +
 			"}\n"
 		},
-		"----------\n" + 
-		"1. ERROR in E.java (at line 4)\n" + 
-		"	void run() { run(1); }\n" + 
-		"	             ^^^\n" + 
-		"The method run() in the type E.Inner is not applicable for the arguments (int)\n" + 
+		"----------\n" +
+		"1. ERROR in E.java (at line 4)\n" +
+		"	void run() { run(1); }\n" +
+		"	             ^^^\n" +
+		"The method run() in the type E.Inner is not applicable for the arguments (int)\n" +
 		"----------\n");
 }
 
@@ -2523,16 +2523,16 @@ public void test074() {
 	} else {
 		runNegativeTest(
 			sources,
-			"----------\n" + 
-			"1. ERROR in p1\\Test.java (at line 2)\n" + 
-			"	import Test2;	\n" + 
-			"	       ^^^^^\n" + 
-			"The import Test2 cannot be resolved\n" + 
-			"----------\n" + 
-			"2. ERROR in p1\\Test.java (at line 3)\n" + 
-			"	import Test2.Member;	\n" + 
-			"	       ^^^^^\n" + 
-			"The import Test2 cannot be resolved\n" + 
+			"----------\n" +
+			"1. ERROR in p1\\Test.java (at line 2)\n" +
+			"	import Test2;	\n" +
+			"	       ^^^^^\n" +
+			"The import Test2 cannot be resolved\n" +
+			"----------\n" +
+			"2. ERROR in p1\\Test.java (at line 3)\n" +
+			"	import Test2.Member;	\n" +
+			"	       ^^^^^\n" +
+			"The import Test2 cannot be resolved\n" +
 			"----------\n");
 	}
 }
@@ -2541,27 +2541,27 @@ public void test075() {
 	this.runConformTest(
 			new String[] {
 				"package1/Test.java",//===================
-				"package package1;\n" + 
-				"import package2.MyList;\n" + 
-				"public class Test {\n" + 
-				"        public void reproduce(String sortKey, boolean isAscending) {\n" + 
-				"                MyList recList = new MyList();\n" + 
-				"                recList.add(null);\n" + 
-				"        }\n" + 
+				"package package1;\n" +
+				"import package2.MyList;\n" +
+				"public class Test {\n" +
+				"        public void reproduce(String sortKey, boolean isAscending) {\n" +
+				"                MyList recList = new MyList();\n" +
+				"                recList.add(null);\n" +
+				"        }\n" +
 				"}\n",//===================
 				"package2/MyList.java",//===================
-				"package package2;\n" + 
-				"import java.util.AbstractList;\n" + 
-				"import java.util.List;\n" + 
-				"public class MyList extends AbstractList implements List {\n" + 
-				"        void add(Integer i) {\n" + 
-				"        }\n" + 
-				"        public Object get(int index) {\n" + 
-				"                return null;\n" + 
-				"        }\n" + 
-				"        public int size() {\n" + 
-				"                return 0;\n" + 
-				"        }\n" + 
+				"package package2;\n" +
+				"import java.util.AbstractList;\n" +
+				"import java.util.List;\n" +
+				"public class MyList extends AbstractList implements List {\n" +
+				"        void add(Integer i) {\n" +
+				"        }\n" +
+				"        public Object get(int index) {\n" +
+				"                return null;\n" +
+				"        }\n" +
+				"        public int size() {\n" +
+				"                return 0;\n" +
+				"        }\n" +
 				"}", // =================
 			},
 			"");
@@ -2573,27 +2573,27 @@ public void test076() {
 		this.runNegativeTest(
 			new String[] {
 				"p/Y.java",	//===================
-				"package p;\n" + 
-				"public class Y {\n" + 
-				"  public static void foo(String s) {\n" + 
-				"  }\n" + 
+				"package p;\n" +
+				"public class Y {\n" +
+				"  public static void foo(String s) {\n" +
+				"  }\n" +
 				"}\n",		//===================
 				"q/X.java",	//===================
-				"package q;\n" + 
-				"import static p.Y.foo;\n" + 
-				"public class X {\n" + 
-				"        void foo() {\n" + 
-				"        }\n" + 
-				"        void bar() {\n" + 
-				"          foo(\"\");\n" + 
-				"        }\n" + 
+				"package q;\n" +
+				"import static p.Y.foo;\n" +
+				"public class X {\n" +
+				"        void foo() {\n" +
+				"        }\n" +
+				"        void bar() {\n" +
+				"          foo(\"\");\n" +
+				"        }\n" +
 				"}", 		// =================
 			},
-			"----------\n" + 
-			"1. ERROR in q\\X.java (at line 7)\n" + 
-			"	foo(\"\");\n" + 
-			"	^^^\n" + 
-			"The method foo() in the type X is not applicable for the arguments (String)\n" + 
+			"----------\n" +
+			"1. ERROR in q\\X.java (at line 7)\n" +
+			"	foo(\"\");\n" +
+			"	^^^\n" +
+			"The method foo() in the type X is not applicable for the arguments (String)\n" +
 			"----------\n");
 	}
 }
@@ -2603,27 +2603,27 @@ public void test077() {
 	this.runConformTest(
 		new String[] {
 			"X.java",	//===================
-			"abstract  class B {\n" + 
-			"  public String getValue(){\n" + 
-			"    return \"pippo\";\n" + 
-			"  }\n" + 
-			"}\n" + 
-			"class D {\n" + 
-			"  private String value;\n" + 
-			"  public D(String p_Value){\n" + 
-			"    value = p_Value;\n" + 
-			"  }\n" + 
-			"  private  String getValue(){\n" + 
-			"    return \"pippoD\";\n" + 
-			"  }\n" + 
-			"}\n" + 
-			"public class X extends B {\n" + 
-			"  class C extends D{\n" + 
-			"    public C() {\n" + 
-			"      super(getValue());\n" + 
-			"      String s = getValue();\n" + 
-			"    }\n" + 
-			"  }\n" + 
+			"abstract  class B {\n" +
+			"  public String getValue(){\n" +
+			"    return \"pippo\";\n" +
+			"  }\n" +
+			"}\n" +
+			"class D {\n" +
+			"  private String value;\n" +
+			"  public D(String p_Value){\n" +
+			"    value = p_Value;\n" +
+			"  }\n" +
+			"  private  String getValue(){\n" +
+			"    return \"pippoD\";\n" +
+			"  }\n" +
+			"}\n" +
+			"public class X extends B {\n" +
+			"  class C extends D{\n" +
+			"    public C() {\n" +
+			"      super(getValue());\n" +
+			"      String s = getValue();\n" +
+			"    }\n" +
+			"  }\n" +
 			"}\n", 		// =================
 		},
 		"");
@@ -2634,39 +2634,39 @@ public void test078() {
 	this.runNegativeTest(
 		new String[] {
 			"X.java",	//===================
-			"class D {\n" + 
-			"  private String value;\n" + 
-			"  public D(String p_Value){\n" + 
-			"    value = p_Value;\n" + 
-			"  }\n" + 
-			"  private  String getValue(){\n" + 
-			"    return \"pippoD\";\n" + 
-			"  }\n" + 
-			"}\n" + 
-			"public class X {\n" + 
-			"  class C extends D{\n" + 
-			"    public C() {\n" + 
-			"      super(getValue());\n" + 
-			"      String s = getValue();\n" + 
-			"    }\n" + 
-			"  }\n" + 
+			"class D {\n" +
+			"  private String value;\n" +
+			"  public D(String p_Value){\n" +
+			"    value = p_Value;\n" +
+			"  }\n" +
+			"  private  String getValue(){\n" +
+			"    return \"pippoD\";\n" +
+			"  }\n" +
+			"}\n" +
+			"public class X {\n" +
+			"  class C extends D{\n" +
+			"    public C() {\n" +
+			"      super(getValue());\n" +
+			"      String s = getValue();\n" +
+			"    }\n" +
+			"  }\n" +
 			"}\n", 		// =================
 		},
-		"----------\n" + 
-		"1. WARNING in X.java (at line 2)\n" + 
-		"	private String value;\n" + 
-		"	               ^^^^^\n" + 
-		"The field D.value is never read locally\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 13)\n" + 
-		"	super(getValue());\n" + 
-		"	      ^^^^^^^^\n" + 
-		"The method getValue() from the type D is not visible\n" + 
-		"----------\n" + 
-		"3. ERROR in X.java (at line 14)\n" + 
-		"	String s = getValue();\n" + 
-		"	           ^^^^^^^^\n" + 
-		"The method getValue() from the type D is not visible\n" + 
+		"----------\n" +
+		"1. WARNING in X.java (at line 2)\n" +
+		"	private String value;\n" +
+		"	               ^^^^^\n" +
+		"The field D.value is never read locally\n" +
+		"----------\n" +
+		"2. ERROR in X.java (at line 13)\n" +
+		"	super(getValue());\n" +
+		"	      ^^^^^^^^\n" +
+		"The method getValue() from the type D is not visible\n" +
+		"----------\n" +
+		"3. ERROR in X.java (at line 14)\n" +
+		"	String s = getValue();\n" +
+		"	           ^^^^^^^^\n" +
+		"The method getValue() from the type D is not visible\n" +
 		"----------\n");
 }
 
@@ -2676,27 +2676,27 @@ public void test079() {
 	this.runConformTest(
 		new String[] {
 			"X.java",	//===================
-			"abstract class Y {\n" + 
-			"  private void foo(boolean b) {\n" + 
-			"    System.out.println(\"Y\");\n" + 
-			"    return;\n" + 
-			"  }\n" + 
-			"}\n" + 
-			"public class X {\n" + 
-			"  private void foo(String s) {\n" + 
-			"    System.out.println(\"X\");\n" + 
-			"    return;\n" + 
-			"  }\n" + 
-			"  private class Z extends Y {\n" + 
-			"    public void bar(boolean b) {\n" + 
-			"      foo(\"Flag \" + b);\n" + 
-			"      X.this.foo(\"Flag \" + b);\n" + 
-			"    }\n" + 
-			"  }\n" + 
-			"  Z m = new Z();\n" + 
-			"  public static void main(String args[]) {\n" + 
-			"    new X().m.bar(true);\n" + 
-			"  }\n" + 
+			"abstract class Y {\n" +
+			"  private void foo(boolean b) {\n" +
+			"    System.out.println(\"Y\");\n" +
+			"    return;\n" +
+			"  }\n" +
+			"}\n" +
+			"public class X {\n" +
+			"  private void foo(String s) {\n" +
+			"    System.out.println(\"X\");\n" +
+			"    return;\n" +
+			"  }\n" +
+			"  private class Z extends Y {\n" +
+			"    public void bar(boolean b) {\n" +
+			"      foo(\"Flag \" + b);\n" +
+			"      X.this.foo(\"Flag \" + b);\n" +
+			"    }\n" +
+			"  }\n" +
+			"  Z m = new Z();\n" +
+			"  public static void main(String args[]) {\n" +
+			"    new X().m.bar(true);\n" +
+			"  }\n" +
 			"}", 		// =================
 		},
 		"X\nX");
@@ -2708,27 +2708,27 @@ public void test080() {
 	this.runConformTest(
 		new String[] {
 			"X.java",	//===================
-			"abstract class Y {\n" + 
-			"  private void foo(String s) {\n" + 
-			"    System.out.println(\"Y\");\n" + 
-			"    return;\n" + 
-			"  }\n" + 
-			"}\n" + 
-			"public class X {\n" + 
-			"  private void foo(String s) {\n" + 
-			"    System.out.println(\"X\");\n" + 
-			"    return;\n" + 
-			"  }\n" + 
-			"  private class Z extends Y {\n" + 
-			"    public void bar(boolean b) {\n" + 
-			"      foo(\"Flag \" + b);\n" + 
-			"      X.this.foo(\"Flag \" + b);\n" + 
-			"    }\n" + 
-			"  }\n" + 
-			"  Z m = new Z();\n" + 
-			"  public static void main(String args[]) {\n" + 
-			"    new X().m.bar(true);\n" + 
-			"  }\n" + 
+			"abstract class Y {\n" +
+			"  private void foo(String s) {\n" +
+			"    System.out.println(\"Y\");\n" +
+			"    return;\n" +
+			"  }\n" +
+			"}\n" +
+			"public class X {\n" +
+			"  private void foo(String s) {\n" +
+			"    System.out.println(\"X\");\n" +
+			"    return;\n" +
+			"  }\n" +
+			"  private class Z extends Y {\n" +
+			"    public void bar(boolean b) {\n" +
+			"      foo(\"Flag \" + b);\n" +
+			"      X.this.foo(\"Flag \" + b);\n" +
+			"    }\n" +
+			"  }\n" +
+			"  Z m = new Z();\n" +
+			"  public static void main(String args[]) {\n" +
+			"    new X().m.bar(true);\n" +
+			"  }\n" +
 			"}", 		// =================
 		},
 		"X\nX");
@@ -2738,26 +2738,26 @@ public void test081() {
 	this.runConformTest(
 		new String[] {
 			"X.java",	//===================
-			"public class X extends Y {\n" + 
-			"  public void set(int value) {\n" + 
-			"      System.out.println(\"set(\" + value + \")\");\n" + 
-			"  }\n" + 
-			"  public static void main(String[] args) {\n" + 
-			"    X x = new X();\n" + 
-			"    x.set(1L);\n" + 
-			"  }\n" + 
-			"}\n" + 
-			"abstract class Y implements I {\n" + 
-			"  public void set(long value) {\n" + 
-			"    set((int)value);\n" + 
-			"  }\n" + 
-			"  public void set(double value) {\n" + 
-			"    set((int)value);\n" + 
-			"  }\n" + 
-			"}\n" + 
-			"interface I {\n" + 
-			"  void set(int value);\n" + 
-			"  void set(long value);\n" + 
+			"public class X extends Y {\n" +
+			"  public void set(int value) {\n" +
+			"      System.out.println(\"set(\" + value + \")\");\n" +
+			"  }\n" +
+			"  public static void main(String[] args) {\n" +
+			"    X x = new X();\n" +
+			"    x.set(1L);\n" +
+			"  }\n" +
+			"}\n" +
+			"abstract class Y implements I {\n" +
+			"  public void set(long value) {\n" +
+			"    set((int)value);\n" +
+			"  }\n" +
+			"  public void set(double value) {\n" +
+			"    set((int)value);\n" +
+			"  }\n" +
+			"}\n" +
+			"interface I {\n" +
+			"  void set(int value);\n" +
+			"  void set(long value);\n" +
 			"}\n", 		// =================
 		},
 		"set(1)");
@@ -2768,27 +2768,27 @@ public void test082() {
 	this.runConformTest(
 		new String[] {
 			"X.java",	//===================
-			"public class X extends Y {\n" + 
-			"  public void set(int value) {\n" + 
-			"      System.out.println(\"set(\" + value + \")\");\n" + 
-			"  }\n" + 
-			"  public static void main(String[] args) {\n" + 
-			"    X x = new X();\n" + 
-			"    x.set(1L);\n" + 
-			"  }\n" + 
-			"}\n" + 
-			"abstract class Y implements I {\n" + 
-			"  public abstract void set(int value);\n" + 
-			"  public void set(long value) {\n" + 
-			"    set((int)value);\n" + 
-			"  }\n" + 
-			"  public void set(double value) {\n" + 
-			"    set((int)value);\n" + 
-			"  }\n" + 
-			"}\n" + 
-			"interface I {\n" + 
-			"  void set(int value);\n" + 
-			"  void set(long value);\n" + 
+			"public class X extends Y {\n" +
+			"  public void set(int value) {\n" +
+			"      System.out.println(\"set(\" + value + \")\");\n" +
+			"  }\n" +
+			"  public static void main(String[] args) {\n" +
+			"    X x = new X();\n" +
+			"    x.set(1L);\n" +
+			"  }\n" +
+			"}\n" +
+			"abstract class Y implements I {\n" +
+			"  public abstract void set(int value);\n" +
+			"  public void set(long value) {\n" +
+			"    set((int)value);\n" +
+			"  }\n" +
+			"  public void set(double value) {\n" +
+			"    set((int)value);\n" +
+			"  }\n" +
+			"}\n" +
+			"interface I {\n" +
+			"  void set(int value);\n" +
+			"  void set(long value);\n" +
 			"}\n", 		// =================
 		},
 		"set(1)");
@@ -2796,46 +2796,46 @@ public void test082() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=174588
 // variant
 public void test083() {
-	String src[] = 
+	String src[] =
 		new String[] {
 			"X.java",
-			"public class X extends Z {\n" + 
-			"  public void set(int value) {\n" + 
-			"      System.out.println(\"set(\" + value + \")\");\n" + 
-			"  }\n" + 
-			"  public static void main(String[] args) {\n" + 
-			"    X x = new X();\n" + 
-			"    x.set(1L);\n" + 
-			"  }\n" + 
-			"}\n" + 
-			"abstract class Z extends Y {\n" + 
-			"  public void set(long value) {\n" + 
-			"    set((int)value);\n" + 
-			"  }\n" + 
-			"  public void set(double value) {\n" + 
-			"    set((int)value);\n" + 
-			"  }\n" + 
-			"}\n" + 
-			"abstract class Y implements I {\n" + 
-			"}\n" + 
-			"interface I {\n" + 
-			"  void set(int value);\n" + 
-			"  void set(long value);\n" + 
+			"public class X extends Z {\n" +
+			"  public void set(int value) {\n" +
+			"      System.out.println(\"set(\" + value + \")\");\n" +
+			"  }\n" +
+			"  public static void main(String[] args) {\n" +
+			"    X x = new X();\n" +
+			"    x.set(1L);\n" +
+			"  }\n" +
+			"}\n" +
+			"abstract class Z extends Y {\n" +
+			"  public void set(long value) {\n" +
+			"    set((int)value);\n" +
+			"  }\n" +
+			"  public void set(double value) {\n" +
+			"    set((int)value);\n" +
+			"  }\n" +
+			"}\n" +
+			"abstract class Y implements I {\n" +
+			"}\n" +
+			"interface I {\n" +
+			"  void set(int value);\n" +
+			"  void set(long value);\n" +
 			"}\n",
 		};
 	if (this.complianceLevel <= ClassFileConstants.JDK1_3) {
 		this.runNegativeTest(
 			src,
-			"----------\n" + 
-			"1. ERROR in X.java (at line 12)\r\n" + 
-			"	set((int)value);\r\n" + 
-			"	^^^\n" + 
-			"The method set(long) is ambiguous for the type Z\n" + 
-			"----------\n" + 
-			"2. ERROR in X.java (at line 15)\r\n" + 
-			"	set((int)value);\r\n" + 
-			"	^^^\n" + 
-			"The method set(long) is ambiguous for the type Z\n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 12)\r\n" +
+			"	set((int)value);\r\n" +
+			"	^^^\n" +
+			"The method set(long) is ambiguous for the type Z\n" +
+			"----------\n" +
+			"2. ERROR in X.java (at line 15)\r\n" +
+			"	set((int)value);\r\n" +
+			"	^^^\n" +
+			"The method set(long) is ambiguous for the type Z\n" +
 			"----------\n");
 	} else {
 		this.runConformTest(
@@ -2849,25 +2849,25 @@ public void test084() {
 	this.runConformTest(
 		new String[] {
 			"X.java",	//===================
-			"public class X extends Y {\n" + 
-			"  public void set(int value, int i) {\n" + 
-			"      System.out.println(\"set(\" + value + \")\");\n" + 
-			"  }\n" + 
-			"  public static void main(String[] args) {\n" + 
-			"    X x = new X();\n" + 
-			"    x.set(1L, 1);\n" + 
-			"  }\n" + 
-			"}\n" + 
-			"abstract class Y implements I {\n" + 
-			"  public void set(long value, int i) {\n" + 
-			"    set((int)value, i);\n" + 
-			"  }\n" + 
-			"  public void set(int i, double value) {\n" + 
-			"    set(i, (int)value);\n" + 
-			"  }\n" + 
-			"}\n" + 
-			"interface I {\n" + 
-			"  void set(int value, int i);\n" + 
+			"public class X extends Y {\n" +
+			"  public void set(int value, int i) {\n" +
+			"      System.out.println(\"set(\" + value + \")\");\n" +
+			"  }\n" +
+			"  public static void main(String[] args) {\n" +
+			"    X x = new X();\n" +
+			"    x.set(1L, 1);\n" +
+			"  }\n" +
+			"}\n" +
+			"abstract class Y implements I {\n" +
+			"  public void set(long value, int i) {\n" +
+			"    set((int)value, i);\n" +
+			"  }\n" +
+			"  public void set(int i, double value) {\n" +
+			"    set(i, (int)value);\n" +
+			"  }\n" +
+			"}\n" +
+			"interface I {\n" +
+			"  void set(int value, int i);\n" +
 			"}\n", 		// =================
 		},
 		"set(1)");
@@ -2877,23 +2877,23 @@ public void test086() {
 	this.runNegativeTest(
 		new String[] {
 			"X.java",	//===================
-			"public class X {\n" + 
-			"	public static void main(String[] arguments) {\n" + 
-			"		Y y = new Y();\n" + 
-			"		System.out.println(y.array[0]);\n" + 
-			"		System.out.println(y.length);\n" + 
-			"	}\n" + 
-			"}\n" + 
-			"class Y {\n" + 
-			"	private class Invisible {}\n" + 
-			"	Invisible[] array;\n" + 
+			"public class X {\n" +
+			"	public static void main(String[] arguments) {\n" +
+			"		Y y = new Y();\n" +
+			"		System.out.println(y.array[0]);\n" +
+			"		System.out.println(y.length);\n" +
+			"	}\n" +
+			"}\n" +
+			"class Y {\n" +
+			"	private class Invisible {}\n" +
+			"	Invisible[] array;\n" +
 			"}\n", 		// =================
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 5)\n" + 
-		"	System.out.println(y.length);\n" + 
-		"	                   ^^^^^^^^\n" + 
-		"y.length cannot be resolved or is not a field\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 5)\n" +
+		"	System.out.println(y.length);\n" +
+		"	                   ^^^^^^^^\n" +
+		"y.length cannot be resolved or is not a field\n" +
 		"----------\n");
 }
 
@@ -2901,18 +2901,18 @@ public void test088() {
 	this.runNegativeTest(
 		new String[] {
 			"java/lang/Object.java",	//===================
-			"package java.lang;\n" + 
-			"public class Object {\n" + 
-			"	public Object() {\n" + 
-			"		super();\n" + 
-			"	}\n" + 
+			"package java.lang;\n" +
+			"public class Object {\n" +
+			"	public Object() {\n" +
+			"		super();\n" +
+			"	}\n" +
 			"}\n", 		// =================
 		},
-		"----------\n" + 
-		"1. ERROR in java\\lang\\Object.java (at line 4)\n" + 
-		"	super();\n" + 
-		"	^^^^^^^^\n" + 
-		"super cannot be used in java.lang.Object\n" + 
+		"----------\n" +
+		"1. ERROR in java\\lang\\Object.java (at line 4)\n" +
+		"	super();\n" +
+		"	^^^^^^^^\n" +
+		"super cannot be used in java.lang.Object\n" +
 		"----------\n");
 }
 
@@ -2920,19 +2920,19 @@ public void test089() {
 	this.runNegativeTest(
 		new String[] {
 			"X.java",	//===================
-			"public class X {\n" + 
-			"	static class Member implements X {\n" + 
-			"		Member () {\n" + 
-			"			super();\n" + 
-			"		}\n" + 
-			"	}\n" + 
+			"public class X {\n" +
+			"	static class Member implements X {\n" +
+			"		Member () {\n" +
+			"			super();\n" +
+			"		}\n" +
+			"	}\n" +
 			"}\n", 		// =================
 		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 2)\n" + 
-		"	static class Member implements X {\n" + 
-		"	                               ^\n" + 
-		"The type X cannot be a superinterface of Member; a superinterface must be an interface\n" + 
+		"----------\n" +
+		"1. ERROR in X.java (at line 2)\n" +
+		"	static class Member implements X {\n" +
+		"	                               ^\n" +
+		"The type X cannot be a superinterface of Member; a superinterface must be an interface\n" +
 		"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=250211 - variation
@@ -2940,24 +2940,24 @@ public void test091() {
 	this.runNegativeTest(
 		new String[] {
 			"foo/Test.java",//------------------------------
-			"package foo;\n" + 
-			"public class Test {\n" + 
+			"package foo;\n" +
+			"public class Test {\n" +
 			"        public class M1 {\n" +
 			"              public class M2 {}\n" +
 			"        }\n" +
 			"}\n",
 			"bar/Test2.java",//------------------------------
-			"package bar;\n" + 
-			"import foo.Test;\n" + 
-			"import Test.M1.M2;\n" + 
-			"public class Test2 {\n" + 
+			"package bar;\n" +
+			"import foo.Test;\n" +
+			"import Test.M1.M2;\n" +
+			"public class Test2 {\n" +
 			"}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in bar\\Test2.java (at line 3)\n" + 
-		"	import Test.M1.M2;\n" + 
-		"	       ^^^^\n" + 
-		"The import Test cannot be resolved\n" + 
+		"----------\n" +
+		"1. ERROR in bar\\Test2.java (at line 3)\n" +
+		"	import Test.M1.M2;\n" +
+		"	       ^^^^\n" +
+		"The import Test cannot be resolved\n" +
 		"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=250211 - variation
@@ -2965,24 +2965,24 @@ public void test092() {
 	this.runNegativeTest(
 		new String[] {
 			"foo/Test.java",//------------------------------
-			"package foo;\n" + 
-			"public class Test {\n" + 
+			"package foo;\n" +
+			"public class Test {\n" +
 			"        public class M1 {\n" +
 			"              public class M2 {}\n" +
 			"        }\n" +
 			"}\n",
 			"bar/Test2.java",//------------------------------
-			"package bar;\n" + 
-			"import foo.*;\n" + 
-			"import Test.M1.M2;\n" + 
-			"public class Test2 {\n" + 
+			"package bar;\n" +
+			"import foo.*;\n" +
+			"import Test.M1.M2;\n" +
+			"public class Test2 {\n" +
 			"}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in bar\\Test2.java (at line 3)\n" + 
-		"	import Test.M1.M2;\n" + 
-		"	       ^^^^\n" + 
-		"The import Test cannot be resolved\n" + 
+		"----------\n" +
+		"1. ERROR in bar\\Test2.java (at line 3)\n" +
+		"	import Test.M1.M2;\n" +
+		"	       ^^^^\n" +
+		"The import Test cannot be resolved\n" +
 		"----------\n");
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=250211 - variation
@@ -2990,45 +2990,43 @@ public void test093() {
 	this.runNegativeTest(
 		new String[] {
 			"foo/Test.java",//------------------------------
-			"package foo;\n" + 
-			"public class Test {\n" + 
+			"package foo;\n" +
+			"public class Test {\n" +
 			"        public class M1 {\n" +
 			"              public class foo {}\n" +
 			"        }\n" +
 			"}\n",
 			"bar/Test2.java",//------------------------------
-			"package bar;\n" + 
-			"import foo.Test;\n" + 
-			"import Test.M1.foo;\n" + 
-			"public class Test2 {\n" + 
+			"package bar;\n" +
+			"import foo.Test;\n" +
+			"import Test.M1.foo;\n" +
+			"public class Test2 {\n" +
 			"}\n",
 		},
-		"----------\n" + 
-		"1. ERROR in bar\\Test2.java (at line 3)\n" + 
-		"	import Test.M1.foo;\n" + 
-		"	       ^^^^\n" + 
-		"The import Test cannot be resolved\n" + 
+		"----------\n" +
+		"1. ERROR in bar\\Test2.java (at line 3)\n" +
+		"	import Test.M1.foo;\n" +
+		"	       ^^^^\n" +
+		"The import Test cannot be resolved\n" +
 		"----------\n");
-}	
+}
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=250211 - variation
 public void test094() {
 	this.runConformTest(
 		new String[] {
 			"foo/Test.java",//------------------------------
-			"package foo;\n" + 
-			"public class Test {\n" + 
+			"package foo;\n" +
+			"public class Test {\n" +
 			"        public class M1 {\n" +
 			"              public class foo {}\n" +
 			"        }\n" +
 			"}\n",
 			"bar/Test2.java",//------------------------------
-			"package bar;\n" + 
-			"import foo.Test.M1.foo;\n" + 
-			"public class Test2 {\n" + 
+			"package bar;\n" +
+			"import foo.Test.M1.foo;\n" +
+			"public class Test2 {\n" +
 			"}\n",
 		},
 		"");
-}	
-public static Class testClass() {	return LookupTest.class;
 }
 }

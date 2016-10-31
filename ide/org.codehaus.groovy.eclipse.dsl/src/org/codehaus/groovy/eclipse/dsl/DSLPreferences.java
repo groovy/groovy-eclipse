@@ -18,8 +18,6 @@ package org.codehaus.groovy.eclipse.dsl;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.eclipse.core.resources.IResource;
-
 /**
  * Manipulator of all preferences for DSLD settings
  * @author andrew
@@ -28,20 +26,20 @@ import org.eclipse.core.resources.IResource;
 public class DSLPreferences {
 
 	public static final String AUTO_ADD_DSL_SUPPORT = "org.codehaus.groovy.eclipse.dsl.auto.add.support";
-	
+
     /**
      * Preference key for all the scripts that are disabled in this workspace.  The value is
-     * a comma separated list of {@link IResource#getFullPath()} of DSLD files.  Default value is 
+     * a comma separated list of {@link IResource#getFullPath()} of DSLD files.  Default value is
      * the empty string
      */
     public static final String DISABLED_SCRIPTS = "org.codehaus.groovy.eclipse.dsl.scripts.disabled";
-    
+
     private final static String[] EMPTY = new String[0];
-    
+
     private DSLPreferences() {
-        
+
     }
-    
+
     public static String[] getDisabledScripts() {
         String disabled = GroovyDSLCoreActivator.getDefault().getPreferenceStore().getString(DISABLED_SCRIPTS);
         if (disabled == null) {
@@ -49,7 +47,7 @@ public class DSLPreferences {
         }
         return disabled.split(",");
     }
-    
+
     public static Set<String> getDisabledScriptsAsSet() {
         String[] disabled = getDisabledScripts();
         Set<String> set = new HashSet<String>(disabled.length*2);
@@ -58,9 +56,9 @@ public class DSLPreferences {
         }
         return set;
     }
-    
+
     /**
-     * persists the set of all the disabled scripts 
+     * persists the set of all the disabled scripts
      * @param disabled
      */
     // note that we filter on the set, not on the get since the filtering will take extra time
@@ -76,7 +74,7 @@ public class DSLPreferences {
             for (String s : filtered) {
                 sb.append(s);
                 sb.append(',');
-            }   
+            }
             sb.replace(sb.length()-1, sb.length(), "");
             return sb.toString();
         } else {

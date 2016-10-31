@@ -15,9 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.launchers;
 
-
 import org.eclipse.debug.core.ILaunchConfigurationType;
-import org.eclipse.debug.ui.ILaunchShortcut;
 
 /**
  * This class is reponsible for creating a launching Groovy script files.  If an

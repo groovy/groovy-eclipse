@@ -10,7 +10,7 @@
  *     Tom Tromey - Contribution for bug 125961
  *     Tom Tromey - Contribution for bug 159641
  *     Benjamin Muskalla - Contribution for bug 239066
- *     Stephan Herrmann  - Contributions for 
+ *     Stephan Herrmann  - Contributions for
  *     							bug 236385 - [compiler] Warn for potential programming problem if an object is created but not used
  *     							bug 295551 - Add option to automatically promote all warnings to errors
  *     							bug 359721 - [options] add command line option for new warning token "resource"
@@ -24,7 +24,7 @@
  *								Bug 408815 - [batch][null] Add CLI option for COMPILER_PB_SYNTACTIC_NULL_ANALYSIS_FOR_FIELDS
  *     Jesper S Moller   - Contributions for
  *								bug 407297 - [1.8][compiler] Control generation of parameter names by option
- *    Mat Booth - Contribution for bug 405176 
+ *    Mat Booth - Contribution for bug 405176
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.batch;
 // GROOVY PATCHED
@@ -1505,8 +1505,8 @@ public void addExtraProblems(CategorizedProblem problem) {
 	}
 	this.extraProblems.add(problem);
 }
-protected void addNewEntry(ArrayList paths, String currentClasspathName,
-		ArrayList currentRuleSpecs, String customEncoding,
+protected void addNewEntry(List paths, String currentClasspathName,
+		List currentRuleSpecs, String customEncoding,
 		String destPath, boolean isSourceOnly,
 		boolean rejectDestinationPathOnJars) {
 
@@ -1804,12 +1804,12 @@ public void configure(String[] argv) {
 	// GROOVY start
 	boolean encounteredGroovySourceFile = false;
 	// GROOVY end
-	
+
 	String customEncoding = null;
 	String customDestinationPath = null;
 	String currentSourceDirectory = null;
 	String currentArg = Util.EMPTY_STRING;
-	
+
 	Set specifiedEncodings = null;
 
 	// expand the command line if necessary
@@ -1943,13 +1943,13 @@ public void configure(String[] argv) {
 				// old code:{
 				if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java)) {
 				}new code: */
-				if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java) 
+				if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java)
 					|| currentArg.endsWith(".groovy")) {				 //$NON-NLS-1$
-				
+
 					if (currentArg.endsWith(".groovy")) { //$NON-NLS-1$
 						encounteredGroovySourceFile = true;
 					}
-				// GROOVY change end				
+				// GROOVY change end
 					if (this.filenames == null) {
 						this.filenames = new String[argCount - index];
 						this.encodings = new String[argCount - index];
@@ -2818,10 +2818,10 @@ public void configure(String[] argv) {
 	} else {
 		this.options.put(
 				CompilerOptions.OPTIONG_BuildGroovyFiles,
-				CompilerOptions.DISABLED);		
+				CompilerOptions.DISABLED);
 	}
 	// GROOVY end
-	
+
 	if (printUsageRequired || (filesCount == 0 && classCount == 0)) {
 		if (usageSection ==  null) {
 			printUsage(); // default
@@ -3110,7 +3110,7 @@ public File getJavaHome() {
 }
 
 public FileSystem getLibraryAccess() {
-	return new FileSystem(this.checkedClasspaths, this.filenames, 
+	return new FileSystem(this.checkedClasspaths, this.filenames,
 					this.annotationsFromClasspath && CompilerOptions.ENABLED.equals(this.options.get(CompilerOptions.OPTION_AnnotationBasedNullAnalysis)));
 }
 
@@ -3486,7 +3486,7 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 						default: // no severity update
 					}
 				}
-				this.options.put(CompilerOptions.OPTION_ReportMissingEnumCaseDespiteDefault, 
+				this.options.put(CompilerOptions.OPTION_ReportMissingEnumCaseDespiteDefault,
 								 isEnabling ? CompilerOptions.ENABLED : CompilerOptions.DISABLED);
 				return;
 			} else if (token.equals("emptyBlock")) {//$NON-NLS-1$
@@ -3792,10 +3792,10 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 				setSeverity(CompilerOptions.OPTION_ReportNonnullParameterAnnotationDropped, severity, isEnabling);
 				return;
 			}
-			
+
 			break;
 		case 'o' :
-			if (token.equals("over-sync") /*|| token.equals("syncOverride")*/) { //$NON-NLS-1$ 
+			if (token.equals("over-sync") /*|| token.equals("syncOverride")*/) { //$NON-NLS-1$
 				setSeverity(CompilerOptions.OPTION_ReportMissingSynchronizedOnInheritedMethod, severity, isEnabling);
 				return;
 			} else if (token.equals("over-ann")) { //$NON-NLS-1$
@@ -3841,7 +3841,7 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 			} else if (token.equals("staticReceiver")) { //$NON-NLS-1$
 				setSeverity(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, severity, isEnabling);
 				return;
-			} else 	if (/*token.equals("over-sync") ||*/ token.equals("syncOverride")) { //$NON-NLS-1$ 
+			} else 	if (/*token.equals("over-sync") ||*/ token.equals("syncOverride")) { //$NON-NLS-1$
 				setSeverity(CompilerOptions.OPTION_ReportMissingSynchronizedOnInheritedMethod, severity, isEnabling);
 				return;
 			} else if (token.equals("semicolon")) {//$NON-NLS-1$
@@ -3904,7 +3904,7 @@ private void handleErrorOrWarningToken(String token, boolean isEnabling, int sev
 				this.options.put(
 					CompilerOptions.OPTION_TaskTags,
 					isEnabling ? taskTags : Util.EMPTY_STRING);
-				
+
 				setSeverity(CompilerOptions.OPTION_ReportTasks, severity, isEnabling);
 				return;
 			} else if (token.equals("typeHiding")) { //$NON-NLS-1$
@@ -4268,7 +4268,7 @@ private ReferenceBinding[] processClassNames(LookupEnvironment environment) {
 /*
  * External API
  */
-public void processPathEntries(final int defaultSize, final ArrayList paths,
+public void processPathEntries(final int defaultSize, final List paths,
 			final String currentPath, String customEncoding, boolean isSourceOnly,
 			boolean rejectDestinationPathOnJars) {
 	String currentClasspathName = null;

@@ -1,15 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2006. 2010 IBM Corporation, SpringSource and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     IBM Corporation - initial API and implementation
- *     Matt Chapman - initial version
- *     Andrew Eisenberg - completely rewritten for 2.1.0
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.refactoring.test.rename;
 
 import org.codehaus.groovy.eclipse.refactoring.test.AbstractRefactoringTest;
@@ -186,8 +189,8 @@ public class MoveCURefactoringTests extends AbstractRefactoringTest {
                 "package p1\nimport p2.Groovy2\npublic class Groovy {\nGroovy2 g }", 
                 "package p2\nimport p1.Groovy\npublic class Groovy2 extends Groovy { }", 
         }, new String[] { 
-                "package p2\npublic class Groovy {\nGroovy2 g }", 
-                "package p2\npublic class Groovy2 extends Groovy { }", 
+                "package p2\n\npublic class Groovy {\nGroovy2 g }", 
+                "package p2\n\npublic class Groovy2 extends Groovy { }", 
         });
     }
 
