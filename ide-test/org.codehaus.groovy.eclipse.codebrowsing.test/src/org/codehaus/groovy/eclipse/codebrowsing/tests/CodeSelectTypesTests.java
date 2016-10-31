@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests;
 import static java.util.Arrays.asList;
 
 import org.eclipse.jdt.core.SourceRange;
+import org.eclipse.jdt.core.tests.util.GroovyUtils;
 
 /**
  * @author Andrew Eisenberg
@@ -108,6 +109,7 @@ public final class CodeSelectTypesTests extends BrowsingTestCase {
     }
 
     public void testSelectAnnotationClass3() {
+        if (GroovyUtils.GROOVY_LEVEL < 21) return; // CompileDynamic was added in 2.1
         // CompileDynamic is an AnnotationCollector, so it is not in the AST after transformation
         String contents = "import groovy.transform.CompileDynamic; @CompileDynamic class Type { }";
         assertCodeSelect(asList(contents), "CompileDynamic");
@@ -382,6 +384,7 @@ public final class CodeSelectTypesTests extends BrowsingTestCase {
     }
 
     public void testSelectAnnotationOnMethod3() {
+        if (GroovyUtils.GROOVY_LEVEL < 21) return; // CompileDynamic was added in 2.1
         String contents = "import groovy.transform.*; class Type { @CompileDynamic void method() {} }";
         assertCodeSelect(asList(contents), "CompileDynamic");
     }

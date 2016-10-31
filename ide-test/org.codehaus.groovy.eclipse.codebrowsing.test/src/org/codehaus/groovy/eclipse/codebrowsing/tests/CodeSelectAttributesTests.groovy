@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
 import org.codehaus.groovy.ast.MethodNode
+import org.eclipse.jdt.core.tests.util.GroovyUtils
 
 final class CodeSelectAttributesTests extends BrowsingTestCase {
 
@@ -37,6 +38,9 @@ final class CodeSelectAttributesTests extends BrowsingTestCase {
     }
 
     void testCodeSelectOnAttributeName2() {
+        // TypeChecked extensions was added in 2.1
+        if (GroovyUtils.GROOVY_LEVEL < 21) return
+
         String source = '''\
             import groovy.transform.*
             @TypeChecked(extensions=['something','whatever'])
