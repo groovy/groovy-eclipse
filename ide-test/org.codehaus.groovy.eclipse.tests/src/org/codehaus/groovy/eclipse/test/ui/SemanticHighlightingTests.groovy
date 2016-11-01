@@ -102,6 +102,18 @@ final class SemanticHighlightingTests extends EclipseTestCase {
             new HighlightedTypedPosition(contents.indexOf('STREAM_MAGIC'), 'STREAM_MAGIC'.length(), STATIC_VALUE))
     }
 
+    void testStaticFinals2() {
+        String contents = '''\
+        import static java.lang.Math.PI
+        def pi = PI
+        '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('pi'), 2, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('PI'), 2, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.lastIndexOf('PI'), 2, STATIC_VALUE))
+    }
+
     void testMethods() {
         String contents = '''\
             import groovy.transform.PackageScope
@@ -136,10 +148,8 @@ final class SemanticHighlightingTests extends EclipseTestCase {
 
     void testStaticMethods2() {
         String contents = '''\
-            import static java.util.Collections.emptyList
             class X {
               static {
-                def x = emptyList()
                 def y = Collections.emptyMap()
                 def z = java.util.Collections.emptySet()
               }
@@ -147,12 +157,26 @@ final class SemanticHighlightingTests extends EclipseTestCase {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('x ='), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('y ='), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('z ='), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.lastIndexOf('emptyList'), 'emptyList'.length(), STATIC_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('emptyMap'), 'emptyMap'.length(), STATIC_CALL),
             new HighlightedTypedPosition(contents.lastIndexOf('emptySet'), 'emptySet'.length(), STATIC_CALL))
+    }
+
+    void testStaticMethods3() {
+        String contents = '''\
+            import static java.util.Collections.singletonList
+            class X {
+              def meth() {
+                return singletonList('x')
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('meth'), 4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('singletonList'), 'singletonList'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('singletonList'), 'singletonList'.length(), STATIC_CALL))
     }
 
     // GRECLIPSE-1138

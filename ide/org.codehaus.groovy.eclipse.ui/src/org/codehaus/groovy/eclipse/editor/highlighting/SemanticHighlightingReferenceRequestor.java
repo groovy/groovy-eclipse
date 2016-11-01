@@ -46,6 +46,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.internal.core.ImportDeclaration;
 import org.eclipse.jdt.internal.core.SourceType;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jface.text.Position;
@@ -62,7 +63,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     private boolean insideSlashy;
     private boolean insideDollarSlashy;
     private final GroovyCompilationUnit unit;
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     /**
      * Contains positions in a non-overlapping, increasing lexical order
@@ -126,10 +127,12 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             pos = handleMethodReference((MethodPointerExpression) node);
 
         } else if (node instanceof ConstantExpression) {
-            if (result.declaration instanceof MethodNode && result.isGroovy) {
-                pos = handleMethodReference((ConstantExpression) node);
-            } else {
+            if (!(result.declaration instanceof MethodNode)) {
                 pos = handleConstantExpression((ConstantExpression) node);
+            } else if (result.isGroovy) {
+                pos = new HighlightedTypedPosition(node.getStart(), node.getLength(), HighlightKind.GROOVY_CALL);
+            } else if (enclosingElement instanceof ImportDeclaration) {
+                pos = new HighlightedTypedPosition(node.getStart(), node.getLength(), HighlightKind.STATIC_CALL);
             }
 
         } else if (node instanceof MapEntryExpression) {
@@ -221,10 +224,6 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             length = expr.getMethod().getLength();
 
         return new HighlightedTypedPosition(offset, length, kind);
-    }
-
-    private HighlightedTypedPosition handleMethodReference(ConstantExpression expr) {
-        return new HighlightedTypedPosition(expr.getStart(), expr.getLength(), HighlightKind.GROOVY_CALL);
     }
 
     private HighlightedTypedPosition handleMethodReference(ConstructorCallExpression expr) {
