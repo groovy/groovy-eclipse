@@ -60,7 +60,6 @@ import org.codehaus.groovy.ast.expr.UnaryMinusExpression;
 import org.codehaus.groovy.ast.expr.UnaryPlusExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.classgen.BytecodeExpression;
-import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentFactory;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentKind;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.FragmentVisitor;
@@ -147,11 +146,6 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
         this.factory = new ASTFragmentFactory();
         this.fragmentMatcher = new FragmentMatcherVisitor();
         this.associatedExpressionMatcher = new AssociatedExpressionMatcher();
-    }
-
-    @Override
-    protected SourceUnit getSourceUnit() {
-        return null;
     }
 
     public List<IASTFragment> findOccurrences(IASTFragment fragment) {

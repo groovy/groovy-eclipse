@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,7 @@
 package org.codehaus.groovy.eclipse.codebrowsing.tests;
 
 import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.eclipse.codebrowsing.selection.FindAllOccurrencesVisitor;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.IsSameExpression;
-import org.eclipse.core.runtime.CoreException;
 
 /**
  * Tests that the {@link IsSameExpression} is working correctly
@@ -26,10 +24,10 @@ import org.eclipse.core.runtime.CoreException;
  * Note that there is a limitation in how {@link FindAllOccurrencesVisitor}
  * works. This is described in the comments of the class under test.
  *
- * @author andrew
+ * @author Andrew Eisenberg
  * @created May 12, 2010
  */
-public class IsSameExpressionTests extends CheckerTestCase {
+public final class IsSameExpressionTests extends CheckerTestCase {
 
     public IsSameExpressionTests() {
         super(IsSameExpressionTests.class.getName());
@@ -75,21 +73,14 @@ public class IsSameExpressionTests extends CheckerTestCase {
         checkTwoExpressions("\"$foo   \"", "\"$foo\"", false);
     }
 
-    private void checkTwoExpressions(String first, String second, boolean isSame) throws CoreException {
+    private void checkTwoExpressions(String first, String second, boolean isSame) {
         Expression firstExpr = getLastExpression(createModuleFromText(first));
         Expression secondExpr = getLastExpression(createModuleFromText(second));
         assertEquals(createMsg(first, second, isSame), isSame, new IsSameExpression().isSame(firstExpr, secondExpr));
     }
 
-    /**
-     * @param first
-     * @param second
-     * @param isSame
-     * @return
-     */
     private String createMsg(String first, String second, boolean isSame) {
         String end = "\nFirst expression:\n" + first + "\n\nSecond expression:\n" + second;
         return (isSame ? "Expressions should have been the same" : "Expressions should not have been the same") + end;
     }
-
 }

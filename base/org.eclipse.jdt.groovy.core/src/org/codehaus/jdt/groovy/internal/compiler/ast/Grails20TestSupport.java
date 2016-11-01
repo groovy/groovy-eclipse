@@ -15,9 +15,6 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
-import groovy.lang.GroovyClassLoader;
-import groovy.lang.GroovySystem;
-
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.ref.WeakReference;
@@ -27,6 +24,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
+
+import groovy.lang.GroovyClassLoader;
+import groovy.lang.GroovySystem;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.classgen.GeneratorContext;

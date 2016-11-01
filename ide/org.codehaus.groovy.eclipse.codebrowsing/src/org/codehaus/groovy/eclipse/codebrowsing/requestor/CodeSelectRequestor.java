@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryField;
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryMethod;
@@ -40,175 +45,304 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.ITypeParameter;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.GenericsMapper;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.internal.core.BinaryType;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.LocalVariable;
+import org.eclipse.jdt.internal.core.SourceType;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * A type requestor for Code selection (i.e., hovers and open declaration)
+ * Type requestor for code selection (i.e., hovers and open declaration).
+ *
  * @author Andrew Eisenberg
  * @created Nov 4, 2009
- *
  */
 public class CodeSelectRequestor implements ITypeRequestor {
 
+    /** The AST node of interest. */
     private final ASTNode nodeToLookFor;
 
-    private IJavaElement requestedElement;
-
-    private ASTNode requestedNode;
-
+    private final Region nodeRegion;
+    private final Region selectRegion;
+    private final GroovyCompilationUnit gunit;
     private final GroovyProjectFacade project;
 
-    private final GroovyCompilationUnit unit;
+    private ASTNode requestedNode;
+    private IJavaElement requestedElement;
 
-    public CodeSelectRequestor(ASTNode nodeToLookFor, GroovyCompilationUnit unit) {
-        this.nodeToLookFor = nodeToLookFor;
-        this.unit = unit;
-        this.project = new GroovyProjectFacade(unit);
+    public CodeSelectRequestor(ASTNode node, GroovyCompilationUnit unit) {
+        this(node, null, new Region(Integer.MIN_VALUE, 0), unit);
     }
 
+    public CodeSelectRequestor(ASTNode node, Region nodeRegion, Region selectRegion, GroovyCompilationUnit unit) {
+        nodeToLookFor = node;
+        this.nodeRegion = nodeRegion;
+        this.selectRegion = selectRegion;
 
-    public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
-            IJavaElement enclosingElement) {
+        gunit = unit;
+        project = new GroovyProjectFacade(unit);
+    }
 
-        // check to see if the enclosing element does not enclose the nodeToLookFor
-        if (! interestingElement(enclosingElement)) {
-            return VisitStatus.CANCEL_MEMBER;
-        }
-
-        if (node instanceof ImportNode) {
-            node = ((ImportNode) node).getType();
-            if (node == null) {
-                return VisitStatus.CONTINUE;
+    public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
+        boolean found = false;
+        try {
+            // check if enclosingElement does not enclose nodeToLookFor
+            if (!interestingElement(enclosingElement)) {
+                return VisitStatus.CANCEL_MEMBER;
             }
-        }
 
-        if (doTest(node)) {
-            requestedNode = result.declaration;
-            if (requestedNode instanceof ClassNode) {
-                requestedNode = ((ClassNode) requestedNode).redirect();
-            }
-            if (requestedNode != null) {
-                if (result.declaration instanceof VariableExpression) {
-                    // look in the local scope
-                    VariableExpression var = (VariableExpression) result.declaration;
-                    requestedElement =
-                        createLocalVariable(result, enclosingElement, var);
-                } else if (result.declaration instanceof Parameter) {
-                    // look in the local scope
-                    Parameter var = (Parameter) result.declaration;
-                    int position = var.getStart()-1;
-                    if (position < 0) {
-                        // could be an implicit variable like 'it'
-                        position = nodeToLookFor.getStart()-1;
-                    }
-                    try {
-                        requestedElement = createLocalVariable(result, unit.getElementAt(position), var);
-                    } catch (JavaModelException e) {
-                        Util.log(e, "Problem getting element at " + position + " for file " + unit.getElementName());
-                    }
-                } else {
-                    ClassNode declaringType = findDeclaringType(result);
-                    if (declaringType != null) {
-                    	ClassNode effectiveDeclaringType = declaringType;
-                        // find it in the java model
-                        if (declaringType.getEnclosingMethod() != null) {
-                        	// inner class, assume anonymous
-                        	effectiveDeclaringType = declaringType.getEnclosingMethod().getDeclaringClass();
-                        }
-                        IType type = project.groovyClassToJavaType(declaringType);
-                        if (type == null && !unit.isOnBuildPath()) {
-                            // try to find it in the current compilation unit
-                            type = unit.getType(effectiveDeclaringType.getNameWithoutPackage());
-                            if (! type.exists()) {
-                                type = null;
-                            }
-                        }
-
-                        if (type != null) {
-                            try {
-                                // find the requested java element
-                                IJavaElement maybeRequested = findRequestedElement(result, type);
-                                // try to resolve the type of the requested element.  this will add the proper type parameters, etc to the hover
-                                requestedElement = resolveRequestedElement(result, maybeRequested);
-                            } catch (JavaModelException e) {
-                                GroovyCore.logException("Problem with code selection for ASTNode: " + node, e);
-                            }
-                        }
-                    }
+            if (node instanceof ImportNode && node != nodeToLookFor) {
+                node = ((ImportNode) node).getType();
+                if (node == null) { // wildcard?
+                    return VisitStatus.CONTINUE;
                 }
             }
-            return VisitStatus.STOP_VISIT;
+
+            found = (node == nodeToLookFor);
+            if (!found && node.getEnd() > 0) {
+                found = (node.getStart() == nodeToLookFor.getStart()) &&
+                        (node.getEnd() == nodeToLookFor.getEnd()) &&
+                        (typeOf(node).equals(typeOf(nodeToLookFor)));
+            }
+            if (found) {
+                handleMatch(result, enclosingElement);
+            }
+        } catch (JavaModelException e) {
+            GroovyCore.logException("Problem with code selection for ASTNode: " + node, e);
         }
-        return VisitStatus.CONTINUE;
+        return !found ? VisitStatus.CONTINUE : VisitStatus.STOP_VISIT;
     }
 
-
     /**
-     * @param enclosingElement
-     * @return true iff enclosingElement's source location contains the source location of {@link #nodeToLookFor}
+     * @return {@code true} iff {@code enclosingElement}'s source location
+     *     contains the source location of {@link #nodeToLookFor}
      */
-    private boolean interestingElement(IJavaElement enclosingElement) {
+    private boolean interestingElement(IJavaElement enclosingElement) throws JavaModelException {
         // the clinit is always interesting since the clinit contains static initializers
         if (enclosingElement.getElementName().equals("<clinit>")) {
             return true;
         }
-
         if (enclosingElement instanceof ISourceReference) {
-            try {
-                ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();
-                return range.getOffset() <= nodeToLookFor.getStart() && range.getOffset() + range.getLength() >= nodeToLookFor.getEnd();
-            } catch (JavaModelException e) {
-                Util.log(e);
-            }
+            ISourceRange range = ((ISourceReference) enclosingElement).getSourceRange();
+            int start = range.getOffset(), until = range.getOffset() + range.getLength();
+            boolean covers = start <= nodeToLookFor.getStart() && until >= nodeToLookFor.getEnd();
+            covers = covers || (start <= selectRegion.getOffset() && until >= selectRegion.getEnd());
+            return covers;
         }
         return false;
     }
 
+    /**
+     * Fills in {@link #requestedNode} and {@link #requestedElement} from the
+     * specified type lookup result and enclosing element that match up with
+     * {@link #nodeToLookFor}.
+     */
+    private void handleMatch(TypeLookupResult result, IJavaElement enclosingElement) throws JavaModelException {
+        requestedNode = result.declaration;
+        if (requestedNode instanceof ClassNode) {
+            ClassNode classNode = (ClassNode) requestedNode;
+            if (!removeArray(classNode).isGenericsPlaceHolder()) {
+                requestedNode = classNode.redirect();
+            } else {
+                requestedElement = findTypeParam(
+                    removeArray(classNode).getUnresolvedName(), enclosingElement);
+                return;
+            }
+        }
+        if (requestedNode != null) {
+            if (result.declaration instanceof VariableExpression) {
+                VariableExpression varExp = (VariableExpression) result.declaration;
+                // look in the local scope
+                requestedElement = createLocalVariable(result, enclosingElement, varExp);
+
+            } else if (result.declaration instanceof Parameter) {
+                Parameter param = (Parameter) result.declaration;
+                // look in the local scope
+                int position = param.getStart() - 1;
+                if (position < 0) {
+                    // could be implicit parameter like 'it'
+                    position = nodeToLookFor.getStart() - 1;
+                }
+                try {
+                    requestedElement = createLocalVariable(result, gunit.getElementAt(position), param);
+                } catch (JavaModelException e) {
+                    Util.log(e, "Problem getting element at " + position + " for file " + gunit.getElementName());
+                }
+
+            } else if (nodeToLookFor instanceof PackageNode) {
+                int start = nodeToLookFor.getStart(), until = selectRegion.getEnd();
+                if (start < until) {
+                    String pack = gunit.getSource().substring(start, until);
+                    IPackageFragmentRoot root = gunit.getPackageFragmentRoot();
+                    requestedElement = root.getPackageFragment(pack);
+                }
+
+            } else if (nodeToLookFor instanceof ImportNode &&
+                    ((ImportNode) nodeToLookFor).isStar() && !((ImportNode) nodeToLookFor).isStatic()) {
+                int start = nodeToLookFor.getStart(), until = selectRegion.getEnd();
+                if (start < until) {
+                    String pack = gunit.getSource().substring(start, until).replaceFirst("^import\\s+", "");
+                    for (IPackageFragmentRoot root : gunit.getJavaProject().getPackageFragmentRoots()) {
+                        IPackageFragment frag = root.getPackageFragment(pack);
+                        if (frag != null && frag.exists()) {
+                            requestedElement = frag;
+                            break;
+                        }
+                    }
+                }
+                requestedNode = nodeToLookFor; // result.declaration should be java.lang.Object here
+
+            } else {
+                String qualifier = checkQualifiedType(result, enclosingElement);
+                ClassNode declaringType = findDeclaringType(result);
+                if (declaringType != null) {
+                    ClassNode effectiveDeclaringType = declaringType;
+                    if (declaringType.getEnclosingMethod() != null) {
+                        // inner class, assume anonymous
+                        effectiveDeclaringType = declaringType.getEnclosingMethod().getDeclaringClass();
+                    }
+                    // find it in the java model
+                    IType type = project.groovyClassToJavaType(declaringType);
+                    if (type == null && !gunit.isOnBuildPath()) {
+                        // try to find it in the current compilation unit
+                        type = gunit.getType(effectiveDeclaringType.getNameWithoutPackage());
+                        if (!type.exists()) {
+                            type = null;
+                        }
+                    }
+                    if (type != null) {
+                        if (qualifier == null) {
+                            // find the requested java element
+                            IJavaElement maybeRequested = findRequestedElement(result, type);
+                            // try to resolve the type of the requested element.  this will add the proper type parameters, etc to the hover
+                            requestedElement = resolveRequestedElement(result, maybeRequested);
+                        } else {
+                            // try to resolve as a type (outer class) then as a package
+                            IType candidate = gunit.getJavaProject().findType(qualifier);
+                            if (candidate != null) {
+                                requestedElement = candidate;
+                            } else {
+                                IPackageFragmentRoot root;
+                                if (type instanceof BinaryType) {
+                                    root = (IPackageFragmentRoot) ((BinaryType) type).getPackageFragment().getParent();
+                                } else {
+                                    root = (IPackageFragmentRoot) ((SourceType) type).getPackageFragment().getParent();
+                                }
+                                requestedElement = root.getPackageFragment(qualifier);
+                            }
+                            requestedNode = nodeToLookFor;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private LocalVariable createLocalVariable(TypeLookupResult result, IJavaElement enclosingElement, Variable var) {
+        ClassNode type = result.type != null ? result.type : var.getType();
+
+        int start;
+        if (var instanceof Parameter) {
+            start = ((Parameter) var).getNameStart();
+        } else {
+            start = ((VariableExpression) var).getStart();
+        }
+
+        // be compatible between 3.6 and 3.7+
+        String signature = Signature.createTypeSignature(createGenericsAwareName(type, true), false);
+        return ReflectionUtils.createLocalVariable(enclosingElement, var.getName(), start, signature);
+    }
+
+    private String checkQualifiedType(TypeLookupResult result, IJavaElement enclosingElement) throws JavaModelException {
+        if (result.declaration instanceof ClassNode ||
+            result.declaration instanceof ConstructorNode /*||
+            result.declaration instanceof DeclarationExpression*/) {
+
+            ClassNode type = result.type;
+            if (type == null) type = result.declaringType;
+            if (type == null) type = (ClassNode) result.declaration;
+            int typeStart = startOffset(type), typeEnd = endOffset(type);
+            type = removeArray(type); // unpack type now that position is known
+
+            if (typeEnd > 0) {
+                String source = gunit.getSource().substring(typeStart, typeEnd);
+                int nameStart = typeStart + source.indexOf(GroovyUtils.splitName(type)[1]);
+
+                // check for code selection on the type name's qualifier string
+                if (nameStart > typeStart && nameStart > selectRegion.getEnd() && selectRegion.getEnd() > typeStart) {
+                    String selected = gunit.getSource().substring(typeStart, selectRegion.getEnd());
+                    selected = selected.replaceAll("\\.$", ""); // remove trailing .
+                    Pattern pattern = Pattern.compile("^\\Q" + selected + "\\E\\w*");
+                    Matcher matcher = pattern.matcher(GroovyUtils.splitName(type)[0]);
+                    if (matcher.find()) {
+                        return matcher.group();
+                    }
+                }
+            }
+        }
+        return null;
+    }
 
     /**
-     * find the declaring type, removing any array
-     * @param result
-     * @return
+     * Finds the declaring type of the specified lookup result.
      */
     private ClassNode findDeclaringType(TypeLookupResult result) {
         ClassNode declaringType = null;
         if (result.declaringType != null) {
             declaringType = removeArray(result.declaringType);
-        } else {
-            if (result.declaration instanceof FieldNode) {
-                declaringType = ((FieldNode) result.declaration).getDeclaringClass();
-            } else if (result.declaration instanceof MethodNode) {
-                declaringType = ((MethodNode) result.declaration).getDeclaringClass();
-            } else if (result.declaration instanceof PropertyNode) {
-                declaringType = ((PropertyNode) result.declaration).getDeclaringClass();
-            } else if (result.declaration instanceof ClassNode) {
-                declaringType = removeArray((ClassNode) result.declaration);
-            }
+        } else if (result.declaration instanceof ClassNode) {
+            declaringType = removeArray((ClassNode) result.declaration);
+        } else if (result.declaration instanceof FieldNode) {
+            declaringType = ((FieldNode) result.declaration).getDeclaringClass();
+        } else if (result.declaration instanceof MethodNode) {
+            declaringType = ((MethodNode) result.declaration).getDeclaringClass();
+        } else if (result.declaration instanceof PropertyNode) {
+            declaringType = ((PropertyNode) result.declaration).getDeclaringClass();
+        } else if (result.declaration instanceof DeclarationExpression) {
+            declaringType = removeArray(((DeclarationExpression) result.declaration).getLeftExpression().getType());
         }
         return declaringType;
     }
 
+    private ITypeParameter findTypeParam(String name, IJavaElement enclosingElement) throws JavaModelException {
+        ITypeParameter typeParam = null;
+        if (enclosingElement instanceof IType) {
+            for (ITypeParameter tp : ((IType) enclosingElement).getTypeParameters()) {
+                if (tp.getElementName().equals(name)) {
+                    typeParam = tp;
+                    break;
+                }
+            }
+        } else if (enclosingElement instanceof IMethod) {
+            for (ITypeParameter tp : ((IMethod) enclosingElement).getTypeParameters()) {
+                if (tp.getElementName().equals(name)) {
+                    typeParam = tp;
+                    break;
+                }
+            }
+        }
+        if (typeParam == null && enclosingElement.getParent() != null) {
+            typeParam = findTypeParam(name, enclosingElement.getParent());
+        }
+        return typeParam;
+    }
 
-    /**
-     * @param result
-     * @param type
-     * @throws JavaModelException
-     */
-    private IJavaElement findRequestedElement(TypeLookupResult result, IType type)
-            throws JavaModelException {
+    private IJavaElement findRequestedElement(TypeLookupResult result, IType type) throws JavaModelException {
         IJavaElement maybeRequested = null;
         ASTNode declaration = result.declaration;
         if (declaration instanceof ClassNode) {
@@ -229,6 +363,16 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     }
                 } else if (declaration instanceof FieldNode) {
                     name = ((FieldNode) declaration).getName();
+                    // check for an @Lazy field
+                    Iterable<AnnotationNode> annos =
+                        ((FieldNode) declaration).getAnnotations();
+                    if (annos != null) {
+                        for (AnnotationNode anno : annos) {
+                            if (anno.getClassNode().getNameWithoutPackage().equals("Lazy")) {
+                                name = name.substring(1); // strip the leading $
+                            }
+                        }
+                    }
                 } else if (declaration instanceof PropertyNode) {
                     name = ((PropertyNode) declaration).getName();
                 } else {
@@ -269,7 +413,6 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
         return maybeRequested;
     }
-
 
     /**
      * Converts the maybeRequested element into a resolved element by creating a unique key for it.
@@ -321,28 +464,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return requestedElement;
     }
 
-
-    private LocalVariable createLocalVariable(TypeLookupResult result,
-            IJavaElement enclosingElement, Variable var) {
-        ASTNode node = (ASTNode) var;
-        ClassNode type = result.type != null ? result.type : var.getType();
-
-        int start;
-        if (node instanceof Parameter) {
-            start = ((Parameter) node).getNameStart();
-        } else {
-            start = node.getStart();
-        }
-
-        // be compatible between 3.6 and 3.7+
-        return ReflectionUtils.createLocalVariable(enclosingElement, var.getName(), start, Signature.createTypeSignature(createGenericsAwareName(type, true), false));
-    }
-
-
     /**
      * Creates the type signature for local variables
-     * @param node
-     * @return
      */
     private String createGenericsAwareName(ClassNode node, boolean useSimple) {
         StringBuilder sb = new StringBuilder();
@@ -389,12 +512,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return sb.toString();
     }
 
-
     /**
      * Creates the unique key for classes, fields and methods
-     * @param node
-     * @param maybeRequested
-     * @return
      */
     private String createUniqueKey(AnnotatedNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType, IJavaElement maybeRequested) {
         if (resolvedDeclaringType == null) {
@@ -463,39 +582,23 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
         return new StringBuilder(Signature.createTypeSignature(createGenericsAwareName(resolvedType, false/*fully qualified*/), true/*must resolve*/).replace('.', '/'));
     }
+
     /**
-     * tries to resolve any type parameters in unresolvedType based on those in resolvedDeclaringType
+     * Tries to resolve any type parameters in unresolvedType based on those in resolvedDeclaringType.
+     *
      * @param unresolvedType unresolved type whose type parameters need to be resolved
      * @param resolvedDeclaringType the resolved type that is the context in which to resolve it.
-     * @return
      */
     private StringBuilder createUniqueKeyForClass(ClassNode unresolvedType, ClassNode resolvedDeclaringType) {
-    	GenericsMapper mapper = GenericsMapper.gatherGenerics(resolvedDeclaringType, resolvedDeclaringType.redirect());
-    	ClassNode resolvedType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(unresolvedType));
-    	return createUniqueKeyForResolvedClass(resolvedType);
+        GenericsMapper mapper = GenericsMapper.gatherGenerics(resolvedDeclaringType, resolvedDeclaringType.redirect());
+        ClassNode resolvedType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(unresolvedType));
+        return createUniqueKeyForResolvedClass(resolvedType);
     }
 
-    private boolean doTest(ASTNode node) {
-        return node.getClass() == nodeToLookFor.getClass() && nodeToLookFor.getStart() == node.getStart() && nodeToLookFor.getEnd() == node.getEnd();
-    }
-
-    /**
-     * @param declaration
-     * @return
-     */
     private ClassNode removeArray(ClassNode declaration) {
         return declaration.getComponentType() != null ? removeArray(declaration.getComponentType()) : declaration;
     }
 
-
-    /**
-     * May return null
-     * @param type
-     * @param text
-     * @param parameters
-     * @return
-     * @throws JavaModelException
-     */
     private IJavaElement findElement(IType type, String text, Parameter[] parameters) throws JavaModelException {
         if (text.equals(type.getElementName())) {
             return type;
@@ -514,7 +617,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         methodsIteration : for (IMethod method : type.getMethods()) {
             if (method.getElementName().equals(text)) {
                 // prefer methods with the same parameter types
-            	closestMatch = method;
+                closestMatch = method;
                 String[] maybeMethodParameters = method.getParameterTypes();
                 if (maybeMethodParameters.length == parameters.length) {
                     for (int i = 0; i < maybeMethodParameters.length; i++) {
@@ -580,6 +683,42 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return null;
     }
 
+    private int startOffset(ClassNode type) {
+        int start = type.getStart();
+        if (nodeToLookFor instanceof ImportNode) {
+            // recover the qualifier position for imports
+            start = endOffset(type) - type.getName().length();
+        } else if (type.getEnd() < 1) {
+            if (nodeRegion != null) {
+                start = nodeRegion.getOffset();
+            } else {
+                start = nodeToLookFor.getStart();
+            }
+        }
+        return start;
+    }
+
+    private int endOffset(ClassNode type) {
+        int end = type.getEnd();
+        if (nodeToLookFor instanceof ImportNode) {
+            end = ((ImportNode) nodeToLookFor).getTypeEnd();
+        } else if (end < 1) {
+            if (nodeRegion != null) {
+                end = nodeRegion.getEnd();
+            } else {
+                end = nodeToLookFor.getEnd();
+            }
+        }
+        return end;
+    }
+
+    private Object typeOf(ASTNode node) {
+        if (node instanceof ClassNode) {
+            return ((ClassNode) node)
+                .getNameWithoutPackage();
+        }
+        return node.getClass();
+    }
 
     public ASTNode getRequestedNode() {
         return requestedNode;

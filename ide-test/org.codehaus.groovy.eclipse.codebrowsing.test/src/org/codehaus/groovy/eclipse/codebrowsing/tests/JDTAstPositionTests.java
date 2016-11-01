@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 package org.codehaus.groovy.eclipse.codebrowsing.tests;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IProblemRequestor;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.AST;
@@ -31,21 +31,21 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
  * @author Kris De Volder
  * @author Andy Clement
  */
-public class JDTAstPositionTest extends BrowsingTestCase {
+public final class JDTAstPositionTests extends BrowsingTestCase {
 
-    private int astLevel;
-    private WorkingCopyOwner workingCopyOwner;
-    private IProblemRequestor problemRequestor;
-
-    public JDTAstPositionTest() {
-        super(JDTAstPositionTest.class.getName());
+    public static junit.framework.Test suite() {
+        return newTestSuite(JDTAstPositionTests.class);
     }
 
     @SuppressWarnings("deprecation")
+    private int astLevel = AST.JLS3;
+    private WorkingCopyOwner workingCopyOwner;
+    private IProblemRequestor problemRequestor;
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        astLevel = AST.JLS3;
+
         try {
             AST.class.getDeclaredField("JLS8");
             astLevel = 8;
@@ -68,37 +68,15 @@ public class JDTAstPositionTest extends BrowsingTestCase {
             }
 
             public void acceptProblem(IProblem problem) {
-            	System.out.println("problem: "+problem);
+                System.out.println("problem: "+problem);
             }
         };
         this.workingCopyOwner = new WorkingCopyOwner() {
-        	@Override
-        	public IProblemRequestor getProblemRequestor(ICompilationUnit workingCopy) {
-        		return problemRequestor;
-        	}
+            @Override
+            public IProblemRequestor getProblemRequestor(ICompilationUnit workingCopy) {
+                return problemRequestor;
+            }
         };
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        ICompilationUnit[] wcs = new ICompilationUnit[0];
-        int i = 0;
-        do {
-            wcs = JavaCore.getWorkingCopies(this.workingCopyOwner);
-            for (ICompilationUnit workingCopy : wcs) {
-                try {
-                    workingCopy.discardWorkingCopy();
-                    workingCopy.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            i++;
-            if (i > 20) {
-                fail("Could not delete working copies " + wcs);
-            }
-        } while (wcs.length > 0);
-        super.tearDown();
     }
 
     public void testAnnotationPositions_STS3822() throws Exception {
@@ -202,15 +180,14 @@ public class JDTAstPositionTest extends BrowsingTestCase {
 
     private void traverseAst(final String contents, CompilationUnit ast) {
         ast.accept(new ASTVisitor() {
-        	@Override
-        	public void preVisit(ASTNode node) {
-        		System.out.println("--- "+node.getClass());
-        		System.out.println(getText(node, contents));
-        		System.out.println("------------------------------");
-        	}
+            @Override
+            public void preVisit(ASTNode node) {
+                System.out.println("--- "+node.getClass());
+                System.out.println(getText(node, contents));
+                System.out.println("------------------------------");
+            }
         });
     }
-
 
     private String getText(ASTNode node, String text) {
         int start = node.getStartPosition();
@@ -223,9 +200,10 @@ public class JDTAstPositionTest extends BrowsingTestCase {
     }
 
     private CompilationUnit getAST(String contents) throws Exception {
-        GroovyCompilationUnit unit = getCompilationUnitFor(contents);
-        CompilationUnit ast = unit.reconcile(astLevel, true, workingCopyOwner, new NullProgressMonitor());
+        GroovyCompilationUnit unit = addGroovySource(contents);
+        IProgressMonitor monitor = new NullProgressMonitor();
+        unit.becomeWorkingCopy(monitor);
+        CompilationUnit ast = unit.reconcile(astLevel, true, workingCopyOwner, monitor);
         return ast;
     }
-
 }

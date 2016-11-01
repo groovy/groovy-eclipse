@@ -95,7 +95,8 @@ public class ClassHelper {
         GROOVY_OBJECT_TYPE = makeWithoutCaching(GroovyObject.class),
         GROOVY_INTERCEPTABLE_TYPE = makeWithoutCaching(GroovyInterceptable.class),
         
-        // GRECLIPSE GROOVY-6184 Resolve the enum and annotation ClassNodes
+        // GRECLIPSE edit
+        // GROOVY-6184 Resolve the enum and annotation ClassNodes
         //Enum_Type = new ClassNode("java.lang.Enum",0,OBJECT_TYPE),
         //Annotation_TYPE = new ClassNode("java.lang.annotation.Annotation",0,OBJECT_TYPE),
         Enum_Type = make(Enum.class, true),

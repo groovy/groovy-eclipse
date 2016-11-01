@@ -29,9 +29,7 @@ import org.eclipse.jdt.core.IJavaElement;
  *          Performs code select in a Groovy-aware way.
  */
 public interface ICodeSelectHelper {
-
     public IJavaElement[] select(GroovyCompilationUnit unit, int start, int length);
-
 }
 
 class CodeSelectHelperFactory {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,22 +20,22 @@ import java.util.List;
 // FIXASC (groovychange) new type
 /**
  * Reports on CST builds.
- * 
+ *
  * @author empovazan
  */
 public interface ICSTReporter {
-	/**
-	 * Report that an AST has been generated.
-	 * @param ast
-	 */
-	public void generatedCST(String fileName, GroovySourceAST ast);
+    /**
+     * Report that an AST has been generated.
+     * @param ast
+     */
+    public void generatedCST(String fileName, GroovySourceAST ast);
 
-	/**
-	 * Report parse errors while attempting to generate a CST. Not that the CST may in fact be generated if the parser
-	 * is error recovering.
-	 * 
-	 * @param fileName
-	 * @param errors
-	 */
-	public void reportErrors(String fileName, List errors);
+    /**
+     * Report parse errors while attempting to generate a CST. Not that the CST may in fact be generated if the parser
+     * is error recovering.
+     *
+     * @param fileName
+     * @param errors
+     */
+    public void reportErrors(String fileName, List errors);
 }

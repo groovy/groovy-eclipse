@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.codehaus.groovy.eclipse.core.builder;
 
 import java.util.HashMap;
@@ -27,8 +26,10 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.ClassFile;
+import org.eclipse.jdt.internal.core.ClasspathEntry;
 import org.eclipse.jdt.internal.core.IJavaElementRequestor;
 import org.eclipse.jdt.internal.core.NameLookup;
+import org.eclipse.jdt.internal.core.PackageFragmentRoot;
 import org.eclipse.jdt.internal.core.util.HashtableOfArrayToObject;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -40,20 +41,17 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class GroovyNameLookup extends NameLookup {
 
-
+    @SuppressWarnings("unchecked")
     public GroovyNameLookup(NameLookup other) {
-        this(new IPackageFragmentRoot[0], new HashtableOfArrayToObject(), new ICompilationUnit[0], new HashMap());
+        this(new IPackageFragmentRoot[0], new HashtableOfArrayToObject(), new ICompilationUnit[0], new HashMap<PackageFragmentRoot, ClasspathEntry>());
         this.packageFragmentRoots = (IPackageFragmentRoot[]) ReflectionUtils.getPrivateField(NameLookup.class, "packageFragmentRoots", other);
         this.packageFragments = (HashtableOfArrayToObject) ReflectionUtils.getPrivateField(NameLookup.class, "packageFragments", other);
-        this.typesInWorkingCopies = (HashMap) ReflectionUtils.getPrivateField(NameLookup.class, "typesInWorkingCopies", other);
-        this.rootToResolvedEntries = (Map) ReflectionUtils.getPrivateField(NameLookup.class, "rootToResolvedEntries", other);
+        this.typesInWorkingCopies = (HashMap<PackageFragmentRoot, ?>) ReflectionUtils.getPrivateField(NameLookup.class, "typesInWorkingCopies", other);
+        this.rootToResolvedEntries = (Map<PackageFragmentRoot, ClasspathEntry>) ReflectionUtils.getPrivateField(NameLookup.class, "rootToResolvedEntries", other);
     }
 
-    public GroovyNameLookup(IPackageFragmentRoot[] packageFragmentRoots,
-            HashtableOfArrayToObject packageFragments,
-            ICompilationUnit[] workingCopies, Map rootToResolvedEntries) {
-        super(packageFragmentRoots, packageFragments, workingCopies,
-                rootToResolvedEntries);
+    public GroovyNameLookup(IPackageFragmentRoot[] packageFragmentRoots, HashtableOfArrayToObject packageFragments, ICompilationUnit[] workingCopies, Map<PackageFragmentRoot, ClasspathEntry> rootToResolvedEntries) {
+        super(packageFragmentRoots, packageFragments, workingCopies, rootToResolvedEntries);
     }
 
     /**
@@ -83,7 +81,6 @@ public class GroovyNameLookup extends NameLookup {
                         // GROOVY begin
                         // removed statements that continue if type is not the same name as the compilation unit
                         ICompilationUnit cu = (ICompilationUnit) compilationUnits[i];
-                        IType[] allTypes = cu.getAllTypes();
                         IType type = cu.getType(name);
                         if (
                                 // GROOVY begin

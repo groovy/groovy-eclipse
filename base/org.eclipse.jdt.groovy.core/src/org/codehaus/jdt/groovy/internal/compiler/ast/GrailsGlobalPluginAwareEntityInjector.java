@@ -15,9 +15,9 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
-import groovy.lang.GroovyClassLoader;
-
 import java.util.List;
+
+import groovy.lang.GroovyClassLoader;
 
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;

@@ -19,7 +19,6 @@ import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.EXAC
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.INFERRED;
 import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN;
 import static org.eclipse.jdt.groovy.search.VariableScope.NO_GENERICS;
-import groovyjarjarasm.asm.Opcodes;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -27,6 +26,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;

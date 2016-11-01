@@ -15,12 +15,12 @@
  */
 package org.eclipse.jdt.core.groovy.tests.locations;
 
-import groovy.lang.GroovyClassLoader;
-
 import java.util.LinkedList;
 import java.util.List;
 
 import junit.framework.TestCase;
+
+import groovy.lang.GroovyClassLoader;
 
 import org.codehaus.groovy.antlr.LocationSupport;
 import org.codehaus.groovy.ast.ASTNode;
@@ -31,11 +31,11 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 
 /**
  * @author Andrew Eisenberg
  * @created Jun 4, 2009
- *
  */
 public class LocationSupportTests extends TestCase {
 
@@ -207,7 +207,7 @@ public class LocationSupportTests extends TestCase {
         sourceUnit.parse();
         sourceUnit.completePhase();
         sourceUnit.convert();
-        ModuleNode module = sourceUnit.getAST();
+        final ModuleNode module = sourceUnit.getAST();
 
         // now check locations
         assertEquals(0, module.getStart());
@@ -222,29 +222,21 @@ public class LocationSupportTests extends TestCase {
         assertEquals("import java.util.List\nimport java.lang.*\nimport javax.swing.text.html.HTML.A\nimport javax.swing.text.html.HTML.*".length(), module.getStarImports().get(1).getEnd());
 
         // now test against the compilation unit declaration
-        MockGroovyCompilationUnitDeclaration cud = new MockGroovyCompilationUnitDeclaration();
-        cud.createImports(module);
+        GroovyCompilationUnitDeclaration cud = new GroovyCompilationUnitDeclaration(null, null, -1, null, null, null) {{
+            GroovyCompilationUnitDeclaration.UnitPopulator cup = new GroovyCompilationUnitDeclaration.UnitPopulator();
+            ReflectionUtils.setPrivateField(cup.getClass(), "unitDeclaration", cup, this);
+            ReflectionUtils.executePrivateMethod(cup.getClass(), "createImportDeclarations",
+                                                    new Class[] {ModuleNode.class}, cup, new Object[] {module});
+        }};
 
         assertEquals(module.getImport("List").getStart(), cud.imports[0].declarationSourceStart);
-        assertEquals(module.getImport("List").getEnd(), cud.imports[0].declarationSourceEnd);
+        assertEquals(module.getImport("List").getEnd() - 1, cud.imports[0].declarationSourceEnd);
         assertEquals(module.getStarImports().get(0).getStart(), cud.imports[1].declarationSourceStart);
-        assertEquals(module.getStarImports().get(0).getEnd(), cud.imports[1].declarationSourceEnd);
+        assertEquals(module.getStarImports().get(0).getEnd() - 1, cud.imports[1].declarationSourceEnd);
         assertEquals(module.getImport("A").getStart(), cud.imports[2].declarationSourceStart);
-        assertEquals(module.getImport("A").getEnd(), cud.imports[2].declarationSourceEnd);
+        assertEquals(module.getImport("A").getEnd() - 1, cud.imports[2].declarationSourceEnd);
         assertEquals(module.getStarImports().get(1).getStart(), cud.imports[3].declarationSourceStart);
-        assertEquals(module.getStarImports().get(1).getEnd(), cud.imports[3].declarationSourceEnd);
-    }
-
-    class MockGroovyCompilationUnitDeclaration extends GroovyCompilationUnitDeclaration {
-        public MockGroovyCompilationUnitDeclaration() {
-            super(null, null, -1, null, null, null);
-        }
-
-        @Override
-        protected void createImports(ModuleNode moduleNode) {
-            super.createImports(moduleNode);
-        }
-
+        assertEquals(module.getStarImports().get(1).getEnd() - 1, cud.imports[3].declarationSourceEnd);
     }
 
     public void testUnicodeEscapes1() throws Exception {

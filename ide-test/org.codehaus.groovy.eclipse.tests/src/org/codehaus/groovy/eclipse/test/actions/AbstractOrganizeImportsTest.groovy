@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,171 +13,172 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.test.actions;
+package org.codehaus.groovy.eclipse.test.actions
 
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports
 import org.codehaus.groovy.eclipse.test.EclipseTestCase
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.codehaus.jdt.groovy.model.GroovyNature
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
+import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.jdt.core.ISourceRange
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.search.TypeNameMatch
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery
-import org.eclipse.jface.text.Document;
+import org.eclipse.jface.text.Document
 import org.eclipse.text.edits.DeleteEdit
 import org.eclipse.text.edits.InsertEdit
 import org.eclipse.text.edits.TextEdit
 
-/**
- * 
- * @author Andrew Eisenberg
- * @created Dec 15, 2010
- */
-class AbstractOrganizeImportsTest extends EclipseTestCase {
-    
-    protected void setUp() throws Exception {
+abstract class AbstractOrganizeImportsTest extends EclipseTestCase {
+
+    protected static final String LINE_SEPARATOR = System.getProperty('line.separator')
+
+    @Override
+    protected void setUp() {
         super.setUp()
-        GroovyRuntime.addGroovyRuntime(testProject.getProject())
-        testProject.createGroovyTypeAndPackage("other", "Other.groovy", CONTENTS_SUPPORTING)
-        testProject.createGroovyTypeAndPackage("other2", "Other.groovy", CONTENTS_SUPPORTING2)
-        testProject.createGroovyTypeAndPackage("other3", "Other.groovy", CONTENTS_SUPPORTING2)
-        testProject.createGroovyTypeAndPackage("other4", "Other.groovy", CONTENTS_SUPPORTING2)
-        testProject.createJavaTypeAndPackage("other", "Outer.java", CONTENTS_JAVA_SUPPORTING)
+        testProject.createGroovyTypeAndPackage('other', 'Other.groovy', CONTENTS_SUPPORTING)
+        testProject.createGroovyTypeAndPackage('other2', 'Other.groovy', CONTENTS_SUPPORTING2)
+        testProject.createGroovyTypeAndPackage('other3', 'Other.groovy', CONTENTS_SUPPORTING2)
+        testProject.createGroovyTypeAndPackage('other4', 'Other.groovy', CONTENTS_SUPPORTING2)
+        testProject.createJavaTypeAndPackage('other', 'Outer.java', CONTENTS_JAVA_SUPPORTING)
     }
-    
-    final static String CONTENTS_SUPPORTING =
-    """
+
+    private static final String CONTENTS_SUPPORTING = '''
         class FirstClass { }
         class SecondClass { }
         class ThirdClass { }
-    """
-    final static String CONTENTS_SUPPORTING2 =
-    """
+        '''
+    private static final String CONTENTS_SUPPORTING2 = '''
         class FourthClass {
-            static m() { }
+          static m() { }
         }
-    """
-    final static String CONTENTS_JAVA_SUPPORTING =
-    """
+        '''
+    private static final String CONTENTS_JAVA_SUPPORTING = '''
         public class Outer {
-            public static class Inner { }
+          public static class Inner { }
         }
-    """
+        '''
 
-    void doAddImportTest(String contents, List<String> expectedImports = [ ]) {
-		doAddImportTest("main", "Main", contents, expectedImports)
-	}
+    protected void doAddImportTest(CharSequence contents, List<String> expectedImports = []) {
+        doAddImportTest('main', 'Main', contents, expectedImports)
+    }
 
-    void doAddImportTest(String pkgName, String resourceName, String contents, List<String> expectedImports = [ ]) {
-        def file = testProject.createGroovyTypeAndPackage(pkgName, resourceName + ".groovy", contents)
-        def unit = JavaCore.createCompilationUnitFrom(file)
+    protected void doAddImportTest(String pkgName, String resourceName, CharSequence contents, List<String> expectedImports) {
+        def unit = testProject.createUnit(pkgName, resourceName + '.groovy', contents)
         testProject.waitForIndexer()
         IChooseImportQuery query = new NoChoiceQuery()
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, query)
         TextEdit edit = organize.calculateMissingImports()
         if (expectedImports == null) {
-            assertNull "Expected null due to a compile error in the contents", edit
+            assertNull('Expected null due to a compile error in the contents', edit)
         }
-        
+
         def actualContents = unit.contents
-        def children = edit.getChildren() as List
+        def children = edit.children as List
         def newChildren = []
         children.each {
             if (it instanceof DeleteEdit) {
                 // check to see if the edit is whitespace only
                 def del = it as DeleteEdit
                 for (i in del.offset..del.inclusiveEnd) {
-                    if (! Character.isWhitespace(actualContents[i] as char)) {
+                    if (!Character.isWhitespace(actualContents[i] as char)) {
                         fail("Found unexpected DeleteEdit: $it [ ${actualContents[del.offset..del.inclusiveEnd]} ]")
                     }
                 }
             }
-         }
-        children.each {
-            t ->
-            if (t instanceof InsertEdit) {
-                def insert = t as InsertEdit
-                if (insert.text.trim().length() > 0 && insert.text != '\n') {
+            if (it instanceof InsertEdit) {
+                def insert = it as InsertEdit
+                if (!insert.text.trim().empty && insert.text != '\n') {
                     newChildren += insert
                 }
             }
         }
-        if (expectedImports.size() > 0) {
-            assertEquals "Found incorrect imports in text edit: \n$edit\nwith expected imports:\n$expectedImports", expectedImports.size(), newChildren.size()
+        if (expectedImports) {
+            assertEquals("Found incorrect imports in text edit:\n$edit\nwith expected imports:\n$expectedImports", expectedImports.size(), newChildren.size())
         } else {
-            assertEquals "Found incorrect imports in text edit: \n$edit\nwith expected imports:\n$expectedImports", 0, newChildren.size()
+            assertTrue("Found incorrect imports in text edit:\n$edit\nwith expected imports:\n$expectedImports", newChildren.empty)
         }
-        
-        
-        def notFound = ""
+
+        def notFound = ''
         for (TextEdit child : newChildren) {
-            if (! child instanceof InsertEdit) {
+            if (!child instanceof InsertEdit) {
                 notFound << "Found an invalid Edit: $child\n"
             } else if (!contents.contains(child.text)) {
-                notFound << child.text << "\n"
+                notFound << child.text << '\n'
             }
         }
-        
-        if (notFound.length() > 0) {
-            fail "Did not find the following imports:\n$notFound"
+
+        if (notFound) {
+            fail("Did not find the following imports:\n$notFound")
         }
     }
-    
-    void doDeleteImportTest(String contents, numDeletes) {
-        def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)
+
+    protected void doDeleteImportTest(CharSequence contents, Number numDeletes) {
+        def file = createGroovyType('main', 'Main.groovy', contents)
         testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
-        GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file)
+        def unit = JavaCore.createCompilationUnitFrom(file) as GroovyCompilationUnit
         testProject.waitForIndexer()
+
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
         TextEdit edit = organize.calculateMissingImports()
-        TextEdit[] children = edit.getChildren()
-        assertEquals("Wrong number of deleted imports:\n$contents\nand edits:\n$edit",
-                numDeletes, children.length);
+        TextEdit[] children = edit.children
+        assertEquals("Wrong number of deleted imports:\n$contents\nand edits:\n$edit", numDeletes, children.length)
         for (TextEdit child : children) {
             assertTrue("$child is not a delete edit", child instanceof DeleteEdit)
         }
         unit.discardWorkingCopy()
     }
-    
-    void doContentsCompareTest(originalContents, expectedContents) {
-        def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", originalContents)
+
+    protected void doContentsCompareTest(CharSequence originalContents, CharSequence expectedContents) {
+        def file = createGroovyType('main', 'Main.groovy', originalContents)
         testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
         def unit = JavaCore.createCompilationUnitFrom(file)
+        testProject.waitForIndexer()
+
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
         TextEdit edit = organize.calculateMissingImports()
-        def prefix = "package main;" + System.getProperty("line.separator") + System.getProperty("line.separator")
-        Document doc = new Document(prefix + originalContents)
-        edit.apply(doc);
-        assertEquals(prefix + expectedContents, doc.get())
+        // TODO: Must match TestProject.createGroovyType()!
+        String prefix = "package main;$LINE_SEPARATOR$LINE_SEPARATOR"
+
+        Document doc = new Document(prefix + normalizeLineEndings(originalContents))
+        edit.apply(doc)
+
+        assertEquals(prefix + normalizeLineEndings(expectedContents), doc.get())
     }
-    
-    void doChoiceTest(contents, expectedChoices) {
-        def file = testProject.createGroovyTypeAndPackage("main", "Main.groovy", contents)
+
+    protected void doChoiceTest(CharSequence contents, List expectedChoices) {
+        def file = createGroovyType('main', 'Main.groovy', contents)
         testProject.project.build(IncrementalProjectBuilder.FULL_BUILD, null)
         def unit = JavaCore.createCompilationUnitFrom(file)
         def query = new ChoiceQuery()
+
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, query)
         organize.calculateMissingImports()
-        for(choice in expectedChoices) {
+        for (choice in expectedChoices) {
             assertTrue("Should have found $choice in choices", query.choices.contains(choice))
         }
-        assertEquals "Wrong number of choices found.  Expecting:\n$expectedChoices\nFound:\n$query.choices", query.choices.size(), expectedChoices.size()
+        assertEquals("Wrong number of choices found.  Expecting:\n$expectedChoices\nFound:\n$query.choices", query.choices.size(), expectedChoices.size())
     }
 
+    protected IFile createGroovyType(String pack, String name, CharSequence contents) {
+        testProject.createGroovyTypeAndPackage(pack, name, normalizeLineEndings(contents))
+    }
+
+    protected String normalizeLineEndings(CharSequence contents) {
+        contents.stripIndent().replaceAll('\r?\n', LINE_SEPARATOR)
+    }
 }
 
 class NoChoiceQuery implements IChooseImportQuery {
     public TypeNameMatch[] chooseImports(TypeNameMatch[][] matches, ISourceRange[] range) {
-        throw new Exception("Should not have a choice, but found $matches[0][0] and $matches[0][1]")
+        EclipseTestCase.fail("Should not have a choice, but found $matches[0][0] and $matches[0][1]")
+    }
+}
+
+class ChoiceQuery implements IChooseImportQuery {
+    List choices
+    public TypeNameMatch[] chooseImports(TypeNameMatch[][] matches, ISourceRange[] range) {
+        choices = matches[0].collect { it.type.fullyQualifiedName }
         return []
     }
 }
-class ChoiceQuery implements IChooseImportQuery {
-    def choices
-    public TypeNameMatch[] chooseImports(TypeNameMatch[][] matches, ISourceRange[] range) {
-        choices = matches[0].collect { it.getType().getFullyQualifiedName() }
-        return []
-    }
-} 

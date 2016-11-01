@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,7 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
 
-
 /**
- *
  * @author Andrew Eisenberg
  * @created Dec 31, 2009
  */
@@ -32,8 +30,8 @@ public class Region {
     private final int length;
 
     public Region(ASTNode node) {
-    	this.start = node.getStart();
-    	this.length = node.getLength();
+        this.start = node.getStart();
+        this.length = node.getLength();
     }
 
     public Region(IASTFragment node) {
@@ -78,7 +76,7 @@ public class Region {
 
     /**
      * Checks for coverage on this node's name range
-     * 
+     *
      * @param node the node to check
      * @return true iff the node's name range covers the region
      */
@@ -89,7 +87,7 @@ public class Region {
     /**
      * FIXADE with the fix for GRECLIPSE-829, I don't think this method is necessary any more
      * slocs in the ast are now correct for VarExprs inside of gstrings.  Consider deleting
-     *  
+     *
      * variable expression start locations include the '$' in the groovy code,
      * but not in the java model, so subtract 1 from the starting node
      *
@@ -151,11 +149,7 @@ public class Region {
         return node.getStart() < getEnd() && length < node.getLength();
     }
 
-    /**
-     * @return
-     */
     public boolean isEmpty() {
         return start == 0 && length == 0;
     }
-
 }

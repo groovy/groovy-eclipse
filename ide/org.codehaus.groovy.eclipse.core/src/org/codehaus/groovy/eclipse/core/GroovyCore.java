@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ public class GroovyCore {
 
     /**
      * Logs an exception
-     * 
+     *
      * @param message The message to save.
      * @param exception The exception to be logged.
      */
@@ -41,7 +41,7 @@ public class GroovyCore {
 
     /**
      * Logs a warning.
-     * 
+     *
      * @param message The warning to log.
      */
     public static void logWarning(final String message) {
@@ -50,16 +50,16 @@ public class GroovyCore {
 
     /**
      * Logs a warning with an exception attached
-     * 
+     *
      * @param message The warning to log.
      */
     public static void logWarning(final String message, final Throwable t) {
         log(IStatus.WARNING, message, t);
     }
-    
+
     /**
      * Logs an information message.
-     * 
+     *
      * @param message The message to log.
      */
     public static void logTraceMessage(String message) {

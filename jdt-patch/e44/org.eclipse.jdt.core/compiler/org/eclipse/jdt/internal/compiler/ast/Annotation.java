@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -31,7 +32,7 @@
  *                          Bug 419209 - [1.8] Repeating container annotations should be rejected in the presence of annotation it contains
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
-// GROOVY PATCHED
+
 import java.util.Stack;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -799,6 +800,10 @@ public abstract class Annotation extends Expression {
 		if (!typeBinding.isAnnotationType() && typeBinding.isValidBinding()) {
 			if (!isFakeGroovyAnnotation(typeBinding)) { // GROOVY suppress error (see https://jira.codehaus.org/browse/GRECLIPSE-1719)
 				scope.problemReporter().typeMismatchError(typeBinding, scope.getJavaLangAnnotationAnnotation(), this.type, null);
+			} else {
+				// allow the Groovy annotation to show in Javadoc
+				// TODO: Does this cause unanticipated side effects?
+				this.compilerAnnotation = scope.environment().createAnnotation((ReferenceBinding) this.resolvedType, computeElementValuePairs());
 			}
 			return null;
 		}

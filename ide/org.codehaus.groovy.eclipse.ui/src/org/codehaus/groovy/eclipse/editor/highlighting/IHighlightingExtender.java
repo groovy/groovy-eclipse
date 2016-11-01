@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.codehaus.groovy.eclipse.editor.highlighting;
 
 import java.util.List;
@@ -22,25 +21,25 @@ import org.eclipse.jface.text.rules.IRule;
 
 /**
  * Extends the Groovy Editor with new Groovy keywords and
- * syntax highlighting rules.  See the extension point 
+ * syntax highlighting rules.  See the extension point
  * org.codehaus.groovy.eclipse.ui.syntaxHighlightingExtension
  * @author Andrew Eisenberg
  * @created Oct 23, 2009
  */
 public interface IHighlightingExtender {
-    
+
     /**
      * Provides a list of extra keywords to highlight in the same
      * color as all other groovy keywords
      */
     public List<String> getAdditionalGroovyKeywords();
-    
+
     /**
      * Provides a list of extra keywords to highlight in the same
      * color as all other gjdk keywords
      */
     public List<String> getAdditionalGJDKKeywords();
-    
+
     /**
      * Provides a list of additional highlighting rules
      */

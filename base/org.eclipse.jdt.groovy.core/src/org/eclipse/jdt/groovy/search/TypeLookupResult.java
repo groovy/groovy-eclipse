@@ -16,6 +16,7 @@
 package org.eclipse.jdt.groovy.search;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 
@@ -60,11 +61,11 @@ public class TypeLookupResult {
             this.val = val;
         }
 
-        static TypeConfidence findLessPrecise(TypeConfidence left, TypeConfidence right) {
+        public static TypeConfidence findLessPrecise(TypeConfidence left, TypeConfidence right) {
             return left.val > right.val ? left : right;
         }
 
-        boolean isLessPreciseThan(TypeConfidence other) {
+        public boolean isLessPreciseThan(TypeConfidence other) {
             return this.val > other.val;
         }
     }
@@ -82,10 +83,15 @@ public class TypeLookupResult {
     /** Extra Javadoc that should appear in hovers. */
     public final String extraDoc;
 
+    /** Found through Groovy category or extension. */
+    public boolean isGroovy;
+
+    public AnnotationNode enclosingAnnotation;
+
     /**
      * The assignment statement that encloses this expression, or null if there is none.
      */
-    BinaryExpression enclosingAssignment;
+    public BinaryExpression enclosingAssignment;
 
     /**
      * @param type the type of the expression being analyzed
@@ -113,9 +119,5 @@ public class TypeLookupResult {
         this.declaration = declaration;
         this.scope = scope;
         this.extraDoc = extraDoc;
-    }
-
-    public BinaryExpression getEnclosingAssignment() {
-        return enclosingAssignment;
     }
 }

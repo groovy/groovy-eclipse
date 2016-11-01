@@ -1213,9 +1213,5 @@ public final class ImportRewrite {
             addedImports.add(importName + " as " + aliasName);
         }
     }
-
-    public void removeInvalidStaticAlias(String aliasName) {
-        existingImports.remove("s" + aliasName);
-    }
     // GRECLIPSE end
 }

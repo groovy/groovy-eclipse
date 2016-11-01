@@ -18,27 +18,31 @@ package org.codehaus.groovy.eclipse.codebrowsing.tests;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-/**
- * @author Andrew Eisenberg
- * @created Jun 3, 2009
- */
-public class AllBrowsingTests {
+public final class AllBrowsingTests {
     public static Test suite() throws Exception {
-        TestSuite suite = new TestSuite(AllBrowsingTests.class.getName());
-        suite.addTestSuite(CodeSelectMethodsTest.class);
-        suite.addTestSuite(CodeSelectFieldsTest.class);
-        suite.addTestSuite(CodeSelectTypesTest.class);
-        suite.addTestSuite(CodeSelectCategoriesTest.class);
-        suite.addTestSuite(CodeSelectGenericsTest.class);
-        suite.addTestSuite(FindSurroundingNodeTests.class);
-        suite.addTestSuite(FindAllOccurrencesVisitorTests.class);
+        // share a BrowsingTestSetup
+        TestSuite suite = new TestSuite();
         suite.addTestSuite(ASTFragmentTests.class);
+        suite.addTestSuite(CodeSelectAttributesTests.class);
+        suite.addTestSuite(CodeSelectCategoriesTests.class);
+        suite.addTestSuite(CodeSelectFieldsTests.class);
+        suite.addTestSuite(CodeSelectGenericsTests.class);
+        suite.addTestSuite(CodeSelectImportsTests.class);
+        suite.addTestSuite(CodeSelectLocalTests.class);
+        suite.addTestSuite(CodeSelectMethodsTests.class);
+        suite.addTestSuite(CodeSelectPackageTests.class);
+        suite.addTestSuite(CodeSelectPropertiesTests.class);
+        suite.addTestSuite(CodeSelectStaticImportsTests.class);
+        suite.addTestSuite(CodeSelectTypesTests.class);
+        suite.addTestSuite(FindSurroundingNodeTests.class);
+        suite.addTestSuite(JDTAstPositionTests.class);
+        suite.addTestSuite(PartialVisitTests.class);
+        Test codeSelectTests = new BrowsingTestSetup(suite);
+
+        suite = new TestSuite(AllBrowsingTests.class.getName());
+        suite.addTest(codeSelectTests);
         suite.addTestSuite(IsSameExpressionTests.class);
-        suite.addTestSuite(PartialVisitTest.class);
-        suite.addTestSuite(CodeSelectFieldsPropertiesTest.class);
-        suite.addTestSuite(CodeSelectLocalTest.class);
-        suite.addTestSuite(CodeSelectStaticImportsTest.class);
-        suite.addTestSuite(JDTAstPositionTest.class);
+        suite.addTestSuite(FindAllOccurrencesVisitorTests.class);
         return suite;
     }
 }

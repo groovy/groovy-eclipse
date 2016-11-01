@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -17,6 +18,7 @@ import java.util.*;
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -281,6 +283,21 @@ public class NameLookup implements SuffixConstants {
 	protected boolean acceptType(IType type, int acceptFlags, boolean isSourceType) {
 		if (acceptFlags == 0 || acceptFlags == ACCEPT_ALL)
 			return true; // no flags or all flags, always accepted
+
+		// GRECLIPSE add
+		if (kind == TypeDeclaration.CLASS_DECL && (acceptFlags & ACCEPT_CLASSES) == 0 && (acceptFlags & ACCEPT_ANNOTATIONS) != 0) {
+			IAnnotation[] annos = type.getAnnotations();
+			if (annos != null && annos.length > 0) {
+				for (IAnnotation anno : annos) {
+					if (anno != null && "groovy.transform.AnnotationCollector".equals(anno.getElementName())) { //$NON-NLS-1$
+						kind = TypeDeclaration.ANNOTATION_TYPE_DECL; // rebrand from class to annotation
+						break;
+					}
+				}
+			}
+		}
+		// GRECLIPSE end
+
 		try {
 			int kind = isSourceType
 					? TypeDeclaration.kind(((SourceTypeElementInfo) ((SourceType) type).getElementInfo()).getModifiers())

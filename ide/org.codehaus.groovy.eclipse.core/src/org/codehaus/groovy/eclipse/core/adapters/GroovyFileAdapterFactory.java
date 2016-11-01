@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,56 +27,46 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 
 /**
- * This class will take an IFile and adapt it to varios Groovy friends 
+ * This class will take an IFile and adapt it to varios Groovy friends
  * classes / interfaces.
- * 
+ *
  * @author David Kerber
  */
 public class GroovyFileAdapterFactory implements IAdapterFactory {
 
-	private static final Class[] classes = new Class[] { ClassNode.class, ClassNode[].class }  ;
+    private static final Class<?>[] classes = new Class[] { ClassNode.class, ClassNode[].class };
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
-	 */
-    public Object getAdapter(Object adaptableObject, Class adapterType) {
+    @SuppressWarnings("unchecked")
+    public <T> T getAdapter(Object adaptableObject, Class<T> adapterType) {
+        T returnValue = null;
+        if (adaptableObject instanceof IFile) {
+            IFile file = (IFile) adaptableObject;
+            if (ContentTypeUtils.isGroovyLikeFileName(file.getName())) {
+                if (ClassNode.class.equals(adapterType) || ClassNode[].class.equals(adapterType)) {
+                    try {
+                        // we know this will be a GCU because of the file extension
+                        GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
+                        ModuleNode module = unit.getModuleNode();
+                        if (module != null) {
+                            List<ClassNode> classNodeList = module.getClasses();
+                            if (classNodeList != null && !classNodeList.isEmpty()) {
+                                if (ClassNode.class.equals(adapterType)) {
+                                    returnValue = (T) classNodeList.get(0);
+                                } else if (ClassNode[].class.equals(adapterType)) {
+                                    returnValue = (T) classNodeList.toArray(new ClassNode[0]);
+                                }
+                            }
+                        }
+                    } catch (Exception ex) {
+                        GroovyCore.logException("error adapting file to ClassNode", ex);
+                    }
+                }
+            }
+        }
+        return returnValue;
+    }
 
-		Object returnValue = null ; 
-
-		if(adaptableObject instanceof IFile) {
-			IFile file = (IFile) adaptableObject ;
-			if(ContentTypeUtils.isGroovyLikeFileName(file.getName())) {
-				if(ClassNode.class.equals(adapterType) || ClassNode[].class.equals(adapterType)) {
-					try {				
-					    
-					    // we know this will be a GCU because of the file extension
-					    GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
-					    ModuleNode module = unit.getModuleNode();
-					    if (module != null) {
-        					List<ClassNode> classNodeList = module.getClasses();
-        
-        					if(classNodeList != null && !classNodeList.isEmpty() ) {
-        						if (ClassNode.class.equals(adapterType)) {
-        							returnValue = classNodeList.get(0) ;
-        						} else if (ClassNode[].class.equals(adapterType)) {
-        							returnValue = classNodeList.toArray(new ClassNode[0] ); 
-        						}
-        					}		
-					    }
-					} catch (Exception ex) {
-						GroovyCore.logException("error adapting file to ClassNode", ex);
-					}
-				}
-			}
-		}
-		return returnValue;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
-	 */
-	public Class[] getAdapterList() {
-		return classes ;
-	}
-
+    public Class<?>[] getAdapterList() {
+        return classes ;
+    }
 }

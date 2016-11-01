@@ -18,7 +18,6 @@ package org.eclipse.jdt.groovy.search;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -27,8 +26,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -90,6 +89,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
@@ -101,7 +101,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
@@ -112,26 +112,21 @@ import org.eclipse.jdt.internal.core.SourceType;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * @author Andrew Eisenberg
- * @created Aug 29, 2009
- *
- *          Visits a GroovyCompilationUnit in order to determine the type of expressions contained in it.
+ * Visits {@link GroovyCompilationUnit" instances to determine the type of expressions they contain.
  */
 public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport {
 
-    public class VisitCompleted extends RuntimeException {
+    public static class VisitCompleted extends RuntimeException {
         private static final long serialVersionUID = 1L;
 
         public final VisitStatus status;
 
         public VisitCompleted(VisitStatus status) {
-            super();
             this.status = status;
         }
-
     }
 
-    class Tuple {
+    static class Tuple {
         ClassNode declaringType;
         ASTNode declaration;
 
@@ -147,11 +142,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
      */
     public boolean DEBUG = false;
 
+    // shared instances for several method checks below
+    private static final String[] NO_PARAMS = new String[0];
+    private static final Parameter[] NO_PARAMETERS = Parameter.EMPTY_ARRAY;
+
     /**
      * We hard code the list of methods that take a closure and expect to iterate over that closure
      */
     private static final Set<String> dgmClosureMethods = new HashSet<String>();
-
     static {
         dgmClosureMethods.add("find");
         dgmClosureMethods.add("each");
@@ -202,7 +200,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     // These methods have a type for the closure argument that is the same as the declaring type
     private static final Set<String> dgmClosureIdentityMethods = new HashSet<String>();
-
     static {
         dgmClosureIdentityMethods.add("with");
         dgmClosureIdentityMethods.add("addShutdownHook");
@@ -212,7 +209,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     // When called with a map and there are 2 closure arguments, then
     // the types are the key/value of the map entry
     private static final Set<String> dgmClosureMaybeMap = new HashSet<String>();
-
     static {
         dgmClosureMaybeMap.add("any");
         dgmClosureMaybeMap.add("every");
@@ -230,7 +226,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     // These methods have a fixed type for the closure argument
     private static final Map<String, ClassNode> dgmClosureMethodsMap = new HashMap<String, ClassNode>();
-
     static {
         dgmClosureMethodsMap.put("eachLine", VariableScope.STRING_CLASS_NODE);
         dgmClosureMethodsMap.put("splitEachLine", VariableScope.STRING_CLASS_NODE);
@@ -374,11 +369,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    // @Override
-    public void visitPackage(PackageNode p) {
-        // do nothing for now
-    }
-
     public void visitJDT(IType type, ITypeRequestor requestor) {
         IJavaElement oldEnclosing = enclosingElement;
         ASTNode oldEnclosingNode = enclosingDeclarationNode;
@@ -389,17 +379,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             return;
         }
         try {
-
             scopes.push(new VariableScope(scopes.peek(), node, false));
             enclosingDeclarationNode = node;
             visitClassInternal(node);
 
             try {
                 // visitJDT so that we have the proper enclosing element
-                boolean isEnum = type.isEnum();
                 for (IJavaElement child : type.getChildren()) {
                     // filter out synthetic members for enums
-                    if (isEnum && shouldFilterEnumMember(child)) {
+                    if (type.isEnum() && shouldFilterEnumMember(child)) {
                         continue;
                     }
                     switch (child.getElementType()) {
@@ -420,17 +408,31 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     }
                 }
 
-                // visit synthetic default constructor...this is where the object initializers are stuffed
-                // this constructor has no JDT counterpart since it doesn't exist in the source code
-                if (!type.getMethod(type.getElementName(), new String[0]).exists()) {
-                    ConstructorNode defConstructor = findDefaultConstructor(node);
-                    if (defConstructor != null) {
-                        visitConstructorOrMethod(defConstructor, true);
+                if (!type.isEnum()) {
+                    // visit fields that were created by @Field
+                    if (node.isScript()) {
+                        for (FieldNode field : node.getFields()) {
+                            if (field.getEnd() > 0) {
+                                if (field.getNameEnd() <= 0) {
+                                    setNameLocation(field);
+                                }
+                                visitField(field);
+                            }
+                        }
+                    }
+
+                    // visit synthetic default constructor; this is where the object initializers are stuffed
+                    // this constructor has no JDT counterpart since it doesn't exist in the source code
+                    if (!type.getMethod(type.getElementName(), NO_PARAMS).exists()) {
+                        ConstructorNode defConstructor = findDefaultConstructor(node);
+                        if (defConstructor != null) {
+                            visitConstructorOrMethod(defConstructor, true);
+                        }
                     }
                 }
 
             } catch (JavaModelException e) {
-                Util.log(e, "Error getting children of " + type.getFullyQualifiedName());
+                Util.log(e, "Error visiting children of " + type.getFullyQualifiedName());
             }
 
         } catch (VisitCompleted vc) {
@@ -472,7 +474,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     /**
-     * Create type name taking into account inner types
+     * Creates type name taking into account inner types.
      */
     private String createName(IType type) {
         StringBuilder sb = new StringBuilder();
@@ -525,14 +527,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
         if (isLazy(fieldNode)) {
             // GRECLIPSE-578 the @Lazy annotation forces an AST transformation
-            // not sure if we get much here because I think the body of the generated method for
-            // @Lazy is filled with binary instructions.
-            List<MethodNode> lazyMethods = ((ClassNode) enclosingDeclarationNode).getDeclaredMethods("set$"
-                    + field.getElementName());
-            if (lazyMethods.size() > 0) {
-                MethodNode lazyMethod = lazyMethods.get(0);
+            // not sure if we get much here because I think the body of the
+            // generated method for @Lazy is filled with binary instructions
+            MethodNode lazyMethod = getLazyMethod(field.getElementName());
+            if (lazyMethod != null) {
                 enclosingDeclarationNode = lazyMethod;
-                this.requestor = requestor;
                 scopes.push(new VariableScope(scopes.peek(), lazyMethod, lazyMethod.isStatic()));
                 try {
                     visitConstructorOrMethod(lazyMethod, lazyMethod instanceof ConstructorNode);
@@ -541,9 +540,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         throw vc;
                     }
                 } finally {
+                    scopes.pop();
                     enclosingElement = oldEnclosing;
                     enclosingDeclarationNode = oldEnclosingNode;
-                    scopes.pop();
                 }
             }
         }
@@ -577,8 +576,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 throw vc;
             }
         } catch (JavaModelException e) {
-            Util.log(e, "Exception visiting method " + method.getElementName() + " in class "
-                    + method.getParent().getElementName());
+            Util.log(e, "Exception visiting method " + method.getElementName() + " in class " + method.getParent().getElementName());
         } catch (Exception e) {
             Util.log(e);
         } finally {
@@ -589,7 +587,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     /**
-     * visit the class itself
+     * Visits the class itself.
      */
     private void visitClassInternal(ClassNode node) {
         if (resolver != null) {
@@ -600,8 +598,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
         visitAnnotations(node);
 
-        TypeLookupResult result = null;
-        result = new TypeLookupResult(node, node, node, TypeConfidence.EXACT, scope);
+        TypeLookupResult result = new TypeLookupResult(node, node, node, TypeConfidence.EXACT, scope);
         VisitStatus status = notifyRequestor(node, requestor, result);
         switch (status) {
             case CONTINUE:
@@ -622,13 +619,18 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             visitClassReference(intr);
         }
 
-        VariableScope currentScope = scope;
+        // visit relocated @Memoized method bodies
+        for (MethodNode method : node.getMethods()) {
+            if (method.getName().startsWith("memoizedMethodPriv$")) {
+                visitClassCodeContainer(method.getCode());
+            }
+        }
 
         // visit <clinit> body because this is where static field initializers are placed
         // only visit field initializers here.
         // it is important here to get the right variable scope for the initializer.
         // need to ensure that the field is one of the enclosing nodes
-        MethodNode clinit = node.getMethod("<clinit>", new Parameter[0]);
+        MethodNode clinit = node.getMethod("<clinit>", NO_PARAMETERS);
         if (clinit != null && clinit.getCode() instanceof BlockStatement) {
             for (Statement element : (Iterable<Statement>) ((BlockStatement) clinit.getCode()).getStatements()) {
                 // only visit the static initialization of a field
@@ -639,7 +641,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         FieldNode f = ((FieldExpression) bexpr.getLeftExpression()).getField();
                         if (f != null && f.isStatic() && bexpr.getRightExpression() != null) {
                             // create the field scope so that it looks like we are visiting within the context of the field
-                            VariableScope fieldScope = new VariableScope(currentScope, f, true);
+                            VariableScope fieldScope = new VariableScope(scope, f, true);
                             scopes.push(fieldScope);
                             try {
                                 bexpr.getRightExpression().visit(this);
@@ -654,12 +656,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
         // I'm not actually sure that there will be anything here. I think these
         // will all be moved to a constructor
-        for (Statement element : (Iterable<Statement>) node.getObjectInitializerStatements()) {
+        for (Statement element : node.getObjectInitializerStatements()) {
             element.visit(this);
         }
 
         // visit synthetic no-arg constructors because that's where the non-static initializers are
-        for (ConstructorNode constructor : (Iterable<ConstructorNode>) node.getDeclaredConstructors()) {
+        for (ConstructorNode constructor : node.getDeclaredConstructors()) {
             if (constructor.isSynthetic() && (constructor.getParameters() == null || constructor.getParameters().length == 0)) {
                 visitConstructor(constructor);
             }
@@ -708,15 +710,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    /**
-     * Visit a return type
-     */
     private void visitClassReference(ClassNode node) {
-        // if this is a placeholder, then the type
-        // doesn't really exist in the code, so can ignore
-        if (node.isGenericsPlaceHolder()) {
-            return;
-        }
+//		// if this is a placeholder, then the type doesn't really exist in the code, so can ignore
+//		if (node.isGenericsPlaceHolder()) {
+//			return;
+//		}
 
         TypeLookupResult result = null;
         VariableScope scope = scopes.peek();
@@ -748,25 +746,21 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    /**
-     * @param node
-     */
     private void visitGenerics(ClassNode node) {
         if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
             for (GenericsType gen : node.getGenericsTypes()) {
+                if (gen.getType() != null && gen.getName().charAt(0) != '?') {
+                    visitClassReference(gen.getType());
+                }
                 if (gen.getLowerBound() != null) {
                     visitClassReference(gen.getLowerBound());
-                }
-                if (gen.getUpperBounds() != null) {
+                } else if (gen.getUpperBounds() != null) {
                     for (ClassNode upper : gen.getUpperBounds()) {
                         // handle enums where the upper bound is the same as the type
                         if (!upper.getName().equals(node.getName())) {
                             visitClassReference(upper);
                         }
                     }
-                }
-                if (gen.getType() != null && gen.getName().charAt(0) != '?') {
-                    visitClassReference(gen.getType());
                 }
             }
         }
@@ -829,11 +823,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     @Override
-    public void visitAnnotations(AnnotatedNode node) {
-        for (AnnotationNode annotation : (Iterable<AnnotationNode>) node.getAnnotations()) {
-            visitAnnotation(annotation);
+    public void visitPackage(PackageNode node) {
+        if (node != null) {
+            visitAnnotations(node);
+
+            TypeLookupResult result = new TypeLookupResult(null, null, node, TypeConfidence.EXACT, null);
+            VisitStatus status = notifyRequestor(node, requestor, result);
+            if (status == VisitStatus.STOP_VISIT) {
+                throw new VisitCompleted(status);
+            }
         }
-        super.visitAnnotations(node);
     }
 
     @Override
@@ -847,10 +846,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             // this will not work for static or * imports, but that's OK because
             // as of now, there is no reason to do that.
             ClassNode type = imp.getType();
-
             if (type != null) {
-                String importName = imp.getClassName().replace('$', '.')
-                        + (imp.getFieldName() != null ? "." + imp.getFieldName() : "");
+                String importName = imp.getClassName().replace('$', '.') +
+                        (imp.getFieldName() != null ? "." + imp.getFieldName() : "");
                 enclosingElement = unit.getImport(importName);
                 if (!enclosingElement.exists()) {
                     enclosingElement = oldEnclosingElement;
@@ -899,9 +897,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                                 throw e;
                             }
                         }
+                    case CANCEL_MEMBER:
                         continue;
                     case CANCEL_BRANCH:
-                    case CANCEL_MEMBER:
                         // assume that import statements are not interesting
                         return;
                     case STOP_VISIT:
@@ -919,7 +917,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         visitAnnotations(node);
         if (node.getAccessedVariable() == node) {
             // this is a declaration
-            visitClassReference(node.getType());
+            visitClassReference(node.getOriginType());
         }
         handleSimpleExpression(node);
         scopes.peek().forgetCurrentNode();
@@ -1105,7 +1103,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     /**
-     * @param text
      * @return the method name associated with this binary operator
      */
     private String findBinaryOperatorName(String text) {
@@ -1186,8 +1183,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    // Groovy 1.8+ only
-    // @Override
+    @Override
     public void visitEmptyExpression(EmptyExpression node) {
         handleSimpleExpression(node);
     }
@@ -1213,6 +1209,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     public void visitClassExpression(ClassExpression node) {
         boolean shouldContinue = handleSimpleExpression(node);
         if (shouldContinue) {
+            visitClassReference(node.getType());
             super.visitClassExpression(node);
         }
     }
@@ -1220,10 +1217,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     @Override
     public void visitClosureExpression(ClosureExpression node) {
         VariableScope parent = scopes.peek();
-        ClosureExpression enclosingClosure = parent.getEnclosingClosure();
-
         VariableScope scope = new VariableScope(parent, node, false);
         scopes.push(scope);
+
         boolean shouldContinue = handleSimpleExpression(node);
         if (shouldContinue) {
             ClassNode[] implicitParamType = findImplicitParamType(scope, node);
@@ -1259,7 +1255,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 scope.addVariable("getDelegate", declaringType, VariableScope.CLOSURE_CLASS);
             } else {
                 ClassNode thisType = scope.getThis();
-                // GRECLIPSE-1348 someone is silly enough to have a variable named "owner".
+                // GRECLIPSE-1348 someone is silly enough to have a variable named "delegate".
                 // don't override that
                 if (scope.lookupName("delegate") == null) {
                     scope.addVariable("delegate", thisType, VariableScope.CLOSURE_CLASS);
@@ -1268,7 +1264,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             }
 
             // Owner is 'this' if no enclosing closure, or 'Closure' if there is
-            if (enclosingClosure != null) {
+            if (parent.getEnclosingClosure() != null) {
                 scope.addVariable("getOwner", VariableScope.CLOSURE_CLASS, VariableScope.CLOSURE_CLASS);
                 scope.addVariable("owner", VariableScope.CLOSURE_CLASS, VariableScope.CLOSURE_CLASS);
             } else {
@@ -1280,8 +1276,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 }
                 scope.addVariable("getOwner", thisType, VariableScope.CLOSURE_CLASS);
 
-                // only do this if we are not already in a closure
-                // no need to add twice
+                // only do this if we are not already in a closure; no need to add twice
                 scope.addVariable("thisObject", VariableScope.OBJECT_CLASS_NODE, VariableScope.CLOSURE_CLASS);
                 scope.addVariable("getThisObject", VariableScope.OBJECT_CLASS_NODE, VariableScope.CLOSURE_CLASS);
                 scope.addVariable("resolveStategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS);
@@ -1309,16 +1304,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         int numParams = closure.getParameters() == null ? 0 : closure.getParameters().length;
         if (numParams == 0) {
             // implicit parameter
-            numParams++;
+            numParams += 1;
         }
         ClassNode[] allInferred = new ClassNode[numParams];
 
         CallAndType call = scope.getEnclosingMethodCallExpression();
         if (call != null) {
             String methodName = call.call.getMethodAsString();
-            ClassNode inferredType;
-
             ClassNode delegateType = call.declaringType;
+
+            ClassNode inferredType; // TODO: Could this use the Closure annotations to determine the type?
             if (dgmClosureMethods.contains(methodName)) {
                 inferredType = VariableScope.extractElementType(delegateType);
             } else if (dgmClosureIdentityMethods.contains(methodName)) {
@@ -1391,12 +1386,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     public void visitReturnStatement(ReturnStatement ret) {
         boolean shouldContinue = handleStatement(ret);
         if (shouldContinue) {
-            // special case: AnnotationConstantExpressions do not visit their type.
-            // this means that annotations in default expressions are not visited.
-            // check that here
-            if (ret.getExpression() instanceof AnnotationConstantExpression) {
-                visitClassReference(((AnnotationConstantExpression) ret.getExpression()).getType());
-            }
             super.visitReturnStatement(ret);
         }
     }
@@ -1450,9 +1439,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     @Override
     public void visitConstantExpression(ConstantExpression node) {
+        if (node instanceof AnnotationConstantExpression) {
+            visitClassReference(node.getType());
+        }
         scopes.peek().setCurrentNode(node);
         handleSimpleExpression(node);
         scopes.peek().forgetCurrentNode();
+        super.visitConstantExpression(node);
     }
 
     @Override
@@ -1618,7 +1611,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         node.getObjectExpression().visit(this);
 
         if (node.isSpreadSafe()) {
-            // most find the component type of the object expression type
+            // must find the component type of the object expression type
             ClassNode objType = primaryTypeStack.pop();
             primaryTypeStack.push(VariableScope.extractElementType(objType));
         }
@@ -1651,9 +1644,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         if (node.isSpreadSafe()) {
             exprType = createParameterizedList(exprType);
         }
-        // Check if it is generic method
+
         if (t.declaration instanceof MethodNode) {
             MethodNode methodNode = (MethodNode) t.declaration;
+            // check if declared method has generics to deal with
             boolean generic = methodNode.getReturnType().isGenericsPlaceHolder();
             GenericsType[] genericsTypes = methodNode.getGenericsTypes();
             if (generic && genericsTypes != null && genericsTypes.length > 0) {
@@ -1663,6 +1657,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 }
             }
         }
+
         handleCompleteExpression(node, exprType, t.declaringType);
         scopes.peek().forgetCurrentNode();
     }
@@ -1685,7 +1680,22 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     public void visitMethodPointerExpression(MethodPointerExpression node) {
         boolean shouldContinue = handleSimpleExpression(node);
         if (shouldContinue) {
+            completeExpressionStack.push(node);
+            primaryTypeStack.push(// method src
+                node.getExpression().getType());
+
             super.visitMethodPointerExpression(node);
+
+            // clean up the stacks
+            completeExpressionStack.pop();
+            ClassNode returnType = dependentTypeStack.pop();
+            Tuple callParamTypes = dependentDeclarationStack.pop();
+
+            // try to set Closure generics
+            if (!primaryTypeStack.isEmpty() && callParamTypes.declaration != null) {
+                GroovyUtils.updateClosureWithInferredTypes(primaryTypeStack.peek(),
+                    returnType, ((MethodNode) callParamTypes.declaration).getParameters());
+            }
         }
     }
 
@@ -1725,8 +1735,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         } else {
             // there is an overloadable method associated with this operation
             // convert to a constant expression and infer type
-            TypeLookupResult result = lookupExpressionType(new ConstantExpression(associatedMethod), primaryType, false,
-                    scopes.peek());
+            TypeLookupResult result = lookupExpressionType(
+                new ConstantExpression(associatedMethod), primaryType, false, scopes.peek());
             completeExprType = result.type;
         }
         completeExpressionStack.pop();
@@ -1759,8 +1769,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 localMapProperties.put(currentMapVariable, map);
             }
             if (enclosingAssignment != null) {
-                map.put(((ConstantExpression) node.getProperty()).getConstantName(), enclosingAssignment.getRightExpression()
-                        .getType());
+                map.put(((ConstantExpression) node.getProperty()).getConstantName(), enclosingAssignment.getRightExpression().getType());
             }
         }
         node.getProperty().visit(this);
@@ -1839,8 +1848,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     public void visitStaticMethodCallExpression(StaticMethodCallExpression node) {
         if (isPrimaryExpression(node)) {
             needToFixStaticMethodType = true;
-            visitMethodCallExpression(new MethodCallExpression(new ClassExpression(node.getOwnerType()), node.getMethod(),
-                    node.getArguments()));
+            visitMethodCallExpression(new MethodCallExpression(
+                    new ClassExpression(node.getOwnerType()), node.getMethod(), node.getArguments()));
             needToFixStaticMethodType = false;
         }
         boolean shouldContinue = handleSimpleExpression(node);
@@ -1849,9 +1858,10 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             primaryTypeStack.push(inferredStaticMethodType);
             inferredStaticMethodType = null;
         }
-        if (shouldContinue && node.getEnd() > 0) {
-            visitClassReference(node.getOwnerType());
-            super.visitStaticMethodCallExpression(node);
+        if (shouldContinue) {
+            boolean isPresentInSource = (node.getEnd() > 0);
+            if (isPresentInSource) visitClassReference(node.getOwnerType());
+            if (isPresentInSource || isEnumInit(node)) super.visitStaticMethodCallExpression(node);
         }
     }
 
@@ -1901,7 +1911,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         visitUnaryExpression(node, node.getExpression(), "+");
     }
 
-    private void visitAnnotation(AnnotationNode node) {
+    @Override
+    protected void visitAnnotation(AnnotationNode node) {
         TypeLookupResult result = null;
         VariableScope scope = scopes.peek();
         for (ITypeLookup lookup : lookups) {
@@ -1919,15 +1930,29 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
         switch (status) {
             case CONTINUE:
+                // visit annotation label
                 visitClassReference(node.getClassNode());
-                if (node.getMembers() != null) {
-                    Collection<Expression> exprs = node.getMembers().values();
-                    for (Expression expr : exprs) {
-                        if (expr instanceof AnnotationConstantExpression) {
-                            visitClassReference(((AnnotationConstantExpression) expr).getType());
-                        }
-                        expr.visit(this);
+                // visit attribute values
+                super.visitAnnotation(node);
+                // visit attribute labels
+                for (String name : node.getMembers().keySet()) {
+                    MethodNode meth = node.getClassNode().getMethod(name, Parameter.EMPTY_ARRAY);
+                    ASTNode attr; TypeLookupResult noLookup;
+                    if (meth != null) {
+                        attr = meth; // no Groovy AST node exists for name
+                        noLookup = new TypeLookupResult(meth.getReturnType(),
+                            node.getClassNode().redirect(), meth, TypeConfidence.EXACT, scope);
+                    } else {
+                        attr = new ConstantExpression(name);
+                        // this is very rough; it only works for an attribute that directly follows '('
+                        attr.setStart(node.getEnd() + 2); attr.setEnd(attr.getStart() + name.length());
+
+                        noLookup = new TypeLookupResult(ClassHelper.VOID_TYPE,
+                            node.getClassNode().redirect(), null, TypeConfidence.UNKNOWN, scope);
                     }
+                    noLookup.enclosingAnnotation = node; // set context for requestor
+                    status = notifyRequestor(attr, requestor, noLookup);
+                    if (status != VisitStatus.CONTINUE) break;
                 }
                 break;
             case CANCEL_BRANCH:
@@ -1974,7 +1999,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         boolean isStatic;
         VariableScope scope = scopes.peek();
         if (isDependentExpression(node)) {
-            // debugging help: objectExpressionType.push(objectExprType)
             primaryType = primaryTypeStack.pop();
             // implicit this expressions do not have a primary type
             if (isImplicitThis()) {
@@ -2000,8 +2024,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     private void handleCompleteExpression(Expression node, ClassNode exprType, ClassNode exprDeclaringType) {
         VariableScope scope = scopes.peek();
         scope.setPrimaryNode(false);
-        handleRequestor(node, exprDeclaringType, new TypeLookupResult(exprType, exprDeclaringType, node, TypeConfidence.EXACT,
-                scope));
+        handleRequestor(node, exprDeclaringType, new TypeLookupResult(exprType, exprDeclaringType, node, TypeConfidence.EXACT, scope));
     }
 
     private void postVisit(Expression node, ClassNode type, ClassNode declaringType, ASTNode declaration) {
@@ -2144,7 +2167,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
         // won't get here
         return false;
-
     }
 
     private VisitStatus notifyRequestor(ASTNode node, ITypeRequestor requestor, TypeLookupResult result) {
@@ -2161,30 +2183,42 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 if (constructors.size() == 0) {
                     return null;
                 }
+                String[] jdtParamTypes = method.getParameterTypes() == null ? NO_PARAMS : method.getParameterTypes();
                 outer: for (ConstructorNode constructorNode : constructors) {
-                    String[] jdtParamTypes = method.getParameterTypes() == null ? new String[0] : method.getParameterTypes();
-                    Parameter[] groovyParams = constructorNode.getParameters() == null ? new Parameter[0] : constructorNode
-                            .getParameters();
-                    // ignore the implicit constructor parameter of constructors for inner types
-                    if (groovyParams != null && groovyParams.length > 0 && groovyParams[0].getName().startsWith("$")) {
-                        Parameter[] newGroovyParams = new Parameter[groovyParams.length - 1];
-                        System.arraycopy(groovyParams, 1, newGroovyParams, 0, newGroovyParams.length);
-                        groovyParams = newGroovyParams;
+                    Parameter[] groovyParams = constructorNode.getParameters() == null ? NO_PARAMETERS : constructorNode.getParameters();
+                    if (groovyParams != null && groovyParams.length > 0) {
+                        int implicitParamCount = 0;
+                        if (method.getDeclaringType().isEnum()) implicitParamCount = 2;
+                        if (groovyParams[0].getName().startsWith("$")) implicitParamCount = 1;
+                        // ignore implicit constructor parameters of constructors for enums or inner types
+                        if (implicitParamCount > 0) {
+                            Parameter[] newGroovyParams = new Parameter[groovyParams.length - implicitParamCount];
+                            System.arraycopy(groovyParams, implicitParamCount, newGroovyParams, 0, newGroovyParams.length);
+                            groovyParams = newGroovyParams;
+                        }
                     }
                     if (groovyParams.length != jdtParamTypes.length) {
                         continue;
                     }
-                    for (int i = 0; i < groovyParams.length; i++) {
-                        String groovyClassType = groovyParams[i].getType().getName();
-                        if (!groovyClassType.startsWith("[")) {
-                            groovyClassType = Signature.createTypeSignature(groovyClassType, false);
+                    inner: for (int i = 0, n = groovyParams.length; i < n; i += 1) {
+                        String simpleGroovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), false);
+                        if (simpleGroovyClassType.equals(jdtParamTypes[i])) {
+                            continue inner;
                         }
+                        String groovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), true);
                         if (!groovyClassType.equals(jdtParamTypes[i])) {
                             continue outer;
                         }
                     }
                     return constructorNode;
                 }
+                String params = "";
+                if (jdtParamTypes.length > 0) {
+                    params = Arrays.toString(jdtParamTypes);
+                    params = params.substring(1, params.length() - 1);
+                }
+                System.err.printf("%s.findMethodNode: no match found for %s(%s)%n",
+                    getClass().getSimpleName(), clazz.getName(), params);
                 // no match found, just return the first
                 return constructors.get(0);
             } else {
@@ -2192,41 +2226,38 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 if (methods.size() == 0) {
                     return null;
                 }
-
+                String[] jdtParamTypes = method.getParameterTypes() == null ? NO_PARAMS : method.getParameterTypes();
                 outer: for (MethodNode methodNode : methods) {
-                    String[] jdtParamTypes = method.getParameterTypes() == null ? new String[0] : method.getParameterTypes();
-                    Parameter[] groovyParams = methodNode.getParameters() == null ? new Parameter[0] : methodNode.getParameters();
+                    Parameter[] groovyParams = methodNode.getParameters() == null ? NO_PARAMETERS : methodNode.getParameters();
                     if (groovyParams.length != jdtParamTypes.length) {
                         continue;
                     }
-                    inner: for (int i = 0; i < groovyParams.length; i++) {
-                        String simpleGroovyClassType = groovyParams[i].getType().getNameWithoutPackage();
-                        if (!simpleGroovyClassType.startsWith("[")) {
-                            simpleGroovyClassType = Signature.createTypeSignature(simpleGroovyClassType, false);
-                        }
+                    inner: for (int i = 0, n = groovyParams.length; i < n; i += 1) {
+                        String simpleGroovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), false);
                         if (simpleGroovyClassType.equals(jdtParamTypes[i])) {
                             continue inner;
                         }
-
-                        String groovyClassType = groovyParams[i].getType().getName();
-                        if (!groovyClassType.startsWith("[")) {
-                            groovyClassType = Signature.createTypeSignature(groovyClassType, false);
-                        }
+                        String groovyClassType = GroovyUtils.getTypeSignature(groovyParams[i].getType(), true);
                         if (!groovyClassType.equals(jdtParamTypes[i])) {
                             continue outer;
                         }
                     }
                     return methodNode;
                 }
-
+                String params = "";
+                if (jdtParamTypes.length > 0) {
+                    params = Arrays.toString(jdtParamTypes);
+                    params = params.substring(1, params.length() - 1);
+                }
+                System.err.printf("%s.findMethodNode: no match found for %s.%s(%s)%n",
+                    getClass().getSimpleName(), clazz.getName(), method.getElementName(), params);
                 // no match found, just return the first
                 return methods.get(0);
             }
         } catch (JavaModelException e) {
             Util.log(e, "Exception finding method " + method.getElementName() + " in class " + clazz.getName());
         }
-        // probably happened due to a syntax error in the code
-        // or an AST transformation
+        // probably happened due to a syntax error in the code or an AST transformation
         return null;
     }
 
@@ -2241,7 +2272,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     /**
-     * @param propType
      * @return a list parameterized by propType
      */
     private ClassNode createParameterizedList(ClassNode propType) {
@@ -2252,7 +2282,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     /**
-     * @param propType
      * @return a list parameterized by propType
      */
     private ClassNode createParameterizedRange(ClassNode propType) {
@@ -2263,7 +2292,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     /**
-     * @param propType
      * @return a list parameterized by propType
      */
     private ClassNode createParameterizedMap(ClassNode k, ClassNode v) {
@@ -2275,15 +2303,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         return map;
     }
 
-    /**
-     * Since AST transforms are turned off for reconcile operations, this method will always return null. But keep it here just in
-     * case we decide to re-enable transforms for reconciles.
-     *
-     * @param field
-     * @return
-     */
-    private boolean isLazy(FieldNode field) {
-        List<AnnotationNode> annotations = field.getAnnotations();
+    protected boolean isEnumInit(StaticMethodCallExpression node) {
+        int typeModifiers = node.getOwnerType().getModifiers();
+        return ((typeModifiers & Opcodes.ACC_ENUM) > 0 && node.getMethod().equals("$INIT"));
+    }
+
+    private boolean isLazy(FieldNode fieldNode) {
+        List<AnnotationNode> annotations = fieldNode.getAnnotations();
         for (AnnotationNode annotation : annotations) {
             if (annotation.getClassNode().getName().equals("groovy.lang.Lazy")) {
                 return true;
@@ -2292,14 +2318,27 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         return false;
     }
 
-    @Override
-    protected SourceUnit getSourceUnit() {
-        // ummm...do I *have* to implement this method??
-        return null;
+    private MethodNode getLazyMethod(String fieldName) {
+        ClassNode classNode = (ClassNode) enclosingDeclarationNode;
+        return classNode.getDeclaredMethod("get" + MetaClassHelper.capitalize(fieldName), NO_PARAMETERS);
+    }
+
+    private void setNameLocation(FieldNode fieldNode) throws JavaModelException {
+        fieldNode.setNameEnd(fieldNode.getEnd());
+        int nameLength = fieldNode.getName().length();
+        Expression init = fieldNode.getInitialExpression();
+        if (init != null && !(init instanceof EmptyExpression)) {
+            String fieldText = unit.getSource().substring(fieldNode.getStart(), init.getStart());
+            int nameStart = fieldNode.getStart() + fieldText.lastIndexOf(fieldNode.getName());
+            if (nameStart < fieldNode.getStart()) throw new JavaModelException(null, 980);
+            fieldNode.setNameEnd(nameStart + nameLength);
+        }
+        fieldNode.setNameStart(fieldNode.getNameEnd() - nameLength);
+        fieldNode.setNameEnd(fieldNode.getNameEnd() - 1); // name end index is inclusive... not sure why
     }
 
     private ClassNode findClassWithName(String simpleName) {
-        for (ClassNode clazz : (Iterable<ClassNode>) getModuleNode().getClasses()) {
+        for (ClassNode clazz : getModuleNode().getClasses()) {
             if (clazz.getNameWithoutPackage().equals(simpleName)) {
                 return clazz;
             }
@@ -2311,7 +2350,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
      * Get the module node. Potentially forces creation of a new module node if the working copy owner is non-default. This is
      * necessary because a non-default working copy owner implies that this may be a search related to refactoring and therefore,
      * the ModuleNode must be based on the most recent working copies.
-     *
      */
     private ModuleNodeInfo createModuleNode(GroovyCompilationUnit unit) {
         if (unit.getOwner() == null || unit.owner == DefaultWorkingCopyOwner.PRIMARY) {
@@ -2435,8 +2473,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 PropertyExpression prop = (PropertyExpression) complete;
                 return prop.getProperty() == node;
             } else if (complete instanceof MethodCallExpression) {
-                MethodCallExpression prop = (MethodCallExpression) complete;
-                return prop.getMethod() == node;
+                MethodCallExpression call = (MethodCallExpression) complete;
+                return call.getMethod() == node;
+            } else if (complete instanceof MethodPointerExpression) {
+                MethodPointerExpression ref = (MethodPointerExpression) complete;
+                return ref.getMethodName() == node;
             } else if (complete instanceof ImportNode) {
                 ImportNode imp = (ImportNode) complete;
                 return node == imp.getAliasExpr() || node == imp.getFieldNameExpr();
@@ -2449,8 +2490,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     /**
-     *
-     * @param node
      * @return true iff the object expression associated with node is a static reference to a class declaration
      */
     private boolean hasStaticObjectExpression(Expression node) {
@@ -2471,12 +2510,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 return prop.getObjectExpression() instanceof ClassExpression ||
                         // check to see if in a static scope
                         (prop.isImplicitThis() && scopes.peek().isStatic());
-            } else {
-                return false;
             }
-        } else {
-            return false;
         }
+        return false;
     }
 
     /**
@@ -2577,10 +2613,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
      * For testing only, ensures that after a visit is complete,
      */
     private void postVisitSanityCheck() {
-        Assert.isTrue(completeExpressionStack.isEmpty(), "Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed.");
-        Assert.isTrue(primaryTypeStack.isEmpty(), "Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed.");
-        Assert.isTrue(dependentDeclarationStack.isEmpty(), "Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed.");
-        Assert.isTrue(dependentTypeStack.isEmpty(), "Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed.");
-        Assert.isTrue(scopes.isEmpty(), "Inferencing engine in invalid state after visitor completed.  All stacks should be empty after visit completed - there are still variable scopes");
+        Assert.isTrue(completeExpressionStack.isEmpty(), String.format(SANITY_CHECK_MESSAGE, "Expression"));
+        Assert.isTrue(primaryTypeStack.isEmpty(), String.format(SANITY_CHECK_MESSAGE, "Primary type"));
+        Assert.isTrue(dependentDeclarationStack.isEmpty(), String.format(SANITY_CHECK_MESSAGE, "Declaration"));
+        Assert.isTrue(dependentTypeStack.isEmpty(), String.format(SANITY_CHECK_MESSAGE, "Dependent type"));
+        Assert.isTrue(scopes.isEmpty(), String.format(SANITY_CHECK_MESSAGE, "Variable scope"));
     }
+    private static final String SANITY_CHECK_MESSAGE =
+        "Inferencing engine in invalid state after visitor completed.  %s stack should be empty after visit completed.";
 }
