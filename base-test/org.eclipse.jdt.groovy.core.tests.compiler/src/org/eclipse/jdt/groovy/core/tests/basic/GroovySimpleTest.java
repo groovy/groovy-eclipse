@@ -310,12 +310,12 @@ public final class GroovySimpleTest extends AbstractGroovyRegressionTest {
             "class Foo {}",
         },
         "----------\n" +
-        "1. ERROR in a"+File.separator+"Foo.groovy (at line 3)\n" +
+        "1. ERROR in a\\Foo.groovy (at line 3)\n" +
         "\tclass Foo {}\n" +
         "\t^^^^^^^^^^^^\n" +
         "Groovy:Invalid duplicate class definition of class a.Foo : The source a"+File.separator+"Foo.groovy contains at least two definitions of the class a.Foo.\n" +
         "----------\n" +
-        "2. ERROR in a"+File.separator+"Foo.groovy (at line 3)\n" +
+        "2. ERROR in a\\Foo.groovy (at line 3)\n" +
         "\tclass Foo {}\n" +
         "\t      ^^^\n" +
         "The type Foo is already defined\n" +
