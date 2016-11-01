@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import java.util.Iterator;
@@ -44,17 +43,17 @@ public class CategorySearchTests extends AbstractGroovySearchTest {
     public CategorySearchTests(String name) {
         super(name);
     }
-    
+
     public static Test suite() {
         return buildTestSuite(CategorySearchTests.class);
     }
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
     }
 
-    private static String CATEGORY_DEFN = 
+    private static String CATEGORY_DEFN =
         "class Cat {\n" +
         "  static String doNothing(CatTarget e, msg) {\n" +
         "    print msg\n" +
@@ -68,8 +67,8 @@ public class CategorySearchTests extends AbstractGroovySearchTest {
         "    print msg\n" +
         "  }\n" +
         "}";
-    
-    private static String SIMPLE_CATEGORY = 
+
+    private static String SIMPLE_CATEGORY =
         "use (Cat) {\n" +
         "  new CatTarget().doNothing 'jello'\n" +
         "  def x = new CatTarget()\n" +
@@ -90,7 +89,7 @@ public class CategorySearchTests extends AbstractGroovySearchTest {
         "  Cat.doNothing x, 'jello'\n" +
         "}";
 
-    private static String CATEGORY_ASSIGNED = 
+    private static String CATEGORY_ASSIGNED =
         "def y = Cat\n" +
         "use (y) {\n" +
         "  new CatTarget().doNothing 'jello'\n" +
@@ -101,7 +100,7 @@ public class CategorySearchTests extends AbstractGroovySearchTest {
         "  y.doNothing x, 'jello'\n" +
         "}";
 
-    private static String CATEGORY_MULTIPLE_OUTER = 
+    private static String CATEGORY_MULTIPLE_OUTER =
         "use (Cat) { use (Cat2) {\n" +
         "  new CatTarget().doNothing 'jello'\n" +
         "  def x = new CatTarget()\n" +
@@ -111,7 +110,7 @@ public class CategorySearchTests extends AbstractGroovySearchTest {
         "  Cat.doNothing x, 'jello'\n" +
         "} }";
 
-    private static String CATEGORY_MULTIPLE_INNER = 
+    private static String CATEGORY_MULTIPLE_INNER =
         "use (Cat2) { use (Cat) {\n" +
         "  new CatTarget().doNothing 'jello'\n" +
         "  def x = new CatTarget()\n" +
@@ -120,42 +119,42 @@ public class CategorySearchTests extends AbstractGroovySearchTest {
         "  x.doNothing 'jello'\n" +
         "  Cat.doNothing x, 'jello'\n" +
         "} }";
-    
 
-    private static String NO_CATEGORY = 
+
+    private static String NO_CATEGORY =
         "use (Cat) {\n" +
         "}\n" +
         "new CatTarget().doNothing 'jello'\n";
-    
-    
+
+
     public void testCategorySearch1() throws Exception {
         doCategorySearchTest(SIMPLE_CATEGORY, 4);
     }
-    
+
     public void testCategorySearch2() throws Exception {
         doCategorySearchTest(CATEGORY_WITH_SUBTYPE, 4);
     }
-    
+
     public void testCategorySearch3() throws Exception {
         doCategorySearchTest(CATEGORY_ASSIGNED, 4);
     }
-    
+
     public void testCategorySearch4() throws Exception {
         doCategorySearchTest(CATEGORY_MULTIPLE_INNER, 4);
     }
-    
+
     public void testCategorySearch5() throws Exception {
         doCategorySearchTest(CATEGORY_MULTIPLE_OUTER, 4);
     }
-    
+
     public void testCategorySearch6() throws Exception {
         doCategorySearchTest(NO_CATEGORY, 0);
     }
-    
+
     void doCategorySearchTest(String contents, int numMatches) throws JavaModelException {
         checkMatches(findMatches(contents), numMatches, contents);
     }
-    
+
     List<SearchMatch> findMatches(String contents) throws JavaModelException {
         GroovyCompilationUnit catUnit = createUnit("Cat", CATEGORY_DEFN);
         GroovyCompilationUnit unit = createUnit("Other", contents);
@@ -168,18 +167,18 @@ public class CategorySearchTests extends AbstractGroovySearchTest {
         ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(match, pattern, searchRequestor);
         TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(match);
         visitor.visitCompilationUnit(typeRequestor);
-        
+
         System.out.println("Matches found:\n" + searchRequestor.printMatches());
-        
+
         return searchRequestor.getMatches();
     }
-    
+
     void checkMatches(List<SearchMatch> matches, int numExpected, String contents) {
         assertEquals("Wrong number matches found:\n" + searchRequestor.printMatches(), numExpected, matches.size());
         if (numExpected == 0) {
             return;
         }
-        
+
         Pattern p = Pattern.compile("doNothing");
         Matcher m = p.matcher(contents);
         Iterator<SearchMatch> matchIter = matches.iterator();
@@ -189,5 +188,5 @@ public class CategorySearchTests extends AbstractGroovySearchTest {
             assertEquals("Wrong length for " + MockPossibleMatch.printMatch(match), "doNothing".length(), match.getLength());
         }
     }
-    
+
 }

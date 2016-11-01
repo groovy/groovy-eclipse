@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import java.util.Hashtable;
 
 import junit.framework.TestCase;
 
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.test.TestProject;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
@@ -60,8 +59,6 @@ public abstract class AbstractNewGroovyWizardTest extends TestCase {
         fProject = new TestProject("testWizards");
         fJProject = fProject.getJavaProject();
         fSourceFolder = fProject.getSourceFolder();
-
-        GroovyRuntime.addGroovyRuntime(fJProject.getProject());
     }
 
     @Override

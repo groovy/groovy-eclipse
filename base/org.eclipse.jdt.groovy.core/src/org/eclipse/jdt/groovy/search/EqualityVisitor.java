@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,61 +21,55 @@ import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.control.SourceUnit;
 
 /**
  * Tests to see if {@link #nodeToLookFor} exists as a sub node in the {@link ASTNode} that is passed in to {@link #doVisit(ASTNode)}
- * 
+ *
  * @author Andrew Eisenberg
  * @created Apr 26, 2011
  */
 public class EqualityVisitor extends ClassCodeVisitorSupport {
-	private final ASTNode nodeToLookFor;
+    private final ASTNode nodeToLookFor;
 
-	private boolean nodeFound = false;
+    private boolean nodeFound = false;
 
-	public EqualityVisitor(ASTNode nodeToLookFor) {
-		this.nodeToLookFor = nodeToLookFor;
-	}
+    public EqualityVisitor(ASTNode nodeToLookFor) {
+        this.nodeToLookFor = nodeToLookFor;
+    }
 
-	public boolean doVisit(ASTNode toVisit) {
-		toVisit.visit(this);
-		return nodeFound;
-	}
+    public boolean doVisit(ASTNode toVisit) {
+        toVisit.visit(this);
+        return nodeFound;
+    }
 
-	@Override
-	protected SourceUnit getSourceUnit() {
-		return null;
-	}
+    @Override
+    public void visitFieldExpression(FieldExpression expression) {
+        if (nodeToLookFor == expression) {
+            nodeFound = true;
+        } else {
+            super.visitFieldExpression(expression);
+        }
+    }
 
-	@Override
-	public void visitFieldExpression(FieldExpression expression) {
-		if (nodeToLookFor == expression) {
-			nodeFound = true;
-		} else {
-			super.visitFieldExpression(expression);
-		}
-	}
+    @Override
+    public void visitVariableExpression(VariableExpression expression) {
+        if (nodeToLookFor == expression) {
+            nodeFound = true;
+        } else {
+            super.visitVariableExpression(expression);
+        }
+    }
 
-	@Override
-	public void visitVariableExpression(VariableExpression expression) {
-		if (nodeToLookFor == expression) {
-			nodeFound = true;
-		} else {
-			super.visitVariableExpression(expression);
-		}
-	}
+    @Override
+    public void visitConstantExpression(ConstantExpression expression) {
+        if (nodeToLookFor == expression) {
+            nodeFound = true;
+        } else {
+            super.visitConstantExpression(expression);
+        }
+    }
 
-	@Override
-	public void visitConstantExpression(ConstantExpression expression) {
-		if (nodeToLookFor == expression) {
-			nodeFound = true;
-		} else {
-			super.visitConstantExpression(expression);
-		}
-	}
-
-	public static boolean checkForAssignment(ASTNode node, BinaryExpression binaryExpr) {
-		return binaryExpr != null && new EqualityVisitor(node).doVisit(binaryExpr.getLeftExpression());
-	}
+    public static boolean checkForAssignment(ASTNode node, BinaryExpression binaryExpr) {
+        return binaryExpr != null && new EqualityVisitor(node).doVisit(binaryExpr.getLeftExpression());
+    }
 }

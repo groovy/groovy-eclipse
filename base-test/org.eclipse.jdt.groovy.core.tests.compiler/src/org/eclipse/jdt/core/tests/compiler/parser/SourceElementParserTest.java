@@ -44,7 +44,7 @@ public SourceElementParserTest(String testName, char[] source) {
 	this.source = source;
 }
 static {
-//	TESTS_NUMBERS = new int[] { 99662 };	
+//	TESTS_NUMBERS = new int[] { 99662 };
 }
 public static Test suite() {
 	return buildAllCompliancesTestSuite(SourceElementParserTest.class);
@@ -67,7 +67,7 @@ public void acceptConstructorReference(char[] typeName, int argCount, int source
 			buffer.append(typeName).append("(").append(argCount).append(")\n");
 			currentType.setDefaultConstructor(buffer.toString());
 		}
-		return;		
+		return;
 	}
 	if (currentMethod.isConstructor()) {
 		StringBuffer buffer = new StringBuffer();
@@ -78,7 +78,7 @@ public void acceptConstructorReference(char[] typeName, int argCount, int source
 			StringBuffer buffer = new StringBuffer();
 			buffer.append(typeName).append("(").append(argCount).append(")\n");
 			currentType.setDefaultConstructor(buffer.toString());
-		}		
+		}
 	}
 }
 /**
@@ -89,27 +89,27 @@ public void acceptFieldReference(char[] fieldName, int sourcePosition) {}
  * acceptImport method comment. 3.7 variant
  */
 public void acceptImport(
-	int declarationStart, 
-	int declarationEnd, int nameStart, int nameEnd, 
-	char[][] tokens, 
+	int declarationStart,
+	int declarationEnd, int nameStart, int nameEnd,
+	char[][] tokens,
 	boolean onDemand,
 	int modifiers) {
 
 	addImport(
-		new SourceImport(declarationStart, declarationEnd, CharOperation.concatWith(tokens, '.'), onDemand, modifiers, source)); 
+		new SourceImport(declarationStart, declarationEnd, CharOperation.concatWith(tokens, '.'), onDemand, modifiers, source));
 }
 /**
  * acceptImport method comment. 3.6 variant
  */
 public void acceptImport(
-	int declarationStart, 
-	int declarationEnd,  
-	char[][] tokens, 
+	int declarationStart,
+	int declarationEnd,
+	char[][] tokens,
 	boolean onDemand,
 	int modifiers) {
 
 	addImport(
-		new SourceImport(declarationStart, declarationEnd, CharOperation.concatWith(tokens, '.'), onDemand, modifiers, source)); 
+		new SourceImport(declarationStart, declarationEnd, CharOperation.concatWith(tokens, '.'), onDemand, modifiers, source));
 }
 /**
  * acceptLineSeparatorPositions method comment.
@@ -124,8 +124,8 @@ public void acceptMethodReference(char[] methodName, int argCount, int sourcePos
  */
 public void acceptPackage(ImportReference importReference) {
 
-	currentPackage = 
-		new SourcePackage(importReference.declarationSourceStart, importReference.declarationSourceEnd, CharOperation.concatWith(importReference.getImportName(), '.'), source); 
+	currentPackage =
+		new SourcePackage(importReference.declarationSourceStart, importReference.declarationSourceEnd, CharOperation.concatWith(importReference.getImportName(), '.'), source);
 }
 /**
  * acceptProblem method comment.
@@ -154,11 +154,11 @@ protected void addImport(SourceImport sourceImport) {
 
 	if (numberOfImports == currentImports.length) {
 		System.arraycopy(
-			currentImports, 
-			0, 
-			currentImports = new SourceImport[numberOfImports * 2], 
-			0, 
-			numberOfImports); 
+			currentImports,
+			0,
+			currentImports = new SourceImport[numberOfImports * 2],
+			0,
+			numberOfImports);
 	}
 	currentImports[numberOfImports++] = sourceImport;
 }
@@ -169,13 +169,13 @@ public void dietParse(String s, String testName, boolean recordLocalDeclaration)
 
 	this.source = s.toCharArray();
 	reset();
-	SourceElementParser parser = 
+	SourceElementParser parser =
 		new SourceElementParser(
-			this, 
-			new DefaultProblemFactory(Locale.getDefault()), 
+			this,
+			new DefaultProblemFactory(Locale.getDefault()),
 			new CompilerOptions(getCompilerOptions()),
 			recordLocalDeclaration/*don't record local declarations*/,
-			true/*optimize string literals*/); 
+			true/*optimize string literals*/);
 
 	ICompilationUnit sourceUnit = new CompilationUnit(source, testName, null);
 
@@ -184,7 +184,7 @@ public void dietParse(String s, String testName, boolean recordLocalDeclaration)
 }
 public static String displayModifiers(int modifiers) {
 	StringBuffer buffer = new StringBuffer();
-	
+
 	if ((modifiers & ClassFileConstants.AccPublic) != 0)
 		buffer.append("public ");
 	if ((modifiers & ClassFileConstants.AccProtected) != 0)
@@ -206,34 +206,34 @@ public static String displayModifiers(int modifiers) {
 public void enterType(TypeInfo typeInfo) {
 	if (currentType == null) {
 		// top level type
-		currentType = 
+		currentType =
 			new SourceType(
-				null, 
-				typeInfo.declarationStart, 
-				typeInfo.modifiers, 
-				typeInfo.name, 
-				typeInfo.nameSourceStart, 
-				typeInfo.nameSourceEnd, 
-				typeInfo.superclass, 
-				typeInfo.superinterfaces, 
-				source); 
+				null,
+				typeInfo.declarationStart,
+				typeInfo.modifiers,
+				typeInfo.name,
+				typeInfo.nameSourceStart,
+				typeInfo.nameSourceEnd,
+				typeInfo.superclass,
+				typeInfo.superinterfaces,
+				source);
 		currentType.setPackage(currentPackage);
 		setImports();
 	} else {
 		// member type
 		SourceType memberType;
 		currentType.addMemberType(
-			memberType = 
+			memberType =
 				new SourceType(
-					currentType.getName(), 
-					typeInfo.declarationStart, 
-					typeInfo.modifiers, 
-					typeInfo.name, 
-					typeInfo.nameSourceStart, 
-					typeInfo.nameSourceEnd, 
-					typeInfo.superclass, 
-					typeInfo.superinterfaces, 
-					source)); 
+					currentType.getName(),
+					typeInfo.declarationStart,
+					typeInfo.modifiers,
+					typeInfo.name,
+					typeInfo.nameSourceStart,
+					typeInfo.nameSourceEnd,
+					typeInfo.superclass,
+					typeInfo.superinterfaces,
+					source));
 		memberType.parent = currentType;
 		currentType = memberType;
 	}
@@ -251,22 +251,22 @@ public void enterConstructor(MethodInfo methodInfo) {
 }
 public void enterField(FieldInfo fieldInfo) {
 	currentType.addField(
-		currentField = 
+		currentField =
 			new SourceField(
-				fieldInfo.declarationStart, 
-				fieldInfo.modifiers, 
-				fieldInfo.type, 
-				fieldInfo.name, 
-				fieldInfo.nameSourceStart, 
-				fieldInfo.nameSourceEnd, 
-				source)); 
+				fieldInfo.declarationStart,
+				fieldInfo.modifiers,
+				fieldInfo.type,
+				fieldInfo.name,
+				fieldInfo.nameSourceStart,
+				fieldInfo.nameSourceEnd,
+				source));
 
 }
 public void enterInitializer(int declarationSourceStart, int modifiers) {
 	currentType.addField(
 		currentInitializer = new SourceInitializer(
-			declarationSourceStart, 
-			modifiers)); 
+			declarationSourceStart,
+			modifiers));
 }
 public void exitInitializer(int declarationSourceEnd) {
 	currentInitializer.setDeclarationSourceEnd(declarationSourceEnd);
@@ -276,19 +276,19 @@ public void enterMethod(MethodInfo methodInfo) {
 }
 protected void enterAbtractMethod(MethodInfo methodInfo) {
 	currentType.addMethod(
-		currentMethod = 
+		currentMethod =
 			new SourceMethod(
-				methodInfo.declarationStart, 
-				methodInfo.modifiers, 
-				methodInfo.returnType, 
+				methodInfo.declarationStart,
+				methodInfo.modifiers,
+				methodInfo.returnType,
 				methodInfo.name, // null for constructors
-				methodInfo.nameSourceStart, 
-				methodInfo.nameSourceEnd, 
-				methodInfo.parameterTypes, 
-				methodInfo.parameterNames, 
+				methodInfo.nameSourceStart,
+				methodInfo.nameSourceEnd,
+				methodInfo.parameterTypes,
+				methodInfo.parameterNames,
 				methodInfo.exceptionTypes,
-				source)); 
-	
+				source));
+
 	if (methodInfo.typeParameters != null) {
 		for (int i = 0, length = methodInfo.typeParameters.length; i < length; i++) {
 			TypeParameterInfo typeParameterInfo = methodInfo.typeParameters[i];
@@ -333,12 +333,12 @@ public void fullParse(String s, String testName) {
 public void fullParse(String s, String testName, boolean recordLocalDeclaration) {
 	this.source = s.toCharArray();
 	reset();
-	SourceElementParser parser = 
+	SourceElementParser parser =
 		new SourceElementParser(
-			this, new DefaultProblemFactory(Locale.getDefault()), 
+			this, new DefaultProblemFactory(Locale.getDefault()),
 			new CompilerOptions(getCompilerOptions()),
 			recordLocalDeclaration/*don't record local declarations*/,
-			true/*optimize string literals*/); 
+			true/*optimize string literals*/);
 
 	ICompilationUnit sourceUnit = new CompilationUnit(source, testName, null);
 
@@ -357,17 +357,17 @@ public void setImports() {
 		return;
 	if (numberOfImports != currentImports.length) {
 		System.arraycopy(
-			currentImports, 
-			0, 
-			currentImports = new SourceImport[numberOfImports], 
-			0, 
-			numberOfImports); 
+			currentImports,
+			0,
+			currentImports = new SourceImport[numberOfImports],
+			0,
+			numberOfImports);
 	}
 	currentType.setImports(currentImports);
 }
 public void test01() {
 
-	String s = 
+	String s =
 		"package a;\n"
 			+ "import java.lang.*;\n"
 			+ "import java.util.*;\n"
@@ -381,9 +381,9 @@ public void test01() {
 			+ "\n"
 			+ "int bar" + "\\" + "u0065(){\n"
 			+ "void truc(){\n"
-			+ "}\n"; 
+			+ "}\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"package a;\n"
 			+ "import java.lang.*;\n"
 			+ "import java.util.*;\n"
@@ -394,20 +394,20 @@ public void test01() {
 			+ "\tvoid foo() {}\n"
 			+ "\tint bare() {}\n"
 			+ "\tvoid truc() {}\n"
-			+ "}"; 
+			+ "}";
 
 	String testName = "test01: full parse";
 	fullParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		52, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		52,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		178, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		178,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
@@ -435,45 +435,45 @@ public void test01() {
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method bare", "bar" + "\\" + "u0065", methods[1].getActualName());
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test02() {
 
 	String s =
 			"/** javadoc comment */\n"
 			+ "public class X {\n"
-			+ "}\n"; 
+			+ "}\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 			"public class X {\n"
 			+ "\tjava.lang.Object(0)\n"
-			+ "}"; 
+			+ "}";
 
 	String testName = "test02: full parse";
 	fullParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		40, 
+		"Invalid class declarationSourceEnd ",
+		40,
 		currentType.getDeclarationSourceEnd());
 
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test03() {
 
-	String s = 
+	String s =
 		"package a;\n"
 			+ "import java.lang.*;\n"
 			+ "import java.util.*;\n"
@@ -487,9 +487,9 @@ public void test03() {
 			+ "\n"
 			+ "int bar" + "\\" + "u0065(){\n"
 			+ "void truc(){\n"
-			+ "}\n"; 
+			+ "}\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"package a;\n"
 			+ "import java.lang.*;\n"
 			+ "import java.util.*;\n"
@@ -499,20 +499,20 @@ public void test03() {
 			+ "\tvoid foo() {}\n"
 			+ "\tint bare() {}\n"
 			+ "\tvoid truc() {}\n"
-			+ "}"; 
+			+ "}";
 
 	String testName = "test03: diet parse";
 	dietParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		52, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		52,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		178, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		178,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
@@ -540,11 +540,11 @@ public void test03() {
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method bare", "bar" + "\\" + "u0065", methods[1].getActualName());
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test04() {
 
@@ -566,9 +566,9 @@ public void test04() {
 			+ "												\n"
 			+ "	void bar(){									\n"
 			+ "	void truc(){								\n"
-			+ "}											\n"; 
+			+ "}											\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"package a;\n"
 			+ "import java.lang.*;\n"
 			+ "import java.util.*;\n"
@@ -579,19 +579,19 @@ public void test04() {
 			+ "\tvoid foo() {}\n"
 			+ "\tvoid bar() {}\n"
 			+ "\tvoid truc() {}\n"
-			+ "}"; 
+			+ "}";
 	String testName = "test04: full parse";
 	fullParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		89, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		89,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		372, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		372,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
@@ -619,11 +619,11 @@ public void test04() {
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test05() {
 
@@ -645,9 +645,9 @@ public void test05() {
 			+ "												\n"
 			+ "	void bar(){									\n"
 			+ "	void truc(){								\n"
-			+ "}											\n"; 
+			+ "}											\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"package a;\n"
 			+ "import java.lang.*;\n"
 			+ "import java.util.*;\n"
@@ -657,20 +657,20 @@ public void test05() {
 			+ "\tvoid foo() {}\n"
 			+ "\tvoid bar() {}\n"
 			+ "\tvoid truc() {}\n"
-			+ "}"; 
+			+ "}";
 
 	String testName = "test05: diet parse";
 	dietParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		89, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		89,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		372, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		372,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
@@ -698,15 +698,15 @@ public void test05() {
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test06() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "import java.lang.*;							\n"
 			+ "import java.util.*;							\n"
@@ -722,9 +722,9 @@ public void test06() {
 			+ "												\n"
 			+ "	void bar(){									\n"
 			+ "	void truc(){								\n"
-			+ "}											\n"; 
+			+ "}											\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 			"package a;\n"
 			+ "import java.lang.*;\n"
 			+ "import java.util.*;\n"
@@ -737,20 +737,20 @@ public void test06() {
 			+ "\tvoid foo() {}\n"
 			+ "\tvoid bar() {}\n"
 			+ "\tvoid truc() {}\n"
-			+ "}"; 
-			
+			+ "}";
+
 	String testName = "test06: diet parse";
 	dietParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		89, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		89,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		347, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		347,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
@@ -789,15 +789,15 @@ public void test06() {
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
 
 	assertEquals(" Invalid actual name for method truc", "truc", methods[2].getActualName());
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test07() {
 
-	String s = 
+	String s =
 		"package a;											\n"
 			+ "import java.lang.*;							\n"
 			+ "import java.util.*;							\n"
@@ -813,9 +813,9 @@ public void test07() {
 			+ "												\n"
 			+ "	void bar(){									\n"
 			+ "	void truc(){								\n"
-			+ "}											\n"; 
+			+ "}											\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 			"package a;\n"
 			+ "import java.lang.*;\n"
 			+ "import java.util.*;\n"
@@ -829,20 +829,20 @@ public void test07() {
 			+ "\tvoid foo() {}\n"
 			+ "\tvoid bar() {}\n"
 			+ "\tvoid truc() {}\n"
-			+ "}"; 
-			
+			+ "}";
+
 	String testName = "test07: full parse";
 	fullParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		89, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		89,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		347, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		347,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
@@ -881,15 +881,15 @@ public void test07() {
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
 
 	assertEquals(" Invalid actual name for method truc", "truc", methods[2].getActualName());
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test08() {
 
-	String s = 
+	String s =
 		"public class X {									\n"
 			+ "	void foo() {								\n"
 			+ "		System.out.println();					\n"
@@ -900,27 +900,27 @@ public void test08() {
 			+ " }											\n"
 			+ "	void truc(){								\n"
 			+ " }											\n"
-			+ "}											\n"; 
+			+ "}											\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 			"public class X {\n"
 			+ "\tvoid foo() {}\n"
 			+ "\tvoid bar() {}\n"
 			+ "\tvoid truc() {}\n"
 			+ "}";
-				
+
 	String testName = "test08: diet parse";
 	dietParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		198, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		198,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
@@ -943,15 +943,15 @@ public void test08() {
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
 
 	assertEquals(" Invalid actual name for method truc", "truc", methods[2].getActualName());
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test09() {
 
-	String s = 
+	String s =
 		"public class X {									\n"
 			+ "	void foo() {								\n"
 			+ "		System.out.println();					\n"
@@ -962,29 +962,28 @@ public void test09() {
 			+ " }											\n"
 			+ "	void truc(){								\n"
 			+ " }											\n"
-			+ "}											\n"; 
+			+ "}											\n";
 
- 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 			"public class X {\n"
 			+ "\tjava.lang.Object(0)\n"
 			+ "\tvoid foo() {}\n"
 			+ "\tvoid bar() {}\n"
 			+ "\tvoid truc() {}\n"
 			+ "}";
-				
+
 	String testName = "test09: full parse";
 	fullParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		198, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		198,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
@@ -1006,17 +1005,17 @@ public void test09() {
 
 
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
-	
+
 	assertEquals(" Invalid actual name for method truc", "truc", methods[2].getActualName());
 
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test10() {
 
-	String s = 
+	String s =
 		"public class X {									\n"
 			+ "	void foo() {								\n"
 			+ "		System.out.println();					\n"
@@ -1031,27 +1030,27 @@ public void test10() {
 			+ " }											\n"
 			+ "	void truc(){								\n"
 			+ " }											\n"
-			+ "}											\n"; 
+			+ "}											\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 			"public class X {\n"
 			+ "\tvoid foo() {}\n"
 			+ "\tvoid bar() {}\n"
 			+ "\tvoid truc() {}\n"
 			+ "}";
-				
+
 	String testName = "test10: diet parse";
 	dietParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		415, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		415,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
@@ -1072,17 +1071,17 @@ public void test10() {
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
-	
+
 	assertEquals(" Invalid actual name for method truc", "truc", methods[2].getActualName());
 
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test11() {
 
-	String s = 
+	String s =
 		"public class X {									\n"
 			+ "	void foo() {								\n"
 			+ "		System.out.println();					\n"
@@ -1097,10 +1096,10 @@ public void test11() {
 			+ " }											\n"
 			+ "	void truc(){								\n"
 			+ " }											\n"
-			+ "}											\n"; 
+			+ "}											\n";
 
-	String expectedUnitToString = 
-			 "public class X {\n"
+	String expectedUnitToString =
+			"public class X {\n"
 			+ "\tint[][][] j;\n"
 			+ "\tint[][] k;\n"
 			+ "\tjava.lang.Object(0)\n"
@@ -1109,19 +1108,19 @@ public void test11() {
 			+ "\tvoid bar() {}\n"
 			+ "\tvoid truc() {}\n"
 			+ "}";
-			
+
 	String testName = "test11: full parse";
 	fullParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		449, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		449,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
@@ -1151,41 +1150,41 @@ public void test11() {
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method baz", "baz", methods[1].getActualName());
-	
+
 	assertEquals(" Invalid actual name for method bar", "bar", methods[2].getActualName());
 
 	assertEquals(" Invalid actual name for method truc", "truc", methods[3].getActualName());
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test12() {
 
-	String s = 
+	String s =
 			"import java.util.Enumeration;\n"
 			+ "import java.util.Hashtable;"
 			+ "\n"
 			+ "/** comment */\n"
 			+ "public class A2 {\n"
-			+ "	void foo() {\n"	
+			+ "	void foo() {\n"
 			+ "		System.out.println();\n"
 			+ " 	void baz(){}\n"
-			+ "	/** comment\n"                            
-			+ "  *\n"                              
-			+ "  *\n"                                       
-			+ "  */\n"                                       
+			+ "	/** comment\n"
+			+ "  *\n"
+			+ "  *\n"
+			+ "  */\n"
 			+ "  static { } // comment\n"
 			+ "  \n"
-			+ "\n"                                        
+			+ "\n"
 			+ "	void bar(){\n"
 			+ " }\n"
 			+ "	void truc(){\n"
 			+ " }\n"
-			+ "}\n";							
+			+ "}\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 			"import java.util.Enumeration;\n"
 			+ "import java.util.Hashtable;\n"
 			+ "public class A2 {\n"
@@ -1196,24 +1195,24 @@ public void test12() {
 			+ "\tvoid bar() {}\n"
 			+ "\tvoid truc() {}\n"
 			+ "}";
-				
+
 	String testName = "test12: full parse";
 	fullParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		58, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		58,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		231, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		231,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
 	assertEquals("Invalid fields length ", 1, fields.length);
-	
+
 	assertEquals("Invalid declaration source start for initializer", 145, fields[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for initializer", 181, fields[0].getDeclarationSourceEnd());
 
@@ -1236,36 +1235,36 @@ public void test12() {
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method baz", "baz", methods[1].getActualName());
-	
+
 	assertEquals(" Invalid actual name for method bar", "bar", methods[2].getActualName());
 
 	assertEquals(" Invalid actual name for method truc", "truc", methods[3].getActualName());
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test13() {
 
-	String s = 
+	String s =
 			"import java.util.Enumeration;\n"
 			+ "import java.util.Hashtable;\n"
 			+ "\n"
 			+ "public class A2 {\n"
-			+ "	void foo() {\n"	
+			+ "	void foo() {\n"
 			+ "		System.out.println();\n"
 			+ " 	void baz(){}\n"
 			+ "  static { }\n"
 			+ "  \n"
-			+ "\n"                                        
+			+ "\n"
 			+ "	void bar(){\n"
 			+ " }\n"
 			+ "	void truc(){\n"
 			+ " }\n"
-			+ "}\n";							
+			+ "}\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 			"import java.util.Enumeration;\n"
 			+ "import java.util.Hashtable;\n"
 			+ "public class A2 {\n"
@@ -1280,14 +1279,14 @@ public void test13() {
 	fullParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		59, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		59,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		180, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		180,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
@@ -1316,36 +1315,36 @@ public void test13() {
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method baz", "baz", methods[1].getActualName());
-	
+
 	assertEquals(" Invalid actual name for method bar", "bar", methods[2].getActualName());
 
 	assertEquals(" Invalid actual name for method truc", "truc", methods[3].getActualName());
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test14() {
 
-	String s = 
+	String s =
 			"import java.util.Enumeration;\n"
 			+ "import java.util.Hashtable;\n"
 			+ "\n"
 			+ "public class A2 {\n"
-			+ "	void foo() {\n"	
+			+ "	void foo() {\n"
 			+ "		System.out.println();\n"
 			+ " 	void baz(){}\n"
 			+ "  static { }\n"
 			+ " }\n"
-			+ "\n"                                        
+			+ "\n"
 			+ "	void bar(){\n"
 			+ " }\n"
 			+ "	void truc(){\n"
 			+ " }\n"
-			+ "}\n";							
+			+ "}\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 			"import java.util.Enumeration;\n"
 			+ "import java.util.Hashtable;\n"
 			+ "public class A2 {\n"
@@ -1353,19 +1352,19 @@ public void test14() {
 			+ "\tvoid bar() {}\n"
 			+ "\tvoid truc() {}\n"
 			+ "}";
-				
+
 	String testName = "test14: diet parse";
 	dietParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		59, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		59,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		180, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		180,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
@@ -1384,19 +1383,19 @@ public void test14() {
 	assertEquals("Invalid declaration source end for method truc", 178, methods[2].getDeclarationSourceEnd());
 
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
-	
+
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
 
 	assertEquals(" Invalid actual name for method truc", "truc", methods[2].getActualName());
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test15() {
 
-	String s = 
+	String s =
 			"public class X {								\n"
 			+ " class Y {									\n"
 			+ "	  void foo() {								\n"
@@ -1407,9 +1406,9 @@ public void test15() {
 			+ "	void bar(){									\n"
 			+ "	void baz(){									\n"
 			+ " }											\n";
-						
 
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 			"public class X {\n"
 			+ "\tclass Y {\n"
 			+ "\t\tpublic int h;\n"
@@ -1421,19 +1420,19 @@ public void test15() {
 			+ "\t}\n"
 			+ "\tjava.lang.Object(0)\n"
 			+ "}";
-				
+
 	String testName = "test15: full parse";
 	fullParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		227, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		227,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
@@ -1454,11 +1453,11 @@ public void test15() {
 
 	assertEquals("Invalid declaration source start for field i", 140, fields[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field i", 163, fields[1].getDeclarationSourceEnd());
-	
+
 	methods = members[0].getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals(" invalid methods length ", 3, methods.length);
-		
+
 	assertEquals("Invalid declaration source start for method foo", 48, methods[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method foo", 103, methods[0].getDeclarationSourceEnd());
 
@@ -1476,23 +1475,23 @@ public void test15() {
 
 	SourceType member = members[0];
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		26, 
-		member.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		26,
+		member.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		227, 
-		member.getDeclarationSourceEnd()); 
-	
+		"Invalid class declarationSourceEnd ",
+		227,
+		member.getDeclarationSourceEnd());
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test16() {
 
-	String s = 
+	String s =
 			"public class X {								\n"
 			+ " class Y {									\n"
 			+ "	  void foo() {								\n"
@@ -1503,9 +1502,9 @@ public void test16() {
 			+ "	void bar(){									\n"
 			+ "	void baz(){									\n"
 			+ " }											\n";
-						
 
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 			"public class X {\n"
 			+ "\tclass Y {\n"
 			+ "\t\tpublic int h;\n"
@@ -1515,19 +1514,19 @@ public void test16() {
 			+ "\t\tvoid baz() {}\n"
 			+ "\t}\n"
 			+ "}";
-				
+
 	String testName = "test16: diet parse";
 	dietParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		227, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		227,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
@@ -1548,11 +1547,11 @@ public void test16() {
 
 	assertEquals("Invalid declaration source start for field i", 140, fields[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field i", 163, fields[1].getDeclarationSourceEnd());
-	
+
 	methods = members[0].getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals(" invalid methods length ", 3, methods.length);
-		
+
 	assertEquals("Invalid declaration source start for method foo", 48, methods[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method foo", 103, methods[0].getDeclarationSourceEnd());
 
@@ -1570,23 +1569,23 @@ public void test16() {
 
 	SourceType member = members[0];
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		26, 
-		member.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		26,
+		member.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		227, 
-		member.getDeclarationSourceEnd()); 
-	
+		"Invalid class declarationSourceEnd ",
+		227,
+		member.getDeclarationSourceEnd());
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test17() {
 
-	String s = 
+	String s =
 			"public class X {								\n"
 			+ " class Y {									\n"
 			+ "	  void foo() {								\n"
@@ -1598,9 +1597,9 @@ public void test17() {
 			+ "	void bar(){									\n"
 			+ "	void baz(){									\n"
 			+ " }											\n";
-						
 
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 			"public class X {\n"
 			+ "\tclass Y {\n"
 			+ "\t\tjava.lang.Object(0)\n"
@@ -1612,19 +1611,19 @@ public void test17() {
 			+ "\tvoid bar() {}\n"
 			+ "\tvoid baz() {}\n"
 			+ "}";
-				
+
 	String testName = "test17: full parse";
 	fullParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		241, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		241,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
@@ -1635,7 +1634,7 @@ public void test17() {
 
 	assertEquals("Invalid declaration source start for field i", 154, fields[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field i", 177, fields[1].getDeclarationSourceEnd());
-	
+
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals(" invalid fields length ", 2, methods.length);
@@ -1645,7 +1644,7 @@ public void test17() {
 
 	assertEquals("Invalid declaration source start for method baz", 207, methods[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method baz", 229, methods[1].getDeclarationSourceEnd());
-	
+
 	assertEquals(" Invalid actual name for method bar", "bar", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method baz", "baz", methods[1].getActualName());
@@ -1656,11 +1655,11 @@ public void test17() {
 
 	fields = members[0].getFields();
 	assertTrue(" invalid fields ", fields == null);
-	
+
 	methods = members[0].getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals(" invalid methods length ", 1, methods.length);
-		
+
 	assertEquals("Invalid declaration source start for method foo", 48, methods[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method foo", 103, methods[0].getDeclarationSourceEnd());
 
@@ -1668,23 +1667,23 @@ public void test17() {
 
 	SourceType member = members[0];
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		26, 
-		member.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		26,
+		member.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		117, 
-		member.getDeclarationSourceEnd()); 
-	
+		"Invalid class declarationSourceEnd ",
+		117,
+		member.getDeclarationSourceEnd());
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test18() {
 
-	String s = 
+	String s =
 			"public class X {								\n"
 			+ " class Y {									\n"
 			+ "	  void foo() {								\n"
@@ -1696,9 +1695,9 @@ public void test18() {
 			+ "	void bar(){									\n"
 			+ "	void baz(){									\n"
 			+ " }											\n";
-						
 
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 			"public class X {\n"
 			+ "\tclass Y {\n"
 			+ "\t\tvoid foo() {}\n"
@@ -1708,19 +1707,19 @@ public void test18() {
 			+ "\tvoid bar() {}\n"
 			+ "\tvoid baz() {}\n"
 			+ "}";
-				
+
 	String testName = "test18: diet parse";
 	dietParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		241, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		241,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
@@ -1731,7 +1730,7 @@ public void test18() {
 
 	assertEquals("Invalid declaration source start for field i", 154, fields[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field i", 177, fields[1].getDeclarationSourceEnd());
-	
+
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals(" invalid fields length ", 2, methods.length);
@@ -1741,7 +1740,7 @@ public void test18() {
 
 	assertEquals("Invalid declaration source start for method baz", 207, methods[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method baz", 229, methods[1].getDeclarationSourceEnd());
-	
+
 	assertEquals(" Invalid actual name for method bar", "bar", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method baz", "baz", methods[1].getActualName());
@@ -1752,11 +1751,11 @@ public void test18() {
 
 	fields = members[0].getFields();
 	assertTrue(" invalid fields ", fields == null);
-	
+
 	methods = members[0].getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals(" invalid methods length ", 1, methods.length);
-		
+
 	assertEquals("Invalid declaration source start for method foo", 48, methods[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method foo", 103, methods[0].getDeclarationSourceEnd());
 
@@ -1764,23 +1763,23 @@ public void test18() {
 
 	SourceType member = members[0];
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		26, 
-		member.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		26,
+		member.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		117, 
-		member.getDeclarationSourceEnd()); 
-	
+		"Invalid class declarationSourceEnd ",
+		117,
+		member.getDeclarationSourceEnd());
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test19() {
 
-	String s = 
+	String s =
 			"public class X {								\n"
 			+ "	void foo() {								\n"
 			+ "		System.out.println();					\n"
@@ -1791,9 +1790,9 @@ public void test19() {
 			+ "	void baz(){									\n"
 			+ " }											\n"
 			+ " int y;										\n";
-						
 
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 			"public class X {\n"
 			+ "\t{}\n"
 			+ "\tint y;\n"
@@ -1802,19 +1801,19 @@ public void test19() {
 			+ "\tvoid bar() {}\n"
 			+ "\tvoid baz() {}\n"
 			+ "}";
-			
+
 	String testName = "test19: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		197, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		197,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
@@ -1822,7 +1821,7 @@ public void test19() {
 
 	assertEquals("Invalid declaration source start for initializer", 90, fields[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for initializer", 90, fields[0].getDeclarationSourceEnd());
-	
+
 	assertEquals("Invalid declaration source start for field y", 181, fields[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field y", 186, fields[1].getDeclarationSourceEnd());
 
@@ -1838,7 +1837,7 @@ public void test19() {
 
 	assertEquals("Invalid declaration source start for method baz", 145, methods[2].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method baz", 167, methods[2].getDeclarationSourceEnd());
-	
+
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
@@ -1849,13 +1848,13 @@ public void test19() {
 	assertTrue(" invalid members ", members == null);
 
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test20() {
 
-	String s = 
+	String s =
 			"public class X {								\n"
 			+ "	void foo() {								\n"
 			+ "		System.out.println();					\n"
@@ -1866,9 +1865,9 @@ public void test20() {
 			+ "	void baz(){									\n"
 			+ " }											\n"
 			+ " int y;										\n";
-						
 
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 			"public class X {\n"
 			+ "\t{}\n"
 			+ "\tpublic int x;\n"
@@ -1878,19 +1877,19 @@ public void test20() {
 			+ "\tvoid bar() {}\n"
 			+ "\tvoid baz() {}\n"
 			+ "}";
-			
+
 	String testName = "test20: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		201, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		201,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
@@ -1898,7 +1897,7 @@ public void test20() {
 
 	assertEquals("Invalid declaration source start for initializer", 90, fields[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for initializer", 90, fields[0].getDeclarationSourceEnd());
-	
+
 	assertEquals("Invalid declaration source start for field x", 126, fields[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field x", 138, fields[1].getDeclarationSourceEnd());
 
@@ -1917,7 +1916,7 @@ public void test20() {
 
 	assertEquals("Invalid declaration source start for method baz", 149, methods[2].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method baz", 171, methods[2].getDeclarationSourceEnd());
-	
+
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
@@ -1928,13 +1927,13 @@ public void test20() {
 	assertTrue(" invalid members ", members == null);
 
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test21() {
 
-	String s = 
+	String s =
 			"public class X {								\n"
 			+ "	void foo() {								\n"
 			+ "		System.out.println();					\n"
@@ -1945,9 +1944,9 @@ public void test21() {
 			+ "	void baz(){									\n"
 			+ " }											\n"
 			+ " int y;										\n";
-						
 
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 			"public class X {\n"
 			+ "\t{}\n"
 			+ "\tpublic int x;\n"
@@ -1956,19 +1955,19 @@ public void test21() {
 			+ "\tvoid bar() {}\n"
 			+ "\tvoid baz() {}\n"
 			+ "}";
-			
+
 	String testName = "test21: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		201, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		201,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
@@ -1976,7 +1975,7 @@ public void test21() {
 
 	assertEquals("Invalid declaration source start for initializer", 90, fields[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for initializer", 90, fields[0].getDeclarationSourceEnd());
-	
+
 	assertEquals("Invalid declaration source start for field x", 126, fields[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field x", 138, fields[1].getDeclarationSourceEnd());
 
@@ -1995,7 +1994,7 @@ public void test21() {
 
 	assertEquals("Invalid declaration source start for method baz", 149, methods[2].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method baz", 171, methods[2].getDeclarationSourceEnd());
-	
+
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
@@ -2006,36 +2005,36 @@ public void test21() {
 	assertTrue(" invalid members ", members == null);
 
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test22() {
 
-	String s = 
+	String s =
 			"public class X extends {						\n"
 			+ "	void foo() {								\n"
 			+ " }											\n"
-			+ "}											\n";						
+			+ "}											\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 			"public class X {\n"
 			+ "\tjava.lang.Object(0)\n"
 			+ "\tvoid foo() {}\n"
 			+ "}";
-			
+
 	String testName = "test22: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		67, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		67,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
@@ -2053,38 +2052,38 @@ public void test22() {
 	assertTrue(" invalid members ", members == null);
 
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test23() {
 
-	String s = 
+	String s =
 			"public class X extends Thread {				\n"
 			+ "	void foo() throws							\n"
 			+ "	void bar() 									\n"
 			+ " }											\n"
 			+ "}											\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 			"public class X extends Thread {\n"
 			+ "\tThread(0)\n"
 			+ "\tvoid foo() {}\n"
 			+ "\tvoid bar() {}\n"
 			+ "}";
-			
+
 	String testName = "test23: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		98, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		98,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
@@ -2107,38 +2106,38 @@ public void test23() {
 	assertTrue(" invalid members ", members == null);
 
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test24() {
 
-	String s = 
+	String s =
 			"public class X implements 						\n"
 			+ "	void foo() 									\n"
 			+ "	void bar() 									\n"
 			+ " }											\n"
 			+ "}											\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 			"public class X {\n"
 			+ "\tjava.lang.Object(0)\n"
 			+ "\tvoid foo() {}\n"
 			+ "\tvoid bar() {}\n"
 			+ "}";
-			
+
 	String testName = "test24: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		91, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		91,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
@@ -2161,42 +2160,42 @@ public void test24() {
 	assertTrue(" invalid members ", members == null);
 
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test25() {
 
-	String s = 
+	String s =
 			"public class X implements Y,					\n"
 			+ "	void foo() 									\n"
 			+ "	void bar() 									\n"
 			+ " }											\n"
 			+ "}											\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 			"public class X implements Y, {\n"
 			+ "\tjava.lang.Object(0)\n"
 			+ "\tvoid foo() {}\n"
 			+ "\tvoid bar() {}\n"
 			+ "}";
-			
+
 	String testName = "test25: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		92, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		92,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("contains superinterfaces " , currentType.getInterfaceNames() != null);
 	assertEquals(" invalid superinterfaces length ", 1, currentType.getInterfaceNames().length);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
 
@@ -2218,9 +2217,9 @@ public void test25() {
 	assertTrue(" invalid members ", members == null);
 
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test26() {
 
@@ -2230,8 +2229,8 @@ public void test26() {
 			+ "	 void bar() 								\n"
 			+ " }											\n"
 			+ "}											\n";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 			"public class X {\n"
 			+ "\tclass Y {\n"
 			+ "\t\tjava.lang.Object(0)\n"
@@ -2239,22 +2238,22 @@ public void test26() {
 			+ "\t}\n"
 			+ "\tjava.lang.Object(0)\n"
 			+ "}";
-			
+
 	String testName = "test26: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		102, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		102,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
 
@@ -2264,21 +2263,21 @@ public void test26() {
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members != null);
 	assertEquals(" contains one member ", 1, members.length);
-	
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		34, 
-		members[0].getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		90, 
-		members[0].getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		34,
+		members[0].getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		90,
+		members[0].getDeclarationSourceEnd());
 
 	methods = members[0].getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals(" contains one method ", 1, methods.length);
-	
+
 	assertEquals("Invalid declaration source start for method bar", 56, methods[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method bar", 77, methods[0].getDeclarationSourceEnd());
 
@@ -2288,21 +2287,21 @@ public void test26() {
 	assertTrue(" invalid members ", members == null);
 
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test27() {
 
-	String s = 
+	String s =
 		"public class X 		 						\n"
 		+ " fieldX;										\n"
 		+ " class Y { 									\n"
 		+ "	 void bar() 								\n"
 		+ " }											\n"
 		+ "}											\n";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 			"public class X {\n"
 			+ "\tclass Y {\n"
 			+ "\t\tjava.lang.Object(0)\n"
@@ -2310,22 +2309,22 @@ public void test27() {
 			+ "\t}\n"
 			+ "\tjava.lang.Object(0)\n"
 			+ "}";
-			
+
 	String testName = "test27: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		113, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		113,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
 
@@ -2335,21 +2334,21 @@ public void test27() {
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members != null);
 	assertEquals(" contains one member ", 1, members.length);
-	
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		45, 
-		members[0].getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		101, 
-		members[0].getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		45,
+		members[0].getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		101,
+		members[0].getDeclarationSourceEnd());
 
 	methods = members[0].getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals(" contains one method ", 1, methods.length);
-	
+
 	assertEquals("Invalid declaration source start for method bar", 67, methods[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method bar", 88, methods[0].getDeclarationSourceEnd());
 
@@ -2359,42 +2358,42 @@ public void test27() {
 	assertTrue(" invalid members ", members == null);
 
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test28() {
 
-	String s = 
+	String s =
 			"public class X 		 						\n"
 			+ " fieldX;										\n"
 			+ " class Y  									\n"
 			+ " }											\n"
 			+ "}											\n";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 			"public class X {\n"
 			+ "\tclass Y {\n"
 			+ "\t\tjava.lang.Object(0)\n"
 			+ "\t}\n"
 			+ "\tjava.lang.Object(0)\n"
 			+ "}";
-			
+
 	String testName = "test28: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		78, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		78,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
 
@@ -2404,27 +2403,27 @@ public void test28() {
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members != null);
 	assertEquals(" contains one member ", 1, members.length);
-	
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		45, 
-		members[0].getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		65, 
-		members[0].getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		45,
+		members[0].getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		65,
+		members[0].getDeclarationSourceEnd());
 
 	methods = members[0].getMethods();
 	assertTrue(" invalid methods ", methods == null);
-	
+
 	members = members[0].getMemberTypes();
 	assertTrue(" invalid members ", members == null);
 
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test29() {
 
@@ -2433,22 +2432,22 @@ public void test29() {
 		"import java.lang.*;							\n" +
 		"import java.util.*;							\n" +
 		"												\n" +
-		"public class X {								\n" +							
+		"public class X {								\n" +
 		"	void foo() {								\n" +
-		"		System.out.println();					\n" +		
+		"		System.out.println();					\n" +
 		"												\n" +
 		"		class L extends {						\n" +
 		"			public int l;						\n" +
 		"			void baz(){}						\n" +
 		"		}										\n" +
 		"												\n" +
-		"	public int h;								\n" +					
+		"	public int h;								\n" +
 		"												\n" +
-		"	void bar(){									\n" +				
+		"	void bar(){									\n" +
 		"	void truc(){								\n" +
 		"}	\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"package a;\n"
 		+ "import java.lang.*;\n"
 		+ "import java.util.*;\n"
@@ -2459,22 +2458,22 @@ public void test29() {
 		+ "\tvoid bar() {}\n"
 		+ "\tvoid truc() {}\n"
 		+ "}";
-			
+
 	String testName = "test29: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		88, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		357, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		88,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		357,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
 	assertEquals("contains one field ", 1, fields.length);
@@ -2500,14 +2499,14 @@ public void test29() {
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
 
 	assertEquals(" Invalid actual name for method truc", "truc", methods[2].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test30() {
 
@@ -2516,22 +2515,22 @@ public void test30() {
 		"import java.lang.*;							\n" +
 		"import java.util.*;							\n" +
 		"												\n" +
-		"public class X {								\n" +							
+		"public class X {								\n" +
 		"	void foo() {								\n" +
-		"		System.out.println();					\n" +		
+		"		System.out.println();					\n" +
 		"												\n" +
 		"		class L extends {						\n" +
 		"			public int l;						\n" +
 		"			void baz(){}						\n" +
 		"		}										\n" +
 		"												\n" +
-		"	public int h;								\n" +					
+		"	public int h;								\n" +
 		"												\n" +
-		"	void bar(){									\n" +				
+		"	void bar(){									\n" +
 		"	void truc(){								\n" +
 		"}	\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"package a;\n"
 		+ "import java.lang.*;\n"
 		+ "import java.util.*;\n"
@@ -2541,22 +2540,22 @@ public void test30() {
 		+ "\tvoid bar() {}\n"
 		+ "\tvoid truc() {}\n"
 		+ "}";
-			
+
 	String testName = "test30: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		88, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		357, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		88,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		357,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
 	assertEquals("contains one field ", 1, fields.length);
@@ -2582,14 +2581,14 @@ public void test30() {
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
 
 	assertEquals(" Invalid actual name for method truc", "truc", methods[2].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test31() {
 
@@ -2598,21 +2597,21 @@ public void test31() {
 		"import java.lang.*;							\n" +
 		"import java.util.*;							\n" +
 		"												\n" +
-		"public class X {								\n" +							
+		"public class X {								\n" +
 		"	void foo() {								\n" +
-		"		System.out.println();					\n" +		
+		"		System.out.println();					\n" +
 		"												\n" +
 		"		new X(){								\n" +
 		"			void baz() {}						\n" +
 		"		}.baz();								\n" +
 		"												\n" +
-		"	public int h;								\n" +					
+		"	public int h;								\n" +
 		"												\n" +
-		"	void bar(){									\n" +				
+		"	void bar(){									\n" +
 		"	void truc(){								\n" +
 		"}	\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"package a;\n"
 		+ "import java.lang.*;\n"
 		+ "import java.util.*;\n"
@@ -2623,22 +2622,22 @@ public void test31() {
 		+ "\tvoid bar() {}\n"
 		+ "\tvoid truc() {}\n"
 		+ "}";
-			
+
 	String testName = "test31: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		89, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		334, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		89,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		334,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
 	assertEquals("contains one field ", 1, fields.length);
@@ -2664,14 +2663,14 @@ public void test31() {
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
 
 	assertEquals(" Invalid actual name for method truc", "truc", methods[2].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test32() {
 
@@ -2680,21 +2679,21 @@ public void test32() {
 		"import java.lang.*;							\n" +
 		"import java.util.*;							\n" +
 		"												\n" +
-		"public class X {								\n" +							
+		"public class X {								\n" +
 		"	void foo() {								\n" +
-		"		System.out.println();					\n" +		
+		"		System.out.println();					\n" +
 		"												\n" +
 		"		new X(){								\n" +
 		"			void baz() {}						\n" +
 		"												\n" +
-		"		public int h;							\n" +					
+		"		public int h;							\n" +
 		"												\n" +
-		"		void bar(){								\n" +				
+		"		void bar(){								\n" +
 		"		void truc(){							\n" +
 		"}	\n";
 
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"package a;\n"
 		+ "import java.lang.*;\n"
 		+ "import java.util.*;\n"
@@ -2702,22 +2701,22 @@ public void test32() {
 		+ "\tjava.lang.Object(0)\n"
 		+ "\tvoid foo() {}\n"
 		+ "}";
-			
+
 	String testName = "test32: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		89, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		315, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		89,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		315,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
 
@@ -2732,11 +2731,11 @@ public void test32() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test33() {
 
@@ -2745,43 +2744,43 @@ public void test33() {
 		"import java.lang.*;							\n" +
 		"import java.util.*;							\n" +
 		"												\n" +
-		"public class X {								\n" +							
+		"public class X {								\n" +
 		"	void foo() {								\n" +
-		"		System.out.println();					\n" +		
+		"		System.out.println();					\n" +
 		"												\n" +
 		"		new X(){								\n" +
 		"			void baz() {}						\n" +
 		"												\n" +
-		"		public int h;							\n" +					
+		"		public int h;							\n" +
 		"												\n" +
-		"		void bar(){								\n" +				
+		"		void bar(){								\n" +
 		"		void truc(){							\n" +
 		"}	\n";
 
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"package a;\n"
 		+ "import java.lang.*;\n"
 		+ "import java.util.*;\n"
 		+ "public class X {\n"
 		+ "\tvoid foo() {}\n"
 		+ "}";
-			
+
 	String testName = "test33: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		89, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		315, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		89,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		315,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
 
@@ -2796,11 +2795,11 @@ public void test33() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test34() {
 
@@ -2809,21 +2808,21 @@ public void test34() {
 		"import java.lang.*;							\n" +
 		"import java.util.*;							\n" +
 		"												\n" +
-		"public class X {								\n" +							
+		"public class X {								\n" +
 		"	void foo() {								\n" +
-		"		System.out.println();					\n" +		
+		"		System.out.println();					\n" +
 		"												\n" +
 		"		new X(){								\n" +
 		"			void baz() 							\n" +
 		"	    }										\n" +
 		"	}											\n" +
-		"	public int h;								\n" +					
+		"	public int h;								\n" +
 		"												\n" +
-		"	void bar(){									\n" +				
+		"	void bar(){									\n" +
 		"	void truc(){								\n" +
 		"}												\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"package a;\n"
 		+ "import java.lang.*;\n"
 		+ "import java.util.*;\n"
@@ -2834,22 +2833,22 @@ public void test34() {
 		+ "\tvoid bar() {}\n"
 		+ "\tvoid truc() {}\n"
 		+ "}";
-			
+
 	String testName = "test34: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		88, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		342, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		88,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		342,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
 	assertEquals("contains one field ", 1, fields.length);
@@ -2875,38 +2874,38 @@ public void test34() {
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
 
 	assertEquals(" Invalid actual name for method truc", "truc", methods[2].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test35() {
 
 	String s =
 		"package a;							\n"	+
-		"import java.lang.*;				\n"	+				
-		"import java.util.*;				\n"	+				
-		"									\n"	+				
-		"public class X {					\n"	+				
-		"	void foo() {					\n"	+				
-		"		System.out.println();		\n"	+				
-		"									\n"	+			
+		"import java.lang.*;				\n"	+
+		"import java.util.*;				\n"	+
+		"									\n"	+
+		"public class X {					\n"	+
+		"	void foo() {					\n"	+
+		"		System.out.println();		\n"	+
+		"									\n"	+
 		"		class L extends {			\n"	+
-		"			public int l;			\n"	+				
-		"			void baz(){}			\n"	+				
-		"		}							\n"	+				
-		"									\n"	+				
-		"		int h;						\n"	+				
-		"									\n"	+				
-		"	void bar(){						\n"	+				
-		"	void truc(){					\n"	+				
+		"			public int l;			\n"	+
+		"			void baz(){}			\n"	+
+		"		}							\n"	+
+		"									\n"	+
+		"		int h;						\n"	+
+		"									\n"	+
+		"	void bar(){						\n"	+
+		"	void truc(){					\n"	+
 		"}									\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"package a;\n"
 		+ "import java.lang.*;\n"
 		+ "import java.util.*;\n"
@@ -2916,22 +2915,22 @@ public void test35() {
 		+ "\tvoid bar() {}\n"
 		+ "\tvoid truc() {}\n"
 		+ "}";
-			
+
 	String testName = "test35: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		76, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		309, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		76,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		309,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
 
@@ -2953,38 +2952,38 @@ public void test35() {
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
 
 	assertEquals(" Invalid actual name for method truc", "truc", methods[2].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test36() {
 
 	String s =
 		"package a;							\n"	+
-		"import java.lang.*;				\n"	+				
-		"import java.util.*;				\n"	+				
-		"									\n"	+				
-		"public class X {					\n"	+				
-		"	void foo() {					\n"	+				
-		"		System.out.println();		\n"	+				
-		"									\n"	+			
+		"import java.lang.*;				\n"	+
+		"import java.util.*;				\n"	+
+		"									\n"	+
+		"public class X {					\n"	+
+		"	void foo() {					\n"	+
+		"		System.out.println();		\n"	+
+		"									\n"	+
 		"		class L extends {			\n"	+
-		"			public int l;			\n"	+				
-		"			void baz(){}			\n"	+				
-		"		}							\n"	+				
-		"									\n"	+				
-		"		int h;						\n"	+				
-		"									\n"	+				
-		"	void bar(){						\n"	+				
-		"	void truc(){					\n"	+				
+		"			public int l;			\n"	+
+		"			void baz(){}			\n"	+
+		"		}							\n"	+
+		"									\n"	+
+		"		int h;						\n"	+
+		"									\n"	+
+		"	void bar(){						\n"	+
+		"	void truc(){					\n"	+
 		"}									\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"package a;\n"
 		+ "import java.lang.*;\n"
 		+ "import java.util.*;\n"
@@ -2993,22 +2992,22 @@ public void test36() {
 		+ "\tvoid bar() {}\n"
 		+ "\tvoid truc() {}\n"
 		+ "}";
-			
+
 	String testName = "test36: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		76, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		309, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		76,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		309,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
 
@@ -3030,20 +3029,20 @@ public void test36() {
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
 
 	assertEquals(" Invalid actual name for method truc", "truc", methods[2].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test37() {
 
 	String s =
 		"public class X {		 	\n" +
-		"  int x;			 		\n"	+						
+		"  int x;			 		\n"	+
 		"							\n" +
 		"  int foo(){ }				\n" +
 		"							\n" +
@@ -3051,7 +3050,7 @@ public void test37() {
 		"    int y;					\n" +
 		"}							\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tclass Y {\n"
 		+ "\t\tint y;\n"
@@ -3061,22 +3060,22 @@ public void test37() {
 		+ "\tjava.lang.Object(0)\n"
 		+ "\tint foo() {}\n"
 		+ "}";
-			
+
 	String testName = "test37: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		112, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		112,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
 	assertEquals("contains one field ", 1, fields.length);
@@ -3092,20 +3091,20 @@ public void test37() {
 	assertEquals("Invalid declaration source end for method foo", 57, methods[0].getDeclarationSourceEnd());
 
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members != null);
 	assertEquals("contains one member ", 1, members.length);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		73, 
-		members[0].getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		73,
+		members[0].getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		104, 
-		members[0].getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		104,
+		members[0].getDeclarationSourceEnd());
 
 	fields = members[0].getFields();
 	assertTrue(" invalid fields ", fields != null);
@@ -3113,20 +3112,20 @@ public void test37() {
 
 	assertEquals("Invalid declaration source start for field y", 92, fields[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field y", 97, fields[0].getDeclarationSourceEnd());
-	
+
 	methods = members[0].getMethods();
 	assertTrue(" invalid methods ", methods == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test38() {
 
 	String s =
 		"public class X {		 	\n" +
-		"  int x;			 		\n"	+						
+		"  int x;			 		\n"	+
 		"							\n" +
 		"  int foo(){ }				\n" +
 		"							\n" +
@@ -3134,7 +3133,7 @@ public void test38() {
 		"    int y;					\n" +
 		"}							\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tclass Y {\n"
 		+ "\t\tint y;\n"
@@ -3142,22 +3141,22 @@ public void test38() {
 		+ "\tint x;\n"
 		+ "\tint foo() {}\n"
 		+ "}";
-			
+
 	String testName = "test38: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		112, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		112,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
 	assertEquals("contains one field ", 1, fields.length);
@@ -3173,20 +3172,20 @@ public void test38() {
 	assertEquals("Invalid declaration source end for method foo", 57, methods[0].getDeclarationSourceEnd());
 
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members != null);
 	assertEquals("contains one member ", 1, members.length);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		73, 
-		members[0].getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		73,
+		members[0].getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		104, 
-		members[0].getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		104,
+		members[0].getDeclarationSourceEnd());
 
 	fields = members[0].getFields();
 	assertTrue(" invalid fields ", fields != null);
@@ -3194,20 +3193,20 @@ public void test38() {
 
 	assertEquals("Invalid declaration source start for field y", 92, fields[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field y", 97, fields[0].getDeclarationSourceEnd());
-	
+
 	methods = members[0].getMethods();
 	assertTrue(" invalid methods ", methods == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test39() {
 
 	String s =
 		"public class X {		 	\n" +
-		"  int x;			 		\n"	+						
+		"  int x;			 		\n"	+
 		"							\n" +
 		"  int foo(){ }				\n" +
 		"							\n" +
@@ -3215,7 +3214,7 @@ public void test39() {
 		"}							\n" +
 		"  int y;					\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tclass Y {\n"
 		+ "\t\tjava.lang.Object(0)\n"
@@ -3225,22 +3224,22 @@ public void test39() {
 		+ "\tjava.lang.Object(0)\n"
 		+ "\tint foo() {}\n"
 		+ "}";
-			
+
 	String testName = "test39: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		109, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		109,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
 	assertEquals("contains one field ", 2, fields.length);
@@ -3250,7 +3249,7 @@ public void test39() {
 
 	assertEquals("Invalid declaration source start for field y", 98, fields[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field y", 103, fields[1].getDeclarationSourceEnd());
-	
+
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals(" contains one methods ", 1, methods.length);
@@ -3259,37 +3258,37 @@ public void test39() {
 	assertEquals("Invalid declaration source end for method foo", 57, methods[0].getDeclarationSourceEnd());
 
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members != null);
 	assertEquals("contains one member ", 1, members.length);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		73, 
-		members[0].getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		73,
+		members[0].getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		87, 
-		members[0].getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		87,
+		members[0].getDeclarationSourceEnd());
 
 	fields = members[0].getFields();
 	assertTrue(" invalid fields ", fields == null);
 
 	methods = members[0].getMethods();
 	assertTrue(" invalid methods ", methods == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test40() {
 
 	String s =
 		"public class X {		 	\n" +
-		"  int x;			 		\n"	+						
+		"  int x;			 		\n"	+
 		"							\n" +
 		"  int foo(){ }				\n" +
 		"							\n" +
@@ -3297,7 +3296,7 @@ public void test40() {
 		"}							\n" +
 		"  int y;					\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tclass Y {\n"
 		+ "\t}\n"
@@ -3305,22 +3304,22 @@ public void test40() {
 		+ "\tint y;\n"
 		+ "\tint foo() {}\n"
 		+ "}";
-			
+
 	String testName = "test40: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		109, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		109,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
 	assertEquals("contains one field ", 2, fields.length);
@@ -3330,7 +3329,7 @@ public void test40() {
 
 	assertEquals("Invalid declaration source start for field y", 98, fields[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field y", 103, fields[1].getDeclarationSourceEnd());
-	
+
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals(" contains one methods ", 1, methods.length);
@@ -3339,31 +3338,31 @@ public void test40() {
 	assertEquals("Invalid declaration source end for method foo", 57, methods[0].getDeclarationSourceEnd());
 
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members != null);
 	assertEquals("contains one member ", 1, members.length);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		73, 
-		members[0].getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		73,
+		members[0].getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		87, 
-		members[0].getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		87,
+		members[0].getDeclarationSourceEnd());
 
 	fields = members[0].getFields();
 	assertTrue(" invalid fields ", fields == null);
 
 	methods = members[0].getMethods();
 	assertTrue(" invalid methods ", methods == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test41() {
 
@@ -3373,32 +3372,32 @@ public void test41() {
 		"	static void foo() {			\n"+
 		"		X x;					\n"+
 		"		x = new X(23);			\n"+
-		"		System.out.println();	\n"+			
+		"		System.out.println();	\n"+
 		"								\n"+
 		"}								\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tjava.lang.Object(0)\n"
 		+ "\tvoid hello() {}\n"
 		+ "\tstatic void foo() {}\n"
 		+ "}";
-			
+
 	String testName = "test41: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		139, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		139,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
 
@@ -3415,42 +3414,42 @@ public void test41() {
 	assertEquals(" Invalid actual name for method hello", "hell" + "\\" + "u006f", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method foo", "foo", methods[1].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test42() {
 
 	String s =
-		"public class X {		\n" +						
+		"public class X {		\n" +
 		"	int x				\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tint x;\n"
 		+ "\tjava.lang.Object(0)\n"
 		+ "}";
-			
+
 	String testName = "test42: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		29, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		29,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
 	assertEquals(" contains one field", 1, fields.length);
@@ -3463,38 +3462,38 @@ public void test42() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test43() {
 
 	String s =
-		"public class X {		\n" +						
+		"public class X {		\n" +
 		"	int x				\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tint x;\n"
 		+ "}";
-			
+
 	String testName = "test43: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		29, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		29,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
 	assertEquals(" contains one field", 1, fields.length);
@@ -3507,40 +3506,40 @@ public void test43() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test44() {
 
 	String s =
-		"public class X {		\n" +						
+		"public class X {		\n" +
 		"	int x, y			\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tint x;\n"
 		+ "\tint y;\n"
 		+ "\tjava.lang.Object(0)\n"
 		+ "}";
-			
+
 	String testName = "test44: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		31, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		31,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
 	assertEquals(" contains one field", 2, fields.length);
@@ -3556,39 +3555,39 @@ public void test44() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test45() {
 
 	String s =
-		"public class X {		\n" +						
+		"public class X {		\n" +
 		"	int x, y			\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tint x;\n"
 		+ "\tint y;\n"
 		+ "}";
-			
+
 	String testName = "test45: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		31, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		31,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
 	assertEquals(" contains one field", 2, fields.length);
@@ -3604,39 +3603,39 @@ public void test45() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test46() {
 
 	String s =
-		"public class X {		\n" +						
+		"public class X {		\n" +
 		"	String s = \"		\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tString s;\n"
 		+ "\tjava.lang.Object(0)\n"
 		+ "}";
-			
+
 	String testName = "test46: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		34, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		34,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
 	assertEquals(" contains one field", 1, fields.length);
@@ -3649,38 +3648,38 @@ public void test46() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test47() {
 
 	String s =
-		"public class X {		\n" +						
+		"public class X {		\n" +
 		"	String s = \"		\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tString s;\n"
 		+ "}";
-			
+
 	String testName = "test47: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		34, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		34,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("doesn't contain superinterfaces " , currentType.getInterfaceNames() == null);
-	
+
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields != null);
 	assertEquals(" contains one field", 1, fields.length);
@@ -3693,38 +3692,38 @@ public void test47() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test48() {
 
 	String s =
-		"public class X implements Y, 		\n" +						
+		"public class X implements Y, 		\n" +
 		"	String s = \"					\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X implements Y, String, {\n"
 		+ "\tjava.lang.Object(0)\n"
 		+ "}";
-			
+
 	String testName = "test48: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		50, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		50,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has 2 superinterfaces " , currentType.getInterfaceNames() != null);
-	assertEquals("2 superinterfaces " , 2, currentType.getInterfaceNames().length);	
+	assertEquals("2 superinterfaces " , 2, currentType.getInterfaceNames().length);
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
@@ -3734,37 +3733,37 @@ public void test48() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test49() {
 
 	String s =
-		"public class X implements Y, 		\n" +						
+		"public class X implements Y, 		\n" +
 		"	String s = \"					\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X implements Y, String, {\n"
 		+ "}";
-			
+
 	String testName = "test49: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		50, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		50,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has 2 superinterfaces " , currentType.getInterfaceNames() != null);
-	assertEquals("2 superinterfaces " , 2, currentType.getInterfaceNames().length);	
+	assertEquals("2 superinterfaces " , 2, currentType.getInterfaceNames().length);
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
@@ -3774,37 +3773,37 @@ public void test49() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test50() {
 
 	String s =
 		"public class X implements 		\n"+
-		"int x							\n"+	
+		"int x							\n"+
 		"}								\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tint x;\n"
 		+ "\tjava.lang.Object(0)\n"
 		+ "}";
-			
+
 	String testName = "test50: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		42, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		42,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
 
@@ -3820,36 +3819,36 @@ public void test50() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test51() {
 
 	String s =
 		"public class X implements 		\n"+
-		"int x							\n"+	
+		"int x							\n"+
 		"}								\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tint x;\n"
 		+ "}";
-			
+
 	String testName = "test51: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		42, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		42,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
 
@@ -3865,37 +3864,37 @@ public void test51() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test52() {
 
 	String s =
 		"public class X public int foo(int bar(static String s";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tstatic String s;\n"
 		+ "\tjava.lang.Object(0)\n"
 		+ "\tpublic int foo() {}\n"
 		+ "\tint bar() {}\n"
 		+ "}";
-			
+
 	String testName = "test52: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		52, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		52,
+		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
 
@@ -3921,35 +3920,35 @@ public void test52() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test53() {
 
 	String s =
 		"public class X public int foo(int x, int bar public String s;";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tpublic String s;\n"
 		+ "\tjava.lang.Object(0)\n"
 		+ "\tpublic int foo(int x, int bar, ) {}\n"
 		+ "}";
-			
+
 	String testName = "test53: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		60, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		60,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -3972,11 +3971,11 @@ public void test53() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test54() {
 
@@ -3985,27 +3984,27 @@ public void test54() {
 		"	public int foo(			\n" +
 		"	int bar(				\n" +
 		" 	static String s, int x	\n";
-		
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tstatic String s;\n"
-		+ "\tint x;\n"		
+		+ "\tint x;\n"
 		+ "\tjava.lang.Object(0)\n"
 		+ "\tpublic int foo() {}\n"
 		+ "\tint bar() {}\n"
 		+ "}";
-			
+
 	String testName = "test54: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		78, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		78,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4019,7 +4018,7 @@ public void test54() {
 
 	assertEquals("Invalid declaration source start for field x", 72, fields[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field x", 76, fields[1].getDeclarationSourceEnd());
-	
+
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals("has 2 methods ", 2, methods.length);
@@ -4029,18 +4028,18 @@ public void test54() {
 
 	assertEquals("Invalid declaration source start for method bar", 40, methods[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method bar", 52, methods[1].getDeclarationSourceEnd());
-	
+
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
-	
+
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
-	
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test55() {
 
@@ -4049,26 +4048,26 @@ public void test55() {
 		"	public int foo(			\n" +
 		"	int bar(				\n" +
 		" 	static String s, int x	\n";
-		
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tstatic String s;\n"
-		+ "\tint x;\n"		
+		+ "\tint x;\n"
 		+ "\tpublic int foo() {}\n"
 		+ "\tint bar() {}\n"
 		+ "}";
-			
+
 	String testName = "test55: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		78, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		78,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4082,7 +4081,7 @@ public void test55() {
 
 	assertEquals("Invalid declaration source start for field x", 72, fields[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field x", 76, fields[1].getDeclarationSourceEnd());
-	
+
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals("has 2 methods ", 2, methods.length);
@@ -4092,18 +4091,18 @@ public void test55() {
 
 	assertEquals("Invalid declaration source start for method bar", 40, methods[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method bar", 52, methods[1].getDeclarationSourceEnd());
-	
+
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
-	
+
 	assertEquals(" Invalid actual name for method bar", "bar", methods[1].getActualName());
-	
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test56() {
 
@@ -4115,26 +4114,26 @@ public void test56() {
 		"		static int x		\n" +
 		"}							\n";
 
-		
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"class X {\n"
 		+ "\tString s;\n"
-		+ "\tstatic int x;\n"		
+		+ "\tstatic int x;\n"
 		+ "\tjava.lang.Object(0)\n"
 		+ "\tpublic void foo() {}\n"
 		+ "}";
-			
+
 	String testName = "test56: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		75, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		75,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4148,7 +4147,7 @@ public void test56() {
 
 	assertEquals("Invalid declaration source start for field x", 60, fields[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field x", 71, fields[1].getDeclarationSourceEnd());
-	
+
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals("has 1 method ", 1, methods.length);
@@ -4160,11 +4159,11 @@ public void test56() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test57() {
 
@@ -4176,25 +4175,25 @@ public void test57() {
 		"		static int x		\n" +
 		"}							\n";
 
-		
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"class X {\n"
 		+ "\tString s;\n"
-		+ "\tstatic int x;\n"		
+		+ "\tstatic int x;\n"
 		+ "\tpublic void foo() {}\n"
 		+ "}";
-			
+
 	String testName = "test57: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		75, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		75,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4208,7 +4207,7 @@ public void test57() {
 
 	assertEquals("Invalid declaration source start for field x", 60, fields[1].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field x", 71, fields[1].getDeclarationSourceEnd());
-	
+
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals("has 1 method ", 1, methods.length);
@@ -4220,11 +4219,11 @@ public void test57() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test58() {
 
@@ -4234,24 +4233,24 @@ public void test58() {
 		"		String s = \"		\n"+
 		"	}						\n"+
 		"}							\n";
-		
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tjava.lang.Object(0)\n"
 		+ "\tint foo() {}\n"
 		+ "}";
-			
+
 	String testName = "test58: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		62, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		62,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4270,37 +4269,37 @@ public void test58() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test59() {
 
 	String s =
 
-		"class X {									\n" + 
-		"	int foo(AA a, BB b, IOEx				\n" + 
-		"											\n"; 
-		
-	String expectedUnitToString = 
+		"class X {									\n" +
+		"	int foo(AA a, BB b, IOEx				\n" +
+		"											\n";
+
+	String expectedUnitToString =
 		"class X {\n"
 		+ "\tjava.lang.Object(0)\n"
 		+ "\tint foo(AA a, BB b, ) {}\n"
 		+ "}";
-			
+
 	String testName = "test59: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		60, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		60,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4319,11 +4318,11 @@ public void test59() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test60() {
 
@@ -4336,25 +4335,25 @@ public void test60() {
 		"		foo();								\n"+
 		"	} 										\n"+
 		"}											\n";
-		
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tjava.lang.Object(0)\n"
 		+ "\tfinal static int foo() {}\n"
 		+ "\tpublic static void main(String[] argv, ) {}\n"
 		+ "}";
-			
+
 	String testName = "test60: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		161, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		161,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4375,14 +4374,14 @@ public void test60() {
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method main", "main", methods[1].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test61() {
 
@@ -4390,24 +4389,24 @@ public void test61() {
 		"public class X {							\n"+
 		"	{										\n"+
 		"     int x;";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\t{}\n"
 		+ "\tjava.lang.Object(0)\n"
 		+ "}";
-			
+
 	String testName = "test61: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		47, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		47,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4418,17 +4417,17 @@ public void test61() {
 	assertEquals("Invalid declaration source start for initializer", 25, fields[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for initializer", 47, fields[0].getDeclarationSourceEnd());
 
-	
+
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods == null);
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test62() {
 
@@ -4437,35 +4436,35 @@ public void test62() {
 		"   int foo(){								\n"+
 		"	  if(true){								\n"+
 		"     	int x;";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tjava.lang.Object(0)\n"
 		+ "\tint foo() {}\n"
 		+ "}";
-			
+
 	String testName = "test62: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		78, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		78,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue(" invalid fields ", fields == null);
-	
+
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals("has one method", 1, methods.length);
-	
+
 	assertEquals("Invalid declaration source start for method foo", 27, methods[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method foo", 78, methods[0].getDeclarationSourceEnd());
 
@@ -4473,11 +4472,11 @@ public void test62() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test63() {
 
@@ -4486,25 +4485,25 @@ public void test63() {
 		"   int foo(){}								\n"+
 		"}											\n"+
 		"int x;\n";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tint x;\n"
 		+ "\tjava.lang.Object(0)\n"
 		+ "\tint foo() {}\n"
 		+ "}";
-			
+
 	String testName = "test63: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		66, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		66,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4515,11 +4514,11 @@ public void test63() {
 
 	assertEquals("Invalid declaration source start for field x", 60, fields[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field x", 65, fields[0].getDeclarationSourceEnd());
-	
+
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals("has one method", 1, methods.length);
-	
+
 	assertEquals("Invalid declaration source start for method foo", 27, methods[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method foo", 37, methods[0].getDeclarationSourceEnd());
 
@@ -4527,11 +4526,11 @@ public void test63() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test64() {
 
@@ -4540,24 +4539,24 @@ public void test64() {
 		"   int foo(){}								\n"+
 		"}											\n"+
 		"int x;\n";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tint x;\n"
 		+ "\tint foo() {}\n"
 		+ "}";
-			
+
 	String testName = "test64: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		66, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		66,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4568,11 +4567,11 @@ public void test64() {
 
 	assertEquals("Invalid declaration source start for field x", 60, fields[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for field x", 65, fields[0].getDeclarationSourceEnd());
-	
+
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals("has one method", 1, methods.length);
-	
+
 	assertEquals("Invalid declaration source start for method foo", 27, methods[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method foo", 37, methods[0].getDeclarationSourceEnd());
 
@@ -4580,11 +4579,11 @@ public void test64() {
 
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test65() {
 
@@ -4593,25 +4592,25 @@ public void test65() {
 		"   int foo(){}								\n"+
 		"}											\n"+
 		"int x();\n";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\t{}\n"
 		+ "\tint foo() {}\n"
 		+ "\tint x() {}\n"
 		+ "}";
-			
+
 	String testName = "test65: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		68, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		68,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4626,7 +4625,7 @@ public void test65() {
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals("has two methods", 2, methods.length);
-	
+
 	assertEquals("Invalid declaration source start for method foo", 27, methods[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method foo", 37, methods[0].getDeclarationSourceEnd());
 
@@ -4636,14 +4635,14 @@ public void test65() {
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method x", "x", methods[1].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test66() {
 
@@ -4652,24 +4651,24 @@ public void test66() {
 		"   int foo() {};							\n"+
 		"}											\n"+
 		"int x();\n";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public interface X {\n"
 		+ "\tint foo() {}\n"
 		+ "\tint x() {}\n"
 		+ "}";
-			
+
 	String testName = "test66: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		72, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		72,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4680,7 +4679,7 @@ public void test66() {
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals("has two methods", 2, methods.length);
-	
+
 	assertEquals("Invalid declaration source start for method foo", 30, methods[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method foo", 41, methods[0].getDeclarationSourceEnd());
 
@@ -4690,14 +4689,14 @@ public void test66() {
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method x", "x", methods[1].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test67() {
 
@@ -4706,24 +4705,24 @@ public void test67() {
 		"   int foo() {};							\n"+
 		"   int x();								\n"+
 		"}";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public interface X {\n"
 		+ "\tint foo() {}\n"
 		+ "\tint x() {}\n"
 		+ "}";
-			
+
 	String testName = "test67: diet parse";
 	dietParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		71, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		71,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4734,7 +4733,7 @@ public void test67() {
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals("has two methods", 2, methods.length);
-	
+
 	assertEquals("Invalid declaration source start for method foo", 30, methods[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method foo", 41, methods[0].getDeclarationSourceEnd());
 
@@ -4744,14 +4743,14 @@ public void test67() {
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method x", "x", methods[1].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test68() {
 
@@ -4760,24 +4759,24 @@ public void test68() {
 		"   int foo() {};							\n"+
 		"   int x();								\n"+
 		"}";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public interface X {\n"
 		+ "\tint foo() {}\n"
 		+ "\tint x() {}\n"
 		+ "}";
-			
+
 	String testName = "test68: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		71, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		71,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4788,7 +4787,7 @@ public void test68() {
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals("has two methods", 2, methods.length);
-	
+
 	assertEquals("Invalid declaration source start for method foo", 30, methods[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method foo", 41, methods[0].getDeclarationSourceEnd());
 
@@ -4798,14 +4797,14 @@ public void test68() {
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method x", "x", methods[1].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test69() {
 
@@ -4815,25 +4814,25 @@ public void test69() {
 		"   int foo()	;							\n"+
 		"   int x();								\n"+
 		"}";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public interface X {\n"
 		+ "\tfloat y;\n"
 		+ "\tint foo() {}\n"
 		+ "\tint x() {}\n"
 		+ "}";
-			
+
 	String testName = "test69: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		87, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		87,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4848,7 +4847,7 @@ public void test69() {
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals("has two methods", 2, methods.length);
-	
+
 	assertEquals("Invalid declaration source start for method foo", 48, methods[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method foo", 58, methods[0].getDeclarationSourceEnd());
 
@@ -4858,14 +4857,14 @@ public void test69() {
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method x", "x", methods[1].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test70() {
 
@@ -4874,24 +4873,24 @@ public void test70() {
 		"   int foo();								\n"+
 		"   int x();								\n"+
 		"}";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public interface X {\n"
 		+ "\tint foo() {}\n"
 		+ "\tint x() {}\n"
 		+ "}";
-			
+
 	String testName = "test70: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		69, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		69,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4902,7 +4901,7 @@ public void test70() {
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals("has two methods", 2, methods.length);
-	
+
 	assertEquals("Invalid declaration source start for method foo", 30, methods[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method foo", 39, methods[0].getDeclarationSourceEnd());
 
@@ -4912,14 +4911,14 @@ public void test70() {
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method x", "x", methods[1].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test71() {
 
@@ -4929,25 +4928,25 @@ public void test71() {
 		"   int foo() {}							\n"+
 		"   int x();								\n"+
 		"}";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public interface X {\n"
 		+ "\tint[] i;\n"
 		+ "\tint foo() {}\n"
 		+ "\tint x() {}\n"
 		+ "}";
-			
+
 	String testName = "test71: full parse";
 	fullParse(s,testName);
-				
-	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		93, 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
+
+	assertEquals(
+		"Invalid class declarationSourceEnd ",
+		93,
 		currentType.getDeclarationSourceEnd());
 
 	assertTrue("has no superinterfaces " , currentType.getInterfaceNames() == null);
@@ -4962,7 +4961,7 @@ public void test71() {
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods != null);
 	assertEquals("has two methods", 2, methods.length);
-	
+
 	assertEquals("Invalid declaration source start for method foo", 53, methods[0].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end for method foo", 64, methods[0].getDeclarationSourceEnd());
 
@@ -4972,14 +4971,14 @@ public void test71() {
 	assertEquals(" Invalid actual name for method foo", "foo", methods[0].getActualName());
 
 	assertEquals(" Invalid actual name for method x", "x", methods[1].getActualName());
-		
+
 	SourceType[] members = currentType.getMemberTypes();
 	assertTrue(" invalid members ", members == null);
-		
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test72() {
 
@@ -4989,21 +4988,21 @@ public void test72() {
 		"   	this();							\n" +
 		"	}									\n" +
 		"}";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public class X {\n"
 		+ "\tX() {\n"
 		+ "\t\tX(0)\n"
 		+ "\t}\n"
 		+ "}";
-			
+
 	String testName = "test72: full parse";
 	fullParse(s,testName);
-				
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test73() {
 
@@ -5019,8 +5018,8 @@ public void test73() {
 		"   	this(0);						\n" +
 		"	}									\n" +
 		"}";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public class X extends Toto {\n"
 		+ "\tX() {\n"
 		+ "\t\tX(0)\n"
@@ -5032,14 +5031,14 @@ public void test73() {
 		+ "\t\tX(1)\n"
 		+ "\t}\n"
 		+ "}";
-			
+
 	String testName = "test73: full parse";
 	fullParse(s,testName);
-				
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test74() {
 
@@ -5060,8 +5059,8 @@ public void test74() {
 		"		return new Object() {};			\n" +
 		"	}									\n" +
 		"}";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public class X extends Toto {\n"
 		+ "\tclass Y extends Throwable {\n"
 		+ "\t\tThrowable(0)\n"
@@ -5077,14 +5076,14 @@ public void test74() {
 		+ "\t}\n"
 		+ "\tpublic Object foo(int i, ) {}\n"
 		+ "}";
-			
+
 	String testName = "test74: full parse";
 	fullParse(s,testName);
-				
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 /*
  * bugs  16126
@@ -5094,55 +5093,55 @@ public void test75() {
 		"public class P#AField {\n" +
 		"	public void setP#A(String P#A) {\n" +
 		"		this.P#A = P#A;\n" +
-		"	}\n" +	
+		"	}\n" +
 		"}";
-			
-	String expectedUnitToString = 
+
+	String expectedUnitToString =
 		"public class P {\n" +
 		"	{}\n" +
 		"	public void setP;\n" +
 		"	java.lang.Object(0)\n" +
 		"	A(String P, ) {}\n" +
 		"}";
-			
+
 	String testName = "test75: full parse";
 	fullParse(s,testName);
-				
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 public void test76() {
 
-	String s = 
-		"class X {\n" + 
-		"  public static int j = 0;\n" + 
-		"  /* static */ {\n" +  
-		"  }" +  
-		"  public static int i = 9;\n" +  
-		"}\n"; 
+	String s =
+		"class X {\n" +
+		"  public static int j = 0;\n" +
+		"  /* static */ {\n" +
+		"  }" +
+		"  public static int i = 9;\n" +
+		"}\n";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"class X {\n" +
 		"	public static int j;\n" +
 		"	{}\n" +
 		"	public static int i;\n" +
 		"	java.lang.Object(0)\n" +
-		"}"; 
+		"}";
 
 	String testName = "test76: full parse";
 	fullParse(s,testName);
 
 	assertEquals(
-		"Invalid class declarationSourceStart ", 
-		0, 
-		currentType.getDeclarationSourceStart()); 
+		"Invalid class declarationSourceStart ",
+		0,
+		currentType.getDeclarationSourceStart());
 
 	assertEquals(
-		"Invalid class declarationSourceEnd ", 
-		84, 
-		currentType.getDeclarationSourceEnd()); 
+		"Invalid class declarationSourceEnd ",
+		84,
+		currentType.getDeclarationSourceEnd());
 
 	SourceField[] fields = currentType.getFields();
 	assertTrue("invalid fields ", fields != null);
@@ -5156,14 +5155,14 @@ public void test76() {
 
 	assertEquals("Invalid declaration source start for field i", 59, fields[2].getDeclarationSourceStart());
 	assertEquals("Invalid declaration source end field i", 82, fields[2].getDeclarationSourceEnd());
-	
+
 	SourceMethod[] methods = currentType.getMethods();
 	assertTrue(" invalid methods ", methods == null);
-	
+
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 /**
  * Bug 99662:[1.5] JavaModel returns inexistent IType for package-info ICompilationUnits
@@ -5172,9 +5171,9 @@ public void test76() {
  */
 public void testBug99662() {
 
-	String s = 
-		"@Deprecated\n" + 
-		"package p;\n"; 
+	String s =
+		"@Deprecated\n" +
+		"package p;\n";
 
 	String testName = "package-info.java";
 	fullParse(s,testName);
@@ -5185,108 +5184,108 @@ public void testBug99662() {
 public void _test77() {
 
 	String s =
-		"public class X {\n" + 
-		"	void foo() {\n" + 
-		"		class Y {\n" + 
-		"			String s = null;\n" + 
-		"			{\n" + 
-		"				class Z {\n" + 
-		"				}\n" + 
-		"			}\n" + 
-		"		}\n" + 
-		"	}\n" + 
+		"public class X {\n" +
+		"	void foo() {\n" +
+		"		class Y {\n" +
+		"			String s = null;\n" +
+		"			{\n" +
+		"				class Z {\n" +
+		"				}\n" +
+		"			}\n" +
+		"		}\n" +
+		"	}\n" +
 		"}";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X implements Y, String, {\n"
 		+ "}";
-			
+
 	String testName = "test77: diet parse";
 	dietParse(s,testName, true);
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=167357
 public void _test78() {
 
 	String s =
-		"public class X {\n" + 
-		"	void foo() {\n" + 
-		"		class Y {\n" + 
-		"			String s = null;\n" + 
-		"			{\n" + 
-		"				class Z {\n" + 
-		"				}\n" + 
-		"			}\n" + 
-		"		}\n" + 
-		"	}\n" + 
+		"public class X {\n" +
+		"	void foo() {\n" +
+		"		class Y {\n" +
+		"			String s = null;\n" +
+		"			{\n" +
+		"				class Z {\n" +
+		"				}\n" +
+		"			}\n" +
+		"		}\n" +
+		"	}\n" +
 		"}";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X implements Y, String, {\n"
 		+ "}";
-			
+
 	String testName = "test78: full parse";
 	fullParse(s,testName, true);
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=167357
 public void _test79() {
 
 	String s =
-		"public class X {\n" + 
-		"	void foo() {\n" + 
-		"		class Y {\n" + 
-		"			{\n" + 
-		"				class Z {\n" + 
-		"				}\n" + 
-		"			}\n" + 
-		"			String s = null;\n" + 
-		"		}\n" + 
-		"	}\n" + 
+		"public class X {\n" +
+		"	void foo() {\n" +
+		"		class Y {\n" +
+		"			{\n" +
+		"				class Z {\n" +
+		"				}\n" +
+		"			}\n" +
+		"			String s = null;\n" +
+		"		}\n" +
+		"	}\n" +
 		"}";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X implements Y, String, {\n"
 		+ "}";
-			
+
 	String testName = "test79: diet parse";
 	dietParse(s,testName, true);
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=167357
 public void _test80() {
 
 	String s =
-		"public class X {\n" + 
-		"	void foo() {\n" + 
-		"		class Y {\n" + 
-		"			{\n" + 
-		"				class Z {\n" + 
-		"				}\n" + 
-		"			}\n" + 
-		"			String s = null;\n" + 
-		"		}\n" + 
-		"	}\n" + 
+		"public class X {\n" +
+		"	void foo() {\n" +
+		"		class Y {\n" +
+		"			{\n" +
+		"				class Z {\n" +
+		"				}\n" +
+		"			}\n" +
+		"			String s = null;\n" +
+		"		}\n" +
+		"	}\n" +
 		"}";
 
-	String expectedUnitToString = 
+	String expectedUnitToString =
 		"public class X implements Y, String, {\n"
 		+ "}";
-			
+
 	String testName = "test80: full parse";
 	fullParse(s,testName, true);
 	assertEquals(
-		"Invalid source " + testName, 
-		expectedUnitToString, 
-		currentType.toString()); 
+		"Invalid source " + testName,
+		expectedUnitToString,
+		currentType.toString());
 }
 }

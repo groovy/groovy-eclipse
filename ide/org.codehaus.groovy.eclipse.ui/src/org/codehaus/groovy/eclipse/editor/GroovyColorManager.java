@@ -23,7 +23,6 @@ import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.G
 import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR;
 import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR;
 import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR;
 import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR;
 import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR;
 import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR;
@@ -77,8 +76,6 @@ public class GroovyColorManager extends JavaColorManager {
                 PreferenceConverter.getColor(getGroovyPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR));
         bindColor(GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR,
                 PreferenceConverter.getColor(getGroovyPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR));
-        bindColor(GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR,
-                PreferenceConverter.getColor(getGroovyPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR));
         bindColor(GROOVY_EDITOR_DEFAULT_COLOR,
                 PreferenceConverter.getColor(getGroovyPreferenceStore(), GROOVY_EDITOR_DEFAULT_COLOR));
         bindColor(GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR,
@@ -96,7 +93,6 @@ public class GroovyColorManager extends JavaColorManager {
         unbindColor(GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR);
         unbindColor(GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR);
         unbindColor(GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
-        unbindColor(GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR);
         unbindColor(GROOVY_EDITOR_DEFAULT_COLOR);
         unbindColor(GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR);
         unbindColor(GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR);
@@ -107,5 +103,4 @@ public class GroovyColorManager extends JavaColorManager {
     private IPreferenceStore getGroovyPreferenceStore() {
         return GroovyPlugin.getDefault().getPreferenceStore();
     }
-
 }

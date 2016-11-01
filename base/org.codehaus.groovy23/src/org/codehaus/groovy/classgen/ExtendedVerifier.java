@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.classgen;
 
-import java.util.*;
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
@@ -27,8 +26,8 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.PreciseSyntaxException;
 import org.codehaus.groovy.syntax.SyntaxException;
-
 import groovyjarjarasm.asm.Opcodes;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -136,7 +135,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport implements GroovyC
             return;
         }
         for (AnnotationNode unvisited : node.getAnnotations()) {
-            AnnotationNode visited = visitAnnotation(unvisited);
+            AnnotationNode visited = visitAnnotation0(unvisited);
             boolean isTargetAnnotation = visited.getClassNode().isResolved() &&
             visited.getClassNode().getName().equals("java.lang.annotation.Target");
 
@@ -242,7 +241,7 @@ public class ExtendedVerifier extends ClassCodeVisitorSupport implements GroovyC
      * @param unvisited the node to visit
      * @return the visited node
      */
-    private AnnotationNode visitAnnotation(AnnotationNode unvisited) {
+    private AnnotationNode visitAnnotation0(AnnotationNode unvisited) {
         ErrorCollector errorCollector = new ErrorCollector(this.source.getConfiguration());
         AnnotationVisitor visitor = new AnnotationVisitor(this.source, errorCollector);
         AnnotationNode visited = visitor.visit(unvisited);

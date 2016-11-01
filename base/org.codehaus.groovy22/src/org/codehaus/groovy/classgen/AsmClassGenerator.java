@@ -1151,10 +1151,6 @@ public class AsmClassGenerator extends ClassGenerator {
         ClassNode icl =  controller.getInterfaceClassLoadingClass();
 
         if (referencedClasses.isEmpty()) {
-        	//GRECLIPSE-1167
-        	// this patch obsolete now. Code just below //end does the same!
-        	// controller.getClassNode().forgetInnerClass(controller.getInterfaceClassLoadingClass());
-        	//end
             Iterator<InnerClassNode> it = controller.getClassNode().getInnerClasses();
             while(it.hasNext()) {
                 InnerClassNode inner = it.next();

@@ -46,10 +46,7 @@ protected void setUp() throws Exception {
 	}
 }
 public static Test suite() {
-	return setupSuite(testClass());
-}
-public static Class testClass() {
-	return SanityTestEvaluationResult.class;
+	return setupSuite(SanityTestEvaluationResult.class);
 }
 /**
  * Sanity test of IEvaluationResult.getEvaluationType()

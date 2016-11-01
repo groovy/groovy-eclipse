@@ -1,21 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+/*
+ * Copyright 2009-2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import java.util.Arrays;
 import java.util.HashSet;
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssistActivator;
-import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaMethodCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -25,7 +28,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 /**
  * @author Andrew Eisenberg
  * @created Jun 5, 2009
- * 
+ *
  * Tests DefaultGroovyMethods that they appear when and where expected
  *
  */
@@ -39,7 +42,7 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
     public DefaultGroovyMethodCompletionTests(String name) {
         super(name);
     }
-    
+
     // should not find dgm here
     public void testDGMInJavaFile() throws Exception {
         ICompilationUnit unit = createJava();
@@ -60,7 +63,7 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CONTENTS, "new Object()."), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "identity", 1);
     }
-    
+
     // should find dgm here
     public void testDGMInConstructorScope() throws Exception {
         ICompilationUnit unit = createGroovy();
@@ -112,7 +115,7 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(CLOSURECONTENTS, " t -> "), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "identity", 1);
     }
-    
+
     // tests DefaultGroovyStaticMethods
     public void testDGSM() throws Exception {
         ICompilationUnit unit = createGroovyForScript();
@@ -127,7 +130,7 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "toURL().t"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "text", 1);
     }
-    
+
     // tests GRECLIPSE-1158
     public void testDateGM() throws Exception {
         String contents = "new Date().toCal";
@@ -135,11 +138,11 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "toCal"), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "toCalendar", 1);
     }
-    
+
     // tests GRECLIPSE-1158
     public void testProcessGM() throws Exception {
         String contents = "Process p\n" +
-        		"p.get";
+                "p.get";
         ICompilationUnit unit = createGroovyWithContents("Script", contents);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "get"), GroovyCompletionProposalComputer.class);
         if (GroovyUtils.GROOVY_LEVEL >= 18) {
@@ -149,7 +152,7 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
             proposalExists(proposals, "getIn", 2);
         }
     }
-    
+
     // tests GRECLIPSE-1158
     public void testEncodingGM() throws Exception {
         String contents = "byte[] p\n" +
@@ -163,7 +166,7 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
             proposalExists(proposals, "encodeBase64", 4);
         }
     }
-    
+
     // tests GRECLIPSE-1158
     public void testXmlGM() throws Exception {
         String contents = "org.w3c.dom.NodeList p\n" +
@@ -177,8 +180,8 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
             proposalExists(proposals, "iterator", 2);
         }
     }
-    
-    
+
+
     // GRECLIPSE-1182
     public void testDGMFilter1() throws Exception {
         try {
@@ -194,7 +197,7 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
             setDGMFilter();
         }
     }
-    
+
     // GRECLIPSE-1182
     public void testDGMFilter2() throws Exception {
         try {
@@ -210,7 +213,7 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
             setDGMFilter();
         }
     }
-    
+
     // GRECLIPSE-1422
     public void testNoDups() throws Exception {
         ICompilationUnit unit = createGroovyWithContents("Script", LISTCONTENTS);
@@ -218,11 +221,11 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
         // should find 2, not 4.  dups removed
         proposalExists(proposals, "findAll", 2);
     }
-    
+
     private void setDGMFilter(String... filter) {
         GroovyContentAssistActivator.getDefault().setFilteredDGMs(new HashSet<String>(Arrays.asList(filter)));
     }
-    
+
     private ICompilationUnit createJava() throws Exception {
         IPath projectPath = createGenericProject();
         IPath src = projectPath.append("src");
@@ -231,7 +234,7 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
         ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
         return unit;
     }
-    
+
     private ICompilationUnit createGroovy() throws Exception {
         return createGroovyWithContents("Class", CONTENTS);
     }
@@ -251,6 +254,6 @@ public class DefaultGroovyMethodCompletionTests extends CompletionTestCase {
         ICompilationUnit unit = getCompilationUnit(pathToJavaClass);
         return unit;
     }
-    
+
 
 }

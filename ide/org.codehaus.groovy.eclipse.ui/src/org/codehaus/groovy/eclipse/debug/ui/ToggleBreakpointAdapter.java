@@ -74,7 +74,7 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
     protected void report(final String message, final IWorkbenchPart part) {
         JDIDebugUIPlugin.getStandardDisplay().asyncExec(new Runnable() {
             public void run() {
-                IEditorStatusLine statusLine = (IEditorStatusLine) part.getAdapter(IEditorStatusLine.class);
+                IEditorStatusLine statusLine = part.getAdapter(IEditorStatusLine.class);
                 if (statusLine != null) {
                     if (message != null) {
                         statusLine.setMessage(true, message, null);
@@ -146,7 +146,7 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
                     int offset = textSelection.getOffset();
                     try {
                         if (type == null) {
-                            IClassFile classFile = (IClassFile) editorInput.getAdapter(IClassFile.class);
+                            IClassFile classFile = editorInput.getAdapter(IClassFile.class);
                             if (classFile != null) {
                                 type = classFile.getType();
                                 // bug 34856 - if this is an inner type, ensure
@@ -256,9 +256,9 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
 
     protected ModuleNode getModuleNode(ITextEditor editor) throws CoreException {
         IEditorInput editorInput = editor.getEditorInput();
-        ICompilationUnit unit = (ICompilationUnit) editorInput.getAdapter(ICompilationUnit.class);
+        ICompilationUnit unit = editorInput.getAdapter(ICompilationUnit.class);
         if (unit == null) {
-            IFile file = (IFile) editorInput.getAdapter(IFile.class);
+            IFile file = editorInput.getAdapter(IFile.class);
             if (file != null) {
                 unit = JavaCore.createCompilationUnitFrom(file);
             }
@@ -274,7 +274,7 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
 
     protected static IResource getResource(IEditorPart editor) {
         IEditorInput editorInput = editor.getEditorInput();
-        IResource resource = (IResource) editorInput.getAdapter(IFile.class);
+        IResource resource = editorInput.getAdapter(IFile.class);
         if (resource == null) {
             resource = ResourcesPlugin.getWorkspace().getRoot();
         }

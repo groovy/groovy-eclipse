@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+/*
+ * Copyright 2009-2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
@@ -23,29 +27,29 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 /**
  * @author Andrew Eisenberg
  * @created Jun 5, 2009
- * 
+ *
  * Tests that completion proposals are sufficiently groovy-like in their output
  */
 public class GroovyLikeCompletionTests extends CompletionTestCase {
 
-    private static final String SCRIPTCONTENTS = 
+    private static final String SCRIPTCONTENTS =
             "any\n" +
-    		"clone\n" +
-    		"findIndexOf\n" +
-    		"inject\n" +
-    		"class Foo {\n" +
-    		"  Foo(first, second) { }\n" +
-    		"  Foo(int third) { }\n" +
-    		"  def method1(arg) { }\n" +
-    		"  def method2(arg, Closure c1) { }\n" +
-    		"  def method3(arg, Closure c1, Closure c2) { }\n" +
-    		"}\n" +
-    		"new Foo()";
+            "clone\n" +
+            "findIndexOf\n" +
+            "inject\n" +
+            "class Foo {\n" +
+            "  Foo(first, second) { }\n" +
+            "  Foo(int third) { }\n" +
+            "  def method1(arg) { }\n" +
+            "  def method2(arg, Closure c1) { }\n" +
+            "  def method3(arg, Closure c1, Closure c2) { }\n" +
+            "}\n" +
+            "new Foo()";
 
     public GroovyLikeCompletionTests(String name) {
         super(name);
     }
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -56,14 +60,14 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         new org.codehaus.groovy.eclipse.preferences.PreferenceInitializer().reset();
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_PARAMETER_GUESSING, false);
     }
-    
+
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         // ensure that the correct properties are set
         new org.codehaus.groovy.eclipse.preferences.PreferenceInitializer().reset();
     }
-    
+
     public void testMethodWithClosure() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
         ICompilationUnit unit = createGroovy();
@@ -76,14 +80,14 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "clone"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "clone()", 1);
     }
-    
+
     public void testMethodWith2Args() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
         ICompilationUnit unit = createGroovy();
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(SCRIPTCONTENTS, "findIndexOf"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "findIndexOf(arg1) {  }", 1);
     }
-    
+
     public void testMethodWithClosureNotGroovyLike() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
@@ -103,7 +107,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
     }
-    
+
     public void testClosureApplication1a() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
@@ -112,7 +116,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         String expected = "new Foo().method1(arg)";
         checkProposalApplicationNonType(contents, expected, contents.length(), "method1");
     }
-    
+
     public void testClosureApplication1b() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
@@ -121,7 +125,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         String expected = "new Foo().method1(arg)";
         checkProposalApplicationNonType(contents, expected, contents.length(), "method1");
     }
-    
+
     public void testClosureApplication1c() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
@@ -130,7 +134,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         String expected = "new Foo().method1(arg)";
         checkProposalApplicationNonType(contents, expected, contents.length(), "method1");
     }
-    
+
     public void testClosureApplication1d() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
@@ -139,7 +143,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         String expected = "new Foo().method1(arg)";
         checkProposalApplicationNonType(contents, expected, contents.length(), "method1");
     }
-    
+
     public void testClosureApplication2a() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
@@ -148,7 +152,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         String expected = "new Foo().method2(arg) {  }";
         checkProposalApplicationNonType(contents, expected, contents.length(), "method2");
     }
-    
+
     public void testClosureApplication2b() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
@@ -157,7 +161,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         String expected = "new Foo().method2(arg, {  })";
         checkProposalApplicationNonType(contents, expected, contents.length(), "method2");
     }
-    
+
     public void testClosureApplication2c() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
@@ -166,7 +170,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         String expected = "new Foo().method2(arg) c1";
         checkProposalApplicationNonType(contents, expected, contents.length(), "method2");
     }
-    
+
     public void testClosureApplication2d() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
@@ -175,7 +179,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         String expected = "new Foo().method2(arg, c1)";
         checkProposalApplicationNonType(contents, expected, contents.length(), "method2");
     }
-    
+
     public void testClosureApplication3a() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
@@ -184,7 +188,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         String expected = "new Foo().method3(arg, {  }) {  }";
         checkProposalApplicationNonType(contents, expected, contents.length(), "method3");
     }
-    
+
     public void testClosureApplication3b() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, true);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
@@ -193,7 +197,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         String expected = "new Foo().method3(arg, {  }, {  })";
         checkProposalApplicationNonType(contents, expected, contents.length(), "method3");
     }
-    
+
     public void testClosureApplication3c() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, true);
@@ -202,7 +206,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         String expected = "new Foo().method3(arg, c1) c2";
         checkProposalApplicationNonType(contents, expected, contents.length(), "method3");
     }
-    
+
     public void testClosureApplication3d() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_BRACKETS, false);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_ASSIST_NOPARENS, false);
@@ -224,7 +228,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         checkReplacementString(proposals, "(first:first, second:second)", 1);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
     }
-    
+
     /**
      * can't get it to pass on build server
      * @throws Exception
@@ -237,16 +241,16 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         checkReplacementString(proposals, "(third:third)", 1);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
     }
-    
-    private final static String CLOSURE_CONTENTS = 
-            "class Other {\n" + 
-            "    def first\n" + 
-            "    def second2() { } \n" + 
-            "}\n" + 
-            " \n" + 
-            "class MyOtherClass extends Other {\n" + 
-            "    def meth() {\n" + 
-            "        \"\".foo {\n" + 
+
+    private final static String CLOSURE_CONTENTS =
+            "class Other {\n" +
+            "    def first\n" +
+            "    def second2() { } \n" +
+            "}\n" +
+            " \n" +
+            "class MyOtherClass extends Other {\n" +
+            "    def meth() {\n" +
+            "        \"\".foo {\n" +
             "            substring(0)\n" +  // should find
             "            first\n" +  // should find
             "            second2()\n" +  // should find
@@ -257,21 +261,21 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
             "            this.first(0)\n" + // should find
             "            this.second2(0)\n" +  // should find
             "            wait\n" +  // should find 2 only
-            "        }\n" + 
-            "    }\n" + 
+            "        }\n" +
+            "    }\n" +
             "}";
-    private final static String CLOSURE_CONTENTS2 = 
-            "class Other {\n" + 
-            "    def first\n" + 
-            "    def second2() { } \n" + 
-            "}\n" + 
-            "class Other2 extends Other { }\n" + 
-            "class MyOtherClass extends Other {\n" + 
-            "    def meth() {\n" + 
-            "        new Other2().foo {\n" + 
+    private final static String CLOSURE_CONTENTS2 =
+            "class Other {\n" +
+            "    def first\n" +
+            "    def second2() { } \n" +
+            "}\n" +
+            "class Other2 extends Other { }\n" +
+            "class MyOtherClass extends Other {\n" +
+            "    def meth() {\n" +
+            "        new Other2().foo {\n" +
             "            first\n" +  // should find 2 only
-            "        }\n" + 
-            "    }\n" + 
+            "        }\n" +
+            "    }\n" +
             "}";
     // accessing members of super types in closures
     public void testClosureCompletion1() throws Exception {
@@ -356,7 +360,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
 
 
     protected void doWait() {
-        // it seems like 
+        // it seems like
         int x = 0;
         while (! Job.getJobManager().isIdle() && x < 20) {
             synchronized (this) {
@@ -368,7 +372,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
             }
         }
     }
-    
+
     public void testNamedArguments3() throws Exception {
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, true);
         ICompilationUnit unit = createGroovy();
@@ -377,7 +381,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         checkReplacementString(proposals, "clone()", 1);
         GroovyPlugin.getDefault().getPreferenceStore().setValue(PreferenceConstants.GROOVY_CONTENT_NAMED_ARGUMENTS, false);
     }
-    
+
     // GRECLIPSE-268
     // disabled because groovy will parse the following as an empty constant expression
     public void _testGString1() throws Exception {
@@ -386,7 +390,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"".length(), GroovyCompletionProposalComputer.class);
         assertEquals("Should not have found any proposals, but found:\n" + printProposals(proposals), 0, proposals.length);
     }
-    
+
     // GRECLIPSE-268
     public void testGString2() throws Exception {
         ICompilationUnit unit = create("\"\"\"${this}\"\"\"");
@@ -394,7 +398,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"".length(), GroovyCompletionProposalComputer.class);
         assertEquals("Should not have found any proposals, but found:\n" + printProposals(proposals), 0, proposals.length);
     }
-    
+
     // GRECLIPSE-268
     public void testGString3() throws Exception {
         ICompilationUnit unit = create("\"\"\"this\"\"\"");
@@ -402,7 +406,7 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, "\"\"\"this".length(), GroovyCompletionProposalComputer.class);
         assertEquals("Should not have found any proposals, but found:\n" + printProposals(proposals), 0, proposals.length);
     }
-    
+
     // GRECLIPSE-268
     public void testGString4() throws Exception {
         String contents = "def flarb;\n\"\"\"${flarb}\"\"\"";
@@ -411,11 +415,11 @@ public class GroovyLikeCompletionTests extends CompletionTestCase {
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "${flarb"), GroovyCompletionProposalComputer.class);
         checkReplacementString(proposals, "flarb", 1);
     }
-    
+
     private ICompilationUnit createGroovy() throws Exception {
         return createGroovy("GroovyLikeCompletions", SCRIPTCONTENTS);
     }
-    
+
     private ICompilationUnit createGroovy(String cuName, String cuContents) throws Exception {
         IPath projectPath = createGenericProject();
         IPath src = projectPath.append("src");

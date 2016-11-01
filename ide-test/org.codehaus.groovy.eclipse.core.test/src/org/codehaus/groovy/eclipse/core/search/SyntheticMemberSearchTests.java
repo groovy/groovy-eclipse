@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2011 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.core.search;
 
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IField;
@@ -51,8 +48,6 @@ public class SyntheticMemberSearchTests extends EclipseTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        GroovyRuntime.addGroovyNature(testProject.getProject());
-        GroovyRuntime.addGroovyClasspathContainer(testProject.getJavaProject());
         gType = testProject.createUnit("p", "G.groovy",
                 "package p\n" +
                         "class G {\n" +
@@ -248,9 +243,8 @@ public class SyntheticMemberSearchTests extends EclipseTestCase {
     private String printMatches(List<SearchMatch> matches) {
         StringBuffer sb = new StringBuffer();
         for (Iterator<SearchMatch> matchIter = matches.iterator(); matchIter.hasNext();) {
-            SearchMatch match = (SearchMatch) matchIter.next();
+            SearchMatch match = matchIter.next();
             sb.append("\n\n" + match);
-
         }
         return sb.toString();
     }

@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,42 +15,20 @@
  */
 package org.codehaus.groovy.eclipse.test;
 
+import java.util.Hashtable;
+
 import junit.framework.TestCase;
 
-import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.JavaCore;
 
 /**
- * Base test case for all Groovy eclipse plugin test cases.
- *
- * Not used
- *
- * @author MelamedZ
+ * Base for all Groovy-Eclipse plugin test cases.
  */
 public abstract class EclipseTestCase extends TestCase {
-
-    protected TestProject testProject;
-
-    protected IPackageFragment pack;
-
-    protected GroovyCoreActivator plugin;
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        System.out.println("------------------------------");
-        System.out.println("Starting: " + getName());
-        testProject = new TestProject();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        testProject.dispose();
-    }
 
     public EclipseTestCase() {
         super();
@@ -59,27 +37,50 @@ public abstract class EclipseTestCase extends TestCase {
     public EclipseTestCase(String name) {
         super(name);
     }
+
+    protected TestProject testProject;
+
+    private Hashtable<String, String> savedPreferences;
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        System.out.println("------------------------------");
+        System.out.println("Starting: " + getName());
+        testProject = new TestProject();
+        savedPreferences = JavaCore.getOptions();
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        JavaCore.setOptions(savedPreferences);
+        testProject.dispose();
+        super.tearDown();
+    }
+
+    protected void setJavaPreference(String name, String value) {
+        Hashtable<String, String> options = JavaCore.getOptions();
+        options.put(name, value);
+        JavaCore.setOptions(options);
+    }
+
     /**
      * Will test to see if the TestProject instance has Groovy nature.
      *
-     * @return Returns true if the project has the Groovy nature.
-     * @throws CoreException
+     * @return {@code true} if the project has the Groovy nature
      */
     protected boolean hasGroovyNature() throws CoreException {
         return testProject.getProject().hasNature(GroovyNature.GROOVY_NATURE);
     }
 
     /**
-     * Does a full build on files in the test project.
-     *
-     * @throws Exception
+     * Performs a full build on the test workspace.
      */
     protected void fullProjectBuild() throws Exception {
         ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.FULL_BUILD, null);
     }
 
-
-    protected void waitForIndexes() {
-    	SynchronizationUtils.waitForIndexingToComplete();
+    public static void waitForIndexes() {
+        SynchronizationUtils.waitForIndexingToComplete();
     }
 }

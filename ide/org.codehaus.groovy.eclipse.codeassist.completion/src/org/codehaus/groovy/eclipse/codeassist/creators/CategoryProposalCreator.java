@@ -32,6 +32,7 @@ import org.codehaus.groovy.eclipse.codeassist.preferences.DGMProposalFilter;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyCategoryMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
@@ -43,7 +44,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
 
     public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic,
             boolean isPrimary) {
-        ClassNode candidate = VariableScope.maybeConvertFromPrimitive(type);
+        ClassNode candidate = GroovyUtils.getWrapperTypeIfPrimitive(type);
         Set<String> set = new HashSet<String>();
         getAllSupersAsStrings(candidate, set);
         set.add("java.lang.Object");

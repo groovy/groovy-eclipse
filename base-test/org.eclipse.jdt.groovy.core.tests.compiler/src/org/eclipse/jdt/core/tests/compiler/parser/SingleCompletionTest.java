@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.parser;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 import junit.framework.TestCase;
@@ -25,9 +26,9 @@ public class SingleCompletionTest extends AbstractCompletionTest {
 public SingleCompletionTest(String testName) {
 	super(testName);
 }
-private void run(Class testClass, String methodName) {
+private void run(Class<?> testClass, String methodName) {
 	try {
-		java.lang.reflect.Constructor constructor = testClass.getDeclaredConstructor(new Class[] {String.class});
+		Constructor<?> constructor = testClass.getDeclaredConstructor(new Class[] {String.class});
 		TestCase test = (TestCase)constructor.newInstance(new Object[] {"single completion test"});
 		java.lang.reflect.Method method = testClass.getDeclaredMethod(methodName, new Class[] {});
 		method.invoke(test, new Object[] {});

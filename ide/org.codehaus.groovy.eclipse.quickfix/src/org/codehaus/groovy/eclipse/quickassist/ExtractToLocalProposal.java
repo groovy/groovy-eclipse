@@ -23,15 +23,13 @@ import org.eclipse.jdt.ui.text.java.IInvocationContext;
 
 /**
  * Quick Assist for extracting expression to a local variable. Delegates the logic to {@link ExtractGroovyLocalRefactoring}
- * 
- * @author Alex Boyko
  *
+ * @author Alex Boyko
  */
-@SuppressWarnings("restriction")
 public class ExtractToLocalProposal
 		extends
 			TextRefactoringProposal {
-	
+
 	public ExtractToLocalProposal(IInvocationContext context) {
 		super(context, new ExtractGroovyLocalRefactoring(
 				(GroovyCompilationUnit) context.getCompilationUnit(), context
@@ -40,13 +38,13 @@ public class ExtractToLocalProposal
 		ExtractGroovyLocalRefactoring extractRefactoring = (ExtractGroovyLocalRefactoring) refactoring;
 		extractRefactoring.setLocalName(extractRefactoring.guessLocalNames()[0]);
 	}
-	
+
 	public ExtractToLocalProposal(IInvocationContext context, boolean all) {
 		this(context);
 		ExtractGroovyLocalRefactoring extractRefactoring = (ExtractGroovyLocalRefactoring) refactoring;
 		extractRefactoring.setReplaceAllOccurrences(all);
 	}
-	
+
 	@Override
 	public String getAdditionalProposalInfo() {
 		try {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -29,7 +28,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.eclipse.core.resources.IStorage;
 
 /**
- * Matches based on arguments to method calls
+ * Matches based on arguments to method calls.
+ *
  * @author andrew
  * @created Jul 22, 2011
  */
@@ -38,8 +38,7 @@ public class TypePointcut extends FilteringPointcut<ClassNode>  {
     public TypePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName, ClassNode.class);
     }
-    
-    
+
     /**
      * Grabs the explicit type of the {@link AnnotatedNode}.  This will not return
      *  the expected value for {@link Expression}s, unless they are constants or variable declarations with an explicit type.
@@ -69,9 +68,6 @@ public class TypePointcut extends FilteringPointcut<ClassNode>  {
         }
     }
 
-    /**
-     * determine if the 
-     */
     @Override
     protected ClassNode filterObject(ClassNode result, GroovyDSLDContext context, String firstArgAsString) {
         return firstArgAsString == null ? result : (result.getName().equals(firstArgAsString) ? result : null);

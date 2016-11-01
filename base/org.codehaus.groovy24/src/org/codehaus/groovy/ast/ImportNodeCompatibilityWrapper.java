@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,11 @@
  */
 package org.codehaus.groovy.ast;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 /**
  * This class provides a standard interface to access import nodes
@@ -33,6 +33,7 @@ import java.util.TreeSet;
  * @created Apr 29, 2010
  */
 public class ImportNodeCompatibilityWrapper {
+
     private class ImportNodeComparator implements Comparator<ImportNode> {
         public int compare(ImportNode i1, ImportNode i2) {
             int start1 = i1.getStart();
@@ -47,8 +48,8 @@ public class ImportNodeCompatibilityWrapper {
         }
     }
 
-    private SortedSet<ImportNode> sortedImports;
     private ModuleNode module;
+    private List<ImportNode> sortedImports;
 
     public ImportNodeCompatibilityWrapper(ModuleNode module) {
         if (module == null) {
@@ -57,19 +58,19 @@ public class ImportNodeCompatibilityWrapper {
         this.module = module;
     }
 
-    public SortedSet<ImportNode> getAllImportNodes() {
+    public List<ImportNode> getAllImportNodes() {
         if (sortedImports == null) {
-            initialize();
+            sortedImports = new ArrayList<ImportNode>();
+
+            sortedImports.addAll(module.getImports());
+            sortedImports.addAll(module.getStarImports());
+            sortedImports.addAll(module.getStaticImports().values());
+            sortedImports.addAll(module.getStaticStarImports().values());
+
+            Collections.sort(sortedImports, new ImportNodeComparator());
+            sortedImports = Collections.unmodifiableList(sortedImports);
         }
         return sortedImports;
-    }
-
-    private void initialize() {
-        sortedImports = new TreeSet<ImportNode>(new ImportNodeComparator());
-        sortedImports.addAll(module.getImports());
-        sortedImports.addAll(module.getStarImports());
-        sortedImports.addAll(module.getStaticStarImports().values());
-        sortedImports.addAll(module.getStaticImports().values());
     }
 
     // not available in 1.6 stream

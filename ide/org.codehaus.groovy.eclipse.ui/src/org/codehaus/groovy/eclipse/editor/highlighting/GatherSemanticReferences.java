@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.codehaus.groovy.eclipse.editor.highlighting;
 
 import java.util.Collection;
@@ -27,34 +26,36 @@ import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jface.preference.IPreferenceStore;
 
+/**
+ * Created and invoked on Groovy compilation units to collect code semantics
+ * for use in syntax coloring/highlighting.
+ */
 public class GatherSemanticReferences {
 
     private final GroovyCompilationUnit unit;
-    private final IPreferenceStore preferences;
+
     public GatherSemanticReferences(GroovyCompilationUnit unit) {
-        this.unit = unit;
-        preferences = GroovyPlugin.getDefault().getPreferenceStore();
+        this.unit = isSemanticHighlightingEnabled() ? unit : null;
     }
 
     public Collection<HighlightedTypedPosition> findSemanticHighlightingReferences() {
-        if (preferences.getBoolean(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING) /*
-                                                                                      * &&
-                                                                                      * unit
-                                                                                      * .
-                                                                                      * isOnBuildPath
-                                                                                      * (
-                                                                                      * )
-                                                                                      */) {
-
-            try {
-                SemanticHighlightingReferenceRequestor typeRequestor = new SemanticHighlightingReferenceRequestor(unit.getContents());
-                TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
-                visitor.visitCompilationUnit(typeRequestor);
-                return typeRequestor.typedPosition;
+        if (unit != null) {
+            try { // TODO: Time this tasks components and find opportunities to make it run faster.
+                SemanticHighlightingReferenceRequestor requestor = new SemanticHighlightingReferenceRequestor(unit);
+                TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
+                visitor.visitCompilationUnit(requestor);
+                return requestor.typedPosition;
             } catch (Exception e) {
-                GroovyCore.logException("Exception with semantic highlighting", e);
+                GroovyCore.logException("Semantic highlighting gather failed", e);
             }
         }
-        return Collections.emptyList();
+        return Collections.emptySet();
     }
+
+    private static boolean isSemanticHighlightingEnabled() {
+        IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
+        return prefs.getBoolean(PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING);
+    }
+
+    private static TypeInferencingVisitorFactory factory = new TypeInferencingVisitorFactory();
 }

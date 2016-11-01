@@ -93,7 +93,7 @@ public class GroovyShellLaunchShortcut implements ILaunchShortcut {
         // make sure we are saved as we run groovy from the file
         editor.getEditorSite().getPage().saveEditor(editor,false);
         IEditorInput input = editor.getEditorInput();
-        IFile file = (IFile) input.getAdapter(IFile.class);
+        IFile file = input.getAdapter(IFile.class);
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
         if (unit.getJavaProject() != null) {
             launchGroovy(unit.getJavaProject(), mode);

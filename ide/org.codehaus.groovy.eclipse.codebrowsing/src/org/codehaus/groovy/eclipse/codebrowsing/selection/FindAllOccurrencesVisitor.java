@@ -60,10 +60,8 @@ import org.codehaus.groovy.ast.expr.UnaryMinusExpression;
 import org.codehaus.groovy.ast.expr.UnaryPlusExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.classgen.BytecodeExpression;
-import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentFactory;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.ASTFragmentKind;
-import org.codehaus.groovy.eclipse.codebrowsing.fragments.BinaryExpressionFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.FragmentVisitor;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.MethodCallFragment;
@@ -84,7 +82,7 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
             IASTFragment matched = fragment.findMatchingSubFragment(toFind);
             if (matched.kind() != ASTFragmentKind.EMPTY) {
                 // prevent double matching, which may occur in binary fragments when searching for a simple expression fragment
-                if (occurrences.size() == 0 || 
+                if (occurrences.size() == 0 ||
                         occurrences.get(occurrences.size()-1).getStart() != matched.getStart()) {
                     occurrences.add(matched);
                     matchWasFound = true;
@@ -105,7 +103,7 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
 
     class AssociatedExpressionMatcher extends FragmentVisitor {
         boolean ignoreNext = false;
-        
+
         @Override
         public boolean previsit(IASTFragment fragment) {
             if (! ignoreNext) {
@@ -115,7 +113,7 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
             }
             return true;
         }
-        
+
         @Override
         public boolean visit(MethodCallFragment fragment) {
             fragment.getArguments().visit(FindAllOccurrencesVisitor.this);
@@ -148,11 +146,6 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
         this.factory = new ASTFragmentFactory();
         this.fragmentMatcher = new FragmentMatcherVisitor();
         this.associatedExpressionMatcher = new AssociatedExpressionMatcher();
-    }
-
-    @Override
-    protected SourceUnit getSourceUnit() {
-        return null;
     }
 
     public List<IASTFragment> findOccurrences(IASTFragment fragment) {

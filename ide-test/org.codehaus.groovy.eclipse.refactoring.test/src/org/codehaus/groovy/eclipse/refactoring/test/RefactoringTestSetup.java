@@ -17,7 +17,6 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.testplugin.JavaProjectHelper;
 
 /**
@@ -57,8 +56,8 @@ public class RefactoringTestSetup extends AbstractRefactoringTestSetup {
         }
         throw new Exception(RefactoringTestSetup.class.getName() + " not initialized");
     }
-	
-	
+
+
 
 	public static IJavaProject getProject()throws Exception {
 		if (fgJavaTestProject != null)
@@ -74,10 +73,6 @@ public class RefactoringTestSetup extends AbstractRefactoringTestSetup {
 
 	protected void setUp() throws Exception {
 		super.setUp();
-
-		if (fgJavaTestProject != null && fgJavaTestProject.exists()) {
-			int breakpointTarget= 0; breakpointTarget++;
-		}
 		fgJavaTestProject= JavaProjectHelper.createGroovyProject("TestProject"+System.currentTimeMillis(), "bin");
 		fgJRELibraries= addRTJars(fgJavaTestProject);
 		fgGroovyLibrary= addGroovyJar(fgJavaTestProject);
@@ -87,7 +82,7 @@ public class RefactoringTestSetup extends AbstractRefactoringTestSetup {
 		fgPackageP= fgRoot.createPackageFragment("p", true, null);
 	}
 
-	
+
 	public IPackageFragmentRoot getGroovyLibrary() {
 	    return fgGroovyLibrary;
 	}

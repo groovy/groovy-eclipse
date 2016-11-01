@@ -27,7 +27,7 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 			this.output = output;
 		}
 	}
-	
+
 	static class FloatTest {
 		String input;
 		int output;
@@ -36,23 +36,17 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 			this.output = output;
 		}
 	}
-	
+
 	public InternalHexFloatTest(String name) {
 		super(name);
 	}
 	public static Test suite() {
-		return buildMinimalComplianceTestSuite(testClass(), F_1_5);
+		return buildMinimalComplianceTestSuite(InternalHexFloatTest.class, F_1_5);
 	}
 
-	public static Class testClass() {
-		return InternalHexFloatTest.class;
-	}
-
-	/**
-	 */
 	public void test001() {
-		List x = new ArrayList();
-		
+		List<DoubleTest> x = new ArrayList<DoubleTest>();
+
 		// various forms of zero
 		x.add(new DoubleTest("0x0p0", 0x0L));
 		x.add(new DoubleTest("0x0p0d", 0x0L));
@@ -65,7 +59,7 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 		x.add(new DoubleTest("0x0p-99D", 0x0L));
 		x.add(new DoubleTest("0x0p9999999D", 0x0L));
 		x.add(new DoubleTest("0x0p-9999999D", 0x0L));
-		
+
 		// small doubles
 		x.add(new DoubleTest("0x0.8p0D",       0x3fe0000000000000L));
 		x.add(new DoubleTest("0x0.4p0D",       0x3fd0000000000000L));
@@ -90,11 +84,11 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 		x.add(new DoubleTest("0x123456789p0D", 0x41f2345678900000L));
 		x.add(new DoubleTest("0xabcedfp0D",    0x416579dbe0000000L));
 		x.add(new DoubleTest("0xABCDEFp0D",    0x416579bde0000000L));
-				
+
 		x.add(new DoubleTest("0x0.0100000000000000000000000000000000000000000000000p0d", 0x3f70000000000000L));
 		x.add(new DoubleTest("0x0.0000000000000000000000000000000000000000000000001p0d", 0x33b0000000000000L));
 		x.add(new DoubleTest("0x10000000000000000000000000000000000000000000000000000p0d", 0x4cf0000000000000L));
-		
+
 		// rounding to 53 bits
 		x.add(new DoubleTest("0x823456789012380p0d", 0x43a0468acf120247L));
 		x.add(new DoubleTest("0xFFFFFFFFFFFFF80p0d", 0x43afffffffffffffL));
@@ -109,7 +103,7 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 		x.add(new DoubleTest("0x3FFFFFFFFFFFFF0p0d", 0x4390000000000000L));
 		x.add(new DoubleTest("0x1FFFFFFFFFFFFF0p0d", 0x437fffffffffffffL));
 		x.add(new DoubleTest("0x1FFFFFFFFFFFFF8p0d", 0x4380000000000000L));
-		
+
 		// rounding to overflow at +1024; denormalized at -1022; underflow at -1075
 		x.add(new DoubleTest("0x1p5000D",    0x7ff0000000000000L));
 		x.add(new DoubleTest("0x1p-5000D",   0x7ff8000000000000L));
@@ -152,9 +146,9 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 		x.add(new DoubleTest("0x0.1p-1071d", 0x7ff8000000000000L));
 		x.add(new DoubleTest("0x0.1p-1072d", 0x7ff8000000000000L));
 		x.add(new DoubleTest("0x0.1p-1073d", 0x7ff8000000000000L));
-		
-		for (Iterator it = x.iterator(); it.hasNext();) {
-			DoubleTest t = (DoubleTest) it.next();
+
+		for (Iterator<DoubleTest> it = x.iterator(); it.hasNext();) {
+			DoubleTest t = it.next();
 			String s = t.input;
 			long expectedBits = t.output;
 			double libExpected = 0.0d;
@@ -182,11 +176,11 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 			assertEquals("Wrong double value for " + s, expectedBits, actualBits);
 		}
 	}
-	
+
 	/**
 	 */
 	public void test002() {
-		List x = new ArrayList();
+		List<FloatTest> x = new ArrayList<FloatTest>();
 		// various forms of zero
 		x.add(new FloatTest("0x0p0f", 0x0));
 		x.add(new FloatTest("0x0p0F", 0x0));
@@ -198,7 +192,7 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 		x.add(new FloatTest("0x0p-99F", 0x0));
 		x.add(new FloatTest("0x0p9999999F", 0x0));
 		x.add(new FloatTest("0x0p-9999999F", 0x0));
-		
+
 		// small floats
 		x.add(new FloatTest("0x0.8p0F", 0x3f000000));
 		x.add(new FloatTest("0x0.4p0F", 0x3e800000));
@@ -223,10 +217,10 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 		x.add(new FloatTest("0x123456789p0F", 0x4f91a2b4));
 		x.add(new FloatTest("0xabcedfp0F", 0x4b2bcedf));
 		x.add(new FloatTest("0xABCDEFp0F", 0x4b2bcdef));
-		
+
 		x.add(new FloatTest("0x0.000000000000000000000000000001p0f", 0x3800000));
 		x.add(new FloatTest("0x10000000000000000000000000000000p0f", 0x7d800000));
-		
+
 		// rounding to 24 bits
 		x.add(new FloatTest("0x823456p0f",   0x4b023456));
 		x.add(new FloatTest("0xFFFFFF80p0f", 0x4f800000));
@@ -240,7 +234,7 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 		x.add(new FloatTest("0x7FFFFF8p0f",  0x4cffffff));
 		x.add(new FloatTest("0x3FFFFFCp0f",  0x4c7fffff));
 		x.add(new FloatTest("0x1FFFFFEp0f",  0x4bffffff));
-		
+
 		// rounding to overflow at +128; denormalized at -126; underflow at -150
 		x.add(new FloatTest("0x1p5000F",     0x7f800000));
 		x.add(new FloatTest("0x1p-5000F",    0x7fc00000));
@@ -285,10 +279,10 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 		x.add(new FloatTest("0x0.1p-145f",   0x00000001));
 		x.add(new FloatTest("0x0.1p-146f",   0x7fc00000));
 		x.add(new FloatTest("0x0.1p-147f",   0x7fc00000));
-		x.add(new FloatTest("0x0.1p-148f",   0x7fc00000));		
-		
-		for (Iterator it = x.iterator(); it.hasNext();) {
-			FloatTest t = (FloatTest) it.next();
+		x.add(new FloatTest("0x0.1p-148f",   0x7fc00000));
+
+		for (Iterator<FloatTest> it = x.iterator(); it.hasNext();) {
+			FloatTest t = it.next();
 			String s = t.input;
 			int expectedBits = t.output;
 			float libExpected = 0.0f;
@@ -316,7 +310,7 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 			assertEquals("Wrong float value for " + s, expectedBits, actualBits);
 		}
 	}
-	
+
 	/*
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74126
 	 */
@@ -325,14 +319,14 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 			new String[] {
 				"X.java",
 				"public class X {	\n" +
-				"    public static void main(String[] args) {\n" + 
-				"        System.out.println(-0Xf.aP1F);\n" + 
-				"    }\n" + 
+				"    public static void main(String[] args) {\n" +
+				"        System.out.println(-0Xf.aP1F);\n" +
+				"    }\n" +
 				"}"
 			},
 			"-31.25");
 	}
-	
+
 	/*
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74126
 	 */
@@ -341,14 +335,14 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 			new String[] {
 				"X.java",
 				"public class X {	\n" +
-				"    public static void main(String[] args) {\n" + 
-				"        System.out.println(0X000.0000P5000);\n" + 
-				"    }\n" + 
+				"    public static void main(String[] args) {\n" +
+				"        System.out.println(0X000.0000P5000);\n" +
+				"    }\n" +
 				"}"
 			},
 			"0.0");
 	}
-	
+
 	/*
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74126
 	 */
@@ -357,14 +351,14 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 			new String[] {
 				"X.java",
 				"public class X {	\n" +
-				"    public static void main(String[] args) {\n" + 
-				"        System.out.println(-0X000.0000P5000F);\n" + 
-				"    }\n" + 
+				"    public static void main(String[] args) {\n" +
+				"        System.out.println(-0X000.0000P5000F);\n" +
+				"    }\n" +
 				"}"
 			},
 			"-0.0");
 	}
-	
+
 	/*
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74126
 	 */
@@ -373,19 +367,19 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 			new String[] {
 				"X.java",
 				"public class X {	\n" +
-				"    public static void main(String[] args) {\n" + 
-				"        System.out.println(0X000.eP-5000F);\n" + 
-				"    }\n" + 
+				"    public static void main(String[] args) {\n" +
+				"        System.out.println(0X000.eP-5000F);\n" +
+				"    }\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\r\n" + 
-			"	System.out.println(0X000.eP-5000F);\r\n" + 
-			"	                   ^^^^^^^^^^^^^^\n" + 
-			"The literal 0X000.eP-5000F of type float is out of range \n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\r\n" +
+			"	System.out.println(0X000.eP-5000F);\r\n" +
+			"	                   ^^^^^^^^^^^^^^\n" +
+			"The literal 0X000.eP-5000F of type float is out of range \n" +
 			"----------\n");
 	}
-	
+
 	/*
 	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=74126
 	 */
@@ -394,16 +388,16 @@ public class InternalHexFloatTest extends AbstractRegressionTest {
 			new String[] {
 				"X.java",
 				"public class X {	\n" +
-				"    public static void main(String[] args) {\n" + 
-				"        System.out.println(0X000.eP5000F);\n" + 
-				"    }\n" + 
+				"    public static void main(String[] args) {\n" +
+				"        System.out.println(0X000.eP5000F);\n" +
+				"    }\n" +
 				"}"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 3)\r\n" + 
-			"	System.out.println(0X000.eP5000F);\r\n" + 
-			"	                   ^^^^^^^^^^^^^\n" + 
-			"The literal 0X000.eP5000F of type float is out of range \n" + 
+			"----------\n" +
+			"1. ERROR in X.java (at line 3)\r\n" +
+			"	System.out.println(0X000.eP5000F);\r\n" +
+			"	                   ^^^^^^^^^^^^^\n" +
+			"The literal 0X000.eP5000F of type float is out of range \n" +
 			"----------\n");
 	}
 }

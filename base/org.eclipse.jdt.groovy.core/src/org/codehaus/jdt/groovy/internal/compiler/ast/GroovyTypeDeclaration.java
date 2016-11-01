@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2009 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     Andy Clement        - Initial API and implementation
- *     Andrew Eisenberg - Additional work
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.util.List;
@@ -25,95 +29,92 @@ import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 
-@SuppressWarnings("restriction")
 public class GroovyTypeDeclaration extends TypeDeclaration {
 
-	public List<PropertyNode> properties;
+    public List<PropertyNode> properties;
 
-	// The Groovy ClassNode that gave rise to this type declaration
-	private ClassNode classNode;
+    // The Groovy ClassNode that gave rise to this type declaration
+    private ClassNode classNode;
 
-	public GroovyTypeDeclaration(CompilationResult compilationResult, ClassNode classNode) {
-		super(compilationResult);
-		this.classNode = classNode;
-	}
+    public GroovyTypeDeclaration(CompilationResult compilationResult, ClassNode classNode) {
+        super(compilationResult);
+        this.classNode = classNode;
+    }
 
-	public ClassNode getClassNode() {
-		return classNode;
-	}
+    public ClassNode getClassNode() {
+        return classNode;
+    }
 
-	// FIXASC is this always what we want to do - are there any other implications?
-	/*
-	 * Prevent groovy types from having their methods re-parsed
-	 */
-	@Override
-	public void parseMethods(Parser parser, CompilationUnitDeclaration unit) {
-		// noop
-	}
+    // FIXASC Is this always what we want to do - are there any other implications?
 
-	// FIXASC (groovychange)
-	@Override
-	public boolean isScannerUsableOnThisDeclaration() {
-		return false;
-	}
+    @Override
+    public void parseMethods(Parser parser, CompilationUnitDeclaration unit) {
+    // prevent Groovy types from having their methods re-parsed
+    //	if (parser instanceof MultiplexingCommentRecorderParser) {
+    //		super.parseMethods(parser, unit);
+    //	}
+    }
 
-	// FIXASC (groovychange) end
+    @Override
+    public boolean isScannerUsableOnThisDeclaration() {
+        return false;
+    }
 
-	/**
-	 * Fixes the super types of anonymous inner classes These kinds of classes are always constructed so that they extend the super
-	 * type, even if the super type is an interface. This is because during parse time we don't know if the super type is a class or
-	 * interface, se we need to wait until after the resolve phase to fix this.
-	 * 
-	 * @param groovyCompilationUnitScope
-	 */
-	public void fixAnonymousTypeBinding(GroovyCompilationUnitScope groovyCompilationUnitScope) {
-		if ((this.bits & ASTNode.IsAnonymousType) != 0) {
-			if (classNode.getInterfaces() != null && classNode.getInterfaces().length == 1
-					&& classNode.getSuperClass().getName().equals("java.lang.Object")) {
+    // FIXASC end
 
-				this.superInterfaces = new TypeReference[] { this.superclass };
-				this.binding.superInterfaces = new ReferenceBinding[] { (ReferenceBinding) this.superclass.resolvedType };
-				this.superclass = null;
+    /**
+     * Fixes the super types of anonymous inner classes These kinds of classes are always constructed so that they extend the super
+     * type, even if the super type is an interface. This is because during parse time we don't know if the super type is a class or
+     * interface, se we need to wait until after the resolve phase to fix this.
+     */
+    public void fixAnonymousTypeBinding(GroovyCompilationUnitScope groovyCompilationUnitScope) {
+        if ((this.bits & ASTNode.IsAnonymousType) != 0) {
+            if (classNode.getInterfaces() != null && classNode.getInterfaces().length == 1
+                    && classNode.getSuperClass().getName().equals("java.lang.Object")) {
 
-			}
-		}
-		if (anonymousTypes != null) {
-			fixAnonymousTypeDeclarations(anonymousTypes, groovyCompilationUnitScope);
-		}
-	}
+                this.superInterfaces = new TypeReference[] { this.superclass };
+                this.binding.superInterfaces = new ReferenceBinding[] { (ReferenceBinding) this.superclass.resolvedType };
+                this.superclass = null;
 
-	private void fixAnonymousTypeDeclarations(GroovyTypeDeclaration[] types, Scope parentScope) {
-		for (GroovyTypeDeclaration type : types) {
-			GroovyClassScope anonScope = new GroovyClassScope(parentScope, type);
-			type.scope = anonScope;
-			if (type.anonymousTypes != null) {
-				fixAnonymousTypeDeclarations(type.anonymousTypes, anonScope);
-			}
-		}
-	}
+            }
+        }
+        if (anonymousTypes != null) {
+            fixAnonymousTypeDeclarations(anonymousTypes, groovyCompilationUnitScope);
+        }
+    }
 
-	/**
-	 * Anonymous types that are declared in this type's methods
-	 */
-	private GroovyTypeDeclaration[] anonymousTypes = null;
+    private void fixAnonymousTypeDeclarations(GroovyTypeDeclaration[] types, Scope parentScope) {
+        for (GroovyTypeDeclaration type : types) {
+            GroovyClassScope anonScope = new GroovyClassScope(parentScope, type);
+            type.scope = anonScope;
+            if (type.anonymousTypes != null) {
+                fixAnonymousTypeDeclarations(type.anonymousTypes, anonScope);
+            }
+        }
+    }
 
-	/**
-	 * If this type is anonymous, points to the enclosing method
-	 */
-	public AbstractMethodDeclaration enclosingMethod;
+    /**
+     * Anonymous types that are declared in this type's methods
+     */
+    private GroovyTypeDeclaration[] anonymousTypes = null;
 
-	public void addAnonymousType(GroovyTypeDeclaration anonymousType) {
-		if (anonymousTypes == null) {
-			anonymousTypes = new GroovyTypeDeclaration[] { anonymousType };
-		} else {
-			GroovyTypeDeclaration[] newTypes = new GroovyTypeDeclaration[anonymousTypes.length + 1];
-			System.arraycopy(anonymousTypes, 0, newTypes, 0, anonymousTypes.length);
-			newTypes[anonymousTypes.length] = anonymousType;
-			anonymousTypes = newTypes;
-		}
-	}
+    /**
+     * If this type is anonymous, points to the enclosing method
+     */
+    public AbstractMethodDeclaration enclosingMethod;
 
-	public GroovyTypeDeclaration[] getAnonymousTypes() {
-		return anonymousTypes;
-	}
+    public void addAnonymousType(GroovyTypeDeclaration anonymousType) {
+        if (anonymousTypes == null) {
+            anonymousTypes = new GroovyTypeDeclaration[] { anonymousType };
+        } else {
+            GroovyTypeDeclaration[] newTypes = new GroovyTypeDeclaration[anonymousTypes.length + 1];
+            System.arraycopy(anonymousTypes, 0, newTypes, 0, anonymousTypes.length);
+            newTypes[anonymousTypes.length] = anonymousType;
+            anonymousTypes = newTypes;
+        }
+    }
+
+    public GroovyTypeDeclaration[] getAnonymousTypes() {
+        return anonymousTypes;
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,12 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 
 /**
- * 
+ *
  * @author Andrew Eisenberg
  * @created May 4, 2011
  */
 public class ExtendedCompletionContextTests extends CompletionTestCase {
-    
+
     private static final String STRING_SIG = "Ljava.lang.String;";
     private static final String STRING_ARR_SIG = "[Ljava.lang.String;";
     private static final String INTEGER_SIG = "Ljava.lang.Integer;";
@@ -52,7 +52,7 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
             }
         }
     }
-    
+
     public void testExtendedContextInScript1() throws Exception {
         String contents = "def x = 9\ndef y = ''\ndef z = []\nint a\nString b\nList c\nz";
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
@@ -62,7 +62,7 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         assertExtendedContextElements(context, STRING_SIG, "y", "b");
         assertExtendedContextElements(context, LIST_SIG, "z", "c");
     }
-    
+
     public void testExtendedContextInScript2() throws Exception {
         String contents = "int[] x\nString[] y\nList[] z\nint a\nString b\nList c\nz";
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
@@ -72,7 +72,7 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         assertExtendedContextElements(context, STRING_ARR_SIG, "y");
         assertExtendedContextElements(context, LIST_ARR_SIG, "z");
     }
-    
+
     public void testExtendedContextInScript3() throws Exception {
         String contents = "class Sub extends Super{ }\nclass Super { }\ndef x = new Super()\ndef y = new Sub()\ndef z\nz";
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
@@ -81,7 +81,7 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         assertExtendedContextElements(context, "LSuper;", "x", "y");
         assertExtendedContextElements(context, "LSub;", "y");
     }
-    
+
     public void testExtendedContextInScript4() throws Exception {
         String contents = "class Sub extends Super{ }\nclass Super { }\ndef x = new Super[0]\ndef y = new Sub[0]\ndef z\nz";
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
@@ -92,7 +92,7 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         assertExtendedContextElements(context, "LSuper;");
         assertExtendedContextElements(context, "LSub;");
     }
-    
+
     public void testExtendedContextInClass1() throws Exception {
         String contents = "class Sub extends Super{ }\nclass Super {\n def foo() { \ndef x = new Super[0]\ndef y = new Sub[0]\ndef z\nz } }";
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
@@ -103,7 +103,7 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         assertExtendedContextElements(context, "LSuper;");
         assertExtendedContextElements(context, "LSub;");
     }
-    
+
     public void testExtendedContextInClass2() throws Exception {
         String contents = "class Sub extends Super{ }\nclass Super { \nSuper x\nSub y\ndef z\n def foo() { \nz } }";
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
@@ -112,7 +112,7 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         assertExtendedContextElements(context, "LSuper;", "x", "y");
         assertExtendedContextElements(context, "LSub;", "y");
     }
-    
+
     public void testExtendedContextInClass3() throws Exception {
         String contents = "class Super{ \nSuper a\nSub b\ndef c }\nclass Sub extends Super { \nSuper x\nSub y\ndef z\n def foo() { \nSuper z } }";
         GroovyExtendedCompletionContext context = getExtendedCoreContext(create(contents), contents.lastIndexOf('z')+1);
@@ -121,10 +121,10 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         assertExtendedContextElements(context, "LSub;", "y", "b");
         assertExtendedContextElements(context, "LSuper;", "x", "y", "a", "b", "z");
     }
-    
+
     // We should be using erasure types, so generics need not match
     public void testExtendedContextWithGenerics() throws Exception {
-        String contents = 
+        String contents =
             "Map<Integer, Class> x\n" +
             "HashMap<Class, Integer> y\n" +
             "z";
@@ -134,10 +134,10 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
         assertExtendedContextElements(context, "Ljava.util.Map;", "y", "x");
         assertExtendedContextElements(context, "Ljava.util.HashMap;", "y");
     }
-    
+
     // now look at boxing and unboxing
     public void testExtendedContextWithBoxing() throws Exception {
-        String contents = 
+        String contents =
             "int x\n" +
             "Integer y\n" +
             "boolean a\n" +
@@ -153,7 +153,7 @@ public class ExtendedCompletionContextTests extends CompletionTestCase {
     }
     // now look at arrayed boxing and unboxing
     public void testExtendedContextWithBoxingAndArrays() throws Exception {
-        String contents = 
+        String contents =
             "int x\n" +
             "Integer y\n" +
             "boolean a\n" +

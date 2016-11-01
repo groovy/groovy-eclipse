@@ -1,26 +1,28 @@
-/*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials 
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+/*
+ * Copyright 2009-2016 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
-
-
 /**
  * @author Andrew Eisenberg
  * @created May 2, 2011
- * 
+ *
  * Tests that new fields are created properly
  */
 public class NewFieldCompletionTests extends CompletionTestCase {
@@ -28,8 +30,7 @@ public class NewFieldCompletionTests extends CompletionTestCase {
     public NewFieldCompletionTests(String name) {
         super(name);
     }
-    
-    
+
     public void testNewFieldSimple() throws Exception {
         String contents = "class SomeClass {\nString str}";
         String expected = "class SomeClass {\nString string}";
@@ -37,22 +38,22 @@ public class NewFieldCompletionTests extends CompletionTestCase {
     }
 
     public void testNewField1() throws Exception {
-        String contents = 
-                "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
-        		"class SomeClass {\nHTMLFrameHyperlinkEvent  }";
-        
-        checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent "), 
+        String contents =
+                "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
+                "class SomeClass {\nHTMLFrameHyperlinkEvent  }";
+
+        checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent "),
                 new String[] {
-                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
                     "class SomeClass {\nHTMLFrameHyperlinkEvent htmlFrameHyperlinkEvent }",
-                    
-                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
                     "class SomeClass {\nHTMLFrameHyperlinkEvent frameHyperlinkEvent }",
-                    
-                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
                     "class SomeClass {\nHTMLFrameHyperlinkEvent hyperlinkEvent }",
-                    
-                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
                     "class SomeClass {\nHTMLFrameHyperlinkEvent event }"
                 },
                 new String[] {
@@ -62,12 +63,12 @@ public class NewFieldCompletionTests extends CompletionTestCase {
                     "HTMLFrameHyperlinkEvent event"
                 });
     }
-    
+
     public void testNewField2() throws Exception {
-        String contents = 
+        String contents =
             "class SomeClass {\njavax.swing.text.html.HTMLFrameHyperlinkEvent  }";
-        
-        checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent "), 
+
+        checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent "),
                 new String[] {
             "class SomeClass {\njavax.swing.text.html.HTMLFrameHyperlinkEvent htmlFrameHyperlinkEvent }",
             "class SomeClass {\njavax.swing.text.html.HTMLFrameHyperlinkEvent frameHyperlinkEvent }",
@@ -81,12 +82,12 @@ public class NewFieldCompletionTests extends CompletionTestCase {
             "HTMLFrameHyperlinkEvent event"
         });
     }
-    
+
     public void testNewField3() throws Exception {
-        String contents = 
+        String contents =
             "class SomeClass {\njavax.swing.text.html.HTMLFrameHyperlinkEvent f }";
-        
-        checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent f"), 
+
+        checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent f"),
                 new String[] {
             "class SomeClass {\njavax.swing.text.html.HTMLFrameHyperlinkEvent frameHyperlinkEvent }",
         },
@@ -94,24 +95,24 @@ public class NewFieldCompletionTests extends CompletionTestCase {
             "HTMLFrameHyperlinkEvent frameHyperlinkEvent",
         });
     }
-    
+
     public void testNewField4() throws Exception {
-        String contents = 
-            "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+        String contents =
+            "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
             "class SomeClass {\nHTMLFrameHyperlinkEvent        }";
-    
-        checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent       "), 
+
+        checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent       "),
                 new String[] {
-                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
                     "class SomeClass {\nHTMLFrameHyperlinkEvent       htmlFrameHyperlinkEvent }",
-                    
-                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
                     "class SomeClass {\nHTMLFrameHyperlinkEvent       frameHyperlinkEvent }",
-                    
-                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
                     "class SomeClass {\nHTMLFrameHyperlinkEvent       hyperlinkEvent }",
-                    
-                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
                     "class SomeClass {\nHTMLFrameHyperlinkEvent       event }"
                 },
                 new String[] {
@@ -123,10 +124,10 @@ public class NewFieldCompletionTests extends CompletionTestCase {
     }
 
     public void testNewField5() throws Exception {
-        String contents = 
+        String contents =
             "class SomeClass {\njavax.swing.text.html.HTMLFrameHyperlinkEvent     f }";
-        
-        checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent     f"), 
+
+        checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent     f"),
                 new String[] {
             "class SomeClass {\njavax.swing.text.html.HTMLFrameHyperlinkEvent     frameHyperlinkEvent }",
         },
@@ -134,24 +135,24 @@ public class NewFieldCompletionTests extends CompletionTestCase {
             "HTMLFrameHyperlinkEvent     frameHyperlinkEvent",
         });
     }
-    
+
     public void testNewField6() throws Exception {
-        String contents = 
-            "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+        String contents =
+            "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
             "class SomeClass {\nHTMLFrameHyperlinkEvent[]        }";
-    
-        checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent[]       "), 
+
+        checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent[]       "),
                 new String[] {
-                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
                     "class SomeClass {\nHTMLFrameHyperlinkEvent[]       htmlFrameHyperlinkEvents }",
-                    
-                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
                     "class SomeClass {\nHTMLFrameHyperlinkEvent[]       frameHyperlinkEvents }",
-                    
-                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
                     "class SomeClass {\nHTMLFrameHyperlinkEvent[]       hyperlinkEvents }",
-                    
-                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
                     "class SomeClass {\nHTMLFrameHyperlinkEvent[]       events }"
                 },
                 new String[] {
@@ -162,22 +163,22 @@ public class NewFieldCompletionTests extends CompletionTestCase {
                 });
     }
     public void testNewField7() throws Exception {
-        String contents = 
-            "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+        String contents =
+            "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
             "class SomeClass {\nHTMLFrameHyperlinkEvent  [][]        }";
-    
-        checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent  [][]       "), 
+
+        checkProposalApplication(contents, getIndexOf(contents, "HTMLFrameHyperlinkEvent  [][]       "),
                 new String[] {
-                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
                     "class SomeClass {\nHTMLFrameHyperlinkEvent  [][]       htmlFrameHyperlinkEvents }",
-                    
-                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
                     "class SomeClass {\nHTMLFrameHyperlinkEvent  [][]       frameHyperlinkEvents }",
-                    
-                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
                     "class SomeClass {\nHTMLFrameHyperlinkEvent  [][]       hyperlinkEvents }",
-                    
-                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+
+                    "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
                     "class SomeClass {\nHTMLFrameHyperlinkEvent  [][]       events }"
                 },
                 new String[] {
@@ -188,10 +189,10 @@ public class NewFieldCompletionTests extends CompletionTestCase {
                 });
     }
 
-    
+
     public void testNoNewField1() throws Exception {
-        String contents = 
-            "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+        String contents =
+            "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
             "class SomeClass {\nHTMLFrameHyperlinkEvent HTMLFrameHyperlinkEvent\nht  }";
 
         ICompilationUnit unit = create(contents);
@@ -200,13 +201,13 @@ public class NewFieldCompletionTests extends CompletionTestCase {
     }
 
     public void testNoNewField2() throws Exception {
-        String contents = 
-            "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" + 
+        String contents =
+            "import javax.swing.text.html.HTMLFrameHyperlinkEvent;\n" +
             "class SomeClass {\nHTMLFrameHyperlinkEvent HTMLFrameHyperlinkEvent\n      }";
-        
+
         ICompilationUnit unit = create(contents);
         ICompletionProposal[] proposals = performContentAssist(unit, getIndexOf(contents, "\n    "), GroovyCompletionProposalComputer.class);
         proposalExists(proposals, "HTMLFrameHyperlinkEvent htmlFrameHyperlinkEvent", 0);
     }
-    
+
 }

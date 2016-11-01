@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -34,7 +35,7 @@
  *                          Bug 419209 - [1.8] Repeating container annotations should be rejected in the presence of annotation it contains
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
-// GROOVY PATCHED
+
 import java.util.Stack;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -798,6 +799,10 @@ public abstract class Annotation extends Expression {
 		if (!typeBinding.isAnnotationType() && typeBinding.isValidBinding()) {
 			if (!isFakeGroovyAnnotation(typeBinding)) { // GROOVY suppress error (see https://jira.codehaus.org/browse/GRECLIPSE-1719)
 				scope.problemReporter().notAnnotationType(typeBinding, this.type);
+			} else {
+				// allow the Groovy annotation to show in Javadoc
+				// TODO: Does this cause unanticipated side effects?
+				this.compilerAnnotation = scope.environment().createAnnotation((ReferenceBinding) this.resolvedType, computeElementValuePairs());
 			}
 			return null;
 		}
@@ -1194,16 +1199,16 @@ public abstract class Annotation extends Expression {
 		// GROOVY start
 	public boolean isFakeGroovyAnnotation(TypeBinding tb) {
 		if (tb instanceof BinaryTypeBinding) {
-			BinaryTypeBinding type = (BinaryTypeBinding)tb;
-			if (isInterestingGroovyType(type)) {
+			BinaryTypeBinding btb = (BinaryTypeBinding) tb;
+			if (isInterestingGroovyType(btb)) {
 				try {
-					AnnotationBinding[] as = type.getAnnotations();
+					AnnotationBinding[] as = btb.getAnnotations();
 					if (as!=null) {
 						for (AnnotationBinding a : as) {
 							ReferenceBinding at = a.getAnnotationType();
-							if (at!=null && at.compoundName!=null) {
+							if (at != null && at.compoundName != null) {
 								String name = CharOperation.toString(at.compoundName);
-								if (name.equals("groovy.transform.AnnotationCollector")) {
+								if (name.equals("groovy.transform.AnnotationCollector")) { //$NON-NLS-1$
 									return true;
 								}
 							}
@@ -1218,19 +1223,17 @@ public abstract class Annotation extends Expression {
 		return false;
 	}
 
-	@SuppressWarnings("nls")
-	private static final char[] SPECIAL_GROOVY_FIELD_NAME = "$callSiteArray".toCharArray();
+	private static final char[] SPECIAL_GROOVY_FIELD_NAME = "$callSiteArray".toCharArray(); //$NON-NLS-1$
 
 	/**
 	 * Try to eliminate things we don't care about from being 'special groovy handled'.
 	 */
-	private static boolean isInterestingGroovyType(BinaryTypeBinding type) {
+	private static boolean isInterestingGroovyType(BinaryTypeBinding btb) {
 		try {
-			FieldBinding f = type.getField(SPECIAL_GROOVY_FIELD_NAME, /*needResolve*/ false);
-			return f!=null;
+			FieldBinding f = btb.getField(SPECIAL_GROOVY_FIELD_NAME, /*needResolve*/ false);
+			return (f != null);
 		} catch (Throwable e) {
-			//Better safe than sorry. 
-			//Don't break JDT if our code misbehaves in any way! 
+			//Better safe than sorry. Don't break JDT if our code misbehaves in any way!
 			e.printStackTrace();
 		}
 		return false;

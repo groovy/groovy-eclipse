@@ -12,10 +12,12 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.util.Map;
 import junit.framework.Test;
+
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 public class AbstractComparableTest extends AbstractRegressionTest {
-	public static Test buildComparableTestSuite(Class evaluationTestClass) {
+
+	public static Test buildComparableTestSuite(Class<? extends Test> evaluationTestClass) {
 		Test suite = buildMinimalComplianceTestSuite(evaluationTestClass, F_1_5);
 		TESTS_COUNTERS.put(evaluationTestClass.getName(), new Integer(suite.countTestCases()));
 		return suite;
@@ -28,8 +30,8 @@ public class AbstractComparableTest extends AbstractRegressionTest {
 	/*
 	 * Toggle compiler in mode -1.5
 	 */
-	protected Map getCompilerOptions() {
-		Map options = super.getCompilerOptions();
+	protected Map<String, String> getCompilerOptions() {
+		Map<String, String> options = super.getCompilerOptions();
 		options.put(CompilerOptions.OPTION_ReportFinalParameterBound, CompilerOptions.WARNING);
 		options.put(CompilerOptions.OPTION_ReportUnnecessaryTypeCheck, CompilerOptions.WARNING);
 		options.put(CompilerOptions.OPTION_ReportMissingOverrideAnnotation, CompilerOptions.WARNING);

@@ -75,8 +75,8 @@ protected void assertCompletionNodeResult(String source, String expected) {
 		System.out.println("********************************************************************************");
 		System.out.print(getName());
 		System.out.println(" expect following result:");
-    	String toDisplay = new String(org.eclipse.jdt.core.tests.util.Util.displayString(new String(actual), 2).toCharArray());
-    	System.out.println(toDisplay);
+		String toDisplay = new String(org.eclipse.jdt.core.tests.util.Util.displayString(new String(actual), 2).toCharArray());
+		System.out.println(toDisplay);
 		System.out.println("--------------------------------------------------------------------------------");
 		System.out.println(source);
 	}
@@ -86,8 +86,8 @@ protected void assertCompletionNodeResult(String source, String expected) {
 		actual
 	);
 }
-protected Map getCompilerOptions() {
-	Map options = super.getCompilerOptions();
+protected Map<String, String> getCompilerOptions() {
+	Map<String, String> options = super.getCompilerOptions();
 	if (this.sourceLevel == null) {
 		return options;
 	}
@@ -165,7 +165,7 @@ protected void verifyAllTagsCompletion() {
 		TAG_DOC_ROOT,
 	};
 	char[][] additionalTags = null;
-	if(this.complianceLevel == ClassFileConstants.JDK1_4) {	
+	if(this.complianceLevel == ClassFileConstants.JDK1_4) {
 		additionalTags = new char[][] {
 			TAG_INHERITDOC, TAG_LINKPLAIN, TAG_VALUE
 		};
@@ -281,14 +281,14 @@ public void test006() {
 
 public void test007() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * Completion on :\n" + 
-		" * 	@\n" + 
-		" * 		- with following lines:\n" + 
-		" * 			+ \"@ {@link }\"\n" + 
-		" * 			+ \"@ {@linkplain }\"\n" + 
-		" * 			+ \"@ {@literal }\"\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * Completion on :\n" +
+		" * 	@\n" +
+		" * 		- with following lines:\n" +
+		" * 			+ \"@ {@link }\"\n" +
+		" * 			+ \"@ {@linkplain }\"\n" +
+		" * 			+ \"@ {@literal }\"\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "@");
 	verifyAllTagsCompletion();
@@ -316,82 +316,82 @@ public void test008() {
  */
 public void test010() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * @see \n" + 
-		" */\n" + 
+		"/**\n" +
+		" * @see \n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "@see ");
 	assertCompletionNodeResult(source,
-		"<CompletionOnJavadocSingleTypeReference:\n" + 
-		"	infos:formal reference\n" + 
+		"<CompletionOnJavadocSingleTypeReference:\n" +
+		"	infos:formal reference\n" +
 		">"
 	);
 }
 
 public void test011() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * {@link }\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * {@link }\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "@link ");
 	assertCompletionNodeResult(source,
-		"<CompletionOnJavadocSingleTypeReference:\n" + 
-		"	infos:formal reference\n" + 
+		"<CompletionOnJavadocSingleTypeReference:\n" +
+		"	infos:formal reference\n" +
 		">"
 	);
 }
 public void test012() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * @see Str\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * @see Str\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "Str");
 	assertCompletionNodeResult(source,
-		"<CompletionOnJavadocSingleTypeReference:Str\n" + 
-		"	infos:formal reference\n" + 
+		"<CompletionOnJavadocSingleTypeReference:Str\n" +
+		"	infos:formal reference\n" +
 		">"
 	);
 }
 
 public void test013() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * {@link Str}\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * {@link Str}\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "Str");
 	assertCompletionNodeResult(source,
-		"<CompletionOnJavadocSingleTypeReference:Str\n" + 
-		"	infos:formal reference\n" + 
+		"<CompletionOnJavadocSingleTypeReference:Str\n" +
+		"	infos:formal reference\n" +
 		">"
 	);
 }
 public void test014() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * @see String Subclass of Obj\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * @see String Subclass of Obj\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "Obj");
 	assertCompletionNodeResult(source,
-		"<CompletionOnJavadocSingleTypeReference:Obj\n" + 
-		"	infos:text\n" + 
+		"<CompletionOnJavadocSingleTypeReference:Obj\n" +
+		"	infos:text\n" +
 		">"
 	);
 }
 
 public void test015() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * {@link String Subclass of Obj}\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * {@link String Subclass of Obj}\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "Obj");
 	assertCompletionNodeResult(source,
-		"<CompletionOnJavadocSingleTypeReference:Obj\n" + 
-		"	infos:formal reference\n" + 
+		"<CompletionOnJavadocSingleTypeReference:Obj\n" +
+		"	infos:formal reference\n" +
 		">"
 	);
 }
@@ -402,9 +402,9 @@ public void test015() {
  */
 public void test020() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * @see\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * @see\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "@s");
 	verifyCompletionOnJavadocTag("s".toCharArray(), new char[][] { TAG_SEE, TAG_SINCE, TAG_SERIAL, TAG_SERIAL_DATA, TAG_SERIAL_FIELD }, false);
@@ -415,9 +415,9 @@ public void test020() {
 
 public void test021() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * @see\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * @see\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "@se");
 	verifyCompletionOnJavadocTag("se".toCharArray(), new char[][] { TAG_SEE, TAG_SERIAL, TAG_SERIAL_DATA, TAG_SERIAL_FIELD }, false);
@@ -428,9 +428,9 @@ public void test021() {
 
 public void test022() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * @see\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * @see\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "@see");
 	verifyCompletionOnJavadocTag("see".toCharArray(), new char[][] { TAG_SEE }, false);
@@ -441,9 +441,9 @@ public void test022() {
 
 public void test023() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * @ebj-tag\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * @ebj-tag\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "ebj");
 	verifyCompletionOnJavadocTag("ebj".toCharArray(), null, false);
@@ -454,9 +454,9 @@ public void test023() {
 
 public void test024() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * @ebj-tag\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * @ebj-tag\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "tag");
 	verifyCompletionOnJavadocTag("ebj-tag".toCharArray(), null, false);
@@ -466,14 +466,14 @@ public void test024() {
 }
 
 /**
- * @test Bug 114091: [assist][javadoc] eternal loop 
+ * @test Bug 114091: [assist][javadoc] eternal loop
  * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=114091"
  */
 public void test025() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * {@</code>\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * {@</code>\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "{@");
 	char[][] allTags = {
@@ -508,9 +508,9 @@ public void test025() {
 
 public void test026() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * {@li</code>\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * {@li</code>\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "{@li");
 	char[][] allTags = this.complianceLevel == ClassFileConstants.JDK1_3
@@ -528,9 +528,9 @@ public void test026() {
 
 public void test027() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * {@link</code>\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * {@link</code>\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "{@link");
 	char[][] allTags = this.complianceLevel == ClassFileConstants.JDK1_3
@@ -545,9 +545,9 @@ public void test027() {
 }
 public void test028() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * {@|\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * {@|\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "{@");
 	char[][] allTags = {
@@ -582,9 +582,9 @@ public void test028() {
 
 public void test029() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * {@li/\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * {@li/\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "{@li");
 	char[][] allTags = this.complianceLevel == ClassFileConstants.JDK1_3
@@ -602,9 +602,9 @@ public void test029() {
 
 public void test030() {
 	String source = "package javadoc;\n" +
-		"/**\n" + 
-		" * {@link+\n" + 
-		" */\n" + 
+		"/**\n" +
+		" * {@link+\n" +
+		" */\n" +
 		"public class Test {}\n";
 	verifyCompletionInJavadoc(source, "{@link");
 	char[][] allTags = this.complianceLevel == ClassFileConstants.JDK1_3

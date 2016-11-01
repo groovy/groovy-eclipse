@@ -1,14 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2009 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     Andy Clement        - Initial API and implementation
- *     Andrew Eisenberg - Additional work
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.jdt.groovy.integration.internal;
 
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
@@ -26,36 +30,34 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
  *
  * @author Andy Clement
  */
-@SuppressWarnings("restriction")
 public class MultiplexingParser extends Parser {
 
-	private Object requestor;
-	private CompilerOptions compilerOptions;
-	private GroovyParser groovyParser;
+    private Object requestor;
+    private CompilerOptions compilerOptions;
+    private GroovyParser groovyParser;
 
-	public MultiplexingParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter,
-			boolean optimizeStringLiterals) {
-		// The superclass that is extended is in charge of parsing .java files
-		super(problemReporter, optimizeStringLiterals);
-		this.requestor = requestor;
-		this.compilerOptions = compilerOptions;
-	}
+    public MultiplexingParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter,
+            boolean optimizeStringLiterals) {
+        // The superclass that is extended is in charge of parsing .java files
+        super(problemReporter, optimizeStringLiterals);
+        this.requestor = requestor;
+        this.compilerOptions = compilerOptions;
+    }
 
-	@Override
-	public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
-		if (ContentTypeUtils.isGroovyLikeFileName(sourceUnit.getFileName())) {
-			if (groovyParser == null) {
-				groovyParser = new GroovyParser(this.requestor, this.compilerOptions, this.problemReporter, true, false);
-			}
-			return groovyParser.dietParse(sourceUnit, compilationResult);
-		} else {
-			return super.dietParse(sourceUnit, compilationResult);
-		}
-	}
+    @Override
+    public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
+        if (ContentTypeUtils.isGroovyLikeFileName(sourceUnit.getFileName())) {
+            if (groovyParser == null) {
+                groovyParser = new GroovyParser(this.requestor, this.compilerOptions, this.problemReporter, true, false);
+            }
+            return groovyParser.dietParse(sourceUnit, compilationResult);
+        } else {
+            return super.dietParse(sourceUnit, compilationResult);
+        }
+    }
 
-	@Override
-	public void reset() {
-		groovyParser = null;
-	}
-
+    @Override
+    public void reset() {
+        groovyParser = null;
+    }
 }

@@ -17,12 +17,10 @@
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import groovyjarjarasm.asm.Opcodes;
-
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.internal.ui.JavaPlugin;

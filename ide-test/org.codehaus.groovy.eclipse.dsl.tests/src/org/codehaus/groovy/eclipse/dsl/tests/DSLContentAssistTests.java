@@ -1,7 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
- * 
- * andrew - Initial API and implementation
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,37 +34,37 @@ import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
- * 
+ *
  * @author Andrew Eisenberg
  * @created Jul 27, 2011
  */
 public class DSLContentAssistTests extends CompletionTestCase {
 
-    private static final String COMMAND_CHAIN_NO_ARGS = 
-            "contribute (currentType('Inner')) {\n" + 
-    		"  method name:'flart', noParens:true, type: 'Inner'\n" + 
-    		"}";
+    private static final String COMMAND_CHAIN_NO_ARGS =
+            "contribute (currentType('Inner')) {\n" +
+            "  method name:'flart', noParens:true, type: 'Inner'\n" +
+            "}";
     private static final String COMMAND_CHAIN_ONE_ARG =
-            "contribute (currentType('Inner')) {\n" + 
-            "  method name:'flart', noParens:true, type: 'Inner', params:[a:Integer]\n" + 
+            "contribute (currentType('Inner')) {\n" +
+            "  method name:'flart', noParens:true, type: 'Inner', params:[a:Integer]\n" +
             "}";
 
     private static final String COMMAND_CHAIN_TWO_ARGS =
-            "contribute (currentType('Inner')) {\n" + 
-            "  method name:'flart', noParens:true, type: 'Inner', params:[a:Integer, b:String]\n" + 
+            "contribute (currentType('Inner')) {\n" +
+            "  method name:'flart', noParens:true, type: 'Inner', params:[a:Integer, b:String]\n" +
             "}";
     private static final String NO_PARENS_FOR_DELEGATE =
-            "contribute (currentType('Inner')) {\n" + 
-            "  delegatesTo type: 'Other', noParens: true\n" + 
+            "contribute (currentType('Inner')) {\n" +
+            "  delegatesTo type: 'Other', noParens: true\n" +
             "}";
-    private static final String SET_DELEGATE_ON_INT = "contribute(currentType(Integer) & enclosingCallName(\"foo\")) {\n" + 
-    "    setDelegateType(String)\n" + 
+    private static final String SET_DELEGATE_ON_INT = "contribute(currentType(Integer) & enclosingCallName(\"foo\")) {\n" +
+    "    setDelegateType(String)\n" +
     "}";
 
     public DSLContentAssistTests(String name) {
         super(name);
     }
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -90,7 +88,7 @@ public class DSLContentAssistTests extends CompletionTestCase {
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, ".")));
         assertProposalOrdering(proposals, "getInstance", "aaa");
     }
-    
+
     public void testDSLProposalFirstMethod1() throws Exception {
         if (GroovyUtils.GROOVY_LEVEL >= 20) {
             AbstractDSLInferencingTest.addGroovyJarToProject(getGroovySwingJar(), getDefaultProject());
@@ -127,32 +125,32 @@ public class DSLContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "frame", 0);
         proposalExists(proposals, "registerBinding", 0);
     }
-    
+
     // GRECLIPSE-1324
     public void testEmptyClosure1() throws Exception {
         createDsls(
                 SET_DELEGATE_ON_INT);
-        String contents = "1.foo {\n" + 
-        		"    // here\n" + 
-        		"}";
+        String contents = "1.foo {\n" +
+                "    // here\n" +
+                "}";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "\n    "));
 
         // should see proposals from String, not Integer
         proposalExists(proposals, "substring", 2);
-        
+
         proposalExists(proposals, "bytes", 1); // synthetic accessor
         proposalExists(proposals, "abs", 0); // DGM
-        
-        
+
+
         proposalExists(proposals, "capitalize", 1); // DGM
-        proposalExists(proposals, "digits", 0);  
+        proposalExists(proposals, "digits", 0);
     }
     // GRECLIPSE-1324
     public void testEmptyClosure2() throws Exception {
         createDsls(
                 SET_DELEGATE_ON_INT);
-        String contents = "1.foo {\n" + 
-                "    to\n" + 
+        String contents = "1.foo {\n" +
+                "    to\n" +
                 "}";
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "\n    "));
 
@@ -160,80 +158,80 @@ public class DSLContentAssistTests extends CompletionTestCase {
         proposalExists(proposals, "toUpperCase()", 1);
         proposalExists(proposals, "toHexString()", 0);
     }
-    
+
     public void testCommandChain1() throws Exception {
         createDsls(COMMAND_CHAIN_NO_ARGS);
-        String contents = 
+        String contents =
                 "class Inner { }\n" +
-        		"def val = new Inner()\n" +
-        		"val.fla";
-        
+                "def val = new Inner()\n" +
+                "val.fla";
+
         Document doc = new Document(contents);
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ".fla"));
         proposalExists(proposals, "flart", 1);
         ICompletionProposal proposal = findFirstProposal(proposals, "flart", false);
         applyProposalAndCheck(doc, proposal, contents.replace("val.fla", "val.flart"));
     }
-    
+
     public void testCommandChain2() throws Exception {
         createDsls(COMMAND_CHAIN_NO_ARGS);
-        String contents = 
+        String contents =
                 "class Inner { }\n" +
                 "def val = new Inner()\n" +
                 "val.flart foo fl";
-        
+
         Document doc = new Document(contents);
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, " fl"));
         proposalExists(proposals, "flart", 1);
         ICompletionProposal proposal = findFirstProposal(proposals, "flart", false);
         applyProposalAndCheck(doc, proposal, contents.replace(" fl", " flart"));
     }
-    
+
     public void testCommandChain3() throws Exception {
         createDsls(COMMAND_CHAIN_NO_ARGS);
-        String contents = 
+        String contents =
                 "class Inner { }\n" +
                 "def val = new Inner()\n" +
                 "val.flart foo, baz fl";
-        
+
         Document doc = new Document(contents);
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, " fl"));
         proposalExists(proposals, "flart", 1);
         ICompletionProposal proposal = findFirstProposal(proposals, "flart", false);
         applyProposalAndCheck(doc, proposal, contents.replace(" fl", " flart"));
     }
-    
+
     public void testCommandChain4() throws Exception {
         createDsls(COMMAND_CHAIN_ONE_ARG);
-        String contents = 
+        String contents =
                 "class Inner { }\n" +
                 "def val = new Inner()\n" +
                 "val.flart foo, baz fl";
-        
+
         Document doc = new Document(contents);
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, " fl"));
         proposalExists(proposals, "flart", 1);
         ICompletionProposal proposal = findFirstProposal(proposals, "flart", false);
         applyProposalAndCheck(doc, proposal, contents.replace(" fl", " flart 0 "));
     }
-    
+
     public void testCommandChain5() throws Exception {
         createDsls(COMMAND_CHAIN_TWO_ARGS);
-        String contents = 
+        String contents =
                 "class Inner { }\n" +
                 "def val = new Inner()\n" +
                 "val.flart foo, baz fl";
-        
+
         Document doc = new Document(contents);
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, " fl"));
         proposalExists(proposals, "flart", 1);
         ICompletionProposal proposal = findFirstProposal(proposals, "flart", false);
         applyProposalAndCheck(doc, proposal, contents.replace(" fl", " flart 0, \"\" "));
     }
-    
+
     public void testDelegatesToNoParens1() throws Exception {
         createDsls(NO_PARENS_FOR_DELEGATE);
-        String contents = 
+        String contents =
                 "class Other {\n" +
                 "  def blart(a, b, c) { }\n" +
                 "  def flart(a) { }\n" +
@@ -247,10 +245,10 @@ public class DSLContentAssistTests extends CompletionTestCase {
         ICompletionProposal proposal = findFirstProposal(proposals, "blart", false);
         applyProposalAndCheck(doc, proposal, contents.replace("val.bl", "val.blart val, val, val "));
     }
-    
+
     public void testDelegatesToNoParens2() throws Exception {
         createDsls(NO_PARENS_FOR_DELEGATE);
-        String contents = 
+        String contents =
                 "class Other {\n" +
                         "  def blart(a, b, c) { }\n" +
                         "  def flart(a) { }\n" +
@@ -258,13 +256,13 @@ public class DSLContentAssistTests extends CompletionTestCase {
                         "class Inner { }\n" +
                         "def val = new Inner()\n" +
                         "val.fl";
-        
+
         Document doc = new Document(contents);
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "val.fl"));
         ICompletionProposal proposal = findFirstProposal(proposals, "flart", false);
         applyProposalAndCheck(doc, proposal, contents.replace("val.fl", "val.flart val "));
     }
-    
+
     protected void addJarToProject(String jarName) throws JavaModelException, IOException {
         String externalFilePath = findExternalFilePath(jarName);
         env.addExternalJar(getDefaultProject().getFullPath(), externalFilePath);
@@ -277,7 +275,7 @@ public class DSLContentAssistTests extends CompletionTestCase {
         String externalFilePath = resolved.getFile();
         return externalFilePath;
     }
-    
+
     protected String[] createDsls(String ... dsls) {
         return createDsls(0, dsls);
     }
@@ -303,5 +301,5 @@ public class DSLContentAssistTests extends CompletionTestCase {
         return "groovy-all-*.jar";
     }
 
-    
+
 }

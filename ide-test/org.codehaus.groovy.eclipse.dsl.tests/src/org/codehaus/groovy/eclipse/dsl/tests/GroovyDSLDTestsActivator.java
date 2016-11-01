@@ -1,13 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *      Andrew Eisenberg - Initial implemenation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.dsl.tests;
 
 import java.io.BufferedReader;
@@ -27,45 +32,45 @@ import org.osgi.framework.BundleContext;
  */
 public class GroovyDSLDTestsActivator extends AbstractUIPlugin {
 
-	// The plug-in ID
-	public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.dsl.tests"; //$NON-NLS-1$
+    // The plug-in ID
+    public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.dsl.tests";
 
-	// The shared instance
-	private static GroovyDSLDTestsActivator plugin;
-	
-	/**
-	 * The constructor
-	 */
-	public GroovyDSLDTestsActivator() {
-	}
+    // The shared instance
+    private static GroovyDSLDTestsActivator plugin;
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
-	 */
-	public void start(BundleContext context) throws Exception {
-		super.start(context);
-		plugin = this;
-	}
+    /**
+     * The constructor
+     */
+    public GroovyDSLDTestsActivator() {
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
-	 */
-	public void stop(BundleContext context) throws Exception {
-		plugin = null;
-		super.stop(context);
-	}
+    /*
+     * (non-Javadoc)
+     * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
+     */
+    public void start(BundleContext context) throws Exception {
+        super.start(context);
+        plugin = this;
+    }
 
-	/**
-	 * Returns the shared instance
-	 *
-	 * @return the shared instance
-	 */
-	public static GroovyDSLDTestsActivator getDefault() {
-		return plugin;
-	}
-	
+    /*
+     * (non-Javadoc)
+     * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
+     */
+    public void stop(BundleContext context) throws Exception {
+        plugin = null;
+        super.stop(context);
+    }
+
+    /**
+     * Returns the shared instance
+     *
+     * @return the shared instance
+     */
+    public static GroovyDSLDTestsActivator getDefault() {
+        return plugin;
+    }
+
     public InputStream getTestResourceStream(String fileName) throws IOException {
         return getTestResourceURL(fileName).openStream();
     }
@@ -74,12 +79,12 @@ public class GroovyDSLDTestsActivator extends AbstractUIPlugin {
         InputStream stream = getTestResourceStream(fileName);
         return getContents(stream);
     }
-    
+
     public URL getTestResourceURL(String fileName) throws MalformedURLException {
         IPath path= new Path("testResources").append(fileName);
         return new URL(getBundle().getEntry("/"), path.toString());
     }
-    
+
     public String getContents(InputStream in) throws IOException {
         BufferedReader br= new BufferedReader(new InputStreamReader(in));
 

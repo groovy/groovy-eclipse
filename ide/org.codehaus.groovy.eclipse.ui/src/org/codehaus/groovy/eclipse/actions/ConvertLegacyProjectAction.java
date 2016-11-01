@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,44 +34,42 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
 /**
- * This Action converts a Project that uses the old Groovy 1.x Nature to a project that uses the 2.x nature. 
- * 
+ * This Action converts a Project that uses the old Groovy 1.x Nature to a project that uses the 2.x nature.
+ *
  * @author Andrew
  */
 public class ConvertLegacyProjectAction implements IObjectActionDelegate {
     private IProject[] projects;
     private Shell currentShell;
-    
 
     public void run(final IAction action) {
         if (projects != null && projects.length > 0) {
             ConvertLegacyProject convert = new ConvertLegacyProject();
             try {
                 convert.convertProjects(projects);
-                
+
                 // success if no exception thrown
                 MessageDialog.openInformation(
-                        (currentShell != null ? currentShell : Display.getCurrent().getActiveShell()), 
+                        (currentShell != null ? currentShell : Display.getCurrent().getActiveShell()),
                         "Successful conversion",
                         "Conversion to new groovy plugin successful!\n" +
                         "It is recommended to delete the \"bin-groovy\" folder.");
-                
+
             } catch (Exception e) {
                 StringBuffer sb = new StringBuffer();
                 for (IProject project : projects) {
                     sb.append(project.getName() + " ");
-                    
+
                 }
                 String message = "Failed to convert projects: " + sb;
                 GroovyCore.logException(message, e);
                 IStatus reason = new Status(IStatus.ERROR, GroovyCoreActivator.PLUGIN_ID, message, e);
                 ErrorDialog.openError(
-                        (currentShell != null ? currentShell : Display.getCurrent().getActiveShell()), 
+                        (currentShell != null ? currentShell : Display.getCurrent().getActiveShell()),
                         "Could not convert projects", "Could not convert projects.  Reason:", reason);
             }
         }
@@ -88,7 +86,7 @@ public class ConvertLegacyProjectAction implements IObjectActionDelegate {
             for (Iterator<?> iter = newSelection.iterator(); iter.hasNext();) {
                 Object object = iter.next();
                 if (object instanceof IAdaptable) {
-                    IProject project = (IProject) ((IAdaptable)object).getAdapter(IProject.class);  
+                    IProject project = ((IAdaptable)object).getAdapter(IProject.class);
                     try {
                         if(project != null  && project.hasNature(ConvertLegacyProject.OLD_NATURE)) {
                             newSelected.add(project);
@@ -120,7 +118,7 @@ public class ConvertLegacyProjectAction implements IObjectActionDelegate {
      * @see IEditorActionDelegate#setActivePart
      */
     public void setActivePart(final IAction action, final IWorkbenchPart targetPart) {
-        try { 
+        try {
             currentShell = targetPart.getSite().getShell();
         } catch (Exception e) {
             currentShell = null;

@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,17 @@
  */
 package org.codehaus.groovy.eclipse.core.compiler;
 
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 
 public class ErrorRecoveryTests extends EclipseTestCase {
-	private GroovySnippetCompiler compiler;
+    private GroovySnippetCompiler compiler;
 
-	@Override
+    @Override
     protected void setUp() throws Exception {
-		super.setUp();
-		GroovyRuntime.addGroovyRuntime(testProject.getProject());
-		compiler = new GroovySnippetCompiler(testProject.getGroovyProjectFacade());
-	}
+        super.setUp();
+        compiler = new GroovySnippetCompiler(testProject.getGroovyProjectFacade());
+    }
 
     @Override
     protected void tearDown() throws Exception {
@@ -35,55 +33,55 @@ public class ErrorRecoveryTests extends EclipseTestCase {
         compiler.cleanup();
     }
 
-	public CompilationResult compileScript(String script) {
-	    long start = System.currentTimeMillis();
-	    CompilationResult result = compiler.compileForErrors(script, "Test");
-	    System.out.println("Time to compile: " + (System.currentTimeMillis() - start) + " ms");
-		return result;
-	}
+    public CompilationResult compileScript(String script) {
+        long start = System.currentTimeMillis();
+        CompilationResult result = compiler.compileForErrors(script, "Test");
+        System.out.println("Time to compile: " + (System.currentTimeMillis() - start) + " ms");
+        return result;
+    }
 
-	public void testDotNothing1() {
-	    CompilationResult result = compileScript("s.");
-	    assertEquals(1, result.getAllProblems().length);
-	}
-
-	public void testDotNothing2() {
-		CompilationResult result = compileScript("s.a.");
+    public void testDotNothing1() {
+        CompilationResult result = compileScript("s.");
         assertEquals(1, result.getAllProblems().length);
-	}
+    }
 
-	public void testDotNothing3() {
-		CompilationResult result = compileScript("s[10].");
+    public void testDotNothing2() {
+        CompilationResult result = compileScript("s.a.");
         assertEquals(1, result.getAllProblems().length);
-	}
+    }
 
-	public void testDotNothing4() {
-		CompilationResult result = compileScript("s().");
+    public void testDotNothing3() {
+        CompilationResult result = compileScript("s[10].");
         assertEquals(1, result.getAllProblems().length);
-	}
+    }
 
-	public void testDotNothing5() {
-		CompilationResult result = compileScript("s { it }.");
+    public void testDotNothing4() {
+        CompilationResult result = compileScript("s().");
         assertEquals(1, result.getAllProblems().length);
-	}
+    }
 
-	public void testDotNothing6() {
-		CompilationResult result = compileScript("String s = 'hello'; s.");
+    public void testDotNothing5() {
+        CompilationResult result = compileScript("s { it }.");
         assertEquals(1, result.getAllProblems().length);
-	}
+    }
 
-	public void testSpreadDotNothing() {
-		CompilationResult result = compileScript("s*.");
+    public void testDotNothing6() {
+        CompilationResult result = compileScript("String s = 'hello'; s.");
         assertEquals(1, result.getAllProblems().length);
-	}
+    }
 
-	public void testOptionalDotNothing() {
-		CompilationResult result = compileScript("s?.");
+    public void testSpreadDotNothing() {
+        CompilationResult result = compileScript("s*.");
         assertEquals(1, result.getAllProblems().length);
-	}
+    }
 
-	public void testDotLBrace() {
-		CompilationResult result = compileScript("String s = 'hello'; s.{");
+    public void testOptionalDotNothing() {
+        CompilationResult result = compileScript("s?.");
         assertEquals(1, result.getAllProblems().length);
-	}
+    }
+
+    public void testDotLBrace() {
+        CompilationResult result = compileScript("String s = 'hello'; s.{");
+        assertEquals(1, result.getAllProblems().length);
+    }
 }

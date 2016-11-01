@@ -24,12 +24,8 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.IGroovyDebugRequestor;
 
 class DebugRequestor implements IGroovyDebugRequestor {
 
-    Map declarations;
-    Map types;
-
-    public DebugRequestor() {
-        declarations = new HashMap();
-    }
+    Map<String, GroovyCompilationUnitDeclaration> declarations =
+            new HashMap<String, GroovyCompilationUnitDeclaration>();
 
     public void acceptCompilationUnitDeclaration(GroovyCompilationUnitDeclaration gcuDeclaration) {
         System.out.println(gcuDeclaration);

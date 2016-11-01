@@ -23,31 +23,30 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.internal.ui.wizards.NewElementWizard;
-import org.eclipse.jface.wizard.Wizard;
 
 /**
  * @see Wizard
  */
 public class NewClassWizard extends NewElementWizard  {
 	private NewClassWizardPage fPage;
-	
+
 	public NewClassWizard() {
 		super();
 		setDefaultPageImageDescriptor(JavaPluginImages.DESC_WIZBAN_NEWCLASS);
 		setDialogSettings(JavaPlugin.getDefault().getDialogSettings());
-		
-		setWindowTitle("Create a new Groovy class"); 
+
+		setWindowTitle("Create a new Groovy class");
 	}
 
 	/*
 	 * @see Wizard#createPages
-	 */	
+	 */
 	public void addPages() {
 		super.addPages();
 		fPage= new NewClassWizardPage();
 		addPage(fPage);
 		fPage.init(getSelection());
-	}	
+	}
 
 
     /*(non-Javadoc)
@@ -63,7 +62,7 @@ public class NewClassWizard extends NewElementWizard  {
     protected void finishPage(IProgressMonitor monitor) throws InterruptedException, CoreException {
         fPage.createType(monitor); // use the full progress monitor
     }
-        
+
     /* (non-Javadoc)
      * @see org.eclipse.jface.wizard.IWizard#performFinish()
      */
@@ -75,7 +74,7 @@ public class NewClassWizard extends NewElementWizard  {
             if (resource != null) {
                 selectAndReveal(resource);
                 openResource((IFile) resource);
-            }   
+            }
         }
         return res;
     }

@@ -1,5 +1,5 @@
- /*
- * Copyright 2009-2011 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.core;
 
 import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.osgi.framework.BundleContext;
 
@@ -57,7 +56,7 @@ public class GroovyCoreActivator extends Plugin {
 
     public IEclipsePreferences getPreferences() {
         if (instanceScope == null) {
-            instanceScope = ((IScopeContext) InstanceScope.INSTANCE).getNode(GroovyCoreActivator.PLUGIN_ID);
+            instanceScope = InstanceScope.INSTANCE.getNode(GroovyCoreActivator.PLUGIN_ID);
         }
         return instanceScope;
     }

@@ -115,7 +115,7 @@ public final class GroovyConventionsBuilder {
 	public static List<Token> tokenizeString(String name) {
 		Reader input = new StringReader(name);
 		GroovyLexer lexer = new GroovyLexer(input);
-		TokenStream stream = (TokenStream) lexer.plumb();
+		TokenStream stream = lexer.plumb();
 
 		List<Token> tokenList = new Vector<Token>();
 

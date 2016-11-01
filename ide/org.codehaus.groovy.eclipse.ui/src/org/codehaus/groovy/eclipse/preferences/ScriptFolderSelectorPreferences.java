@@ -298,7 +298,6 @@ public class ScriptFolderSelectorPreferences {
     }
 
     protected void doSelectionChanged(ListDialogField field) {
-        @SuppressWarnings("unchecked")
         List<String> selected = field.getSelectedElements();
         field.enableButton(IDX_EDIT, canEdit(selected));
     }
@@ -339,7 +338,6 @@ public class ScriptFolderSelectorPreferences {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public void applyPreferences() {
         if (!hasChanges) {
             return;

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
  *
  * IFS Institute for Software, HSR Rapperswil, Switzerland
@@ -33,28 +33,28 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
 
 public class BaseTestSuite extends TestSuite {
-	
+
 	private static class PatternFilter implements FilenameFilter {
-		
+
 		public PatternFilter(final String findPattern) {
 			this.findPattern = "^" + findPattern + ".*";
 		}
-		
+
 		private String findPattern;
 
 		public boolean accept(final File dir, final String name) {
 			return name.matches(findPattern);
-		}	
+		}
 	}
-	
+
 	public static List<File> getFileList(final String search) {
 		return createFileList(search, "");
 	}
-	
+
 	public static List<File> getFileList(final String subFolder,final String search) {
 		return createFileList(search, subFolder);
 	}
-	
+
 	private static List<File> createFileList(final String search, final String subFolder){
 		final String TEST_FILES = getPathToTestFiles();
 		final File dir = new File(TEST_FILES + subFolder);
@@ -62,18 +62,17 @@ public class BaseTestSuite extends TestSuite {
 			throw new RuntimeException("The path: " + dir.getAbsolutePath() + " is invalid");
 		}
 		final ArrayList<File> fl = new ArrayList<File>();
-		
+
 		for (final File f : dir.listFiles(new PatternFilter(search))) {
 			fl.add(f);
 		}
-		
+
 		return fl;
-	} 
-	
-	
+	}
+
     private static String getPluginDirectoryPath() {
         try {
-            URL platformURL = Platform.getBundle("org.codehaus.groovy.eclipse.refactoring.test").getEntry("/"); //$NON-NLS-1$ //$NON-NLS-2$
+            URL platformURL = Platform.getBundle("org.codehaus.groovy.eclipse.refactoring.test").getEntry("/");
             return new File(FileLocator.toFileURL(platformURL).getFile()).getAbsolutePath();
         } catch (IOException e) {
             e.printStackTrace();
@@ -81,15 +80,11 @@ public class BaseTestSuite extends TestSuite {
         return null;
     }
 
-
     public static String getPathToTestFiles() {
         final String systemSeparator = String.valueOf(IPath.SEPARATOR);
         String folders = "/resources";
         folders = folders.replaceAll("/", systemSeparator);
 
         return getPluginDirectoryPath() + folders;
-
     }
-
-	
 }

@@ -38,8 +38,10 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This visitor walks the AST tree and collects references to Annotations that
@@ -167,19 +169,20 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
                 } else {
                     act = new AnnotationCollectorTransform();
                 }
-                // GRECLIPSE: start: Information about original annotation added to meta 
-                // data to prevent import organizer from deleting original import
-                if (act!=null) { 
+                if (act!=null) {
+                    // GRECLIPSE edit
+                    //collected.addAll(act.visit(annotation, aliasNode, origin, source));
+                    // original annotation added to metadata to prevent import organizer from deleting its import
                     List<AnnotationNode> visitResult = act.visit(annotation, aliasNode, origin, source);
                     for (AnnotationNode annotationNode : visitResult) {
-	                    Object key = AnnotationCollector.class + annotationNode.getClassNode().getName();
-	                    if (annotationNode.getClassNode().getNodeMetaData(key) == null) {
-	                    	annotationNode.getClassNode().setNodeMetaData(key, aliasNode.getClassNode().getName());
-	                    }
+                        Set<AnnotationNode> aliases = annotationNode.getNodeMetaData("AnnotationCollector");
+                        if (aliases == null) annotationNode.setNodeMetaData("AnnotationCollector", (aliases = new HashSet(1)));
+
+                        aliases.add(aliasNode);
                     }
-					collected.addAll(visitResult);
+                    collected.addAll(visitResult);
+                    // GRECLIPSE end
                 }
-                // GRECLIPSE: end
                 ret = true;
             }
         }

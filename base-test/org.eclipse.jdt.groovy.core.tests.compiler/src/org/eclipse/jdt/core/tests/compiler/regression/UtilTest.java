@@ -30,7 +30,7 @@ static {
 //	TESTS_RANGE = new int[] { 62, -1 };
 }
 public static Test suite() {
-	return buildAllCompliancesTestSuite(testClass());
+	return buildAllCompliancesTestSuite(UtilTest.class);
 }
 /**
  * Assert that a pattern and a name matches or not.
@@ -71,12 +71,12 @@ protected void setUp() throws Exception {
 }
 
 public boolean checkPathMatch(char[] pattern, char[] path, boolean isCaseSensitive) {
-	
+
 	CharOperation.replace(pattern, '/', File.separatorChar);
 	CharOperation.replace(pattern, '\\', File.separatorChar);
 	CharOperation.replace(path, '/', File.separatorChar);
 	CharOperation.replace(path, '\\', File.separatorChar);
-	
+
 	boolean result = CharOperation.pathMatch(pattern, path, isCaseSensitive, File.separatorChar);
 
 //	boolean antResult = SelectorUtils.matchPath(new String(pattern), new String(path), isCaseSensitive);
@@ -365,7 +365,7 @@ public void test43() {
  * Corner cases
  */
 public void test44() {
-		
+
 	assertTrue("Path pattern matching failure-1",
 		!checkPathMatch("test".toCharArray(), "test/CVS/Entries".toCharArray(), true));
 	assertTrue("Path pattern matching failure-2",
@@ -375,7 +375,7 @@ public void test44() {
  * Corner cases
  */
 public void test45() {
-		
+
 	assertTrue("Path pattern matching failure-1",
 		checkPathMatch("/test/test1/".toCharArray(), "/test/test1/test/test1".toCharArray(), true));
 	assertTrue("Path pattern matching failure-2",
@@ -387,7 +387,7 @@ public void test46() {
 		checkPathMatch("hello/**/World".toCharArray(), "hello/World".toCharArray(), true));
 }
 /*
- * Regression test for 28316 Missing references to constructor 
+ * Regression test for 28316 Missing references to constructor
  */
 public void test47() {
 
@@ -430,7 +430,7 @@ public void test54() {
 		!checkPathMatch("x/".toCharArray(), "hello/x".toCharArray(), true)); // 29761
 
 	assertTrue("Path pattern matching failure-2",
-		checkPathMatch("**/x/".toCharArray(), "hello/x".toCharArray(), true)); 
+		checkPathMatch("**/x/".toCharArray(), "hello/x".toCharArray(), true));
 
 	assertTrue("Path pattern matching failure-3",
 		!checkPathMatch("/x/".toCharArray(), "hello/x".toCharArray(), true));
@@ -464,7 +464,7 @@ public void test60() {
 	assertTrue("Path pattern matching failure-3",
 		checkPathMatch("/P/src".toCharArray(), "/P/src".toCharArray(), true));
 	assertTrue("Path pattern matching failure-4",
-		!checkPathMatch("A.java".toCharArray(), "/P/src/A.java".toCharArray(), true));		
+		!checkPathMatch("A.java".toCharArray(), "/P/src/A.java".toCharArray(), true));
 }
 public void test61() {
 
@@ -479,7 +479,7 @@ public void test62() {
 	assertCamelCase("NPoE", "NullPointerException", true/* should match */);
 	assertCamelCase("NuPExc", "NullPointerException", true/* should match */);
 	// Verify that there were no unexpected results
-    assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
+	assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
 }
 public void test63() {
 	assertCamelCase("NPEX", "NullPointerException", false/* should not match */);
@@ -488,7 +488,7 @@ public void test63() {
 	assertCamelCase("npe", "NPException", false/* should not match */);
 	assertCamelCase("NPointerE", "NullPointerException", true/* should match */);
 	// Verify that there were no unexpected results
-    assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
+	assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
 }
 public void test64() {
 	assertCamelCase("IAE", "IgnoreAllErrorHandler", true/* should match */);
@@ -499,7 +499,7 @@ public void test64() {
 	assertCamelCase("", "", true/* should match */);
 	assertCamelCase("IAnchor", null, false/* should not match */);
 	// Verify that there were no unexpected results
-    assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
+	assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
 }
 public void test65() {
 	assertCamelCase("iSCDCo", "invokeStringConcatenationDefaultConstructor", true/* should match */);
@@ -516,7 +516,7 @@ public void test65() {
 	assertCamelCase("nullP", "nullPointerException", true/* should match */);
 	assertCamelCase("nP", "nullPointerException", true/* should match */);
 	// Verify that there were no unexpected results
-    assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
+	assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
 }
 
 /**
@@ -524,51 +524,51 @@ public void test65() {
  * @see "https://bugs.eclipse.org/bugs/show_bug.cgi?id=130390"
  */
 public void test66() {
-    String[][] MATCHES = {
-            {"TZ","TimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"TiZ","TimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"TiZon","TimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"TZon","TimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"TZone","TimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"TimeZone","TimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"TimeZ","TimeZ"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"TZ","TimeZ"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"T","TimeZ"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"T","TimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"TZ","TZ"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"aT","aTimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"aTi","aTimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"aTiZ","aTimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"aTZ","aTimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"aT","artTimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"aTi","artTimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"aTiZ","artTimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"aTZ","artTimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-    };
-    
-    for (int i = 0; i<MATCHES.length ; i++) {
-        String[] match = MATCHES[i];
-        assertCamelCase(match[0], match[1], true/*should match*/);
-    }
-    
-    String[][] MIS_MATCHES = {
-            {"TZ","Timezone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"aTZ","TimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"aTZ","TZ"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"arT","aTimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"arTi","aTimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"arTiZ","aTimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"arTZ","aTimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-            {"aT","atimeZone"},  //$NON-NLS-1$//$NON-NLS-2$
-    };
-    
-    for (int i = 0; i<MIS_MATCHES.length ; i++) {
-        String[] match = MIS_MATCHES[i];
-        assertCamelCase(match[0], match[1], false/*should not match*/);
-    }
+	String[][] MATCHES = {
+			{"TZ","TimeZone"},
+			{"TiZ","TimeZone"},
+			{"TiZon","TimeZone"},
+			{"TZon","TimeZone"},
+			{"TZone","TimeZone"},
+			{"TimeZone","TimeZone"},
+			{"TimeZ","TimeZ"},
+			{"TZ","TimeZ"},
+			{"T","TimeZ"},
+			{"T","TimeZone"},
+			{"TZ","TZ"},
+			{"aT","aTimeZone"},
+			{"aTi","aTimeZone"},
+			{"aTiZ","aTimeZone"},
+			{"aTZ","aTimeZone"},
+			{"aT","artTimeZone"},
+			{"aTi","artTimeZone"},
+			{"aTiZ","artTimeZone"},
+			{"aTZ","artTimeZone"},
+	};
+
+	for (int i = 0; i<MATCHES.length ; i++) {
+		String[] match = MATCHES[i];
+		assertCamelCase(match[0], match[1], true/*should match*/);
+	}
+
+	String[][] MIS_MATCHES = {
+			{"TZ","Timezone"},
+			{"aTZ","TimeZone"},
+			{"aTZ","TZ"},
+			{"arT","aTimeZone"},
+			{"arTi","aTimeZone"},
+			{"arTiZ","aTimeZone"},
+			{"arTZ","aTimeZone"},
+			{"aT","atimeZone"},
+	};
+
+	for (int i = 0; i<MIS_MATCHES.length ; i++) {
+		String[] match = MIS_MATCHES[i];
+		assertCamelCase(match[0], match[1], false/*should not match*/);
+	}
 
 	// Verify that there were no unexpected results
-    assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
+	assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
 }
 
 /**
@@ -592,7 +592,7 @@ public void test67() {
 	assertCamelCase("Clonenotsupportedexception", "CloneNotSupportedException", false/* should not match */);
 	assertCamelCase("CloneNotSupportedException", "CloneNotSupportedException", true /* should match */);
 	// Verify that there were no unexpected results
-    assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
+	assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
 }
 // lower CamelCase
 public void test68() {
@@ -603,7 +603,7 @@ public void test68() {
 	assertCamelCase("longNOMethod", "longNameOfMethod", true/* should match */);
 	assertCamelCase("longNoMethod", "longNameOfMethod", false/* should not match */);
 	// Verify that there were no unexpected results
-    assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
+	assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
 }
 // search tests
 public void test69() {
@@ -614,7 +614,7 @@ public void test69() {
 	assertCamelCase("aa", "AbcdAbcdefAbcAbcdefghAbAAzzzzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnAbcAbcdefghijklm", false /* should not match */);
 	assertCamelCase("AA", "AbcdAbcdefAbcAbcdefghAbAAzzzzAbcdefghijklmnopqrstuvwxyzAbcdefghijklmnAbcAbcdefghijklm", true /* should match */);
 	// Verify that there were no unexpected results
-    assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
+	assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
 }
 
 // bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=109695
@@ -655,7 +655,7 @@ public void test70() throws CoreException {
 	assertCamelCase("UTFDSS", "UTF6DocScannerSupport", true /*same part count*/, true /* should match */);
 	assertCamelCase("UTFDSS", "UTFDocScannerSupport", true /*same part count*/, true /* should match */);
 	// Verify that there were no unexpected results
-    assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
+	assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
 }
 // bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=124624
 public void test71() {
@@ -669,7 +669,7 @@ public void test71() {
 	assertCamelCase("HashM", "HtmlMapper", true /*same count of parts expected*/, false /* should not match */);
 	assertCamelCase("HashM", "HashMapEntry", true /*same count of parts expected*/, false /* should not match */);
 	// Verify that there were no unexpected results
-    assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
+	assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
 }
 public void test71b() { // previous test cases but with 3.3 behavior
 	assertCamelCase("HM", "HashMap", true /*should match*/);
@@ -682,7 +682,7 @@ public void test71b() { // previous test cases but with 3.3 behavior
 	assertCamelCase("HashM", "HtmlMapper", false /*should not match*/);
 	assertCamelCase("HashM", "HashMapEntry", true /*should match*/);
 	// Verify that there were no unexpected results
-    assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
+	assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
 }
 // bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=124624
 public void test72() {
@@ -696,7 +696,7 @@ public void test72() {
 	assertCamelCase("HashMa", "HtmlMapper", true /*same count of parts expected*/, false /* should not match */);
 	assertCamelCase("HashMa", "HashMapEntry", true /*same count of parts expected*/, false /* should not match */);
 	// Verify that there were no unexpected results
-    assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
+	assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
 }
 public void test72b() { // previous test cases but with 3.3 behavior
 	assertCamelCase("HMa", "HashMap", true /*should match*/);
@@ -709,7 +709,7 @@ public void test72b() { // previous test cases but with 3.3 behavior
 	assertCamelCase("HashMa", "HtmlMapper", false /*should not match*/);
 	assertCamelCase("HashMa", "HashMapEntry", true /*should match*/);
 	// Verify that there were no unexpected results
-    assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
+	assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
 }
 // bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=124624
 public void test73() {
@@ -723,7 +723,7 @@ public void test73() {
 	assertCamelCase("HashMap", "HtmlMapper", true /*same count of parts expected*/, false /* should not match */);
 	assertCamelCase("HashMap", "HashMapEntry", true /*same count of parts expected*/, false /* should not match */);
 	// Verify that there were no unexpected results
-    assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
+	assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
 }
 public void test73b() { // previous test cases but with 3.3 behavior
 	assertCamelCase("HMap", "HashMap", true /*should match*/);
@@ -736,9 +736,6 @@ public void test73b() { // previous test cases but with 3.3 behavior
 	assertCamelCase("HashMap", "HtmlMapper", false /*should not match*/);
 	assertCamelCase("HashMap", "HashMapEntry", true /*should match*/);
 	// Verify that there were no unexpected results
-    assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
-}
-public static Class testClass() {
-	return UtilTest.class;
+	assertTrue(this.camelCaseErrors.toString(), this.camelCaseErrors.length()==0);
 }
 }

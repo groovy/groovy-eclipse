@@ -12,7 +12,6 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Hashtable;
 
 import junit.framework.Assert;
 
@@ -25,12 +24,11 @@ public class Requestor extends Assert implements ICompilerRequestor {
 	public boolean hasErrors = false;
 	public String outputPath;
 	private boolean forceOutputGeneration;
-	public Hashtable expectedProblems = new Hashtable();
 	public String problemLog = "";
 	public ICompilerRequestor clientRequestor;
 	public boolean showCategory = false;
 	public boolean showWarningToken = false;
-	
+
 public Requestor(boolean forceOutputGeneration, ICompilerRequestor clientRequestor, boolean showCategory, boolean showWarningToken) {
 	this.forceOutputGeneration = forceOutputGeneration;
 	this.clientRequestor = clientRequestor;
@@ -52,7 +50,7 @@ protected void outputClassFiles(CompilationResult unitResult) {
 			for (int i = 0, fileCount = classFiles.length; i < fileCount; i++) {
 				// retrieve the key and the corresponding classfile
 				ClassFile classFile = classFiles[i];
-				String relativeName = 
+				String relativeName =
 					new String(classFile.fileName()).replace('/', File.separatorChar) + ".class";
 				try {
 					org.eclipse.jdt.internal.compiler.util.Util.writeToDisk(true, outputPath, relativeName, classFile);

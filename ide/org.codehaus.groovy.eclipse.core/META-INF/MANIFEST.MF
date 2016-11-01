@@ -1,10 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Groovy Core
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.core;singleton:=true
+Bundle-Name: Groovy Core
+Bundle-Vendor: Codehaus.org
 Bundle-Version: 2.9.2.qualifier
-Bundle-ClassPath: .
-Bundle-Activator: org.codehaus.groovy.eclipse.core.GroovyCoreActivator
 Require-Bundle: org.codehaus.groovy,
  org.eclipse.core.runtime,
  org.eclipse.jdt.core,
@@ -13,7 +12,6 @@ Require-Bundle: org.codehaus.groovy,
  org.eclipse.jdt.launching;bundle-version="3.5.0",
  org.eclipse.osgi,
  org.codehaus.groovy.eclipse.compilerResolver;bundle-version="2.9.2";visibility:=reexport
-Bundle-ActivationPolicy: lazy
 Export-Package: org.codehaus.groovy.eclipse.core,
  org.codehaus.groovy.eclipse.core.adapters,
  org.codehaus.groovy.eclipse.core.builder,
@@ -26,5 +24,6 @@ Export-Package: org.codehaus.groovy.eclipse.core,
  org.codehaus.groovy.eclipse.core.search,
  org.codehaus.groovy.eclipse.core.templates,
  org.codehaus.groovy.eclipse.core.util
-Bundle-Vendor: The Codehaus
+Bundle-ActivationPolicy: lazy
+Bundle-Activator: org.codehaus.groovy.eclipse.core.GroovyCoreActivator
 Bundle-RequiredExecutionEnvironment: J2SE-1.5

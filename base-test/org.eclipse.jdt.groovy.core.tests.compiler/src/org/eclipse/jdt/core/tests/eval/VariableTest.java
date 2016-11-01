@@ -26,7 +26,7 @@ public VariableTest(String name) {
 	super(name);
 }
 public static Test suite() {
-	return setupSuite(testClass());
+	return setupSuite(VariableTest.class);
 }
 /**
  * Tests the individual evaluation of variables with expected values of all kind of types.
@@ -43,10 +43,10 @@ public void testAllKindOfValues() {
 		GlobalVariable var7 = context.newVariable("long".toCharArray(), "var7".toCharArray(), "(long)1".toCharArray());
 		GlobalVariable var8 = context.newVariable("String".toCharArray(), "var8".toCharArray(), "\"hello\"".toCharArray());
 		GlobalVariable var9 = context.newVariable("Object".toCharArray(), "var9".toCharArray(), buildCharArray(new String[] {
-			"new Object() {", 
-			"	public String toString() {", 
-			"		return \"an object\";", 
-			"	}", 
+			"new Object() {",
+			"	public String toString() {",
+			"		return \"an object\";",
+			"	}",
 			"}"}));
 		GlobalVariable var10 = context.newVariable("Object".toCharArray(), "var10".toCharArray(), null);
 
@@ -72,9 +72,6 @@ public void testAllKindOfValues() {
 		}
 	}
 }
-public static Class testClass() {
-	return VariableTest.class;
-}
 /**
  * Tests the assignment of a global variable in a code snippet.
  */
@@ -98,33 +95,33 @@ public void testCodeSnippetVarAssign() {
 		// Assign each of the variable and get its value
 		evaluateWithExpectedDisplayString("var1 = 1;".toCharArray(), "1".toCharArray());
 		evaluateWithExpectedValue(var1, "1".toCharArray(), "int".toCharArray());
-		
+
 		evaluateWithExpectedDisplayString("var2 = true;".toCharArray(), "true".toCharArray());
 		evaluateWithExpectedValue(var2, "true".toCharArray(), "boolean".toCharArray());
 
 		evaluateWithExpectedDisplayString("var3 = 'c';".toCharArray(), "c".toCharArray());
 		evaluateWithExpectedValue(var3, "c".toCharArray(), "char".toCharArray());
-		
+
 		evaluateWithExpectedDisplayString("var4 = (float)1.0;".toCharArray(), "1.0".toCharArray());
 		evaluateWithExpectedValue(var4, "1.0".toCharArray(), "float".toCharArray());
-		
+
 		evaluateWithExpectedDisplayString("var5 = 1.0;".toCharArray(), "1.0".toCharArray());
 		evaluateWithExpectedValue(var5, "1.0".toCharArray(), "double".toCharArray());
 
 		evaluateWithExpectedDisplayString("var6 = (short)1;".toCharArray(), "1".toCharArray());
 		evaluateWithExpectedValue(var6, "1".toCharArray(), "short".toCharArray());
-		
+
 		evaluateWithExpectedDisplayString("var7 = (long)1;".toCharArray(), "1".toCharArray());
 		evaluateWithExpectedValue(var7, "1".toCharArray(), "long".toCharArray());
-		
+
 		evaluateWithExpectedDisplayString("var8 = \"hello\";".toCharArray(), "hello".toCharArray());
 		evaluateWithExpectedValue(var8, "hello".toCharArray(), "java.lang.String".toCharArray());
-		
+
 		evaluateWithExpectedDisplayString(buildCharArray(new String[] {
-			"var9 = new Object() {", 
-			"	public String toString() {", 
-			"		return \"an object\";", 
-			"	}", 
+			"var9 = new Object() {",
+			"	public String toString() {",
+			"		return \"an object\";",
+			"	}",
 			"};"}), "an object".toCharArray());
 		evaluateWithExpectedValue(var9, "an object".toCharArray(), "java.lang.Object".toCharArray());
 
@@ -153,10 +150,10 @@ public void testCodeSnippetVarRetrieval() {
 		GlobalVariable var7 = context.newVariable("long".toCharArray(), "var7".toCharArray(), "(long)1".toCharArray());
 		GlobalVariable var8 = context.newVariable("String".toCharArray(), "var8".toCharArray(), "\"hello\"".toCharArray());
 		GlobalVariable var9 = context.newVariable("Object".toCharArray(), "var9".toCharArray(), buildCharArray(new String[] {
-			"new Object() {", 
-			"	public String toString() {", 
-			"		return \"an object\";", 
-			"	}", 
+			"new Object() {",
+			"	public String toString() {",
+			"		return \"an object\";",
+			"	}",
 			"}"}));
 		GlobalVariable var10 = context.newVariable("Object".toCharArray(), "var10".toCharArray(), null);
 
@@ -240,7 +237,7 @@ public void testSeveralVariableInstallations() {
 		context.deleteVariable(var2);
 		context.deleteVariable(var5);
 		context.deleteVariable(var6);
-		
+
 		// Install the variables
 		installVariables(3);
 
@@ -253,10 +250,10 @@ public void testSeveralVariableInstallations() {
 		GlobalVariable var7 = context.newVariable("long".toCharArray(), "var7".toCharArray(), "(long)1".toCharArray());
 		GlobalVariable var8 = context.newVariable("String".toCharArray(), "var8".toCharArray(), "\"hello\"".toCharArray());
 		GlobalVariable var9 = context.newVariable("Object".toCharArray(), "var9".toCharArray(), buildCharArray(new String[] {
-			"new Object() {", 
-			"	public String toString() {", 
-			"		return \"an object\";", 
-			"	}", 
+			"new Object() {",
+			"	public String toString() {",
+			"		return \"an object\";",
+			"	}",
 			"}"}));
 		GlobalVariable var10 = context.newVariable("Object".toCharArray(), "var10".toCharArray(), null);
 

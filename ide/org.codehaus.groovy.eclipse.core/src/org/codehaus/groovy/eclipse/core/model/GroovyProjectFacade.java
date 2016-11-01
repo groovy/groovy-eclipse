@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,13 +96,9 @@ public class GroovyProjectFacade {
              IJavaElement elt = unit.getElementAt(start);
 
              if (node instanceof DeclarationExpression) {
-                 int end = node.getEnd();
-
-                // Local variable signature has changed between 3.6 and 3.7, use
-                // reflection to create.
+                // Local variable signature has changed between 3.6 and 3.7, use reflection to create.
                 return ReflectionUtils.createLocalVariable(elt, ((DeclarationExpression) node).getVariableExpression().getName(),
-                        start, Signature.createTypeSignature(((DeclarationExpression) node).getVariableExpression().getType()
-                                .getName(), false));
+                        start, Signature.createTypeSignature(((DeclarationExpression) node).getVariableExpression().getType().getName(), false));
              } else {
                  return elt;
              }
@@ -188,7 +184,7 @@ public class GroovyProjectFacade {
     }
 
      GroovyCompilationUnit groovyModuleToCompilationUnit(ModuleNode node) {
-    	 List classes = node.getClasses();
+         List<ClassNode> classes = node.getClasses();
          ClassNode classNode = classes.size() > 0 ? (ClassNode) classes.get(0) : null;
          if (classNode != null) {
              IType type = groovyClassToJavaType(classNode);

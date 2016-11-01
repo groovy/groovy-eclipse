@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.quickfix.test;
 
-import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.test.EclipseTestCase;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -30,97 +29,95 @@ import org.eclipse.jdt.core.JavaCore;
 /**
  * Base test harness for creating Groovy and Java types in a Groovy project and
  * testing quick fixes, including helper methods to get problem markers.
- * 
+ *
  * @author Nieraj Singh
- * 
+ *
  */
 public class GroovyProjectTestCase extends EclipseTestCase {
 
-	public static final String PACKAGE = "com.test";
-	private IPackageFragment packageFrag;
+    public static final String PACKAGE = "com.test";
+    private IPackageFragment packageFrag;
 
-	protected void setUp() throws Exception {
-		super.setUp();
-		// This already adds the Groovy nature, so no need to add it separately
-		GroovyRuntime.addGroovyRuntime(testProject.getProject());
-		packageFrag = testProject.createPackage(PACKAGE);
-	}
+    protected void setUp() throws Exception {
+        super.setUp();
+        packageFrag = testProject.createPackage(PACKAGE);
+    }
 
-	/**
-	 * Creates a Groovy Type in the test package.
-	 * 
-	 * @param unitName
-	 * @param contents
-	 * @return
-	 * @throws Exception
-	 */
-	protected ICompilationUnit createGroovyTypeInTestPackage(String fileName,
-			String contents) throws Exception {
-		return createGroovyType(packageFrag, fileName, contents);
-	}
+    /**
+     * Creates a Groovy Type in the test package.
+     *
+     * @param unitName
+     * @param contents
+     * @return
+     * @throws Exception
+     */
+    protected ICompilationUnit createGroovyTypeInTestPackage(String fileName,
+            String contents) throws Exception {
+        return createGroovyType(packageFrag, fileName, contents);
+    }
 
-	/**
-	 * Create a Groovy type in the specified package
-	 * 
-	 * @param pack
-	 * @param unitName
-	 * @param contents
-	 * @return
-	 * @throws Exception
-	 */
-	protected ICompilationUnit createGroovyType(IPackageFragment pack,
-			String fileName, String contents) throws Exception {
-		IFile file = testProject.createGroovyType(pack, fileName, contents);
-		assertTrue(file.getName() + " should exist", file.exists());
-		fullProjectBuild();
-		waitForIndexes();
-		ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
-		return unit;
-	}
+    /**
+     * Create a Groovy type in the specified package
+     *
+     * @param pack
+     * @param unitName
+     * @param contents
+     * @return
+     * @throws Exception
+     */
+    protected ICompilationUnit createGroovyType(IPackageFragment pack,
+            String fileName, String contents) throws Exception {
+        IFile file = testProject.createGroovyType(pack, fileName, contents);
+        assertTrue(file.getName() + " should exist", file.exists());
+        fullProjectBuild();
+        waitForIndexes();
+        ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
+        return unit;
+    }
 
-	protected ICompilationUnit createJavaTypeInTestPackage(String fileName,
-			String contents) throws Exception {
-		ICompilationUnit unit = testProject.createJavaType(packageFrag,
-				fileName, contents).getCompilationUnit();
+    protected ICompilationUnit createJavaTypeInTestPackage(String fileName,
+            String contents) throws Exception {
+        ICompilationUnit unit = testProject.createJavaType(packageFrag,
+                fileName, contents).getCompilationUnit();
 
-		fullProjectBuild();
-		waitForIndexes();
-		IFile file = (IFile) unit.getResource();
-		assertTrue(file.getName() + " should exist", file.exists());
-		return unit;
-	}
+        fullProjectBuild();
+        waitForIndexes();
+        IFile file = (IFile) unit.getResource();
+        assertTrue(file.getName() + " should exist", file.exists());
+        return unit;
+    }
 
-	protected IProject getTestProject() {
-		return testProject.getProject();
-	}
+    protected IProject getTestProject() {
+        return testProject.getProject();
+    }
 
-	/**
-	 * Java package where Groovy and Java classes should be added.
-	 * 
-	 * @return
-	 */
-	protected IPackageFragment getTestPackage() {
-		return packageFrag;
-	}
+    /**
+     * Java package where Groovy and Java classes should be added.
+     *
+     * @return
+     */
+    protected IPackageFragment getTestPackage() {
+        return packageFrag;
+    }
 
-	protected IMarker[] getProjectJDTFailureMarkers() throws CoreException {
+    protected IMarker[] getProjectJDTFailureMarkers() throws CoreException {
 
-		return getTestProject().findMarkers(
-				IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false,
-				IResource.DEPTH_INFINITE);
+        return getTestProject().findMarkers(
+                IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false,
+                IResource.DEPTH_INFINITE);
 
-	}
+    }
 
-	protected String[] getMarkerMessages(IMarker marker) throws Exception {
-		String message = (String) marker.getAttribute(IMarker.MESSAGE);
-		return new String[] { message };
-	}
+    protected String[] getMarkerMessages(IMarker marker) throws Exception {
+        String message = (String) marker.getAttribute(IMarker.MESSAGE);
+        return new String[] { message };
+    }
 
-	protected IMarker[] getCompilationUnitJDTFailureMarkers(
-			ICompilationUnit unit) throws Exception {
-		return unit.getResource().findMarkers(
-				IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false,
-				IResource.DEPTH_INFINITE);
-	}
+    protected IMarker[] getCompilationUnitJDTFailureMarkers(
+            ICompilationUnit unit) throws Exception {
+        return unit.getResource().findMarkers(
+                IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false,
+                IResource.DEPTH_INFINITE);
+    }
 
 }

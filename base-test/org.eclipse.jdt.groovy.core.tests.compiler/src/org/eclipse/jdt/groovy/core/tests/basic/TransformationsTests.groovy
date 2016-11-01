@@ -15,6 +15,9 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic
 
+import groovy.transform.InheritConstructors
+import groovy.transform.TypeChecked
+
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
@@ -25,14 +28,11 @@ import org.eclipse.jdt.core.tests.util.AbstractCompilerTest
 import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions
 
+@InheritConstructors @TypeChecked
 final class TransformationsTests extends AbstractGroovyRegressionTest {
 
     static junit.framework.Test suite() {
         buildMinimalComplianceTestSuite(TransformationsTests, F_1_5)
-    }
-
-    TransformationsTests(String name) {
-        super(name)
     }
 
     void testDelegate() {
@@ -207,6 +207,45 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
         runConformTest(sources, "abc")
     }
 
+    void testAnnotationCollector() {
+        if (GroovyUtils.GROOVY_LEVEL < 21) {
+            return
+        }
+
+        String[] sources = [
+            'Book.groovy', '''
+            import java.lang.reflect.*;
+            class Book {
+              @ISBN String isbn;
+              public static void main(String []argv) {
+                Field f = Book.class.getDeclaredField('isbn');
+                Object[] os = f.getDeclaredAnnotations();
+                for (Object o: os) {
+                  System.out.print(o);
+                }
+              }
+            }''',
+
+            'NotNull.java', '''
+            import java.lang.annotation.*;
+            @Retention(RetentionPolicy.RUNTIME) public @interface NotNull {
+            }''',
+
+            'Length.java', '''
+            import java.lang.annotation.*;
+            @Retention(RetentionPolicy.RUNTIME) public @interface Length {
+              int value() default 0;
+            }''',
+
+            'ISBN.groovy', '''
+            @NotNull @Length @groovy.transform.AnnotationCollector
+            public @interface ISBN {
+            }'''
+        ]
+
+        runConformTest(sources, '@NotNull()@Length(value=0)')
+    }
+
     void testBuiltInTransforms_Singleton() {
         String[] sources = [
             'Goo.groovy', '''
@@ -238,7 +277,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     // lazy option set in Singleton
     void testBuiltInTransforms_Singleton2() {
         //This test breaks on Groovy < 2.2.1 because the 'strict' flag was introduced in that version.
-        if (!GroovyUtils.isAtLeastGroovy(22)) return
+        if (GroovyUtils.GROOVY_LEVEL < 22) return
 
         String[] sources = [
             "Goo.groovy",
@@ -270,7 +309,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
 
     void testBuiltInTransforms_Singleton3() {
         //This test breaks on Groovy < 2.2.1 because the 'strict' flag was introduced in that version.
-        if (!GroovyUtils.isAtLeastGroovy(22)) return
+        if (GroovyUtils.GROOVY_LEVEL < 22) return
 
         String[] sources = [
             "Goo.groovy",
@@ -474,9 +513,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testTypeChecked2() {
-        if (GroovyUtils.GROOVY_LEVEL<20) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
 
         String[] sources = [
             "Foo.groovy",
@@ -505,9 +542,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
      * That method does a lot of equality by == testing against classnode constants, which doesn't work so well for us...
      */
     void testCompileStatic2() {
-        if (GroovyUtils.GROOVY_LEVEL<20) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
 
         String[] sources = [
             "Foo.groovy",
@@ -542,9 +577,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testCompileStatic() {
-        if (GroovyUtils.GROOVY_LEVEL<20) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
 
         String[] sources = [
             "Foo.groovy",
@@ -569,9 +602,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testCompileStatic3() {
-        if (GroovyUtils.GROOVY_LEVEL<20) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
 
         String[] sources = [
             "Foo.groovy",
@@ -587,9 +618,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testCompileStatic_1511() {
-        if (GroovyUtils.GROOVY_LEVEL<20) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
 
         String[] sources = [
             "Foo.groovy",
@@ -607,9 +636,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testCompileStatic_1505() {
-        if (GroovyUtils.GROOVY_LEVEL<20) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
 
         String[] sources = [
             "DynamicQuery.groovy",
@@ -631,9 +658,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void _testCompileStatic_1506() {
-        if (GroovyUtils.GROOVY_LEVEL<20) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
 
         String[] sources = [
             "LoggerTest.groovy",
@@ -654,9 +679,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testCompileStatic4() {
-        if (GroovyUtils.GROOVY_LEVEL < 20) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 20) return
 
         // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
         String[] sources = [
@@ -682,6 +705,8 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testCompileDynamic() {
+        if (GroovyUtils.GROOVY_LEVEL < 21) return
+
         String[] sources = [
             'A.groovy', '''
             @groovy.transform.CompileStatic
@@ -845,9 +870,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testJDTClassNode_1731() {
-        if (GroovyUtils.GROOVY_LEVEL < 21) {
-            return
-        }
+        if (GroovyUtils.GROOVY_LEVEL < 21) return
 
         // Testcode based on article: http://www.infoq.com/articles/groovy-1.5-new
         // The groups of tests are loosely based on the article contents - but what is really exercised here is the accessibility of
@@ -905,7 +928,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "}\n"
         ]
 
-        this.runConformTest(sources, "@a.SampleAnnotation()")
+        runConformTest(sources, "@a.SampleAnnotation()")
     }
 
     void testImmutable_1723() {
@@ -935,7 +958,7 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
             "}\n"
         ]
 
-        this.runConformTest(sources)
+        runConformTest(sources)
 
         GroovyCompilationUnitDeclaration unit = getCUDeclFor("SomeValueObject.groovy")
         ClassNode classNode = unit.getCompilationUnit().getClassNode("b.SomeValueObject")
@@ -943,6 +966,94 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
         ClassNode type = field.getType()
         List annotations = type.getAnnotations(ClassHelper.make(groovy.transform.Immutable))
         assertEquals(1, annotations.size())
+    }
+
+    public void testGrab() {
+        String[] sources = [
+            "Printer.groovy",
+            "import groovy.lang.Grab;\n"+
+            "\n"+
+            "@Grab(group=\"joda-time\", module=\"joda-time\", version=\"1.6\")\n"+
+            "def printDate() {\n"+
+            "      def dt = new org.joda.time.DateTime()\n"+
+            "}\n"+
+            "printDate()"
+        ]
+
+        runConformTest(sources)
+    }
+
+    /**
+     * Improving grab, this program has a broken grab. Without changes we get a 'general error' recorded on the first line of the source file (big juicy exception)
+     * General error during conversion: Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found] java.lang.RuntimeException: Error grabbing
+     * Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found] at sun.reflect.GeneratedConstructorAccessor48.newInstance(Unknown Source) at
+     * sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:27) at java.lang.reflect.Constructor.newInstance(Constructor.java:513) at
+     * org.codehaus.groovy.reflection.CachedConstructor.invoke(CachedConstructor.java:77) at ...
+     * With grab improvements we get two errors - the missing dependency and the missing type (which is at the right version of that dependency!)
+     */
+    public void testGrabWithErrors() {
+        if (GroovyUtils.isGroovy21() || GroovyUtils.isGroovy22()) {
+            String[] sources = [
+                "Grab1.groovy",
+                "\n"+
+                "@Grab(group=\"joda-time\", module=\"joda-time\", version=\"1.6\")\n"+
+                "\n"+
+                "@Grab(group=\"org.aspectj\", module=\"aspectjweaver\", version=\"1.6.11x\")\n"+
+                "class C {\n"+
+                "   def printDate() {\n"+
+                "         def dt = new org.joda.time.DateTime()\n"+
+                "         def world = new org.aspectj.weaver.bcel.BcelWorld();\n"+
+                "         print dt;\n"+
+                "   }\n"+
+                "   public static void main(String[] argv) {\n"+
+                "       new C().printDate()\n"+
+                "   }\n"+
+                "}\n"
+            ]
+
+            runNegativeTest(sources,
+                "----------\n" +
+                "1. ERROR in Grab1.groovy (at line 4)\n" +
+                "\t@Grab(group=\"org.aspectj\", module=\"aspectjweaver\", version=\"1.6.11x\")\n" +
+                "\t ^^^\n" +
+                "Groovy:Error grabbing Grapes -- [unresolved dependency: org.aspectj#aspectjweaver;1.6.11x: not found]\n" +
+                "----------\n" +
+                "2. ERROR in Grab1.groovy (at line 8)\n" +
+                "\tdef world = new org.aspectj.weaver.bcel.BcelWorld();\n" +
+                "\t                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+                "Groovy:unable to resolve class org.aspectj.weaver.bcel.BcelWorld \n" +
+                "----------\n")
+        }
+    }
+
+    public void testGrabError() {
+        String[] sources = [
+            "Printer.groovy",
+            "import groovy.lang.Grab;\n"+
+            "\n"+
+            "@Grab(group=\"joda-time\", module=\"joda-time\", version=\"1.6\")\n"+
+            "def printDate() {\n"+
+            "      def dt = new org.joda.time.DateTime()\n"+
+            "}\n"+
+            "printDate()"
+        ]
+
+        runConformTest(sources)
+    }
+
+    public void testGrabScriptAndImports_GRE680() {
+        String[] sources = [
+            "Script.groovy",
+            "import org.mortbay.jetty.Server\n"+
+            "import org.mortbay.jetty.servlet.*\n"+
+            "import groovy.servlet.*\n"+
+            "\n"+
+            "@Grab(group = 'org.mortbay.jetty', module = 'jetty-embedded', version = '6.1.0')\n"+
+            "def runServer(duration) {  }\n"+
+            "runServer(10000)\n"
+        ]
+
+        runConformTest(sources)
     }
 
     void testTransforms_Gaelyk() {
@@ -978,4 +1089,100 @@ final class TransformationsTests extends AbstractGroovyRegressionTest {
 
         runConformTest(sources, "done", augmented, true, null, options, null)
     }
+
+    // FIXASC1) test mechanism for running JUnit based tests not yet in place for these Spock tests
+    //  public void testTransforms_Spock() {
+    //      Map options = getCompilerOptions();
+    //      options.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, new File("astTransformations/spock-core-0.1.jar").getAbsolutePath());
+    //
+    //      runConformTest(new String[] {
+    //              "Assertions.groovy",
+    //              "import spock.lang.*\n"+
+    //              "@Speck\n"+
+    //              "class Assertions {\n"+
+    ////                "  public static void main(String[] argv) { new Assertions().comparingXandY();}\n"+
+    //              "  def comparingXandY() {\n"+
+    //              "    def x = 1\n"+
+    //              "    def y = 2\n"+
+    //              "    \n"+
+    ////                " print 'a'\n"+
+    //              "    expect:\n"+
+    //              "    x < y    // OK\n"+
+    //              "    x == y   // BOOM!\n"+
+    //              " }\n"+
+    //              "}"},
+    //              "----------\n" +
+    //              "1. ERROR in Assertions.groovy (at line 4)\n" +
+    //              "\tpublic static void main(String[] argv) {\n" +
+    //              "\t^^\n" +
+    //              "Groovy:Feature methods must not be static @ line 4, column 2.\n" +
+    //              "----------\n",
+    //              null,
+    //              true,
+    //              null,
+    //              options,
+    //              null);
+    //
+    //      // FIXASC1) make negative test for this:
+    ////
+    ////        runConformTest(new String[] {
+    ////                "Assertions.groovy",
+    ////                "import spock.lang.*\n"+
+    ////                "@Speck\n"+
+    ////                "class Assertions {\n"+
+    ////                " public static void main(String[] argv) {\n"+
+    ////                //              "  def \"comparing x and y\"() {\n"+
+    ////                "    def x = 1\n"+
+    ////                "    def y = 2\n"+
+    ////                "    \n"+
+    //////              " print 'a'\n"+
+    ////                "    expect:\n"+
+    ////                "    x < y    // OK\n"+
+    ////                "    x == y   // BOOM!\n"+
+    ////                " }\n"+
+    ////                "}"},
+    ////                "----------\n" +
+    ////                "1. ERROR in Assertions.groovy (at line 4)\n" +
+    ////                "\tpublic static void main(String[] argv) {\n" +
+    ////                "\t^^\n" +
+    ////                "Groovy:Feature methods must not be static @ line 4, column 2.\n" +
+    ////                "----------\n",
+    ////                null,
+    ////                true,
+    ////                null,
+    ////                options,
+    ////                null);
+    //  }
+
+    //  public void testTransforms_Spock2() {
+    //      Map options = getCompilerOptions();
+    //      options.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, new File("astTransformations/spock-core-0.1.jar").getAbsolutePath());
+    //
+    //      runConformTest(new String[] {
+    //          "HelloSpock.groovy",
+    //          "import org.junit.runner.RunWith\n"+
+    //          "import spock.lang.*\n"+
+    //          "@Speck\n"+
+    //          "@RunWith(Sputnik)\n"+
+    //          "class HelloSpock {\n"+
+    //          "  def \"can you figure out what I'm up to?\"() {\n"+
+    //          "  print 'xxx'\n"+
+    //          "    expect:\n"+
+    //          "    name.size() == size\n"+
+    //          "\n"+
+    //          "    where:\n"+
+    //          "    name << ['Kirk', 'Spock', 'Scotty']\n"+
+    //          "    size << [4, 5, 6, 7]\n"+
+    //          "  }\n"+
+    //          "}"
+    //      },"",
+    //      null,
+    //      true,
+    //      null,
+    //      options,
+    //      null);
+    //
+    //      String expectedOutput = "public @Anno(p.Target.class) int foo";
+    //      checkGCUDeclaration("HelloSpock.groovy",expectedOutput);
+    //  }
 }

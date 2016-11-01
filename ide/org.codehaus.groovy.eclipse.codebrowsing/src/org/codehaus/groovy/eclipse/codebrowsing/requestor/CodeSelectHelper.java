@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.codehaus.groovy.eclipse.codebrowsing.requestor;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -33,18 +32,19 @@ import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 /**
  * @author Andrew Eisenberg
  * @created Nov 4, 2009
- *
  */
 public class CodeSelectHelper implements ICodeSelectHelper {
-    
+
     public IJavaElement[] select(GroovyCompilationUnit unit, int start, int length) {
-        ModuleNode module = unit.getModuleNode();
-        // GRECLIPSE-1330 check for possible reference in GString
+
+        // GRECLIPSE-1330: check for possible reference in GString
         char[] contents = unit.getContents();
         if (length > 1 && start + length < contents.length && contents[start] == '$' && contents[start+1] != '{') {
-            start++;
-            length--;
+            start += 1;
+            length -= 1;
         }
+
+        ModuleNode module = unit.getModuleNode();
         if (module != null) {
             String event = null;
             if (GroovyLogManager.manager.hasLoggers()) {
@@ -53,18 +53,30 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                 GroovyLogManager.manager.logStart(event);
             }
             try {
-                ASTNode nodeToLookFor = findASTNodeAt(module, new Region(start, length));
-                if (nodeToLookFor != null) {
-                    // shortcut.  Check to see if we are looking for this type itself
-                    if (isTypeDeclaration(module, nodeToLookFor)) {
-                        return returnThisNode(unit, nodeToLookFor);
+                Region select = new Region(start, length);
+                Object[] result = findNodeForRegion(module, select);
+                ASTNode node = (ASTNode) result[0];
+                Region region = (Region) result[1];
+                if (node != null) {
+                    // shortcut: check to see if we are looking for this type itself
+                    if (isTypeDeclaration(module, node)) {
+                        return returnThisNode(unit, node);
                     }
-                    
-                    CodeSelectRequestor requestor = createRequestor(unit, nodeToLookFor);
+
+                    CodeSelectRequestor requestor = createRequestor(node, region, select, unit);
                     TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
                     visitor.visitCompilationUnit(requestor);
-                    return requestor.getRequestedElement() != null ? new IJavaElement[] { requestor.getRequestedElement() } : new IJavaElement[0];
+
+                    IJavaElement element = requestor.getRequestedElement();
+                    if (element != null) {
+                        return new IJavaElement[] {element};
+                    }
                 }
+            } catch (RuntimeException e) {
+                if (event != null) {
+                    GroovyLogManager.manager.logException(TraceCategory.CODESELECT, e);
+                }
+                throw e;
             } finally {
                 if (event != null) {
                     GroovyLogManager.manager.logEnd(event, TraceCategory.CODESELECT);
@@ -74,17 +86,6 @@ public class CodeSelectHelper implements ICodeSelectHelper {
         return new IJavaElement[0];
     }
 
-    /**
-     * Allow sub-classes to provide their own requestor
-     * @param unit
-     * @param nodeToLookFor
-     * @return
-     */
-    protected CodeSelectRequestor createRequestor(GroovyCompilationUnit unit,
-            ASTNode nodeToLookFor) {
-        return new CodeSelectRequestor(nodeToLookFor, unit);
-    }
-    
     public ASTNode selectASTNode(GroovyCompilationUnit unit, int start, int length) {
         ModuleNode module = unit.getModuleNode();
         if (module != null) {
@@ -95,14 +96,17 @@ public class CodeSelectHelper implements ICodeSelectHelper {
                 GroovyLogManager.manager.logStart(event);
             }
             try {
-                ASTNode nodeToLookFor = findASTNodeAt(module, new Region(start, length));
-                if (nodeToLookFor != null) {
-                    // shortcut.  Check to see if we are looking for this type itself
-                    if (isTypeDeclaration(module, nodeToLookFor)) {
-                        return ((ClassNode) nodeToLookFor).redirect();
+                Region select = new Region(start, length);
+                Object[] result = findNodeForRegion(module, select);
+                ASTNode node = (ASTNode) result[0];
+                Region region = (Region) result[1];
+                if (node != null) {
+                    // shortcut: check to see if we are looking for this type itself
+                    if (isTypeDeclaration(module, node)) {
+                        return ((ClassNode) node).redirect();
                     }
-                    
-                    CodeSelectRequestor requestor = createRequestor(unit, nodeToLookFor);
+
+                    CodeSelectRequestor requestor = createRequestor(node, region, select, unit);
                     TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
                     visitor.visitCompilationUnit(requestor);
                     return requestor.getRequestedNode();
@@ -116,13 +120,23 @@ public class CodeSelectHelper implements ICodeSelectHelper {
         return null;
     }
 
-    private IJavaElement[] returnThisNode(GroovyCompilationUnit unit,
-            ASTNode nodeToLookFor) {
-        // GRECLIPSE-803 ensure inner classes are handled correctly
+    /**
+     * Allows sub-classes to provide their own requestor.
+     *
+     * @param node the selected AST node
+     * @param nodeRegion the source range for {@code node}
+     * @param selectRegion the source range for the selection
+     */
+    protected CodeSelectRequestor createRequestor(ASTNode node, Region nodeRegion, Region selectRegion, GroovyCompilationUnit unit) {
+        return new CodeSelectRequestor(node, nodeRegion, selectRegion, unit);
+    }
+
+    protected static IJavaElement[] returnThisNode(GroovyCompilationUnit unit, ASTNode nodeToLookFor) {
+        // GRECLIPSE-803: ensure inner classes are handled correctly
         String rawName = ((ClassNode) nodeToLookFor).getNameWithoutPackage();
         String[] enclosingTypes = rawName.split("\\$");
         IType candidate = null;
-        for (int i = 0; i < enclosingTypes.length; i++) {
+        for (int i = 0, n = enclosingTypes.length; i < n; i += 1) {
             if (i == 0) {
                 candidate = unit.getType(enclosingTypes[i]);
             } else {
@@ -131,15 +145,15 @@ public class CodeSelectHelper implements ICodeSelectHelper {
         }
         IJavaElement result;
         if (unit instanceof GroovyClassFileWorkingCopy) {
-        	result = ((GroovyClassFileWorkingCopy) unit).convertToBinary(candidate);
+            result = ((GroovyClassFileWorkingCopy) unit).convertToBinary(candidate);
         } else {
-        	result = candidate;
+            result = candidate;
         }
-        return new IJavaElement[] { result };
+        return new IJavaElement[] {result};
     }
 
-    private boolean isTypeDeclaration(ModuleNode module, ASTNode nodeToLookFor) {
-    	// don't use inner class nodes since they really should resolve to the super type
+    protected static boolean isTypeDeclaration(ModuleNode module, ASTNode nodeToLookFor) {
+        // don't use inner class nodes since they really should resolve to the super type
         if (nodeToLookFor instanceof ClassNode &&  !(nodeToLookFor instanceof InnerClassNode)) {
             for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
                 if (clazz == nodeToLookFor) {
@@ -150,8 +164,13 @@ public class CodeSelectHelper implements ICodeSelectHelper {
         return false;
     }
 
-    private ASTNode findASTNodeAt(ModuleNode module, Region r) {
+    /**
+     * @return array of {@link ASTNode} and {@link Region}.
+     */
+    protected Object[] findNodeForRegion(ModuleNode module, Region r) {
         ASTNodeFinder finder = new ASTNodeFinder(r);
-        return finder.doVisit(module);
+        finder.doVisit(module);
+
+        return new Object[] {finder.result, finder.sloc};
     }
 }

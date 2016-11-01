@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,23 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.codehaus.groovy.eclipse.editor.highlighting;
-
-
-import greclipse.org.eclipse.jdt.internal.ui.javaeditor.HighlightedPosition;
-import greclipse.org.eclipse.jdt.internal.ui.javaeditor.HighlightingStyle;
-import greclipse.org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingPresenter;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
+import greclipse.org.eclipse.jdt.internal.ui.javaeditor.HighlightedPosition;
+import greclipse.org.eclipse.jdt.internal.ui.javaeditor.HighlightingStyle;
+import greclipse.org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingPresenter;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
-import org.codehaus.groovy.eclipse.editor.GroovyColorManager;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -39,6 +37,7 @@ import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.internal.ui.text.JavaPresentationReconciler;
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.TextPresentation;
@@ -50,71 +49,125 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchPartSite;
 
 /**
- * Simplest reconciling that we can do
- *
  * @author Andrew Eisenberg
  * @created Oct 13, 2009
- *
  */
 public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
-    private final Object fReconcileLock= new Object();
+    private static final String GROOVY_HIGHLIGHT_PREFERENCE             = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR.replaceFirst("\\.color$", "");
+    private static final String STRING_HIGHLIGHT_PREFERENCE             = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR.replaceFirst("\\.color$", "");
+    private static final String NUMBER_HIGHLIGHT_PREFERENCE             = "semanticHighlighting.number";
+    private static final String VARIABLE_HIGHLIGHT_PREFERENCE           = "semanticHighlighting.localVariable";
+    private static final String PARAMETER_HIGHLIGHT_PREFERENCE          = "semanticHighlighting.parameterVariable";
+    private static final String ANNOTATION_HIGHLIGHT_PREFERENCE         = "semanticHighlighting.annotationElementReference";
+    private static final String DEPRECATED_HIGHLIGHT_PREFERENCE         = "semanticHighlighting.deprecatedMember";
+    private static final String OBJECT_FIELD_HIGHLIGHT_PREFERENCE       = "semanticHighlighting.field";
+    private static final String STATIC_FIELD_HIGHLIGHT_PREFERENCE       = "semanticHighlighting.staticField";
+    private static final String STATIC_VALUE_HIGHLIGHT_PREFERENCE       = "semanticHighlighting.staticFinalField";
+    private static final String OBJECT_METHOD_HIGHLIGHT_PREFERENCE      = "semanticHighlighting.method";
+    private static final String STATIC_METHOD_HIGHLIGHT_PREFERENCE      = "semanticHighlighting.staticMethodInvocation";
+    private static final String METHOD_DECLARATION_HIGHLIGHT_PREFERENCE = "semanticHighlighting.methodDeclarationName";
+
     private GroovyEditor editor;
-
-    // make these configurable
-    private HighlightingStyle undefinedRefHighlighting;
-
-    private HighlightingStyle regexRefHighlighting;
-
-    private HighlightingStyle deprecatedRefHighlighting;
-
-    private HighlightingStyle fieldRefHighlighting;
-
-    private HighlightingStyle staticFieldRefHighlighting;
-
-    private HighlightingStyle methodRefHighlighting;
-
-    private HighlightingStyle staticMethodRefHighlighting;
-
-    private HighlightingStyle numberRefHighlighting;
-
-    private HighlightingStyle mapKeyHighlighting;
-
+    private final Semaphore lock = new Semaphore(1);
     private SemanticHighlightingPresenter presenter;
 
-    /**
-     * <code>true</code> if any thread is executing
-     * <code>reconcile</code>, <code>false</code> otherwise.
-     */
-    private boolean fIsReconciling= false;
+    // make these configurable
+    private HighlightingStyle mapKeyHighlighting;
+    private HighlightingStyle tagKeyHighlighting;
+    private HighlightingStyle numberRefHighlighting;
+    private HighlightingStyle regexpRefHighlighting;
+    private HighlightingStyle undefinedRefHighlighting;
+    private HighlightingStyle deprecatedRefHighlighting;
+
+    private HighlightingStyle localHighlighting;
+    private HighlightingStyle paramHighlighting;
+
+    private HighlightingStyle objectFieldHighlighting;
+    private HighlightingStyle staticFieldHighlighting;
+    private HighlightingStyle staticValueHighlighting;
+
+    private HighlightingStyle methodDefHighlighting;
+    private HighlightingStyle methodUseHighlighting;
+    private HighlightingStyle groovyMethodUseHighlighting;
+    private HighlightingStyle staticMethodUseHighlighting;
 
 
     public GroovySemanticReconciler() {
-        RGB rgbString = PreferenceConverter.getColor(GroovyPlugin.getDefault().getPreferenceStore(),
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
-        RGB rgbNumber = PreferenceConverter.getColor(GroovyPlugin.getDefault().getPreferenceStore(),
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_NUMBERS_COLOR);
-        RGB rgbField = findRGB("semanticHighlighting.field.color", new RGB(0, 0, 192));
-        RGB rgbMethod = findRGB("semanticHighlighting.method.color", new RGB(0, 0, 0));
-        GroovyColorManager colorManager = GroovyPlugin.getDefault().getTextTools().getColorManager();
-        Color regexColor = colorManager.getColor(rgbString);
-        Color fieldColor = colorManager.getColor(rgbField);
-        Color methodColor = colorManager.getColor(rgbMethod);
-        Color numberColor = colorManager.getColor(rgbNumber);
-        undefinedRefHighlighting = new HighlightingStyle(new TextAttribute(null, null, TextAttribute.UNDERLINE), true);
-        regexRefHighlighting = new HighlightingStyle(new TextAttribute(regexColor, null, SWT.ITALIC), true);
-        numberRefHighlighting = new HighlightingStyle(new TextAttribute(numberColor), true);
-        deprecatedRefHighlighting = new HighlightingStyle(new TextAttribute(null, null, TextAttribute.STRIKETHROUGH), true);
-        fieldRefHighlighting = new HighlightingStyle(new TextAttribute(fieldColor), true);
-        staticFieldRefHighlighting = new HighlightingStyle(new TextAttribute(fieldColor, null, SWT.ITALIC), true);
-        methodRefHighlighting = new HighlightingStyle(new TextAttribute(methodColor), true);
-        staticMethodRefHighlighting = new HighlightingStyle(new TextAttribute(methodColor, null, SWT.ITALIC), true);
-        mapKeyHighlighting = new HighlightingStyle(new TextAttribute(regexColor), true);
+        // TODO: Reload colors and styles when preferences are changed.
+        IPreferenceStore javaPrefs = JavaPlugin.getDefault().getPreferenceStore();
+        IPreferenceStore groovyPrefs = GroovyPlugin.getDefault().getPreferenceStore();
+
+        Color groovyColor      = loadColorFrom(groovyPrefs, GROOVY_HIGHLIGHT_PREFERENCE);
+        Color numberColor      = loadColorFrom(javaPrefs, NUMBER_HIGHLIGHT_PREFERENCE);
+        Color stringColor      = loadColorFrom(groovyPrefs, STRING_HIGHLIGHT_PREFERENCE);
+        Color tagKeyColor      = loadColorFrom(javaPrefs, ANNOTATION_HIGHLIGHT_PREFERENCE);
+        Color parameterColor   = loadColorFrom(javaPrefs, PARAMETER_HIGHLIGHT_PREFERENCE);
+        Color variableColor    = loadColorFrom(javaPrefs, VARIABLE_HIGHLIGHT_PREFERENCE);
+        Color objectFieldColor = loadColorFrom(javaPrefs, OBJECT_FIELD_HIGHLIGHT_PREFERENCE);
+        Color staticFieldColor = loadColorFrom(javaPrefs, STATIC_FIELD_HIGHLIGHT_PREFERENCE);
+        Color staticValueColor = loadColorFrom(javaPrefs, STATIC_VALUE_HIGHLIGHT_PREFERENCE);
+        Color staticCallColor  = loadColorFrom(javaPrefs, STATIC_METHOD_HIGHLIGHT_PREFERENCE);
+        Color methodCallColor  = loadColorFrom(javaPrefs, OBJECT_METHOD_HIGHLIGHT_PREFERENCE);
+        Color methodDeclColor  = loadColorFrom(javaPrefs, METHOD_DECLARATION_HIGHLIGHT_PREFERENCE);
+
+        mapKeyHighlighting = newHighlightingStyle(stringColor);
+        tagKeyHighlighting = newHighlightingStyle(tagKeyColor, loadStyleFrom(javaPrefs, ANNOTATION_HIGHLIGHT_PREFERENCE));
+        numberRefHighlighting = newHighlightingStyle(numberColor, loadStyleFrom(javaPrefs, NUMBER_HIGHLIGHT_PREFERENCE));
+        regexpRefHighlighting = newHighlightingStyle(stringColor, SWT.ITALIC | loadStyleFrom(groovyPrefs, STRING_HIGHLIGHT_PREFERENCE));
+        deprecatedRefHighlighting = newHighlightingStyle(null, loadStyleFrom(javaPrefs, DEPRECATED_HIGHLIGHT_PREFERENCE));
+        undefinedRefHighlighting = newHighlightingStyle(null, TextAttribute.UNDERLINE);
+
+        localHighlighting = newHighlightingStyle(variableColor, loadStyleFrom(javaPrefs, VARIABLE_HIGHLIGHT_PREFERENCE));
+        paramHighlighting = newHighlightingStyle(parameterColor, loadStyleFrom(javaPrefs, PARAMETER_HIGHLIGHT_PREFERENCE));
+
+        objectFieldHighlighting = newHighlightingStyle(objectFieldColor, loadStyleFrom(javaPrefs, OBJECT_FIELD_HIGHLIGHT_PREFERENCE));
+        staticFieldHighlighting = newHighlightingStyle(staticFieldColor, loadStyleFrom(javaPrefs, STATIC_FIELD_HIGHLIGHT_PREFERENCE));
+        staticValueHighlighting = newHighlightingStyle(staticValueColor, loadStyleFrom(javaPrefs, STATIC_VALUE_HIGHLIGHT_PREFERENCE));
+
+        methodDefHighlighting = newHighlightingStyle(methodDeclColor, loadStyleFrom(javaPrefs, METHOD_DECLARATION_HIGHLIGHT_PREFERENCE));
+        methodUseHighlighting = newHighlightingStyle(methodCallColor, loadStyleFrom(javaPrefs, OBJECT_METHOD_HIGHLIGHT_PREFERENCE));
+        groovyMethodUseHighlighting = newHighlightingStyle(groovyColor, loadStyleFrom(groovyPrefs, GROOVY_HIGHLIGHT_PREFERENCE));
+        staticMethodUseHighlighting = newHighlightingStyle(staticCallColor, loadStyleFrom(javaPrefs, STATIC_METHOD_HIGHLIGHT_PREFERENCE));
     }
 
+    protected static Color loadColorFrom(IPreferenceStore prefs, String which) {
+        RGB color;
+        if (!prefs.contains(which + ".enabled") || prefs.getBoolean(which + ".enabled")) {
+            color = PreferenceConverter.getColor(prefs, which + ".color");
+        } else {
+            return null; // allow contextual default (i.e. string color)
+            //color = PreferenceConverter.getColor(prefs, "java_default");
+            //color = PreferenceConverter.getColor(GroovyPlugin.getDefault().getPreferenceStore(), PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR);
+        }
+        return GroovyPlugin.getDefault().getTextTools().getColorManager().getColor(color);
+    }
 
-    private static RGB findRGB(String key, RGB defaultRGB) {
-        return PreferenceConverter.getColor(JavaPlugin.getDefault().getPreferenceStore(), key);
+    protected static int loadStyleFrom(IPreferenceStore prefs, String which) {
+        int style = SWT.NONE;
+
+        if (!prefs.contains(which + ".enabled") || prefs.getBoolean(which + ".enabled")) {
+
+            if (prefs.getBoolean(which + ".bold") ||
+                    prefs.getBoolean(which + ".color_bold"))
+                style |= SWT.BOLD;
+            if (prefs.getBoolean(which + ".italic"))
+                style |= SWT.ITALIC;
+            if (prefs.getBoolean(which + ".underline"))
+                style |= TextAttribute.UNDERLINE;
+            if (prefs.getBoolean(which + ".strikethrough"))
+                style |= TextAttribute.STRIKETHROUGH;
+        }
+
+        return style;
+    }
+
+    protected HighlightingStyle newHighlightingStyle(Color color, int style) {
+        return new HighlightingStyle(new TextAttribute(color, null, style), true);
+    }
+
+    protected HighlightingStyle newHighlightingStyle(Color color) {
+        return new HighlightingStyle(new TextAttribute(color), true);
     }
 
     public void install(GroovyEditor editor, JavaSourceViewer viewer) {
@@ -129,98 +182,119 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         editor = null;
     }
 
-    public void aboutToBeReconciled() { }
+    public void aboutToBeReconciled() {
+        // anything to do here?
+    }
 
-    @SuppressWarnings("unchecked")
-    public void reconciled(CompilationUnit ast, boolean forced,
-            IProgressMonitor progressMonitor) {
-
-        // ensure that only one thread can enter here at a time
-        synchronized (fReconcileLock) {
-            if (fIsReconciling)
-                return;
-            else
-                fIsReconciling= true;
-        }
-
+    public void reconciled(CompilationUnit ast, boolean forced, IProgressMonitor monitor) {
+        // ensure that only one thread performs this task
+        if (ast != null && lock.tryAcquire())
         try {
-            progressMonitor.beginTask("Groovy semantic highlighting", 100);
-
+            monitor.beginTask("Groovy semantic highlighting", 10);
             GroovyCompilationUnit unit = editor.getGroovyCompilationUnit();
             if (unit != null) {
-                presenter.setCanceled(progressMonitor.isCanceled());
+                presenter.setCanceled(monitor.isCanceled()); // TODO: Should this be done in the finally block? Or done after/before beginTask?
+                if (update(monitor, 1)) return;
+
                 GatherSemanticReferences finder = new GatherSemanticReferences(unit);
                 Collection<HighlightedTypedPosition> semanticReferences = finder.findSemanticHighlightingReferences();
-                progressMonitor.worked(50);
+                if (update(monitor, 5)) return;
 
-                List<HighlightedPosition> newPositions = new LinkedList<HighlightedPosition>();
-                List<HighlightedPosition> removedPositions = new LinkedList<HighlightedPosition>();
+                List<HighlightedPosition> newPositions = new ArrayList<HighlightedPosition>(semanticReferences.size());
+                @SuppressWarnings("unchecked")
+                List<HighlightedPosition> oldPositions = new LinkedList<HighlightedPosition>((List<HighlightedPosition>) presenter.fPositions);
+                if (update(monitor, 1)) return;
 
-                for (HighlightedPosition oldPosition : (Iterable<HighlightedPosition>) presenter.fPositions) {
-                    if (oldPosition != null) {
-                        removedPositions.add(oldPosition);
-                    }
+                for (HighlightedTypedPosition ref : semanticReferences) {
+                    HighlightedPosition pos = createHighlightedPosition(ref);
+                    tryAddPosition(newPositions, oldPositions, pos);
                 }
-                progressMonitor.worked(20);
-                List<HighlightedPosition> semanticReferencesHighlighted = new ArrayList<HighlightedPosition>(semanticReferences.size());
-                for (HighlightedTypedPosition pos : semanticReferences) {
-                    HighlightedPosition range = createHighlightedPosition(pos);
-                    maybeAddPosition(newPositions, removedPositions, range);
-                    semanticReferencesHighlighted.add(range);
-                }
-                progressMonitor.worked(20);
+                if (update(monitor, 2)) return;
 
                 TextPresentation textPresentation = null;
                 if (!presenter.isCanceled()) {
-                    textPresentation= presenter.createPresentation(newPositions, removedPositions);
+                    textPresentation = presenter.createPresentation(newPositions, oldPositions);
                 }
-
                 if (!presenter.isCanceled()) {
-                    updatePresentation(textPresentation, newPositions, removedPositions);
+                    updatePresentation(textPresentation, newPositions, oldPositions);
                 }
-                progressMonitor.worked(10);
+                update(monitor, 1);
             }
-        } catch (NullPointerException e) {
-            // do nothing...reconciler has been uninstalled
+        } catch (Exception e) {
+            GroovyCore.logException("Semantic highlighting failed", e);
         } finally {
-            synchronized (fReconcileLock) {
-                fIsReconciling= false;
-            }
+            monitor.done();
+            lock.release();
         }
+    }
+
+    private boolean update(IProgressMonitor monitor, int units) {
+        monitor.worked(units);
+        return monitor.isCanceled();
     }
 
     private HighlightedPosition createHighlightedPosition(HighlightedTypedPosition pos) {
+        HighlightingStyle style = null;
         switch (pos.kind) {
-            case UNKNOWN:
-                return new HighlightedPosition(pos.offset, pos.length, undefinedRefHighlighting, this);
-            case NUMBER:
-                return new HighlightedPosition(pos.offset, pos.length, numberRefHighlighting, this);
-            case REGEX:
-                return new HighlightedPosition(pos.offset, pos.length, regexRefHighlighting, this);
             case DEPRECATED:
-                return new HighlightedPosition(pos.offset, pos.length, deprecatedRefHighlighting, this);
-            case FIELD:
-                return new HighlightedPosition(pos.offset, pos.length, fieldRefHighlighting, this);
-            case STATIC_FIELD:
-                return new HighlightedPosition(pos.offset, pos.length, staticFieldRefHighlighting, this);
-            case METHOD:
-                return new HighlightedPosition(pos.offset, pos.length, methodRefHighlighting, this);
-            case STATIC_METHOD:
-                return new HighlightedPosition(pos.offset, pos.length, staticMethodRefHighlighting, this);
+                style = deprecatedRefHighlighting;
+                break;
+            case UNKNOWN:
+                style = undefinedRefHighlighting;
+                break;
+            case NUMBER:
+                style = numberRefHighlighting;
+                break;
+            case REGEXP:
+                style = regexpRefHighlighting;
+                break;
             case MAP_KEY:
-                return new HighlightedPosition(pos.offset, pos.length, mapKeyHighlighting, this);
+                style = mapKeyHighlighting;
+                break;
+            case TAG_KEY:
+                style = tagKeyHighlighting;
+                break;
+            case VARIABLE:
+                style = localHighlighting;
+                break;
+            case PARAMETER:
+                style = paramHighlighting;
+                break;
+            case FIELD:
+                style = objectFieldHighlighting;
+                break;
+            case STATIC_FIELD:
+                style = staticFieldHighlighting;
+                break;
+            case STATIC_VALUE:
+                style = staticValueHighlighting;
+                break;
+            case CTOR:
+            case METHOD:
+            case STATIC_METHOD:
+                style = methodDefHighlighting;
+                break;
+            case CTOR_CALL:
+            case METHOD_CALL:
+                style = methodUseHighlighting;
+                break;
+            case GROOVY_CALL:
+                style = groovyMethodUseHighlighting;
+                break;
+            case STATIC_CALL:
+                style = staticMethodUseHighlighting;
+                break;
         }
-        // won't get here
-        return null;
+
+        return new HighlightedPosition(pos.offset, pos.length, style, this);
     }
 
-    private void maybeAddPosition(List<HighlightedPosition> newPositions, List<HighlightedPosition> oldPositionsCopy,
-            HighlightedPosition maybePosition) {
-        boolean found = false;
-        for (Iterator<HighlightedPosition> positionIter = oldPositionsCopy.iterator(); positionIter.hasNext();) {
-            HighlightedPosition oldPosition = positionIter.next();
+    private void tryAddPosition(List<HighlightedPosition> newPositions, List<HighlightedPosition> oldPositions, HighlightedPosition maybePosition) {
+        boolean found = false; // TODO: Is there a quicker way to search for matches?  These can be sorted easily.
+        for (Iterator<HighlightedPosition> it = oldPositions.iterator(); it.hasNext();) {
+            HighlightedPosition oldPosition = it.next();
             if (oldPosition.isEqual(maybePosition.offset, maybePosition.length, maybePosition.getHighlighting())) {
-                positionIter.remove();
+                it.remove();
                 found = true;
                 break;
             }
@@ -229,7 +303,6 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
             newPositions.add(maybePosition);
         }
     }
-
 
     /**
      * Update the presentation.
@@ -261,5 +334,4 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
         display.asyncExec(runnable);
     }
-
 }

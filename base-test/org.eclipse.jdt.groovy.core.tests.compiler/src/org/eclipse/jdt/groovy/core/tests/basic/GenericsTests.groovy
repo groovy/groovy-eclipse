@@ -15,6 +15,9 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic
 
+import groovy.transform.InheritConstructors
+import groovy.transform.TypeChecked
+
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration
 import org.eclipse.core.runtime.Platform
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest
@@ -22,14 +25,11 @@ import org.eclipse.jdt.core.tests.util.GroovyUtils
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions
 
+@InheritConstructors @TypeChecked
 final class GenericsTests extends AbstractGroovyRegressionTest {
 
     static junit.framework.Test suite() {
         buildMinimalComplianceTestSuite(GenericsTests, F_1_6)
-    }
-
-    GenericsTests(String name) {
-        super(name)
     }
 
     void testGenericParam() {
@@ -52,15 +52,13 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                 new A(35);
                 System.out.println('success');
               }
-            }
-            ''',
+            }''',
 
             'p/A.java', '''
             package p;
             public class A {
               public <T> A(T t) {}
-            }
-            '''
+            }'''
         ]
 
         runConformTest(sources, 'success')
@@ -100,7 +98,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
             class X {
               Set<?> setone;
               Set<? extends java.io.Serializable> settwo;
-              Set<? super java.lang.Number> setthree;
+              Set<? super java.lang.Thread> setthree;
               public static void main(String[]argv){ print 'y';}
             }'''.stripIndent()
         ]
@@ -110,7 +108,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
         GroovyCompilationUnitDeclaration decl = getCUDeclFor('X.groovy')
         assertEquals('(12>14)Set<(16>16)?>', stringify(grabField(decl,'setone').type))
         assertEquals('(29>31)Set<(33>62)? extends (43>62)(43>46)java.(48>49)io.(51>62)Serializable>', stringify(grabField(decl,'settwo').type))
-        assertEquals('(75>77)Set<(79>102)? super (87>102)(87>90)java.(92>95)lang.(97>102)Number>', stringify(grabField(decl,'setthree').type))
+        assertEquals('(75>77)Set<(79>102)? super (87>102)(87>90)java.(92>95)lang.(97>102)Thread>', stringify(grabField(decl,'setthree').type))
     }
 
     void testGenericsPositions_GRE267_3() {
@@ -120,7 +118,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
               Set<?> setone;
               Set<String[]> settwo;
               Set<String[][]> setthree;
-              Set<java.lang.Number[][][]> setfour;
+              Set<java.lang.Thread[][][]> setfour;
               public static void main(String[]argv){ print 'y' }
             }'''.stripIndent(),
 
@@ -129,7 +127,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
             class Y {
               Set<String[]> a;
               Set<String[][]> b;
-              Set<java.lang.Number[][][]> c;
+              Set<java.lang.Thread[][][]> c;
             }'''.stripIndent()
         ]
 
@@ -139,7 +137,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
         assertEquals('(12>14)Set<(16>16)?>', stringify(grabField(decl, 'setone').type))
         assertEquals('(29>31)Set<(33>40 ose:38)String[]>', stringify(grabField(decl, 'settwo').type))
         assertEquals('(53>55)Set<(57>66 ose:62)String[][]>', stringify(grabField(decl, 'setthree').type))
-        //assertEquals('(81>83)Set<(85>106)(85>88)java.(90>93)lang.(95>100)Number[][][]>', stringify(grabField(decl, 'setfour')))
+        //assertEquals('(81>83)Set<(85>106)(85>88)java.(90>93)lang.(95>100)Thread[][][]>', stringify(grabField(decl, 'setfour')))
     }
 
     void testGenericsPositions_4_GRE267() {
@@ -167,10 +165,9 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
             class X {
               java.util.Set<?> setone;
               java.util.Set<? extends java.io.Serializable> settwo;
-              java.util.Set<? super java.lang.Number> setthree;
+              java.util.Set<? super java.lang.Thread> setthree;
               public static void main(String[]argv){ print 'y';}
-            }
-            '''.stripIndent()
+            }'''.stripIndent()
         ]
 
         runConformTest(sources, 'y')
@@ -178,7 +175,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
         GroovyCompilationUnitDeclaration decl = getCUDeclFor('X.groovy')
         assertEquals('(12>24)(12>15)java.(17>20)util.(22>24)Set<(26>26)?>', stringify(grabField(decl, 'setone').type))
         assertEquals('(39>51)(39>42)java.(44>47)util.(49>51)Set<(53>82)? extends (63>82)(63>66)java.(68>69)io.(71>82)Serializable>', stringify(grabField(decl, 'settwo').type))
-        assertEquals('(95>107)(95>98)java.(100>103)util.(105>107)Set<(109>132)? super (117>132)(117>120)java.(122>125)lang.(127>132)Number>', stringify(grabField(decl, 'setthree').type))
+        assertEquals('(95>107)(95>98)java.(100>103)util.(105>107)Set<(109>132)? super (117>132)(117>120)java.(122>125)lang.(127>132)Thread>', stringify(grabField(decl, 'setthree').type))
     }
 
     void _testGenericsPositions_6_GRE267() {
@@ -191,15 +188,13 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
               java.util.Set<? extends java.io.Serializable> settwo;
               java.util.Set<? super java.lang.Number> setthree;
               public static void main(String[]argv){ print 'y';}
-            }
-            '''.stripIndent(),
+            }'''.stripIndent(),
 
             'One.java', '''
             public class One<A,B> {
-                 class Two<C> {
-                 }
-               }
-            '''
+              class Two<C> {
+              }
+            }'''
         ]
 
         runConformTest(sources, 'y')
@@ -218,8 +213,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
               java.util.Set<String[]> settwo;
               java.util.Set<java.lang.Number[][][]> setthree;
               public static void main(String[]argv){ print 'y';}
-            }
-            '''.stripIndent()
+            }'''.stripIndent()
         ]
 
         runConformTest(sources, 'y')
@@ -236,8 +230,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
             class X {
               Set<Map.Entry<String,List<String>>> foo;
               public static void main(String[]argv){ print 'y' }
-            }
-            '''.stripIndent()
+            }'''.stripIndent()
         ]
 
         runConformTest(sources, 'y')
@@ -252,8 +245,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
             class X {
               Map.Entry<String,List<String>> foo;
               public static void main(String[]argv){ print 'y';}
-            }
-            '''.stripIndent()
+            }'''.stripIndent()
         ]
 
         runConformTest(sources, 'y')
@@ -271,8 +263,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                 public String getName();
                 public T getValue();
                 public void setValue(T o);
-            }
-            ''',
+            }''',
 
             'p/Structure.java', '''
             package test;
@@ -281,8 +272,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
             public interface Structure extends Map<String, Field<?>> {
                public void reset();
                public void setup(ByteBuffer clientBuff);
-            }
-            ''',
+            }''',
 
             'p/StructureBase.groovy', '''\
             package test;
@@ -338,8 +328,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                //public void setup(ByteBuffer buff) {
                //    str.setup(buff);
                //}
-            }
-            ''',
+            }''',
 
             'p/StructureBaseTest.groovy', '''
             package test;
@@ -352,8 +341,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                            System.out.println('Failed');
                        }
                }
-            }
-            ''',
+            }''',
 
             'p/TestField.java', '''
             package test;
@@ -379,8 +367,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                public int compareTo(String arg0) {
                    return getValue().compareTo(arg0);
                }
-            }
-            ''',
+            }''',
 
             'p/TestStructure.java', '''
             package test;
@@ -401,8 +388,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                public void putAll(Map<? extends String, ? extends Field<?>> arg0) {
                    super.putAll(arg0);
                }
-            }
-            '''
+            }'''
         ]
 
         runNegativeTest(sources,
@@ -426,8 +412,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
               public static void main(String[]argv) {
                 test.StructureBaseTest.main(argv);
               }
-            }
-            ''',
+            }''',
 
             'p/Field.java', '''
             package test;
@@ -436,8 +421,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                 public String getName();
                 public T getValue();
                 public void setValue(T o);
-            }
-            ''',
+            }''',
 
             'p/Structure.java', '''
             package test;
@@ -446,8 +430,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
             public interface Structure extends Map<String, Field<?>> {
                public void reset();
                public void setup(ByteBuffer clientBuff);
-            }
-            ''',
+            }''',
 
             'p/StructureBase.groovy', '''
             package test;
@@ -500,8 +483,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                public void setup(ByteBuffer buff) {
                    str.setup(buff);
                }
-            }
-            ''',
+            }''',
 
             'p/StructureBaseTest.groovy', '''
             package test;
@@ -514,8 +496,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                            println('Failed');
                        }
                }
-            }
-            ''',
+            }''',
 
             'p/TestField.java', '''
             package test;
@@ -541,8 +522,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                public int compareTo(String arg0) {
                    return getValue().compareTo(arg0);
                }
-            }
-            ''',
+            }''',
 
             'p/TestStructure.java', '''
             package test;
@@ -563,8 +543,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                public void putAll(Map<? extends String, ? extends Field<?>> arg0) {
                    super.putAll(arg0);
                }
-            }
-            '''
+            }'''
         ]
 
         runConformTest(sources)
@@ -576,8 +555,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
             'p/Field.java', '''
             package test;
             public interface Field<T extends java.io.Serializable> extends Comparable<T> {
-            }
-            ''',
+            }''',
 
             'p/StructureBase.groovy', '''
             package test;
@@ -585,8 +563,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                public Field<?> get(Object arg0) {
                    return str.get(arg0);
                }
-            }
-            '''
+            }'''
         ]
 
         runConformTest(sources, 'Success')
@@ -599,8 +576,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
               public static void main(String[]argv) {
                 test.StructureBaseTest.main(argv);
               }
-            }
-            ''',
+            }''',
 
             'p/Field.java', '''
             package test;
@@ -609,8 +585,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                 public String getName();
                 public T getValue();
                 public void setValue(T o);
-            }
-            ''',
+            }''',
 
             'p/Structure.java', '''
             package test;
@@ -619,8 +594,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
             public interface Structure extends Map<String, Field<?>> {
                public void reset();
                public void setup(ByteBuffer clientBuff);
-            }
-            ''',
+            }''',
 
             'p/StructureBase.groovy', '''
             package test;
@@ -676,8 +650,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                public void setup(ByteBuffer buff) {
                    str.setup(buff);
                }
-            }
-            ''',
+            }''',
 
             'p/StructureBaseTest.groovy', '''
             package test;
@@ -692,8 +665,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                            System.out.println(\"Success\");
                        }
                }
-            }
-            ''',
+            }''',
 
             'p/TestField.java', '''
             package test;
@@ -719,8 +691,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                public int compareTo(String arg0) {
                    return getValue().compareTo(arg0);
                }
-            }
-            ''',
+            }''',
 
             'p/TestStructure.java', '''
             package test;
@@ -739,8 +710,7 @@ final class GenericsTests extends AbstractGroovyRegressionTest {
                public void putAll(Map<? extends String, ? extends Field<?>> arg0) {
                    super.putAll(arg0);
                }
-            }
-            '''
+            }'''
         ]
 
         runConformTest(sources, "Success")

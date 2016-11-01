@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,15 @@ package org.codehaus.groovy.eclipse.editor.highlighting;
 import org.eclipse.jface.text.Position;
 
 /**
- *
- * @author andrew
+ * @author Andrew Eisenberg
  * @created Jun 10, 2010
  */
 public class HighlightedTypedPosition extends Position implements Comparable<HighlightedTypedPosition> {
+
     public static enum HighlightKind {
-        DEPRECATED, FIELD, METHOD, STATIC_FIELD, STATIC_METHOD, REGEX, NUMBER, UNKNOWN, MAP_KEY
+        FIELD, STATIC_FIELD, STATIC_VALUE, PARAMETER, VARIABLE, NUMBER, REGEXP, MAP_KEY, TAG_KEY,
+        CTOR, METHOD, STATIC_METHOD, CTOR_CALL, GROOVY_CALL, METHOD_CALL, STATIC_CALL,
+        DEPRECATED, UNKNOWN
     }
 
     public final HighlightKind kind;
@@ -68,14 +70,11 @@ public class HighlightedTypedPosition extends Position implements Comparable<Hig
 
     @Override
     public String toString() {
-        return "HighlightedTypedPosition [kind=" + kind + ", offset=" + offset + ", length=" + length + ", isDeleted=" + isDeleted
-                + "]";
+        return "HighlightedTypedPosition[kind=" + kind + ", offset=" + offset + ", length=" + length + "]";
     }
 
     public int compareTo(HighlightedTypedPosition o) {
-        if (o == null) {
-            return 1;
-        }
+        if (o == null) return 1;
         return this.offset - o.offset;
     }
 }

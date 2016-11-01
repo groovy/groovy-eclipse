@@ -28,27 +28,27 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 
 public class SyntaxErrorTest extends AbstractCompilerTest {
 	public static boolean optimizeStringLiterals = false;
-	public static long sourceLevel = ClassFileConstants.JDK1_3; //$NON-NLS-1$
-	
+	public static long sourceLevel = ClassFileConstants.JDK1_3;
+
 public SyntaxErrorTest(String testName){
 	super(testName);
 }
 public void checkParse(
-	char[] source, 
+	char[] source,
 	String expectedSyntaxErrorDiagnosis,
 	String testName) {
 
 	/* using regular parser in DIET mode */
-	Parser parser = 
+	Parser parser =
 		new Parser(
 			new ProblemReporter(
-				DefaultErrorHandlingPolicies.proceedWithAllProblems(), 
-				new CompilerOptions(getCompilerOptions()), 
+				DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+				new CompilerOptions(getCompilerOptions()),
 				new DefaultProblemFactory(Locale.getDefault())),
 			optimizeStringLiterals);
 	ICompilationUnit sourceUnit = new CompilationUnit(source, testName, null);
-	CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);	
-	
+	CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, 0);
+
 	parser.parse(sourceUnit, compilationResult);
 
 	StringBuffer buffer = new StringBuffer(100);
@@ -57,7 +57,7 @@ public void checkParse(
 		int count = problems.length;
 		int problemCount = 0;
 		char[] unitSource = compilationResult.compilationUnit.getContents();
-		for (int i = 0; i < count; i++) { 
+		for (int i = 0; i < count; i++) {
 			if (problems[i] != null) {
 				if (problemCount == 0)
 					buffer.append("----------\n");
@@ -76,7 +76,7 @@ public void checkParse(
 		}
 	}
 	String computedSyntaxErrorDiagnosis = buffer.toString();
- 	//System.out.println(Util.displayString(computedSyntaxErrorDiagnosis));
+	//System.out.println(Util.displayString(computedSyntaxErrorDiagnosis));
 	assertEquals(
 		"Invalid syntax error diagnosis" + testName,
 		Util.convertToIndependantLineDelimiter(expectedSyntaxErrorDiagnosis),
@@ -87,7 +87,7 @@ public void checkParse(
  */
 public void test01() {
 
-	String s = 
+	String s =
 		"public class X {								\n"+
 		" public void solve(){							\n"+
 		"												\n"+
@@ -104,14 +104,14 @@ public void test01() {
 		"  }											\n"+
 		"  return andResult;							\n"+
 		" }												\n"+
-		"}												\n"; 	
+		"}												\n";
 
 	String expectedSyntaxErrorDiagnosis =
 		"----------\n" +
-		"1. ERROR in <parenthesis mismatch> (at line 9)\n" + 
-		"	if (this.equals(result.documentName){		\n" + 
-		"	                                   ^\n" + 
-		"Syntax error, insert \") Statement\" to complete BlockStatements\n" + 
+		"1. ERROR in <parenthesis mismatch> (at line 9)\n" +
+		"	if (this.equals(result.documentName){		\n" +
+		"	                                   ^\n" +
+		"Syntax error, insert \") Statement\" to complete BlockStatements\n" +
 		"----------\n";
 
 	String testName = "<parenthesis mismatch>";
@@ -125,19 +125,19 @@ public void test01() {
  */
 public void test02() {
 
-	String s = 
-		"class Bar {			\n"+				
+	String s =
+		"class Bar {			\n"+
 		"	Bar() {				\n"+
 		"		this(fred().x{);\n"+
-		"	}					\n"+						
-		"}						\n"; 	
+		"	}					\n"+
+		"}						\n";
 
 	String expectedSyntaxErrorDiagnosis =
 		"----------\n" +
 		"1. ERROR in <brace mismatch> (at line 3)\n" +
 		"	this(fred().x{);\n" +
 		"	             ^\n" +
-		"Syntax error on token \"{\", delete this token\n" + 
+		"Syntax error on token \"{\", delete this token\n" +
 		"----------\n";
 
 	String testName = "<brace mismatch>";
@@ -151,7 +151,7 @@ public void test02() {
  */
 public void test03() {
 
-	String s = 
+	String s =
 		"public class X { // should complain	\n"+
 		"	int foo(							\n"+
 		"		[ arg1, 						\n"+
@@ -159,7 +159,7 @@ public void test03() {
 		"		  arg3, 						\n"+
 		"	){									\n"+
 		"	}									\n"+
-		"}										\n"; 	
+		"}										\n";
 
 	String expectedSyntaxErrorDiagnosis =
 		"----------\n" +
@@ -195,7 +195,7 @@ public void test03() {
  */
 public void test04() {
 
-	String s = 
+	String s =
 		"public class X { // should not complain	\n"+
 		"	int foo(								\n"+
 		"		{ arg1, 							\n"+
@@ -203,7 +203,7 @@ public void test04() {
 		"		  arg3, }							\n"+
 		"	){										\n"+
 		"	}										\n"+
-		"}											\n"; 	
+		"}											\n";
 
 	String expectedSyntaxErrorDiagnosis =
 		"----------\n" +
@@ -232,12 +232,12 @@ public void test04() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=61189
 public void test05() {
 
-	String s = 
+	String s =
 		"public class X {							\n"+
 		"	public void foo() {						\n"+
 		"		(X) foo(); 							\n"+
 		"	}										\n"+
-		"}											\n"; 	
+		"}											\n";
 
 	String expectedSyntaxErrorDiagnosis =
 		"----------\n"+
@@ -261,12 +261,12 @@ public void test05() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=61189
 public void test06() {
 
-	String s = 
+	String s =
 		"public class X { 							\n"+
 		"	public void foo(int i) {				\n"+
 		"		i; 									\n"+
 		"	}										\n"+
-		"}											\n"; 	
+		"}											\n";
 
 	String expectedSyntaxErrorDiagnosis =
 		"----------\n"+
@@ -285,10 +285,10 @@ public void test06() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=133292
 public void test07() {
 
-	String s = 
+	String s =
 		"public class X { 											\n"+
 		"	java.lang.Object o[] = { new String(\"SUCCESS\") ; };	\n"+
-		"}															\n"; 	
+		"}															\n";
 
 	String expectedSyntaxErrorDiagnosis =
 		"----------\n"+
@@ -307,10 +307,10 @@ public void test07() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=133292
 public void test08() {
 
-	String s = 
+	String s =
 		"public class X { 											\n"+
 		"	Object o[] = { new String(\"SUCCESS\") ; };				\n"+
-		"}															\n"; 	
+		"}															\n";
 
 	String expectedSyntaxErrorDiagnosis =
 		"----------\n"+
@@ -329,12 +329,12 @@ public void test08() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=133292
 public void test09() {
 
-	String s = 
+	String s =
 		"public class X { 												\n"+
 		"	void foo() {												\n"+
 		"		java.lang.Object o[] = { new String(\"SUCCESS\") ; };	\n"+
 		"	}															\n"+
-		"}																\n"; 	
+		"}																\n";
 
 	String expectedSyntaxErrorDiagnosis =
 		"----------\n"+
@@ -353,12 +353,12 @@ public void test09() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=133292
 public void test10() {
 
-	String s = 
+	String s =
 		"public class X { 												\n"+
 		"	void foo() {												\n"+
 		"		Object o[] = { new String(\"SUCCESS\") ; };				\n"+
 		"	}															\n"+
-		"}																\n"; 	
+		"}																\n";
 
 	String expectedSyntaxErrorDiagnosis =
 		"----------\n"+
@@ -377,11 +377,11 @@ public void test10() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=80339
 public void test11() {
 
-	String s = 
+	String s =
 		"package a;										\n"+
 		"public interface Test {						\n"+
 		"  public void myMethod()						\n"+
-		"}												\n"; 	
+		"}												\n";
 
 	String expectedSyntaxErrorDiagnosis =
 		"----------\n"+
@@ -400,12 +400,12 @@ public void test11() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=80339
 public void test12() {
 
-	String s = 
+	String s =
 		"package a;										\n"+
 		"public interface Test {						\n"+
 		"  public void myMethod()						\n"+
 		"    System.out.println();						\n"+
-		"}												\n"; 	
+		"}												\n";
 
 	String expectedSyntaxErrorDiagnosis =
 		"----------\n"+
@@ -429,13 +429,13 @@ public void test12() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=221266
 public void test13() {
 
-	String s = 
+	String s =
 		"package a;										\n"+
 		"public class Test {							\n"+
 		"  public void foo() {							\n"+
 		"    foo(a  \"\\\"\");							\n"+
 		"  }											\n"+
-		"}												\n"; 	
+		"}												\n";
 
 	String expectedSyntaxErrorDiagnosis =
 		"----------\n"+

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,47 +19,47 @@ import org.eclipse.core.runtime.IProgressMonitor;
 
 /**
  * Will pass on status to another progress monitor.
- * 
+ *
  * @author Andy Clement
  */
 public class DelegatingProgressMonitor implements IProgressMonitor {
 
-	public IProgressMonitor delegate;
+    public IProgressMonitor delegate;
 
-	public DelegatingProgressMonitor(IProgressMonitor delegate) {
-		this.delegate = delegate;
-	}
-	
-	public void beginTask(String name, int totalWork) {
-		this.delegate.beginTask(name, totalWork);
-	}
+    public DelegatingProgressMonitor(IProgressMonitor delegate) {
+        this.delegate = delegate;
+    }
 
-	public void done() {
-		this.delegate.done();
-	}
+    public void beginTask(String name, int totalWork) {
+        this.delegate.beginTask(name, totalWork);
+    }
 
-	public void internalWorked(double work) {
-		this.internalWorked(work);
-	}
+    public void done() {
+        this.delegate.done();
+    }
 
-	public boolean isCanceled() {
-		return this.delegate.isCanceled();
-	}
+    public void internalWorked(double work) {
+        this.internalWorked(work);
+    }
 
-	public void setCanceled(boolean value) {
-		this.delegate.setCanceled(value);
-	}
+    public boolean isCanceled() {
+        return this.delegate.isCanceled();
+    }
 
-	public void setTaskName(String name) {
-		this.delegate.setTaskName(name);
-	}
+    public void setCanceled(boolean value) {
+        this.delegate.setCanceled(value);
+    }
 
-	public void subTask(String name) {
-		this.delegate.subTask(name);
-	}
+    public void setTaskName(String name) {
+        this.delegate.setTaskName(name);
+    }
 
-	public void worked(int work) {
-		this.delegate.worked(work);
-	}
+    public void subTask(String name) {
+        this.delegate.subTask(name);
+    }
+
+    public void worked(int work) {
+        this.delegate.worked(work);
+    }
 
 }

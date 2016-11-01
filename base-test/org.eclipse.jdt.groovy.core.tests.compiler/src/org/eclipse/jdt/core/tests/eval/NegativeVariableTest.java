@@ -28,10 +28,7 @@ public NegativeVariableTest(String name) {
 	super(name);
 }
 public static Test suite() {
-	return setupSuite(testClass());
-}
-public static Class testClass() {
-	return NegativeVariableTest.class;
+	return setupSuite(NegativeVariableTest.class);
 }
 /**
  * Test a variable that has a problem in its initializer.
@@ -44,7 +41,7 @@ public void testInitializerProblem() {
 			"(1 + 1) *",
 			"(j + 2)"}));
 		evaluateWithExpectedProblem(
-			var, 
+			var,
 			newProblem(IProblem.UndefinedName, Error, 11, 11, 2)); // j cannot be resolved
 	} finally {
 		if (var != null) {
@@ -61,7 +58,7 @@ public void testInitializerProblem() {
 			"(1 + 1) *",
 			"(1 ++ 2)"}));
 		evaluateWithExpectedProblem(
-			var2, 
+			var2,
 			newProblem(IProblem.InvalidUnaryExpression, Error, 11, 11, 2)); // Invalid argument to operation ++/--
 	} finally {
 		if (var1 != null) {
@@ -71,7 +68,7 @@ public void testInitializerProblem() {
 			context.deleteVariable(var2);
 		}
 	}
-	
+
 }
 /**
  * Test a variable that has a problem in its name.
@@ -83,7 +80,7 @@ public void _testInvalidName() {
 	try {
 		var = context.newVariable("int".toCharArray(), "!@#$%^&*()_".toCharArray(), "1".toCharArray());
 		evaluateWithExpectedProblem(
-			var, 
+			var,
 			newProblem(IProblem.ParsingErrorDeleteTokens, Error, 0, 9, 0)); // Syntax error, delete these tokens
 	} finally {
 		if (var != null) {
@@ -98,7 +95,7 @@ public void _testInvalidName() {
 		var1 = context.newVariable("String".toCharArray(), "foo".toCharArray(), "\"bar\"".toCharArray());
 		var2 = context.newVariable("int".toCharArray(), "!@#$%^&*()_".toCharArray(), "1".toCharArray());
 		evaluateWithExpectedProblem(
-			var2, 
+			var2,
 			newProblem(IProblem.ParsingErrorDeleteTokens, Error, 0, 9, 0)); // Syntax error, delete these tokens
 	} finally {
 		if (var1 != null) {
@@ -118,7 +115,7 @@ public void testUnknownType() {
 	try {
 		var = context.newVariable("foo.Bar".toCharArray(), "var".toCharArray(), null);
 		evaluateWithExpectedProblem(
-			var, 
+			var,
 			newProblem(IProblem.UndefinedType, Error, 0, 2, -1)); // The type foo is undefined
 	} finally {
 		if (var != null) {
@@ -133,7 +130,7 @@ public void testUnknownType() {
 		var1 = context.newVariable("int".toCharArray(), "x".toCharArray(), null);
 		var2 = context.newVariable("foo.Bar".toCharArray(), "var".toCharArray(), null);
 		evaluateWithExpectedProblem(
-			var2, 
+			var2,
 			newProblem(IProblem.UndefinedType, Error, 0, 2, -1)); // The type foo is undefined
 	} finally {
 		if (var1 != null) {

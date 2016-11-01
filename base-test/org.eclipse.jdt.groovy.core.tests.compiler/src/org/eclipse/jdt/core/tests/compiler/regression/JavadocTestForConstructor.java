@@ -20,18 +20,12 @@ public class JavadocTestForConstructor extends JavadocTest {
 	public JavadocTestForConstructor(String name) {
 		super(name);
 	}
-	public static Class javadocTestClass() {
-		return JavadocTestForConstructor.class;
-	}
-
 	public static Test suite() {
-		return buildAllCompliancesTestSuite(javadocTestClass());
-	}
-	static { // Use this static to initialize TESTS_NAMES (String[]) , TESTS_RANGE (int[2]), TESTS_NUMBERS (int[])
+		return buildAllCompliancesTestSuite(JavadocTestForConstructor.class);
 	}
 
-	protected Map getCompilerOptions() {
-		Map options = super.getCompilerOptions();
+	protected Map<String, String> getCompilerOptions() {
+		Map<String, String> options = super.getCompilerOptions();
 		options.put(CompilerOptions.OPTION_ReportInvalidJavadoc, CompilerOptions.ERROR);
 		options.put(CompilerOptions.OPTION_ReportInvalidJavadocTagsVisibility, CompilerOptions.PRIVATE);
 		options.put(CompilerOptions.OPTION_ReportMissingJavadocTags, CompilerOptions.ERROR);
@@ -902,16 +896,16 @@ public class JavadocTestForConstructor extends JavadocTest {
 					+ "	public X() {\n"
 					+ "	}\n"
 					+ "}\n" },
-			"----------\n" + 
-			"1. ERROR in test\\X.java (at line 7)\n" + 
-			"	* @see VisibilityPackage#unknown() Invalid ref: non visible class (non existent method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type VisibilityPackage is not visible\n" + 
-			"----------\n" + 
-			"2. ERROR in test\\X.java (at line 8)\n" + 
-			"	* @see test.copy.VisibilityPackage#unknown() Invalid ref: non visible class (non existent method)\n" + 
-			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Javadoc: The type test.copy.VisibilityPackage is not visible\n" + 
+			"----------\n" +
+			"1. ERROR in test\\X.java (at line 7)\n" +
+			"	* @see VisibilityPackage#unknown() Invalid ref: non visible class (non existent method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type VisibilityPackage is not visible\n" +
+			"----------\n" +
+			"2. ERROR in test\\X.java (at line 8)\n" +
+			"	* @see test.copy.VisibilityPackage#unknown() Invalid ref: non visible class (non existent method)\n" +
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"Javadoc: The type test.copy.VisibilityPackage is not visible\n" +
 			"----------\n");
 	}
 

@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,82 +32,82 @@ import org.codehaus.groovy.eclipse.core.impl.StringSourceBuffer;
  * @author empovazan
  */
 public class ExpressionFinder {
-	/**
-	 * Find an expression starting at the offset and working backwards. The found expression is one that could possibly
-	 * have completions.
-	 *
-	 * @param sourceBuffer
-	 * @param offset
-	 * @return The expression, or null if no suitable expression was found.
-	 * @throws ParseException
-	 */
-	public String findForCompletions(ISourceBuffer sourceBuffer, int offset) throws ParseException {
-		Token token = null;
-		int endOffset = 0;
-		TokenStream stream = new TokenStream(sourceBuffer, offset);
-		try {
-			token = stream.peek();
-			if (token.type == Token.EOF) {
-				return null;
-			}
+    /**
+     * Find an expression starting at the offset and working backwards. The found expression is one that could possibly
+     * have completions.
+     *
+     * @param sourceBuffer
+     * @param offset
+     * @return The expression, or null if no suitable expression was found.
+     * @throws ParseException
+     */
+    public String findForCompletions(ISourceBuffer sourceBuffer, int offset) throws ParseException {
+        Token token = null;
+        int endOffset = 0;
+        TokenStream stream = new TokenStream(sourceBuffer, offset);
+        try {
+            token = stream.peek();
+            if (token.type == Token.EOF) {
+                return null;
+            }
 
-			endOffset = token.endOffset;
+            endOffset = token.endOffset;
 
-			boolean offsetIsWhitespace = Character.isWhitespace(stream.getCurrentChar());
-			boolean offsetIsQuote = stream.getCurrentChar() == '\"' || stream.getCurrentChar() == '\'';
-			// no expression associated with a quote
-			if (offsetIsQuote) {
-				return null;
-			}
-			skipLineBreaksAndComments(stream);
-			token = stream.next();
+            boolean offsetIsWhitespace = Character.isWhitespace(stream.getCurrentChar());
+            boolean offsetIsQuote = stream.getCurrentChar() == '\"' || stream.getCurrentChar() == '\'';
+            // no expression associated with a quote
+            if (offsetIsQuote) {
+                return null;
+            }
+            skipLineBreaksAndComments(stream);
+            token = stream.next();
 
-			// if the offset is a whitespace, then content assist should be on a blank expression unless
-			// there is a '.', '..', or '?.'
-			if (offsetIsWhitespace && token.type != Token.DOT && token.type != Token.DOUBLE_DOT && token.type != Token.SAFE_DEREF && token.type != Token.SPREAD) {
-				return "";
-			}
+            // if the offset is a whitespace, then content assist should be on a blank expression unless
+            // there is a '.', '..', or '?.'
+            if (offsetIsWhitespace && token.type != Token.DOT && token.type != Token.DOUBLE_DOT && token.type != Token.SAFE_DEREF && token.type != Token.SPREAD) {
+                return "";
+            }
 
-			if (token.type == Token.EOF) {
-				return null;
-			}
+            if (token.type == Token.EOF) {
+                return null;
+            }
 
-			switch (token.type) {
-				case Token.DOT:
-				case Token.DOUBLE_DOT:
-				case Token.SAFE_DEREF:
-				case Token.SPREAD:
-					token = dot(stream);
-					break;
-				case Token.IDENT:
-					token = ident(stream);
-					break;
-				case Token.BRACK_BLOCK:
-					token = null;
-					break;
-				default:
-					throw new ParseException(token);
-			}
-		} catch (TokenStreamException e) {
-			// FUTURE: emp - the token stream should return EOF, for tokens [ { ( etc. or the tokens themselves.
-			// This can happen: if () { a._
-			// as '{' is unexpected without '}' - there are no tokens for the block delimiters.
-			// Because of this exception, the last token has not been returned. Patch that here.
-			Token last = stream.last();
-			if (last != null) {
-				token = last;
-			}
+            switch (token.type) {
+                case Token.DOT:
+                case Token.DOUBLE_DOT:
+                case Token.SAFE_DEREF:
+                case Token.SPREAD:
+                    token = dot(stream);
+                    break;
+                case Token.IDENT:
+                    token = ident(stream);
+                    break;
+                case Token.BRACK_BLOCK:
+                    token = null;
+                    break;
+                default:
+                    throw new ParseException(token);
+            }
+        } catch (TokenStreamException e) {
+            // FUTURE: emp - the token stream should return EOF, for tokens [ { ( etc. or the tokens themselves.
+            // This can happen: if () { a._
+            // as '{' is unexpected without '}' - there are no tokens for the block delimiters.
+            // Because of this exception, the last token has not been returned. Patch that here.
+            Token last = stream.last();
+            if (last != null) {
+                token = last;
+            }
         } catch (IllegalStateException e) {
 
-		}
-		if (token != null) {
-			return sourceBuffer.subSequence(token.startOffset, endOffset).toString();
-		}
-		return "";
-	}
+        }
+        if (token != null) {
+            return sourceBuffer.subSequence(token.startOffset, endOffset).toString();
+        }
+        return "";
+    }
 
 
-	/**
+    /**
      * Finds the end of the String token that exists at initialOffset.
      * searches the document for the next non-word character and returns that
      * as the end
@@ -146,25 +146,25 @@ public class ExpressionFinder {
      *         Also, remove starting '$'. These only occur when inside GStrings,
      *         and should not be completed against.
      */
-	public String[] splitForCompletion(String expression) {
-	    String[] split = splitForCompletionNoTrim(expression);
-	    if (split[0] != null) {
-	        split[0] = split[0].trim();
-	        if (split[0].startsWith("$")) {
-	            split[0] = split[0].substring(1);
-	        }
-	    }
-	    if (split[1] != null) {
-	        split[1] = split[1].trim();
+    public String[] splitForCompletion(String expression) {
+        String[] split = splitForCompletionNoTrim(expression);
+        if (split[0] != null) {
+            split[0] = split[0].trim();
+            if (split[0].startsWith("$")) {
+                split[0] = split[0].substring(1);
+            }
+        }
+        if (split[1] != null) {
+            split[1] = split[1].trim();
             if (split[1].startsWith("$")) {
                 split[1] = split[1].substring(1);
             }
-	    }
-	    return split;
-	}
+        }
+        return split;
+    }
 
 
-	public String[] splitForCompletionNoTrim(String expression) {
+    public String[] splitForCompletionNoTrim(String expression) {
        String[] ret = new String[2];
 
         if (expression == null || expression.trim().length() < 1 ){
@@ -204,7 +204,7 @@ public class ExpressionFinder {
         }
 
         return ret;
-	}
+    }
 
     public class NameAndLocation {
         public final String name;
@@ -278,93 +278,93 @@ public class ExpressionFinder {
      * For now, though we just ignore skipping all line breaks
      *
      */
-	private void skipLineBreaksAndComments(TokenStream stream)
-			throws TokenStreamException {
-		skipLineBreaks(stream);
-		skipLineComments(stream);
-	}
+    private void skipLineBreaksAndComments(TokenStream stream)
+            throws TokenStreamException {
+        skipLineBreaks(stream);
+        skipLineComments(stream);
+    }
 
-	private boolean isValidBeforeDot(int type) {
-		int beforeDot[] = new int[] { Token.IDENT, Token.QUOTED_STRING, Token.BRACE_BLOCK, Token.BRACK_BLOCK,
-				Token.PAREN_BLOCK };
-		for (int i = 0; i < beforeDot.length; ++i) {
-			if (type == beforeDot[i]) {
-				return true;
-			}
-		}
-		return false;
-	}
+    private boolean isValidBeforeDot(int type) {
+        int beforeDot[] = new int[] { Token.IDENT, Token.QUOTED_STRING, Token.BRACE_BLOCK, Token.BRACK_BLOCK,
+                Token.PAREN_BLOCK };
+        for (int i = 0; i < beforeDot.length; ++i) {
+            if (type == beforeDot[i]) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-	private Token dot(TokenStream stream) throws TokenStreamException, ParseException {
-		skipLineBreaksAndComments(stream);
-		Token token = stream.next();
+    private Token dot(TokenStream stream) throws TokenStreamException, ParseException {
+        skipLineBreaksAndComments(stream);
+        Token token = stream.next();
 
-		switch (token.type) {
-			case Token.IDENT:
-				return ident(stream);
-			case Token.QUOTED_STRING:
-				return quotedString(stream);
-			case Token.PAREN_BLOCK:
-				return parenBlock(stream);
-			case Token.BRACE_BLOCK:
-				return braceBlock(stream);
-			case Token.BRACK_BLOCK:
-				return brackBlock(stream);
-			default:
-				throw new ParseException(token);
-		}
-	}
+        switch (token.type) {
+            case Token.IDENT:
+                return ident(stream);
+            case Token.QUOTED_STRING:
+                return quotedString(stream);
+            case Token.PAREN_BLOCK:
+                return parenBlock(stream);
+            case Token.BRACE_BLOCK:
+                return braceBlock(stream);
+            case Token.BRACK_BLOCK:
+                return brackBlock(stream);
+            default:
+                throw new ParseException(token);
+        }
+    }
 
-	private void skipLineComments(TokenStream stream) throws TokenStreamException {
-		while (stream.peek().type == Token.LINE_COMMENT) {
-			stream.next();
-		}
-	}
+    private void skipLineComments(TokenStream stream) throws TokenStreamException {
+        while (stream.peek().type == Token.LINE_COMMENT) {
+            stream.next();
+        }
+    }
 
-	private void skipLineBreaks(TokenStream stream) throws TokenStreamException {
-		while (stream.peek().type == Token.LINE_BREAK) {
-			stream.next();
-		}
-	}
+    private void skipLineBreaks(TokenStream stream) throws TokenStreamException {
+        while (stream.peek().type == Token.LINE_BREAK) {
+            stream.next();
+        }
+    }
 
-	private Token ident(TokenStream stream) throws TokenStreamException, ParseException {
-		Token token = stream.peek();
-		Token last = stream.last();
-		switch (token.type) {
-			case Token.LINE_BREAK:
-				skipLineBreaksAndComments(stream);
-				token = stream.peek();
-				if (token.type != Token.DOT && token.type != Token.SAFE_DEREF && token.type != Token.SPREAD) {
-					return new Token(Token.EOF, last.startOffset, last.endOffset, null);
-				}
-				stream.next();
-				return dot(stream);
-			case Token.DOUBLE_DOT:
-			    return new Token(Token.EOF, last.startOffset, last.endOffset, null);
-			case Token.SAFE_DEREF:
-			case Token.SPREAD:
-			case Token.DOT: {
-				stream.next();
-				return dot(stream);
-			}
+    private Token ident(TokenStream stream) throws TokenStreamException, ParseException {
+        Token token = stream.peek();
+        Token last = stream.last();
+        switch (token.type) {
+            case Token.LINE_BREAK:
+                skipLineBreaksAndComments(stream);
+                token = stream.peek();
+                if (token.type != Token.DOT && token.type != Token.SAFE_DEREF && token.type != Token.SPREAD) {
+                    return new Token(Token.EOF, last.startOffset, last.endOffset, null);
+                }
+                stream.next();
+                return dot(stream);
+            case Token.DOUBLE_DOT:
+                return new Token(Token.EOF, last.startOffset, last.endOffset, null);
+            case Token.SAFE_DEREF:
+            case Token.SPREAD:
+            case Token.DOT: {
+                stream.next();
+                return dot(stream);
+            }
 
-			// Anything that is not a dot before an ident is assumed to be EOF, unless it is the 'new' keyword.
-			// This is because, a previous line of code can end with ) ] } ident ; etc.
-			case Token.IDENT:
-				// A 'new' keyword is the beginning of the expression to find.
-				if (token.text.equals("new")) {
-					Token next = stream.next();
-					return new Token(Token.EOF, next.startOffset, next.endOffset, null);
-				}
+            // Anything that is not a dot before an ident is assumed to be EOF, unless it is the 'new' keyword.
+            // This is because, a previous line of code can end with ) ] } ident ; etc.
+            case Token.IDENT:
+                // A 'new' keyword is the beginning of the expression to find.
+                if (token.text.equals("new")) {
+                    Token next = stream.next();
+                    return new Token(Token.EOF, next.startOffset, next.endOffset, null);
+                }
                 // fall through
-			default:
-				return new Token(Token.EOF, last.startOffset, last.endOffset, null);
-		}
-	}
+            default:
+                return new Token(Token.EOF, last.startOffset, last.endOffset, null);
+        }
+    }
 
-	private Token quotedString(TokenStream stream) throws TokenStreamException, ParseException {
-		Token token = stream.peek();
-		Token last;
+    private Token quotedString(TokenStream stream) throws TokenStreamException, ParseException {
+        Token token = stream.peek();
+        Token last;
     switch (token.type) {
       case Token.EOF:
       case Token.LINE_BREAK:
@@ -379,57 +379,57 @@ public class ExpressionFinder {
       default:
         throw new ParseException(token);
     }
-	}
+    }
 
 
-	private Token parenBlock(TokenStream stream) throws TokenStreamException, ParseException {
-		Token token = stream.peek();
-		switch (token.type) {
-		  case Token.IDENT:
-		    stream.next();
-		    return ident(stream);
-		  case Token.EOF:
-		  case Token.SEMI:
-		  case Token.LINE_BREAK:
-		    //expression in paren
-		    return stream.last();
-		  default:
-		    throw new ParseException(token);
-		}
-	}
+    private Token parenBlock(TokenStream stream) throws TokenStreamException, ParseException {
+        Token token = stream.peek();
+        switch (token.type) {
+          case Token.IDENT:
+            stream.next();
+            return ident(stream);
+          case Token.EOF:
+          case Token.SEMI:
+          case Token.LINE_BREAK:
+            //expression in paren
+            return stream.last();
+          default:
+            throw new ParseException(token);
+        }
+    }
 
-	private Token braceBlock(TokenStream stream) throws TokenStreamException, ParseException {
-		Token token = stream.next();
-		switch (token.type) {
-			case Token.IDENT:
-				return ident(stream);
-			case Token.PAREN_BLOCK:
-				return parenBlock(stream);
-			default:
-				throw new ParseException(token);
-		}
-	}
+    private Token braceBlock(TokenStream stream) throws TokenStreamException, ParseException {
+        Token token = stream.next();
+        switch (token.type) {
+            case Token.IDENT:
+                return ident(stream);
+            case Token.PAREN_BLOCK:
+                return parenBlock(stream);
+            default:
+                throw new ParseException(token);
+        }
+    }
 
-	private Token brackBlock(TokenStream stream) throws TokenStreamException, ParseException {
-		Token last = stream.last();
-		Token token = stream.next();
-		switch (token.type) {
-			case Token.EOF:
-				return new Token(Token.EOF, last.startOffset, last.startOffset, null);
-			case Token.IDENT:
-				return ident(stream);
-			case Token.PAREN_BLOCK:
-				return parenBlock(stream);
-			case Token.BRACE_BLOCK:
-				return braceBlock(stream);
+    private Token brackBlock(TokenStream stream) throws TokenStreamException, ParseException {
+        Token last = stream.last();
+        Token token = stream.next();
+        switch (token.type) {
+            case Token.EOF:
+                return new Token(Token.EOF, last.startOffset, last.startOffset, null);
+            case Token.IDENT:
+                return ident(stream);
+            case Token.PAREN_BLOCK:
+                return parenBlock(stream);
+            case Token.BRACE_BLOCK:
+                return braceBlock(stream);
             case Token.BRACK_BLOCK:
                 return brackBlock(stream);
             case Token.SEMI:
             case Token.LINE_BREAK:
                 // expression in paren
                 return stream.last();
-			default:
-				throw new ParseException(token);
-		}
-	}
+            default:
+                throw new ParseException(token);
+        }
+    }
 }

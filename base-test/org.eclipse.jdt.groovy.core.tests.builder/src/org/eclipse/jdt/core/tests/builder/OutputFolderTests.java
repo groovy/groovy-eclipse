@@ -32,55 +32,55 @@ public class OutputFolderTests extends BuilderTests {
 	}
 
 	public void testChangeOutputFolder() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
 		// remove old package fragment root so that names don't collide
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
+		env.removePackageFragmentRoot(projectPath, "");
 
-		IPath root = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		IPath bin1 = env.setOutputFolder(projectPath, "bin1"); //$NON-NLS-1$
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		IPath bin1 = env.setOutputFolder(projectPath, "bin1");
 
-		env.addClass(root, "p", "Test", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;\n" + //$NON-NLS-1$
-			"public class Test {}" //$NON-NLS-1$
+		env.addClass(root, "p", "Test",
+			"package p;\n" +
+			"public class Test {}"
 		);
 
 		fullBuild();
 		expectingNoProblems();
-		expectingPresenceOf(bin1.append("p/Test.class")); //$NON-NLS-1$
+		expectingPresenceOf(bin1.append("p/Test.class"));
 
-		IPath bin2 = env.setOutputFolder(projectPath, "bin2"); //$NON-NLS-1$
+		IPath bin2 = env.setOutputFolder(projectPath, "bin2");
 		incrementalBuild();
 		expectingNoProblems();
-		expectingPresenceOf(bin2.append("p/Test.class")); //$NON-NLS-1$
+		expectingPresenceOf(bin2.append("p/Test.class"));
 	}
 
 	public void testDeleteOutputFolder() throws JavaModelException {
-		IPath projectPath = env.addProject("Project"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("Project");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-		
-		IPath root = env.getPackageFragmentRootPath(projectPath, ""); //$NON-NLS-1$
-		IPath bin = env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
 
-		env.addClass(root, "", "Test", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class Test {}" //$NON-NLS-1$
+		IPath root = env.getPackageFragmentRootPath(projectPath, "");
+		IPath bin = env.setOutputFolder(projectPath, "bin");
+
+		env.addClass(root, "", "Test",
+			"public class Test {}"
 		);
-		env.addFile(root, "Test.txt", ""); //$NON-NLS-1$ //$NON-NLS-2$
+		env.addFile(root, "Test.txt", "");
 
 		fullBuild();
 		expectingNoProblems();
 		expectingPresenceOf(new IPath[]{
-			bin.append("Test.class"), //$NON-NLS-1$
-			bin.append("Test.txt") //$NON-NLS-1$
+			bin.append("Test.class"),
+			bin.append("Test.txt")
 		});
 
 		env.removeFolder(bin);
 //		incrementalBuild(); currently not detected by the incremental builder... should it?
 		fullBuild();
 		expectingPresenceOf(new IPath[]{
-			bin.append("Test.class"), //$NON-NLS-1$
-			bin.append("Test.txt") //$NON-NLS-1$
+			bin.append("Test.class"),
+			bin.append("Test.txt")
 		});
 	}
 	/*
@@ -90,231 +90,231 @@ public class OutputFolderTests extends BuilderTests {
 	 */
 	public void testInvalidOutput() throws JavaModelException {
 		// setup project with 1 src folder and 1 output folder
-		IPath projectPath = env.addProject("P"); //$NON-NLS-1$
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("P");
+		env.removePackageFragmentRoot(projectPath, "");
+		env.addPackageFragmentRoot(projectPath, "src");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
-	
+
 		// add cu and build
-		env.addClass(projectPath, "src", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class A {}" //$NON-NLS-1$
+		env.addClass(projectPath, "src", "A",
+			"public class A {}"
 			);
 		fullBuild();
 		expectingNoProblems();
 
 		// set invalid  output foder by editing the .classpath file
 		env.addFile(
-			projectPath, 
-			".classpath",  //$NON-NLS-1$
-			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + //$NON-NLS-1$
-			"<classpath>\n" + //$NON-NLS-1$
-			"    <classpathentry kind=\"src\" path=\"src\"/>\n" + //$NON-NLS-1$
-			"    <classpathentry kind=\"var\" path=\"" + Util.getJavaClassLibs() + "\"/>\n" + //$NON-NLS-1$ //$NON-NLS-2$
-			"    <classpathentry kind=\"output\" path=\"\"/>\n" + //$NON-NLS-1$
-			"</classpath>" //$NON-NLS-1$
+			projectPath,
+			".classpath",
+			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+			"<classpath>\n" +
+			"    <classpathentry kind=\"src\" path=\"src\"/>\n" +
+			"    <classpathentry kind=\"var\" path=\"" + Util.getJavaClassLibs() + "\"/>\n" +
+			"    <classpathentry kind=\"output\" path=\"\"/>\n" +
+			"</classpath>"
 		);
-		
+
 		// simulate exit/restart
 		JavaModelManager manager = JavaModelManager.getJavaModelManager();
-		JavaProject project = (JavaProject)manager.getJavaModel().getJavaProject("P"); //$NON-NLS-1$
+		JavaProject project = (JavaProject)manager.getJavaModel().getJavaProject("P");
 		manager.removePerProjectInfo(project,true);
-		
+
 		// change cu and build
-		IPath cuPath = env.addClass(projectPath, "src", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class A { String s;}" //$NON-NLS-1$
-			);		
+		IPath cuPath = env.addClass(projectPath, "src", "A",
+			"public class A { String s;}"
+			);
 		incrementalBuild();
 
 		expectingPresenceOf(new IPath[] {cuPath});
 	}
 
 	public void testSimpleProject() throws JavaModelException {
-		IPath projectPath = env.addProject("P1"); //$NON-NLS-1$
-		IPath bin = env.setOutputFolder(projectPath, ""); //$NON-NLS-1$
+		IPath projectPath = env.addProject("P1");
+		IPath bin = env.setOutputFolder(projectPath, "");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
-		env.addClass(projectPath, "", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class A {}" //$NON-NLS-1$
+		env.addClass(projectPath, "", "A",
+			"public class A {}"
 			);
-		env.addClass(projectPath, "p", "B", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;"+ //$NON-NLS-1$
-			"public class B {}" //$NON-NLS-1$
+		env.addClass(projectPath, "p", "B",
+			"package p;"+
+			"public class B {}"
 			);
 
 		fullBuild();
 		expectingNoProblems();
 		expectingPresenceOf(new IPath[] {
-			bin.append("A.class"), //$NON-NLS-1$
-			bin.append("p/B.class") //$NON-NLS-1$
+			bin.append("A.class"),
+			bin.append("p/B.class")
 		});
 	}
 
 	public void testProjectWithBin() throws JavaModelException {
-		IPath projectPath = env.addProject("P2"); //$NON-NLS-1$
-		IPath src = env.getPackageFragmentRootPath(projectPath, ""); //$NON-NLS-1$
-		IPath bin = env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("P2");
+		IPath src = env.getPackageFragmentRootPath(projectPath, "");
+		IPath bin = env.setOutputFolder(projectPath, "bin");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
-		env.addClass(src, "", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class A {}" //$NON-NLS-1$
+		env.addClass(src, "", "A",
+			"public class A {}"
 			);
-		env.addClass(src, "p", "B", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;"+ //$NON-NLS-1$
-			"public class B {}" //$NON-NLS-1$
+		env.addClass(src, "p", "B",
+			"package p;"+
+			"public class B {}"
 			);
 
 		fullBuild();
 		expectingNoProblems();
 		expectingPresenceOf(new IPath[] {
-			bin.append("A.class"), //$NON-NLS-1$
-			bin.append("p/B.class") //$NON-NLS-1$
+			bin.append("A.class"),
+			bin.append("p/B.class")
 		});
 	}
 
 	public void testProjectWithSrcBin() throws JavaModelException {
-		IPath projectPath = env.addProject("P3"); //$NON-NLS-1$
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		IPath src = env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		IPath bin = env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("P3");
+		env.removePackageFragmentRoot(projectPath, "");
+		IPath src = env.addPackageFragmentRoot(projectPath, "src");
+		IPath bin = env.setOutputFolder(projectPath, "bin");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
-		env.addClass(src, "", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class A {}" //$NON-NLS-1$
+		env.addClass(src, "", "A",
+			"public class A {}"
 			);
-		env.addClass(src, "p", "B", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;"+ //$NON-NLS-1$
-			"public class B {}" //$NON-NLS-1$
+		env.addClass(src, "p", "B",
+			"package p;"+
+			"public class B {}"
 			);
 
 		fullBuild();
 		expectingNoProblems();
 		expectingPresenceOf(new IPath[] {
-			bin.append("A.class"), //$NON-NLS-1$
-			bin.append("p/B.class") //$NON-NLS-1$
+			bin.append("A.class"),
+			bin.append("p/B.class")
 		});
 	}
 
 	public void testProjectWith2SrcBin() throws JavaModelException {
-		IPath projectPath = env.addProject("P4"); //$NON-NLS-1$
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		IPath src1 = env.addPackageFragmentRoot(projectPath, "src1"); //$NON-NLS-1$
-		IPath src2 = env.addPackageFragmentRoot(projectPath, "src2"); //$NON-NLS-1$
-		IPath bin = env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("P4");
+		env.removePackageFragmentRoot(projectPath, "");
+		IPath src1 = env.addPackageFragmentRoot(projectPath, "src1");
+		IPath src2 = env.addPackageFragmentRoot(projectPath, "src2");
+		IPath bin = env.setOutputFolder(projectPath, "bin");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
-		env.addClass(src1, "", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class A {}" //$NON-NLS-1$
+		env.addClass(src1, "", "A",
+			"public class A {}"
 			);
-		env.addClass(src2, "p", "B", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;"+ //$NON-NLS-1$
-			"public class B {}" //$NON-NLS-1$
+		env.addClass(src2, "p", "B",
+			"package p;"+
+			"public class B {}"
 			);
 
 		fullBuild();
 		expectingNoProblems();
 		expectingPresenceOf(new IPath[] {
-			bin.append("A.class"), //$NON-NLS-1$
-			bin.append("p/B.class") //$NON-NLS-1$
+			bin.append("A.class"),
+			bin.append("p/B.class")
 		});
 	}
 
 	public void testProjectWith2SrcAsBin() throws JavaModelException {
-		IPath projectPath = env.addProject("P5"); //$NON-NLS-1$
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		IPath src1 = env.addPackageFragmentRoot(projectPath, "src1", null, "src1"); //$NON-NLS-1$ //$NON-NLS-2$
-		IPath src2 = env.addPackageFragmentRoot(projectPath, "src2", null, "src2"); //$NON-NLS-1$ //$NON-NLS-2$
-		/*IPath bin =*/ env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("P5");
+		env.removePackageFragmentRoot(projectPath, "");
+		IPath src1 = env.addPackageFragmentRoot(projectPath, "src1", null, "src1");
+		IPath src2 = env.addPackageFragmentRoot(projectPath, "src2", null, "src2");
+		/*IPath bin =*/ env.setOutputFolder(projectPath, "bin");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
-		env.addClass(src1, "", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class A {}" //$NON-NLS-1$
+		env.addClass(src1, "", "A",
+			"public class A {}"
 			);
-		env.addClass(src2, "p", "B", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;"+ //$NON-NLS-1$
-			"public class B {}" //$NON-NLS-1$
+		env.addClass(src2, "p", "B",
+			"package p;"+
+			"public class B {}"
 			);
 
 		fullBuild();
 		expectingNoProblems();
 		expectingPresenceOf(new IPath[] {
-			src1.append("A.class"), //$NON-NLS-1$
-			src2.append("p/B.class") //$NON-NLS-1$
+			src1.append("A.class"),
+			src2.append("p/B.class")
 		});
 	}
 
 	public void testProjectWith2Src2Bin() throws JavaModelException {
-		IPath projectPath = env.addProject("P6"); //$NON-NLS-1$
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		IPath src1 = env.addPackageFragmentRoot(projectPath, "src1", null, "bin1"); //$NON-NLS-1$ //$NON-NLS-2$
-		IPath src2 = env.addPackageFragmentRoot(projectPath, "src2", null, "bin2"); //$NON-NLS-1$ //$NON-NLS-2$
-		env.setOutputFolder(projectPath, "bin1"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("P6");
+		env.removePackageFragmentRoot(projectPath, "");
+		IPath src1 = env.addPackageFragmentRoot(projectPath, "src1", null, "bin1");
+		IPath src2 = env.addPackageFragmentRoot(projectPath, "src2", null, "bin2");
+		env.setOutputFolder(projectPath, "bin1");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
-		env.addClass(src1, "", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class A {}" //$NON-NLS-1$
+		env.addClass(src1, "", "A",
+			"public class A {}"
 			);
-		env.addClass(src2, "p", "B", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;"+ //$NON-NLS-1$
-			"public class B {}" //$NON-NLS-1$
+		env.addClass(src2, "p", "B",
+			"package p;"+
+			"public class B {}"
 			);
 
 		fullBuild();
 		expectingNoProblems();
 		expectingPresenceOf(new IPath[] {
-			projectPath.append("bin1/A.class"), //$NON-NLS-1$
-			projectPath.append("bin2/p/B.class") //$NON-NLS-1$
+			projectPath.append("bin1/A.class"),
+			projectPath.append("bin2/p/B.class")
 		});
 	}
 
 	public void testProjectWith3Src2Bin() throws JavaModelException {
-		IPath projectPath = env.addProject("P6"); //$NON-NLS-1$
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		IPath src1 = env.addPackageFragmentRoot(projectPath, "src1", null, "bin1"); //$NON-NLS-1$ //$NON-NLS-2$
-		IPath src2 = env.addPackageFragmentRoot(projectPath, "src2", null, "bin2"); //$NON-NLS-1$ //$NON-NLS-2$
-		IPath src3 = env.addPackageFragmentRoot(projectPath, "src3", null, "bin2"); //$NON-NLS-1$ //$NON-NLS-2$
-		env.setOutputFolder(projectPath, "bin1"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("P6");
+		env.removePackageFragmentRoot(projectPath, "");
+		IPath src1 = env.addPackageFragmentRoot(projectPath, "src1", null, "bin1");
+		IPath src2 = env.addPackageFragmentRoot(projectPath, "src2", null, "bin2");
+		IPath src3 = env.addPackageFragmentRoot(projectPath, "src3", null, "bin2");
+		env.setOutputFolder(projectPath, "bin1");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
-		env.addClass(src1, "", "A", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class A {}" //$NON-NLS-1$
+		env.addClass(src1, "", "A",
+			"public class A {}"
 			);
-		env.addClass(src2, "p", "B", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;"+ //$NON-NLS-1$
-			"public class B {}" //$NON-NLS-1$
+		env.addClass(src2, "p", "B",
+			"package p;"+
+			"public class B {}"
 			);
-		env.addClass(src3, "", "C", //$NON-NLS-1$ //$NON-NLS-2$
-			"public class C {}" //$NON-NLS-1$
+		env.addClass(src3, "", "C",
+			"public class C {}"
 			);
 
 		fullBuild();
 		expectingNoProblems();
 		expectingPresenceOf(new IPath[] {
-			projectPath.append("bin1/A.class"), //$NON-NLS-1$
-			projectPath.append("bin2/p/B.class"), //$NON-NLS-1$
-			projectPath.append("bin2/C.class") //$NON-NLS-1$
+			projectPath.append("bin1/A.class"),
+			projectPath.append("bin2/p/B.class"),
+			projectPath.append("bin2/C.class")
 		});
 	}
 
 	public void test2ProjectWith1Bin() throws JavaModelException {
-		IPath projectPath = env.addProject("P7"); //$NON-NLS-1$
-		env.removePackageFragmentRoot(projectPath, ""); //$NON-NLS-1$
-		env.addPackageFragmentRoot(projectPath, "src"); //$NON-NLS-1$
-		IPath bin = env.setOutputFolder(projectPath, "bin"); //$NON-NLS-1$
+		IPath projectPath = env.addProject("P7");
+		env.removePackageFragmentRoot(projectPath, "");
+		env.addPackageFragmentRoot(projectPath, "src");
+		IPath bin = env.setOutputFolder(projectPath, "bin");
 		env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
-		IPath projectPath2 = env.addProject("P8"); //$NON-NLS-1$
-		IPath binLocation = env.getProject(projectPath).getFolder("bin").getLocation(); //$NON-NLS-1$
-		env.setExternalOutputFolder(projectPath2, "externalBin", binLocation); //$NON-NLS-1$
+		IPath projectPath2 = env.addProject("P8");
+		IPath binLocation = env.getProject(projectPath).getFolder("bin").getLocation();
+		env.setExternalOutputFolder(projectPath2, "externalBin", binLocation);
 		env.addExternalJars(projectPath2, Util.getJavaClassLibs());
 		env.addRequiredProject(projectPath2, projectPath);
 
-		env.addClass(projectPath2, "p", "B", //$NON-NLS-1$ //$NON-NLS-2$
-			"package p;"+ //$NON-NLS-1$
-			"public class B {}" //$NON-NLS-1$
+		env.addClass(projectPath2, "p", "B",
+			"package p;"+
+			"public class B {}"
 			);
 
 		fullBuild();
 		expectingNoProblems();
-		expectingPresenceOf(bin.append("p/B.class")); //$NON-NLS-1$
+		expectingPresenceOf(bin.append("p/B.class"));
 	}
 }

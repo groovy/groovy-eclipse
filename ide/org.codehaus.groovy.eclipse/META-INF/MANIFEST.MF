@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Groovy-Eclipse plugin
 Bundle-SymbolicName: org.codehaus.groovy.eclipse;singleton:=true
+Bundle-Name: Groovy-Eclipse Plug-in
+Bundle-Vendor: Codehaus.org
 Bundle-Version: 2.9.2.qualifier
-Bundle-Vendor: The Codehaus

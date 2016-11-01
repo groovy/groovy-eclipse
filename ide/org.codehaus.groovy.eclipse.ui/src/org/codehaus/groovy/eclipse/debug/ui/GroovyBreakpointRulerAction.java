@@ -3,7 +3,7 @@
  * This program and the accompanying materials are made available under the
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors: IBM Corporation - initial API and implementation
  ******************************************************************************/
 package org.codehaus.groovy.eclipse.debug.ui;
@@ -52,11 +52,10 @@ public class GroovyBreakpointRulerAction extends Action {
 
 	public GroovyBreakpointRulerAction(IVerticalRulerInfo ruler,
 			ITextEditor editor, IEditorPart editorPart) {
-		super("Toggle &Breakpoint"); 
+		super("Toggle &Breakpoint");
 		fRuler = ruler;
 		fTextEditor = editor;
-		fStatusLine = (IEditorStatusLine) editorPart
-				.getAdapter(IEditorStatusLine.class);
+		fStatusLine = editorPart.getAdapter(IEditorStatusLine.class);
 		fBreakpointAdapter = new ToggleBreakpointAdapter();
 	}
 
@@ -70,7 +69,7 @@ public class GroovyBreakpointRulerAction extends Action {
 
 	/**
 	 * Returns this action's vertical ruler info.
-	 * 
+	 *
 	 * @return this action's vertical ruler
 	 */
 	protected IVerticalRulerInfo getVerticalRulerInfo() {
@@ -79,7 +78,7 @@ public class GroovyBreakpointRulerAction extends Action {
 
 	/**
 	 * Returns this action's editor.
-	 * 
+	 *
 	 * @return this action's editor
 	 */
 	protected ITextEditor getTextEditor() {
@@ -88,17 +87,17 @@ public class GroovyBreakpointRulerAction extends Action {
 
 	/**
 	 * Returns the <code>IDocument</code> of the editor's input.
-	 * 
+	 *
 	 * @return the document of the editor's input
 	 */
 	protected IDocument getDocument() {
 		IDocumentProvider provider = fTextEditor.getDocumentProvider();
 		return provider.getDocument(fTextEditor.getEditorInput());
 	}
-	
+
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.eclipse.jface.action.IAction#run()
 	 */
 	public void run() {
@@ -131,8 +130,8 @@ public class GroovyBreakpointRulerAction extends Action {
 				}
 			}
 		} catch (CoreException e) {
-			JDIDebugUIPlugin.errorDialog("Cannot add breakpoint", e); 
-		}	
+			JDIDebugUIPlugin.errorDialog("Cannot add breakpoint", e);
+		}
 	}
 
 	protected IResource getResource() {
@@ -146,7 +145,7 @@ public class GroovyBreakpointRulerAction extends Action {
 
 	/**
 	 * Returns a list of markers that exist at the current ruler location.
-	 * 
+	 *
 	 * @return a list of markers that exist at the current ruler location
 	 */
 	protected List<IMarker> getMarkers() {
@@ -196,7 +195,7 @@ public class GroovyBreakpointRulerAction extends Action {
 	/**
 	 * Returns the <code>AbstractMarkerAnnotationModel</code> of the editor's
 	 * input.
-	 * 
+	 *
 	 * @return the marker annotation model
 	 */
 	protected AbstractMarkerAnnotationModel getAnnotationModel() {
@@ -211,7 +210,7 @@ public class GroovyBreakpointRulerAction extends Action {
 
 	/**
 	 * Checks whether a position includes the ruler's line of activity.
-	 * 
+	 *
 	 * @param position
 	 *            the position to be checked
 	 * @param document

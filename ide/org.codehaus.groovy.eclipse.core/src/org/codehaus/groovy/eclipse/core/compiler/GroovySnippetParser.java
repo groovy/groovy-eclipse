@@ -1,21 +1,25 @@
-/*******************************************************************************
- * Copyright (c) 2009 SpringSource and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *     Andrew Eisenberg - initial API and implementation
- *******************************************************************************/
-
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.core.compiler;
-
-import groovyjarjarasm.asm.Opcodes;
 
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Map;
 
+import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.antlr.AntlrParserPlugin;
 import org.codehaus.groovy.antlr.GroovySourceAST;
 import org.codehaus.groovy.ast.ClassNode;
@@ -35,11 +39,9 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 
-
 /**
  * @author Andrew Eisenberg
  * @created Aug 11, 2009
- *
  *
  * This class is used to parse a snippet of groovy source code into a module node
  * The module node is not resolved
@@ -80,7 +82,6 @@ public class GroovySnippetParser {
 
     private CategorizedProblem[] problems;
 
-
     /**
      * Compiles source code into a ModuleNode.  Source code
      * must be a complete file including package declaration
@@ -88,10 +89,8 @@ public class GroovySnippetParser {
      *
      * @param source the groovy source code to compile
      */
-    @SuppressWarnings("unchecked")
     public ModuleNode parse(String source) {
-
-        Hashtable table = JavaCore.getOptions();
+        Map<String, String> table = JavaCore.getOptions();
         table.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
         CompilerOptions options = new CompilerOptions(table);
         ProblemReporter reporter = new ProblemReporter(DefaultErrorHandlingPolicies.proceedWithAllProblems(), options,
@@ -128,8 +127,6 @@ public class GroovySnippetParser {
         return problems;
     }
 
-
-    @SuppressWarnings("unchecked")
     public GroovySourceAST parseForCST(String source) {
         Hashtable<String, String> table = JavaCore.getOptions();
         table.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);

@@ -1,19 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.2"?><!--
-    Copyright 2003-2009 the original author or authors.
-   
+<?eclipse version="3.4"?>
+
+<!--
+    Copyright 2009-2016 the original author or authors.
+
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
-   
+
         http://www.apache.org/licenses/LICENSE-2.0
-   
+
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
- -->
+-->
+
 
 <plugin>
    <extension-point id="syntaxHighlightingExtension" name="Groovy Editor Syntax Highlighting Extension" schema="schema/syntaxHighlightingExtension.exsd"/>
@@ -76,10 +79,10 @@
                   </count>
               <iterate>
                   <test
-	                    property="org.eclipse.debug.ui.projectNature"
+                      property="org.eclipse.debug.ui.projectNature"
                       value="org.eclipse.jdt.groovy.core.groovyNature">
                   </test>
-              		<adapt type="org.eclipse.core.resources.IProject"/>
+                  <adapt type="org.eclipse.core.resources.IProject"/>
               </iterate>
                </with>
             </enablement>
@@ -147,9 +150,9 @@
                               value="org.eclipse.jdt.groovy.core.groovyNature">
                         </test>
                         <or>
-                        		<adapt type="org.eclipse.core.resources.IProject"/>
-		                        <test property="org.codehaus.groovy.eclipse.ui.isScript"/>
-                        </or> 
+                           <adapt type="org.eclipse.core.resources.IProject"/>
+                           <test property="org.codehaus.groovy.eclipse.ui.isScript"/>
+                        </or>
                      </iterate>
                   </with>
                </or>
@@ -220,11 +223,11 @@
             class="org.codehaus.groovy.eclipse.wizards.GroovyProjectWizard"
             descriptionImage="icons/full/newgroovyprj_wiz.gif"
             preferredPerspectives="org.eclipse.jdt.ui.JavaPerspective,com.springsource.sts.grails.perspective,org.grails.ide.eclipse.perspective"
-						project="true"
+            project="true"
             finalPerspective="org.eclipse.jdt.ui.JavaPerspective"
             id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard">
          <description>
-         		Create a new Groovy project
+            Create a new Groovy project
          </description>
       </wizard>
       <wizard
@@ -254,102 +257,101 @@
    <extension point="org.eclipse.ui.views">
       <category name="Groovy" id="org.codehaus.groovy.eclipse.Groovy" />
    </extension>
-   
-    <extension point="org.eclipse.ui.popupMenus">
-  		<objectContribution id="org.codehaus.groovy.eclipse.groovyProjectContributions"
-   			adaptable="true"
-   			objectClass="org.eclipse.core.resources.IProject">
-			   <action
-			         class="org.codehaus.groovy.eclipse.actions.RemoveGroovyNatureAction"
-			         enablesFor="1"
-			         id="org.codehaus.groovy.eclipse.removenature.action"
-			         label="Remove Groovy nature"
-			         menubarPath="groovy/nature">
-			   </action>
-			   <action
+
+   <extension point="org.eclipse.ui.popupMenus">
+      <objectContribution id="org.codehaus.groovy.eclipse.groovyProjectContributions"
+            adaptable="true"
+            objectClass="org.eclipse.core.resources.IProject">
+         <action
+               class="org.codehaus.groovy.eclipse.actions.RemoveGroovyNatureAction"
+               enablesFor="1"
+               id="org.codehaus.groovy.eclipse.removenature.action"
+               label="Remove Groovy nature"
+               menubarPath="groovy/nature">
+         </action>
+         <action
              class="org.codehaus.groovy.eclipse.actions.AddGroovyClasspathContainerAction"
              enablesFor="1"
              id="org.codehaus.groovy.eclipse.importlibs.action"
              label="Add Groovy libs to classpath"
              menubarPath="groovy/libs"
              tooltip="Add or remove the Groovy classpath container to this project">
-			   </action>
-          <action
-                class="org.codehaus.groovy.eclipse.actions.FixCompilerMismatches"
-                definitionId="org.codehaus.groovy.eclipse.ui.fixCompilerMismatch"
-                enablesFor="1"
-                id="org.codehaus.groovy.eclipse.ui.fixCompilerMismatch.action"
-                label="Fix Compiler Mismatch problems"
-                menubarPath="groovy/nature">
-          </action>
-			   <visibility>
-			      <objectState
-			            name="nature"
-			            value="org.eclipse.jdt.groovy.core.groovyNature">
-			      </objectState>
-			   </visibility>
-		</objectContribution>
-		
-		<objectContribution id="org.codehaus.groovy.eclipse.groovyFileContributions"
- 			adaptable="true"
- 			objectClass="org.eclipse.core.resources.IFile">
-			   <action
-            class="org.codehaus.groovy.eclipse.editor.actions.RenameToGroovyAction"
-            definitionId="org.codehaus.groovy.eclipse.ui.convertToGroovy"
-            enablesFor="*"
-            id="org.codehaus.groovy.eclipse.convertToGroovy.action"
-            label="Convert file extension to Groovy"
-            menubarPath="groovyfile/defaultGroup">
-         <enablement>
+         </action>
+         <action
+               class="org.codehaus.groovy.eclipse.actions.FixCompilerMismatches"
+               definitionId="org.codehaus.groovy.eclipse.ui.fixCompilerMismatch"
+               enablesFor="1"
+               id="org.codehaus.groovy.eclipse.ui.fixCompilerMismatch.action"
+               label="Fix Compiler Mismatch problems"
+               menubarPath="groovy/nature">
+         </action>
+         <visibility>
             <objectState
-                  name="extension"
-                  value="java"/>
-         </enablement>
-			   </action>
-				 <action
-            class="org.codehaus.groovy.eclipse.editor.actions.RenameToJavaAction"
-            definitionId="org.codehaus.groovy.eclipse.ui.convertToJava"
-            enablesFor="*"
-            id="org.codehaus.groovy.eclipse.convertToJava.action"
-            label="Convert file extension to Java"
-            menubarPath="groovyfile/defaultGroup"
-            tooltip="Convert file to having a *.java extension">
-          <enablement>
-            <objectState
-                  name="extension"
-                  value="groovy">
+                  name="nature"
+                  value="org.eclipse.jdt.groovy.core.groovyNature">
             </objectState>
-         </enablement>
-			   </action>
-		      <menu
-            id="groovyfile"
-            label="Groovy"
-            path="additions">
-         <separator
-               name="defaultGroup">
-         </separator>
-      </menu>
-      <visibility>
-         <objectState 
-            name="projectNature" 
-            value="org.eclipse.jdt.groovy.core.groovyNature"/>
-      </visibility>
-		</objectContribution>
+         </visibility>
+      </objectContribution>
 
-		<!--
-		Restrict selection to be a project with a Groovy nature.
-		Specifying an "IJavaProject" objectClass would mean that
-		this contribution would become unavailable for web and EJB
-		projects in IBM Rational 6.x tools.
-		--> 
-   		<objectContribution id="org.codehaus.groovy.eclipse.groovymenu"
-   			adaptable="true"
-   			objectClass="org.eclipse.core.resources.IProject">
-	        <menu
-	              id="groovy"
-	              label="Groovy"
-	              path="additions">
-	           <separator name="defaultGroup"/>
+      <objectContribution id="org.codehaus.groovy.eclipse.groovyFileContributions"
+            adaptable="true"
+            objectClass="org.eclipse.core.resources.IFile">
+         <action
+               class="org.codehaus.groovy.eclipse.editor.actions.RenameToGroovyAction"
+               definitionId="org.codehaus.groovy.eclipse.ui.convertToGroovy"
+               enablesFor="*"
+               id="org.codehaus.groovy.eclipse.convertToGroovy.action"
+               label="Convert file extension to Groovy"
+               menubarPath="groovyfile/defaultGroup">
+            <enablement>
+               <objectState
+                     name="extension"
+                     value="java"/>
+            </enablement>
+         </action>
+         <action
+               class="org.codehaus.groovy.eclipse.editor.actions.RenameToJavaAction"
+               definitionId="org.codehaus.groovy.eclipse.ui.convertToJava"
+               enablesFor="*"
+               id="org.codehaus.groovy.eclipse.convertToJava.action"
+               label="Convert file extension to Java"
+               menubarPath="groovyfile/defaultGroup"
+               tooltip="Convert file to having a *.java extension">
+            <enablement>
+               <objectState
+                     name="extension"
+                     value="groovy"/>
+            </enablement>
+         </action>
+         <menu
+               id="groovyfile"
+               label="Groovy"
+               path="additions">
+            <separator
+                  name="defaultGroup">
+            </separator>
+         </menu>
+         <visibility>
+            <objectState
+                  name="projectNature"
+                  value="org.eclipse.jdt.groovy.core.groovyNature"/>
+         </visibility>
+      </objectContribution>
+
+      <!--
+      Restrict selection to be a project with a Groovy nature.
+      Specifying an "IJavaProject" objectClass would mean that
+      this contribution would become unavailable for web and EJB
+      projects in IBM Rational 6.x tools.
+      -->
+      <objectContribution id="org.codehaus.groovy.eclipse.groovymenu"
+            adaptable="true"
+            objectClass="org.eclipse.core.resources.IProject">
+           <menu
+                 id="groovy"
+                 label="Groovy"
+                 path="additions">
+              <separator name="defaultGroup"/>
              <separator
                   name="libs">
             </separator>
@@ -360,9 +362,9 @@
                  value="org.eclipse.jdt.groovy.core.groovyNature">
            </objectState>
         </visibility>
-		</objectContribution>
+      </objectContribution>
 
-		<!-- In "Configure" sub-menu -->
+      <!-- In "Configure" sub-menu -->
     <objectContribution
            adaptable="true"
            id="org.codehaus.groovy.eclipse.nonGroovyContributions"
@@ -375,13 +377,13 @@
               menubarPath="org.eclipse.ui.projectConfigure/additions">
         </action>
         <visibility>
-         	<and>
-	         	<objectState name="nature" value="org.eclipse.jdt.core.javanature"/>
-	         	<not>
-		         	<objectState name="nature" value="org.eclipse.jdt.groovy.core.groovyNature"/>
-		        </not>
-		        <objectState name="open" value="true"/>
-		      </and>
+            <and>
+               <objectState name="nature" value="org.eclipse.jdt.core.javanature"/>
+               <not>
+                  <objectState name="nature" value="org.eclipse.jdt.groovy.core.groovyNature"/>
+              </not>
+              <objectState name="open" value="true"/>
+            </and>
         </visibility>
      </objectContribution>
      <objectContribution
@@ -402,7 +404,7 @@
            </objectState>
         </visibility>
      </objectContribution>
-     
+
    <!--Our Toggle breakpoint action and JDT's other breakpoint actions-->
      <viewerContribution
             targetID="#GroovyCompilationUnitRulerContext"
@@ -443,17 +445,17 @@
                menubarPath="add"
                id="org.eclipse.ui.texteditor.BookmarkRulerAction">
          </action>
-         
+
          <!-- This adds "Quick Fix" action to the Groovy editor ruler context menu -->
-		 <action
+       <action
                label="Select Annotation ruler"
                helpContextId="org.eclipse.ui.bookmark_action_context"
                class="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction"
                menubarPath="add"
                id="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction">
-         </action> 
+         </action>
      </viewerContribution>
-     
+
      <!-- Groovy Refactorings -->
      <viewerContribution
                id="org.codehaus.groovy.viewer.refactorings"
@@ -462,22 +464,22 @@
               label="Groovy Refac&amp;tor">
            <separator name="refactoring"/>
       </menu>
-			<action
-				class="org.codehaus.groovy.eclipse.refactoring.actions.ConvertToMethodAction"
-				id="org.groovy.codehaus.eclipse.ui.actions.convertToMethodContribution"
-				label="Convert closure to method"
-				definitionId="org.codehaus.groovy.eclipse.ui.convertToMethod"
-				menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
-				style="push">
-			</action>
-			<action
-				class="org.codehaus.groovy.eclipse.refactoring.actions.ConvertToClosureAction"
-				id="org.groovy.codehaus.eclipse.ui.actions.convertToClosureContribution"
-				label="Convert method to closure"
-				definitionId="org.codehaus.groovy.eclipse.ui.convertToClosure"
-				menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
-				style="push">
-			</action>
+         <action
+            class="org.codehaus.groovy.eclipse.refactoring.actions.ConvertToMethodAction"
+            id="org.groovy.codehaus.eclipse.ui.actions.convertToMethodContribution"
+            label="Convert closure to method"
+            definitionId="org.codehaus.groovy.eclipse.ui.convertToMethod"
+            menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
+            style="push">
+         </action>
+         <action
+            class="org.codehaus.groovy.eclipse.refactoring.actions.ConvertToClosureAction"
+            id="org.groovy.codehaus.eclipse.ui.actions.convertToClosureContribution"
+            label="Convert method to closure"
+            definitionId="org.codehaus.groovy.eclipse.ui.convertToClosure"
+            menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
+            style="push">
+         </action>
     </viewerContribution>
    </extension>
    <extension
@@ -530,53 +532,53 @@
        </actionSet>
    </extension>
    <extension point="org.eclipse.ui.perspectiveExtensions">
-	   		<perspectiveExtension 
-				targetID="org.eclipse.jdt.ui.JavaPerspective">
-						<actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
-						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>					
-						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
-						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
+            <perspectiveExtension
+            targetID="org.eclipse.jdt.ui.JavaPerspective">
+                  <actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
+                  <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
+                  <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
+                  <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
       <actionSet
             id="org.codehaus.groovy.eclipse.conversion">
       </actionSet>
-	    	</perspectiveExtension>
-			<perspectiveExtension 
-				targetID="org.eclipse.jdt.ui.JavaBrowsingPerspective">
-						<actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
-						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
-						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>					
-						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
+          </perspectiveExtension>
+         <perspectiveExtension
+            targetID="org.eclipse.jdt.ui.JavaBrowsingPerspective">
+                  <actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
+                  <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
+                  <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
+                  <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
       <actionSet
             id="org.codehaus.groovy.eclipse.conversion">
       </actionSet>
-			</perspectiveExtension>
-			<perspectiveExtension 
-				targetID="org.eclipse.jdt.ui.JavaHierarchyPerspective">
-						<actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
-						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
-						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>					
-						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
+         </perspectiveExtension>
+         <perspectiveExtension
+            targetID="org.eclipse.jdt.ui.JavaHierarchyPerspective">
+                  <actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
+                  <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
+                  <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
+                  <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
       <actionSet
             id="org.codehaus.groovy.eclipse.conversion">
       </actionSet>
-			</perspectiveExtension>
-    	<perspectiveExtension 
- 			  targetID="org.eclipse.jst.j2ee.J2EEPerspective">
-						<actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
-						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
-						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>					
-						<newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
+         </perspectiveExtension>
+       <perspectiveExtension
+            targetID="org.eclipse.jst.j2ee.J2EEPerspective">
+                  <actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
+                  <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyClassWizard"/>
+                  <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyProjectWizard"/>
+                  <newWizardShortcut id="org.codehaus.groovy.eclipse.ui.groovyJUnitWizard"/>
       <actionSet
             id="org.codehaus.groovy.eclipse.conversion">
       </actionSet>
-    	</perspectiveExtension>
-			<perspectiveExtension 
-				targetID="org.eclipse.pde.ui.PDEPerspective">
-						<actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
+       </perspectiveExtension>
+         <perspectiveExtension
+            targetID="org.eclipse.pde.ui.PDEPerspective">
+                  <actionSet id="org.codehaus.groovy.eclipse.ui.groovyElementCreation"/>
       <actionSet
             id="org.codehaus.groovy.eclipse.conversion">
       </actionSet>
-			</perspectiveExtension>
+         </perspectiveExtension>
    </extension>
    <extension
          point="org.eclipse.ui.preferencePages">
@@ -628,7 +630,7 @@
              name="Save Actions">
        </page>
    </extension>
-   
+
    <extension
          point="org.eclipse.ui.commands">
       <command
@@ -725,7 +727,7 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M3+J G"/>
-            
+
       <key
             commandId="org.codehaus.groovy.eclipse.ui.convertToMethod"
             contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
@@ -736,9 +738,9 @@
             contextId="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M3+G F"/>
-      <!-- Now disable all of the M3+G commands for Swiss German since that conflicts with '@' -->      
-      <!-- Reenable commands using M1+M3+G for Swiss German -->      
-            
+      <!-- Now disable all of the M3+G commands for Swiss German since that conflicts with '@' -->
+      <!-- Reenable commands using M1+M3+G for Swiss German -->
+
       <!-- Use our Find occurrences command instead -->
       <key
             commandId="org.codehaus.groovy.eclipse.ui.findOccurrences"
@@ -752,35 +754,35 @@
       </sequenceModifier>
    </extension>
    <extension point="org.eclipse.debug.ui.consoleLineTrackers">
-		<consoleLineTracker
-			class="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker"
-			processType="java"
-			id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTrackerForJava"/>
-		<consoleLineTracker
-			class="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker"
-			processType="groovy"
-			id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTrackerForGroovy"/>
-	</extension>
-	<extension
-		point="org.eclipse.core.expressions.propertyTesters">
-		<propertyTester
+      <consoleLineTracker
+         class="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker"
+         processType="java"
+         id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTrackerForJava"/>
+      <consoleLineTracker
+         class="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker"
+         processType="groovy"
+         id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTrackerForGroovy"/>
+   </extension>
+   <extension
+      point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
           class="org.codehaus.groovy.eclipse.ui.GroovyResourcePropertyTester"
           id="org.codehaus.groovy.eclipse.ui.groovyResourcePropertyTester"
           namespace="org.codehaus.groovy.eclipse.ui"
           properties="isTest,hasMain,isScript"
           type="org.eclipse.core.runtime.IAdaptable"/>
-	</extension>
-	<extension
+   </extension>
+   <extension
        point="org.eclipse.core.runtime.preferences">
-    	<initializer class="org.codehaus.groovy.eclipse.preferences.PreferenceInitializer"/>
+       <initializer class="org.codehaus.groovy.eclipse.preferences.PreferenceInitializer"/>
          <initializer
                class="org.codehaus.groovy.eclipse.preferences.FormatterPreferenceInitializer">
          </initializer>
          <initializer
                class="org.codehaus.groovy.eclipse.preferences.SaveActionsPreferenceInitializer">
          </initializer>
-	 	</extension>
-	<extension
+       </extension>
+   <extension
         point="org.eclipse.jdt.ui.classpathContainerPage">
     <classpathContainerPage
           class="org.codehaus.groovy.eclipse.ui.cpcontainer.GroovyClasspathContainerPage"
@@ -823,17 +825,17 @@
        </enablement>
     </decorator>
     -->
- </extension>
-	<extension point="org.eclipse.core.runtime.adapters">
-         <factory 
-            class="org.codehaus.groovy.eclipse.debug.ui.GroovyRetargettableActionAdapterFactory" 
+   </extension>
+   <extension point="org.eclipse.core.runtime.adapters">
+         <factory
+            class="org.codehaus.groovy.eclipse.debug.ui.GroovyRetargettableActionAdapterFactory"
             adaptableType="org.codehaus.groovy.eclipse.editor.GroovyEditor">
             <adapter type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
          </factory>
-  		<factory adaptableType="org.eclipse.ui.IFileEditorInput"
-        	class="org.codehaus.groovy.eclipse.adapters.GroovyIFileEditorInputAdapterFactory">
-     		<adapter type="org.codehaus.groovy.ast.ClassNode"/>
-	  	</factory>
+        <factory adaptableType="org.eclipse.ui.IFileEditorInput"
+           class="org.codehaus.groovy.eclipse.adapters.GroovyIFileEditorInputAdapterFactory">
+           <adapter type="org.codehaus.groovy.ast.ClassNode"/>
+        </factory>
     <factory
           adaptableType="org.codehaus.groovy.eclipse.editor.GroovyEditor"
           class="org.codehaus.groovy.eclipse.adapters.GroovyEditorAdapterFactory">
@@ -847,7 +849,7 @@
       <editorContribution
             targetID="org.codehaus.groovy.eclipse.editor.GroovyEditor"
             id="org.codehaus.groovy.editor.actions">
-				 <!-- Ruler actions -->
+             <!-- Ruler actions -->
          <action
                label="Toggle Breakpoint"
                class="org.codehaus.groovy.eclipse.debug.ui.GroovyBreakpointRulerActionDelegate"
@@ -927,7 +929,7 @@
           label="Groovy Event Console">
     </consoleFactory>
  </extension>
- 
+
     <extension
          point="org.eclipse.jdt.ui.javaEditorTextHovers">
       <hover

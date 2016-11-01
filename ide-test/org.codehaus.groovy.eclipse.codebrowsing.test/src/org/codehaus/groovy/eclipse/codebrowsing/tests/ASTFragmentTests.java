@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,16 +38,15 @@ import org.eclipse.jdt.core.JavaCore;
 /**
  * Tests to see that ASTFragments are created correctly
  *
- * @author andrew
+ * @author Andrew Eisenberg
  * @created Jun 4, 2010
  */
-public class ASTFragmentTests extends BrowsingTestCase {
+public final class ASTFragmentTests extends BrowsingTestCase {
 
-    @Override
-    protected void setUp() throws Exception {
-        System.out.println(JavaCore.getWorkingCopies(null));
-        super.setUp();
+    public static junit.framework.Test suite() {
+        return newTestSuite(ASTFragmentTests.class);
     }
+
     private class TestFragmentVisitor extends FragmentVisitor {
         private Stack<ASTFragmentKind> expectedKinds;
 
@@ -106,10 +105,6 @@ public class ASTFragmentTests extends BrowsingTestCase {
             return super.visit(fragment);
         }
 
-    }
-
-    public ASTFragmentTests() {
-        super(ASTFragmentTests.class.getName());
     }
 
     public void testASTFragment1() throws Exception {
@@ -209,7 +204,7 @@ public class ASTFragmentTests extends BrowsingTestCase {
         IASTFragment first = createFragmentFromText("a.b.c");
         String contents = "a.b.c.d";
         IASTFragment second = createFragmentFromText(contents, 0, contents.indexOf(".d"));
-		assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
+        assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
         assertFragmentSame(first, second);
         new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY,
                 ASTFragmentKind.SIMPLE_EXPRESSION);
@@ -222,7 +217,7 @@ public class ASTFragmentTests extends BrowsingTestCase {
         IASTFragment first = createFragmentFromText("a.b.c");
         String contents = "z.a.b.c.d";
         IASTFragment second = createFragmentFromText(contents, 2, contents.indexOf(".d"));
-		assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
+        assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
         // fragments should not match because property-based fragments only
         // match from the beginning
         assertFragmentDifferent(first, second);
@@ -236,7 +231,7 @@ public class ASTFragmentTests extends BrowsingTestCase {
         IASTFragment first = createFragmentFromText("a.b.c");
         String contents = "a.b.c.dddda";
         IASTFragment second = createFragmentFromText(contents, 0, contents.indexOf("da"));
-		assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
+        assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
         assertFragmentSame(first, second);
         new TestFragmentVisitor().checkExpectedKinds(first, ASTFragmentKind.PROPERTY, ASTFragmentKind.PROPERTY,
                 ASTFragmentKind.SIMPLE_EXPRESSION);
@@ -248,7 +243,7 @@ public class ASTFragmentTests extends BrowsingTestCase {
         IASTFragment first = createFragmentFromText("a.b.c");
         String contents = "zzz.a.b.c.dddda";
         IASTFragment second = createFragmentFromText(contents, 2, contents.indexOf("da"));
-		assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
+        assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
         // fragments should not match because property-based fragments only
         // match from the beginning
         assertFragmentDifferent(first, second);
@@ -262,7 +257,7 @@ public class ASTFragmentTests extends BrowsingTestCase {
         IASTFragment first = createFragmentFromText("a + b - c");
         String contents = "z + a + b - c >> d";
         IASTFragment second = createFragmentFromText(contents, 4, contents.indexOf(" >>"));
-		assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
+        assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
         assertFragmentSame(first, second);
         new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.BINARY, ASTFragmentKind.BINARY,
                 ASTFragmentKind.SIMPLE_EXPRESSION);
@@ -272,7 +267,7 @@ public class ASTFragmentTests extends BrowsingTestCase {
         IASTFragment first = createFragmentFromText("a + b - c");
         String contents = "zzz + a + b - c >> d";
         IASTFragment second = createFragmentFromText(contents, 4, contents.indexOf(" >>") + 2);
-		assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
+        assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
         assertFragmentSame(first, second);
         new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.BINARY, ASTFragmentKind.BINARY,
                 ASTFragmentKind.SIMPLE_EXPRESSION);
@@ -282,7 +277,7 @@ public class ASTFragmentTests extends BrowsingTestCase {
         IASTFragment first = createFragmentFromText("foo.bar(a + b - c)");
         String contents = "foo.bar(a + b - c).fraz";
         IASTFragment second = createFragmentFromText(contents, 0, contents.indexOf(")"));
-		assertEquals("Wrong number of fragments: " + second, 2, second.fragmentLength());
+        assertEquals("Wrong number of fragments: " + second, 2, second.fragmentLength());
         assertFragmentSame(first, second);
         new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.PROPERTY, ASTFragmentKind.METHOD_CALL);
     }
@@ -291,7 +286,7 @@ public class ASTFragmentTests extends BrowsingTestCase {
         IASTFragment first = createFragmentFromText("c(foo.bar(foo.bar(foo.bar(bebop, foobee)))) + a + b");
         String contents = "a + b + c(foo.bar(foo.bar(foo.bar(bebop, foobee)))) + a + b";
         IASTFragment second = createFragmentFromText(contents, contents.indexOf("c"), contents.length());
-		assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
+        assertEquals("Wrong number of fragments: " + second, 3, second.fragmentLength());
         assertFragmentSame(first, second);
         new TestFragmentVisitor().checkExpectedKinds(second, ASTFragmentKind.BINARY, ASTFragmentKind.BINARY,
                 ASTFragmentKind.SIMPLE_EXPRESSION);
@@ -440,19 +435,18 @@ public class ASTFragmentTests extends BrowsingTestCase {
     }
 
     private IASTFragment createFragmentFromText(String contents) throws Exception {
-        GroovyCompilationUnit unit = getCompilationUnitFor(contents);
-        Statement statement = (Statement) unit.getModuleNode().getStatementBlock().getStatements()
-                .get(0);
-        Expression expr = statement instanceof ReturnStatement ? ((ReturnStatement) statement).getExpression()
-                : ((ExpressionStatement) statement).getExpression();
+        GroovyCompilationUnit unit = addGroovySource(contents);
+        Statement statement = unit.getModuleNode().getStatementBlock().getStatements().get(0);
+        Expression expr = statement instanceof ReturnStatement
+                ? ((ReturnStatement) statement).getExpression() : ((ExpressionStatement) statement).getExpression();
         IASTFragment fragment = new ASTFragmentFactory().createFragment(expr);
         unit.discardWorkingCopy();
         return fragment;
     }
 
     private IASTFragment createFragmentFromText(String contents, int start, int end) throws Exception {
-        GroovyCompilationUnit unit = getCompilationUnitFor(contents);
-        return new ASTFragmentFactory().createFragment(((ReturnStatement) unit.getModuleNode().getStatementBlock().getStatements()
-                .get(0)).getExpression(), start, end);
+        GroovyCompilationUnit unit = addGroovySource(contents);
+        return new ASTFragmentFactory().createFragment(
+                ((ReturnStatement) unit.getModuleNode().getStatementBlock().getStatements().get(0)).getExpression(), start, end);
     }
 }

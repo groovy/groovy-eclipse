@@ -271,7 +271,7 @@ public class GroovyIndentation {
             ASTNode node = formatter.findCorrespondingNode(token);
             if (node instanceof SwitchStatement) {
                 SwitchStatement switchstmt = (SwitchStatement) node;
-                for (CaseStatement cs : (List<CaseStatement>) switchstmt.getCaseStatements()) {
+                for (CaseStatement cs : switchstmt.getCaseStatements()) {
                     indentendBlockStatement(cs.getCode(), cs.getLineNumber());
                 }
                 // Hack because the default statement has wrong line infos
@@ -288,7 +288,7 @@ public class GroovyIndentation {
     private void indentendBlockStatement(Statement stmt, int currentLine) {
         if (stmt instanceof BlockStatement) {
             BlockStatement defaultBlock = (BlockStatement) stmt;
-            for (Statement sm : (List<Statement>) defaultBlock.getStatements()) {
+            for (Statement sm : defaultBlock.getStatements()) {
                 if (sm.getLineNumber() > currentLine) {
                     for (int i = sm.getLineNumber(); i <= sm.getLastLineNumber(); i++) {
                         tempIndentation[i - 1] += 1;

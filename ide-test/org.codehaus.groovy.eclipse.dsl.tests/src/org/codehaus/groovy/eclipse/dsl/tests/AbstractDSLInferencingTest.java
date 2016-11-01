@@ -1,13 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *      Andrew Eisenberg - Initial implemenation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.dsl.tests;
 
 import java.io.IOException;
@@ -42,7 +47,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -51,7 +55,7 @@ import org.eclipse.jdt.core.groovy.tests.search.AbstractInferencingTest;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 
 /**
- * 
+ *
  * @author Andrew Eisenberg
  * @created Feb 19, 2011
  */
@@ -60,7 +64,7 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
     public AbstractDSLInferencingTest(String name) {
         super(name);
     }
-    
+
     public static class TestLogger implements IGroovyLogger {
 
         public void log(TraceCategory category, String message) {
@@ -70,13 +74,13 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         public boolean isCategoryEnabled(TraceCategory category) {
             return true;
         }
-        
+
     }
-    
+
     TestLogger logger = new TestLogger();
-    
+
     protected boolean doRemoveClasspathContainer = true;
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -91,7 +95,7 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         }
         GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(project);
     }
-    
+
     @Override
     protected void tearDown() throws Exception {
         GroovyLogManager.manager.removeLogger(logger);
@@ -103,7 +107,7 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         return createDsls(0, dsls);
     }
     protected String[] createDsls(int startWith, String ... dsls) {
-    	return createDsls(startWith, project, dsls);
+        return createDsls(startWith, project, dsls);
     }
     protected String[] createDsls(int startWith, IProject theProject, String ... dsls) {
         int i = startWith;
@@ -118,7 +122,7 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         }
         return dsls;
     }
-    
+
     protected void deleteDslFile(int fileNum) {
         env.removeFile(project.getFile("dsl" + fileNum + ".dsld").getFullPath());
     }
@@ -130,12 +134,12 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         }
         return createDsls(dslContents);
     }
-    
+
     protected void addJarToProject(String jarName) throws JavaModelException, IOException {
         String externalFilePath = findExternalFilePath(jarName);
         env.addExternalJar(project.getFullPath(), externalFilePath);
     }
-    
+
     protected void addGroovyJarToProject(String jarName) throws JavaModelException, IOException {
         addGroovyJarToProject(jarName, project);
     }
@@ -146,7 +150,7 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         } else {
             fail("Could not find file " + jarName + " in org.codehaus.groovy bundle");
         }
-        
+
     }
 
     protected String findExternalFilePath(String jarName)
@@ -156,22 +160,22 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         String externalFilePath = resolved.getFile();
         return externalFilePath;
     }
-    
+
     protected void removeJarFromProject(String jarName) throws JavaModelException, IOException {
         URL url = GroovyDSLDTestsActivator.getDefault().getTestResourceURL(jarName);
         URL resolved = FileLocator.resolve(url);
         env.removeExternalJar(project.getFullPath(), new Path(resolved.getFile()));
     }
-    
-    
-    
+
+
+
     /**
      * @param expectedNumDslFiles  number of dsl files currently registered
-     * @param allExpectedPointcuts map: dsl file name -> all pointcuts in that file 
+     * @param allExpectedPointcuts map: dsl file name -> all pointcuts in that file
      * @param expectedContributionCounts map: pointcut name -> all contribution group associated with
      */
     protected void assertDSLStore(int expectedNumDslFiles, Map<String, List<String>> allExpectedPointcuts, Map<String, Integer> expectedContributionCounts) {
-        
+
         // ensure DSLDs are refreshed
         // don't schedule. instead run in the same thread.
         System.out.println("About to run RefreshDSLDJob");
@@ -183,8 +187,8 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         job.run(spm);
         spm.waitForCompletion();
         System.out.println("Finished RefreshDSLDJob");
-        
-        
+
+
         DSLDStoreManager manager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
         DSLDStore store = manager.getDSLDStore(project);
         Set<String> disabledScripts = DSLPreferences.getDisabledScriptsAsSet();
@@ -202,20 +206,26 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
             // don't check the name for external and binary dslds
             if (key instanceof IFile) {
                 assertEquals(project.getFullPath() + "/dsl" + i++ + ".dsld", uniqueString);
-            }            
+            }
             // check to see if the file is disabled.
             if (disabledScripts.contains(uniqueString)) {
                 continue;
             }
-            
+
             // now check the pointcuts in this script
-            Set<IPointcut> pcs = ((Map<IStorage, Set<IPointcut>>) ReflectionUtils.getPrivateField(DSLDStore.class, "keyContextMap", store)).get(key);
+            @SuppressWarnings("unchecked")
+            Map<IStorage, Set<IPointcut>> keyContextMap = (Map<IStorage, Set<IPointcut>>)
+                    ReflectionUtils.getPrivateField(DSLDStore.class, "keyContextMap", store);
+            Set<IPointcut> pcs = keyContextMap.get(key);
             List<String> expectedPcs = allExpectedPointcuts.get(uniqueString);
             for (IPointcut pc : pcs) {
                 assertTrue("Didn't find expected Pointcut " + pc + " in\n" + expectedPcs, expectedPcs.contains(createSemiUniqueName(pc)));
-                
+
                 // now check the contributions for each pointcut
-                List<IContributionGroup> group = ((Map<IPointcut, List<IContributionGroup>>) ReflectionUtils.getPrivateField(DSLDStore.class, "pointcutContributionMap", store)).get(pc);
+                @SuppressWarnings("unchecked")
+                Map<IPointcut, List<IContributionGroup>> pointcutContributionMap = (Map<IPointcut, List<IContributionGroup>>)
+                        ReflectionUtils.getPrivateField(DSLDStore.class, "pointcutContributionMap", store);
+                List<IContributionGroup> group = pointcutContributionMap.get(pc);
                 int groupSize = group.size();
                 int expectedSize = expectedContributionCounts.get(createSemiUniqueName(pc));
                 assertEquals("Didn't find expected number of contributions for " + pc, expectedSize, groupSize);
@@ -250,29 +260,29 @@ public class AbstractDSLInferencingTest extends AbstractInferencingTest {
         }
         return map;
     }
-    
+
     protected String createSemiUniqueName(IPointcut pc) {
         return pc.getClass().getName() + ":" + pc.getContainerIdentifier().getFullPath().lastSegment();
     }
-    
+
     protected String createSemiUniqueName(Class<? extends IPointcut> pc, int cnt) {
         return pc.getName() + ":" + "dsl" + cnt + ".dsld";
     }
-    
+
     protected String createSemiUniqueName(Class<? extends IPointcut> pc, IStorage storage) {
         return pc.getName() + ":" + DSLDStore.toUniqueString(storage);
     }
-    
-    
-    
+
+
+
     protected void assertDSLType(String contents, String name) {
         assertDeclaringType(contents, contents.indexOf(name), contents.indexOf(name) + name.length(), "p.IPointcut", true);
     }
-    
+
     protected void assertUnknownDSLType(String contents, String name) {
         assertUnknownConfidence(contents, contents.indexOf(name), contents.indexOf(name) + name.length(), "Search", true);
     }
-    
+
     /**
      * Refreshes the external folders project.  It seems that the contents of linked folders are not being refreshed fast enough
      * and we are getting {@link IllegalArgumentException}s because there is a resource that is aliased, but no longer exists

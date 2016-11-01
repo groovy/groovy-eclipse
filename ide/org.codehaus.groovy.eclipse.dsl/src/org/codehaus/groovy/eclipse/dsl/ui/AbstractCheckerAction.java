@@ -29,7 +29,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartSite;
 
 /**
- * 
+ *
  * @author andrew
  * @created Aug 29, 2011
  */
@@ -54,9 +54,9 @@ public class AbstractCheckerAction {
             if (elt instanceof IResource) {
                 candidate = (IResource) elt;
             } else if (elt instanceof IAdaptable) {
-                candidate = (IResource) ((IAdaptable) elt).getAdapter(IResource.class);
+                candidate = ((IAdaptable) elt).getAdapter(IResource.class);
             }
-            
+
             if (candidate != null && GroovyNature.hasGroovyNature(candidate.getProject())) {
                 currentSelection.add(candidate);
             }
@@ -66,11 +66,11 @@ public class AbstractCheckerAction {
         }
         return currentSelection;
     }
-    
+
     public void selectionChanged(IAction action, ISelection selection) {
         this.selection = selection;
     }
-    
+
     public void setActivePart(IAction action, IWorkbenchPart targetPart) {
         try {
             IWorkbenchPartSite site = targetPart.getSite();

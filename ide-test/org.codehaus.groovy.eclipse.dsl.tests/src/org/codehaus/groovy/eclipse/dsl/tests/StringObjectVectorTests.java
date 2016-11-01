@@ -1,40 +1,44 @@
-/*******************************************************************************
- * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2016 the original author or authors.
  *
- * Contributors:
- *      Andrew Eisenberg - Initial implemenation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.dsl.tests;
 
 import junit.framework.TestCase;
 
 import org.codehaus.groovy.eclipse.dsl.pointcuts.StringObjectVector;
 
-
 /**
- * 
+ *
  * @author Andrew Eisenberg
  * @created Feb 18, 2011
  */
 public class StringObjectVectorTests extends TestCase {
 
-	private final Object obj1 = new Object();
-	private final Object obj2 = new Object();
-	private final Object obj3 = new Object();
-	private final Object obj4 = new Object();
-	private final Object obj5 = new Object();
-	
-	private final String str1 = "1";
-	private final String str2 = "2";
-	private final String str3 = "3";
-	private final String str4 = "4";
-	private final String str5 = "5";
-	
-	public void testCreateAndResiveVector() throws Exception {
+    private final Object obj1 = new Object();
+    private final Object obj2 = new Object();
+    private final Object obj3 = new Object();
+    private final Object obj4 = new Object();
+    private final Object obj5 = new Object();
+
+    private final String str1 = "1";
+    private final String str2 = "2";
+    private final String str3 = "3";
+    private final String str4 = "4";
+    private final String str5 = "5";
+
+    public void testCreateAndResiveVector() throws Exception {
         StringObjectVector vector = new StringObjectVector(3);
         assertEquals(0, vector.size);
         assertEquals(3, vector.maxSize);
@@ -53,50 +57,50 @@ public class StringObjectVectorTests extends TestCase {
         vector.add(str5, obj5);
         assertEquals(5, vector.size);
         assertEquals(6, vector.maxSize);
-	}
-	public void testFindAndContains() throws Exception {
-	    StringObjectVector vector = new StringObjectVector(3);
-	    vector.add(str1, obj1);
-	    vector.add(str2, obj2);
-	    vector.add(str3, obj3);
-	    vector.add(str4, obj4);
-	    vector.add(str5, obj5);
-	    assertEquals("should have found obj1", obj1, vector.find(str1));
-	    assertEquals("should have found obj2", obj2, vector.find(str2));
-	    assertEquals("should have found obj3", obj3, vector.find(str3));
-	    assertEquals("should have found obj4", obj4, vector.find(str4));
-	    assertEquals("should have found obj5", obj5, vector.find(str5));
-	    
-	    assertFalse(vector.contains(null));
-	    assertFalse(vector.contains(new Object()));
-	    assertFalse(vector.containsName(""));
-	    assertFalse(vector.contains(str1));
-
-	    
-	    assertTrue(vector.contains(obj1));
-	    assertTrue(vector.contains(obj2));
-	    assertTrue(vector.contains(obj3));
-	    assertTrue(vector.contains(obj4));
-	    assertTrue(vector.contains(obj5));
-	    
-	    assertTrue(vector.containsName(str1));
-	    assertTrue(vector.containsName(str2));
-	    assertTrue(vector.containsName(str3));
-	    assertTrue(vector.containsName(str4));
-	    assertTrue(vector.containsName(str5));
-	    
-	    assertNull(vector.find(""));
-	    assertNull(vector.find(null));
-	    
-	    assertEquals(5, vector.size);
-	    vector.add(null, obj1);
-	    assertEquals(6, vector.size);
-	    assertEquals(obj1, vector.find(null));
-	}
-	
-	public void testElementAtNameAt() throws Exception {
+    }
+    public void testFindAndContains() throws Exception {
         StringObjectVector vector = new StringObjectVector(3);
-        
+        vector.add(str1, obj1);
+        vector.add(str2, obj2);
+        vector.add(str3, obj3);
+        vector.add(str4, obj4);
+        vector.add(str5, obj5);
+        assertEquals("should have found obj1", obj1, vector.find(str1));
+        assertEquals("should have found obj2", obj2, vector.find(str2));
+        assertEquals("should have found obj3", obj3, vector.find(str3));
+        assertEquals("should have found obj4", obj4, vector.find(str4));
+        assertEquals("should have found obj5", obj5, vector.find(str5));
+
+        assertFalse(vector.contains(null));
+        assertFalse(vector.contains(new Object()));
+        assertFalse(vector.containsName(""));
+        assertFalse(vector.contains(str1));
+
+
+        assertTrue(vector.contains(obj1));
+        assertTrue(vector.contains(obj2));
+        assertTrue(vector.contains(obj3));
+        assertTrue(vector.contains(obj4));
+        assertTrue(vector.contains(obj5));
+
+        assertTrue(vector.containsName(str1));
+        assertTrue(vector.containsName(str2));
+        assertTrue(vector.containsName(str3));
+        assertTrue(vector.containsName(str4));
+        assertTrue(vector.containsName(str5));
+
+        assertNull(vector.find(""));
+        assertNull(vector.find(null));
+
+        assertEquals(5, vector.size);
+        vector.add(null, obj1);
+        assertEquals(6, vector.size);
+        assertEquals(obj1, vector.find(null));
+    }
+
+    public void testElementAtNameAt() throws Exception {
+        StringObjectVector vector = new StringObjectVector(3);
+
         try {
             vector.elementAt(0);
             fail("Expecting exception");
@@ -107,7 +111,7 @@ public class StringObjectVectorTests extends TestCase {
             fail("Expecting exception");
         } catch (ArrayIndexOutOfBoundsException e) {
         }
-        
+
         vector.add(str1, obj1);
         vector.add(str2, obj2);
         vector.add(str3, obj3);
@@ -151,8 +155,8 @@ public class StringObjectVectorTests extends TestCase {
         assertEquals("should have found str2", null, vector.elementAt(5));
         assertEquals("should have found str2", null, vector.elementAt(6));
     }
-	
-	public void testGetNameAndValue() throws Exception {
+
+    public void testGetNameAndValue() throws Exception {
         StringObjectVector vector = new StringObjectVector(3);
         vector.add(str1, obj1);
         vector.add(str2, obj2);
@@ -166,7 +170,7 @@ public class StringObjectVectorTests extends TestCase {
         assertEquals(obj3, elts[2]);
         assertEquals(obj4, elts[3]);
         assertEquals(obj5, elts[4]);
-        
+
         String[] names = vector.getNames();
         assertEquals(5, names.length);
         assertEquals(str1, names[0]);
@@ -174,10 +178,10 @@ public class StringObjectVectorTests extends TestCase {
         assertEquals(str3, names[2]);
         assertEquals(str4, names[3]);
         assertEquals(str5, names[4]);
-        
+
         vector.add(null, null);
         vector.add(null, null);
-        
+
         elts = vector.getElements();
         assertEquals(7, elts.length);
         assertEquals(obj1, elts[0]);
@@ -187,7 +191,7 @@ public class StringObjectVectorTests extends TestCase {
         assertEquals(obj5, elts[4]);
         assertEquals(null, elts[5]);
         assertEquals(null, elts[6]);
-        
+
         names = vector.getNames();
         assertEquals(7, names.length);
         assertEquals(str1, names[0]);

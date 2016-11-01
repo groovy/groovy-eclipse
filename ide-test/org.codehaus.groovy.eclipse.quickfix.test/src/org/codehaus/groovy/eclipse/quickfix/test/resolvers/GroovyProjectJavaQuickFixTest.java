@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.codehaus.groovy.eclipse.quickfix.test.resolvers;
 
 import java.util.List;
@@ -28,120 +27,120 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 
 /**
  * Tests Groovy quick fixes in a Java file contained in a Groovy Project
- * 
+ *
  * @author Nieraj Singh
- * 
+ *
  */
 public class GroovyProjectJavaQuickFixTest extends GroovyProjectQuickFixHarness {
 
-	/**
-	 * Tests that no Groovy add import resolvers are found for unresolved types
-	 * in a Java file in Groovy Project, as those should be handle by JDT
-	 * 
-	 * @throws Exception
-	 */
-	public void testNoGroovyAddImportQuickFix() throws Exception {
-		String typeToAddImport = "TestJavaC";
-		String typeToImport = "ImageBuilder";
+    /**
+     * Tests that no Groovy add import resolvers are found for unresolved types
+     * in a Java file in Groovy Project, as those should be handle by JDT
+     *
+     * @throws Exception
+     */
+    public void testNoGroovyAddImportQuickFix() throws Exception {
+        String typeToAddImport = "TestJavaC";
+        String typeToImport = "ImageBuilder";
 
-		String typeToAddImportContent = "class TestJavaC  { public void doSomething () { ImageBuilder imageBuilder = null; }  }";
+        String typeToAddImportContent = "class TestJavaC  { public void doSomething () { ImageBuilder imageBuilder = null; }  }";
 
-		ICompilationUnit unit = createJavaTypeInTestPackage(typeToAddImport
-				+ ".java", typeToAddImportContent);
+        ICompilationUnit unit = createJavaTypeInTestPackage(typeToAddImport
+                + ".java", typeToAddImportContent);
 
-		AddMissingGroovyImportsResolver resolver = getAddMissingImportsResolver(
-				typeToImport, unit);
+        AddMissingGroovyImportsResolver resolver = getAddMissingImportsResolver(
+                typeToImport, unit);
 
-		assertNull(
-				"Expected no Groovy add import quick fix resolver for unresolved type: "
-						+ typeToImport + " in " + unit.getResource().getName()
-						+ ", as it is a Java file", resolver);
-	}
+        assertNull(
+                "Expected no Groovy add import quick fix resolver for unresolved type: "
+                        + typeToImport + " in " + unit.getResource().getName()
+                        + ", as it is a Java file", resolver);
+    }
 
-	/**
-	 * Tests that a convert to Groovy quick fix is found when a missing ';' is
-	 * encountered in a Java file in Groovy Project
-	 * 
-	 * @throws Exception
-	 */
-	public void testConverToGroovyQuickFixMissingSemiColon() throws Exception {
-		String typeToAddImport = "TestJavaC";
+    /**
+     * Tests that a convert to Groovy quick fix is found when a missing ';' is
+     * encountered in a Java file in Groovy Project
+     *
+     * @throws Exception
+     */
+    public void testConverToGroovyQuickFixMissingSemiColon() throws Exception {
+        String typeToAddImport = "TestJavaC";
 
-		String typeToAddImportContent = "class TestJavaC  { public void doSomething () { ImageBuilder imageBuilder = null }  }";
+        String typeToAddImportContent = "class TestJavaC  { public void doSomething () { ImageBuilder imageBuilder = null }  }";
 
-		ICompilationUnit unit = createJavaTypeInTestPackage(typeToAddImport
-				+ ".java", typeToAddImportContent);
+        ICompilationUnit unit = createJavaTypeInTestPackage(typeToAddImport
+                + ".java", typeToAddImportContent);
 
-		ConvertToGroovyFileResolver resolver = getConvertToGroovyQuickFixResolver(unit);
+        ConvertToGroovyFileResolver resolver = getConvertToGroovyQuickFixResolver(unit);
 
-		assertNotNull(
-				"Expected a quick fix resolver for converting to Groovy. None found.",
-				resolver);
+        assertNotNull(
+                "Expected a quick fix resolver for converting to Groovy. None found.",
+                resolver);
 
-		String expectedDisplayString = "Convert to Groovy file and open in Groovy editor";
+        String expectedDisplayString = "Convert to Groovy file and open in Groovy editor";
 
-		List<IJavaCompletionProposal> proposals = resolver.getQuickFixProposals();
+        List<IJavaCompletionProposal> proposals = resolver.getQuickFixProposals();
 
-		assertTrue(
-				"Expected a convert to Groovy file quick fix proposal. None found.",
-				proposals != null && proposals.size() > 0);
+        assertTrue(
+                "Expected a convert to Groovy file quick fix proposal. None found.",
+                proposals != null && proposals.size() > 0);
 
-		// Test the first proposal
+        // Test the first proposal
 
-		IJavaCompletionProposal firstProposal = proposals.get(0);
+        IJavaCompletionProposal firstProposal = proposals.get(0);
 
-		assertEquals("Display string mismatch for convert to Groovy quick fix",
-				expectedDisplayString, firstProposal.getDisplayString());
+        assertEquals("Display string mismatch for convert to Groovy quick fix",
+                expectedDisplayString, firstProposal.getDisplayString());
 
-	}
+    }
 
-	   public void testConverToGroovyQuickFixMissingSemiColonVariant() throws Exception {
-	        String typeToAddImport = "TestJavaC";
+       public void testConverToGroovyQuickFixMissingSemiColonVariant() throws Exception {
+            String typeToAddImport = "TestJavaC";
 
-	        String typeToAddImportContent = "abstract class TestJavaC  { public abstract void doSomething () }";
+            String typeToAddImportContent = "abstract class TestJavaC  { public abstract void doSomething () }";
 
-	        ICompilationUnit unit = createJavaTypeInTestPackage(typeToAddImport
-	                + ".java", typeToAddImportContent);
+            ICompilationUnit unit = createJavaTypeInTestPackage(typeToAddImport
+                    + ".java", typeToAddImportContent);
 
-	        ConvertToGroovyFileResolver resolver = getConvertToGroovyQuickFixResolver(unit);
+            ConvertToGroovyFileResolver resolver = getConvertToGroovyQuickFixResolver(unit);
 
-	        assertNotNull(
-	                "Expected a quick fix resolver for converting to Groovy. None found.",
-	                resolver);
+            assertNotNull(
+                    "Expected a quick fix resolver for converting to Groovy. None found.",
+                    resolver);
 
-	        String expectedDisplayString = "Convert to Groovy file and open in Groovy editor";
+            String expectedDisplayString = "Convert to Groovy file and open in Groovy editor";
 
-	        List<IJavaCompletionProposal> proposals = resolver.getQuickFixProposals();
+            List<IJavaCompletionProposal> proposals = resolver.getQuickFixProposals();
 
-	        assertTrue(
-	                "Expected a convert to Groovy file quick fix proposal. None found.",
-	                proposals != null && proposals.size() > 0);
+            assertTrue(
+                    "Expected a convert to Groovy file quick fix proposal. None found.",
+                    proposals != null && proposals.size() > 0);
 
-	        // Test the first proposal
+            // Test the first proposal
 
-	        IJavaCompletionProposal firstProposal = proposals.get(0);
+            IJavaCompletionProposal firstProposal = proposals.get(0);
 
-	        assertEquals("Display string mismatch for convert to Groovy quick fix",
-	                expectedDisplayString, firstProposal.getDisplayString());
+            assertEquals("Display string mismatch for convert to Groovy quick fix",
+                    expectedDisplayString, firstProposal.getDisplayString());
 
-	    }
-	protected ConvertToGroovyFileResolver getConvertToGroovyQuickFixResolver(
-			ICompilationUnit unit) throws Exception {
-		IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit);
+        }
+    protected ConvertToGroovyFileResolver getConvertToGroovyQuickFixResolver(
+            ICompilationUnit unit) throws Exception {
+        IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit);
 
-		List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(
-				markers, ProblemType.MISSING_SEMI_COLON_TYPE, unit);
+        List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(
+                markers, ProblemType.MISSING_SEMI_COLON_TYPE, unit);
 
-		assertNotNull(resolvers);
+        assertNotNull(resolvers);
 
-		assertTrue(resolvers.size() > 0);
+        assertTrue(resolvers.size() > 0);
 
-		for (IQuickFixResolver resolver : resolvers) {
-			if (resolver instanceof ConvertToGroovyFileResolver) {
-				return (ConvertToGroovyFileResolver) resolver;
-			}
-		}
-		return null;
-	}
+        for (IQuickFixResolver resolver : resolvers) {
+            if (resolver instanceof ConvertToGroovyFileResolver) {
+                return (ConvertToGroovyFileResolver) resolver;
+            }
+        }
+        return null;
+    }
 
 }

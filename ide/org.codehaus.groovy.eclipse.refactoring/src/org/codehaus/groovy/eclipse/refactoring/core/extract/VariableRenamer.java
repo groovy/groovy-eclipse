@@ -22,7 +22,6 @@ import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.control.SourceUnit;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 
@@ -65,10 +64,5 @@ public class VariableRenamer extends ClassCodeVisitorSupport {
                 edits.addChild(new ReplaceEdit(expression.getStart(), expression.getLength(), newName));
             }
         }
-    }
-
-    @Override
-    protected SourceUnit getSourceUnit() {
-        return null;
     }
 }

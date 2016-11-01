@@ -18,8 +18,6 @@ package org.codehaus.groovy.eclipse.codeassist.processors;
 
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.codeassist.proposals.AbstractGroovyProposal;
-import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;

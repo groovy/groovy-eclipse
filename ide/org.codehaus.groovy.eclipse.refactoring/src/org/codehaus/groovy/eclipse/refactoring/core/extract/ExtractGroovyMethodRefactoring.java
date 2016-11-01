@@ -652,7 +652,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
                     return null;
                 }
             }
-            MethodNode method = (MethodNode) module.getMethods().get(0);
+            MethodNode method = module.getMethods().get(0);
             new VariableScopeVisitor(null).visitClass(method.getDeclaringClass());
             return method;
         } catch (Exception e) {

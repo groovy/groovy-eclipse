@@ -28,7 +28,7 @@ public TestResult() {
 	public synchronized void addError(Test test, Throwable t) {
 		TestFailure testFailure= new TestFailure(test, t);
 		this.fErrors.add(testFailure);
-		for (Iterator e= cloneListeners().iterator(); e.hasNext(); ) {
+		for (Iterator<junit.framework.TestListener> e= cloneListeners().iterator(); e.hasNext(); ) {
 			((TestListener)e.next()).addError(test, testFailure);
 		}
 	}
@@ -39,15 +39,15 @@ public TestResult() {
 	public synchronized void addFailure(Test test, AssertionFailedError t) {
 		TestFailure testFailure= new TestFailure(test, t);
 		this.fFailures.add(testFailure);
-		for (Iterator e= cloneListeners().iterator(); e.hasNext(); ) {
+		for (Iterator<junit.framework.TestListener> e= cloneListeners().iterator(); e.hasNext(); ) {
 			((TestListener)e.next()).addFailure(test, testFailure);
 		}
 	}
 	/**
 	 * Returns a copy of the listeners.
 	 */
-	private synchronized List cloneListeners() {
-		List result = new ArrayList();
+	private synchronized List<junit.framework.TestListener> cloneListeners() {
+		List<junit.framework.TestListener> result = new ArrayList<junit.framework.TestListener>();
 		result.addAll(this.fListeners);
 		return result;
 	}

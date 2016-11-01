@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2009-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,99 +28,98 @@ import org.eclipse.jdt.core.ICompilationUnit;
 /**
  * Tests that no Groovy quick fixes are present in either a Java or Groovy file
  * in a non-Groovy Project
- * 
+ *
  * @author Nieraj Singh
- * 
  */
 public class NonGroovyProjectQuickFixTest extends GroovyProjectQuickFixHarness {
 
-	protected void setUp() throws Exception {
-		super.setUp();
+    protected void setUp() throws Exception {
+        super.setUp();
 
-		GroovyRuntime.removeGroovyNature(testProject.getProject());
-	}
+        GroovyRuntime.removeGroovyNature(testProject.getProject());
+    }
 
-	public void testIsNonGroovyProject() throws Exception {
-		assertFalse(
-				"This project has a Groovy nature. It only should be a Java project",
-				GroovyNature.hasGroovyNature(testProject.getProject()));
-	}
+    public void testIsNonGroovyProject() throws Exception {
+        assertFalse(
+                "This project has a Groovy nature. It only should be a Java project",
+                GroovyNature.hasGroovyNature(testProject.getProject()));
+    }
 
-	/**
-	 * Tests that no Groovy add import quick fix is found in a Java file in a
-	 * non-Groovy Project
-	 * 
-	 * @throws Exception
-	 */
-	public void testNoGroovyAddImportQuickFix() throws Exception {
-		String typeToAddImport = "TestJavaC";
-		String typeToImport = "ImageBuilder";
+    /**
+     * Tests that no Groovy add import quick fix is found in a Java file in a
+     * non-Groovy Project
+     *
+     * @throws Exception
+     */
+    public void testNoGroovyAddImportQuickFix() throws Exception {
+        String typeToAddImport = "TestJavaC";
+        String typeToImport = "ImageBuilder";
 
-		String typeToAddImportContent = "class TestJavaC  { public void doSomething () { ImageBuilder imageBuilder = null; }  }";
+        String typeToAddImportContent = "class TestJavaC  { public void doSomething () { ImageBuilder imageBuilder = null; }  }";
 
-		ICompilationUnit unit = createJavaTypeInTestPackage(typeToAddImport
-				+ ".java", typeToAddImportContent);
+        ICompilationUnit unit = createJavaTypeInTestPackage(typeToAddImport
+                + ".java", typeToAddImportContent);
 
-		AddMissingGroovyImportsResolver resolver = getAddMissingImportsResolver(
-				typeToImport, unit);
+        AddMissingGroovyImportsResolver resolver = getAddMissingImportsResolver(
+                typeToImport, unit);
 
-		assertNull(
-				"Expected no Groovy add import quick fix resolver for unresolved type: "
-						+ typeToImport + " in " + unit.getResource().getName()
-						+ ", as it is a Java project", resolver);
-	}
+        assertNull(
+                "Expected no Groovy add import quick fix resolver for unresolved type: "
+                        + typeToImport + " in " + unit.getResource().getName()
+                        + ", as it is a Java project", resolver);
+    }
 
-	/**
-	 * Tests that no Groovy quick fixes are found in a Groovy file in a
-	 * non-Groovy Project
-	 * 
-	 * @throws Exception
-	 */
-	public void testNoGroovyQuickFixNonGroovyProject1() throws Exception {
-		String typeToAddImport = "TestGroovyC";
+    /**
+     * Tests that no Groovy quick fixes are found in a Groovy file in a
+     * non-Groovy Project
+     *
+     * @throws Exception
+     */
+    public void testNoGroovyQuickFixNonGroovyProject1() throws Exception {
+        String typeToAddImport = "TestGroovyC";
 
-		String typeToAddImportContent = "class TestGroovyC  { public void doSomething () { ImageBuilder imageBuilder = null }  }";
+        String typeToAddImportContent = "class TestGroovyC  { public void doSomething () { ImageBuilder imageBuilder = null }  }";
 
-		ICompilationUnit unit = createGroovyTypeInTestPackage(typeToAddImport
-				+ ".groovy", typeToAddImportContent);
-		IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit);
+        ICompilationUnit unit = createGroovyTypeInTestPackage(typeToAddImport
+                + ".groovy", typeToAddImportContent);
+        IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit);
 
-		ProblemType[] knownProblemTypes = getGroovyProblemTypes();
+        ProblemType[] knownProblemTypes = getGroovyProblemTypes();
 
-		assertTrue("No Groovy problem types to test", knownProblemTypes != null
-				&& knownProblemTypes.length > 0);
+        assertTrue("No Groovy problem types to test", knownProblemTypes != null
+                && knownProblemTypes.length > 0);
 
-		for (ProblemType type : getGroovyProblemTypes()) {
-			List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(
-					markers, type, unit);
-			assertTrue(
-					"Encountered Groovy quick fix resolvers in a non-Groovy Project. None expected.",
-					resolvers == null || resolvers.isEmpty());
-		}
+        for (ProblemType type : getGroovyProblemTypes()) {
+            List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(
+                    markers, type, unit);
+            assertTrue(
+                    "Encountered Groovy quick fix resolvers in a non-Groovy Project. None expected.",
+                    resolvers == null || resolvers.isEmpty());
+        }
 
-	}
+    }
 
-	/**
-	 * Tests that no Groovy add import quick fixes are found in a Groovy file in
-	 * a non-Groovy Project
-	 * 
-	 * @throws Exception
-	 */
-	public void testNoGroovyQuickFixNonGroovyProject2() throws Exception {
-		String typeToAddImport = "TestGroovyC";
-		String unresolvedType = "ImageBuilder";
-		String typeToAddImportContent = "class TestGroovyC  { public void doSomething () { ImageBuilder imageBuilder = null }  }";
+    /**
+     * Tests that no Groovy add import quick fixes are found in a Groovy file in
+     * a non-Groovy Project
+     *
+     * @throws Exception
+     */
+    public void testNoGroovyQuickFixNonGroovyProject2() throws Exception {
+        String typeToAddImport = "TestGroovyC";
+        String unresolvedType = "ImageBuilder";
+        String typeToAddImportContent = "class TestGroovyC  { public void doSomething () { ImageBuilder imageBuilder = null }  }";
 
-		ICompilationUnit unit = createGroovyTypeInTestPackage(typeToAddImport
-				+ ".groovy", typeToAddImportContent);
+        ICompilationUnit unit = createGroovyTypeInTestPackage(typeToAddImport
+                + ".groovy", typeToAddImportContent);
 
-		AddMissingGroovyImportsResolver resolver = getAddMissingImportsResolver(
-				unresolvedType, unit);
+        AddMissingGroovyImportsResolver resolver = getAddMissingImportsResolver(
+                unresolvedType, unit);
 
-		assertNull(
-				"Expected no Groovy add import resolvers as this is a Java project",
-				resolver);
+        assertNull(
+                "Expected no Groovy add import resolvers as this is a Java project",
+                resolver);
 
-	}
+    }
 
 }

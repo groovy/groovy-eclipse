@@ -38,7 +38,7 @@ public class BuilderTests extends TestCase {
 	protected static boolean DEBUG = false;
 	protected static TestingEnvironment env = null;
 	protected EfficiencyCompilerRequestor debugRequestor = null;
-	
+
 	private int moduleNodeMapperCacheSize = 0;
 
 	public BuilderTests(String name) {
@@ -69,15 +69,15 @@ public class BuilderTests extends TestCase {
 		for (int i = 0; i < cp.length; i++) {
 			IPath c = cp[i].getPath();
 			String ext = c.getFileExtension();
-			if (ext != null && (ext.equals("zip") || ext.equals("jar"))) { //$NON-NLS-1$ //$NON-NLS-2$
-			    
+			if (ext != null && (ext.equals("zip") || ext.equals("jar"))) {
+
 			    // this doesn't work on mac/*nix because device is usually (always?) null
 //				if (c.getDevice() == null) {
 //					classpath.addElement(workspacePath.append(c).toOSString());
 //				} else {
 //					classpath.addElement(c.toOSString());
 //				}
-			    
+
 			    // this will work as long as the jar is contained in the same project
 			    if (projectPath.isPrefixOf(c)) {
 			        classpath.addElement(workspacePath.append(c).toOSString());
@@ -90,17 +90,17 @@ public class BuilderTests extends TestCase {
 		verifier.execute(className, classpath.toArray(new String[0]));
 
 		if (DEBUG) {
-			System.out.println("ERRORS\n"); //$NON-NLS-1$
+			System.out.println("ERRORS\n");
 			System.out.println(Util.displayString(verifier.getExecutionError()));
 
-			System.out.println("OUTPUT\n"); //$NON-NLS-1$
+			System.out.println("OUTPUT\n");
 			System.out.println(Util.displayString(verifier.getExecutionOutput()));
 		}
 		String actualError = verifier.getExecutionError();
 
 		// workaround pb on 1.3.1 VM (line delimitor is not the platform line delimitor)
 		char[] error = actualError.toCharArray();
-		actualError = new String(CharOperation.replace(error, System.getProperty("line.separator").toCharArray(), new char[] { '\n' })); //$NON-NLS-1$
+		actualError = new String(CharOperation.replace(error, System.getProperty("line.separator").toCharArray(), new char[] { '\n' }));
 
 		if (expectedError==null && actualError.length()!=0) {
 			if (actualError.trim().endsWith("WARNING: Module [groovy-all] - Unable to load extension class [org.codehaus.groovy.runtime.NioGroovyMethods]")) {
@@ -110,16 +110,16 @@ public class BuilderTests extends TestCase {
 			}
 		}
 		if (expectedError!=null && actualError.indexOf(expectedError) == -1) {
-			System.out.println("ERRORS\n"); //$NON-NLS-1$
+			System.out.println("ERRORS\n");
 			System.out.println(Util.displayString(actualError));
 		}
 		if (expectedError!=null) {
-			assertTrue("unexpected error : " + actualError + " expected : " + expectedError, actualError.indexOf(expectedError) != -1); //$NON-NLS-1$ //$NON-NLS-2$
+			assertTrue("unexpected error : " + actualError + " expected : " + expectedError, actualError.indexOf(expectedError) != -1);
 		}
 
 		String actualOutput = verifier.getExecutionOutput();
 		if (actualOutput.indexOf(expectingOutput) == -1) {
-			System.out.println("OUTPUT\n"); //$NON-NLS-1$
+			System.out.println("OUTPUT\n");
 			System.out.println(Util.displayString(actualOutput));
 		}
 		// strip out carriage return for windoze testing
@@ -127,7 +127,7 @@ public class BuilderTests extends TestCase {
 		while ((idx=actualOutput.indexOf('\r'))!=-1) {
 			actualOutput = actualOutput.substring(0,idx)+actualOutput.substring(idx+1);
 		}
-		assertTrue("unexpected output.\nExpected:\n"+expectingOutput+"\nActual:\n"+actualOutput, actualOutput.indexOf(expectingOutput) != -1); //$NON-NLS-1$
+		assertTrue("unexpected output.\nExpected:\n"+expectingOutput+"\nActual:\n"+actualOutput, actualOutput.indexOf(expectingOutput) != -1);
 	}
 
 	protected void expectingParticipantProblems(IPath path, String expected) {
@@ -153,7 +153,7 @@ public class BuilderTests extends TestCase {
 		IPath wRoot = env.getWorkspaceRootPath();
 
 		for (int i = 0; i < paths.length; i++)
-			assertTrue(paths[i] + " is not present", wRoot.append(paths[i]).toFile().exists()); //$NON-NLS-1$
+			assertTrue(paths[i] + " is not present", wRoot.append(paths[i]).toFile().exists());
 	}
 
 	/** Verifies that given element is not present.
@@ -168,7 +168,7 @@ public class BuilderTests extends TestCase {
 		IPath wRoot = env.getWorkspaceRootPath();
 
 		for (int i = 0; i < paths.length; i++)
-			assertTrue(paths[i] + " is present", !wRoot.append(paths[i]).toFile().exists()); //$NON-NLS-1$
+			assertTrue(paths[i] + " is present", !wRoot.append(paths[i]).toFile().exists());
 	}
 
 	/** Verifies that given classes have been compiled.
@@ -177,16 +177,16 @@ public class BuilderTests extends TestCase {
 		String[] actual = debugRequestor.getCompiledClasses();
 		org.eclipse.jdt.internal.core.util.Util.sort(actual);
 		org.eclipse.jdt.internal.core.util.Util.sort(expected);
-		expectingCompiling(actual, expected, "unexpected recompiled units. lenExpected="+expected.length+" lenActual="+actual.length); //$NON-NLS-1$
+		expectingCompiling(actual, expected, "unexpected recompiled units. lenExpected="+expected.length+" lenActual="+actual.length);
 	}
-	
+
 	protected void expectedCompiledClassCount(int expected) {
 		int actual = debugRequestor.getCompiledClasses().length;
 		assertEquals(expected,actual);
 	}
-	
-	/** 
-	 * Verifies that the given classes and no others have been compiled, 
+
+	/**
+	 * Verifies that the given classes and no others have been compiled,
 	 * but permits the classes to have been compiled more than once.
 	 */
 	protected void expectingUniqueCompiledClasses(String[] expected) {
@@ -207,13 +207,13 @@ public class BuilderTests extends TestCase {
 			}
 		}
 		org.eclipse.jdt.internal.core.util.Util.sort(expected);
-		expectingCompiling(uniqueActual, expected, "unexpected compiled units"); //$NON-NLS-1$
+		expectingCompiling(uniqueActual, expected, "unexpected compiled units");
 	}
 
 	/** Verifies that given classes have been compiled in the specified order.
 	 */
 	protected void expectingCompilingOrder(String[] expected) {
-		expectingCompiling(debugRequestor.getCompiledClasses(), expected, "unexpected compiling order"); //$NON-NLS-1$
+		expectingCompiling(debugRequestor.getCompiledClasses(), expected, "unexpected compiling order");
 	}
 
 	private void expectingCompiling(String[] actual, String[] expected, String message) {
@@ -221,17 +221,17 @@ public class BuilderTests extends TestCase {
 			for (int i = 0; i < actual.length; i++)
 				System.out.println(actual[i]);
 
-		StringBuffer actualBuffer = new StringBuffer("{"); //$NON-NLS-1$
+		StringBuffer actualBuffer = new StringBuffer("{");
 		for (int i = 0; i < actual.length; i++) {
 			if (i > 0)
-				actualBuffer.append(","); //$NON-NLS-1$
+				actualBuffer.append(",");
 			actualBuffer.append(actual[i]);
 		}
 		actualBuffer.append('}');
-		StringBuffer expectedBuffer = new StringBuffer("{"); //$NON-NLS-1$
+		StringBuffer expectedBuffer = new StringBuffer("{");
 		for (int i = 0; i < expected.length; i++) {
 			if (i > 0)
-				expectedBuffer.append(","); //$NON-NLS-1$
+				expectedBuffer.append(",");
 			expectedBuffer.append(expected[i]);
 		}
 		expectedBuffer.append('}');
@@ -243,7 +243,7 @@ public class BuilderTests extends TestCase {
 	protected void expectingNoProblems() {
 		expectingNoProblemsFor(env.getWorkspaceRootPath());
 	}
-	
+
 	protected void expectingNoErrors() {
 		expectingNoErrorsFor(env.getWorkspaceRootPath());
 	}
@@ -253,7 +253,7 @@ public class BuilderTests extends TestCase {
 	protected void expectingNoProblemsFor(IPath root) {
 		expectingNoProblemsFor(new IPath[] { root });
 	}
-	
+
 	protected void expectingNoErrorsFor(IPath root) {
 		expectingNoErrorsFor(new IPath[] { root });
 	}
@@ -269,9 +269,9 @@ public class BuilderTests extends TestCase {
 			}
 		}
 		String actual = buffer.toString();
-		assumeEquals("Unexpected problem(s)!!!", "", actual); //$NON-NLS-1$
+		assumeEquals("Unexpected problem(s)!!!", "", actual);
 	}
-	
+
 	protected void expectingNoErrorsFor(IPath[] roots) {
 		StringBuffer buffer = new StringBuffer();
 		Problem[] allProblems = allSortedProblems(roots);
@@ -288,7 +288,7 @@ public class BuilderTests extends TestCase {
 			}
 		}
 		String actual = buffer.toString();
-		assumeEquals("Unexpected problem(s)!!! number="+count, "", actual); //$NON-NLS-1$
+		assumeEquals("Unexpected problem(s)!!! number="+count, "", actual);
 	}
 
 	/** Verifies that the given element has problems and
@@ -314,7 +314,7 @@ public class BuilderTests extends TestCase {
 
 		for (int i = 0; i < expected.length; i++)
 			if (!actual.containsKey(expected[i]))
-				assertTrue("missing expected problem with " + expected[i].toString(), false); //$NON-NLS-1$
+				assertTrue("missing expected problem with " + expected[i].toString(), false);
 
 		if (actual.size() > expected.length) {
 			for (Enumeration<IPath> e = actual.elements(); e.hasMoreElements();) {
@@ -327,7 +327,7 @@ public class BuilderTests extends TestCase {
 					}
 				}
 				if (!found)
-					assertTrue("unexpected problem(s) with " + path.toString(), false); //$NON-NLS-1$
+					assertTrue("unexpected problem(s) with " + path.toString(), false);
 			}
 		}
 	}
@@ -337,7 +337,7 @@ public class BuilderTests extends TestCase {
 	 */
 	protected void expectingOnlySpecificProblemFor(IPath root, Problem problem) {
 		expectingOnlySpecificProblemsFor(root, new Problem[] { problem });
-	} 
+	}
 
 	/** Verifies that the given element has specifics problems and
 	 * only the given problems.
@@ -361,12 +361,12 @@ public class BuilderTests extends TestCase {
 			if (!found) {
 				printProblemsFor(root);
 			}
-			assertTrue("problem not found: " + expectedProblem.toString(), found); //$NON-NLS-1$
+			assertTrue("problem not found: " + expectedProblem.toString(), found);
 		}
 		for (int i = 0; i < rootProblems.length; i++) {
 			if(rootProblems[i] != null) {
 				printProblemsFor(root);
-				assertTrue("unexpected problem: " + rootProblems[i].toString(), false); //$NON-NLS-1$
+				assertTrue("unexpected problem: " + rootProblems[i].toString(), false);
 			}
 		}
 	}
@@ -381,20 +381,20 @@ public class BuilderTests extends TestCase {
 	 */
 	protected void expectingProblemsFor(IPath[] roots, String expected) {
 		Problem[] problems = allSortedProblems(roots);
-		assumeEquals("Invalid problem(s)!!!", expected, arrayToString(problems)); //$NON-NLS-1$
+		assumeEquals("Invalid problem(s)!!!", expected, arrayToString(problems));
 	}
 
 	/**
 	 * Verifies that the given element has the expected problems.
 	 */
-	protected void expectingProblemsFor(IPath root, List<IPath> expected) {
+	protected void expectingProblemsFor(IPath root, List<String> expected) {
 		expectingProblemsFor(new IPath[] { root }, expected);
 	}
 
 	/**
 	 * Verifies that the given elements have the expected problems.
 	 */
-	protected void expectingProblemsFor(IPath[] roots, List<IPath> expected) {
+	protected void expectingProblemsFor(IPath[] roots, List<String> expected) {
 		Problem[] allProblems = allSortedProblems(roots);
 		assumeEquals("Invalid problem(s)!!!", arrayToString(expected.toArray()), arrayToString(allProblems));
 	}
@@ -525,11 +525,11 @@ public class BuilderTests extends TestCase {
 		env.setAutoBuilding(false);
 		this.moduleNodeMapperCacheSize = ModuleNodeMapper.size();
 	}
-	
+
 	final protected int getInitialModuleNodeMapperSize() {
 		return moduleNodeMapperCacheSize;
 	}
-	
+
 	/**
 	 * @see junit.framework.TestCase#tearDown()
 	 */
@@ -555,7 +555,7 @@ public class BuilderTests extends TestCase {
                 fail("Could not delete working copies " + wcs);
             }
         } while (wcs != null && wcs.length > 0);
-        assertTrue("ModuleNodeMapper should be empty when there are no working copies", getInitialModuleNodeMapperSize() >= ModuleNodeMapper.size());        
+        assertTrue("ModuleNodeMapper should be empty when there are no working copies", getInitialModuleNodeMapperSize() >= ModuleNodeMapper.size());
 		JavaCore.setOptions(JavaCore.getDefaultOptions());
 		super.tearDown();
 	}
