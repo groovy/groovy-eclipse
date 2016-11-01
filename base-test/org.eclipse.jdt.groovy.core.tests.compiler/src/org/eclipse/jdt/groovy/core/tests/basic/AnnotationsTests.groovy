@@ -28,7 +28,7 @@ final class AnnotationsTests extends AbstractGroovyRegressionTest {
     }
 
     void testGroovyAnnotation() {
-        String sources = [
+        String[] sources = [
             'Foo.groovy',
             '@interface A {}',
 
