@@ -28,13 +28,11 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-
 
 /**
  * @author Andrew Eisenberg
@@ -134,13 +132,6 @@ public class GroovyPartialModelTests  extends AbstractGroovyTypeRootTests {
         }
 
         private final Expression exprToCheck;
-
-
-
-        @Override
-        protected SourceUnit getSourceUnit() {
-            return null;
-        }
 
         @Override
         public void visitListExpression(ListExpression expression) {
