@@ -63,7 +63,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     private boolean insideSlashy;
     private boolean insideDollarSlashy;
     private final GroovyCompilationUnit unit;
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     /**
      * Contains positions in a non-overlapping, increasing lexical order
@@ -129,10 +129,8 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         } else if (node instanceof ConstantExpression) {
             if (!(result.declaration instanceof MethodNode)) {
                 pos = handleConstantExpression((ConstantExpression) node);
-            } else if (result.isGroovy) {
-                pos = new HighlightedTypedPosition(node.getStart(), node.getLength(), HighlightKind.GROOVY_CALL);
-            } else if (enclosingElement instanceof ImportDeclaration) {
-                pos = new HighlightedTypedPosition(node.getStart(), node.getLength(), HighlightKind.STATIC_CALL);
+            } else {
+                pos = handleMethodReference((ConstantExpression) node, result, (enclosingElement instanceof ImportDeclaration));
             }
 
         } else if (node instanceof MapEntryExpression) {
@@ -252,6 +250,26 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             length = expr.getMethodName().getLength();
 
         return new HighlightedTypedPosition(offset, length, kind);
+    }
+
+    private HighlightedTypedPosition handleMethodReference(ConstantExpression expr, TypeLookupResult result, boolean isStaticImport) {
+        MethodNode meth = (MethodNode) result.declaration;
+
+        HighlightKind kind = null;
+        if (result.isGroovy) {
+            kind = HighlightKind.GROOVY_CALL;
+        } else if (isStaticImport) {
+            kind = HighlightKind.STATIC_CALL;
+        } else if (!expr.getText().equals(meth.getName())) {
+            // property name did not match method name
+            // there won't be a [Static]MethodCallExpression
+            kind = !meth.isStatic() ? HighlightKind.METHOD_CALL : HighlightKind.STATIC_CALL;
+        }
+
+        if (kind != null) {
+            return new HighlightedTypedPosition(expr.getStart(), expr.getLength(), kind);
+        }
+        return null;
     }
 
     private HighlightedTypedPosition handleMapEntryExpression(MapEntryExpression expr) {

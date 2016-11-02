@@ -240,11 +240,6 @@ public class ASTNodeSourceLocationsTests  extends GroovierBuilderTests {
             assertStartAndEnds(sae);
         }
 
-        @Override
-        protected SourceUnit getSourceUnit() {
-            return null;
-        }
-
         void assertStartAndEnds(StartAndEnd...sae) {
             assertEquals("Wrong number expressions found", sae.length, allCollectedNodes.size());
             ASTNode[] bexprs = allCollectedNodes.toArray(new ASTNode[0]);
