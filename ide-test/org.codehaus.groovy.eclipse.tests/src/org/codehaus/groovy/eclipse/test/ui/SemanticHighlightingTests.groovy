@@ -202,6 +202,21 @@ final class SemanticHighlightingTests extends EclipseTestCase {
             new HighlightedTypedPosition(contents.lastIndexOf('b)'), 1, PARAMETER))
     }
 
+    void testMethodsAsProperties() {
+        String contents = '''\
+            import java.lang.management.ManagementFactory
+            // compact form:
+            ManagementFactory.runtimeMXBean.inputArguments
+            // expanded form:
+            ManagementFactory.getRuntimeMXBean().getInputArguments()
+            '''.stripIndent()
+            assertHighlighting(contents,
+                new HighlightedTypedPosition(contents.indexOf('runtimeMXBean'), 'runtimeMXBean'.length(), STATIC_CALL),
+                new HighlightedTypedPosition(contents.indexOf('inputArguments'), 'inputArguments'.length(), METHOD_CALL),
+                new HighlightedTypedPosition(contents.indexOf('getRuntimeMXBean'), 'getRuntimeMXBean'.length(), STATIC_CALL),
+                new HighlightedTypedPosition(contents.indexOf('getInputArguments'), 'getInputArguments'.length(), METHOD_CALL))
+    }
+
     void testDefaultGroovyMethods() {
         String contents = '["one", "two"].grep().first()'
 
@@ -983,7 +998,7 @@ final class SemanticHighlightingTests extends EclipseTestCase {
 
     //
 
-    void assertHighlighting(String contents, HighlightedTypedPosition... expectedPositions) {
+    private void assertHighlighting(String contents, HighlightedTypedPosition... expectedPositions) {
         GroovyCompilationUnit unit = openFile(contents)
         checkStyles(unit, expectedPositions as List)
     }
@@ -1011,9 +1026,6 @@ final class SemanticHighlightingTests extends EclipseTestCase {
             h1.offset <=> h2.offset ?: h1.kind.ordinal() <=> h2.kind.ordinal()
         }
 
-        assertEquals("All expected:\n${ -> expectedPositions.toListString()}\n\nAll actual:\n${ -> actualPositions.toListString()}", expectedPositions.size(), actualPositions.size())
-        for (i in 0..<actualPositions.size()) {
-            assertEquals("Should have had equal positions.\nAll expected:\n${ -> expectedPositions.toListString()}\n\nAll actual:\n${ -> actualPositions.toListString()}", expectedPositions[i], actualPositions[i])
-        }
+        assertEquals(expectedPositions.join('\n'), actualPositions.join('\n'))
     }
 }
