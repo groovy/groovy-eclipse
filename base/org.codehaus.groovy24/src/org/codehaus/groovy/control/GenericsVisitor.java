@@ -106,7 +106,13 @@ public class GenericsVisitor extends ClassCodeVisitorSupport {
         for (int i=0; i<nTypes.length; i++) {
             ClassNode nType = nTypes[i].getType();
             ClassNode cnType = cnTypes[i].getType();
+            /// GRECLIPSE: start: added isWildcard
+            /*old{
+            if (!nType.isDerivedFrom(cnType)) {
+            }*/
+            // newcode
             if (!nTypes[i].isWildcard() && !nType.isDerivedFrom(cnType)) {
+            // GRECLIPSE: end
                 if (cnType.isInterface() && nType.implementsInterface(cnType)) continue;
                 addError("The type "+nTypes[i].getName()+
                          " is not a valid substitute for the bounded parameter <"+
@@ -122,11 +128,23 @@ public class GenericsVisitor extends ClassCodeVisitorSupport {
         if (upperBounds!=null) {
             ret += " extends ";
             for (int i = 0; i < upperBounds.length; i++) {
+                /// GRECLIPSE: start: don't recurse on names
+                /*old{
+                ret += getPrintName(upperBounds[i]);
+                }*/
+                // newcode
                 ret += upperBounds[i].getName();
+                // GRECLIPSE: end
                 if (i+1<upperBounds.length) ret += " & ";
             }
         } else if (lowerBound!=null) {
+            /// GRECLIPSE: start: don't recurse on names
+            /*old{
+            ret += " super "+getPrintName(lowerBound);
+            }*/
+            // newcode
             ret += " super "+ lowerBound.getName();
+            // GRECLIPSE: end
         }
         return ret;
 
